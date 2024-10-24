@@ -110,18 +110,18 @@ public class AbstractJaxWs2Test extends AbstractHttpServerUsingTest<Server> {
     testing()
         .waitAndAssertTraces(
             trace -> {
-              List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
-              assertions.add(
-                  span ->
-                      span.hasName(serverSpanName(testMethod.methodName()))
-                          .hasNoParent()
-                          .hasKind(SpanKind.SERVER)
-                          .hasStatus(StatusData.unset()));
-              assertions.add(
-                  span ->
-                      span.hasName("HelloService/" + testMethod.methodName())
-                          .hasParent(trace.getSpan(0))
-                          .hasKind(SpanKind.INTERNAL));
+              List<Consumer<SpanDataAssert>> assertions =
+                  new ArrayList<>(
+                      Arrays.asList(
+                          span ->
+                              span.hasName(serverSpanName(testMethod.methodName()))
+                                  .hasNoParent()
+                                  .hasKind(SpanKind.SERVER)
+                                  .hasStatus(StatusData.unset()),
+                          span ->
+                              span.hasName("HelloService/" + testMethod.methodName())
+                                  .hasParent(trace.getSpan(0))
+                                  .hasKind(SpanKind.INTERNAL)));
               if (hasAnnotationHandlerSpan(testMethod)) {
                 assertions.add(
                     span ->
@@ -152,20 +152,20 @@ public class AbstractJaxWs2Test extends AbstractHttpServerUsingTest<Server> {
     testing()
         .waitAndAssertTraces(
             trace -> {
-              List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
-              assertions.add(
-                  span ->
-                      span.hasName(serverSpanName(testMethod.methodName()))
-                          .hasNoParent()
-                          .hasKind(SpanKind.SERVER)
-                          .hasStatus(StatusData.error()));
-              assertions.add(
-                  span ->
-                      span.hasName("HelloService/" + testMethod.methodName())
-                          .hasParent(trace.getSpan(0))
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasStatus(StatusData.error())
-                          .hasException(expectedException));
+              List<Consumer<SpanDataAssert>> assertions =
+                  new ArrayList<>(
+                      Arrays.asList(
+                          span ->
+                              span.hasName(serverSpanName(testMethod.methodName()))
+                                  .hasNoParent()
+                                  .hasKind(SpanKind.SERVER)
+                                  .hasStatus(StatusData.error()),
+                          span ->
+                              span.hasName("HelloService/" + testMethod.methodName())
+                                  .hasParent(trace.getSpan(0))
+                                  .hasKind(SpanKind.INTERNAL)
+                                  .hasStatus(StatusData.error())
+                                  .hasException(expectedException)));
               if (hasAnnotationHandlerSpan(testMethod)) {
                 assertions.add(
                     span ->
