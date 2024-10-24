@@ -45,10 +45,11 @@ class KafkaStreamReflectionUtil {
     try {
       // equivalent to:
       // ((org.apache.kafka.streams.kstream.KStreamBuilder)builder).stream(STREAM_PENDING);
+      String[] topics = new String[] {topic};
       return (KStream<Integer, String>)
           Class.forName("org.apache.kafka.streams.kstream.KStreamBuilder")
               .getMethod("stream", String[].class)
-              .invoke(builder, topic);
+              .invoke(builder, (Object) topics);
     } catch (ClassNotFoundException
         | NoSuchMethodException
         | IllegalAccessException
@@ -79,7 +80,7 @@ class KafkaStreamReflectionUtil {
           .getMethod("to", Serde.class, Serde.class, String.class)
           .invoke(values, Serdes.Integer(), Serdes.String(), topic);
 
-      Class<?> ksteamsClass = Class.forName("org.apache.kafka.streams.KStreams");
+      Class<?> ksteamsClass = Class.forName("org.apache.kafka.streams.KafkaStreams");
       Class<?> topologyBuilderClass =
           Class.forName("org.apache.kafka.streams.processor.TopologyBuilder");
       Constructor<?> constructor =
@@ -107,7 +108,7 @@ class KafkaStreamReflectionUtil {
       Class<?> streamsBuilderClass = Class.forName("org.apache.kafka.streams.StreamsBuilder");
       Object topology = streamsBuilderClass.getMethod("build").invoke(builder);
 
-      Class<?> ksteamsClass = Class.forName("org.apache.kafka.streams.KStreams");
+      Class<?> ksteamsClass = Class.forName("org.apache.kafka.streams.KafkaStreams");
       Class<?> topologyClass = Class.forName("org.apache.kafka.streams.Topology");
       Constructor<?> constructor = ksteamsClass.getConstructor(topologyClass, Properties.class);
       return (KafkaStreams) constructor.newInstance(topology, config);
