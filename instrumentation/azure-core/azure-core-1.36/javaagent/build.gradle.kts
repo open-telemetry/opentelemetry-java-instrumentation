@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("com.azure")
     module.set("azure-core")
-    versions.set("[1.36.0,)")
+    versions.set("[1.36.0,1.53.0)")
     assertInverse.set(true)
   }
 }

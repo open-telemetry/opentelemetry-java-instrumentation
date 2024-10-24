@@ -6,8 +6,8 @@ plugins {
 group = "io.opentelemetry.javaagent.instrumentation"
 
 dependencies {
-  // this is the latest version that works with azure-core 1.36
-  implementation("com.azure:azure-core-tracing-opentelemetry:1.0.0-beta.49")
+  // this is the latest version that works with azure-core 1.53
+  implementation("com.azure:azure-core-tracing-opentelemetry:1.0.0-beta.50")
 }
 
 tasks {
@@ -18,7 +18,7 @@ tasks {
       // including only azure-core-tracing-opentelemetry excludes its transitive dependencies
       include(dependency("com.azure:azure-core-tracing-opentelemetry"))
     }
-    relocate("com.azure.core.tracing.opentelemetry", "io.opentelemetry.javaagent.instrumentation.azurecore.v1_36.shaded.com.azure.core.tracing.opentelemetry")
+    relocate("com.azure.core.tracing.opentelemetry", "io.opentelemetry.javaagent.instrumentation.azurecore.v1_53.shaded.com.azure.core.tracing.opentelemetry")
   }
 
   val extractShadowJar by registering(Copy::class) {
