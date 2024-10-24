@@ -25,7 +25,8 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ServerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.ktor.server.engine.ApplicationEngineEnvironmentReloading");
+    return named("io.ktor.server.engine.ApplicationEngineEnvironmentReloading")
+        .or(named("io.ktor.server.engine.EmbeddedServer"));
   }
 
   @Override
