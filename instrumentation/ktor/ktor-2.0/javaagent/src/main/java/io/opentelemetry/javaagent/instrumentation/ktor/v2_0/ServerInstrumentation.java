@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.ktor.v2_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
-import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.ktor.server.application.Application;
 import io.ktor.server.application.ApplicationPluginKt;
@@ -25,7 +25,10 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ServerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.ktor.server.engine.ApplicationEngineEnvironmentReloading");
+    return namedOneOf(
+        "io.ktor.server.engine.ApplicationEngineEnvironmentReloading", // Ktor 2.0
+        "io.ktor.server.engine.EmbeddedServer" // Ktor 3.0
+    );
   }
 
   @Override
