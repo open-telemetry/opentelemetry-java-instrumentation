@@ -136,6 +136,7 @@ abstract class KafkaStreamsBaseTest {
 
   // Kafka's eventual consistency behavior forces us to do a couple of empty poll() calls until it
   // gets properly assigned a topic partition
+  @SuppressWarnings("PreferJavaTimeOverload")
   static void awaitUntilConsumerIsReady() throws InterruptedException {
     if (consumerReady.await(0, TimeUnit.SECONDS)) {
       return;
