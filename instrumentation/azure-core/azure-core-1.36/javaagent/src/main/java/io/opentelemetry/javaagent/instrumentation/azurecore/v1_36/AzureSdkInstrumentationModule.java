@@ -58,6 +58,7 @@ public class AzureSdkInstrumentationModule extends InstrumentationModule
     // this class was introduced in azure-core 1.36
     return hasClassesNamed("com.azure.core.util.tracing.TracerProvider")
         .and(not(hasClassesNamed("com.azure.core.tracing.opentelemetry.OpenTelemetryTracer")))
+        // this class was introduced in azure-core 1.53
         .and(not(hasClassesNamed("com.azure.core.util.LibraryTelemetryOptions")));
   }
 

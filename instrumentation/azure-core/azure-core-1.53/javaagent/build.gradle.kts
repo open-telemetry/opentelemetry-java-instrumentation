@@ -42,8 +42,10 @@ testing {
       dependencies {
         if (latestDepTest) {
           implementation("com.azure:azure-core:+")
+          implementation("com.azure:azure-core-test:+")
         } else {
           implementation("com.azure:azure-core:1.53.0")
+          implementation("com.azure:azure-core-test:1.26.2")
         }
       }
     }

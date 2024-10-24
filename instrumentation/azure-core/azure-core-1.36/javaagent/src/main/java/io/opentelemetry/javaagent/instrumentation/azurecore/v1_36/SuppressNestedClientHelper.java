@@ -25,7 +25,8 @@ public class SuppressNestedClientHelper {
     return null;
   }
 
-  public static <T> Mono<T> disallowNestedClientSpanMono(Mono<T> delegate, com.azure.core.util.Context azContext) {
+  public static <T> Mono<T> disallowNestedClientSpanMono(
+      Mono<T> delegate, com.azure.core.util.Context azContext) {
     return new Mono<T>() {
       @Override
       public void subscribe(CoreSubscriber<? super T> coreSubscriber) {

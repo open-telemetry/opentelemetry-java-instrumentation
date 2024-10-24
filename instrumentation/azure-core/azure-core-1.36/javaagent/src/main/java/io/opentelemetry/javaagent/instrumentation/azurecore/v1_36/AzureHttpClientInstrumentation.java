@@ -51,7 +51,9 @@ public class AzureHttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SuppressNestedClientMonoAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void asyncSendExit(@Advice.Argument(1) com.azure.core.util.Context azContext, @Advice.Return(readOnly = false) Mono<HttpResponse> mono) {
+    public static void asyncSendExit(
+        @Advice.Argument(1) com.azure.core.util.Context azContext,
+        @Advice.Return(readOnly = false) Mono<HttpResponse> mono) {
       mono = disallowNestedClientSpanMono(mono, azContext);
     }
   }
@@ -60,7 +62,9 @@ public class AzureHttpClientInstrumentation implements TypeInstrumentation {
   public static class SuppressNestedClientSyncAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void syncSendEnter(@Advice.Argument(1) com.azure.core.util.Context azContext, @Advice.Local("otelScope") Scope scope) {
+    public static void syncSendEnter(
+        @Advice.Argument(1) com.azure.core.util.Context azContext,
+        @Advice.Local("otelScope") Scope scope) {
       scope = disallowNestedClientSpanSync(azContext);
     }
 
