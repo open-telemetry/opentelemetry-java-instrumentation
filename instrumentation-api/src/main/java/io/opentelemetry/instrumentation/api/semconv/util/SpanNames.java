@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.incubator.semconv.util;
+package io.opentelemetry.instrumentation.api.semconv.util;
 
 import io.opentelemetry.instrumentation.api.internal.ClassNames;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
@@ -11,11 +11,6 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * This class has been stabilized and moved to {@link
- * io.opentelemetry.instrumentation.api.semconv.util.SpanNames}
- */
-@Deprecated
 public final class SpanNames {
 
   private static final Cache<Class<?>, Map<String, String>> spanNameCaches = Cache.weak();

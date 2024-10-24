@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.grails;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.util.SpanNames;
+import io.opentelemetry.instrumentation.api.semconv.util.SpanNames;
 
 public class HandlerData {
 
