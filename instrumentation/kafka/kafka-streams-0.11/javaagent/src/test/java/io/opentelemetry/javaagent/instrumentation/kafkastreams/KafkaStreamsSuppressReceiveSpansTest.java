@@ -80,6 +80,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
     KafkaStreamsBaseTest.producer.send(new ProducerRecord<>(STREAM_PENDING, 10, greeting));
 
     // check that the message was received
+    @SuppressWarnings("PreferJavaTimeOverload")
     ConsumerRecords<Integer, String> records =
         KafkaStreamsBaseTest.consumer.poll(Duration.ofSeconds(10).toMillis());
     Headers receivedHeaders = null;

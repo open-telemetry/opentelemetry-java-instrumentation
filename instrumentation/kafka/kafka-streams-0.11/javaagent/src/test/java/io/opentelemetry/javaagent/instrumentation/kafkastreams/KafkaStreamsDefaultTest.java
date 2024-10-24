@@ -83,6 +83,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
     KafkaStreamsBaseTest.producer.send(new ProducerRecord<>(STREAM_PENDING, 10, greeting));
 
     awaitUntilConsumerIsReady();
+    @SuppressWarnings("PreferJavaTimeOverload")
     ConsumerRecords<Integer, String> records =
         KafkaStreamsBaseTest.consumer.poll(Duration.ofSeconds(10).toMillis());
     Headers receivedHeaders = null;
