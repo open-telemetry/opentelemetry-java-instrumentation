@@ -334,7 +334,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
       }
       return defineClass(name, bytecode, 0, bytecode.length, PROTECTION_DOMAIN);
     } catch (LinkageError error) {
-      // Pre-caution against linkage error due to nested instrumentations happening
+      // Precaution against linkage error due to nested instrumentations happening
       // it might be possible that e.g. an advice class has already been defined
       // during an instrumentation of defineClass
       Class<?> clazz = findLoadedClass(name);
