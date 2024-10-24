@@ -210,7 +210,7 @@ public class IndyBootstrap {
         // Update the callsite of those to run the actual instrumentation
         logger.log(
             Level.FINE,
-            "Fixing nested instrumentation invokedynamic instruction bootstrapping for instrumented class {0} and advice {1}.{2}, the instrumentaiton should be active now",
+            "Fixing nested instrumentation invokedynamic instruction bootstrapping for instrumented class {0} and advice {1}.{2}, the instrumentation should be active now",
             new Object[] {lookup.lookupClass().getName(), adviceClassName, adviceMethodName});
         nestedBootstrapCallSite.setTarget(methodHandle);
         MutableCallSite.syncAll(new MutableCallSite[] {nestedBootstrapCallSite});
