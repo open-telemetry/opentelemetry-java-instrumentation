@@ -107,7 +107,7 @@ class AzureSdkTest {
         request ->
             Mono.defer(
                 () -> {
-                  // check if suppression is working
+                  // check no suppression
                   hasClientAndHttpKeys.set(hasClientAndHttpSpans());
                   return Mono.just(new MockHttpResponse(request, 200));
                 });
