@@ -559,7 +559,7 @@ class JdbcConnectionUrlParserTest {
               .setPort(666)
               .setName("orclsn")
               .build(),
-          arg("jdbc:oracle:thin:@(description = (connect_timeout=90)(retry_count=20)(retry_delay=3) (transport_connect_timeout=3000) (address_list = (load_balance = on) (failover = on) (address = (protocol = tcp)(host = orcl.host1)(port = 1521)) (address = (protocol = tcp)(host = orcl.host2)(port = 1521)) (address = (protocol = tcp)(host = orcl.host3)(port = 1521)) (address = (protocol = tcp)(host = orcl.host4)(port = 1521)) ) (connect_data = (server = dedicated) (service_name = orclsn)))")
+          arg("jdbc:oracle:thin:@ ( description = (connect_timeout=90)(retry_count=20)(retry_delay=3) (transport_connect_timeout=3000) (address_list = (load_balance = on) (failover = on) (address = (protocol = tcp)(host = orcl.host1 )(port = 1521 )) (address = (protocol = tcp)(host = orcl.host2)(port = 1521)) (address = (protocol = tcp)(host = orcl.host3)(port = 1521)) (address = (protocol = tcp)(host = orcl.host4)(port = 1521)) ) (connect_data = (server = dedicated) (service_name = orclsn)))")
               .setShortUrl("oracle:thin://orcl.host1:1521")
               .setSystem("oracle")
               .setSubtype("thin")
