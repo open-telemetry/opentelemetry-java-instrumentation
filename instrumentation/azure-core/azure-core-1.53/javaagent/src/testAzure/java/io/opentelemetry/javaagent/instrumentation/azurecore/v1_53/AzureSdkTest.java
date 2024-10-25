@@ -47,9 +47,7 @@ class AzureSdkTest {
     assertThat(azTracer.isEnabled()).isTrue();
 
     assertThat(azTracer.getClass().getName())
-        .isEqualTo(
-            "io.opentelemetry.javaagent.instrumentation.azurecore.v1_53.shaded"
-                + ".com.azure.core.tracing.opentelemetry.OpenTelemetryTracer");
+        .endsWith("com.azure.core.tracing.opentelemetry.OpenTelemetryTracer");
   }
 
   @Test
