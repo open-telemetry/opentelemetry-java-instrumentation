@@ -99,7 +99,7 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
       io.opentelemetry.api.trace.Span agentSpan = agentSpanKey.fromContextOrNull(agentContext);
       if (agentSpan == null) {
         // Bridged agent span was not found. Run the original method, there could be an unbridged
-        // span stored it the application context.
+        // span stored in the application context.
         return null;
       }
 
