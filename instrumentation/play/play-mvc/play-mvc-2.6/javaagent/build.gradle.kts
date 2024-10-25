@@ -67,6 +67,9 @@ tasks {
     named("test") {
       enabled = false
     }
+    named("compileTestJava") {
+      enabled = false
+    }
   }
 
   check {

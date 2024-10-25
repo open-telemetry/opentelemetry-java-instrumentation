@@ -29,7 +29,7 @@ import play.mvc.Results;
 import play.routing.RoutingDsl;
 import play.server.Server;
 
-abstract class PlayServerTest extends AbstractHttpServerTest<Server> {
+class PlayServerTest extends AbstractHttpServerTest<Server> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
@@ -75,9 +75,10 @@ abstract class PlayServerTest extends AbstractHttpServerTest<Server> {
                               Result result =
                                   Results.status(
                                       CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody());
-                              request
-                                  .header("X-Test-Request")
-                                  .ifPresent(value -> result.withHeader("X-Test-Response", value));
+                              result =
+                                  result.withHeader(
+                                      "X-Test-Response",
+                                      request.header("X-Test-Request").orElse("missing"));
                               return result;
                             }))
                 .GET(INDEXED_CHILD.getPath())
