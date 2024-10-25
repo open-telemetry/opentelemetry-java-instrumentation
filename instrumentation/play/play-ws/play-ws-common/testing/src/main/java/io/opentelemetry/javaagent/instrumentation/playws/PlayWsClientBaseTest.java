@@ -16,16 +16,12 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
-import java.io.IOException;
 import java.net.InetAddress;
-import java.net.URI;
 import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import play.shaded.ahc.io.netty.resolver.InetNameResolver;
@@ -66,31 +62,6 @@ abstract class PlayWsClientBaseTest<REQUEST> extends AbstractHttpClientTest<REQU
     asyncHttpClientWithReadTimeout = createClient(true);
     autoCleanup.deferCleanup(asyncHttpClient);
     autoCleanup.deferCleanup(asyncHttpClientWithReadTimeout);
-  }
-
-  @AfterEach
-  void tearDown() throws IOException {
-    if (system != null) {
-      system.terminate();
-    }
-    if (asyncHttpClient != null) {
-      asyncHttpClient.close();
-    }
-    if (asyncHttpClientWithReadTimeout != null) {
-      asyncHttpClientWithReadTimeout.close();
-    }
-  }
-
-  @Override
-  public REQUEST buildRequest(String method, URI uri, Map<String, String> headers)
-      throws Exception {
-    return null;
-  }
-
-  @Override
-  public int sendRequest(REQUEST request, String method, URI uri, Map<String, String> headers)
-      throws Exception {
-    return 0;
   }
 
   @Override

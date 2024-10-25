@@ -22,7 +22,7 @@ import scala.concurrent.duration.Duration;
 import scala.jdk.javaapi.CollectionConverters;
 import scala.util.Try;
 
-public class PlayScalaStreamedWsClientTest extends PlayWsClientBaseTest<StandaloneWSRequest> {
+class PlayScalaStreamedWsClientTest extends PlayWsClientBaseTest<StandaloneWSRequest> {
 
   private static StandaloneWSClient wsClient;
   private static StandaloneWSClient wsClientWithReadTimeout;
