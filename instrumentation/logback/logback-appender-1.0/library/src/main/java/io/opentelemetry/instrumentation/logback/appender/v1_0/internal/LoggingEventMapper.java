@@ -23,12 +23,18 @@ import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import io.opentelemetry.semconv.ExceptionAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
+import net.logstash.logback.marker.LogstashMarker;
+import net.logstash.logback.marker.MapEntriesAppendingMarker;
+import net.logstash.logback.marker.SingleFieldAppendingMarker;
 import org.slf4j.Marker;
 import org.slf4j.event.KeyValuePair;
 
@@ -50,6 +56,7 @@ public final class LoggingEventMapper {
   private static final boolean supportsInstant = supportsInstant();
   private static final boolean supportsKeyValuePairs = supportsKeyValuePairs();
   private static final boolean supportsMultipleMarkers = supportsMultipleMarkers();
+  private static final boolean supportsLogstashMarkers = supportsLogstashMarkers();
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
   private static final Cache<String, AttributeKey<String>> attributeKeys = Cache.bounded(100);
 
@@ -60,6 +67,8 @@ public final class LoggingEventMapper {
   private static final AttributeKey<List<String>> LOG_BODY_PARAMETERS =
       AttributeKey.stringArrayKey("log.body.parameters");
 
+  private static final Cache<Class<?>, Field> valueField = Cache.bounded(20);
+
   private final boolean captureExperimentalAttributes;
   private final List<String> captureMdcAttributes;
   private final boolean captureAllMdcAttributes;
@@ -68,6 +77,7 @@ public final class LoggingEventMapper {
   private final boolean captureKeyValuePairAttributes;
   private final boolean captureLoggerContext;
   private final boolean captureArguments;
+  private final boolean captureLogstashAttributes;
 
   private LoggingEventMapper(Builder builder) {
     this.captureExperimentalAttributes = builder.captureExperimentalAttributes;
@@ -77,6 +87,7 @@ public final class LoggingEventMapper {
     this.captureKeyValuePairAttributes = builder.captureKeyValuePairAttributes;
     this.captureLoggerContext = builder.captureLoggerContext;
     this.captureArguments = builder.captureArguments;
+    this.captureLogstashAttributes = builder.captureLogstashAttributes;
     this.captureAllMdcAttributes =
         builder.captureMdcAttributes.size() == 1 && builder.captureMdcAttributes.get(0).equals("*");
   }
@@ -170,7 +181,8 @@ public final class LoggingEventMapper {
     }
 
     if (captureMarkerAttribute) {
-      captureMarkerAttribute(attributes, loggingEvent);
+      boolean skipLogstashMarkers = supportsLogstashMarkers && captureLogstashAttributes;
+      captureMarkerAttribute(attributes, loggingEvent, skipLogstashMarkers);
     }
 
     if (supportsKeyValuePairs && captureKeyValuePairAttributes) {
@@ -185,6 +197,10 @@ public final class LoggingEventMapper {
         && loggingEvent.getArgumentArray() != null
         && loggingEvent.getArgumentArray().length > 0) {
       captureArguments(attributes, loggingEvent.getMessage(), loggingEvent.getArgumentArray());
+    }
+
+    if (supportsLogstashMarkers && captureLogstashAttributes) {
+      captureLogstashAttributes(attributes, loggingEvent);
     }
 
     builder.setAllAttributes(attributes.build());
@@ -326,31 +342,35 @@ public final class LoggingEventMapper {
   }
 
   private static void captureMarkerAttribute(
-      AttributesBuilder attributes, ILoggingEvent loggingEvent) {
+      AttributesBuilder attributes, ILoggingEvent loggingEvent, boolean skipLogstashMarkers) {
     if (supportsMultipleMarkers && hasMultipleMarkers(loggingEvent)) {
-      captureMultipleMarkerAttributes(attributes, loggingEvent);
+      captureMultipleMarkerAttributes(attributes, loggingEvent, skipLogstashMarkers);
     } else {
-      captureSingleMarkerAttribute(attributes, loggingEvent);
+      captureSingleMarkerAttribute(attributes, loggingEvent, skipLogstashMarkers);
     }
   }
 
   @SuppressWarnings("deprecation") // getMarker is deprecate since 1.3.0
   private static void captureSingleMarkerAttribute(
-      AttributesBuilder attributes, ILoggingEvent loggingEvent) {
+      AttributesBuilder attributes, ILoggingEvent loggingEvent, boolean skipLogstashMarkers) {
     Marker marker = loggingEvent.getMarker();
-    if (marker != null) {
+    if (marker != null && (!skipLogstashMarkers || !isLogstashMarker(marker))) {
       attributes.put(LOG_MARKER, marker.getName());
     }
   }
 
   @NoMuzzle
   private static void captureMultipleMarkerAttributes(
-      AttributesBuilder attributes, ILoggingEvent loggingEvent) {
+      AttributesBuilder attributes, ILoggingEvent loggingEvent, boolean skipLogstashMarkers) {
     List<String> markerNames = new ArrayList<>(loggingEvent.getMarkerList().size());
     for (Marker marker : loggingEvent.getMarkerList()) {
-      markerNames.add(marker.getName());
+      if (!skipLogstashMarkers || !isLogstashMarker(marker)) {
+        markerNames.add(marker.getName());
+      }
     }
-    attributes.put(LOG_MARKER, markerNames.toArray(new String[0]));
+    if (!markerNames.isEmpty()) {
+      attributes.put(LOG_MARKER, markerNames.toArray(new String[0]));
+    }
   }
 
   @NoMuzzle
@@ -369,6 +389,175 @@ public final class LoggingEventMapper {
     return true;
   }
 
+  private static void captureLogstashAttributes(
+      AttributesBuilder attributes, ILoggingEvent loggingEvent) {
+    try {
+      if (supportsMultipleMarkers && hasMultipleMarkers(loggingEvent)) {
+        captureMultipleLogstashAttributes(attributes, loggingEvent);
+      } else {
+        captureSingleLogstashAttribute(attributes, loggingEvent);
+      }
+    } catch (Throwable e) {
+      // ignore
+    }
+  }
+
+  @NoMuzzle
+  private static boolean isLogstashMarker(Marker marker) {
+    return marker instanceof LogstashMarker;
+  }
+
+  @SuppressWarnings("deprecation") // getMarker is deprecate since 1.3.0
+  @NoMuzzle
+  private static void captureSingleLogstashAttribute(
+      AttributesBuilder attributes, ILoggingEvent loggingEvent) {
+    Marker marker = loggingEvent.getMarker();
+    if (isLogstashMarker(marker)) {
+      LogstashMarker logstashMarker = (LogstashMarker) marker;
+      captureLogstashMarker(attributes, logstashMarker);
+    }
+  }
+
+  @NoMuzzle
+  private static void captureMultipleLogstashAttributes(
+      AttributesBuilder attributes, ILoggingEvent loggingEvent) {
+    for (Marker marker : loggingEvent.getMarkerList()) {
+      if (isLogstashMarker(marker)) {
+        LogstashMarker logstashMarker = (LogstashMarker) marker;
+        captureLogstashMarker(attributes, logstashMarker);
+      }
+    }
+  }
+
+  @NoMuzzle
+  private static void captureLogstashMarker(
+      AttributesBuilder attributes, LogstashMarker logstashMarker) {
+    captureLogstashMarkerAttributes(attributes, logstashMarker);
+
+    if (logstashMarker.hasReferences()) {
+      for (Iterator<Marker> it = logstashMarker.iterator(); it.hasNext(); ) {
+        Marker referenceMarker = it.next();
+        if (isLogstashMarker(referenceMarker)) {
+          LogstashMarker referenceLogstashMarker = (LogstashMarker) referenceMarker;
+          captureLogstashMarker(attributes, referenceLogstashMarker);
+        }
+      }
+    }
+  }
+
+  @NoMuzzle
+  private static void captureLogstashMarkerAttributes(
+      AttributesBuilder attributes, LogstashMarker logstashMarker) {
+    if (logstashMarker instanceof SingleFieldAppendingMarker) {
+      SingleFieldAppendingMarker singleFieldAppendingMarker =
+          (SingleFieldAppendingMarker) logstashMarker;
+      String fieldName = singleFieldAppendingMarker.getFieldName();
+      String fieldValue = extractFieldValue(singleFieldAppendingMarker);
+      if (fieldName != null) {
+        if (fieldValue != null) {
+          attributes.put(fieldName, fieldValue);
+        } else {
+          attributes.put(fieldName, "");
+        }
+      }
+    } else if (logstashMarker instanceof MapEntriesAppendingMarker) {
+      MapEntriesAppendingMarker mapEntriesAppendingMarker =
+          (MapEntriesAppendingMarker) logstashMarker;
+      Map<?, ?> map = extractMapValue(mapEntriesAppendingMarker);
+      if (map != null) {
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+          Object key = entry.getKey();
+          Object value = entry.getValue();
+          if (key != null) {
+            if (value != null) {
+              attributes.put(key.toString(), value.toString());
+            } else {
+              attributes.put(key.toString(), "");
+            }
+          }
+        }
+      }
+    }
+  }
+
+  @Nullable
+  private static String extractFieldValue(SingleFieldAppendingMarker singleFieldAppendingMarker) {
+    // ObjectAppendingMarker.fieldValue since v7.0
+    // ObjectAppendingMarker.object since v3.0
+    // RawJsonAppendingMarker.rawJson since v3.0
+    Field field =
+        valueField.computeIfAbsent(
+            singleFieldAppendingMarker.getClass(),
+            clazz -> findValueField(clazz, new String[] {"fieldValue", "object", "rawJson"}));
+    if (field != null) {
+      try {
+        Object value = field.get(singleFieldAppendingMarker);
+        if (value != null) {
+          return value.toString();
+        }
+      } catch (IllegalAccessException e) {
+        // ignore
+      }
+    }
+    return null;
+  }
+
+  @Nullable
+  private static Map<?, ?> extractMapValue(MapEntriesAppendingMarker mapEntriesAppendingMarker) {
+    // MapEntriesAppendingMarker.map since v3.0
+    Field field =
+        valueField.computeIfAbsent(
+            mapEntriesAppendingMarker.getClass(),
+            clazz -> findValueField(clazz, new String[] {"map"}));
+    if (field != null) {
+      try {
+        Object value = field.get(mapEntriesAppendingMarker);
+        if (value instanceof Map) {
+          return (Map<?, ?>) value;
+        }
+      } catch (IllegalAccessException e) {
+        // ignore
+      }
+    }
+    return null;
+  }
+
+  @Nullable
+  private static Field findValueField(Class<?> clazz, String[] fieldNames) {
+    for (String fieldName : fieldNames) {
+      try {
+        Field field = clazz.getDeclaredField(fieldName);
+        field.setAccessible(true);
+        return field;
+      } catch (NoSuchFieldException e) {
+        // ignore
+      }
+    }
+    return null;
+  }
+
+  private static boolean supportsLogstashMarkers() {
+    try {
+      Class.forName("net.logstash.logback.marker.LogstashMarker");
+    } catch (ClassNotFoundException e) {
+      return false;
+    }
+
+    try {
+      Class.forName("net.logstash.logback.marker.SingleFieldAppendingMarker");
+    } catch (ClassNotFoundException e) {
+      return false;
+    }
+
+    try {
+      Class.forName("net.logstash.logback.marker.MapEntriesAppendingMarker");
+    } catch (ClassNotFoundException e) {
+      return false;
+    }
+
+    return true;
+  }
+
   /**
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
    * any time.
@@ -381,6 +570,7 @@ public final class LoggingEventMapper {
     private boolean captureKeyValuePairAttributes;
     private boolean captureLoggerContext;
     private boolean captureArguments;
+    private boolean captureLogstashAttributes;
 
     Builder() {}
 
@@ -423,6 +613,12 @@ public final class LoggingEventMapper {
     @CanIgnoreReturnValue
     public Builder setCaptureArguments(boolean captureArguments) {
       this.captureArguments = captureArguments;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setCaptureLogstashAttributes(boolean captureLogstashAttributes) {
+      this.captureLogstashAttributes = captureLogstashAttributes;
       return this;
     }
 

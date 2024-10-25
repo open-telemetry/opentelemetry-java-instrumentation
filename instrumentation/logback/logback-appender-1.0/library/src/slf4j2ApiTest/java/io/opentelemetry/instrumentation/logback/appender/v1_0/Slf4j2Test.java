@@ -12,6 +12,9 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.resources.Resource;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import net.logstash.logback.marker.Markers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -124,5 +127,31 @@ public class Slf4j2Test {
                     equalTo(
                         AttributeKey.stringKey("log.body.template"),
                         "log message {} and {}, bool {}, long {}")));
+  }
+
+  @Test
+  void logstash() {
+    Map<String, Object> entries = new HashMap<>();
+    entries.put("field2", 2);
+    entries.put("field3", "value3");
+
+    logger
+        .atInfo()
+        .setMessage("log message 1")
+        .addMarker(Markers.append("field1", "value1"))
+        .addMarker(Markers.appendEntries(entries))
+        .log();
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasResource(resource)
+                .hasInstrumentationScope(instrumentationScopeInfo)
+                .hasBody("log message 1")
+                .hasTotalAttributeCount(7) // 4 code attributes + 3 markers
+                .hasAttributesSatisfying(
+                    equalTo(AttributeKey.stringKey("field1"), "value1"),
+                    equalTo(AttributeKey.stringKey("field2"), "2"),
+                    equalTo(AttributeKey.stringKey("field3"), "value3")));
   }
 }
