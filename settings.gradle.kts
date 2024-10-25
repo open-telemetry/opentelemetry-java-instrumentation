@@ -1,7 +1,7 @@
 pluginManagement {
   plugins {
     id("com.github.jk1.dependency-license-report") version "2.9"
-    id("com.google.cloud.tools.jib") version "3.4.3"
+    id("com.google.cloud.tools.jib") version "3.4.4"
     id("com.gradle.plugin-publish") version "1.3.0"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
     id("org.jetbrains.kotlin.jvm") version "2.0.21"
@@ -554,8 +554,10 @@ include(":instrumentation:servlet:servlet-3.0:javaagent-unit-tests")
 include(":instrumentation:servlet:servlet-3.0:testing")
 include(":instrumentation:servlet:servlet-5.0:javaagent")
 include(":instrumentation:servlet:servlet-5.0:javaagent-unit-tests")
+include(":instrumentation:servlet:servlet-5.0:jetty11-testing")
 include(":instrumentation:servlet:servlet-5.0:jetty12-testing")
 include(":instrumentation:servlet:servlet-5.0:testing")
+include(":instrumentation:servlet:servlet-5.0:tomcat-testing")
 include(":instrumentation:servlet:servlet-common:bootstrap")
 include(":instrumentation:servlet:servlet-common:javaagent")
 include(":instrumentation:servlet:servlet-javax-common:javaagent")

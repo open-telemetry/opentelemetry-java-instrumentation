@@ -97,7 +97,7 @@ class LogbackAppenderTest {
   void shouldNotInitializeAppenderWhenDisabled() {
     Map<String, Object> properties = new HashMap<>();
     properties.put("logging.config", "classpath:logback-test.xml");
-    properties.put("otel.springboot.logback-appender.enabled", "false");
+    properties.put("otel.instrumentation.logback-appender.enabled", "false");
 
     SpringApplication app =
         new SpringApplication(

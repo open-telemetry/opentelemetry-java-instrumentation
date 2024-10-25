@@ -9,7 +9,7 @@ rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.43.0"
-val otelContribVersion = "1.39.0-alpha"
+val otelContribVersion = "1.40.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -33,15 +33,15 @@ val DEPENDENCY_BOMS = listOf(
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
-  "org.junit:junit-bom:5.11.2",
-  "org.testcontainers:testcontainers-bom:1.20.2",
+  "org.junit:junit-bom:5.11.3",
+  "org.testcontainers:testcontainers-bom:1.20.3",
   "org.spockframework:spock-bom:2.4-M4-groovy-4.0"
 )
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
-val errorProneVersion = "2.33.0"
-val byteBuddyVersion = "1.15.4"
+val errorProneVersion = "2.34.0"
+val byteBuddyVersion = "1.15.7"
 val asmVersion = "9.7.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
@@ -87,7 +87,7 @@ val DEPENDENCIES = listOf(
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.11.3",
+  "com.uber.nullaway:nullaway:0.12.0",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.9.0",
   "commons-codec:commons-codec:1.17.1",
@@ -116,7 +116,7 @@ val DEPENDENCIES = listOf(
   "org.objenesis:objenesis:3.4",
   "javax.validation:validation-api:2.0.1.Final",
   "org.snakeyaml:snakeyaml-engine:2.8",
-  "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.8"
+  "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.9"
 )
 
 javaPlatform {
