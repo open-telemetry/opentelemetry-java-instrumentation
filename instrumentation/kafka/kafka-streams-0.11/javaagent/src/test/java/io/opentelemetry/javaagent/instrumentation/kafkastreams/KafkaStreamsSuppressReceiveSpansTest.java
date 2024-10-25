@@ -209,8 +209,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                   if (Boolean.getBoolean("testLatestDeps")) {
                     assertions.add(
                         equalTo(
-                            MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
-                            "test"));
+                            MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
                   }
                   span.hasName(STREAM_PROCESSED + " process")
                       .hasKind(SpanKind.CONSUMER)
