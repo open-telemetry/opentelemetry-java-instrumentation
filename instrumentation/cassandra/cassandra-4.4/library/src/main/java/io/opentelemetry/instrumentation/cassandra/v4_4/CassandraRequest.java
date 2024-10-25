@@ -11,11 +11,11 @@ import com.google.auto.value.AutoValue;
 @AutoValue
 public abstract class CassandraRequest {
 
-  public static CassandraRequest create(Session session, String statement) {
-    return new AutoValue_CassandraRequest(session, statement);
+  public static CassandraRequest create(Session session, String queryText) {
+    return new AutoValue_CassandraRequest(session, queryText);
   }
 
   public abstract Session getSession();
 
-  public abstract String getStatement();
+  public abstract String getQueryText();
 }

@@ -11,6 +11,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 
 /**
  * Extractor of <a
@@ -19,7 +20,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
  *
  * <p>It sets the same set of attributes as {@link DbClientAttributesExtractor} plus an additional
  * <code>db.sql.table</code> attribute. The raw SQL statements returned by the {@link
- * SqlClientAttributesGetter#getRawStatement(Object)} method are sanitized before use, all statement
+ * SqlClientAttributesGetter#getRawQueryText(Object)} method are sanitized before use, all statement
  * parameters are removed.
  */
 public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
@@ -28,7 +29,12 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
+  private static final AttributeKey<String> DB_OPERATION_NAME =
+      AttributeKey.stringKey("db.operation.name");
   private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
+  private static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.query.text");
+  private static final AttributeKey<String> DB_COLLECTION_NAME =
+      AttributeKey.stringKey("db.collection.name");
 
   /** Creates the SQL client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
@@ -49,15 +55,15 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   // sanitizer is also used to extract operation and table name, so we have it always enable here
   private static final SqlStatementSanitizer sanitizer = SqlStatementSanitizer.create(true);
 
-  private final AttributeKey<String> dbTableAttribute;
+  private final AttributeKey<String> oldSemconvTableAttribute;
   private final boolean statementSanitizationEnabled;
 
   SqlClientAttributesExtractor(
       SqlClientAttributesGetter<REQUEST> getter,
-      AttributeKey<String> dbTableAttribute,
+      AttributeKey<String> oldSemconvTableAttribute,
       boolean statementSanitizationEnabled) {
     super(getter);
-    this.dbTableAttribute = dbTableAttribute;
+    this.oldSemconvTableAttribute = oldSemconvTableAttribute;
     this.statementSanitizationEnabled = statementSanitizationEnabled;
   }
 
@@ -65,16 +71,30 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    String rawStatement = getter.getRawStatement(request);
-    SqlStatementInfo sanitizedStatement = sanitizer.sanitize(rawStatement);
+    String rawQueryText = getter.getRawQueryText(request);
+    SqlStatementInfo sanitizedStatement = sanitizer.sanitize(rawQueryText);
     String operation = sanitizedStatement.getOperation();
-    internalSet(
-        attributes,
-        DB_STATEMENT,
-        statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawStatement);
-    internalSet(attributes, DB_OPERATION, operation);
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      internalSet(
+          attributes,
+          DB_QUERY_TEXT,
+          statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawQueryText);
+      internalSet(attributes, DB_OPERATION_NAME, operation);
+    }
+    if (SemconvStability.emitOldDatabaseSemconv()) {
+      internalSet(
+          attributes,
+          DB_STATEMENT,
+          statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawQueryText);
+      internalSet(attributes, DB_OPERATION, operation);
+    }
     if (!SQL_CALL.equals(operation)) {
-      internalSet(attributes, dbTableAttribute, sanitizedStatement.getMainIdentifier());
+      if (SemconvStability.emitStableDatabaseSemconv()) {
+        internalSet(attributes, DB_COLLECTION_NAME, sanitizedStatement.getMainIdentifier());
+      }
+      if (SemconvStability.emitOldDatabaseSemconv()) {
+        internalSet(attributes, oldSemconvTableAttribute, sanitizedStatement.getMainIdentifier());
+      }
     }
   }
 }
