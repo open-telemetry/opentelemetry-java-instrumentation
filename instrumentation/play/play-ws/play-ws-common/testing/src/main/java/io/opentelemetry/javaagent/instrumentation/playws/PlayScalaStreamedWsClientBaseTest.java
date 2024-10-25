@@ -6,12 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.playws;
 
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import play.api.libs.ws.StandaloneWSClient;
 import play.api.libs.ws.StandaloneWSRequest;
 import play.api.libs.ws.StandaloneWSResponse;
