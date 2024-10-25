@@ -5,9 +5,12 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.ServiceLoader;
 import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.utility.JavaModule;
 
 /**
@@ -18,7 +21,7 @@ import net.bytebuddy.utility.JavaModule;
 public final class AgentTooling {
 
   private static final AgentLocationStrategy LOCATION_STRATEGY =
-      new AgentLocationStrategy(getBootstrapProxy());
+      new AgentLocationStrategy(getBootstrapProxy(), getLocators());
 
   private static final AgentBuilder.PoolStrategy POOL_STRATEGY =
       new AgentCachingPoolStrategy(LOCATION_STRATEGY);
@@ -47,6 +50,20 @@ public final class AgentTooling {
     }
 
     return null;
+  }
+
+  private static List<ClassFileLocator> getLocators() {
+    List<ClassFileLocator> locators = new ArrayList<>();
+    ServiceLoader.load(ClassFileLocatorProvider.class, AgentTooling.class.getClassLoader())
+        .forEach(
+            provider -> {
+              ClassFileLocator locator = provider.getClassFileLocator();
+              if (locator != null) {
+                locators.add(locator);
+              }
+            });
+
+    return locators;
   }
 
   public static boolean isTransforming(ClassLoader classLoader, String className) {
