@@ -116,6 +116,14 @@ class Wildfly28Jdk21 extends WildflySmokeTest {
 class Wildfly28Jdk21Openj9 extends WildflySmokeTest {
 }
 
+@AppServer(version = "28.0.1.Final", jdk = "23")
+class Wildfly28Jdk23 extends WildflySmokeTest {
+}
+
+@AppServer(version = "28.0.1.Final", jdk = "23-openj9")
+class Wildfly28Jdk23Openj9 extends WildflySmokeTest {
+}
+
 @AppServer(version = "29.0.1.Final", jdk = "11")
 class Wildfly29Jdk11 extends WildflySmokeTest {
 }
@@ -140,6 +148,14 @@ class Wildfly29Jdk21 extends WildflySmokeTest {
 class Wildfly29Jdk21Openj9 extends WildflySmokeTest {
 }
 
+@AppServer(version = "29.0.1.Final", jdk = "23")
+class Wildfly29Jdk23 extends WildflySmokeTest {
+}
+
+@AppServer(version = "29.0.1.Final", jdk = "23-openj9")
+class Wildfly29Jdk23Openj9 extends WildflySmokeTest {
+}
+
 @AppServer(version = "30.0.1.Final", jdk = "11")
 class Wildfly30Jdk11 extends WildflySmokeTest {
 }
@@ -162,4 +178,12 @@ class Wildfly30Jdk21 extends WildflySmokeTest {
 
 @AppServer(version = "30.0.1.Final", jdk = "21-openj9")
 class Wildfly30Jdk21Openj9 extends WildflySmokeTest {
+}
+
+@AppServer(version = "30.0.1.Final", jdk = "23")
+class Wildfly30Jdk23 extends WildflySmokeTest {
+}
+
+@AppServer(version = "30.0.1.Final", jdk = "23-openj9")
+class Wildfly30Jdk23Openj9 extends WildflySmokeTest {
 }

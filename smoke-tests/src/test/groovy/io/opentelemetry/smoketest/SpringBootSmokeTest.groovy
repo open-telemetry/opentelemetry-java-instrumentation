@@ -21,7 +21,7 @@ import static java.util.stream.Collectors.toSet
 class SpringBootSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$jdk-20230920.6251727205"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$jdk-20241021.11448062567"
   }
 
   @Override
@@ -105,12 +105,12 @@ class SpringBootSmokeTest extends SmokeTest {
         .map { it.stringValue }
         .findAny()
     serviceVersion.isPresent()
-    serviceVersion.get() == "1.31.0-alpha-SNAPSHOT"
+    serviceVersion.get() == "2.10.0-alpha-SNAPSHOT"
 
     cleanup:
     stopTarget()
 
     where:
-    jdk << [8, 11, 17, 19]
+    jdk << [8, 11, 17, 21, 23]
   }
 }

@@ -9,6 +9,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.jmx.engine.BeanAttributeExtractor;
 import io.opentelemetry.instrumentation.jmx.engine.BeanGroup;
 import io.opentelemetry.instrumentation.jmx.engine.MetricAttribute;
+import io.opentelemetry.instrumentation.jmx.engine.MetricAttributeExtractor;
 import io.opentelemetry.instrumentation.jmx.engine.MetricDef;
 import io.opentelemetry.instrumentation.jmx.engine.MetricExtractor;
 import io.opentelemetry.instrumentation.jmx.engine.MetricInfo;
@@ -18,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
+import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
@@ -126,14 +128,9 @@ public class JmxRule extends MetricStructure {
   public MetricDef buildMetricDef() throws Exception {
     BeanGroup group;
     if (bean != null) {
-      group = new BeanGroup(null, new ObjectName(bean));
+      group = BeanGroup.forSingleBean(bean);
     } else if (beans != null && !beans.isEmpty()) {
-      ObjectName[] objectNames = new ObjectName[beans.size()];
-      int k = 0;
-      for (String oneBean : beans) {
-        objectNames[k++] = new ObjectName(oneBean);
-      }
-      group = new BeanGroup(null, objectNames);
+      group = BeanGroup.forBeans(beans);
     } else {
       throw new IllegalStateException("No ObjectName specified");
     }
@@ -143,8 +140,7 @@ public class JmxRule extends MetricStructure {
     }
 
     Set<String> attrNames = mapping.keySet();
-    MetricExtractor[] metricExtractors = new MetricExtractor[attrNames.size()];
-    int n = 0;
+    List<MetricExtractor> metricExtractors = new ArrayList<>();
     for (String attributeName : attrNames) {
       BeanAttributeExtractor attrExtractor = BeanAttributeExtractor.fromName(attributeName);
       // This is essentially the same as 'attributeName' but with escape characters removed
@@ -162,44 +158,107 @@ public class JmxRule extends MetricStructure {
         metricInfo = m.buildMetricInfo(prefix, niceAttributeName, getUnit(), getMetricType());
       }
 
-      List<MetricAttribute> attributeList;
       List<MetricAttribute> ownAttributes = getAttributeList();
-      if (ownAttributes != null && m != null && m.getAttributeList() != null) {
-        // MetricAttributes have been specified at two levels, need to combine them
-        attributeList = combineMetricAttributes(ownAttributes, m.getAttributeList());
-      } else if (ownAttributes != null) {
-        attributeList = ownAttributes;
-      } else if (m != null && m.getAttributeList() != null) {
-        // Get the attributes from the metric
-        attributeList = m.getAttributeList();
-      } else {
-        // There are no attributes at all
-        attributeList = new ArrayList<MetricAttribute>();
-      }
+      List<MetricAttribute> metricAttributes = m != null ? m.getAttributeList() : null;
+      List<MetricAttribute> attributeList =
+          combineMetricAttributes(ownAttributes, metricAttributes);
 
-      MetricExtractor metricExtractor =
-          new MetricExtractor(
-              attrExtractor,
-              metricInfo,
-              attributeList.toArray(new MetricAttribute[attributeList.size()]));
-      metricExtractors[n++] = metricExtractor;
+      // higher priority to metric level mapping, then jmx rule as fallback
+      StateMapping stateMapping = getEffectiveStateMapping(m, this);
+
+      if (stateMapping.isEmpty()) {
+        metricExtractors.add(new MetricExtractor(attrExtractor, metricInfo, attributeList));
+      } else {
+
+        // generate one metric extractor per state metric key
+        // each metric extractor will have the state attribute replaced with a constant
+        metricExtractors.addAll(
+            createStateMappingExtractors(stateMapping, attributeList, attrExtractor, metricInfo));
+      }
     }
 
     return new MetricDef(group, metricExtractors);
   }
 
+  private static List<MetricExtractor> createStateMappingExtractors(
+      StateMapping stateMapping,
+      List<MetricAttribute> attributeList,
+      BeanAttributeExtractor attrExtractor,
+      MetricInfo metricInfo) {
+
+    List<MetricExtractor> extractors = new ArrayList<>();
+    for (String key : stateMapping.getStateKeys()) {
+      List<MetricAttribute> stateMetricAttributes = new ArrayList<>();
+
+      for (MetricAttribute ma : attributeList) {
+        // replace state metric attribute with constant key value
+        if (!ma.isStateAttribute()) {
+          stateMetricAttributes.add(ma);
+        } else {
+          stateMetricAttributes.add(
+              new MetricAttribute(
+                  ma.getAttributeName(), MetricAttributeExtractor.fromConstant(key)));
+        }
+      }
+
+      BeanAttributeExtractor stateMetricExtractor =
+          new BeanAttributeExtractor(attrExtractor.getAttributeName()) {
+
+            @Override
+            protected Object getSampleValue(
+                MBeanServerConnection connection, ObjectName objectName) {
+              // metric actual type is sampled in the discovery process, so we have to
+              // make this extractor as extracting integers.
+              return 0;
+            }
+
+            @Override
+            protected Number extractNumericalAttribute(
+                MBeanServerConnection connection, ObjectName objectName) {
+              String rawStateValue = attrExtractor.extractValue(connection, objectName);
+              String mappedStateValue = stateMapping.getStateValue(rawStateValue);
+              return key.equals(mappedStateValue) ? 1 : 0;
+            }
+          };
+
+      // state metric are always up/down counters
+      MetricInfo stateMetricInfo =
+          new MetricInfo(
+              metricInfo.getMetricName(),
+              metricInfo.getDescription(),
+              metricInfo.getUnit(),
+              MetricInfo.Type.UPDOWNCOUNTER);
+
+      extractors.add(
+          new MetricExtractor(stateMetricExtractor, stateMetricInfo, stateMetricAttributes));
+    }
+    return extractors;
+  }
+
   private static List<MetricAttribute> combineMetricAttributes(
       List<MetricAttribute> ownAttributes, List<MetricAttribute> metricAttributes) {
+
     Map<String, MetricAttribute> set = new HashMap<>();
-    for (MetricAttribute ownAttribute : ownAttributes) {
-      set.put(ownAttribute.getAttributeName(), ownAttribute);
+    if (ownAttributes != null) {
+      for (MetricAttribute ownAttribute : ownAttributes) {
+        set.put(ownAttribute.getAttributeName(), ownAttribute);
+      }
+    }
+    if (metricAttributes != null) {
+      // Let the metric level defined attributes override own attributes
+      for (MetricAttribute metricAttribute : metricAttributes) {
+        set.put(metricAttribute.getAttributeName(), metricAttribute);
+      }
     }
 
-    // Let the metric level defined attributes override own attributes
-    for (MetricAttribute metricAttribute : metricAttributes) {
-      set.put(metricAttribute.getAttributeName(), metricAttribute);
-    }
+    return new ArrayList<>(set.values());
+  }
 
-    return new ArrayList<MetricAttribute>(set.values());
+  private static StateMapping getEffectiveStateMapping(Metric m, JmxRule rule) {
+    if (m == null || m.getStateMapping().isEmpty()) {
+      return rule.getStateMapping();
+    } else {
+      return m.getStateMapping();
+    }
   }
 }

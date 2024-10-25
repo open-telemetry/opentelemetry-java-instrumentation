@@ -120,6 +120,13 @@ class MetricRegistrar {
           }
           logger.log(INFO, "Created Gauge for {0}", metricName);
         }
+        break;
+        // CHECKSTYLE:OFF
+      case STATE:
+        {
+          // CHECKSTYLE:ON
+          throw new IllegalStateException("state metrics should not be registered");
+        }
     }
   }
 
@@ -173,9 +180,8 @@ class MetricRegistrar {
    */
   static Attributes createMetricAttributes(
       MBeanServerConnection connection, ObjectName objectName, MetricExtractor extractor) {
-    MetricAttribute[] metricAttributes = extractor.getAttributes();
     AttributesBuilder attrBuilder = Attributes.builder();
-    for (MetricAttribute metricAttribute : metricAttributes) {
+    for (MetricAttribute metricAttribute : extractor.getAttributes()) {
       String attributeValue = metricAttribute.acquireAttributeValue(connection, objectName);
       if (attributeValue != null) {
         attrBuilder = attrBuilder.put(metricAttribute.getAttributeName(), attributeValue);

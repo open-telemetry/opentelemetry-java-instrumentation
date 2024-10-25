@@ -79,3 +79,7 @@ jobs:
       - name: Build Java 21 Docker image
         if: "!inputs.skip-java-21"
         run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -Ptag=${{ env.TAG }} -PtargetJDK=21 -Djib.httpTimeout=120000 -Djib.console=plain
+
+      - name: Build Java 23 Docker image
+        if: "!inputs.skip-java-23"
+        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -Ptag=${{ env.TAG }} -PtargetJDK=23 -Djib.httpTimeout=120000 -Djib.console=plain
