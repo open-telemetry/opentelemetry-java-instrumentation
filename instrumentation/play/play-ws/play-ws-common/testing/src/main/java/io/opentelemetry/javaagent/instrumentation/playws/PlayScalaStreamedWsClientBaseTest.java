@@ -29,7 +29,6 @@ public class PlayScalaStreamedWsClientBaseTest extends PlayWsClientBaseTest<Stan
   private static StandaloneWSClient wsClient;
   private static StandaloneWSClient wsClientWithReadTimeout;
 
-  @BeforeEach
   @Override
   void setup() {
     super.setup();
@@ -38,18 +37,6 @@ public class PlayScalaStreamedWsClientBaseTest extends PlayWsClientBaseTest<Stan
         new StandaloneAhcWSClient(asyncHttpClientWithReadTimeout, materializer);
     autoCleanup.deferCleanup(wsClient);
     autoCleanup.deferCleanup(wsClientWithReadTimeout);
-  }
-
-  @AfterEach
-  @Override
-  void tearDown() throws IOException {
-    if (wsClient != null) {
-      wsClient.close();
-    }
-    if (wsClientWithReadTimeout != null) {
-      wsClientWithReadTimeout.close();
-    }
-    super.tearDown();
   }
 
   @Override

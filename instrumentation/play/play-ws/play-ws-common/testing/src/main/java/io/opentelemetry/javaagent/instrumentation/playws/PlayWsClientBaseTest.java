@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import play.shaded.ahc.io.netty.resolver.InetNameResolver;
 import play.shaded.ahc.io.netty.util.concurrent.EventExecutor;
@@ -46,7 +45,6 @@ abstract class PlayWsClientBaseTest<REQUEST> extends AbstractHttpClientTest<REQU
   protected static AsyncHttpClient asyncHttpClientWithReadTimeout;
   protected static ActorMaterializer materializer;
 
-  @BeforeEach
   void setup() {
     String name = "play-ws";
     system = ActorSystem.create(name);
