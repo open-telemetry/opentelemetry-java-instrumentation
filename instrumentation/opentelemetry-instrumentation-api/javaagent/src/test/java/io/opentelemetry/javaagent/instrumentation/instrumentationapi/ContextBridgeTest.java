@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.instrumentationapi;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.opentelemetry.api.trace.Span;
@@ -18,6 +19,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.testing.AgentSpanTesting;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import java.util.Arrays;
@@ -74,6 +76,18 @@ class ContextBridgeTest {
                   spanKeys.forEach(
                       spanKey -> assertNotNull(spanKey.fromContextOrNull(Context.current()))));
         });
+  }
+
+  @Test
+  void testSpanKeyBridge_UnbridgedSpan() {
+    OpenTelemetrySdk openTelemetry = OpenTelemetrySdk.builder().build();
+    // span is bridged only when it is created though a bridged OpenTelemetry instance obtained
+    // from GlobalOpenTelemetry
+    Span span = openTelemetry.getTracer("test").spanBuilder("test").startSpan();
+
+    Context context = SpanKey.HTTP_CLIENT.storeInContext(Context.current(), span);
+    assertThat(context).isNotNull();
+    assertThat(SpanKey.HTTP_CLIENT.fromContextOrNull(context)).isEqualTo(span);
   }
 
   @Test
