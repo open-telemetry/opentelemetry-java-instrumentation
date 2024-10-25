@@ -131,6 +131,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "aws.sns.topic.arn" "$topicArn"
           }
         }
       }
@@ -154,6 +155,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "aws.sns.topic.arn" "$topicArn"
           }
         }
       }
@@ -176,6 +178,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "$SemanticAttributes.NET_PROTOCOL_VERSION" "1.1"
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" Long
+            "aws.sns.topic.arn" "$topicArn"
           }
         }
         span(1) {

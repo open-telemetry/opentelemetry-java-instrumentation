@@ -444,6 +444,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "aws.sns.topic.arn" "$topicArn"
           }
         }
       }
@@ -467,6 +468,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "aws.sns.topic.arn" "$topicArn"
           }
         }
       }
@@ -514,6 +516,7 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "net.peer.port" { it == null || Number }
             "$SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH" { it == null || it instanceof Long }
             "$SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH" { it == null || it instanceof Long }
+            "aws.sns.topic.arn" "$topicArn"
           }
         }
       }

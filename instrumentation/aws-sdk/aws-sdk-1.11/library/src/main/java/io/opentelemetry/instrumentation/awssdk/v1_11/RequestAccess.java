@@ -23,101 +23,152 @@ final class RequestAccess {
 
   @Nullable
   static String getLambdaName(Object request) {
+    if (request == null) {
+      return null;
+    }
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
     return invokeOrNull(access.getLambdaName, request);
   }
 
   @Nullable
   static String getLambdaResourceId(Object request) {
+    if (request == null) {
+      return null;
+    }
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
     return invokeOrNull(access.getLambdaResourceId, request);
   }
 
   @Nullable
   static String getSecretArn(Object request) {
+    if (request == null) {
+      return null;
+    }
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
     return invokeOrNull(access.getSecretArn, request);
   }
 
   @Nullable
   static String getSnsTopicArn(Object request) {
+    if (request == null) {
+      return null;
+    }
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
     return invokeOrNull(access.getSnsTopicArn, request);
   }
 
   @Nullable
   static String getStepFunctionsActivityArn(Object request) {
+    if (request == null) {
+      return null;
+    }
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
     return invokeOrNull(access.getStepFunctionsActivityArn, request);
   }
 
   @Nullable
   static String getStateMachineArn(Object request) {
+    if (request == null) {
+      return null;
+    }
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
     return invokeOrNull(access.getStateMachineArn, request);
   }
 
   @Nullable
   static String getBucketName(Object request) {
+    if (request == null) {
+      return null;
+    }
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
     return invokeOrNull(access.getBucketName, request);
   }
 
   @Nullable
   static String getQueueUrl(Object request) {
+    if (request == null) {
+      return null;
+    }
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
     return invokeOrNull(access.getQueueUrl, request);
   }
 
   @Nullable
   static String getQueueName(Object request) {
+    if (request == null) {
+      return null;
+    }
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
     return invokeOrNull(access.getQueueName, request);
   }
 
   @Nullable
   static String getStreamName(Object request) {
+    if (request == null) {
+      return null;
+    }
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
     return invokeOrNull(access.getStreamName, request);
   }
 
   @Nullable
   static String getTableName(Object request) {
+    if (request == null) {
+      return null;
+    }
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
     return invokeOrNull(access.getTableName, request);
   }
 
   @Nullable
   static String getAgentId(Object request) {
+    if (request == null) {
+      return null;
+    }
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
     return invokeOrNull(access.getAgentId, request);
   }
 
   @Nullable
   static String getKnowledgeBaseId(Object request) {
+    if (request == null) {
+      return null;
+    }
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
     return invokeOrNull(access.getKnowledgeBaseId, request);
   }
 
   @Nullable
   static String getDataSourceId(Object request) {
+    if (request == null) {
+      return null;
+    }
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
     return invokeOrNull(access.getDataSourceId, request);
   }
 
   @Nullable
   static String getGuardrailId(Object request) {
+    if (request == null) {
+      return null;
+    }
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
     return invokeOrNull(access.getGuardrailId, request);
   }
 
   @Nullable
   static String getGuardrailArn(Object request) {
+    if (request == null) {
+      return null;
+    }
     return findNestedAccessorOrNull(request, "getGuardrailArn");
   }
 
   @Nullable
   static String getModelId(Object request) {
+    if (request == null) {
+      return null;
+    }
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
     return invokeOrNull(access.getModelId, request);
   }

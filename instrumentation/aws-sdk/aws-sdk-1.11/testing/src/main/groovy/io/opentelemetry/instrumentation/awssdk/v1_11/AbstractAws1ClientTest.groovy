@@ -35,6 +35,7 @@ import com.amazonaws.services.bedrock.AmazonBedrockClientBuilder
 import com.amazonaws.services.bedrock.model.GetGuardrailRequest
 import com.amazonaws.services.bedrockruntime.AmazonBedrockRuntimeClientBuilder
 import com.amazonaws.services.bedrockruntime.model.InvokeModelRequest
+import com.amazonaws.services.stepfunctions.AWSStepFunctionsClientBuilder
 import com.amazonaws.services.stepfunctions.model.DescribeStateMachineRequest
 import com.amazonaws.services.stepfunctions.model.DescribeActivityRequest
 import com.amazonaws.services.sns.AmazonSNSClientBuilder
@@ -174,14 +175,15 @@ abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
           </ResponseMetadata>
         </DeleteOptionGroupResponse>
       """
-    "Bedrock"    | "GetGuardrail"      | "GET" | "/"                   | AmazonBedrockClientBuilder.standard()                             | { c -> c.getGuardrail(new GetGuardrailRequest().withGuardrailIdentifier("guardrailId")) } | ["aws.bedrock.guardrail.id": "guardrailId"] | """
+    "Bedrock"    | "GetGuardrail"      | "GET" | "/"                   |
+    AmazonBedrockClientBuilder.standard()                             | { c -> c.getGuardrail(new GetGuardrailRequest().withGuardrailIdentifier("guardrailId")) } | ["aws.bedrock.guardrail.id":"guardrailId", "aws.bedrock.guardrail.arn": "guardrailArn"] | """
         {
            "blockedInputMessaging": "string",
            "blockedOutputsMessaging": "string",
            "contentPolicy": {},
            "createdAt": "2024-06-12T18:31:45Z",
            "description": "string",
-           "guardrailArn": "string",
+           "guardrailArn": "guardrailArn",
            "guardrailId": "guardrailId",
            "kmsKeyArn": "string",
            "name": "string",
