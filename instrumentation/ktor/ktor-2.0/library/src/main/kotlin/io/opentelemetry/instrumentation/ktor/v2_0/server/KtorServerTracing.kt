@@ -17,19 +17,17 @@ import io.opentelemetry.api.common.AttributesBuilder
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.context.Context
 import io.opentelemetry.extension.kotlin.asContextElement
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil
-import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor
-import io.opentelemetry.instrumentation.api.semconv.http.HttpServerMetrics
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource
-import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor
-import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor
 import io.opentelemetry.instrumentation.ktor.v2_0.InstrumentationProperties.INSTRUMENTATION_NAME
+import io.opentelemetry.instrumentation.ktor.v2_0.internal.KtorBuilderUtil
 import kotlinx.coroutines.withContext
 
 class KtorServerTracing private constructor(
@@ -37,42 +35,45 @@ class KtorServerTracing private constructor(
 ) {
 
   class Configuration {
-    internal lateinit var openTelemetry: OpenTelemetry
+    companion object {
+      init {
+        KtorBuilderUtil.serverBuilderExtractor = { it.serverBuilder }
+      }
+    }
 
-    internal val additionalExtractors = mutableListOf<AttributesExtractor<in ApplicationRequest, in ApplicationResponse>>()
-
-    internal val httpAttributesExtractorBuilder = HttpServerAttributesExtractor.builder(KtorHttpServerAttributesGetter.INSTANCE)
-
-    internal val httpSpanNameExtractorBuilder = HttpSpanNameExtractor.builder(KtorHttpServerAttributesGetter.INSTANCE)
-
-    internal val httpServerRouteBuilder = HttpServerRoute.builder(KtorHttpServerAttributesGetter.INSTANCE)
-
-    internal var statusExtractor:
-      (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse> = { a -> a }
+    internal lateinit var serverBuilder: DefaultHttpServerInstrumenterBuilder<ApplicationRequest, ApplicationResponse>
 
     internal var spanKindExtractor:
       (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest> = { a -> a }
 
     fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
-      this.openTelemetry = openTelemetry
+      this.serverBuilder =
+        DefaultHttpServerInstrumenterBuilder.create(
+          INSTRUMENTATION_NAME,
+          openTelemetry,
+          KtorHttpServerAttributesGetter.INSTANCE
+        )
     }
 
     @Deprecated("Please use method `spanStatusExtractor`")
     fun setStatusExtractor(
-      extractor: (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>
+      extractor: (SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>
     ) {
       spanStatusExtractor { prevStatusExtractor ->
         extractor(prevStatusExtractor).extract(spanStatusBuilder, request, response, error)
       }
     }
 
-    fun spanStatusExtractor(extract: SpanStatusData.(SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> Unit) {
-      statusExtractor = { prevExtractor ->
-        SpanStatusExtractor<ApplicationRequest, ApplicationResponse> { spanStatusBuilder: SpanStatusBuilder,
-                                                                       request: ApplicationRequest,
-                                                                       response: ApplicationResponse?,
-                                                                       throwable: Throwable? ->
-          extract(SpanStatusData(spanStatusBuilder, request, response, throwable), prevExtractor)
+    fun spanStatusExtractor(extract: SpanStatusData.(SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>) -> Unit) {
+      serverBuilder.setStatusExtractor { prevExtractor ->
+        SpanStatusExtractor { spanStatusBuilder: SpanStatusBuilder,
+                              request: ApplicationRequest,
+                              response: ApplicationResponse?,
+                              throwable: Throwable? ->
+          extract(
+            SpanStatusData(spanStatusBuilder, request, response, throwable),
+            prevExtractor
+          )
         }
       }
     }
@@ -113,7 +114,7 @@ class KtorServerTracing private constructor(
 
     fun attributeExtractor(extractorBuilder: ExtractorBuilder.() -> Unit = {}) {
       val builder = ExtractorBuilder().apply(extractorBuilder).build()
-      additionalExtractors.add(
+      serverBuilder.addAttributesExtractor(
         object : AttributesExtractor<ApplicationRequest, ApplicationResponse> {
           override fun onStart(attributes: AttributesBuilder, parentContext: Context, request: ApplicationRequest) {
             builder.onStart(OnStartData(attributes, parentContext, request))
@@ -168,7 +169,7 @@ class KtorServerTracing private constructor(
     fun capturedRequestHeaders(vararg headers: String) = capturedRequestHeaders(headers.asIterable())
 
     fun capturedRequestHeaders(headers: Iterable<String>) {
-      httpAttributesExtractorBuilder.setCapturedRequestHeaders(headers.toList())
+      serverBuilder.setCapturedRequestHeaders(headers.toList())
     }
 
     @Deprecated(
@@ -180,7 +181,7 @@ class KtorServerTracing private constructor(
     fun capturedResponseHeaders(vararg headers: String) = capturedResponseHeaders(headers.asIterable())
 
     fun capturedResponseHeaders(headers: Iterable<String>) {
-      httpAttributesExtractorBuilder.setCapturedResponseHeaders(headers.toList())
+      serverBuilder.setCapturedResponseHeaders(headers.toList())
     }
 
     @Deprecated(
@@ -198,13 +199,14 @@ class KtorServerTracing private constructor(
 
     fun knownMethods(methods: Iterable<String>) {
       methods.toSet().apply {
-        httpAttributesExtractorBuilder.setKnownMethods(this)
-        httpSpanNameExtractorBuilder.setKnownMethods(this)
-        httpServerRouteBuilder.setKnownMethods(this)
+        serverBuilder.setKnownMethods(this)
       }
     }
 
-    internal fun isOpenTelemetryInitialized(): Boolean = this::openTelemetry.isInitialized
+    /**
+     * {@link #setOpenTelemetry(OpenTelemetry)} sets the serverBuilder to a non-null value.
+     */
+    internal fun isOpenTelemetryInitialized(): Boolean = this::serverBuilder.isInitialized
   }
 
   private fun start(call: ApplicationCall): Context? {
@@ -232,25 +234,8 @@ class KtorServerTracing private constructor(
 
       require(configuration.isOpenTelemetryInitialized()) { "OpenTelemetry must be set" }
 
-      val httpAttributesGetter = KtorHttpServerAttributesGetter.INSTANCE
-
-      val instrumenterBuilder = Instrumenter.builder<ApplicationRequest, ApplicationResponse>(
-        configuration.openTelemetry,
-        INSTRUMENTATION_NAME,
-        configuration.httpSpanNameExtractorBuilder.build()
-      )
-
-      configuration.additionalExtractors.forEach { instrumenterBuilder.addAttributesExtractor(it) }
-
-      with(instrumenterBuilder) {
-        setSpanStatusExtractor(configuration.statusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter)))
-        addAttributesExtractor(configuration.httpAttributesExtractorBuilder.build())
-        addOperationMetrics(HttpServerMetrics.get())
-        addContextCustomizer(configuration.httpServerRouteBuilder.build())
-      }
-
       val instrumenter = InstrumenterUtil.buildUpstreamInstrumenter(
-        instrumenterBuilder,
+        configuration.serverBuilder.instrumenterBuilder(),
         ApplicationRequestGetter,
         configuration.spanKindExtractor(SpanKindExtractor.alwaysServer())
       )

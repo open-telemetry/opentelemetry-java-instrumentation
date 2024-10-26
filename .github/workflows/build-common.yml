@@ -26,7 +26,7 @@ jobs:
   spotless:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
+      - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -52,14 +52,14 @@ jobs:
   gradle-wrapper-validation:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
+      - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
 
       - uses: gradle/actions/wrapper-validation@d156388eb19639ec20ade50009f3d199ce1e2808 # v4.1.0
 
   license-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
+      - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -94,9 +94,9 @@ jobs:
           else
             echo "Licenses are not up-to-date, please run './gradlew generateLicenseReport --no-build-cache' locally and commit."
             echo
-            echo "$(git diff --cached --stat licenses)"
+            git diff --cached --stat licenses
             echo
-            echo "$(git diff --cached licenses)"
+            git diff --cached licenses
             exit 1
           fi
 
@@ -105,7 +105,7 @@ jobs:
   extra-dependency-management-enforcement:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
+      - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
 
       - name: Dependency check
         run: |
@@ -128,7 +128,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
+      - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -165,13 +165,13 @@ jobs:
             echo "No diff detected."
           else
             echo "Diff detected - did you run './gradlew jApiCmp'?"
-            echo $(git diff --cached --name-only)
-            echo $(git diff --cached)
+            git diff --cached --name-only
+            git diff --cached
             exit 1
           fi
 
       - name: Upload agent jar
-        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: opentelemetry-javaagent.jar
           path: javaagent/build/libs/opentelemetry-javaagent-*-SNAPSHOT.jar
@@ -182,7 +182,7 @@ jobs:
           mkdir sboms
           cp javaagent/build/spdx/*.spdx.json sboms
 
-      - uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
+      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         name: Upload SBOMs
         with:
           name: opentelemetry-java-instrumentation-SBOM.zip
@@ -209,11 +209,9 @@ jobs:
           - 3
         exclude:
           - vm: ${{ inputs.skip-openj9-tests && 'openj9' || '' }}
-          - test-java-version: 23
-            vm: openj9
       fail-fast: false
     steps:
-      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
+      - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -240,7 +238,7 @@ jobs:
 
       # vaadin tests use pnpm
       - name: Cache pnpm modules
-        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        uses: actions/cache@3624ceb22c1c5a301c8db4169662070a689d9ea8 # v4.1.1
         with:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-test-cache-pnpm-modules
@@ -291,7 +289,7 @@ jobs:
 
       - name: Upload deadlock detector artifacts if any
         if: failure()
-        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: deadlock-detector-test-${{ matrix.test-java-version }}-${{ matrix.vm }}-${{ matrix.test-partition }}
           path: /tmp/deadlock-detector-*
@@ -299,7 +297,7 @@ jobs:
 
       - name: Upload jvm crash dump files if any
         if: failure()
-        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: javacore-test-${{ matrix.test-java-version }}-${{ matrix.test-partition }}
           path: |
@@ -336,7 +334,7 @@ jobs:
         run: git config --system core.longpaths true
         if: matrix.os == 'windows-latest'
 
-      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
+      - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -368,7 +366,7 @@ jobs:
 
       - name: Upload jvm crash dump files if any
         if: failure()
-        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
         with:
           name: javacore-smoke-test-${{ matrix.smoke-test-suite }}-${{ matrix.os }}
           # we expect crash dumps either in root director or in smoke-tests
@@ -389,7 +387,7 @@ jobs:
   gradle-plugins:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
+      - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -412,7 +410,7 @@ jobs:
   examples:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
+      - uses: actions/checkout@eef61447b9ff4aafe5dcd4e0bbf5d482be7e7871 # v4.2.1
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh

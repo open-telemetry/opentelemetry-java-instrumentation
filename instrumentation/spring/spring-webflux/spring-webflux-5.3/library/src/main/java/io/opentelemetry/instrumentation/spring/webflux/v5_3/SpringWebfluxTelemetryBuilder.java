@@ -40,10 +40,10 @@ public final class SpringWebfluxTelemetryBuilder {
 
   SpringWebfluxTelemetryBuilder(OpenTelemetry openTelemetry) {
     clientBuilder =
-        new DefaultHttpClientInstrumenterBuilder<>(
+        DefaultHttpClientInstrumenterBuilder.create(
             INSTRUMENTATION_NAME, openTelemetry, WebClientHttpAttributesGetter.INSTANCE);
     serverBuilder =
-        new DefaultHttpServerInstrumenterBuilder<>(
+        DefaultHttpServerInstrumenterBuilder.create(
             INSTRUMENTATION_NAME,
             openTelemetry,
             WebfluxServerHttpAttributesGetter.INSTANCE,
