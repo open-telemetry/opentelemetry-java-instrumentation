@@ -14,10 +14,10 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Sets;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
@@ -26,6 +26,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.semconv.HttpAttributes;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -89,12 +90,19 @@ class JettyHandlerTest extends AbstractHttpServerTest<Server> {
   @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
+    String methodName;
     if (endpoint == REDIRECT) {
-      span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendRedirect"));
+      methodName = "sendRedirect";
     } else if (endpoint == ERROR) {
-      span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"));
+      methodName = "sendError";
+    } else {
+      throw new AssertionError("Unexpected endpoint: " + endpoint.name());
     }
-    span.hasKind(SpanKind.INTERNAL).hasAttributesSatisfying(Attributes::isEmpty);
+    span.hasKind(SpanKind.INTERNAL)
+        .satisfies(spanData -> assertThat(spanData.getName()).endsWith("." + methodName))
+        .hasAttributesSatisfyingExactly(
+            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, methodName),
+            equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, "org.eclipse.jetty.server.Response"));
     return span;
   }
 
