@@ -32,6 +32,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import io.opentelemetry.semconv.HttpAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import reactor.core.publisher.Mono;
@@ -95,12 +96,12 @@ class AzureSdkTest {
                     span.hasName("myService.testMethod")
                         .hasKind(SpanKind.INTERNAL)
                         .hasStatus(StatusData.unset())
-                        .hasAttributesSatisfyingExactly(),
+                        .hasAttributes(Attributes.empty()),
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .hasName(Boolean.getBoolean("testLatestDeps") ? "GET" : "HTTP GET")
                         .hasStatus(StatusData.unset())
-                        .hasAttribute(AttributeKey.longKey("http.response.status_code"), 200L)));
+                        .hasAttribute(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L)));
   }
 
   @Test
