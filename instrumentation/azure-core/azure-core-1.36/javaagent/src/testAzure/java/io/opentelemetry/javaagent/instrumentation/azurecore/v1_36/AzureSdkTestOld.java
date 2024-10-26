@@ -50,7 +50,7 @@ class AzureSdkTestOld {
                     span.hasName("hello")
                         .hasKind(SpanKind.INTERNAL)
                         .hasStatus(StatusData.unset())
-                        .hasAttributesSatisfying(Attributes::isEmpty)));
+                        .hasAttributes(Attributes.empty())));
   }
 
   private static com.azure.core.util.tracing.Tracer createAzTracer() {
