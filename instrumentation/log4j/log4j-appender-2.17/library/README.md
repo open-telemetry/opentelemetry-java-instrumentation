@@ -27,7 +27,7 @@ For Maven, add to your `pom.xml` dependencies:
 For Gradle, add to your dependencies:
 
 ```groovy
-runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-log4j-appender-2.17:OPENTELEMETRY_VERSION")
+implementation("io.opentelemetry.instrumentation:opentelemetry-log4j-appender-2.17:OPENTELEMETRY_VERSION")
 ```
 
 ### Usage
