@@ -20,7 +20,6 @@ For Maven, add to your `pom.xml` dependencies:
     <groupId>io.opentelemetry.instrumentation</groupId>
     <artifactId>opentelemetry-log4j-appender-2.17</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
-    <scope>runtime</scope>
   </dependency>
 </dependencies>
 ```
