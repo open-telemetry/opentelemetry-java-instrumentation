@@ -24,15 +24,19 @@ class KafkaStreamReflectionUtil {
   static Object createBuilder() throws Exception {
     try {
       // Different class names for test and latestDepTest.
-      return Class.forName("org.apache.kafka.streams.kstream.KStreamBuilder").getConstructors()[0].newInstance();
+      return Class.forName("org.apache.kafka.streams.kstream.KStreamBuilder")
+          .getConstructors()[0]
+          .newInstance();
     } catch (Exception e) {
-      return Class.forName("org.apache.kafka.streams.StreamsBuilder").getConstructors()[0].newInstance();
+      return Class.forName("org.apache.kafka.streams.StreamsBuilder")
+          .getConstructors()[0]
+          .newInstance();
     }
   }
 
   @SuppressWarnings("unchecked")
-  static KStream<Integer, String> stream(Object builder, String topic) throws Exception
-    // Different api for test and latestDepTest.
+  static KStream<Integer, String> stream(Object builder, String topic)
+      throws Exception { // Different api for test and latestDepTest.
     try {
       // equivalent to:
       // ((org.apache.kafka.streams.kstream.KStreamBuilder)builder).stream(STREAM_PENDING);

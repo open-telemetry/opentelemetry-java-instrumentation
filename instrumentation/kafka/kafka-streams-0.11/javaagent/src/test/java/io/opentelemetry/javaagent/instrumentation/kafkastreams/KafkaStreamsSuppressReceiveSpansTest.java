@@ -21,7 +21,6 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -29,8 +28,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -47,15 +44,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
 
   @DisplayName("test kafka produce and consume with streams in-between")
   @Test
-  void testKafkaProduceAndConsumeWithStreamsInBetween()
-      throws ExecutionException,
-          InterruptedException,
-          TimeoutException,
-          InstantiationException,
-          IllegalAccessException,
-          ClassNotFoundException,
-          NoSuchMethodException,
-          InvocationTargetException {
+  void testKafkaProduceAndConsumeWithStreamsInBetween() throws Exception {
     Properties config = new Properties();
     config.putAll(producerProps(KafkaStreamsBaseTest.kafka.getBootstrapServers()));
     config.put(StreamsConfig.APPLICATION_ID_CONFIG, "test-application");
