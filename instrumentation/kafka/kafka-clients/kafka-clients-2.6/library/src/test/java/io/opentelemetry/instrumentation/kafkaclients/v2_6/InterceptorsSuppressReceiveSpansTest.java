@@ -34,7 +34,7 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
                                 SHARED_TOPIC),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
                             satisfies(
-                                MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
+                                MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("producer"))),
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
@@ -59,7 +59,7 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
                                 MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
                                 "test"),
                             satisfies(
-                                MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
+                                MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("consumer"))),
                 span ->
                     span.hasName("process child")
