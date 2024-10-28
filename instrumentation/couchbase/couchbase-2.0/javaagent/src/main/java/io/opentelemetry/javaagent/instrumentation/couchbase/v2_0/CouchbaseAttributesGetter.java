@@ -13,7 +13,7 @@ final class CouchbaseAttributesGetter implements DbClientAttributesGetter<Couchb
 
   @Override
   public String getDbSystem(CouchbaseRequestInfo couchbaseRequest) {
-    return DbIncubatingAttributes.DbSystemValues.COUCHBASE;
+    return DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE;
   }
 
   @Deprecated

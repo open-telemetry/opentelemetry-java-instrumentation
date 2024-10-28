@@ -32,7 +32,7 @@ final class ClickHouseAttributesGetter implements DbClientAttributesGetter<Click
   @Nullable
   @Override
   public String getDbSystem(ClickHouseDbRequest request) {
-    return DbIncubatingAttributes.DbSystemValues.CLICKHOUSE;
+    return DbIncubatingAttributes.DbSystemIncubatingValues.CLICKHOUSE;
   }
 
   @Deprecated

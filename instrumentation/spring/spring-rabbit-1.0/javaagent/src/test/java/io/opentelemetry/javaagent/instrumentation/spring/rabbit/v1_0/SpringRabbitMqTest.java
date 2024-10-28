@@ -95,6 +95,7 @@ public class SpringRabbitMqTest {
     }
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> getAssertions(
       String destination,
       String operation,

@@ -15,6 +15,7 @@ import org.assertj.core.api.AbstractStringAssert;
 
 class SpringListenerSuppressReceiveSpansTest extends AbstractSpringJmsListenerTest {
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   void assertSpringJmsListener() {
     testing.waitAndAssertTraces(

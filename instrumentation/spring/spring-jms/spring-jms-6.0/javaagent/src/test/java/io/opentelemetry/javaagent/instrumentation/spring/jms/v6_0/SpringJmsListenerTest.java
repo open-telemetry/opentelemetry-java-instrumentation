@@ -31,6 +31,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.jms.core.JmsTemplate;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
 
   @Override

@@ -46,7 +46,7 @@ val asmVersion = "9.7.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.16"
-val semConvVersion = "1.25.0-alpha"
+val semConvVersion = "1.28.0-alpha"
 
 val CORE_DEPENDENCIES = listOf(
   "io.opentelemetry.semconv:opentelemetry-semconv:${semConvVersion}",
@@ -87,7 +87,7 @@ val DEPENDENCIES = listOf(
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.12.0",
+  "com.uber.nullaway:nullaway:0.12.1",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.9.0",
   "commons-codec:commons-codec:1.17.1",

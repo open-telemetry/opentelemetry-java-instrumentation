@@ -158,7 +158,7 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
             "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
             "$ServerAttributes.SERVER_ADDRESS" "localhost"
             "$ServerAttributes.SERVER_PORT" sqsPort
-            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS
+            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
             "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
@@ -179,7 +179,7 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
             "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
             "$ServerAttributes.SERVER_ADDRESS" "localhost"
             "$ServerAttributes.SERVER_PORT" sqsPort
-            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS
+            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
             "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
@@ -330,7 +330,7 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
             "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
             "$ServerAttributes.SERVER_ADDRESS" "localhost"
             "$ServerAttributes.SERVER_PORT" sqsPort
-            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS
+            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
           }
@@ -352,7 +352,7 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
               "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
               "$ServerAttributes.SERVER_ADDRESS" "localhost"
               "$ServerAttributes.SERVER_PORT" sqsPort
-              "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS
+              "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS
               "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
               "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
               "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
@@ -380,7 +380,7 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
               "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
               "$ServerAttributes.SERVER_ADDRESS" "localhost"
               "$ServerAttributes.SERVER_PORT" sqsPort
-              "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS
+              "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS
               "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
               "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
               "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String

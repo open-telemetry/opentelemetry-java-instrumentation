@@ -5,9 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH;
-
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class ElasticsearchTransportAttributesGetter
@@ -15,7 +14,7 @@ final class ElasticsearchTransportAttributesGetter
 
   @Override
   public String getDbSystem(ElasticTransportRequest request) {
-    return ELASTICSEARCH;
+    return DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH;
   }
 
   @Deprecated

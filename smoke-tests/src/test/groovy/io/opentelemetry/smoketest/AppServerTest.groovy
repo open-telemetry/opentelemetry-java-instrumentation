@@ -16,8 +16,8 @@ import java.util.jar.Attributes
 import java.util.jar.JarFile
 
 import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OS_TYPE
-import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeValues.LINUX
-import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeValues.WINDOWS
+import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.LINUX
+import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.WINDOWS
 import static org.junit.Assume.assumeFalse
 import static org.junit.Assume.assumeTrue
 

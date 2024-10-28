@@ -42,6 +42,7 @@ class AwsSpanAssertions {
     return sqs(span, spanName, queueUrl, queueName, CLIENT);
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   static SpanDataAssert sqs(
       SpanDataAssert span, String spanName, String queueUrl, String queueName, SpanKind spanKind) {
 
@@ -100,7 +101,7 @@ class AwsSpanAssertions {
               equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, queueName),
               equalTo(
                   MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                  MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS)));
+                  MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS)));
       if (spanName.endsWith("receive")) {
         attributeAssertions.add(
             equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "receive"));

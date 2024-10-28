@@ -816,7 +816,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     }
   }
 
-  // Ignoring deprecation warning for use of SemanticAttributes
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static void verifyMessagingAttributes(
       SpanDataAssert span, String exchange, String routingKey, String operation) {
     span.hasAttribute(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "rabbitmq")

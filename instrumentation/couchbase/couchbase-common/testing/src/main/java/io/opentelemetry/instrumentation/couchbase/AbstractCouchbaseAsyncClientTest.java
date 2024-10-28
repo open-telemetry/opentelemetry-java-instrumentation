@@ -35,6 +35,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbaseTest {
 
   private static final int TIMEOUT_SECONDS = 10;
@@ -89,7 +90,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.COUCHBASE),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE),
                             equalTo(
                                 SemconvStabilityUtil.getAttributeKey(
                                     DbIncubatingAttributes.DB_OPERATION),
@@ -133,7 +134,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.COUCHBASE),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE),
                             equalTo(
                                 SemconvStabilityUtil.getAttributeKey(
                                     DbIncubatingAttributes.DB_OPERATION),
@@ -184,7 +185,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.COUCHBASE),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE),
                             equalTo(
                                 SemconvStabilityUtil.getAttributeKey(
                                     DbIncubatingAttributes.DB_OPERATION),
@@ -232,7 +233,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.COUCHBASE),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE),
                             equalTo(
                                 SemconvStabilityUtil.getAttributeKey(
                                     DbIncubatingAttributes.DB_OPERATION),

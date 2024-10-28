@@ -25,7 +25,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings({"InterruptedExceptionSwallowed"})
+@SuppressWarnings({"InterruptedExceptionSwallowed", "deprecation"}) // using deprecated semconv
 public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceClientTest {
 
   protected static String expectedHostAttributeValue;

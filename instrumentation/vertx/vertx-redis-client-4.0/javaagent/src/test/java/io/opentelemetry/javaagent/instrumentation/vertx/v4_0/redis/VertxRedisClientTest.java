@@ -201,6 +201,7 @@ class VertxRedisClientTest {
                             redisSpanAttributes("RANDOMKEY", "RANDOMKEY"))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static AttributeAssertion[] redisSpanAttributes(String operation, String statement) {
     // not testing database/dup
     if (SemconvStability.emitStableDatabaseSemconv()) {

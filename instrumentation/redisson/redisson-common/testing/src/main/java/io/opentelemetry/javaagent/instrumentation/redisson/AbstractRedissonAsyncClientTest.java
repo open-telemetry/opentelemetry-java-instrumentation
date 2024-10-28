@@ -48,6 +48,7 @@ import org.redisson.config.Config;
 import org.redisson.config.SingleServerConfig;
 import org.testcontainers.containers.GenericContainer;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractRedissonAsyncClientTest {
 
