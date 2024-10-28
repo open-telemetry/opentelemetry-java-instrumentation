@@ -66,11 +66,10 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      OpenTelemetryHandlerMappingFilter filter = springCtx.getBean("otelAutoDispatcherFilter",
-          OpenTelemetryHandlerMappingFilter.class);
+      OpenTelemetryHandlerMappingFilter filter =
+          springCtx.getBean("otelAutoDispatcherFilter", OpenTelemetryHandlerMappingFilter.class);
       filter.setHandlerMappings(handlerMappings);
     }
-
   }
 
   @SuppressWarnings("unused")
