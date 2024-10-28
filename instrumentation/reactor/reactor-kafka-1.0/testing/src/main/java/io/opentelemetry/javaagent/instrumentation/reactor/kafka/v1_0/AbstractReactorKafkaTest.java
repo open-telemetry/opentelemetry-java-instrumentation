@@ -12,6 +12,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -184,7 +185,7 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
                 satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
+                    AttributeKey.stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("producer")),
                 satisfies(
                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
@@ -209,7 +210,7 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "receive"),
                 satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
+                    AttributeKey.stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("consumer")),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 1)));
     if (Boolean.getBoolean("hasConsumerGroup")) {
@@ -228,7 +229,7 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
                 satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
+                    AttributeKey.stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("consumer")),
                 satisfies(
                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
