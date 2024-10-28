@@ -30,7 +30,7 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    */
   @CanIgnoreReturnValue
   @Deprecated
-  public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setOldSemconvTableAttribute(
+  public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setTableAttribute(
       AttributeKey<String> oldSemconvTableAttribute) {
     this.oldSemconvTableAttribute = requireNonNull(oldSemconvTableAttribute);
     return this;

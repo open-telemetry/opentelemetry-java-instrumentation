@@ -31,8 +31,7 @@ public final class SemconvStability {
         stableDatabase = true;
       }
       // no else -- technically it's possible to set "database,database/dup", in which case we
-      // should emit
-      // both sets of attributes
+      // should emit both sets of attributes
       if (values.contains("database/dup")) {
         oldDatabase = true;
         stableDatabase = true;

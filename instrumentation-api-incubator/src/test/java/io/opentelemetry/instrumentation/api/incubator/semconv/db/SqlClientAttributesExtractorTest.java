@@ -162,7 +162,7 @@ class SqlClientAttributesExtractorTest {
 
     AttributesExtractor<Map<String, String>, Void> underTest =
         SqlClientAttributesExtractor.<Map<String, String>, Void>builder(new TestAttributesGetter())
-            .setOldSemconvTableAttribute(DbIncubatingAttributes.DB_CASSANDRA_TABLE)
+            .setTableAttribute(DbIncubatingAttributes.DB_CASSANDRA_TABLE)
             .build();
 
     // when

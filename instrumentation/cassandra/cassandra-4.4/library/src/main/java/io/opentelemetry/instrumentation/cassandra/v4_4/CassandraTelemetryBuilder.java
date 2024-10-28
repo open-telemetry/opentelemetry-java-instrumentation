@@ -59,7 +59,7 @@ public class CassandraTelemetryBuilder {
             openTelemetry, INSTRUMENTATION_NAME, DbClientSpanNameExtractor.create(attributesGetter))
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(attributesGetter)
-                .setOldSemconvTableAttribute(DB_CASSANDRA_TABLE)
+                .setTableAttribute(DB_CASSANDRA_TABLE)
                 .setStatementSanitizationEnabled(statementSanitizationEnabled)
                 .build())
         .addAttributesExtractor(

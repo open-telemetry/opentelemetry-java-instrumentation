@@ -33,7 +33,7 @@ public final class CassandraSingletons {
                 DbClientSpanNameExtractor.create(attributesGetter))
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(attributesGetter)
-                    .setOldSemconvTableAttribute(DbIncubatingAttributes.DB_CASSANDRA_TABLE)
+                    .setTableAttribute(DbIncubatingAttributes.DB_CASSANDRA_TABLE)
                     .setStatementSanitizationEnabled(
                         AgentCommonConfig.get().isStatementSanitizationEnabled())
                     .build())
