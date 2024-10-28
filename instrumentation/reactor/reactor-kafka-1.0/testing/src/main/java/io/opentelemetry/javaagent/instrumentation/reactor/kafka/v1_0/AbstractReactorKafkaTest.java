@@ -175,6 +175,7 @@ public abstract class AbstractReactorKafkaTest {
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> sendAttributes(ProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -199,6 +200,7 @@ public abstract class AbstractReactorKafkaTest {
     return assertions;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> receiveAttributes(String topic) {
     ArrayList<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -216,6 +218,7 @@ public abstract class AbstractReactorKafkaTest {
     return assertions;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> processAttributes(
       ProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =

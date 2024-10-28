@@ -18,7 +18,7 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
 
   @Override
   public String getSystem(GeodeRequest request) {
-    return DbIncubatingAttributes.DbSystemValues.GEODE;
+    return DbIncubatingAttributes.DbSystemIncubatingValues.GEODE;
   }
 
   @Override

@@ -195,6 +195,7 @@ public abstract class AbstractVertxKafkaTest {
     }
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> sendAttributes(
       KafkaProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
@@ -228,6 +229,7 @@ public abstract class AbstractVertxKafkaTest {
     return batchConsumerAttributes(topic, "process");
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> batchConsumerAttributes(String topic, String operation) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -248,6 +250,7 @@ public abstract class AbstractVertxKafkaTest {
     return assertions;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> processAttributes(
       KafkaProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =

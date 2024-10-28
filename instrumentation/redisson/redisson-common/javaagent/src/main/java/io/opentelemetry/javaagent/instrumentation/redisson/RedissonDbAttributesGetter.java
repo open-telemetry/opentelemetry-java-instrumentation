@@ -13,7 +13,7 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
 
   @Override
   public String getSystem(RedissonRequest request) {
-    return DbIncubatingAttributes.DbSystemValues.REDIS;
+    return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
   }
 
   @Nullable

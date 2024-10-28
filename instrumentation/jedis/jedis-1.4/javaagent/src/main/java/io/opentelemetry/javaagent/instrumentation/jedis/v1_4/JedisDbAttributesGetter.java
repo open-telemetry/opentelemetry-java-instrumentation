@@ -18,7 +18,7 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
 
   @Override
   public String getSystem(JedisRequest request) {
-    return DbIncubatingAttributes.DbSystemValues.REDIS;
+    return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
   }
 
   @Override

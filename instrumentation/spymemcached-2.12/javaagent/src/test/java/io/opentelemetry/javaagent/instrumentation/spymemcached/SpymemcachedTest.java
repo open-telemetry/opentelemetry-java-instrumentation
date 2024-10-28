@@ -144,7 +144,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.MEMCACHED),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "get"),
                             equalTo(stringKey("spymemcached.result"), "hit"))));
   }
@@ -166,7 +166,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.MEMCACHED),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "get"),
                             equalTo(stringKey("spymemcached.result"), "miss"))));
   }
@@ -201,7 +201,7 @@ class SpymemcachedTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.MEMCACHED),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "get"),
                             equalTo(booleanKey("spymemcached.command.cancelled"), true))));
   }

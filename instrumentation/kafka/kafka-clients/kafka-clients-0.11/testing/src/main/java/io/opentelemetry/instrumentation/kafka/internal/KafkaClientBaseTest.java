@@ -153,6 +153,7 @@ public abstract class KafkaClientBaseTest {
     consumer.seekToBeginning(Collections.emptyList());
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> sendAttributes(
       String messageKey, String messageValue, boolean testHeaders) {
     List<AttributeAssertion> assertions =
@@ -187,6 +188,7 @@ public abstract class KafkaClientBaseTest {
     return assertions;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> receiveAttributes(boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -213,6 +215,7 @@ public abstract class KafkaClientBaseTest {
     return assertions;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> processAttributes(
       String messageKey, String messageValue, boolean testHeaders) {
     List<AttributeAssertion> assertions =

@@ -17,6 +17,7 @@ enum VertxRedisClientAttributesExtractor
     implements AttributesExtractor<VertxRedisClientRequest, Void> {
   INSTANCE;
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, VertxRedisClientRequest request) {

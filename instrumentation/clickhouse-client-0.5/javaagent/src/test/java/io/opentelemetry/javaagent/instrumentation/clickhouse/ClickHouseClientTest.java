@@ -334,7 +334,9 @@ class ClickHouseClientTest {
 
   private static List<AttributeAssertion> attributeAssertions(String statement, String operation) {
     return asList(
-        equalTo(DbIncubatingAttributes.DB_SYSTEM, DbIncubatingAttributes.DbSystemValues.CLICKHOUSE),
+        equalTo(
+            DbIncubatingAttributes.DB_SYSTEM,
+            DbIncubatingAttributes.DbSystemIncubatingValues.CLICKHOUSE),
         equalTo(DbIncubatingAttributes.DB_NAME, dbName),
         equalTo(ServerAttributes.SERVER_ADDRESS, host),
         equalTo(ServerAttributes.SERVER_PORT, port),

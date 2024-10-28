@@ -171,7 +171,7 @@ class Elasticsearch53SpringTemplateTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "RefreshAction"),
                             equalTo(stringKey("elasticsearch.action"), "RefreshAction"),
                             equalTo(stringKey("elasticsearch.request"), "RefreshRequest"),
@@ -226,7 +226,7 @@ class Elasticsearch53SpringTemplateTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "CreateIndexAction"),
                             equalTo(stringKey("elasticsearch.action"), "CreateIndexAction"),
                             equalTo(stringKey("elasticsearch.request"), "CreateIndexRequest"),
@@ -240,7 +240,7 @@ class Elasticsearch53SpringTemplateTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "ClusterHealthAction"),
                             equalTo(stringKey("elasticsearch.action"), "ClusterHealthAction"),
                             equalTo(stringKey("elasticsearch.request"), "ClusterHealthRequest"))),

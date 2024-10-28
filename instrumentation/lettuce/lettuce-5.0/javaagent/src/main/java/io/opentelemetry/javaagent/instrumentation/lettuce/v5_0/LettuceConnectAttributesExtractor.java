@@ -14,9 +14,11 @@ import javax.annotation.Nullable;
 
 final class LettuceConnectAttributesExtractor implements AttributesExtractor<RedisURI, Void> {
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, RedisURI redisUri) {
-    attributes.put(DbIncubatingAttributes.DB_SYSTEM, DbIncubatingAttributes.DbSystemValues.REDIS);
+    attributes.put(
+        DbIncubatingAttributes.DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.REDIS);
 
     int database = redisUri.getDatabase();
     if (database != 0) {

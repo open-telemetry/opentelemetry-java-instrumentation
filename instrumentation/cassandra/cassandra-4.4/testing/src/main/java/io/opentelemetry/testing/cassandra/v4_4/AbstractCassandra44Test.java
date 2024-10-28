@@ -36,6 +36,7 @@ import reactor.core.publisher.Flux;
 
 public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideReactiveParameters")
   void reactiveTest(Parameter parameter) {

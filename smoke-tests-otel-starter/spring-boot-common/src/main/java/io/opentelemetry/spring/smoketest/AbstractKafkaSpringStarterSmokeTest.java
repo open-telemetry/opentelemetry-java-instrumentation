@@ -28,6 +28,7 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
 
   @Autowired protected KafkaTemplate<String, String> kafkaTemplate;
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void shouldInstrumentProducerAndConsumer() {
     testing.runWithSpan(

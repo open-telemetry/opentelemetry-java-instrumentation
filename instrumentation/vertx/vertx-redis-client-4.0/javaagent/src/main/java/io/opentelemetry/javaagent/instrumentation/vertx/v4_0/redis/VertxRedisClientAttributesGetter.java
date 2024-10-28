@@ -20,7 +20,7 @@ public enum VertxRedisClientAttributesGetter
 
   @Override
   public String getSystem(VertxRedisClientRequest request) {
-    return DbIncubatingAttributes.DbSystemValues.REDIS;
+    return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
   }
 
   @Override
