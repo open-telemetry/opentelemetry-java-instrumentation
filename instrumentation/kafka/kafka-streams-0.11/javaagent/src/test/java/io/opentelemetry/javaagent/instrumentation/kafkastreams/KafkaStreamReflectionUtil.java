@@ -21,26 +21,17 @@ class KafkaStreamReflectionUtil {
 
   private KafkaStreamReflectionUtil() {}
 
-  @SuppressWarnings("ClassNewInstance")
-  static Object createBuilder()
-      throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+  static Object createBuilder() throws Exception {
     try {
       // Different class names for test and latestDepTest.
-      return Class.forName("org.apache.kafka.streams.kstream.KStreamBuilder").newInstance();
-    } catch (ClassNotFoundException
-        | NoClassDefFoundError
-        | InstantiationException
-        | IllegalAccessException e) {
-      return Class.forName("org.apache.kafka.streams.StreamsBuilder").newInstance();
+      return Class.forName("org.apache.kafka.streams.kstream.KStreamBuilder").getConstructors()[0].newInstance();
+    } catch (Exception e) {
+      return Class.forName("org.apache.kafka.streams.StreamsBuilder").getConstructors()[0].newInstance();
     }
   }
 
   @SuppressWarnings("unchecked")
-  static KStream<Integer, String> stream(Object builder, String topic)
-      throws ClassNotFoundException,
-          NoSuchMethodException,
-          InvocationTargetException,
-          IllegalAccessException {
+  static KStream<Integer, String> stream(Object builder, String topic) throws Exception
     // Different api for test and latestDepTest.
     try {
       // equivalent to:

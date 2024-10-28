@@ -153,7 +153,6 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                             MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
                             "test-application"));
                   }
-                  ;
                   span.hasName(STREAM_PENDING + " process")
                       .hasKind(SpanKind.CONSUMER)
                       .hasParent(trace.getSpan(0))

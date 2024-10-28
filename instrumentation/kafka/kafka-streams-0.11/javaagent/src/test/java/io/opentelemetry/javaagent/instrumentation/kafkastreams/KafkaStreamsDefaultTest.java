@@ -50,15 +50,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
 
   @DisplayName("test kafka produce and consume with streams in-between")
   @Test
-  void testKafkaProduceAndConsumeWithStreamsInBetween()
-      throws ExecutionException,
-          InterruptedException,
-          TimeoutException,
-          InstantiationException,
-          IllegalAccessException,
-          ClassNotFoundException,
-          NoSuchMethodException,
-          InvocationTargetException {
+  void testKafkaProduceAndConsumeWithStreamsInBetween() throws Exception {
     Properties config = new Properties();
     config.putAll(producerProps(KafkaStreamsBaseTest.kafka.getBootstrapServers()));
     config.put(StreamsConfig.APPLICATION_ID_CONFIG, "test-application");
@@ -91,8 +83,8 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
     for (ConsumerRecord<Integer, String> record : records) {
       Span.current().setAttribute("testing", 123);
 
-      assertEquals(10, record.key());
-      assertEquals(greeting.toLowerCase(Locale.ROOT), record.value());
+      assertThat(record.key()).isEqualTo(10);
+      assertThat(record.value()).isEqualTo(greeting.toLowerCase(Locale.ROOT));
 
       if (receivedHeaders == null) {
         receivedHeaders = record.headers();
