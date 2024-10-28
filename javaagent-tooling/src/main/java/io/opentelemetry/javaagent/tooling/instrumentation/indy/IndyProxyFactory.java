@@ -93,7 +93,8 @@ public class IndyProxyFactory {
             .implement(classToProxy.getInterfaces())
             .name(proxyClassName)
             .annotateType(classToProxy.getDeclaredAnnotations())
-            .defineField(DELEGATE_FIELD_NAME, Object.class, Modifier.PRIVATE | Modifier.FINAL);
+            // field must be public to enable resolving the proxy target using introspection
+            .defineField(DELEGATE_FIELD_NAME, Object.class, Modifier.PUBLIC | Modifier.FINAL);
 
     for (MethodDescription.InDefinedShape method : classToProxy.getDeclaredMethods()) {
       if (method.isPublic()) {
