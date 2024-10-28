@@ -29,7 +29,7 @@ import play.mvc.Results;
 import play.routing.RoutingDsl;
 import play.server.Server;
 
-abstract class PlayServerTest extends AbstractHttpServerTest<Server> {
+class PlayServerTest extends AbstractHttpServerTest<Server> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
