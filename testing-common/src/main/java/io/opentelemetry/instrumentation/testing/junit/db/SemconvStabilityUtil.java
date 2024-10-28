@@ -20,7 +20,8 @@ import java.util.Map;
 
 // until old database semconv are dropped in 3.0
 public class SemconvStabilityUtil {
-  private static final Map<AttributeKey<?>, AttributeKey<?>> oldToNewMap = new HashMap<>();
+  private static final Map<AttributeKey<?>, AttributeKey<?>> oldToNewMap = buildMap();
+
   private static final AttributeKey<String> DB_NAMESPACE = AttributeKey.stringKey("db.namespace");
   private static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.query.text");
   private static final AttributeKey<String> DB_OPERATION_NAME =
@@ -28,22 +29,20 @@ public class SemconvStabilityUtil {
   private static final AttributeKey<String> DB_COLLECTION_NAME =
       AttributeKey.stringKey("db.collection.name");
 
-  static {
-    addKey(oldToNewMap, DB_NAME, DB_NAMESPACE);
-    addKey(oldToNewMap, DB_STATEMENT, DB_QUERY_TEXT);
-    addKey(oldToNewMap, DB_OPERATION, DB_OPERATION_NAME);
-    addKey(oldToNewMap, DB_SQL_TABLE, DB_COLLECTION_NAME);
-    addKey(oldToNewMap, DB_CASSANDRA_TABLE, DB_COLLECTION_NAME);
-    addKey(oldToNewMap, DB_MONGODB_COLLECTION, DB_COLLECTION_NAME);
-    addKey(oldToNewMap, DB_COSMOSDB_CONTAINER, DB_COLLECTION_NAME);
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  private static Map<AttributeKey<?>, AttributeKey<?>> buildMap() {
+    Map<AttributeKey<?>, AttributeKey<?>> map = new HashMap<>();
+    map.put(DB_NAME, DB_NAMESPACE);
+    map.put(DB_STATEMENT, DB_QUERY_TEXT);
+    map.put(DB_OPERATION, DB_OPERATION_NAME);
+    map.put(DB_SQL_TABLE, DB_COLLECTION_NAME);
+    map.put(DB_CASSANDRA_TABLE, DB_COLLECTION_NAME);
+    map.put(DB_MONGODB_COLLECTION, DB_COLLECTION_NAME);
+    map.put(DB_COSMOSDB_CONTAINER, DB_COLLECTION_NAME);
+    return map;
   }
 
   private SemconvStabilityUtil() {}
-
-  private static <T> void addKey(
-      Map<AttributeKey<?>, AttributeKey<?>> map, AttributeKey<T> oldKey, AttributeKey<T> newKey) {
-    map.put(oldKey, newKey);
-  }
 
   @SuppressWarnings("unchecked")
   public static <T> AttributeKey<T> getAttributeKey(AttributeKey<T> oldKey) {
