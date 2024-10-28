@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.api.semconv.network.internal;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import io.opentelemetry.semconv.NetworkAttributes;
 import java.util.Locale;
@@ -39,13 +38,11 @@ public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
 
     if (captureProtocolAttributes) {
       String transport = lowercase(getter.getNetworkTransport(request, response));
-      if (SemconvStability.emitOldDatabaseSemconv()) {
-        internalSet(attributes, NetworkAttributes.NETWORK_TRANSPORT, transport);
-        internalSet(
-            attributes,
-            NetworkAttributes.NETWORK_TYPE,
-            lowercase(getter.getNetworkType(request, response)));
-      }
+      internalSet(attributes, NetworkAttributes.NETWORK_TRANSPORT, transport);
+      internalSet(
+          attributes,
+          NetworkAttributes.NETWORK_TYPE,
+          lowercase(getter.getNetworkType(request, response)));
       internalSet(attributes, NetworkAttributes.NETWORK_PROTOCOL_NAME, protocolName);
       internalSet(attributes, NetworkAttributes.NETWORK_PROTOCOL_VERSION, protocolVersion);
     }
