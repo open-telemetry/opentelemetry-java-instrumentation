@@ -14,7 +14,6 @@ import com.couchbase.client.core.metrics.DefaultMetricsCollectorConfig;
 import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.semconv.NetworkAttributes;
 import java.util.Arrays;
@@ -48,28 +47,14 @@ public class Couchbase26Util {
   }
 
   public static List<AttributeAssertion> couchbaseAttributes() {
-    if (SemconvStability.emitStableDatabaseSemconv()) {
-      return Arrays.asList(
-          equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-          satisfies(NetworkAttributes.NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()),
-          satisfies(
-              AttributeKey.stringKey("couchbase.local.address"),
-              val -> assertThat(val).isNotNull()),
-          satisfies(
-              AttributeKey.stringKey("couchbase.operation_id"),
-              val -> assertThat(val).isNotNull()));
-    } else {
-      return Arrays.asList(
-          equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-          equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-          satisfies(NetworkAttributes.NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()),
-          satisfies(
-              AttributeKey.stringKey("couchbase.local.address"),
-              val -> assertThat(val).isNotNull()),
-          satisfies(
-              AttributeKey.stringKey("couchbase.operation_id"),
-              val -> assertThat(val).isNotNull()));
-    }
+    return Arrays.asList(
+        equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+        equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
+        satisfies(NetworkAttributes.NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()),
+        satisfies(
+            AttributeKey.stringKey("couchbase.local.address"), val -> assertThat(val).isNotNull()),
+        satisfies(
+            AttributeKey.stringKey("couchbase.operation_id"), val -> assertThat(val).isNotNull()));
   }
 
   private Couchbase26Util() {}

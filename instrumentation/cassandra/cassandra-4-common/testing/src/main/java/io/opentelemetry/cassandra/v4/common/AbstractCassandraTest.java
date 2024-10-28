@@ -30,7 +30,6 @@ import com.datastax.oss.driver.api.core.config.DefaultDriverOption;
 import com.datastax.oss.driver.api.core.config.DriverConfigLoader;
 import com.datastax.oss.driver.internal.core.config.typesafe.DefaultDriverConfigLoader;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
 import io.opentelemetry.semconv.NetworkAttributes;
@@ -103,15 +102,10 @@ public abstract class AbstractCassandraTest {
                             .hasAttributesSatisfyingExactly(
                                 satisfies(
                                     NETWORK_TYPE,
-                                    val -> {
-                                      if (SemconvStability.emitOldDatabaseSemconv()) {
+                                    val ->
                                         val.satisfiesAnyOf(
                                             v -> assertThat(v).isEqualTo("ipv4"),
-                                            v -> assertThat(v).isEqualTo("ipv6"));
-                                      } else {
-                                        val.isNull();
-                                      }
-                                    }),
+                                            v -> assertThat(v).isEqualTo("ipv6"))),
                                 equalTo(SERVER_ADDRESS, cassandraHost),
                                 equalTo(SERVER_PORT, cassandraPort),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
@@ -170,15 +164,10 @@ public abstract class AbstractCassandraTest {
                             .hasAttributesSatisfyingExactly(
                                 satisfies(
                                     NETWORK_TYPE,
-                                    val -> {
-                                      if (SemconvStability.emitOldDatabaseSemconv()) {
+                                    val ->
                                         val.satisfiesAnyOf(
                                             v -> assertThat(v).isEqualTo("ipv4"),
-                                            v -> assertThat(v).isEqualTo("ipv6"));
-                                      } else {
-                                        val.isNull();
-                                      }
-                                    }),
+                                            v -> assertThat(v).isEqualTo("ipv6"))),
                                 equalTo(SERVER_ADDRESS, cassandraHost),
                                 equalTo(SERVER_PORT, cassandraPort),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),

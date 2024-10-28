@@ -27,7 +27,6 @@ import static org.junit.jupiter.api.Named.named;
 import com.datastax.oss.driver.api.core.CqlSession;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.cassandra.v4.common.AbstractCassandraTest;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
 import io.opentelemetry.semconv.NetworkAttributes;
 import java.util.stream.Stream;
@@ -63,15 +62,10 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                             .hasAttributesSatisfyingExactly(
                                 satisfies(
                                     NETWORK_TYPE,
-                                    val -> {
-                                      if (SemconvStability.emitOldDatabaseSemconv()) {
+                                    val ->
                                         val.satisfiesAnyOf(
                                             v -> assertThat(v).isEqualTo("ipv4"),
-                                            v -> assertThat(v).isEqualTo("ipv6"));
-                                      } else {
-                                        val.isNull();
-                                      }
-                                    }),
+                                            v -> assertThat(v).isEqualTo("ipv6"))),
                                 equalTo(SERVER_ADDRESS, cassandraHost),
                                 equalTo(SERVER_PORT, cassandraPort),
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
