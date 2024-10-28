@@ -32,6 +32,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClientTest {
 
   private static String dbUriNonExistent;

@@ -55,6 +55,7 @@ public class AwsLambdaSqsEventWrapperTest {
     assertThat(testing.forceFlushCalled()).isTrue();
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void eventTraced() {
     SQSEvent event = new SQSEvent();
@@ -86,7 +87,8 @@ public class AwsLambdaSqsEventWrapperTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
+                                MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                    .AWS_SQS),
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"))));
   }

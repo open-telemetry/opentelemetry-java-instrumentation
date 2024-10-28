@@ -47,6 +47,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class LettuceAsyncClientTest extends AbstractLettuceClientTest {
   private static int incorrectPort;
   private static String dbUriNonExistent;

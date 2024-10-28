@@ -41,7 +41,7 @@ final class OpenTelemetryTracing implements Tracing {
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
   private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
-  // copied from DbIncubatingAttributes.DbSystemValues
+  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
   private static final String REDIS = "redis";
 
   private static final AttributesExtractor<OpenTelemetryEndpoint, Void> serverAttributesExtractor =

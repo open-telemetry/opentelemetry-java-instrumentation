@@ -173,7 +173,7 @@ public abstract class AbstractDubboTraceChainTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SYSTEM,
-                                    RpcIncubatingAttributes.RpcSystemValues.APACHE_DUBBO),
+                                    RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SERVICE,
                                     "org.apache.dubbo.rpc.service.GenericService"),
@@ -208,7 +208,7 @@ public abstract class AbstractDubboTraceChainTest {
                             .hasAttributesSatisfying(
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SYSTEM,
-                                    RpcIncubatingAttributes.RpcSystemValues.APACHE_DUBBO),
+                                    RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SERVICE,
                                     "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
@@ -233,7 +233,7 @@ public abstract class AbstractDubboTraceChainTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SYSTEM,
-                                    RpcIncubatingAttributes.RpcSystemValues.APACHE_DUBBO),
+                                    RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SERVICE,
                                     "org.apache.dubbo.rpc.service.GenericService"),
@@ -268,7 +268,7 @@ public abstract class AbstractDubboTraceChainTest {
                             .hasAttributesSatisfying(
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SYSTEM,
-                                    RpcIncubatingAttributes.RpcSystemValues.APACHE_DUBBO),
+                                    RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SERVICE,
                                     "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"),
@@ -354,7 +354,7 @@ public abstract class AbstractDubboTraceChainTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SYSTEM,
-                                    RpcIncubatingAttributes.RpcSystemValues.APACHE_DUBBO),
+                                    RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SERVICE,
                                     "org.apache.dubbo.rpc.service.GenericService"),
@@ -389,7 +389,7 @@ public abstract class AbstractDubboTraceChainTest {
                             .hasAttributesSatisfying(
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SYSTEM,
-                                    RpcIncubatingAttributes.RpcSystemValues.APACHE_DUBBO),
+                                    RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_SERVICE,
                                     "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),

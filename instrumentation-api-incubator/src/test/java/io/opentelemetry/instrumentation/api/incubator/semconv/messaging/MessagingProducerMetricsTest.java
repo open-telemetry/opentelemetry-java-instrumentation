@@ -27,6 +27,7 @@ class MessagingProducerMetricsTest {
   private static final double[] DURATION_BUCKETS =
       MessagingMetricsAdvice.DURATION_SECONDS_BUCKETS.stream().mapToDouble(d -> d).toArray();
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void collectsMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.create();

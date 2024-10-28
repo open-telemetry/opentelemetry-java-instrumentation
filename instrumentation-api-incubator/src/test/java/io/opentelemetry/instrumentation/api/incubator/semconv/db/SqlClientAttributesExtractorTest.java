@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class SqlClientAttributesExtractorTest {
 
   static final class TestAttributesGetter

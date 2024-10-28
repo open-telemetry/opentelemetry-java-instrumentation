@@ -61,6 +61,7 @@ class AwsSqsTest {
     }
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void sqsListener() throws InterruptedException, ExecutionException, TimeoutException {
     String messageContent = "hello";
@@ -121,7 +122,8 @@ class AwsSqsTest {
                                         "http://localhost:" + AwsSqsTestApplication.sqsPort)),
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
+                                MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                    .AWS_SQS),
                             satisfies(
                                 MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                 AbstractStringAssert::isNotBlank),
@@ -158,7 +160,8 @@ class AwsSqsTest {
                                         "http://localhost:" + AwsSqsTestApplication.sqsPort)),
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
+                                MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                    .AWS_SQS),
                             satisfies(
                                 MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                                 AbstractStringAssert::isNotBlank),

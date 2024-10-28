@@ -35,6 +35,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class ElasticsearchClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

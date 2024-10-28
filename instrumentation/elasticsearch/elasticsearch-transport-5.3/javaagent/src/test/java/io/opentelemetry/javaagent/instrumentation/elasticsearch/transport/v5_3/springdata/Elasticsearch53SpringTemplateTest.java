@@ -61,6 +61,7 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilde
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 import spock.util.environment.Jvm;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class Elasticsearch53SpringTemplateTest {
   private static final Logger logger =
       LoggerFactory.getLogger(Elasticsearch53SpringTemplateTest.class);
@@ -171,7 +172,7 @@ class Elasticsearch53SpringTemplateTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "RefreshAction"),
                             equalTo(stringKey("elasticsearch.action"), "RefreshAction"),
                             equalTo(stringKey("elasticsearch.request"), "RefreshRequest"),
@@ -226,7 +227,7 @@ class Elasticsearch53SpringTemplateTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "CreateIndexAction"),
                             equalTo(stringKey("elasticsearch.action"), "CreateIndexAction"),
                             equalTo(stringKey("elasticsearch.request"), "CreateIndexRequest"),
@@ -240,7 +241,7 @@ class Elasticsearch53SpringTemplateTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "ClusterHealthAction"),
                             equalTo(stringKey("elasticsearch.action"), "ClusterHealthAction"),
                             equalTo(stringKey("elasticsearch.request"), "ClusterHealthRequest"))),
@@ -253,7 +254,7 @@ class Elasticsearch53SpringTemplateTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SearchAction"),
                             equalTo(stringKey("elasticsearch.action"), "SearchAction"),
                             equalTo(stringKey("elasticsearch.request"), "SearchRequest"),
@@ -268,7 +269,7 @@ class Elasticsearch53SpringTemplateTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "IndexAction"),
                             equalTo(stringKey("elasticsearch.action"), "IndexAction"),
                             equalTo(stringKey("elasticsearch.request"), "IndexRequest"),
@@ -288,7 +289,7 @@ class Elasticsearch53SpringTemplateTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "RefreshAction"),
                             equalTo(stringKey("elasticsearch.action"), "RefreshAction"),
                             equalTo(stringKey("elasticsearch.request"), "RefreshRequest"),
@@ -305,7 +306,7 @@ class Elasticsearch53SpringTemplateTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SearchAction"),
                             equalTo(stringKey("elasticsearch.action"), "SearchAction"),
                             equalTo(stringKey("elasticsearch.request"), "SearchRequest"),
@@ -389,7 +390,7 @@ class Elasticsearch53SpringTemplateTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "SearchAction"),
                             equalTo(stringKey("elasticsearch.action"), "SearchAction"),
                             equalTo(stringKey("elasticsearch.request"), "SearchRequest"),

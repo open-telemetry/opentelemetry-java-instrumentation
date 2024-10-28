@@ -195,6 +195,7 @@ public abstract class AbstractVertxKafkaTest {
     }
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> sendAttributes(
       KafkaProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
@@ -204,7 +205,7 @@ public abstract class AbstractVertxKafkaTest {
                 equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
                 satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
+                    AttributeKey.stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("producer")),
                 satisfies(
                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
@@ -228,6 +229,7 @@ public abstract class AbstractVertxKafkaTest {
     return batchConsumerAttributes(topic, "process");
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> batchConsumerAttributes(String topic, String operation) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -236,7 +238,7 @@ public abstract class AbstractVertxKafkaTest {
                 equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, operation),
                 satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
+                    AttributeKey.stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("consumer")),
                 satisfies(
                     MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT,
@@ -248,6 +250,7 @@ public abstract class AbstractVertxKafkaTest {
     return assertions;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> processAttributes(
       KafkaProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
@@ -257,7 +260,7 @@ public abstract class AbstractVertxKafkaTest {
                 equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
                 satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
+                    AttributeKey.stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("consumer")),
                 satisfies(
                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,

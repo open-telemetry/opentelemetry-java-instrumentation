@@ -21,6 +21,7 @@ import org.assertj.core.api.AbstractStringAssert;
 
 class InterceptorsTest extends AbstractInterceptorsTest {
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   void assertTraces() {
     AtomicReference<SpanContext> producerSpanContext = new AtomicReference<>();
@@ -40,7 +41,7 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                               SHARED_TOPIC),
                           equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
                           satisfies(
-                              MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
+                              MESSAGING_CLIENT_ID,
                               stringAssert -> stringAssert.startsWith("producer"))));
           SpanContext spanContext = trace.getSpan(1).getSpanContext();
           producerSpanContext.set(
@@ -67,7 +68,7 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                                 MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
                                 "test"),
                             satisfies(
-                                MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
+                                MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("consumer")),
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 1)),
@@ -95,7 +96,7 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                                 MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
                                 "test"),
                             satisfies(
-                                MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
+                                MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("consumer"))),
                 span ->
                     span.hasName("process child")

@@ -39,6 +39,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractElasticsearchTransportClientTest
     extends AbstractElasticsearchClientTest {
@@ -81,7 +82,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, getPort()),
                                 equalTo(
                                     DbIncubatingAttributes.DB_SYSTEM,
-                                    DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                                 equalTo(DbIncubatingAttributes.DB_OPERATION, "ClusterHealthAction"),
                                 equalTo(ELASTICSEARCH_ACTION, "ClusterHealthAction"),
                                 equalTo(ELASTICSEARCH_REQUEST, "ClusterHealthRequest"))),
@@ -137,7 +138,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "GetAction"),
                             equalTo(ELASTICSEARCH_ACTION, "GetAction"),
                             equalTo(ELASTICSEARCH_REQUEST, "GetRequest"),
@@ -198,7 +199,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, getPort()),
                                 equalTo(
                                     DbIncubatingAttributes.DB_SYSTEM,
-                                    DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                                 equalTo(DbIncubatingAttributes.DB_OPERATION, "CreateIndexAction"),
                                 equalTo(ELASTICSEARCH_ACTION, "CreateIndexAction"),
                                 equalTo(ELASTICSEARCH_REQUEST, "CreateIndexRequest"),
@@ -212,7 +213,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, getPutMappingActionName()),
                             equalTo(ELASTICSEARCH_ACTION, getPutMappingActionName()),
                             equalTo(ELASTICSEARCH_REQUEST, "PutMappingRequest"))),
@@ -228,7 +229,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, getPort()),
                                 equalTo(
                                     DbIncubatingAttributes.DB_SYSTEM,
-                                    DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                                 equalTo(DbIncubatingAttributes.DB_OPERATION, "IndexAction"),
                                 equalTo(ELASTICSEARCH_ACTION, "IndexAction"),
                                 equalTo(ELASTICSEARCH_REQUEST, "IndexRequest"),
@@ -251,7 +252,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, getPort()),
                                 equalTo(
                                     DbIncubatingAttributes.DB_SYSTEM,
-                                    DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                                 equalTo(DbIncubatingAttributes.DB_OPERATION, "GetAction"),
                                 equalTo(ELASTICSEARCH_ACTION, "GetAction"),
                                 equalTo(ELASTICSEARCH_REQUEST, "GetRequest"),
@@ -271,7 +272,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, getPort()),
                                 equalTo(
                                     DbIncubatingAttributes.DB_SYSTEM,
-                                    DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                                 equalTo(DbIncubatingAttributes.DB_OPERATION, "GetAction"),
                                 equalTo(ELASTICSEARCH_ACTION, "GetAction"),
                                 equalTo(ELASTICSEARCH_REQUEST, "GetRequest"),

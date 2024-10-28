@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  * any time.
  */
 public final class DbExecution {
-  // copied from DbIncubatingAttributes.DbSystemValues
+  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
   private static final String OTHER_SQL = "other_sql";
 
   private final String system;

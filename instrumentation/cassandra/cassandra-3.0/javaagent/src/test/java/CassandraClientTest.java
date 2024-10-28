@@ -34,7 +34,8 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 
-public class CassandraClientTest {
+@SuppressWarnings("deprecation") // using deprecated semconv
+class CassandraClientTest {
 
   private static final Logger logger = LoggerFactory.getLogger(CassandraClientTest.class);
 

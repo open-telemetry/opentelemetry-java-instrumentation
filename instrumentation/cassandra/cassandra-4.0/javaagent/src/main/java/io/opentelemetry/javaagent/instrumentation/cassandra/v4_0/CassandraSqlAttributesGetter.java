@@ -14,7 +14,7 @@ final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<Ca
 
   @Override
   public String getSystem(CassandraRequest request) {
-    return DbIncubatingAttributes.DbSystemValues.CASSANDRA;
+    return DbIncubatingAttributes.DbSystemIncubatingValues.CASSANDRA;
   }
 
   @Override

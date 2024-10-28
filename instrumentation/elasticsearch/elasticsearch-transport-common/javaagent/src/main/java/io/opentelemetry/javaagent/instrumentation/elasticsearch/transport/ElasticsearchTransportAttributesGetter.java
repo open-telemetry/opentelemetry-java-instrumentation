@@ -14,7 +14,7 @@ final class ElasticsearchTransportAttributesGetter
 
   @Override
   public String getSystem(ElasticTransportRequest s) {
-    return DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH;
+    return DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH;
   }
 
   @Override

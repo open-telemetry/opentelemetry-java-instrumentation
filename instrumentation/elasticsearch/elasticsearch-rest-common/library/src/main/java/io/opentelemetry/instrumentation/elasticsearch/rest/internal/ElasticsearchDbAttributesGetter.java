@@ -27,7 +27,7 @@ final class ElasticsearchDbAttributesGetter
   private static final Logger logger =
       Logger.getLogger(ElasticsearchDbAttributesGetter.class.getName());
 
-  // copied from DbIncubatingAttributes.DbSystemValues
+  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
   private static final String ELASTICSEARCH = "elasticsearch";
 
   private final boolean captureSearchQuery;

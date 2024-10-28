@@ -54,6 +54,8 @@ public abstract class KafkaClientBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(KafkaClientBaseTest.class);
 
   protected static final String SHARED_TOPIC = "shared.topic";
+  protected static final AttributeKey<String> MESSAGING_CLIENT_ID =
+      AttributeKey.stringKey("messaging.client_id");
 
   private KafkaContainer kafka;
   protected Producer<Integer, String> producer;
@@ -153,6 +155,7 @@ public abstract class KafkaClientBaseTest {
     consumer.seekToBeginning(Collections.emptyList());
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> sendAttributes(
       String messageKey, String messageValue, boolean testHeaders) {
     List<AttributeAssertion> assertions =
@@ -161,9 +164,7 @@ public abstract class KafkaClientBaseTest {
                 equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
-                satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
-                    stringAssert -> stringAssert.startsWith("producer")),
+                satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("producer")),
                 satisfies(
                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
                     AbstractStringAssert::isNotEmpty),
@@ -187,6 +188,7 @@ public abstract class KafkaClientBaseTest {
     return assertions;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> receiveAttributes(boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -194,9 +196,7 @@ public abstract class KafkaClientBaseTest {
                 equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "receive"),
-                satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
-                    stringAssert -> stringAssert.startsWith("consumer")),
+                satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")),
                 satisfies(
                     MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT,
                     AbstractLongAssert::isPositive)));
@@ -213,6 +213,7 @@ public abstract class KafkaClientBaseTest {
     return assertions;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> processAttributes(
       String messageKey, String messageValue, boolean testHeaders) {
     List<AttributeAssertion> assertions =
@@ -221,9 +222,7 @@ public abstract class KafkaClientBaseTest {
                 equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
-                satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
-                    stringAssert -> stringAssert.startsWith("consumer")),
+                satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")),
                 satisfies(
                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
                     AbstractStringAssert::isNotEmpty),

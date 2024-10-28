@@ -22,7 +22,7 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisC
 
   @Override
   public String getSystem(RedisCommand<?, ?, ?> request) {
-    return DbIncubatingAttributes.DbSystemValues.REDIS;
+    return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
   }
 
   @Override

@@ -56,6 +56,7 @@ public class AwsLambdaSqsMessageHandlerTest {
     assertThat(testing.forceFlushCalled()).isTrue();
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void processSpans() {
     SQSEvent.SQSMessage message1 = newMessage();
@@ -88,7 +89,8 @@ public class AwsLambdaSqsMessageHandlerTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
+                                MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                    .AWS_SQS),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"))
                         .hasLinks(
                             LinkData.create(
@@ -110,7 +112,8 @@ public class AwsLambdaSqsMessageHandlerTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
+                                MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                    .AWS_SQS),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, "message1"),
                             equalTo(
@@ -129,7 +132,8 @@ public class AwsLambdaSqsMessageHandlerTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
+                                MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                    .AWS_SQS),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, "message2"),
                             equalTo(

@@ -34,6 +34,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasticsearchClientTest {
 
@@ -68,7 +69,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "ClusterHealthAction"),
                             equalTo(ELASTICSEARCH_ACTION, "ClusterHealthAction"),
                             equalTo(ELASTICSEARCH_REQUEST, "ClusterHealthRequest")),
@@ -117,7 +118,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "GetAction"),
                             equalTo(ELASTICSEARCH_ACTION, "GetAction"),
                             equalTo(ELASTICSEARCH_REQUEST, "GetRequest"),
@@ -179,7 +180,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "CreateIndexAction"),
                             equalTo(ELASTICSEARCH_ACTION, "CreateIndexAction"),
                             equalTo(ELASTICSEARCH_REQUEST, "CreateIndexRequest"),
@@ -193,7 +194,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "ClusterHealthAction"),
                             equalTo(ELASTICSEARCH_ACTION, "ClusterHealthAction"),
                             equalTo(ELASTICSEARCH_REQUEST, "ClusterHealthRequest"))),
@@ -206,7 +207,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "GetAction"),
                             equalTo(ELASTICSEARCH_ACTION, "GetAction"),
                             equalTo(ELASTICSEARCH_REQUEST, "GetRequest"),
@@ -224,7 +225,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                             addIndexActionAttributes(
                                 equalTo(
                                     DbIncubatingAttributes.DB_SYSTEM,
-                                    DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                                 equalTo(DbIncubatingAttributes.DB_OPERATION, "IndexAction"),
                                 equalTo(ELASTICSEARCH_ACTION, "IndexAction"),
                                 equalTo(ELASTICSEARCH_REQUEST, "IndexRequest"),
@@ -243,7 +244,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "GetAction"),
                             equalTo(ELASTICSEARCH_ACTION, "GetAction"),
                             equalTo(ELASTICSEARCH_REQUEST, "GetRequest"),

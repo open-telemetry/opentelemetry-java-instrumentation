@@ -16,10 +16,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASS
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_IDEMPOTENCE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_PAGE_SIZE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_TABLE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
@@ -28,6 +24,7 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.cassandra.v4.common.AbstractCassandraTest;
 import io.opentelemetry.semconv.NetworkAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -36,6 +33,7 @@ import reactor.core.publisher.Flux;
 
 public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideReactiveParameters")
   void reactiveTest(Parameter parameter) {
@@ -70,9 +68,11 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                                 equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
                                 equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
                                 equalTo(DB_SYSTEM, "cassandra"),
-                                equalTo(DB_NAME, parameter.keyspace),
-                                equalTo(DB_STATEMENT, parameter.expectedStatement),
-                                equalTo(DB_OPERATION, parameter.operation),
+                                equalTo(DbIncubatingAttributes.DB_NAME, parameter.keyspace),
+                                equalTo(
+                                    DbIncubatingAttributes.DB_STATEMENT,
+                                    parameter.expectedStatement),
+                                equalTo(DbIncubatingAttributes.DB_OPERATION, parameter.operation),
                                 equalTo(DB_CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
                                 equalTo(DB_CASSANDRA_COORDINATOR_DC, "datacenter1"),
                                 satisfies(
@@ -83,7 +83,8 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                                     val -> val.isInstanceOf(Boolean.class)),
                                 equalTo(DB_CASSANDRA_PAGE_SIZE, 5000),
                                 equalTo(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
-                                equalTo(DB_CASSANDRA_TABLE, parameter.table)),
+                                equalTo(
+                                    DbIncubatingAttributes.DB_CASSANDRA_TABLE, parameter.table)),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
