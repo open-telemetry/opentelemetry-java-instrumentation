@@ -24,6 +24,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
 
 class Jms1InstrumentationTest extends AbstractJms1Test {
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @ArgumentsSource(DestinationsProvider.class)
   @ParameterizedTest
   void testMessageConsumer(

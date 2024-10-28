@@ -75,6 +75,7 @@ class WrapperTest extends AbstractWrapperTest {
                         .hasParent(trace.getSpan(1))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> sendAttributes(boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -100,6 +101,7 @@ class WrapperTest extends AbstractWrapperTest {
     return assertions;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> processAttributes(String greeting, boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -132,6 +134,7 @@ class WrapperTest extends AbstractWrapperTest {
     return assertions;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> receiveAttributes(boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(

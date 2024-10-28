@@ -29,6 +29,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class MessagingAttributesExtractorTest {
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
   @MethodSource("destinations")
   void shouldExtractAllAvailableAttributes(

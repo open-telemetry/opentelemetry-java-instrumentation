@@ -16,6 +16,7 @@ import org.assertj.core.api.AbstractStringAssert;
 
 class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   void assertTraces() {
     testing.waitAndAssertTraces(

@@ -29,6 +29,7 @@ class SpringIntegrationAndRabbitTest {
     rabbit = new RabbitExtension(null);
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void shouldCooperateWithExistingRabbitMqInstrumentation() {
     testing.waitForTraces(13); // from rabbitmq instrumentation of startup

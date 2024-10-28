@@ -332,6 +332,7 @@ class ClickHouseClientTest {
                                 "select * from " + tableName + " where s=:val", "SELECT"))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> attributeAssertions(String statement, String operation) {
     return asList(
         equalTo(

@@ -21,6 +21,7 @@ import org.assertj.core.api.AbstractStringAssert;
 
 class InterceptorsTest extends AbstractInterceptorsTest {
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   void assertTraces() {
     AtomicReference<SpanContext> producerSpanContext = new AtomicReference<>();

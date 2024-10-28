@@ -51,7 +51,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
   private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
-  // copied from DbIncubatingAttributes.DbSystemValues
+  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
   private static final String DB_SYSTEM_DYNAMODB = "dynamodb";
   // copied from AwsIncubatingAttributes
   private static final AttributeKey<String> AWS_REQUEST_ID =
