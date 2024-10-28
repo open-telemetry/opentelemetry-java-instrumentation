@@ -10,7 +10,6 @@ import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ResultSetFuture;
 import com.datastax.driver.core.Session;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
@@ -95,9 +94,7 @@ public class CassandraClientTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
-                              equalTo(
-                                  NetworkAttributes.NETWORK_TYPE,
-                                  SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
+                              equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                               equalTo(ServerAttributes.SERVER_ADDRESS, cassandraHost),
                               equalTo(ServerAttributes.SERVER_PORT, cassandraPort),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
@@ -114,9 +111,7 @@ public class CassandraClientTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
-                              equalTo(
-                                  NetworkAttributes.NETWORK_TYPE,
-                                  SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
+                              equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                               equalTo(ServerAttributes.SERVER_ADDRESS, cassandraHost),
                               equalTo(ServerAttributes.SERVER_PORT, cassandraPort),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
@@ -147,9 +142,7 @@ public class CassandraClientTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
-                              equalTo(
-                                  NetworkAttributes.NETWORK_TYPE,
-                                  SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
+                              equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                               equalTo(ServerAttributes.SERVER_ADDRESS, cassandraHost),
                               equalTo(ServerAttributes.SERVER_PORT, cassandraPort),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
@@ -197,9 +190,7 @@ public class CassandraClientTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
-                              equalTo(
-                                  NetworkAttributes.NETWORK_TYPE,
-                                  SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
+                              equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                               equalTo(ServerAttributes.SERVER_ADDRESS, cassandraHost),
                               equalTo(ServerAttributes.SERVER_PORT, cassandraPort),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
@@ -217,9 +208,7 @@ public class CassandraClientTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              equalTo(
-                                  NetworkAttributes.NETWORK_TYPE,
-                                  SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
+                              equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                               equalTo(ServerAttributes.SERVER_ADDRESS, cassandraHost),
                               equalTo(ServerAttributes.SERVER_PORT, cassandraPort),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
@@ -255,9 +244,7 @@ public class CassandraClientTest {
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              equalTo(
-                                  NetworkAttributes.NETWORK_TYPE,
-                                  SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
+                              equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                               equalTo(ServerAttributes.SERVER_ADDRESS, cassandraHost),
                               equalTo(ServerAttributes.SERVER_PORT, cassandraPort),
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),

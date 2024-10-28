@@ -9,12 +9,12 @@ import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbNetworkAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 final class CassandraNetworkAttributesGetter
-    implements DbNetworkAttributesGetter<CassandraRequest, ExecutionInfo> {
+    implements NetworkAttributesGetter<CassandraRequest, ExecutionInfo> {
 
   @Override
   @Nullable

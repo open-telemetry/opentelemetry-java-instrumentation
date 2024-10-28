@@ -14,7 +14,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
@@ -117,9 +116,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                     span.hasName("SET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                NetworkAttributes.NETWORK_TYPE,
-                                SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
+                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
@@ -158,9 +155,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                     span.hasName("SADD")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                NetworkAttributes.NETWORK_TYPE,
-                                SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
+                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
@@ -240,9 +235,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                     span.hasName("DB Query")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                NetworkAttributes.NETWORK_TYPE,
-                                SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
+                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
@@ -255,9 +248,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                     span.hasName("SET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                NetworkAttributes.NETWORK_TYPE,
-                                SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
+                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
@@ -274,9 +265,7 @@ public abstract class AbstractRedissonAsyncClientTest {
                     span.hasName("EXEC")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                NetworkAttributes.NETWORK_TYPE,
-                                SemconvStability.emitOldDatabaseSemconv() ? "ipv4" : null),
+                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),

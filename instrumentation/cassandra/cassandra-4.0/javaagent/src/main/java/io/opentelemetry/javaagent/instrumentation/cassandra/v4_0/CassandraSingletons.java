@@ -8,10 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 
@@ -37,7 +37,7 @@ public final class CassandraSingletons {
                         AgentCommonConfig.get().isStatementSanitizationEnabled())
                     .build())
             .addAttributesExtractor(
-                DbNetworkAttributesExtractor.create(new CassandraNetworkAttributesGetter()))
+                NetworkAttributesExtractor.create(new CassandraNetworkAttributesGetter()))
             .addAttributesExtractor(new CassandraAttributesExtractor())
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
