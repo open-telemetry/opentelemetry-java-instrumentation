@@ -20,7 +20,6 @@ import java.util.Map;
 
 // until old database semconv are dropped in 3.0
 public class SemconvStabilityUtil {
-  private static final Map<AttributeKey<?>, AttributeKey<?>> oldToNewMap = buildMap();
 
   private static final AttributeKey<String> DB_NAMESPACE = AttributeKey.stringKey("db.namespace");
   private static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.query.text");
@@ -28,6 +27,8 @@ public class SemconvStabilityUtil {
       AttributeKey.stringKey("db.operation.name");
   private static final AttributeKey<String> DB_COLLECTION_NAME =
       AttributeKey.stringKey("db.collection.name");
+
+  private static final Map<AttributeKey<?>, AttributeKey<?>> oldToNewMap = buildMap();
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   private static Map<AttributeKey<?>, AttributeKey<?>> buildMap() {
