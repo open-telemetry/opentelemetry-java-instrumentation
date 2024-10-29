@@ -8,7 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.redis;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -201,15 +203,29 @@ class VertxRedisClientTest {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   private static AttributeAssertion[] redisSpanAttributes(String operation, String statement) {
-    return new AttributeAssertion[] {
-      equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-      equalTo(DbIncubatingAttributes.DB_STATEMENT, statement),
-      equalTo(DbIncubatingAttributes.DB_OPERATION, operation),
-      equalTo(DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX, 1),
-      equalTo(ServerAttributes.SERVER_ADDRESS, host),
-      equalTo(ServerAttributes.SERVER_PORT, port),
-      equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip)
-    };
+    // not testing database/dup
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      return new AttributeAssertion[] {
+        equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+        equalTo(AttributeKey.stringKey("db.query.text"), statement),
+        equalTo(AttributeKey.stringKey("db.operation.name"), operation),
+        equalTo(AttributeKey.stringKey("db.namespace"), "1"),
+        equalTo(ServerAttributes.SERVER_ADDRESS, host),
+        equalTo(ServerAttributes.SERVER_PORT, port),
+        equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
+        equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip)
+      };
+    } else {
+      return new AttributeAssertion[] {
+        equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+        equalTo(DbIncubatingAttributes.DB_STATEMENT, statement),
+        equalTo(DbIncubatingAttributes.DB_OPERATION, operation),
+        equalTo(DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX, 1),
+        equalTo(ServerAttributes.SERVER_ADDRESS, host),
+        equalTo(ServerAttributes.SERVER_PORT, port),
+        equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
+        equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip)
+      };
+    }
   }
 }
