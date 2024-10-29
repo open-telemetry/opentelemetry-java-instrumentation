@@ -172,7 +172,7 @@ class LogbackAppenderTest {
   @Test
   void shouldInitializeMdcAppender() {
     Map<String, Object> properties = new HashMap<>();
-    properties.put("logging.config", "classpath:logback-mdc-test.xml");
+    properties.put("logging.config", "classpath:logback-no-otel-appenders.xml");
     properties.put("otel.instrumentation.logback-appender.enabled", "false");
 
     SpringApplication app =
@@ -205,7 +205,7 @@ class LogbackAppenderTest {
   @Test
   void shouldNotInitializeMdcAppenderWhenDisabled() {
     Map<String, Object> properties = new HashMap<>();
-    properties.put("logging.config", "classpath:logback-mdc-test.xml");
+    properties.put("logging.config", "classpath:logback-no-otel-appenders.xml");
     properties.put("otel.instrumentation.logback-appender.enabled", "false");
     properties.put("otel.instrumentation.logback-mdc.enabled", "false");
 
