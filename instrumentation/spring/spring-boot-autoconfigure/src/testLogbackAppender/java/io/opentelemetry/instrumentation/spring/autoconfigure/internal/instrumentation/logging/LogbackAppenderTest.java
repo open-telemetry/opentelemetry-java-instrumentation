@@ -169,10 +169,80 @@ class LogbackAppenderTest {
                                     "traceid", "spanid", "traceflags", "baggage.key")));
   }
 
+  @Test
+  void shouldInitializeMdcAppender() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("logging.config", "classpath:logback-mdc-test.xml");
+    properties.put("otel.instrumentation.logback-appender.enabled", "false");
+
+    SpringApplication app =
+        new SpringApplication(
+            TestingOpenTelemetryConfiguration.class, OpenTelemetryAppenderAutoConfiguration.class);
+    app.setDefaultProperties(properties);
+    ConfigurableApplicationContext context = app.run();
+    cleanup.deferCleanup(context);
+
+    ListAppender<ILoggingEvent> listAppender = getListAppender();
+    listAppender.list.clear();
+
+    Span span = testing.getOpenTelemetry().getTracer("test").spanBuilder("test").startSpan();
+    try (Scope ignore = span.makeCurrent()) {
+      LoggerFactory.getLogger("test").info("test log message");
+    }
+
+    assertThat(testing.logRecords()).isEmpty();
+    assertThat(listAppender.list)
+        .satisfiesExactly(
+            event ->
+                assertThat(event)
+                    .satisfies(
+                        e -> assertThat(e.getMessage()).isEqualTo("test log message"),
+                        e ->
+                            assertThat(e.getMDCPropertyMap())
+                                .containsOnlyKeys("trace_id", "span_id", "trace_flags")));
+  }
+
+  @Test
+  void shouldNotInitializeMdcAppenderWhenDisabled() {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("logging.config", "classpath:logback-mdc-test.xml");
+    properties.put("otel.instrumentation.logback-appender.enabled", "false");
+    properties.put("otel.instrumentation.logback-mdc.enabled", "false");
+
+    SpringApplication app =
+        new SpringApplication(
+            TestingOpenTelemetryConfiguration.class, OpenTelemetryAppenderAutoConfiguration.class);
+    app.setDefaultProperties(properties);
+    ConfigurableApplicationContext context = app.run();
+    cleanup.deferCleanup(context);
+
+    ListAppender<ILoggingEvent> listAppender = getListAppender();
+    listAppender.list.clear();
+
+    Span span = testing.getOpenTelemetry().getTracer("test").spanBuilder("test").startSpan();
+    try (Scope ignore = span.makeCurrent()) {
+      LoggerFactory.getLogger("test").info("test log message");
+    }
+
+    assertThat(testing.logRecords()).isEmpty();
+    assertThat(listAppender.list)
+        .satisfiesExactly(
+            event ->
+                assertThat(event)
+                    .satisfies(
+                        e -> assertThat(e.getMessage()).isEqualTo("test log message"),
+                        e -> assertThat(e.getMDCPropertyMap()).isEmpty()));
+  }
+
   @SuppressWarnings("unchecked")
   private static ListAppender<ILoggingEvent> getListAppender() {
     Logger logger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
     ch.qos.logback.classic.Logger logbackLogger = (ch.qos.logback.classic.Logger) logger;
+    ListAppender<ILoggingEvent> listAppender =
+        (ListAppender<ILoggingEvent>) logbackLogger.getAppender("List");
+    if (listAppender != null) {
+      return listAppender;
+    }
     AppenderAttachable<?> mdcAppender =
         (AppenderAttachable<?>) logbackLogger.getAppender("OpenTelemetryMdc");
     return (ListAppender<ILoggingEvent>) mdcAppender.getAppender("List");
