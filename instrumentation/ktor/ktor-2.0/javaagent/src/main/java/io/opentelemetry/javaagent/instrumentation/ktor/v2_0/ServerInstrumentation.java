@@ -28,7 +28,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
     return namedOneOf(
         "io.ktor.server.engine.ApplicationEngineEnvironmentReloading", // Ktor 2.0
         "io.ktor.server.engine.EmbeddedServer" // Ktor 3.0
-    );
+        );
   }
 
   @Override
