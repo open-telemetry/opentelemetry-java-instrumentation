@@ -33,6 +33,7 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 
   @Override
   public String getModuleGroup() {
+    // depends on OpenTelemetryHandlerMappingFilter
     return "servlet";
   }
 

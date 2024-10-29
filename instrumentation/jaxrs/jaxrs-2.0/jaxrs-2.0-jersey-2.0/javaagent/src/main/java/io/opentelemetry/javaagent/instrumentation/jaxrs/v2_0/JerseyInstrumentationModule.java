@@ -29,6 +29,7 @@ public class JerseyInstrumentationModule extends InstrumentationModule
 
   @Override
   public String getModuleGroup() {
+    // depends on Servlet3SnippetInjectingResponseWrapper
     return "servlet";
   }
 

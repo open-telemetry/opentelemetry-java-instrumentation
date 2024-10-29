@@ -51,6 +51,7 @@ public class SpringSecurityConfigServletInstrumentationModule extends Instrument
 
   @Override
   public String getModuleGroup() {
+    // depends on servlet instrumentation
     return "servlet";
   }
 

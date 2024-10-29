@@ -37,6 +37,7 @@ public class Servlet3InstrumentationModule extends InstrumentationModule
 
   @Override
   public String getModuleGroup() {
+    // depends on servlet instrumentation
     return "servlet";
   }
 
