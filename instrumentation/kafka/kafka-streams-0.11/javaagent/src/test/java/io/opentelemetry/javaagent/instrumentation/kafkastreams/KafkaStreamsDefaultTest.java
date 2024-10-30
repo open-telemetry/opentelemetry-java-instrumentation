@@ -56,8 +56,9 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
         StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.String().getClass().getName());
 
     // CONFIGURE PROCESSOR
-    Object builder = KafkaStreamReflectionUtil.createBuilder();
-    KStream<Integer, String> textLines = KafkaStreamReflectionUtil.stream(builder, STREAM_PENDING);
+    KafkaStreamsReflectionUtil.StreamBuilder streamBuilder =
+        KafkaStreamsReflectionUtil.createBuilder();
+    KStream<Integer, String> textLines = streamBuilder.stream(STREAM_PENDING);
     KStream<Integer, String> values =
         textLines.mapValues(
             textLine -> {
@@ -65,8 +66,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
               return textLine.toLowerCase(Locale.ROOT);
             });
 
-    KafkaStreams streams =
-        KafkaStreamReflectionUtil.createStreams(builder, values, config, STREAM_PROCESSED);
+    KafkaStreams streams = streamBuilder.createStreams(values, config, STREAM_PROCESSED);
     streams.start();
 
     String greeting = "TESTING TESTING 123!";
@@ -104,7 +104,9 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                       .hasKind(SpanKind.PRODUCER)
                       .hasNoParent()
                       .hasAttributesSatisfyingExactly(
-                          equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
+                          equalTo(
+                              MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                              MessagingIncubatingAttributes.MessagingSystemIncubatingValues.KAFKA),
                           equalTo(
                               MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                               STREAM_PENDING),
@@ -125,7 +127,10 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                 List<AttributeAssertion> assertions =
                     new ArrayList<>(
                         asList(
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                    .KAFKA),
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                 STREAM_PENDING),
@@ -149,7 +154,10 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                 List<AttributeAssertion> assertions =
                     new ArrayList<>(
                         asList(
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
+                            equalTo(
+                                MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                    .KAFKA),
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                 STREAM_PENDING),
@@ -187,7 +195,9 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(1))
                       .hasAttributesSatisfyingExactly(
-                          equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
+                          equalTo(
+                              MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                              MessagingIncubatingAttributes.MessagingSystemIncubatingValues.KAFKA),
                           equalTo(
                               MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                               STREAM_PROCESSED),
@@ -208,7 +218,10 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                   List<AttributeAssertion> assertions =
                       new ArrayList<>(
                           asList(
-                              equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
+                              equalTo(
+                                  MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                  MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                      .KAFKA),
                               equalTo(
                                   MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                   STREAM_PROCESSED),
@@ -231,7 +244,10 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                   List<AttributeAssertion> assertions =
                       new ArrayList<>(
                           asList(
-                              equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
+                              equalTo(
+                                  MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                  MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                      .KAFKA),
                               equalTo(
                                   MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                   STREAM_PROCESSED),

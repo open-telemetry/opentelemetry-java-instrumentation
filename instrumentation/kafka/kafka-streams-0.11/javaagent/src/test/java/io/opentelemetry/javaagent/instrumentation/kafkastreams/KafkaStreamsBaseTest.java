@@ -10,7 +10,6 @@ import static java.util.Collections.singleton;
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
@@ -33,6 +32,7 @@ import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -43,8 +43,6 @@ abstract class KafkaStreamsBaseTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
-
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected static final AttributeKey<String> MESSAGING_CLIENT_ID =
       AttributeKey.stringKey("messaging.client_id");
@@ -64,22 +62,20 @@ abstract class KafkaStreamsBaseTest {
             .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.Kafka.*Server\\).*", 1))
             .withStartupTimeout(Duration.ofMinutes(1));
     kafka.start();
-    cleanup.deferCleanup(kafka::stop);
 
     // create test topic
-    AdminClient adminClient =
-        AdminClient.create(ImmutableMap.of("bootstrap.servers", kafka.getBootstrapServers()));
-    cleanup.deferCleanup(adminClient);
-    adminClient
-        .createTopics(
-            asList(
-                new NewTopic(STREAM_PENDING, 1, (short) 1),
-                new NewTopic(STREAM_PROCESSED, 1, (short) 1)))
-        .all()
-        .get(10, TimeUnit.SECONDS);
+    try (AdminClient adminClient =
+        AdminClient.create(ImmutableMap.of("bootstrap.servers", kafka.getBootstrapServers()))) {
+      adminClient
+          .createTopics(
+              asList(
+                  new NewTopic(STREAM_PENDING, 1, (short) 1),
+                  new NewTopic(STREAM_PROCESSED, 1, (short) 1)))
+          .all()
+          .get(10, TimeUnit.SECONDS);
+    }
 
     producer = new KafkaProducer<>(producerProps(kafka.getBootstrapServers()));
-    cleanup.deferCleanup(producer);
 
     Map<String, Object> consumerProps =
         ImmutableMap.of(
@@ -98,7 +94,6 @@ abstract class KafkaStreamsBaseTest {
             "value.deserializer",
             StringDeserializer.class);
     consumer = new KafkaConsumer<>(consumerProps);
-    cleanup.deferCleanup(consumer);
     consumer.subscribe(
         singleton(STREAM_PROCESSED),
         new ConsumerRebalanceListener() {
@@ -110,6 +105,13 @@ abstract class KafkaStreamsBaseTest {
             consumerReady.countDown();
           }
         });
+  }
+
+  @AfterAll
+  static void cleanup() {
+    consumer.close();
+    producer.close();
+    kafka.stop();
   }
 
   static Map<String, Object> producerProps(String servers) {
