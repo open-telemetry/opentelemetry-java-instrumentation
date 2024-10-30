@@ -46,11 +46,6 @@ jib {
   container {
     mainClass = "bogus" // to suppress Jib warning about missing main class
   }
-  pluginExtensions {
-    pluginExtension {
-      implementation = "com.google.cloud.tools.jib.gradle.extension.quarkus.JibQuarkusExtension"
-    }
-  }
 }
 
 tasks {
