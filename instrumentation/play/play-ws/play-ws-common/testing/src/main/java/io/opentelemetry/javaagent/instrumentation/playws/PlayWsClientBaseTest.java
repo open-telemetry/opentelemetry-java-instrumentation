@@ -9,19 +9,21 @@ import akka.actor.ActorSystem;
 import akka.stream.ActorMaterializer;
 import akka.stream.ActorMaterializerSettings;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import play.shaded.ahc.io.netty.resolver.InetNameResolver;
 import play.shaded.ahc.io.netty.util.concurrent.EventExecutor;
@@ -38,14 +40,13 @@ abstract class PlayWsClientBaseTest<REQUEST> extends AbstractHttpClientTest<REQU
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  static final AutoCleanupExtension autoCleanup = AutoCleanupExtension.create();
-
   private static ActorSystem system;
   protected static AsyncHttpClient asyncHttpClient;
   protected static AsyncHttpClient asyncHttpClientWithReadTimeout;
   protected static ActorMaterializer materializer;
 
-  void setup() {
+  @BeforeAll
+  static void setupHttpClient() {
     String name = "play-ws";
     system = ActorSystem.create(name);
     materializer = ActorMaterializer.create(ActorMaterializerSettings.create(system), system, name);
@@ -58,8 +59,13 @@ abstract class PlayWsClientBaseTest<REQUEST> extends AbstractHttpClientTest<REQU
 
     asyncHttpClient = createClient(false);
     asyncHttpClientWithReadTimeout = createClient(true);
-    autoCleanup.deferCleanup(asyncHttpClient);
-    autoCleanup.deferCleanup(asyncHttpClientWithReadTimeout);
+  }
+
+  @AfterAll
+  static void cleanupHttpClient() throws IOException {
+    asyncHttpClient.close();
+    asyncHttpClientWithReadTimeout.close();
+    system.terminate();
   }
 
   @Override

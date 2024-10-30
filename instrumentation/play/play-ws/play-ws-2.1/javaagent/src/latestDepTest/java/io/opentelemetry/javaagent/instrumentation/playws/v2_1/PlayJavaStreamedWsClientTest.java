@@ -6,11 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.playws.v2_1;
 
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
+import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import play.libs.ws.StandaloneWSClient;
 import play.libs.ws.StandaloneWSRequest;
 import play.libs.ws.StandaloneWSResponse;
@@ -21,15 +23,17 @@ class PlayJavaStreamedWsClientTest extends PlayWsClientBaseTest<StandaloneWSRequ
   private static StandaloneWSClient wsClient;
   private static StandaloneWSClient wsClientWithReadTimeout;
 
-  @BeforeEach
-  @Override
-  void setup() {
-    super.setup();
+  @BeforeAll
+  static void setup() {
     wsClient = new StandaloneAhcWSClient(asyncHttpClient, materializer);
     wsClientWithReadTimeout =
         new StandaloneAhcWSClient(asyncHttpClientWithReadTimeout, materializer);
-    autoCleanup.deferCleanup(wsClient);
-    autoCleanup.deferCleanup(wsClientWithReadTimeout);
+  }
+
+  @AfterAll
+  static void cleanup() throws IOException {
+    wsClient.close();
+    wsClientWithReadTimeout.close();
   }
 
   @Override
