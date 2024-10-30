@@ -11,6 +11,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 
 /**
  * Extractor of <a
@@ -26,7 +27,11 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
+  private static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.query.text");
+
   private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
+  private static final AttributeKey<String> DB_OPERATION_NAME =
+      AttributeKey.stringKey("db.operation.name");
 
   /** Creates the database client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
@@ -42,7 +47,13 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    internalSet(attributes, DB_STATEMENT, getter.getStatement(request));
-    internalSet(attributes, DB_OPERATION, getter.getOperation(request));
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      internalSet(attributes, DB_QUERY_TEXT, getter.getDbQueryText(request));
+      internalSet(attributes, DB_OPERATION_NAME, getter.getDbOperationName(request));
+    }
+    if (SemconvStability.emitOldDatabaseSemconv()) {
+      internalSet(attributes, DB_STATEMENT, getter.getDbQueryText(request));
+      internalSet(attributes, DB_OPERATION, getter.getDbOperationName(request));
+    }
   }
 }

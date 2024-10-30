@@ -16,6 +16,7 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientRequestResendCount
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
@@ -63,6 +64,14 @@ class KtorClientTracing internal constructor(
     }
 
     private fun installSpanCreation(plugin: KtorClientTracing, scope: HttpClient) {
+      val initializeRequestPhase = PipelinePhase("OpenTelemetryInitializeRequest")
+      scope.requestPipeline.insertPhaseAfter(HttpRequestPipeline.State, initializeRequestPhase)
+
+      scope.requestPipeline.intercept(initializeRequestPhase) {
+        val openTelemetryContext = HttpClientRequestResendCount.initialize(Context.current())
+        withContext(openTelemetryContext.asContextElement()) { proceed() }
+      }
+
       val createSpanPhase = PipelinePhase("OpenTelemetryCreateSpan")
       scope.sendPipeline.insertPhaseAfter(HttpSendPipeline.State, createSpanPhase)
 
