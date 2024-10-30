@@ -10,7 +10,9 @@ import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -18,6 +20,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 
 class ThreadPoolExecutorTest {
+
+  @Test
+  void virtualFieldsAdded() {
+    assertThat(VirtualFieldInstalledMarker.class).isAssignableFrom(FutureTask.class);
+  }
 
   @Test
   void shouldPassOriginalRunnableToBeforeAfterMethods() throws InterruptedException {

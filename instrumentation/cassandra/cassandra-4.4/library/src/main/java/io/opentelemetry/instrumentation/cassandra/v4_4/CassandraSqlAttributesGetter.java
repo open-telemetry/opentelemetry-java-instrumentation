@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttrib
 import javax.annotation.Nullable;
 
 final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<CassandraRequest> {
-  // copied from DbIncubatingAttributes.DbSystemValues
+  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
   private static final String CASSANDRA = "cassandra";
 
   @Override

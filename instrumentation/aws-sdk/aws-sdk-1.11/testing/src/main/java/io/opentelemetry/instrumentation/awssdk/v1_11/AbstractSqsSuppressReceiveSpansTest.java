@@ -28,6 +28,7 @@ import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
+import io.opentelemetry.semconv.incubating.AwsIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import org.elasticmq.rest.sqs.SQSRestServer;
@@ -36,6 +37,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractSqsSuppressReceiveSpansTest {
 
   protected abstract InstrumentationExtension testing();
@@ -97,6 +99,9 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(stringKey("aws.endpoint"), "http://localhost:" + sqsPort),
                                 equalTo(stringKey("aws.queue.name"), "testSdkSqs"),
+                                satisfies(
+                                    AwsIncubatingAttributes.AWS_REQUEST_ID,
+                                    val -> val.isInstanceOf(String.class)),
                                 equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
                                 equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RpcIncubatingAttributes.RPC_METHOD, "CreateQueue"),
@@ -118,6 +123,9 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(
                                     stringKey("aws.queue.url"),
                                     "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
+                                satisfies(
+                                    AwsIncubatingAttributes.AWS_REQUEST_ID,
+                                    val -> val.isInstanceOf(String.class)),
                                 equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
                                 equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RpcIncubatingAttributes.RPC_METHOD, "SendMessage"),
@@ -128,7 +136,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                    MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
+                                    MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                        .AWS_SQS),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSdkSqs"),
@@ -148,6 +157,9 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(
                                     stringKey("aws.queue.url"),
                                     "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
+                                satisfies(
+                                    AwsIncubatingAttributes.AWS_REQUEST_ID,
+                                    val -> val.isInstanceOf(String.class)),
                                 equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
                                 equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),
@@ -158,7 +170,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                    MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
+                                    MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                        .AWS_SQS),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSdkSqs"),
@@ -206,6 +219,9 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(stringKey("aws.endpoint"), "http://localhost:" + sqsPort),
                                 equalTo(stringKey("aws.queue.name"), "testSdkSqs"),
+                                satisfies(
+                                    AwsIncubatingAttributes.AWS_REQUEST_ID,
+                                    val -> val.isInstanceOf(String.class)),
                                 equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
                                 equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RpcIncubatingAttributes.RPC_METHOD, "CreateQueue"),
@@ -227,6 +243,9 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(
                                     stringKey("aws.queue.url"),
                                     "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
+                                satisfies(
+                                    AwsIncubatingAttributes.AWS_REQUEST_ID,
+                                    val -> val.isInstanceOf(String.class)),
                                 equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
                                 equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RpcIncubatingAttributes.RPC_METHOD, "SendMessage"),
@@ -237,7 +256,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                    MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
+                                    MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                        .AWS_SQS),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSdkSqs"),
@@ -257,6 +277,9 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(
                                     stringKey("aws.queue.url"),
                                     "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
+                                satisfies(
+                                    AwsIncubatingAttributes.AWS_REQUEST_ID,
+                                    val -> val.isInstanceOf(String.class)),
                                 equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
                                 equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),
@@ -267,7 +290,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                    MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
+                                    MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                        .AWS_SQS),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSdkSqs"),
@@ -298,6 +322,9 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(
                                     stringKey("aws.queue.url"),
                                     "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
+                                satisfies(
+                                    AwsIncubatingAttributes.AWS_REQUEST_ID,
+                                    val -> val.isInstanceOf(String.class)),
                                 equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
                                 equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),

@@ -6,30 +6,28 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.mapping;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.util.UUID;
 import javax.servlet.Servlet;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.startup.Tomcat;
+import org.junit.jupiter.api.io.TempDir;
 
 class TomcatServlet3MappingTest extends AbstractServlet3MappingTest<Tomcat, Context> {
+  @TempDir private static File tempDir;
+
   @Override
   protected Tomcat setupServer() throws Exception {
     Tomcat tomcatServer = new Tomcat();
 
-    File baseDir = Files.createTempDirectory("tomcat").toFile();
-    baseDir.deleteOnExit();
+    File baseDir = tempDir;
     tomcatServer.setBaseDir(baseDir.getAbsolutePath());
 
     tomcatServer.setPort(port);
     tomcatServer.getConnector().setEnableLookups(true); // get localhost instead of 127.0.0.1
 
     File applicationDir = new File(baseDir, "/webapps/ROOT");
-    if (!applicationDir.exists()) {
-      applicationDir.mkdirs();
-      applicationDir.deleteOnExit();
-    }
+    applicationDir.mkdirs();
 
     Context servletContext =
         tomcatServer.addWebapp(getContextPath(), applicationDir.getAbsolutePath());

@@ -2,6 +2,67 @@
 
 ## Unreleased
 
+- Update azure-core-tracing-opentelemetry version and improve HTTP suppression to back off
+  when Azure SDK tracing was disabled.
+  ([#12489](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12489))
+
+## Version 2.9.0 (2024-10-17)
+
+### 📈 Enhancements
+
+- Allow JMX Insight reuse for remote connections
+  ([#12178](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12178))
+- Add opentelemetry-semconv-incubating to bom-alpha
+  ([#12266](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12266))
+- Bridge more incubating api
+  ([#12230](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12230))
+- Jetty HttpClient 12: propagate context to all response listeners
+  ([#12326](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12326))
+- Add Pekko Scheduler context propagation
+  ([#12359](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12359))
+- Add Akka Scheduler context propagation
+  ([#12373](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12373))
+- Add instrumentation for spring-cloud-aws SqsListener annotation
+  ([#12314](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12314))
+- Align SpringConfigProperties with DefaultConfigProperties
+  ([#12398](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12398))
+- Clear context propagation virtual field
+  ([#12397](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12397))
+- The opt-in experimental attribute `aws.requestId` was renamed to `aws.request_id`
+  (to match the semantic conventions) and it is now emitted by default.
+  ([#12352](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12352))
+- Ability to set Logback argument capture with a property in Spring Boot Starter
+  ([#12442](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12442))
+- Support experimental declarative configuration
+  ([#12265](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12265))
+- Spring Boot Starter: Add auto configuration for spring scheduling instrumentation
+  ([#12438](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12438))
+- Extract `APIGatewayProxyRequestEvent` headers for context propagation in AWS Lambda instrumentation
+  ([#12440](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12440))
+- Support JMX state metrics
+  ([#12369](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12369))
+- Allow method instrumentation module to trace methods in boot loader
+  ([#12454](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12454))
+
+### 🛠️ Bug fixes
+
+- Fix gc duration metric in runtime-telemetry-java17
+  ([#12256](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12256))
+- Fix vert.x route containing duplicate segments when RoutingContext.next is used
+  ([#12260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12260))
+- Fixes for latest mongo version
+  ([#12331](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12331))
+- Fix context propagation for ratpack request body stream
+  ([#12330](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12330))
+- Fix lambda instrumentation to forceFlush logs also
+  ([#12341](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12341))
+- Can't add custom AttributeExtractor to Apache HttpClient 5 library instrumentation
+  ([#12394](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12394))
+- Disable logback capture arguments by default
+  ([#12445](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12445))
+- Add support for missing list properties in spring starter
+  ([#12434](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12434))
+
 ## Version 2.8.0 (2024-09-13)
 
 ### Migration notes

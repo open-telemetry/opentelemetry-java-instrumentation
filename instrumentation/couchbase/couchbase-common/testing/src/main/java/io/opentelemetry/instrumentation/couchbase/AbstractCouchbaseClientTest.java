@@ -32,6 +32,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest {
 
   @RegisterExtension
@@ -107,7 +108,7 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.COUCHBASE),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "Cluster.openBucket"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -143,7 +144,7 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.COUCHBASE),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE),
                             equalTo(DbIncubatingAttributes.DB_OPERATION, "Cluster.openBucket"))),
         trace ->
             trace.hasSpansSatisfyingExactly(

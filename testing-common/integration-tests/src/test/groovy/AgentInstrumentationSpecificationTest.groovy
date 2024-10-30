@@ -6,7 +6,7 @@
 import com.google.common.reflect.ClassPath
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
 import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
-import io.opentelemetry.javaagent.tooling.Constants
+import io.opentelemetry.javaagent.bootstrap.BootstrapPackagePrefixesHolder
 import org.slf4j.LoggerFactory
 
 import java.util.concurrent.TimeoutException
@@ -17,12 +17,14 @@ import java.util.concurrent.TimeoutException
 class AgentInstrumentationSpecificationTest extends AgentInstrumentationSpecification {
   private static final ClassLoader BOOTSTRAP_CLASSLOADER = null
 
+  public static final List<String> BOOTSTRAP_PACKAGE_PREFIXES = BootstrapPackagePrefixesHolder.getBoostrapPackagePrefixes()
+
   def "classpath setup"() {
     setup:
     final List<String> bootstrapClassesIncorrectlyLoaded = []
     for (ClassPath.ClassInfo info : getTestClasspath().getAllClasses()) {
-      for (int i = 0; i < Constants.BOOTSTRAP_PACKAGE_PREFIXES.size(); ++i) {
-        if (info.getName().startsWith(Constants.BOOTSTRAP_PACKAGE_PREFIXES[i])) {
+      for (int i = 0; i < BOOTSTRAP_PACKAGE_PREFIXES.size(); ++i) {
+        if (info.getName().startsWith(BOOTSTRAP_PACKAGE_PREFIXES[i])) {
           Class<?> bootstrapClass = Class.forName(info.getName())
           def loader
           try {

@@ -114,13 +114,16 @@ public abstract class AbstractCouchbaseTest {
     return assertCouchbaseSpan(span, operation, operation, bucketName, null);
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected SpanDataAssert assertCouchbaseSpan(
       SpanDataAssert span, String spanName, String operation, String bucketName, String statement) {
     span.hasName(spanName).hasKind(SpanKind.CLIENT);
 
     List<AttributeAssertion> assertions = new ArrayList<>();
     assertions.add(
-        equalTo(DbIncubatingAttributes.DB_SYSTEM, DbIncubatingAttributes.DbSystemValues.COUCHBASE));
+        equalTo(
+            DbIncubatingAttributes.DB_SYSTEM,
+            DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE));
     if (operation != null) {
       assertions.add(equalTo(DbIncubatingAttributes.DB_OPERATION, operation));
     }

@@ -61,8 +61,8 @@ public abstract class AbstractGrpcStreamingTest {
     }
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @CartesianTest
-  @SuppressWarnings({"unchecked", "rawtypes"})
   void conversation(
       @CartesianTest.Values(ints = {1, 2, 3}) int clientMessageCount,
       @CartesianTest.Values(ints = {1, 2, 3}) int serverMessageCount)
@@ -195,8 +195,7 @@ public abstract class AbstractGrpcStreamingTest {
                             .satisfies(
                                 spanData ->
                                     assertThat(spanData.getEvents())
-                                        .satisfiesExactlyInAnyOrder(
-                                            events.toArray(new Consumer[0]))),
+                                        .satisfiesExactlyInAnyOrder(toArray(events))),
                     span ->
                         span.hasName("example.Greeter/Conversation")
                             .hasKind(SpanKind.SERVER)
@@ -218,8 +217,7 @@ public abstract class AbstractGrpcStreamingTest {
                             .satisfies(
                                 spanData ->
                                     assertThat(spanData.getEvents())
-                                        .satisfiesExactlyInAnyOrder(
-                                            events.toArray(new Consumer[0])))));
+                                        .satisfiesExactlyInAnyOrder(toArray(events)))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",
@@ -383,5 +381,10 @@ public abstract class AbstractGrpcStreamingTest {
     } catch (NoSuchMethodException unused) {
       channelBuilder.getClass().getMethod("usePlaintext").invoke(channelBuilder);
     }
+  }
+
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  private static Consumer<EventData>[] toArray(List<Consumer<EventData>> list) {
+    return list.toArray(new Consumer[0]);
   }
 }

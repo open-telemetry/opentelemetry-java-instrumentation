@@ -48,6 +48,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 abstract class AbstractJms3Test {
   static final Logger logger = LoggerFactory.getLogger(AbstractJms3Test.class);
 

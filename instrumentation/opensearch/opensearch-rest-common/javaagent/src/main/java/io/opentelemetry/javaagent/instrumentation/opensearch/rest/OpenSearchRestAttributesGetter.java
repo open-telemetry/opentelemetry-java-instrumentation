@@ -14,7 +14,7 @@ final class OpenSearchRestAttributesGetter
 
   @Override
   public String getSystem(OpenSearchRestRequest request) {
-    return DbIncubatingAttributes.DbSystemValues.OPENSEARCH;
+    return DbIncubatingAttributes.DbSystemIncubatingValues.OPENSEARCH;
   }
 
   @Override

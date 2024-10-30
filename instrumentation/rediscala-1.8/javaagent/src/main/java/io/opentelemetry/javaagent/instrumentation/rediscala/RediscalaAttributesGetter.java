@@ -15,7 +15,7 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<RedisC
 
   @Override
   public String getSystem(RedisCommand<?, ?> redisCommand) {
-    return DbIncubatingAttributes.DbSystemValues.REDIS;
+    return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
   }
 
   @Override

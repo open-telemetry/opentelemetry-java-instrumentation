@@ -199,6 +199,7 @@ class VertxRedisClientTest {
                             redisSpanAttributes("RANDOMKEY", "RANDOMKEY"))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static AttributeAssertion[] redisSpanAttributes(String operation, String statement) {
     return new AttributeAssertion[] {
       equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),

@@ -14,11 +14,13 @@ import io.opentelemetry.javaagent.testing.common.Java8BytecodeBridge
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemValues
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues
+
 import java.util.function.Consumer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.{Test, TestInstance}
 import org.junit.jupiter.api.extension.RegisterExtension
+
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 import slick.jdbc.H2Profile.api._
@@ -81,7 +83,7 @@ class SlickTest {
                   .hasAttributesSatisfyingExactly(
                     equalTo(
                       DbIncubatingAttributes.DB_SYSTEM,
-                      DbSystemValues.H2
+                      DbSystemIncubatingValues.H2
                     ),
                     equalTo(DbIncubatingAttributes.DB_NAME, Db),
                     equalTo(DbIncubatingAttributes.DB_USER, Username),

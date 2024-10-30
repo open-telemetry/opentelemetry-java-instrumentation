@@ -10,6 +10,8 @@ package io.opentelemetry.instrumentation.jmx.engine;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.jmx.yaml.JmxConfig;
 import io.opentelemetry.instrumentation.jmx.yaml.JmxRule;
@@ -20,6 +22,10 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
+import javax.management.MBeanAttributeInfo;
+import javax.management.MBeanInfo;
+import javax.management.MBeanServerConnection;
+import javax.management.ObjectName;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -30,7 +36,7 @@ class RuleParserTest {
   @BeforeAll
   static void setup() {
     parser = RuleParser.get();
-    assertThat(parser == null).isFalse();
+    assertThat(parser).isNotNull();
   }
 
   /*
@@ -68,19 +74,22 @@ class RuleParserTest {
 
   @Test
   void testConf2() {
-    InputStream is = new ByteArrayInputStream(CONF2.getBytes(StandardCharsets.UTF_8));
-    JmxConfig config = parser.loadConfig(is);
-    assertThat(config).isNotNull();
+    JmxConfig config = parseConf(CONF2);
 
     List<JmxRule> defs = config.getRules();
     assertThat(defs).hasSize(2);
 
     JmxRule def1 = defs.get(0);
-    assertThat(def1.getBeans()).hasSize(2);
-    assertThat(def1.getMetricAttribute()).hasSize(2);
+    assertThat(def1.getBeans()).containsExactly("OBJECT:NAME1=*", "OBJECT:NAME2=*");
+    assertThat(def1.getMetricAttribute())
+        .hasSize(2)
+        .containsEntry("LABEL_KEY1", "param(PARAMETER)")
+        .containsEntry("LABEL_KEY2", "beanattr(ATTRIBUTE)");
 
     Map<String, Metric> attr = def1.getMapping();
-    assertThat(attr).hasSize(4);
+    assertThat(attr)
+        .hasSize(4)
+        .containsKeys("ATTRIBUTE1", "ATTRIBUTE2", "ATTRIBUTE3", "ATTRIBUTE4");
 
     Metric m1 = attr.get("ATTRIBUTE1");
     assertThat(m1).isNotNull();
@@ -88,6 +97,21 @@ class RuleParserTest {
     assertThat(m1.getMetricType()).isEqualTo(MetricInfo.Type.GAUGE);
     assertThat(m1.getUnit()).isEqualTo("UNIT1");
     assertThat(m1.getMetricAttribute()).containsExactly(entry("LABEL_KEY3", "const(CONSTANT)"));
+
+    Metric m2 = attr.get("ATTRIBUTE2");
+    assertThat(m2).isNotNull();
+    assertThat(m2.getMetric()).isEqualTo("METRIC_NAME2");
+    assertThat(m2.getDesc()).isEqualTo("DESCRIPTION2");
+    assertThat(m2.getUnit()).isEqualTo("UNIT2");
+
+    JmxRule def2 = defs.get(1);
+    assertThat(def2.getBeans()).containsExactly("OBJECT:NAME3=*");
+    assertThat(def2.getMetricAttribute()).isNull();
+
+    assertThat(def2.getMapping()).hasSize(1);
+    Metric m3 = def2.getMapping().get("ATTRIBUTE3");
+    assertThat(m3.getMetric()).isEqualTo("METRIC_NAME3");
+    assertThat(m3.getUnit()).isNull();
   }
 
   private static final String CONF3 =
@@ -103,9 +127,7 @@ class RuleParserTest {
 
   @Test
   void testConf3() {
-    InputStream is = new ByteArrayInputStream(CONF3.getBytes(StandardCharsets.UTF_8));
-    JmxConfig config = parser.loadConfig(is);
-    assertThat(config).isNotNull();
+    JmxConfig config = parseConf(CONF3);
 
     List<JmxRule> defs = config.getRules();
     assertThat(defs).hasSize(1);
@@ -115,9 +137,15 @@ class RuleParserTest {
     assertThat(def1.getMetricAttribute()).isNull();
 
     Map<String, Metric> attr = def1.getMapping();
-    assertThat(attr).hasSize(5).containsKey("ATTRIBUTE33");
+    assertThat(attr)
+        .hasSize(5)
+        .containsKeys("ATTRIBUTE31", "ATTRIBUTE32", "ATTRIBUTE33", "ATTRIBUTE34", "ATTRIBUTE35");
+    assertThat(attr.get("ATTRIBUTE32")).isNull();
     assertThat(attr.get("ATTRIBUTE33")).isNull();
-    assertThat(attr.get("ATTRIBUTE34")).isNotNull();
+    Metric attribute34 = attr.get("ATTRIBUTE34");
+    assertThat(attribute34).isNotNull();
+    assertThat(attribute34.getMetric()).isEqualTo("METRIC_NAME34");
+    assertThat(attr.get("ATTRIBUTE35")).isNull();
   }
 
   /*
@@ -149,38 +177,62 @@ class RuleParserTest {
 
   @Test
   void testConf4() throws Exception {
-    InputStream is = new ByteArrayInputStream(CONF4.getBytes(StandardCharsets.UTF_8));
-    JmxConfig config = parser.loadConfig(is);
-    assertThat(config).isNotNull();
+    JmxConfig config = parseConf(CONF4);
 
     List<JmxRule> defs = config.getRules();
     assertThat(defs).hasSize(1);
 
-    MetricDef metricDef = defs.get(0).buildMetricDef();
+    JmxRule jmxDef = defs.get(0);
+    assertThat(jmxDef.getUnit()).isEqualTo("DEFAULT_UNIT");
+    assertThat(jmxDef.getMetricType()).isEqualTo(MetricInfo.Type.UPDOWNCOUNTER);
+
+    MetricDef metricDef = jmxDef.buildMetricDef();
     assertThat(metricDef).isNotNull();
-    assertThat(metricDef.getMetricExtractors()).hasSize(3);
 
     assertThat(metricDef.getMetricExtractors())
+        .hasSize(3)
         .anySatisfy(
             m -> {
               assertThat(m.getMetricValueExtractor().getAttributeName()).isEqualTo("A.b");
-              assertThat(m.getAttributes()).hasSize(3);
+              assertThat(m.getAttributes())
+                  .hasSize(3)
+                  .extracting("attributeName")
+                  .contains("LABEL_KEY1", "LABEL_KEY2", "LABEL_KEY3");
 
-              MetricInfo mb1 = m.getInfo();
-              assertThat(mb1.getMetricName()).isEqualTo("PREFIX.METRIC_NAME1");
-              assertThat(mb1.getDescription()).isEqualTo("DESCRIPTION1");
-              assertThat(mb1.getUnit()).isEqualTo("UNIT1");
-              assertThat(mb1.getType()).isEqualTo(MetricInfo.Type.COUNTER);
+              MetricInfo metricInfo = m.getInfo();
+              assertThat(metricInfo.getMetricName()).isEqualTo("PREFIX.METRIC_NAME1");
+              assertThat(metricInfo.getDescription()).isEqualTo("DESCRIPTION1");
+              assertThat(metricInfo.getUnit()).isEqualTo("UNIT1");
+              assertThat(metricInfo.getType()).isEqualTo(MetricInfo.Type.COUNTER);
+            })
+        .anySatisfy(
+            m -> {
+              assertThat(m.getMetricValueExtractor().getAttributeName()).isEqualTo("ATTRIBUTE2");
+              assertThat(m.getAttributes())
+                  .hasSize(2)
+                  .extracting("attributeName")
+                  .contains("LABEL_KEY1", "LABEL_KEY2");
+
+              MetricInfo metricInfo = m.getInfo();
+              assertThat(metricInfo.getMetricName()).isEqualTo("PREFIX.METRIC_NAME2");
+              assertThat(metricInfo.getDescription()).isEqualTo("DESCRIPTION2");
+              assertThat(metricInfo.getUnit()).isEqualTo("UNIT2");
             })
         .anySatisfy(
             m -> {
               assertThat(m.getMetricValueExtractor().getAttributeName()).isEqualTo("ATTRIBUTE3");
 
-              MetricInfo mb3 = m.getInfo();
-              assertThat(mb3.getMetricName()).isEqualTo("PREFIX.ATTRIBUTE3");
+              MetricInfo metricInfo = m.getInfo();
+              assertThat(metricInfo.getMetricName()).isEqualTo("PREFIX.ATTRIBUTE3");
+              assertThat(metricInfo.getDescription()).isNull();
+
               // syntax extension - defining a default unit and type
-              assertThat(mb3.getType()).isEqualTo(MetricInfo.Type.UPDOWNCOUNTER);
-              assertThat(mb3.getUnit()).isEqualTo("DEFAULT_UNIT");
+              assertThat(metricInfo.getType())
+                  .describedAs("default type should match jmx rule definition")
+                  .isEqualTo(jmxDef.getMetricType());
+              assertThat(metricInfo.getUnit())
+                  .describedAs("default unit should match jmx rule definition")
+                  .isEqualTo(jmxDef.getUnit());
             });
   }
 
@@ -193,9 +245,7 @@ class RuleParserTest {
 
   @Test
   void testConf5() throws Exception {
-    InputStream is = new ByteArrayInputStream(CONF5.getBytes(StandardCharsets.UTF_8));
-    JmxConfig config = parser.loadConfig(is);
-    assertThat(config).isNotNull();
+    JmxConfig config = parseConf(CONF5);
 
     List<JmxRule> defs = config.getRules();
     assertThat(defs).hasSize(1);
@@ -204,7 +254,7 @@ class RuleParserTest {
     assertThat(metricDef).isNotNull();
     assertThat(metricDef.getMetricExtractors()).hasSize(1);
 
-    MetricExtractor m1 = metricDef.getMetricExtractors()[0];
+    MetricExtractor m1 = metricDef.getMetricExtractors().get(0);
     assertThat(m1.getMetricValueExtractor().getAttributeName()).isEqualTo("ATTRIBUTE");
     assertThat(m1.getAttributes()).isEmpty();
 
@@ -227,9 +277,7 @@ class RuleParserTest {
 
   @Test
   void testConf6() throws Exception {
-    InputStream is = new ByteArrayInputStream(CONF6.getBytes(StandardCharsets.UTF_8));
-    JmxConfig config = parser.loadConfig(is);
-    assertThat(config).isNotNull();
+    JmxConfig config = parseConf(CONF6);
 
     List<JmxRule> defs = config.getRules();
     assertThat(defs).hasSize(1);
@@ -238,14 +286,16 @@ class RuleParserTest {
     assertThat(metricDef).isNotNull();
     assertThat(metricDef.getMetricExtractors()).hasSize(1);
 
-    MetricExtractor m1 = metricDef.getMetricExtractors()[0];
+    MetricExtractor m1 = metricDef.getMetricExtractors().get(0);
     assertThat(m1.getMetricValueExtractor().getAttributeName()).isEqualTo("ATTRIBUTE");
     // MetricAttribute set at the metric level should override the one set at the definition level
-    assertThat(m1.getAttributes()).hasSize(1);
-    assertThat(m1.getInfo().getMetricName()).isEqualTo("ATTRIBUTE");
+    assertThat(m1.getAttributes())
+        .hasSize(1)
+        .satisfiesExactly(a -> checkConstantMetricAttribute(a, "key1", "value2"));
 
-    MetricAttribute l1 = m1.getAttributes()[0];
-    assertThat(l1.acquireAttributeValue(null, null)).isEqualTo("value2");
+    assertThat(m1.getInfo().getMetricName())
+        .describedAs("metric name should default to JMX attribute name")
+        .isEqualTo("ATTRIBUTE");
   }
 
   private static final String CONF7 =
@@ -261,9 +311,7 @@ class RuleParserTest {
 
   @Test
   void testConf7() throws Exception {
-    InputStream is = new ByteArrayInputStream(CONF7.getBytes(StandardCharsets.UTF_8));
-    JmxConfig config = parser.loadConfig(is);
-    assertThat(config).isNotNull();
+    JmxConfig config = parseConf(CONF7);
 
     List<JmxRule> defs = config.getRules();
     assertThat(defs).hasSize(1);
@@ -273,10 +321,13 @@ class RuleParserTest {
     assertThat(metricDef.getMetricExtractors()).hasSize(1);
 
     // Test that the MBean attribute is correctly parsed
-    MetricExtractor m1 = metricDef.getMetricExtractors()[0];
+    MetricExtractor m1 = metricDef.getMetricExtractors().get(0);
     assertThat(m1.getMetricValueExtractor().getAttributeName()).isEqualTo("ATTRIBUTE");
-    assertThat(m1.getAttributes()).hasSize(2);
     assertThat(m1.getInfo().getMetricName()).isEqualTo("ATTRIBUTE");
+    assertThat(m1.getAttributes())
+        .hasSize(2)
+        .anySatisfy(a -> checkConstantMetricAttribute(a, "key1", "value1"))
+        .anySatisfy(a -> checkConstantMetricAttribute(a, "key2", "value2"));
   }
 
   private static final String EMPTY_CONF = "---\n";
@@ -290,9 +341,7 @@ class RuleParserTest {
 
   @Test
   void testConf8() throws Exception {
-    InputStream is = new ByteArrayInputStream(CONF8.getBytes(StandardCharsets.UTF_8));
-    JmxConfig config = parser.loadConfig(is);
-    assertThat(config).isNotNull();
+    JmxConfig config = parseConf(CONF8);
 
     List<JmxRule> defs = config.getRules();
     assertThat(defs).hasSize(1);
@@ -301,7 +350,7 @@ class RuleParserTest {
     assertThat(metricDef).isNotNull();
     assertThat(metricDef.getMetricExtractors()).hasSize(1);
 
-    MetricExtractor m1 = metricDef.getMetricExtractors()[0];
+    MetricExtractor m1 = metricDef.getMetricExtractors().get(0);
     assertThat(m1.getMetricValueExtractor().getAttributeName()).isEqualTo("Attr.with.dot");
     assertThat(m1.getAttributes()).isEmpty();
 
@@ -312,11 +361,114 @@ class RuleParserTest {
     assertThat(mb1.getUnit()).isNull();
   }
 
+  private static final String CONF9 =
+      "---                                   # keep stupid spotlessJava at bay\n"
+          + "rules:\n"
+          + "  - bean: my-test:type=9\n"
+          + "    mapping:\n"
+          + "      jmxStateAttribute:\n"
+          + "        type: state\n"
+          + "        metric: state_metric\n"
+          + "        metricAttribute:\n"
+          + "          state_attribute: \n" // --> only one state attribute allowed
+          + "            ok: STARTED\n" // as simple string
+          + "            failed: [STOPPED,FAILED]\n" // as array of strings
+          + "            degraded: '*'\n" // degraded value for default
+          + "";
+
+  @Test
+  void testStateMetricConf() throws Exception {
+    JmxConfig config = parseConf(CONF9);
+    assertThat(config).isNotNull();
+
+    List<JmxRule> rules = config.getRules();
+    assertThat(rules).hasSize(1);
+
+    JmxRule jmxRule = rules.get(0);
+    assertThat(jmxRule.getBean()).isEqualTo("my-test:type=9");
+    Metric metric = jmxRule.getMapping().get("jmxStateAttribute");
+    assertThat(metric.getMetricType()).isEqualTo(MetricInfo.Type.STATE);
+
+    assertThat(metric.getStateMapping().isEmpty()).isFalse();
+    assertThat(metric.getStateMapping().getStateKeys()).contains("ok", "failed", "degraded");
+    assertThat(metric.getStateMapping().getDefaultStateKey()).isEqualTo("degraded");
+    assertThat(metric.getStateMapping().getStateValue("STARTED")).isEqualTo("ok");
+    assertThat(metric.getStateMapping().getStateValue("STOPPED")).isEqualTo("failed");
+    assertThat(metric.getStateMapping().getStateValue("FAILED")).isEqualTo("failed");
+    assertThat(metric.getStateMapping().getStateValue("OTHER")).isEqualTo("degraded");
+
+    Map<String, Object> metricAttributeMap = metric.getMetricAttribute();
+    assertThat(metricAttributeMap).containsKey("state_attribute").hasSize(1);
+    assertThat(metricAttributeMap.get("state_attribute")).isInstanceOf(Map.class);
+
+    ObjectName objectName = new ObjectName(jmxRule.getBean());
+    MBeanServerConnection mockConnection = mock(MBeanServerConnection.class);
+
+    // mock attribute value
+    when(mockConnection.getAttribute(objectName, "jmxStateAttribute")).thenReturn("STOPPED");
+
+    // mock attribute discovery
+    MBeanInfo mockBeanInfo = mock(MBeanInfo.class);
+    when(mockBeanInfo.getAttributes())
+        .thenReturn(
+            new MBeanAttributeInfo[] {
+              new MBeanAttributeInfo(
+                  "jmxStateAttribute", "java.lang.String", "", true, false, false)
+            });
+    when(mockConnection.getMBeanInfo(objectName)).thenReturn(mockBeanInfo);
+
+    MetricDef metricDef = jmxRule.buildMetricDef();
+    assertThat(metricDef.getMetricExtractors())
+        .hasSize(3)
+        .allSatisfy(
+            me -> {
+              assertThat(me.getInfo().getMetricName()).isEqualTo("state_metric");
+              assertThat(me.getInfo().getType()).isEqualTo(MetricInfo.Type.UPDOWNCOUNTER);
+
+              assertThat(me.getAttributes()).hasSize(1);
+              MetricAttribute stateAttribute = me.getAttributes().get(0);
+              assertThat(stateAttribute.getAttributeName()).isEqualTo("state_attribute");
+              String stateAttributeValue =
+                  stateAttribute.acquireAttributeValue(mockConnection, objectName);
+
+              BeanAttributeExtractor attributeExtractor = me.getMetricValueExtractor();
+              assertThat(attributeExtractor).isNotNull();
+              assertThat(attributeExtractor.getSampleValue(null, null))
+                  .describedAs("sampled value must be an integer")
+                  .isInstanceOf(Integer.class);
+
+              assertThat(attributeExtractor.getAttributeInfo(mockConnection, objectName))
+                  .describedAs("attribute info must be provided as a regular int metric")
+                  .isNotNull();
+
+              int expectedValue = stateAttributeValue.equals("failed") ? 1 : 0;
+              Number extractedValue =
+                  attributeExtractor.extractNumericalAttribute(mockConnection, objectName);
+              assertThat(extractedValue)
+                  .describedAs(
+                      "metric value should be %d when '%s' attribute is '%s'",
+                      expectedValue, stateAttribute.getAttributeName(), stateAttributeValue)
+                  .isEqualTo(expectedValue);
+            });
+  }
+
   @Test
   void testEmptyConf() {
-    InputStream is = new ByteArrayInputStream(EMPTY_CONF.getBytes(StandardCharsets.UTF_8));
-    JmxConfig config = parser.loadConfig(is);
+    JmxConfig config = parseConf(EMPTY_CONF);
     assertThat(config.getRules()).isEmpty();
+  }
+
+  private static void checkConstantMetricAttribute(
+      MetricAttribute attribute, String expectedName, String expectedValue) {
+    assertThat(attribute.getAttributeName()).isEqualTo(expectedName);
+    assertThat(attribute.acquireAttributeValue(null, null)).isEqualTo(expectedValue);
+  }
+
+  private static JmxConfig parseConf(String s) {
+    InputStream is = new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8));
+    JmxConfig jmxConfig = parser.loadConfig(is);
+    assertThat(jmxConfig).isNotNull();
+    return jmxConfig;
   }
 
   /*
@@ -324,13 +476,10 @@ class RuleParserTest {
    */
 
   private static void runNegativeTest(String yaml) {
-    InputStream is = new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8));
-
     Assertions.assertThrows(
         Exception.class,
         () -> {
-          JmxConfig config = parser.loadConfig(is);
-          assertThat(config).isNotNull();
+          JmxConfig config = parseConf(yaml);
 
           List<JmxRule> defs = config.getRules();
           assertThat(defs).hasSize(1);

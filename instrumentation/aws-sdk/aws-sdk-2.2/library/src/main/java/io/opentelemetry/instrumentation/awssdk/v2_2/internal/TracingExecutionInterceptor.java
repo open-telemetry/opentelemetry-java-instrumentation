@@ -51,8 +51,11 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
   private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
-  // copied from DbIncubatingAttributes.DbSystemValues
+  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
   private static final String DB_SYSTEM_DYNAMODB = "dynamodb";
+  // copied from AwsIncubatingAttributes
+  private static final AttributeKey<String> AWS_REQUEST_ID =
+      AttributeKey.stringKey("aws.request_id");
 
   // the class name is part of the attribute name, so that it will be shaded when used in javaagent
   // instrumentation, and won't conflict with usage outside javaagent instrumentation
@@ -365,10 +368,10 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   private void onSdkResponse(
       Span span, SdkResponse response, ExecutionAttributes executionAttributes) {
+    if (response instanceof AwsResponse) {
+      span.setAttribute(AWS_REQUEST_ID, ((AwsResponse) response).responseMetadata().requestId());
+    }
     if (captureExperimentalSpanAttributes) {
-      if (response instanceof AwsResponse) {
-        span.setAttribute("aws.requestId", ((AwsResponse) response).responseMetadata().requestId());
-      }
       AwsSdkRequest sdkRequest = executionAttributes.getAttribute(AWS_SDK_REQUEST_ATTRIBUTE);
       if (sdkRequest != null) {
         fieldMapper.mapToAttributes(response, sdkRequest, span);
