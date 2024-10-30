@@ -38,6 +38,7 @@ import org.opensearch.client.RestClient;
 import org.opensearch.testcontainers.OpensearchContainer;
 import org.testcontainers.utility.DockerImageName;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public class OpenSearchRestTest {
   @RegisterExtension
   static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -87,7 +88,6 @@ public class OpenSearchRestTest {
 
   @Test
   void shouldGetStatusWithTraces() throws IOException {
-
     client.performRequest(new Request("GET", "_cluster/health"));
 
     testing.waitAndAssertTraces(

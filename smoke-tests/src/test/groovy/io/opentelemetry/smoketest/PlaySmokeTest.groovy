@@ -17,7 +17,7 @@ import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContaine
 class PlaySmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-play:jdk$jdk-20210917.1246460868"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-play:jdk$jdk-20241022.11450623960"
   }
 
   @Override
@@ -43,8 +43,6 @@ class PlaySmokeTest extends SmokeTest {
     stopTarget()
 
     where:
-    // Play doesn't support Java 16 (or 17) yet
-    // https://github.com/playframework/playframework/pull/10819
-    jdk << [8, 11, 15]
+    jdk << [8, 11, 17, 21]
   }
 }

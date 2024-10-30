@@ -42,6 +42,7 @@ import org.junit.jupiter.api.Test;
 
 class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @DisplayName("test kafka produce and consume with streams in-between")
   @Test
   void testKafkaProduceAndConsumeWithStreamsInBetween() throws Exception {
@@ -100,8 +101,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                 STREAM_PENDING),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
-                            equalTo(
-                                MessagingIncubatingAttributes.MESSAGING_CLIENT_ID, "producer-1"),
+                            equalTo(MESSAGING_CLIENT_ID, "producer-1"),
                             satisfies(
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
                                 k -> k.isInstanceOf(String.class)),
@@ -119,9 +119,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                                   MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                   STREAM_PENDING),
                               equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
-                              satisfies(
-                                  MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
-                                  k -> k.endsWith("consumer")),
+                              satisfies(MESSAGING_CLIENT_ID, k -> k.endsWith("consumer")),
                               satisfies(
                                   MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                                   k -> k.isInstanceOf(Long.class)),
@@ -159,9 +157,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                               MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                               STREAM_PROCESSED),
                           equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
-                          satisfies(
-                              MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
-                              k -> k.isInstanceOf(String.class)),
+                          satisfies(MESSAGING_CLIENT_ID, k -> k.isInstanceOf(String.class)),
                           satisfies(
                               MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
                               k -> k.isInstanceOf(String.class)),
@@ -177,9 +173,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                                   MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                   STREAM_PROCESSED),
                               equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
-                              satisfies(
-                                  MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
-                                  k -> k.startsWith("consumer")),
+                              satisfies(MESSAGING_CLIENT_ID, k -> k.startsWith("consumer")),
                               satisfies(
                                   MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                                   k -> k.isInstanceOf(Long.class)),

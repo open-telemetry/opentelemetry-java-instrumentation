@@ -123,6 +123,7 @@ class PutGetTest {
     assertGeodeTrace("query", "SELECT * FROM /test-region p WHERE p.expDate = ?");
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void assertGeodeTrace(String verb, String query) {
     testing.waitAndAssertTraces(
         trace ->

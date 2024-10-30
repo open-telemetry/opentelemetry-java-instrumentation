@@ -48,8 +48,7 @@ public class ResourceProviderPropertiesCustomizer implements AutoConfigurationCu
     autoConfigurationCustomizer.addPropertiesCustomizer(this::customize);
   }
 
-  // VisibleForTesting
-  Map<String, String> customize(ConfigProperties config) {
+  public Map<String, String> customize(ConfigProperties config) {
     Set<String> enabledProviders = new HashSet<>(config.getList(ENABLED_KEY));
 
     List<String> enabled = new ArrayList<>();

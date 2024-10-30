@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2
 
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.AwsIncubatingAttributes
 import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.HttpAttributes
 import io.opentelemetry.semconv.UrlAttributes
@@ -128,7 +129,7 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.queue.name" "testSdkSqs"
-            "aws.requestId" { it == "00000000-0000-0000-0000-000000000000" || it == "UNKNOWN" }
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" { it == "00000000-0000-0000-0000-000000000000" || it == "UNKNOWN" }
             "rpc.system" "aws-api"
             "rpc.service" "Sqs"
             "rpc.method" "CreateQueue"
@@ -148,7 +149,7 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
-            "aws.requestId" { it == "00000000-0000-0000-0000-000000000000" || it == "UNKNOWN" }
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" { it == "00000000-0000-0000-0000-000000000000" || it == "UNKNOWN" }
             "rpc.system" "aws-api"
             "rpc.method" "SendMessage"
             "rpc.service" "Sqs"
@@ -157,7 +158,7 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
             "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
             "$ServerAttributes.SERVER_ADDRESS" "localhost"
             "$ServerAttributes.SERVER_PORT" sqsPort
-            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS
+            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
             "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
@@ -178,7 +179,7 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
             "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
             "$ServerAttributes.SERVER_ADDRESS" "localhost"
             "$ServerAttributes.SERVER_PORT" sqsPort
-            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS
+            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
             "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
@@ -208,7 +209,7 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
             hasNoLinks()
             attributes {
               "aws.agent" "java-aws-sdk"
-              "aws.requestId" { it == "00000000-0000-0000-0000-000000000000" || it == "UNKNOWN" }
+              "$AwsIncubatingAttributes.AWS_REQUEST_ID" { it == "00000000-0000-0000-0000-000000000000" || it == "UNKNOWN" }
               "rpc.method" "ReceiveMessage"
               "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
               "rpc.system" "aws-api"
@@ -320,7 +321,7 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.queue.url" "http://localhost:$sqsPort/000000000000/testSdkSqs"
-            "aws.requestId" { it.trim() == "00000000-0000-0000-0000-000000000000" || it == "UNKNOWN" }
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" { it.trim() == "00000000-0000-0000-0000-000000000000" || it == "UNKNOWN" }
             "rpc.system" "aws-api"
             "rpc.method" "SendMessageBatch"
             "rpc.service" "Sqs"
@@ -329,7 +330,7 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
             "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
             "$ServerAttributes.SERVER_ADDRESS" "localhost"
             "$ServerAttributes.SERVER_PORT" sqsPort
-            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS
+            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
             "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
           }
@@ -351,7 +352,7 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
               "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
               "$ServerAttributes.SERVER_ADDRESS" "localhost"
               "$ServerAttributes.SERVER_PORT" sqsPort
-              "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS
+              "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS
               "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
               "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
               "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
@@ -379,7 +380,7 @@ abstract class AbstractAws2SqsSuppressReceiveSpansTest extends InstrumentationSp
               "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:$sqsPort") }
               "$ServerAttributes.SERVER_ADDRESS" "localhost"
               "$ServerAttributes.SERVER_PORT" sqsPort
-              "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS
+              "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS
               "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "testSdkSqs"
               "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
               "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String

@@ -50,6 +50,7 @@ public class CassandraTelemetryBuilder {
     return new CassandraTelemetry(createInstrumenter(openTelemetry, statementSanitizationEnabled));
   }
 
+  @SuppressWarnings("deprecation") // to support old database semantic conventions
   protected Instrumenter<CassandraRequest, ExecutionInfo> createInstrumenter(
       OpenTelemetry openTelemetry, boolean statementSanitizationEnabled) {
     CassandraSqlAttributesGetter attributesGetter = new CassandraSqlAttributesGetter();

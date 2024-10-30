@@ -114,6 +114,7 @@ class DbSpanDecorator extends BaseSpanDecorator {
     }
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   public void pre(
       AttributesBuilder attributes,

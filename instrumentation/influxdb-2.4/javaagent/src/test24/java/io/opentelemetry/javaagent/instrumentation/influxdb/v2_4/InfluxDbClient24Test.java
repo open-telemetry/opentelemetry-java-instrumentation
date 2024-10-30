@@ -141,6 +141,7 @@ class InfluxDbClient24Test {
                                 databaseName))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> attributeAssertions(
       String statement, String operation, String databaseName) {
     List<AttributeAssertion> result = new ArrayList<>();

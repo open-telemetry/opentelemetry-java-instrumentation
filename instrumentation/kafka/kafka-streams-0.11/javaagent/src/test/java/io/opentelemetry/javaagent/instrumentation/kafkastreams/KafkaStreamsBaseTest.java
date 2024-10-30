@@ -9,6 +9,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 
 import com.google.common.collect.ImmutableMap;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -45,6 +46,8 @@ abstract class KafkaStreamsBaseTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
+  protected static final AttributeKey<String> MESSAGING_CLIENT_ID =
+      AttributeKey.stringKey("messaging.client_id");
   protected static final String STREAM_PENDING = "test.pending";
   protected static final String STREAM_PROCESSED = "test.processed";
 

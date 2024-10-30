@@ -41,22 +41,16 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class StoreInContextAdvice {
-    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
-    public static Object onEnter() {
-      return null;
-    }
-
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    public static Context onEnter(
         @Advice.This SpanKey applicationSpanKey,
         @Advice.Argument(0) Context applicationContext,
-        @Advice.Argument(1) Span applicationSpan,
-        @Advice.Return(readOnly = false) Context newApplicationContext) {
+        @Advice.Argument(1) Span applicationSpan) {
 
       io.opentelemetry.instrumentation.api.internal.SpanKey agentSpanKey =
           SpanKeyBridging.toAgentOrNull(applicationSpanKey);
       if (agentSpanKey == null) {
-        return;
+        return null;
       }
 
       io.opentelemetry.context.Context agentContext =
@@ -64,41 +58,61 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
 
       io.opentelemetry.api.trace.Span agentSpan = Bridging.toAgentOrNull(applicationSpan);
       if (agentSpan == null) {
-        return;
+        // if application span can not be bridged to agent span, this could happen when it is not
+        // created through bridged GlobalOpenTelemetry, we'll let the original method run and
+        // store the span in context without bridging
+        return null;
       }
 
       io.opentelemetry.context.Context newAgentContext =
           agentSpanKey.storeInContext(agentContext, agentSpan);
 
-      newApplicationContext = AgentContextStorage.toApplicationContext(newAgentContext);
+      return AgentContextStorage.toApplicationContext(newAgentContext);
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(
+        @Advice.Enter Context newApplicationContext,
+        @Advice.Return(readOnly = false) Context result) {
+
+      if (newApplicationContext != null) {
+        result = newApplicationContext;
+      }
     }
   }
 
   @SuppressWarnings("unused")
   public static class FromContextOrNullAdvice {
-    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
-    public static Object onEnter() {
-      return null;
-    }
-
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This SpanKey applicationSpanKey,
-        @Advice.Argument(0) Context applicationContext,
-        @Advice.Return(readOnly = false) Span applicationSpan) {
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    public static Span onEnter(
+        @Advice.This SpanKey applicationSpanKey, @Advice.Argument(0) Context applicationContext) {
 
       io.opentelemetry.instrumentation.api.internal.SpanKey agentSpanKey =
           SpanKeyBridging.toAgentOrNull(applicationSpanKey);
       if (agentSpanKey == null) {
-        return;
+        return null;
       }
 
       io.opentelemetry.context.Context agentContext =
           AgentContextStorage.getAgentContext(applicationContext);
 
       io.opentelemetry.api.trace.Span agentSpan = agentSpanKey.fromContextOrNull(agentContext);
+      if (agentSpan == null) {
+        // Bridged agent span was not found. Run the original method, there could be an unbridged
+        // span stored in the application context.
+        return null;
+      }
 
-      applicationSpan = agentSpan == null ? null : Bridging.toApplication(agentSpan);
+      return Bridging.toApplication(agentSpan);
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(
+        @Advice.Enter Span applicationSpan, @Advice.Return(readOnly = false) Span result) {
+
+      if (applicationSpan != null) {
+        result = applicationSpan;
+      }
     }
   }
 }

@@ -13,8 +13,8 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.PropagationProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.SpringConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -53,13 +53,14 @@ import org.springframework.web.client.RestTemplate;
  * This test class enforces the order of the tests to make sure that {@link #shouldSendTelemetry()},
  * which asserts the telemetry data from the application startup, is executed first.
  */
+@SuppressWarnings("deprecation") // using deprecated semconv
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
   @Autowired private TestRestTemplate testRestTemplate;
 
   @Autowired private Environment environment;
-  @Autowired private PropagationProperties propagationProperties;
+  @Autowired private OtelSpringProperties otelSpringProperties;
   @Autowired private OtelResourceProperties otelResourceProperties;
   @Autowired private OtlpExporterProperties otlpExporterProperties;
   @Autowired private RestTemplateBuilder restTemplateBuilder;
@@ -128,7 +129,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
             environment,
             otlpExporterProperties,
             otelResourceProperties,
-            propagationProperties,
+            otelSpringProperties,
             DefaultConfigProperties.createFromMap(
                 Collections.singletonMap("otel.exporter.otlp.headers", "a=1,b=2")));
     assertThat(configProperties.getMap("otel.exporter.otlp.headers"))

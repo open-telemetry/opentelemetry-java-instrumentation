@@ -24,6 +24,7 @@ import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends AbstractSpringKafkaTest {
 
   protected abstract boolean isLibraryInstrumentationTest();
@@ -58,7 +59,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
                                 satisfies(
-                                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
+                                    MESSAGING_CLIENT_ID,
                                     stringAssert -> stringAssert.startsWith("producer")),
                                 satisfies(
                                     MessagingIncubatingAttributes
@@ -98,7 +99,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
                                     "testSingleListener"),
                                 satisfies(
-                                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
+                                    MESSAGING_CLIENT_ID,
                                     stringAssert -> stringAssert.startsWith("consumer"))),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
@@ -133,9 +134,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
             equalTo(MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY, "10"),
             equalTo(
                 MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "testSingleListener"),
-            satisfies(
-                MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
-                stringAssert -> stringAssert.startsWith("consumer")));
+            satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")));
 
     testing()
         .waitAndAssertTraces(
@@ -154,7 +153,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
                                 satisfies(
-                                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
+                                    MESSAGING_CLIENT_ID,
                                     stringAssert -> stringAssert.startsWith("producer")),
                                 satisfies(
                                     MessagingIncubatingAttributes
@@ -218,7 +217,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                   "testBatchTopic"),
                               equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
                               satisfies(
-                                  MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
+                                  MESSAGING_CLIENT_ID,
                                   stringAssert -> stringAssert.startsWith("producer")),
                               satisfies(
                                   MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
@@ -239,7 +238,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                   "testBatchTopic"),
                               equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
                               satisfies(
-                                  MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
+                                  MESSAGING_CLIENT_ID,
                                   stringAssert -> stringAssert.startsWith("producer")),
                               satisfies(
                                   MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
@@ -275,7 +274,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                     MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
                                     "testBatchListener"),
                                 satisfies(
-                                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
+                                    MESSAGING_CLIENT_ID,
                                     stringAssert -> stringAssert.startsWith("consumer")),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT,
@@ -305,9 +304,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
             equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
             equalTo(
                 MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "testBatchListener"),
-            satisfies(
-                MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
-                stringAssert -> stringAssert.startsWith("consumer")),
+            satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")),
             equalTo(MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 1));
 
     testing()
@@ -327,7 +324,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                                   "testBatchTopic"),
                               equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
                               satisfies(
-                                  MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
+                                  MESSAGING_CLIENT_ID,
                                   stringAssert -> stringAssert.startsWith("producer")),
                               satisfies(
                                   MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,

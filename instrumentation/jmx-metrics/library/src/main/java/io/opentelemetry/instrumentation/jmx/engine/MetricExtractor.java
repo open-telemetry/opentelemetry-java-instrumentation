@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.engine;
 
+import java.util.List;
 import javax.annotation.Nullable;
 
 /**
@@ -22,14 +23,14 @@ public class MetricExtractor {
   private final BeanAttributeExtractor attributeExtractor;
 
   // Defines the Measurement attributes to be used when reporting the metric value.
-  private final MetricAttribute[] attributes;
+  private final List<MetricAttribute> attributes;
 
   @Nullable private volatile DetectionStatus status;
 
   public MetricExtractor(
       BeanAttributeExtractor attributeExtractor,
       MetricInfo metricInfo,
-      MetricAttribute... attributes) {
+      List<MetricAttribute> attributes) {
     this.attributeExtractor = attributeExtractor;
     this.metricInfo = metricInfo;
     this.attributes = attributes;
@@ -43,7 +44,7 @@ public class MetricExtractor {
     return attributeExtractor;
   }
 
-  MetricAttribute[] getAttributes() {
+  List<MetricAttribute> getAttributes() {
     return attributes;
   }
 

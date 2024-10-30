@@ -16,8 +16,8 @@ import java.util.jar.Attributes
 import java.util.jar.JarFile
 
 import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OS_TYPE
-import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeValues.LINUX
-import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeValues.WINDOWS
+import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.LINUX
+import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeIncubatingValues.WINDOWS
 import static org.junit.Assume.assumeFalse
 import static org.junit.Assume.assumeTrue
 
@@ -59,8 +59,8 @@ abstract class AppServerTest extends SmokeTest {
   @Override
   protected String getTargetImage(String jdk, String serverVersion, boolean windows) {
     String platformSuffix = windows ? "-windows" : ""
-    String extraTag = "20240216.7928274208"
-    String fullSuffix = "${serverVersion}-jdk$jdk$platformSuffix-$extraTag"
+    String extraTag = "-20241014.11321808438"
+    String fullSuffix = "${serverVersion}-jdk$jdk$platformSuffix$extraTag"
     return getTargetImagePrefix() + ":" + fullSuffix
   }
 

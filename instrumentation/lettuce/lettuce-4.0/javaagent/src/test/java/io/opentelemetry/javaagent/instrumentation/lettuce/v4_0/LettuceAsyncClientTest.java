@@ -53,6 +53,7 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class LettuceAsyncClientTest {
   private static final Logger logger = LoggerFactory.getLogger(LettuceAsyncClientTest.class);
 

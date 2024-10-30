@@ -12,7 +12,8 @@ import org.apache.catalina.valves.ErrorReportValve;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class ErrorHandlerValve extends ErrorReportValve {
+// public, because it's loaded by reflection
+public class ErrorHandlerValve extends ErrorReportValve {
 
   private static final Logger logger = LoggerFactory.getLogger(ErrorHandlerValve.class);
 

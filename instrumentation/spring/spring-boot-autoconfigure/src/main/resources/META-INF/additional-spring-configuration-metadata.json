@@ -77,6 +77,11 @@
       "defaultValue": 2000
     },
     {
+      "name": "otel.experimental.metrics.view.config",
+      "type": "java.util.List<java.lang.String>",
+      "description": "View file configuration See https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/incubator/README.md#view-file-configuration."
+    },
+    {
       "name": "otel.experimental.resource.disabled.keys",
       "type": "java.util.List<java.lang.String>",
       "description": "Filter out resource entries with these keys."
@@ -410,6 +415,36 @@
       "name": "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
       "type": "java.util.List<java.lang.String>",
       "description": "MDC attributes to capture. Use the wildcard character <code>*</code> to capture all attributes."
+    },
+    {
+      "name": "otel.instrumentation.logback-mdc.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the Logback MDC instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.logback-mdc.add-baggage",
+      "type": "java.lang.Boolean",
+      "description": "Enable exposing baggage attributes through MDC.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.common.logging.trace-id",
+      "type": "java.lang.String",
+      "description": "Customize MDC key name for the trace id.",
+      "defaultValue": "trace_id"
+    },
+    {
+      "name": "otel.instrumentation.common.logging.span-id",
+      "type": "java.lang.String",
+      "description": "Customize MDC key name for the span id.",
+      "defaultValue": "span_id"
+    },
+    {
+      "name": "otel.instrumentation.common.logging.trace-flags",
+      "type": "java.lang.String",
+      "description": "Customize MDC key name for the trace flags.",
+      "defaultValue": "trace_flags"
     },
     {
       "name": "otel.instrumentation.micrometer.enabled",

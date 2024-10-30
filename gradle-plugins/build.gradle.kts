@@ -24,7 +24,7 @@ configurations.named("compileOnly") {
   extendsFrom(bbGradlePlugin)
 }
 
-val byteBuddyVersion = "1.15.3"
+val byteBuddyVersion = "1.15.7"
 val aetherVersion = "1.1.0"
 
 dependencies {
@@ -39,11 +39,11 @@ dependencies {
   implementation("org.eclipse.aether:aether-transport-http:${aetherVersion}")
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
-  implementation("com.gradleup.shadow:shadow-gradle-plugin:8.3.3")
+  implementation("com.gradleup.shadow:shadow-gradle-plugin:8.3.4")
 
   testImplementation("org.assertj:assertj-core:3.26.3")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.11.2"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.11.3"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testImplementation("org.junit.jupiter:junit-jupiter-params")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
@@ -56,13 +56,13 @@ tasks {
 
   withType<JavaCompile>().configureEach {
     with(options) {
-      release.set(8)
+      release.set(11)
     }
   }
 
   withType(KotlinCompile::class).configureEach {
     kotlinOptions {
-      jvmTarget = "1.8"
+      jvmTarget = "11"
     }
   }
 }

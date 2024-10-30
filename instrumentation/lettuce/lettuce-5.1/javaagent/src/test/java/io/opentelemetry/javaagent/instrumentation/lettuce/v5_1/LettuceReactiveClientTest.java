@@ -35,6 +35,7 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
 
   // TODO(anuraaga): reactor library instrumentation doesn't seem to handle this case, figure out if
   // it should and if so move back to base class.
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testAsyncSubscriberWithSpecificThreadPool() {
     getInstrumentationExtension()
