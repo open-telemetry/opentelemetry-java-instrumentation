@@ -15,16 +15,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
@@ -85,6 +80,8 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
         receivedHeaders = record.headers();
       }
     }
+    assertThat(receivedHeaders).isNotEmpty();
+    SpanContext receivedContext = Span.fromContext(getContext(receivedHeaders)).getSpanContext();
 
     AtomicReference<SpanData> streamSendSpanRef = new AtomicReference<>();
     testing.waitAndAssertTraces(
@@ -157,6 +154,8 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                   span.hasName(STREAM_PROCESSED + " publish")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(1))
+                      .hasTraceId(receivedContext.getTraceId())
+                      .hasSpanId(receivedContext.getSpanId())
                       .hasAttributesSatisfyingExactly(
                           equalTo(
                               MessagingIncubatingAttributes.MESSAGING_SYSTEM,
@@ -209,34 +208,5 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                       .hasParent(trace.getSpan(2))
                       .hasAttributesSatisfyingExactly(assertions);
                 }));
-
-    assertThat(receivedHeaders.iterator().hasNext()).isTrue();
-    String traceparent =
-        new String(
-            receivedHeaders.headers("traceparent").iterator().next().value(),
-            StandardCharsets.UTF_8);
-    Context context =
-        W3CTraceContextPropagator.getInstance()
-            .extract(
-                Context.root(),
-                "",
-                new TextMapGetter<String>() {
-                  @Override
-                  public String get(String carrier, String key) {
-                    if ("traceparent".equals(key)) {
-                      return traceparent;
-                    }
-                    return null;
-                  }
-
-                  @Override
-                  public Iterable<String> keys(String carrier) {
-                    return Collections.singleton("traceparent");
-                  }
-                });
-    SpanContext spanContext = Span.fromContext(context).getSpanContext();
-    SpanData streamSendSpan = streamSendSpanRef.get();
-    assertThat(spanContext.getTraceId()).isEqualTo(streamSendSpan.getTraceId());
-    assertThat(spanContext.getSpanId()).isEqualTo(streamSendSpan.getSpanId());
   }
 }

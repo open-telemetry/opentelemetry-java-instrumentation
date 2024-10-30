@@ -10,8 +10,12 @@ import static java.util.Collections.singleton;
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
@@ -28,6 +32,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.common.TopicPartition;
+import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.IntegerSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -150,5 +155,29 @@ abstract class KafkaStreamsBaseTest {
       throw new AssertionError("Consumer wasn't assigned any partitions!");
     }
     consumer.seekToBeginning(Collections.emptyList());
+  }
+
+  static Context getContext(Headers headers) {
+    String traceparent =
+        new String(
+            headers.headers("traceparent").iterator().next().value(), StandardCharsets.UTF_8);
+    return W3CTraceContextPropagator.getInstance()
+        .extract(
+            Context.root(),
+            "",
+            new TextMapGetter<String>() {
+              @Override
+              public String get(String carrier, String key) {
+                if ("traceparent".equals(key)) {
+                  return traceparent;
+                }
+                return null;
+              }
+
+              @Override
+              public Iterable<String> keys(String carrier) {
+                return Collections.singleton("traceparent");
+              }
+            });
   }
 }
