@@ -53,7 +53,7 @@ import static io.opentelemetry.api.trace.SpanKind.PRODUCER
 import static io.opentelemetry.api.trace.StatusCode.ERROR
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT
 
-abstract class AbstractAws1ClientTest extends InstrumentationSpecification {
+abstract class AbstractAws1ClientTest2 extends InstrumentationSpecification {
 
   abstract <T> T configureClient(T client)
 
