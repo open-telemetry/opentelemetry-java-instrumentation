@@ -7,10 +7,6 @@ package io.opentelemetry.instrumentation.ktor.v3_0.server
 
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
-import io.ktor.server.routing.RoutingRoot.Plugin.RoutingCallStarted
-import io.opentelemetry.context.Context
-import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute
-import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource
 import io.opentelemetry.instrumentation.ktor.v2_0.server.KtorServerTracing
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension

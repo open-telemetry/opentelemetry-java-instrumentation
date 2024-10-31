@@ -43,12 +43,12 @@ public class ServerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit
     public static void onExit(@Advice.FieldValue("_applicationInstance") Application application) {
-      ApplicationPluginKt.install(application, KtorServerTracingKt.getKtorServerTracing(), new SetupFunction());
+      ApplicationPluginKt.install(
+          application, KtorServerTracingKt.getKtorServerTracing(), new SetupFunction());
     }
   }
 
-  public static class SetupFunction
-      implements Function1<KtorServerTracingBuilder, kotlin.Unit> {
+  public static class SetupFunction implements Function1<KtorServerTracingBuilder, kotlin.Unit> {
 
     @Override
     public Unit invoke(KtorServerTracingBuilder configuration) {
