@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.ktor.v2_0.server
 
+import io.ktor.events.EventDefinition
 import io.ktor.http.*
-import io.ktor.serialization.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -260,7 +260,26 @@ val KtorServerTracing = createRouteScopedPlugin("OpenTelemetry", ::KtorServerTra
     }
   }
 
-  application.environment.monitor.subscribe(RoutingCallStarted) { call ->
-    HttpServerRoute.update(Context.current(), HttpServerRouteSource.SERVER, { _, arg -> arg.route.parent.toString() }, call)
+  val callStartedEvent = runCatching {
+    RoutingCallStarted // Ktor 2.0
+  }.getOrElse {
+    // Ktor 3.0
+    val routingRoot = Class.forName("io.ktor.server.routing.RoutingRoot")
+    val callStartedGetter = routingRoot.getDeclaredMethod("access\$getRoutingCallStarted\$cp")
+    callStartedGetter.invoke(null) as EventDefinition<ApplicationCall>
+  }
+
+  application.environment.monitor.subscribe(callStartedEvent) { call ->
+    HttpServerRoute.update(Context.current(), HttpServerRouteSource.SERVER, { _, arg ->
+      runCatching {
+        // Ktor 2.0
+        (call as RoutingApplicationCall).route.parent.toString()
+      }.getOrElse {
+        // Ktor 3.0
+        val route = arg::class.java.getDeclaredMethod("getRoute").invoke(arg)
+        val parent = route::class.java.getDeclaredMethod("getParent").invoke(route)
+        parent.toString()
+      }
+    }, call)
   }
 }
