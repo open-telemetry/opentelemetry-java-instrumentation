@@ -6,7 +6,12 @@
 package io.opentelemetry.instrumentation.ktor.v3_0.server
 
 import io.ktor.server.application.*
-import io.opentelemetry.instrumentation.ktor.v3_0.server.io.opentelemetry.instrumentation.ktor.v3_0.server.AbstractKtorHttpServerTest
+import io.ktor.server.routing.*
+import io.ktor.server.routing.RoutingRoot.Plugin.RoutingCallStarted
+import io.opentelemetry.context.Context
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource
+import io.opentelemetry.instrumentation.ktor.v2_0.server.KtorServerTracing
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
@@ -17,7 +22,7 @@ class KtorHttpServerInstrumentationTest : AbstractKtorHttpServerTest() {
   companion object {
     @JvmStatic
     @RegisterExtension
-    val TESTING: InstrumentationExtension = HttpServerInstrumentationExtension.forAgent()
+    val TESTING: InstrumentationExtension = HttpServerInstrumentationExtension.forLibrary()
   }
 
   override fun getTesting(): InstrumentationExtension {
@@ -25,6 +30,13 @@ class KtorHttpServerInstrumentationTest : AbstractKtorHttpServerTest() {
   }
 
   override fun installOpenTelemetry(application: Application) {
+    application.apply {
+      install(KtorServerTracing) {
+        setOpenTelemetry(TESTING.openTelemetry)
+        capturedRequestHeaders(TEST_REQUEST_HEADER)
+        capturedResponseHeaders(TEST_RESPONSE_HEADER)
+      }
+    }
   }
 
   override fun configure(options: HttpServerTestOptions) {

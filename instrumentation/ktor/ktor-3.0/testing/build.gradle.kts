@@ -19,6 +19,10 @@ dependencies {
   compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
   compileOnly("io.ktor:ktor-server-netty:$ktorVersion")
   compileOnly("io.ktor:ktor-client-cio:$ktorVersion")
+
+  testImplementation(project(":instrumentation:ktor:ktor-2.0:library"))
+  testImplementation("io.ktor:ktor-server-netty:$ktorVersion")
+  testImplementation("io.ktor:ktor-client-cio:$ktorVersion")
 }
 
 kotlin {
