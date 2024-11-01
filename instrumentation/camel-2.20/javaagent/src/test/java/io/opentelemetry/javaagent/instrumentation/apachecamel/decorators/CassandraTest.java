@@ -95,6 +95,7 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
     cqlSession.execute("CREATE TABLE IF NOT EXISTS test.users (id int PRIMARY KEY, name TEXT);");
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testCassandra() {
     CamelContext camelContext = appContext.getBean(CamelContext.class);

@@ -33,6 +33,7 @@ public abstract class AbstractJmsTest {
         .hasAttributesSatisfyingExactly(attributeAssertions);
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected List<AttributeAssertion> producerAttributeAssertions(
       String destinationName, boolean testHeaders) {
     List<AttributeAssertion> attributeAssertions =
@@ -82,6 +83,7 @@ public abstract class AbstractJmsTest {
         consumerAttributeAssertions(destinationName, testHeaders, operation, msgId));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected List<AttributeAssertion> consumerAttributeAssertions(
       String destinationName, boolean testHeaders, String operation, String msgId) {
     List<AttributeAssertion> attributeAssertions =

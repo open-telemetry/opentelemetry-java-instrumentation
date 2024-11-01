@@ -16,10 +16,11 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
   INSTANCE;
 
   @Override
-  public String getSystem(DbExecution request) {
+  public String getDbSystem(DbExecution request) {
     return request.getSystem();
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(DbExecution request) {
@@ -28,10 +29,11 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
 
   @Override
   @Nullable
-  public String getName(DbExecution request) {
+  public String getDbNamespace(DbExecution request) {
     return request.getName();
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(DbExecution request) {
@@ -40,7 +42,7 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
 
   @Override
   @Nullable
-  public String getRawStatement(DbExecution request) {
-    return request.getRawStatement();
+  public String getRawQueryText(DbExecution request) {
+    return request.getRawQueryText();
   }
 }

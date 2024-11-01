@@ -9,33 +9,33 @@
 > - **POM Project URL**: [https://github.com/raphw/weak-lock-free](https://github.com/raphw/weak-lock-free)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**2** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-annotations` **Version:** `2.18.0`
+**2** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-annotations` **Version:** `2.18.1`
 > - **Project URL**: [https://github.com/FasterXML/jackson](https://github.com/FasterXML/jackson)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-annotations-2.18.0.jar/META-INF/LICENSE](jackson-annotations-2.18.0.jar/META-INF/LICENSE)
-    - [jackson-annotations-2.18.0.jar/META-INF/NOTICE](jackson-annotations-2.18.0.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-annotations-2.18.1.jar/META-INF/LICENSE](jackson-annotations-2.18.1.jar/META-INF/LICENSE)
+    - [jackson-annotations-2.18.1.jar/META-INF/NOTICE](jackson-annotations-2.18.1.jar/META-INF/NOTICE)
 
-**3** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.18.0`
+**3** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.18.1`
 > - **Project URL**: [https://github.com/FasterXML/jackson-core](https://github.com/FasterXML/jackson-core)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-core-2.18.0.jar/META-INF/LICENSE](jackson-core-2.18.0.jar/META-INF/LICENSE)
-    - [jackson-core-2.18.0.jar/META-INF/NOTICE](jackson-core-2.18.0.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-core-2.18.1.jar/META-INF/LICENSE](jackson-core-2.18.1.jar/META-INF/LICENSE)
+    - [jackson-core-2.18.1.jar/META-INF/NOTICE](jackson-core-2.18.1.jar/META-INF/NOTICE)
 
-**4** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-databind` **Version:** `2.18.0`
+**4** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-databind` **Version:** `2.18.1`
 > - **Project URL**: [https://github.com/FasterXML/jackson](https://github.com/FasterXML/jackson)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-databind-2.18.0.jar/META-INF/LICENSE](jackson-databind-2.18.0.jar/META-INF/LICENSE)
-    - [jackson-databind-2.18.0.jar/META-INF/NOTICE](jackson-databind-2.18.0.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-databind-2.18.1.jar/META-INF/LICENSE](jackson-databind-2.18.1.jar/META-INF/LICENSE)
+    - [jackson-databind-2.18.1.jar/META-INF/NOTICE](jackson-databind-2.18.1.jar/META-INF/NOTICE)
 
-**5** **Group:** `com.fasterxml.jackson.dataformat` **Name:** `jackson-dataformat-yaml` **Version:** `2.18.0`
+**5** **Group:** `com.fasterxml.jackson.dataformat` **Name:** `jackson-dataformat-yaml` **Version:** `2.18.1`
 > - **Project URL**: [https://github.com/FasterXML/jackson-dataformats-text](https://github.com/FasterXML/jackson-dataformats-text)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-dataformat-yaml-2.18.0.jar/META-INF/LICENSE](jackson-dataformat-yaml-2.18.0.jar/META-INF/LICENSE)
-    - [jackson-dataformat-yaml-2.18.0.jar/META-INF/NOTICE](jackson-dataformat-yaml-2.18.0.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-dataformat-yaml-2.18.1.jar/META-INF/LICENSE](jackson-dataformat-yaml-2.18.1.jar/META-INF/LICENSE)
+    - [jackson-dataformat-yaml-2.18.1.jar/META-INF/NOTICE](jackson-dataformat-yaml-2.18.1.jar/META-INF/NOTICE)
 
 **6** **Group:** `com.google.cloud.opentelemetry` **Name:** `detector-resources-support` **Version:** `0.33.0`
 > - **POM Project URL**: [https://github.com/GoogleCloudPlatform/opentelemetry-operations-java](https://github.com/GoogleCloudPlatform/opentelemetry-operations-java)
@@ -163,11 +163,11 @@
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java-contrib](https://github.com/open-telemetry/opentelemetry-java-contrib)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**37** **Group:** `io.opentelemetry.semconv` **Name:** `opentelemetry-semconv` **Version:** `1.25.0-alpha`
+**37** **Group:** `io.opentelemetry.semconv` **Name:** `opentelemetry-semconv` **Version:** `1.28.0-alpha`
 > - **POM Project URL**: [https://github.com/open-telemetry/semantic-conventions-java](https://github.com/open-telemetry/semantic-conventions-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**38** **Group:** `io.opentelemetry.semconv` **Name:** `opentelemetry-semconv-incubating` **Version:** `1.25.0-alpha`
+**38** **Group:** `io.opentelemetry.semconv` **Name:** `opentelemetry-semconv-incubating` **Version:** `1.28.0-alpha`
 > - **POM Project URL**: [https://github.com/open-telemetry/semantic-conventions-java](https://github.com/open-telemetry/semantic-conventions-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
@@ -273,7 +273,7 @@
 > - **POM Project URL**: [https://bitbucket.org/snakeyaml/snakeyaml-engine](https://bitbucket.org/snakeyaml/snakeyaml-engine)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**59** **Group:** `org.yaml` **Name:** `snakeyaml` **Version:** `2.2`
+**59** **Group:** `org.yaml` **Name:** `snakeyaml` **Version:** `2.3`
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM Project URL**: [https://bitbucket.org/snakeyaml/snakeyaml](https://bitbucket.org/snakeyaml/snakeyaml)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)

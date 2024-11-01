@@ -238,7 +238,7 @@ public abstract class AbstractGraphqlTest {
                         span.hasName("GraphQL Operation")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfying(Attributes::isEmpty)
+                            .hasAttributes(Attributes.empty())
                             .hasStatus(StatusData.error())
                             .hasEventsSatisfyingExactly(
                                 event ->
@@ -280,7 +280,7 @@ public abstract class AbstractGraphqlTest {
                         span.hasName("GraphQL Operation")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfying(Attributes::isEmpty)
+                            .hasAttributes(Attributes.empty())
                             .hasStatus(StatusData.error())
                             .hasEventsSatisfyingExactly(
                                 event ->

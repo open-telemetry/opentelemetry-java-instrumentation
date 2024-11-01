@@ -22,6 +22,7 @@ import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import java.security.Principal;
 import java.util.function.Function;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   protected final Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
       instrumenter;

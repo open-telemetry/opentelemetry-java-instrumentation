@@ -34,11 +34,21 @@ dependencies {
   latestDepTestLibrary("com.couchbase.client:java-client:2.+")
 }
 
-tasks.withType<Test>().configureEach {
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.couchbase.experimental-span-attributes=true")
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
 
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  withType<Test>().configureEach {
+    // TODO run tests both with and without experimental span attributes
+    jvmArgs("-Dotel.instrumentation.couchbase.experimental-span-attributes=true")
+
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
 }

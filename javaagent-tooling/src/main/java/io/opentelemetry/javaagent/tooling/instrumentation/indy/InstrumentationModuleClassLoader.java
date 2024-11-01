@@ -197,6 +197,15 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   public static final Map<String, byte[]> bytecodeOverride = new ConcurrentHashMap<>();
 
   @Override
+  public Class<?> loadClass(String name) throws ClassNotFoundException {
+    // We explicitly override loadClass from ClassLoader to ensure
+    // that loadClass is properly excluded from our internal ClassLoader Instrumentations
+    // (e.g. LoadInjectedClassInstrumentation, BooDelegationInstrumentation)
+    // Otherwise this will cause recursion in invokedynamic linkage
+    return loadClass(name, false);
+  }
+
+  @Override
   @SuppressWarnings("removal") // AccessController is deprecated for removal
   protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
     synchronized (getClassLoadingLock(name)) {
@@ -317,12 +326,23 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   }
 
   private Class<?> defineClassWithPackage(String name, byte[] bytecode) {
-    int lastDotIndex = name.lastIndexOf('.');
-    if (lastDotIndex != -1) {
-      String packageName = name.substring(0, lastDotIndex);
-      safeDefinePackage(packageName);
+    try {
+      int lastDotIndex = name.lastIndexOf('.');
+      if (lastDotIndex != -1) {
+        String packageName = name.substring(0, lastDotIndex);
+        safeDefinePackage(packageName);
+      }
+      return defineClass(name, bytecode, 0, bytecode.length, PROTECTION_DOMAIN);
+    } catch (LinkageError error) {
+      // Precaution against linkage error due to nested instrumentations happening
+      // it might be possible that e.g. an advice class has already been defined
+      // during an instrumentation of defineClass
+      Class<?> clazz = findLoadedClass(name);
+      if (clazz != null) {
+        return clazz;
+      }
+      throw error;
     }
-    return defineClass(name, bytecode, 0, bytecode.length, PROTECTION_DOMAIN);
   }
 
   private void safeDefinePackage(String packageName) {

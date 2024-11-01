@@ -27,7 +27,7 @@ val groovyVersion = "4.0.23"
 // configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"
 
 val DEPENDENCY_BOMS = listOf(
-  "com.fasterxml.jackson:jackson-bom:2.18.0",
+  "com.fasterxml.jackson:jackson-bom:2.18.1",
   "com.squareup.okio:okio-bom:3.9.1", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
   "com.google.guava:guava-bom:33.3.1-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
@@ -40,13 +40,13 @@ val DEPENDENCY_BOMS = listOf(
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
-val errorProneVersion = "2.34.0"
+val errorProneVersion = "2.35.1"
 val byteBuddyVersion = "1.15.7"
 val asmVersion = "9.7.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.16"
-val semConvVersion = "1.25.0-alpha"
+val semConvVersion = "1.28.0-alpha"
 
 val CORE_DEPENDENCIES = listOf(
   "io.opentelemetry.semconv:opentelemetry-semconv:${semConvVersion}",
@@ -87,7 +87,7 @@ val DEPENDENCIES = listOf(
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.12.0",
+  "com.uber.nullaway:nullaway:0.12.1",
   "commons-beanutils:commons-beanutils:1.9.4",
   "commons-cli:commons-cli:1.9.0",
   "commons-codec:commons-codec:1.17.1",

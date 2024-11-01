@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Update azure-core-tracing-opentelemetry version and improve HTTP suppression to back off
+  when Azure SDK tracing was disabled.
+  ([#12489](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12489))
+
 ## Version 2.9.0 (2024-10-17)
 
 ### 📈 Enhancements

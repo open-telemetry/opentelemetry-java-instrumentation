@@ -24,7 +24,7 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Override
-  public InstrumentationExtension getInstrumentationExtension() {
+  public InstrumentationExtension testing() {
     return testing;
   }
 
@@ -35,14 +35,15 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
 
   // TODO(anuraaga): reactor library instrumentation doesn't seem to handle this case, figure out if
   // it should and if so move back to base class.
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testAsyncSubscriberWithSpecificThreadPool() {
-    getInstrumentationExtension()
+    testing()
         .runWithSpan(
             "test-parent",
             () -> reactiveCommands.set("a", "1").then(reactiveCommands.get("a")).subscribe());
 
-    getInstrumentationExtension()
+    testing()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
@@ -52,13 +53,14 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
-                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                equalTo(ServerAttributes.SERVER_ADDRESS, host),
-                                equalTo(ServerAttributes.SERVER_PORT, port),
-                                equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET a ?"))
+                                addExtraAttributes(
+                                    equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                                    equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
+                                    equalTo(ServerAttributes.SERVER_ADDRESS, host),
+                                    equalTo(ServerAttributes.SERVER_PORT, port),
+                                    equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                                    equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET a ?")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end")),
@@ -67,13 +69,14 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
-                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                equalTo(ServerAttributes.SERVER_ADDRESS, host),
-                                equalTo(ServerAttributes.SERVER_PORT, port),
-                                equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET a"))
+                                addExtraAttributes(
+                                    equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                                    equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
+                                    equalTo(ServerAttributes.SERVER_ADDRESS, host),
+                                    equalTo(ServerAttributes.SERVER_PORT, port),
+                                    equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                                    equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET a")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));

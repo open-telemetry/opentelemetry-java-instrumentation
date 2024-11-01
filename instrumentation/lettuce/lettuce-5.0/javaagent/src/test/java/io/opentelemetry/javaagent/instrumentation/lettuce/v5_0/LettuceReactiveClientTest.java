@@ -30,6 +30,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import reactor.core.scheduler.Schedulers;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class LettuceReactiveClientTest extends AbstractLettuceClientTest {
   private static RedisReactiveCommands<String, String> reactiveCommands;
 

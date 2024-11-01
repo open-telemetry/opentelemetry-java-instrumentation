@@ -53,6 +53,7 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
                         .hasParent(trace.getSpan(0))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> sendAttributes(boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -60,9 +61,7 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
                 equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
-                satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
-                    stringAssert -> stringAssert.startsWith("producer")),
+                satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("producer")),
                 satisfies(
                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
                     AbstractStringAssert::isNotEmpty),
@@ -78,6 +77,7 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
     return assertions;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> processAttributes(String greeting, boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -99,8 +99,7 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
                     AbstractLongAssert::isNotNegative),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
                 satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
-                    stringAssert -> stringAssert.startsWith("consumer"))));
+                    MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer"))));
     if (testHeaders) {
       assertions.add(
           equalTo(
