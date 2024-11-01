@@ -49,7 +49,6 @@ class DropwizardAsyncTest extends DropwizardTest {
     super.configure(options);
     // server spans are ended inside the JAX-RS controller spans
     options.setVerifyServerSpanEndTime(false);
-    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
   }
 
   public static class AsyncTestApp extends Application<Configuration> {

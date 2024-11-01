@@ -76,6 +76,7 @@ class DropwizardTest extends AbstractHttpServerTest<DropwizardTestSupport<Config
     options.setHasResponseSpan(endpoint -> endpoint == NOT_FOUND);
     options.setTestPathParam(true);
     options.setResponseCodeOnNonStandardHttpMethod(405);
+    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
 
     options.setExpectedHttpRoute(
         (endpoint, method) -> {
@@ -107,7 +108,8 @@ class DropwizardTest extends AbstractHttpServerTest<DropwizardTestSupport<Config
     span.hasName(testResource().getSimpleName() + "." + getEndpointName(endpoint))
         .hasKind(INTERNAL);
     if (EXCEPTION.equals(endpoint)) {
-      span.hasStatus(StatusData.error()).hasException(new Exception(EXCEPTION.getBody()));
+      span.hasStatus(StatusData.error())
+          .hasException(new IllegalStateException(EXCEPTION.getBody()));
     }
     return span;
   }
@@ -192,7 +194,7 @@ class DropwizardTest extends AbstractHttpServerTest<DropwizardTestSupport<Config
       return controller(
           EXCEPTION,
           () -> {
-            throw new Exception(EXCEPTION.getBody());
+            throw new IllegalStateException(EXCEPTION.getBody());
           });
     }
 
