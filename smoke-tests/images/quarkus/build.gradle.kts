@@ -17,7 +17,7 @@ plugins {
 
 dependencies {
   implementation(enforcedPlatform("io.quarkus:quarkus-bom:3.15.1"))
-  implementation("io.quarkus:quarkus-resteasy")
+  implementation("io.quarkus:quarkus-rest")
 }
 
 quarkus {
@@ -26,7 +26,8 @@ quarkus {
   setFinalName("opentelemetry-quarkus-$version")
 }
 
-val targetJDK = project.findProperty("targetJDK") ?: "11"
+// Quarkus 3.7+ requires Java 17+
+val targetJDK = project.findProperty("targetJDK") ?: "17"
 
 val tag = findProperty("tag")
   ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
@@ -45,18 +46,13 @@ jib {
   container {
     mainClass = "bogus" // to suppress Jib warning about missing main class
   }
-  pluginExtensions {
-    pluginExtension {
-      implementation = "com.google.cloud.tools.jib.gradle.extension.quarkus.JibQuarkusExtension"
-    }
-  }
 }
 
 tasks {
   withType<JavaCompile>().configureEach {
     with(options) {
-      // Quarkus 2.0+ does not support Java 8
-      release.set(11)
+      // Quarkus 3.7+ requires Java 17+
+      release.set(17)
     }
   }
 
