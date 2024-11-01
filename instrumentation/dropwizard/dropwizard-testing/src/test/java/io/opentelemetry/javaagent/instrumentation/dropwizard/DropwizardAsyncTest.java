@@ -47,7 +47,6 @@ class DropwizardAsyncTest extends DropwizardTest {
   @Override
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
-    customizeTestOptions(options);
     // server spans are ended inside the JAX-RS controller spans
     options.setVerifyServerSpanEndTime(false);
   }
@@ -80,7 +79,7 @@ class DropwizardAsyncTest extends DropwizardTest {
 
     @GET
     @Path("query")
-    public void query_param(
+    public void queryParam(
         @QueryParam("some") String param, @Suspended AsyncResponse asyncResponse) {
       executor.execute(
           () ->
@@ -145,7 +144,7 @@ class DropwizardAsyncTest extends DropwizardTest {
 
     @GET
     @Path("path/{id}/param")
-    public void path_param(@PathParam("id") int param, @Suspended AsyncResponse asyncResponse) {
+    public void pathParam(@PathParam("id") int param, @Suspended AsyncResponse asyncResponse) {
       executor.execute(
           () ->
               controller(
@@ -157,7 +156,7 @@ class DropwizardAsyncTest extends DropwizardTest {
 
     @GET
     @Path("child")
-    public void indexed_child(
+    public void indexedChild(
         @QueryParam("id") String param, @Suspended AsyncResponse asyncResponse) {
       controller(
           INDEXED_CHILD,
@@ -170,7 +169,7 @@ class DropwizardAsyncTest extends DropwizardTest {
 
     @GET
     @Path("captureHeaders")
-    public void capture_headers(
+    public void captureHeaders(
         @HeaderParam("X-Test-Request") String header, @Suspended AsyncResponse asyncResponse) {
       controller(
           CAPTURE_HEADERS,

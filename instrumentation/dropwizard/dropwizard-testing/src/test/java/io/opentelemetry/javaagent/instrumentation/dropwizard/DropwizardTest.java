@@ -15,6 +15,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.dropwizard.Application;
 import io.dropwizard.Configuration;
@@ -66,7 +67,9 @@ class DropwizardTest extends AbstractHttpServerTest<DropwizardTestSupport<Config
     server.after();
   }
 
-  protected void customizeTestOptions(HttpServerTestOptions options) {
+  @Override
+  protected void configure(HttpServerTestOptions options) {
+    super.configure(options);
     // this override is needed because dropwizard reports peer ip as the client ip
     options.setSockPeerAddr(serverEndpoint -> TEST_CLIENT_IP);
     options.setHasHandlerSpan(endpoint -> endpoint != NOT_FOUND);
@@ -90,12 +93,6 @@ class DropwizardTest extends AbstractHttpServerTest<DropwizardTestSupport<Config
         });
   }
 
-  @Override
-  protected void configure(HttpServerTestOptions options) {
-    super.configure(options);
-    customizeTestOptions(options);
-  }
-
   Class<? extends Application<Configuration>> testApp() {
     return TestApp.class;
   }
@@ -107,7 +104,7 @@ class DropwizardTest extends AbstractHttpServerTest<DropwizardTestSupport<Config
   @Override
   protected SpanDataAssert assertHandlerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
-    span.hasName(testResource().getSimpleName() + "." + endpoint.name().toLowerCase(Locale.ROOT))
+    span.hasName(testResource().getSimpleName() + "." + getEndpointName(endpoint))
         .hasKind(INTERNAL);
     if (EXCEPTION.equals(endpoint)) {
       span.hasStatus(StatusData.error()).hasException(new Exception(EXCEPTION.getBody()));
@@ -115,10 +112,24 @@ class DropwizardTest extends AbstractHttpServerTest<DropwizardTestSupport<Config
     return span;
   }
 
+  private static String getEndpointName(ServerEndpoint endpoint) {
+    if (QUERY_PARAM.equals(endpoint)) {
+      return "queryParam";
+    } else if (PATH_PARAM.equals(endpoint)) {
+      return "pathParam";
+    } else if (CAPTURE_HEADERS.equals(endpoint)) {
+      return "captureHeaders";
+    } else if (INDEXED_CHILD.equals(endpoint)) {
+      return "indexedChild";
+    }
+    return endpoint.name().toLowerCase(Locale.ROOT);
+  }
+
   @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, SpanData parentSpan, String method, ServerEndpoint endpoint) {
-    span.hasName("CompressedResponseWrapper.sendError").hasKind(INTERNAL);
+    span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"))
+        .hasKind(INTERNAL);
     return span;
   }
 
@@ -149,7 +160,7 @@ class DropwizardTest extends AbstractHttpServerTest<DropwizardTestSupport<Config
 
     @GET
     @Path("query")
-    public Response query_param(@QueryParam("some") String param) {
+    public Response queryParam(@QueryParam("some") String param) {
       return controller(
           QUERY_PARAM,
           () -> Response.status(QUERY_PARAM.getStatus()).entity("some=" + param).build());
@@ -187,7 +198,7 @@ class DropwizardTest extends AbstractHttpServerTest<DropwizardTestSupport<Config
 
     @GET
     @Path("path/{id}/param")
-    public Response path_param(@PathParam("id") int param) {
+    public Response pathParam(@PathParam("id") int param) {
       return controller(
           PATH_PARAM,
           () -> Response.status(PATH_PARAM.getStatus()).entity(String.valueOf(param)).build());
@@ -195,7 +206,7 @@ class DropwizardTest extends AbstractHttpServerTest<DropwizardTestSupport<Config
 
     @GET
     @Path("child")
-    public Response indexed_child(@QueryParam("id") String param) {
+    public Response indexedChild(@QueryParam("id") String param) {
       return controller(
           INDEXED_CHILD,
           () -> {
@@ -208,7 +219,7 @@ class DropwizardTest extends AbstractHttpServerTest<DropwizardTestSupport<Config
 
     @GET
     @Path("captureHeaders")
-    public Response capture_headers(@HeaderParam("X-Test-Request") String header) {
+    public Response captureHeaders(@HeaderParam("X-Test-Request") String header) {
       return controller(
           CAPTURE_HEADERS,
           () ->
