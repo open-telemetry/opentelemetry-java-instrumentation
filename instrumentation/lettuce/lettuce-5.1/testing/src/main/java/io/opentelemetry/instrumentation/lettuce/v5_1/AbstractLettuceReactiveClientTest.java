@@ -309,14 +309,15 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(addExtraAttributes(
-                                equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
-                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                equalTo(ServerAttributes.SERVER_ADDRESS, host),
-                                equalTo(ServerAttributes.SERVER_PORT, port),
-                                equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET a")))
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                                    equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
+                                    equalTo(ServerAttributes.SERVER_ADDRESS, host),
+                                    equalTo(ServerAttributes.SERVER_PORT, port),
+                                    equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                                    equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET a")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
