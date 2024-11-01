@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.jetty;
 
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
-
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
@@ -36,7 +34,6 @@ class JettyServletHandlerTest extends AbstractServlet5Test<Server, ServletHandle
     super.configure(options);
     options.setContextPath("");
     options.setTestNotFound(false);
-    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setHttpAttributes(
         serverEndpoint -> {
           Set<AttributeKey<?>> attributes =

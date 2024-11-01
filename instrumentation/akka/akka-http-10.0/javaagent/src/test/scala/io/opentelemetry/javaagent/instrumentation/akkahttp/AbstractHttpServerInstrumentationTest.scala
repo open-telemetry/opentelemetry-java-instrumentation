@@ -42,5 +42,8 @@ abstract class AbstractHttpServerInstrumentationTest
     )
     // instrumentation does not create a span at all
     options.disableTestNonStandardHttpMethod
+    options.setExpectedException(
+      new Exception(ServerEndpoint.EXCEPTION.getBody())
+    )
   }
 }

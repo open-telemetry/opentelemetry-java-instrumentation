@@ -82,7 +82,7 @@ public abstract class AbstractArmeriaHttpServerTest extends AbstractHttpServerTe
                 .runWithSpan(
                     "controller",
                     () -> {
-                      throw new Exception(EXCEPTION.getBody());
+                      throw new IllegalStateException(EXCEPTION.getBody());
                     }));
 
     sb.service(
