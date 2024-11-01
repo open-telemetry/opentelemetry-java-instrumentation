@@ -5,10 +5,17 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
@@ -40,7 +47,7 @@ abstract class AbstractLettuceClientTest {
 
   protected abstract RedisClient createClient(String uri);
 
-  protected abstract InstrumentationExtension getInstrumentationExtension();
+  protected abstract InstrumentationExtension testing();
 
   protected ContainerConnection newContainerConnection() {
     GenericContainer<?> server =
@@ -71,5 +78,13 @@ abstract class AbstractLettuceClientTest {
       this.connection = connection;
       this.port = port;
     }
+  }
+
+  protected static List<AttributeAssertion> addExtraAttributes(AttributeAssertion... assertions) {
+    List<AttributeAssertion> result = new ArrayList<>(Arrays.asList(assertions));
+    if (Boolean.getBoolean("testLatestDeps")) {
+      result.add(equalTo(DbIncubatingAttributes.DB_NAMESPACE, "0"));
+    }
+    return result;
   }
 }

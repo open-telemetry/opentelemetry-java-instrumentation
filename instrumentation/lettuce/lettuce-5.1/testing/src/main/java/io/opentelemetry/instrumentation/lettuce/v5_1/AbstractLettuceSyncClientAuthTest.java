@@ -62,7 +62,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
     assertThat(result).isEqualTo("OK");
 
     if (Boolean.getBoolean("testLatestDeps")) {
-      getInstrumentationExtension()
+      testing()
           .waitAndAssertTraces(
               trace ->
                   trace.hasSpansSatisfyingExactly(
@@ -70,50 +70,53 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                           span.hasName("CLIENT")
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
-                                  equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                                  equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                  equalTo(ServerAttributes.SERVER_ADDRESS, host),
-                                  equalTo(ServerAttributes.SERVER_PORT, port),
-                                  equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                  equalTo(
-                                      DbIncubatingAttributes.DB_STATEMENT,
-                                      "CLIENT SETINFO lib-name Lettuce"))),
+                                  addExtraAttributes(
+                                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                                      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
+                                      equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
+                                      equalTo(ServerAttributes.SERVER_ADDRESS, host),
+                                      equalTo(ServerAttributes.SERVER_PORT, port),
+                                      equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                                      equalTo(
+                                          DbIncubatingAttributes.DB_STATEMENT,
+                                          "CLIENT SETINFO lib-name Lettuce")))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
                           span.hasName("CLIENT")
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
-                                  equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                                  equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                  equalTo(ServerAttributes.SERVER_ADDRESS, host),
-                                  equalTo(ServerAttributes.SERVER_PORT, port),
-                                  equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                  satisfies(
-                                      DbIncubatingAttributes.DB_STATEMENT,
-                                      stringAssert ->
-                                          stringAssert.startsWith("CLIENT SETINFO lib-ver")))),
+                                  addExtraAttributes(
+                                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                                      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
+                                      equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
+                                      equalTo(ServerAttributes.SERVER_ADDRESS, host),
+                                      equalTo(ServerAttributes.SERVER_PORT, port),
+                                      equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                                      satisfies(
+                                          DbIncubatingAttributes.DB_STATEMENT,
+                                          stringAssert ->
+                                              stringAssert.startsWith("CLIENT SETINFO lib-ver"))))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
                           span.hasName("AUTH")
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
-                                  equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                                  equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                  equalTo(ServerAttributes.SERVER_ADDRESS, host),
-                                  equalTo(ServerAttributes.SERVER_PORT, port),
-                                  equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                  equalTo(DbIncubatingAttributes.DB_STATEMENT, "AUTH ?"))
+                                  addExtraAttributes(
+                                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                                      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
+                                      equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
+                                      equalTo(ServerAttributes.SERVER_ADDRESS, host),
+                                      equalTo(ServerAttributes.SERVER_PORT, port),
+                                      equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                                      equalTo(DbIncubatingAttributes.DB_STATEMENT, "AUTH ?")))
                               .hasEventsSatisfyingExactly(
                                   event -> event.hasName("redis.encode.start"),
                                   event -> event.hasName("redis.encode.end"))));
 
     } else {
-      getInstrumentationExtension()
+      testing()
           .waitAndAssertTraces(
               trace ->
                   trace.hasSpansSatisfyingExactly(
@@ -121,13 +124,14 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                           span.hasName("AUTH")
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
-                                  equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                                  equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                  equalTo(ServerAttributes.SERVER_ADDRESS, host),
-                                  equalTo(ServerAttributes.SERVER_PORT, port),
-                                  equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                  equalTo(DbIncubatingAttributes.DB_STATEMENT, "AUTH ?"))
+                                  addExtraAttributes(
+                                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
+                                      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
+                                      equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
+                                      equalTo(ServerAttributes.SERVER_ADDRESS, host),
+                                      equalTo(ServerAttributes.SERVER_PORT, port),
+                                      equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                                      equalTo(DbIncubatingAttributes.DB_STATEMENT, "AUTH ?")))
                               .hasEventsSatisfyingExactly(
                                   event -> event.hasName("redis.encode.start"),
                                   event -> event.hasName("redis.encode.end"))));

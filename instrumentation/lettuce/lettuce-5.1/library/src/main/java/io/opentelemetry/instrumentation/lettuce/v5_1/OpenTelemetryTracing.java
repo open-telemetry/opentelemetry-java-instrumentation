@@ -234,7 +234,7 @@ final class OpenTelemetryTracing implements Tracing {
       if (span == null) {
         throw new IllegalStateException("Span started but null, this is a programming error.");
       }
-      span.updateName(command.getType().name());
+      span.updateName(command.getType().toString());
 
       if (command.getArgs() != null) {
         argsList = OtelCommandArgsUtil.getCommandArgs(command.getArgs());
@@ -306,6 +306,9 @@ final class OpenTelemetryTracing implements Tracing {
     @Override
     @CanIgnoreReturnValue
     public synchronized Tracer.Span tag(String key, String value) {
+      if (value == null || value.isEmpty()) {
+        return this;
+      }
       if (key.equals("redis.args")) {
         argsString = value;
         return this;
