@@ -56,6 +56,9 @@ class FinatraServerLatestTest extends AbstractHttpServerTest[HttpServer] {
         endpoint != ServerEndpoint.NOT_FOUND
     })
     options.setResponseCodeOnNonStandardHttpMethod(400)
+    options.setExpectedException(
+      new Exception(ServerEndpoint.EXCEPTION.getBody())
+    )
   }
 
   override protected def assertHandlerSpan(
