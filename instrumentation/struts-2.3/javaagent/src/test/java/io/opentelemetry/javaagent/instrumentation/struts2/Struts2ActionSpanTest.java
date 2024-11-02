@@ -96,7 +96,6 @@ class Struts2ActionSpanTest extends AbstractHttpServerTest<Server> {
     options.setTestPathParam(true);
     options.setTestErrorBody(false);
     options.setHasHandlerSpan(endpoint -> !endpoint.equals(NOT_FOUND));
-    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setHasResponseSpan(
         endpoint ->
             endpoint == REDIRECT

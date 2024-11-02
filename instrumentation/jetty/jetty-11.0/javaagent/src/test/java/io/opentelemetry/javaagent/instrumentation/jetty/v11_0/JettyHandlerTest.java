@@ -83,7 +83,6 @@ class JettyHandlerTest extends AbstractHttpServerTest<Server> {
             Sets.difference(
                 DEFAULT_HTTP_ATTRIBUTES, Collections.singleton(HttpAttributes.HTTP_ROUTE)));
     options.setHasResponseSpan(endpoint -> endpoint == REDIRECT || endpoint == ERROR);
-    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setHasResponseCustomizer(endpoint -> true);
   }
 
