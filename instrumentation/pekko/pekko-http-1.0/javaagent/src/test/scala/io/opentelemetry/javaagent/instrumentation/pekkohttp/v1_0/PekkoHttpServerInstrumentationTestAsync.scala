@@ -8,8 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.{
   HttpServerInstrumentationExtension,
-  HttpServerTestOptions,
-  ServerEndpoint
+  HttpServerTestOptions
 }
 import org.junit.jupiter.api.extension.RegisterExtension
 
@@ -32,8 +31,5 @@ class PekkoHttpServerInstrumentationTestAsync
   ): Unit = {
     super.configure(options)
     options.setTestHttpPipelining(false)
-    options.setExpectedException(
-      new Exception(ServerEndpoint.EXCEPTION.getBody())
-    )
   }
 }

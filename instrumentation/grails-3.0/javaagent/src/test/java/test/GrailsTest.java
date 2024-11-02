@@ -71,7 +71,6 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
         endpoint -> endpoint == ERROR || endpoint == EXCEPTION || endpoint == NOT_FOUND);
     options.setTestPathParam(true);
     options.setResponseCodeOnNonStandardHttpMethod(testLatestDeps ? 200 : 501);
-    options.setExpectedException(new Exception(EXCEPTION.getBody()));
   }
 
   @SpringBootApplication
@@ -157,7 +156,7 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
     span.hasName(getHandlerSpanName(endpoint)).hasKind(SpanKind.INTERNAL);
     if (endpoint == EXCEPTION) {
       span.hasStatus(StatusData.error());
-      span.hasException(new Exception(EXCEPTION.getBody()));
+      span.hasException(new IllegalStateException(EXCEPTION.getBody()));
     }
     return span;
   }

@@ -98,7 +98,6 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   void setupOptions() {
     options.expectedServerSpanNameMapper = this::expectedServerSpanName;
     options.expectedHttpRoute = this::expectedHttpRoute;
-    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
 
     configure(options);
 
