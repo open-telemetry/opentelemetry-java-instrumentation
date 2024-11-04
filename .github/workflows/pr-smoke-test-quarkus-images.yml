@@ -1,3 +1,4 @@
+# dummy comment to trigger workflow
 name: PR build Quarkus images for smoke tests
 
 on:
