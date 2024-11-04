@@ -12,6 +12,6 @@ class KtorClientTracingBuilder : AbstractKtorClientTracingBuilder(INSTRUMENTATIO
 
   internal fun build(): KtorClientTracing = KtorClientTracing(
     instrumenter = clientBuilder.build(),
-    propagators = openTelemetry.propagators,
+    propagators = getOpenTelemetry().propagators,
   )
 }

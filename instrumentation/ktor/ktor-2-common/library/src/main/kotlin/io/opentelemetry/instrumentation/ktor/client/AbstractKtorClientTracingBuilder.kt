@@ -24,7 +24,7 @@ abstract class AbstractKtorClientTracingBuilder(
     }
   }
 
-  protected lateinit var openTelemetry: OpenTelemetry
+  internal lateinit var openTelemetry: OpenTelemetry
   protected lateinit var clientBuilder: DefaultHttpClientInstrumenterBuilder<HttpRequestData, HttpResponse>
 
   fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
@@ -34,6 +34,10 @@ abstract class AbstractKtorClientTracingBuilder(
       openTelemetry,
       KtorHttpClientAttributesGetter
     )
+  }
+
+  protected fun getOpenTelemetry(): OpenTelemetry {
+    return openTelemetry
   }
 
   @Deprecated(
