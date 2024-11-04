@@ -21,6 +21,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
@@ -34,6 +35,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbaseTest {
 
   private static final int TIMEOUT_SECONDS = 10;
@@ -88,8 +90,11 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.COUCHBASE),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "Cluster.openBucket")),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE),
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_OPERATION),
+                                "Cluster.openBucket")),
                 span ->
                     assertCouchbaseSpan(span, "ClusterManager.hasBucket")
                         .hasParent(trace.getSpan(0))));
@@ -129,8 +134,11 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.COUCHBASE),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "Cluster.openBucket")),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE),
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_OPERATION),
+                                "Cluster.openBucket")),
                 span ->
                     assertCouchbaseSpan(span, "Bucket.upsert", bucketSettings.name())
                         .hasParent(trace.getSpan(1))));
@@ -177,8 +185,11 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.COUCHBASE),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "Cluster.openBucket")),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE),
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_OPERATION),
+                                "Cluster.openBucket")),
                 span ->
                     assertCouchbaseSpan(span, "Bucket.upsert", bucketSettings.name())
                         .hasParent(trace.getSpan(1)),
@@ -222,8 +233,11 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.COUCHBASE),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "Cluster.openBucket")),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE),
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_OPERATION),
+                                "Cluster.openBucket")),
                 span ->
                     assertCouchbaseSpan(
                             span,

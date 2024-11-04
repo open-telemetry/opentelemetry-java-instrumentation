@@ -41,15 +41,33 @@ dependencies {
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:akka:akka-http-10.0:javaagent"))
   testInstrumentation(project(":instrumentation:akka:akka-actor-2.3:javaagent"))
-
-  latestDepTestLibrary("com.typesafe.play:play-ahc-ws-standalone_2.13:+")
 }
 
-if (findProperty("testLatestDeps") as Boolean) {
-  configurations {
-    // play-ws artifact name is different for regular and latest tests
-    testImplementation {
-      exclude("com.typesafe.play", "play-ahc-ws-standalone_$scalaVersion")
+val testLatestDeps = findProperty("testLatestDeps") as Boolean
+
+testing {
+  suites {
+    val latestDepTest by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation("com.typesafe.play:play-ahc-ws-standalone_2.13:+")
+      }
     }
+  }
+}
+
+tasks {
+  if (testLatestDeps) {
+    // disable regular test running and compiling tasks when latest dep test task is run
+    named("test") {
+      enabled = false
+    }
+  }
+
+  named("latestDepTest") {
+    enabled = testLatestDeps
+  }
+
+  check {
+    dependsOn(testing.suites)
   }
 }

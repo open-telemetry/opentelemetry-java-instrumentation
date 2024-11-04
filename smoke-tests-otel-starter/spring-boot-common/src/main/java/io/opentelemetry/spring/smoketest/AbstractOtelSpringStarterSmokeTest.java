@@ -53,6 +53,7 @@ import org.springframework.web.client.RestTemplate;
  * This test class enforces the order of the tests to make sure that {@link #shouldSendTelemetry()},
  * which asserts the telemetry data from the application startup, is executed first.
  */
+@SuppressWarnings("deprecation") // using deprecated semconv
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 

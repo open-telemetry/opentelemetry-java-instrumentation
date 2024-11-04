@@ -204,7 +204,10 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     try {
       // minimize scope of write lock
       this.openTelemetry = openTelemetry;
-      this.eventsToReplay.drainTo(eventsToReplay);
+      // tests set openTelemetry to null, ignore it
+      if (openTelemetry != null) {
+        this.eventsToReplay.drainTo(eventsToReplay);
+      }
     } finally {
       writeLock.unlock();
     }

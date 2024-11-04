@@ -75,6 +75,7 @@ class WrapperTest extends AbstractWrapperTest {
                         .hasParent(trace.getSpan(1))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> sendAttributes(boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -82,9 +83,7 @@ class WrapperTest extends AbstractWrapperTest {
                 equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
-                satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
-                    stringAssert -> stringAssert.startsWith("producer")),
+                satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("producer")),
                 satisfies(
                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
                     AbstractStringAssert::isNotEmpty),
@@ -100,6 +99,7 @@ class WrapperTest extends AbstractWrapperTest {
     return assertions;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> processAttributes(String greeting, boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -121,8 +121,7 @@ class WrapperTest extends AbstractWrapperTest {
                     AbstractLongAssert::isNotNegative),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
                 satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
-                    stringAssert -> stringAssert.startsWith("consumer"))));
+                    MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer"))));
     if (testHeaders) {
       assertions.add(
           equalTo(
@@ -132,6 +131,7 @@ class WrapperTest extends AbstractWrapperTest {
     return assertions;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> receiveAttributes(boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -140,9 +140,7 @@ class WrapperTest extends AbstractWrapperTest {
                 equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "receive"),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
-                satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
-                    stringAssert -> stringAssert.startsWith("consumer")),
+                satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")),
                 equalTo(MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 1)));
     if (testHeaders) {
       assertions.add(

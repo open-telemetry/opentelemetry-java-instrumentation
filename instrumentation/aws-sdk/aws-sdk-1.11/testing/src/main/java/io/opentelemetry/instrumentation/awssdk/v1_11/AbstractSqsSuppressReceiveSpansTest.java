@@ -37,6 +37,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractSqsSuppressReceiveSpansTest {
 
   protected abstract InstrumentationExtension testing();
@@ -135,7 +136,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                    MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
+                                    MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                        .AWS_SQS),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSdkSqs"),
@@ -168,7 +170,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                    MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
+                                    MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                        .AWS_SQS),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSdkSqs"),
@@ -253,7 +256,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                    MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
+                                    MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                        .AWS_SQS),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSdkSqs"),
@@ -286,7 +290,8 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                    MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
+                                    MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                        .AWS_SQS),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSdkSqs"),

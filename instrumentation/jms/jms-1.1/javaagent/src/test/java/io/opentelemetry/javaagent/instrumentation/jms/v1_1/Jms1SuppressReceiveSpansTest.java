@@ -21,6 +21,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
 
 class Jms1SuppressReceiveSpansTest extends AbstractJms1Test {
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @ArgumentsSource(DestinationsProvider.class)
   @ParameterizedTest
   void testMessageConsumer(

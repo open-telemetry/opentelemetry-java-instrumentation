@@ -60,9 +60,8 @@ abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBu
   override fun configure(optionsBuilder: HttpClientTestOptions.Builder) {
     with(optionsBuilder) {
       disableTestReadTimeout()
-      // this instrumentation creates a span per each physical request
-      // related issue https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/5722
-      disableTestRedirects()
+      markAsLowLevelInstrumentation()
+      setMaxRedirects(20)
       spanEndsAfterBody()
 
       setHttpAttributes { DEFAULT_HTTP_ATTRIBUTES - setOf(NetworkAttributes.NETWORK_PROTOCOL_VERSION) }

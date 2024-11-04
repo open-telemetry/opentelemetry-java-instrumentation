@@ -33,6 +33,7 @@ class R2DbcInstrumentationAutoConfigurationTest {
                   R2dbcInstrumentationAutoConfiguration.class, R2dbcAutoConfiguration.class))
           .withBean("openTelemetry", OpenTelemetry.class, testing::getOpenTelemetry);
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void statementSanitizerEnabledByDefault() {
     runner.run(

@@ -41,7 +41,6 @@ class JettyServletHandlerTest extends AbstractServlet3Test<Server, ServletHandle
     super.configure(options);
     options.setContextPath("");
     options.setTestNotFound(false);
-    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setHttpAttributes(
         serverEndpoint -> {
           Set<AttributeKey<?>> attributes =

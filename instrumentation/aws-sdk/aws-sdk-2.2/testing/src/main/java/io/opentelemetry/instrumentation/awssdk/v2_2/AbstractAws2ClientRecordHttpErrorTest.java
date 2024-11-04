@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -59,6 +60,7 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
     server.start();
   }
 
+  @AfterAll
   public static void cleanup() {
     server.stop();
   }
@@ -118,6 +120,7 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
         "otel.instrumentation.aws-sdk.experimental-record-individual-http-error", false);
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   public void testSendDynamoDbRequestWithRetries() {
     cleanResponses();

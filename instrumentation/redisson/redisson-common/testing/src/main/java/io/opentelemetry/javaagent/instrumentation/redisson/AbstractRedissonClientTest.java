@@ -16,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
@@ -51,6 +52,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractRedissonClientTest {
 
@@ -122,8 +124,14 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET foo ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"))),
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_STATEMENT),
+                                "SET foo ?"),
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_OPERATION),
+                                "SET"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -134,8 +142,14 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET foo"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GET"))));
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_STATEMENT),
+                                "GET foo"),
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_OPERATION),
+                                "GET"))));
   }
 
   @Test
@@ -161,7 +175,8 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_STATEMENT),
                                 "SET batch1 ?;SET batch2 ?"))));
   }
 
@@ -202,7 +217,10 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "MULTI;SET batch1 ?"))
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_STATEMENT),
+                                "MULTI;SET batch1 ?"))
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("SET")
@@ -212,8 +230,14 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET batch2 ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"))
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_STATEMENT),
+                                "SET batch2 ?"),
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_OPERATION),
+                                "SET"))
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("EXEC")
@@ -223,8 +247,14 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "EXEC"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "EXEC"))
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_STATEMENT),
+                                "EXEC"),
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_OPERATION),
+                                "EXEC"))
                         .hasParent(trace.getSpan(0))));
   }
 
@@ -245,8 +275,14 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "RPUSH list1 ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "RPUSH"))
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_STATEMENT),
+                                "RPUSH list1 ?"),
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_OPERATION),
+                                "RPUSH"))
                         .hasNoParent()));
   }
 
@@ -271,9 +307,13 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_STATEMENT),
                                 String.format("EVAL %s 1 map1 ? ?", script)),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "EVAL"))),
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_OPERATION),
+                                "EVAL"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -284,8 +324,14 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "HGET map1 key1"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "HGET"))));
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_STATEMENT),
+                                "HGET map1 key1"),
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_OPERATION),
+                                "HGET"))));
   }
 
   @Test
@@ -305,8 +351,14 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SADD set1 ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SADD"))));
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_STATEMENT),
+                                "SADD set1 ?"),
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_OPERATION),
+                                "SADD"))));
   }
 
   @Test
@@ -334,8 +386,13 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
                             equalTo(
-                                DbIncubatingAttributes.DB_STATEMENT, "ZADD sort_set1 ? ? ? ? ? ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "ZADD"))));
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_STATEMENT),
+                                "ZADD sort_set1 ? ? ? ? ? ?"),
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_OPERATION),
+                                "ZADD"))));
   }
 
   private static void invokeAddAll(RScoredSortedSet<String> object, Map<String, Double> arg)
@@ -360,8 +417,14 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "INCR AtomicLong"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "INCR"))));
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_STATEMENT),
+                                "INCR AtomicLong"),
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_OPERATION),
+                                "INCR"))));
   }
 
   @Test
@@ -386,9 +449,13 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "EVAL"),
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_OPERATION),
+                                "EVAL"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_STATEMENT),
                                 stringAssert -> stringAssert.startsWith("EVAL")))));
     traceAsserts.add(
         trace ->
@@ -401,9 +468,13 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                             equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "EVAL"),
+                            equalTo(
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_OPERATION),
+                                "EVAL"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                SemconvStabilityUtil.getAttributeKey(
+                                    DbIncubatingAttributes.DB_STATEMENT),
                                 stringAssert -> stringAssert.startsWith("EVAL")))));
     if (lockHas3Traces()) {
       traceAsserts.add(
@@ -417,9 +488,13 @@ public abstract class AbstractRedissonClientTest {
                               equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
                               equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
                               equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                              equalTo(DbIncubatingAttributes.DB_OPERATION, "DEL"),
+                              equalTo(
+                                  SemconvStabilityUtil.getAttributeKey(
+                                      DbIncubatingAttributes.DB_OPERATION),
+                                  "DEL"),
                               satisfies(
-                                  DbIncubatingAttributes.DB_STATEMENT,
+                                  SemconvStabilityUtil.getAttributeKey(
+                                      DbIncubatingAttributes.DB_STATEMENT),
                                   stringAssert -> stringAssert.startsWith("DEL")))));
     }
 

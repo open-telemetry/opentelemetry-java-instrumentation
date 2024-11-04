@@ -23,6 +23,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
 import redis.clients.jedis.Jedis;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class Jedis40ClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

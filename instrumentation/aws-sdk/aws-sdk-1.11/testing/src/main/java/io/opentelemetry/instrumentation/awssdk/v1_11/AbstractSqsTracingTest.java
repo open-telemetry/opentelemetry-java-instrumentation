@@ -50,6 +50,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractSqsTracingTest {
 
   protected abstract InstrumentationExtension testing();
@@ -167,7 +168,8 @@ public abstract class AbstractSqsTracingTest {
                                   equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                   equalTo(
                                       MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                      MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
+                                      MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                          .AWS_SQS),
                                   equalTo(
                                       MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                       "testSdkSqs"),
@@ -214,7 +216,8 @@ public abstract class AbstractSqsTracingTest {
                                   equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                   equalTo(
                                       MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                      MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
+                                      MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                          .AWS_SQS),
                                   equalTo(
                                       MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                       "testSdkSqs"),
@@ -259,7 +262,8 @@ public abstract class AbstractSqsTracingTest {
                                   equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                   equalTo(
                                       MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                      MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
+                                      MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                          .AWS_SQS),
                                   equalTo(
                                       MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                       "testSdkSqs"),
@@ -356,7 +360,8 @@ public abstract class AbstractSqsTracingTest {
                                 equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                    MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
+                                    MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                        .AWS_SQS),
                                 equalTo(
                                     MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                     "testSdkSqs"),
@@ -430,8 +435,8 @@ public abstract class AbstractSqsTracingTest {
                                       equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                       equalTo(
                                           MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                          MessagingIncubatingAttributes.MessagingSystemValues
-                                              .AWS_SQS),
+                                          MessagingIncubatingAttributes
+                                              .MessagingSystemIncubatingValues.AWS_SQS),
                                       equalTo(
                                           MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                           "testSdkSqs"),
@@ -470,8 +475,8 @@ public abstract class AbstractSqsTracingTest {
                                       equalTo(ServerAttributes.SERVER_PORT, sqsPort),
                                       equalTo(
                                           MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                          MessagingIncubatingAttributes.MessagingSystemValues
-                                              .AWS_SQS),
+                                          MessagingIncubatingAttributes
+                                              .MessagingSystemIncubatingValues.AWS_SQS),
                                       equalTo(
                                           MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                           "testSdkSqs"),

@@ -196,7 +196,7 @@ class SnsTracingTest extends AgentInstrumentationSpecification {
             "$UrlAttributes.URL_FULL" String
             "$ServerAttributes.SERVER_ADDRESS" String
             "$ServerAttributes.SERVER_PORT" { it == null || Number }
-            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS
+            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS
             "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "snsToSqsTestQueue"
             "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
             "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String

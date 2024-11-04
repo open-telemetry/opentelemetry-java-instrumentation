@@ -23,7 +23,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
-import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.semconv.ClientAttributes;
 import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
@@ -106,10 +105,9 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
                         exchange ->
                             testing.runWithSpan(
                                 "controller",
-                                (ThrowingRunnable<Exception>)
-                                    () -> {
-                                      throw new Exception(EXCEPTION.getBody());
-                                    }))
+                                () -> {
+                                  throw new IllegalStateException(EXCEPTION.getBody());
+                                }))
                     .addExactPath(
                         INDEXED_CHILD.rawPath(),
                         exchange ->

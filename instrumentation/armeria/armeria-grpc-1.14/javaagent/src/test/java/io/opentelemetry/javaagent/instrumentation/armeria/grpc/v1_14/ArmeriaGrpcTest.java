@@ -53,6 +53,7 @@ class ArmeriaGrpcTest {
         }
       };
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void grpcInstrumentation() {
     GreeterGrpc.GreeterBlockingStub client =
