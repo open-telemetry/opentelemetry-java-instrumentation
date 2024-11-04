@@ -7,7 +7,7 @@ This package contains libraries to help instrument Ktor. Server and client instr
 ### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
-release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-ktor-2.0).
+release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-ktor-3.0).
 
 For Maven, add to your `pom.xml` dependencies:
 
