@@ -34,7 +34,10 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-exporter-otlp")
   implementation("io.opentelemetry:opentelemetry-exporter-logging-otlp")
 
-  implementation("io.opentelemetry:opentelemetry-exporter-prometheus")
+  implementation("io.opentelemetry:opentelemetry-exporter-prometheus") {
+    exclude(group = "io.prometheus", module = "prometheus-metrics-shaded-protobuf")
+  }
+  compileOnly("io.prometheus:prometheus-metrics-exposition-formats:1.3.1")
   implementation("io.opentelemetry:opentelemetry-exporter-zipkin")
 
   implementation("io.opentelemetry:opentelemetry-sdk-extension-jaeger-remote-sampler")
