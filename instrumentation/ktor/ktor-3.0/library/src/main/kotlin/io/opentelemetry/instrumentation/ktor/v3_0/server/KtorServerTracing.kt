@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ktor.v2_0.server
+package io.opentelemetry.instrumentation.ktor.v3_0.server
 
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -18,7 +18,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource
 import io.opentelemetry.instrumentation.ktor.internal.KtorServerTracingUtil
 import io.opentelemetry.instrumentation.ktor.server.AbstractKtorServerTracing
-import io.opentelemetry.instrumentation.ktor.v2_0.InstrumentationProperties.INSTRUMENTATION_NAME
+import io.opentelemetry.instrumentation.ktor.v3_0.InstrumentationProperties.INSTRUMENTATION_NAME
 import kotlinx.coroutines.withContext
 
 class KtorServerTracing private constructor(
@@ -80,7 +80,7 @@ class KtorServerTracing private constructor(
         }
       }
 
-      pipeline.environment.monitor.subscribe(Routing.RoutingCallStarted) { call ->
+      pipeline.environment.monitor.subscribe(RoutingRoot.RoutingCallStarted) { call ->
         HttpServerRoute.update(Context.current(), HttpServerRouteSource.SERVER, { _, arg -> arg.route.parent.toString() }, call)
       }
 

@@ -7,7 +7,7 @@ plugins {
   id("org.jetbrains.kotlin.jvm")
 }
 
-val ktorVersion = "2.0.0"
+val ktorVersion = "3.0.0"
 
 dependencies {
   library("io.ktor:ktor-client-core:$ktorVersion")
@@ -18,16 +18,11 @@ dependencies {
 
   compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
-  testImplementation(project(":instrumentation:ktor:ktor-2.0:testing"))
+  testImplementation(project(":instrumentation:ktor:ktor-3.0:testing"))
   testImplementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
   testLibrary("io.ktor:ktor-server-netty:$ktorVersion")
   testLibrary("io.ktor:ktor-client-cio:$ktorVersion")
-
-  latestDepTestLibrary("io.ktor:ktor-client-core:2.+")
-  latestDepTestLibrary("io.ktor:ktor-server-core:2.+")
-  latestDepTestLibrary("io.ktor:ktor-server-netty:2.+")
-  latestDepTestLibrary("io.ktor:ktor-client-cio:2.+")
 }
 
 kotlin {

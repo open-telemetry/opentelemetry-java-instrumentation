@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.ktor.v2_0;
+package io.opentelemetry.javaagent.instrumentation.ktor.v3_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -14,8 +14,8 @@ import io.ktor.client.HttpClientConfig;
 import io.ktor.client.engine.HttpClientEngineConfig;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.ktor.internal.KtorBuilderUtil;
-import io.opentelemetry.instrumentation.ktor.v2_0.client.KtorClientTracing;
-import io.opentelemetry.instrumentation.ktor.v2_0.client.KtorClientTracingBuilder;
+import io.opentelemetry.instrumentation.ktor.v3_0.client.KtorClientTracing;
+import io.opentelemetry.instrumentation.ktor.v3_0.client.KtorClientTracingBuilder;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -56,7 +56,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     public Unit invoke(KtorClientTracingBuilder builder) {
       builder.setOpenTelemetry(GlobalOpenTelemetry.get());
       KtorBuilderUtil.clientBuilderExtractor.invoke(builder).configure(AgentCommonConfig.get());
-      return kotlin.Unit.INSTANCE;
+      return Unit.INSTANCE;
     }
   }
 }

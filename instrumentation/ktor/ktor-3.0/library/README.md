@@ -1,4 +1,4 @@
-# Library Instrumentation for Ktor version 2.x
+# Library Instrumentation for Ktor version 3.0 and higher
 
 This package contains libraries to help instrument Ktor. Server and client instrumentations are supported.
 
@@ -15,7 +15,7 @@ For Maven, add to your `pom.xml` dependencies:
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
-    <artifactId>opentelemetry-ktor-2.0</artifactId>
+    <artifactId>opentelemetry-ktor-3.0</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 </dependencies>
@@ -24,7 +24,7 @@ For Maven, add to your `pom.xml` dependencies:
 For Gradle, add to your dependencies:
 
 ```groovy
-implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-2.0:OPENTELEMETRY_VERSION")
+implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-3.0:OPENTELEMETRY_VERSION")
 ```
 
 ## Usage

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.ktor.v2_0;
+package io.opentelemetry.javaagent.instrumentation.ktor.v3_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -13,7 +13,7 @@ import io.ktor.server.application.ApplicationPluginKt;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.ktor.internal.KtorBuilderUtil;
 import io.opentelemetry.instrumentation.ktor.server.AbstractKtorServerTracing;
-import io.opentelemetry.instrumentation.ktor.v2_0.server.KtorServerTracing;
+import io.opentelemetry.instrumentation.ktor.v3_0.server.KtorServerTracing;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -26,7 +26,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ServerInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.ktor.server.engine.ApplicationEngineEnvironmentReloading");
+    return named("io.ktor.server.engine.EmbeddedServer");
   }
 
   @Override
@@ -45,7 +45,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
   }
 
   public static class SetupFunction
-      implements Function1<AbstractKtorServerTracing.Configuration, kotlin.Unit> {
+      implements Function1<AbstractKtorServerTracing.Configuration, Unit> {
 
     @Override
     public Unit invoke(AbstractKtorServerTracing.Configuration configuration) {
@@ -53,7 +53,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
       KtorBuilderUtil.serverBuilderExtractor
           .invoke(configuration)
           .configure(AgentCommonConfig.get());
-      return kotlin.Unit.INSTANCE;
+      return Unit.INSTANCE;
     }
   }
 }
