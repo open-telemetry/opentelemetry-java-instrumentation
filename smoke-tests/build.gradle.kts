@@ -60,6 +60,7 @@ tasks {
       "tomee" to listOf("**/Tomee*.*"),
       "websphere" to listOf("**/Websphere*.*"),
       "wildfly" to listOf("**/Wildfly*.*"),
+      "quarkus" to listOf("**/Quarkus*.*"),
     )
 
     val smokeTestSuite: String? by project
