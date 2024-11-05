@@ -80,3 +80,30 @@ If you set `<addBaggage>true</addBaggage>` in your `logback.xml` configuration,
 key/value pairs in [baggage](https://opentelemetry.io/docs/concepts/signals/baggage/) will also be added to the MDC.
 
 - `baggage.<entry_name>`
+
+### Using the OpenTelemetryAppender together with the AsyncAppender
+
+When using the `AsyncAppender`, it is important that the `OpenTelemetryAppender` be called first before the `AsyncAppender`. Otherwise, the trace id and span id for the particular log event will be lost. An example configuration would be:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} trace_id=%X{trace_id} span_id=%X{span_id} trace_flags=%X{trace_flags} %msg%n</pattern>
+    </encoder>
+  </appender>
+	
+	<appender name="ASYNC_CONSOLE_APPENDER" class="ch.qos.logback.classic.AsyncAppender">
+		<appender-ref ref="CONSOLE"/>
+	</appender>
+
+	<appender name="OTEL" class="io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender">
+		<appender-ref ref="ASYNC_CONSOLE_APPENDER"/>
+	</appender>
+
+	<root level="info">
+		<appender-ref ref="OTEL"/>
+	</root>
+</configuration>
+```
