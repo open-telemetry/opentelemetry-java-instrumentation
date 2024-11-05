@@ -12,7 +12,7 @@ import io.ktor.server.response.*
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder
 import io.opentelemetry.instrumentation.ktor.client.AbstractKtorClientTracingBuilder
-import io.opentelemetry.instrumentation.ktor.server.AbstractKtorServerTracing
+import io.opentelemetry.instrumentation.ktor.server.AbstractKtorServerTracingBuilder
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -21,6 +21,6 @@ import io.opentelemetry.instrumentation.ktor.server.AbstractKtorServerTracing
 object KtorBuilderUtil {
   lateinit var clientBuilderExtractor: (AbstractKtorClientTracingBuilder) -> DefaultHttpClientInstrumenterBuilder<HttpRequestData, HttpResponse>
   lateinit var serverBuilderExtractor: (
-    AbstractKtorServerTracing.Configuration
+    AbstractKtorServerTracingBuilder
   ) -> DefaultHttpServerInstrumenterBuilder<ApplicationRequest, ApplicationResponse>
 }
