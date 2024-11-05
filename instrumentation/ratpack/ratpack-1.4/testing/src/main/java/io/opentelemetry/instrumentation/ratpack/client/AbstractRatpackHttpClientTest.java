@@ -29,13 +29,13 @@ import ratpack.test.exec.ExecHarness;
 
 public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void> {
 
-  private final ExecHarness exec = ExecHarness.harness();
+  protected final ExecHarness exec = ExecHarness.harness();
 
-  private HttpClient client;
-  private HttpClient singleConnectionClient;
+  protected HttpClient client;
+  protected HttpClient singleConnectionClient;
 
   @BeforeAll
-  void setUpClient() throws Exception {
+  protected void setUpClient() throws Exception {
     exec.run(
         unused -> {
           client = buildHttpClient();
@@ -66,7 +66,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
   @Override
   public int sendRequest(Void request, String method, URI uri, Map<String, String> headers)
       throws Exception {
-    return exec.yield(unused -> internalSendRequest(client, method, uri, headers))
+    return exec.yield(execution -> internalSendRequest(client, method, uri, headers))
         .getValueOrThrow();
   }
 
@@ -78,13 +78,17 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
       Map<String, String> headers,
       HttpClientResult httpClientResult)
       throws Exception {
-    exec.execute(
-        Operation.of(
-            () ->
-                internalSendRequest(client, method, uri, headers)
-                    .result(
-                        result ->
-                            httpClientResult.complete(result::getValue, result.getThrowable()))));
+    exec.yield(
+            (e) ->
+                Operation.of(
+                        () ->
+                            internalSendRequest(client, method, uri, headers)
+                                .result(
+                                    result ->
+                                        httpClientResult.complete(
+                                            result::getValue, result.getThrowable())))
+                    .promise())
+        .getValueOrThrow();
   }
 
   // overridden in RatpackForkedHttpClientTest

@@ -9,6 +9,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
@@ -170,6 +171,13 @@ public final class RatpackTelemetryBuilder {
       Function<SpanNameExtractor<? super Request>, ? extends SpanNameExtractor<? super Request>>
           serverSpanNameExtractor) {
     serverBuilder.setSpanNameExtractor(serverSpanNameExtractor);
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public RatpackTelemetryBuilder configure(CommonConfig config) {
+    clientBuilder.configure(config);
+    serverBuilder.configure(config);
     return this;
   }
 

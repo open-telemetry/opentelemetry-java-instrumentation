@@ -11,9 +11,9 @@ import ratpack.exec.ExecInterceptor;
 import ratpack.exec.Execution;
 import ratpack.func.Block;
 
-final class OpenTelemetryExecInterceptor implements ExecInterceptor {
+public final class OpenTelemetryExecInterceptor implements ExecInterceptor {
 
-  static final ExecInterceptor INSTANCE = new OpenTelemetryExecInterceptor();
+  public static final ExecInterceptor INSTANCE = new OpenTelemetryExecInterceptor();
 
   @Override
   public void intercept(Execution execution, ExecType type, Block continuation) throws Exception {

@@ -44,18 +44,30 @@ final class OpenTelemetryHttpClient {
           httpClientSpec.responseIntercept(
               httpResponse -> {
                 Execution execution = Execution.current();
-                ContextHolder contextHolder = execution.get(ContextHolder.class);
-                execution.remove(ContextHolder.class);
-                instrumenter.end(
-                    contextHolder.context(), contextHolder.requestSpec(), httpResponse, null);
+                execution
+                    .maybeGet(ContextHolder.class)
+                    .ifPresent(
+                        contextHolder -> {
+                          execution.remove(ContextHolder.class);
+                          instrumenter.end(
+                              contextHolder.context(),
+                              contextHolder.requestSpec(),
+                              httpResponse,
+                              null);
+                        });
               });
 
           httpClientSpec.errorIntercept(
               ex -> {
                 Execution execution = Execution.current();
-                ContextHolder contextHolder = execution.get(ContextHolder.class);
-                execution.remove(ContextHolder.class);
-                instrumenter.end(contextHolder.context(), contextHolder.requestSpec(), null, ex);
+                execution
+                    .maybeGet(ContextHolder.class)
+                    .ifPresent(
+                        contextHolder -> {
+                          execution.remove(ContextHolder.class);
+                          instrumenter.end(
+                              contextHolder.context(), contextHolder.requestSpec(), null, ex);
+                        });
               });
         });
   }

@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.ratpack.v1_7.internal.ContextHolder;
 import ratpack.exec.ExecInitializer;
 import ratpack.exec.Execution;
 
-final class OpenTelemetryExecInitializer implements ExecInitializer {
+public final class OpenTelemetryExecInitializer implements ExecInitializer {
   public static final ExecInitializer INSTANCE = new OpenTelemetryExecInitializer();
 
   @Override
