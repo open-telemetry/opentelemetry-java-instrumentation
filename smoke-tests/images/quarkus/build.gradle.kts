@@ -20,12 +20,6 @@ dependencies {
   implementation("io.quarkus:quarkus-rest")
 }
 
-quarkus {
-  // Expected by jib extension.
-  // TODO(anuraaga): Switch to quarkus plugin native jib support.
-  setFinalName("opentelemetry-quarkus-$version")
-}
-
 // Quarkus 3.7+ requires Java 17+
 val targetJDK = project.findProperty("targetJDK") ?: "17"
 
@@ -34,10 +28,10 @@ val tag = findProperty("tag")
 
 java {
   // this is needed to avoid jib failing with
-  // "Your project is using Java 17 but the base image is for Java 8"
+  // "Your project is using Java 21 but the base image is for Java 17"
   // (it seems the jib plugins does not understand toolchains yet)
-  sourceCompatibility = JavaVersion.VERSION_1_8
-  targetCompatibility = JavaVersion.VERSION_1_8
+  sourceCompatibility = JavaVersion.VERSION_17
+  targetCompatibility = JavaVersion.VERSION_17
 }
 
 jib {
@@ -45,6 +39,12 @@ jib {
   to.image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-quarkus:jdk$targetJDK-$tag"
   container {
     mainClass = "bogus" // to suppress Jib warning about missing main class
+  }
+  pluginExtensions {
+    pluginExtension {
+      implementation = "com.google.cloud.tools.jib.gradle.extension.quarkus.JibQuarkusExtension"
+      properties = mapOf("packageType" to "fast-jar")
+    }
   }
 }
 
