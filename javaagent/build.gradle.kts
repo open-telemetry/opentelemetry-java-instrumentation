@@ -141,20 +141,40 @@ tasks {
     archiveFileName.set("bootstrapLibs.jar")
   }
 
-  val relocateBaseJavaagentLibs by registering(ShadowJar::class) {
+  val relocateBaseJavaagentLibsTmp by registering(ShadowJar::class) {
     configurations = listOf(baseJavaagentLibs)
 
     excludeBootstrapClasses()
 
     duplicatesStrategy = DuplicatesStrategy.FAIL
 
+    archiveFileName.set("baseJavaagentLibs-relocated-tmp.jar")
+  }
+
+  val relocateBaseJavaagentLibs by registering(ShadowJar::class) {
+    dependsOn(relocateBaseJavaagentLibsTmp)
+
+    copyByteBuddy(relocateBaseJavaagentLibsTmp.get().archiveFile)
+
+    duplicatesStrategy = DuplicatesStrategy.FAIL
+
     archiveFileName.set("baseJavaagentLibs-relocated.jar")
   }
 
-  val relocateJavaagentLibs by registering(ShadowJar::class) {
+  val relocateJavaagentLibsTmp by registering(ShadowJar::class) {
     configurations = listOf(javaagentLibs)
 
     excludeBootstrapClasses()
+
+    duplicatesStrategy = DuplicatesStrategy.FAIL
+
+    archiveFileName.set("javaagentLibs-relocated-tmp.jar")
+  }
+
+  val relocateJavaagentLibs by registering(ShadowJar::class) {
+    dependsOn(relocateJavaagentLibsTmp)
+
+    copyByteBuddy(relocateJavaagentLibsTmp.get().archiveFile)
 
     duplicatesStrategy = DuplicatesStrategy.FAIL
 
@@ -360,6 +380,22 @@ fun CopySpec.isolateClasses(jar: Provider<RegularFile>) {
     exclude("META-INF/INDEX.LIST")
     exclude("META-INF/*.DSA")
     exclude("META-INF/*.SF")
+  }
+}
+
+fun CopySpec.copyByteBuddy(jar: Provider<RegularFile>) {
+  // Byte buddy jar includes classes compiled for java 5 at the root of the jar and the same classes
+  // compiled for java 8 under META-INF/versions/9. Here we move the classes from
+  // META-INF/versions/9/net/bytebuddy to net/bytebuddy to get rid of the duplicate classes.
+  from(zipTree(jar)) {
+    eachFile {
+      if (path.startsWith("net/bytebuddy/")) {
+        exclude()
+      } else if (path.startsWith("META-INF/versions/9/net/bytebuddy/")) {
+        path = path.removePrefix("META-INF/versions/9/")
+      }
+    }
+    includeEmptyDirs = false
   }
 }
 
