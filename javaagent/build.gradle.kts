@@ -151,7 +151,7 @@ tasks {
     archiveFileName.set("baseJavaagentLibs-relocated-tmp.jar")
   }
 
-  val relocateBaseJavaagentLibs by registering(ShadowJar::class) {
+  val relocateBaseJavaagentLibs by registering(Jar::class) {
     dependsOn(relocateBaseJavaagentLibsTmp)
 
     copyByteBuddy(relocateBaseJavaagentLibsTmp.get().archiveFile)
@@ -171,7 +171,7 @@ tasks {
     archiveFileName.set("javaagentLibs-relocated-tmp.jar")
   }
 
-  val relocateJavaagentLibs by registering(ShadowJar::class) {
+  val relocateJavaagentLibs by registering(Jar::class) {
     dependsOn(relocateJavaagentLibsTmp)
 
     copyByteBuddy(relocateJavaagentLibsTmp.get().archiveFile)
@@ -389,7 +389,9 @@ fun CopySpec.copyByteBuddy(jar: Provider<RegularFile>) {
   // META-INF/versions/9/net/bytebuddy to net/bytebuddy to get rid of the duplicate classes.
   from(zipTree(jar)) {
     eachFile {
-      if (path.startsWith("net/bytebuddy/")) {
+      if (path.startsWith("net/bytebuddy/")
+          // this is our class that we have placed in the byte buddy package, need to preserve it
+          && !path.startsWith("net/bytebuddy/agent/builder/AgentBuilderUtil")) {
         exclude()
       } else if (path.startsWith("META-INF/versions/9/net/bytebuddy/")) {
         path = path.removePrefix("META-INF/versions/9/")
