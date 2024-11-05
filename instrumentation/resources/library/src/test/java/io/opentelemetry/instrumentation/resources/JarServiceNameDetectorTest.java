@@ -74,6 +74,21 @@ class JarServiceNameDetectorTest {
   }
 
   @Test
+  void createResource_processHandleJar_jar_command_variant() {
+    JarServiceNameDetector serviceNameProvider =
+        getDetector(
+            getArgs_jar_command_variant("my-service.jar"),
+            prop -> null,
+            JarServiceNameDetectorTest::failPath);
+
+    Resource resource = serviceNameProvider.createResource(config);
+
+    assertThat(resource.getAttributes())
+        .hasSize(1)
+        .containsEntry(ServiceAttributes.SERVICE_NAME, "my-service");
+  }
+
+  @Test
   void createResource_processHandleJarWithoutExtension() {
     JarServiceNameDetector serviceNameProvider =
         getDetector(getArgs("my-service"), prop -> null, JarServiceNameDetectorTest::failPath);
@@ -88,6 +103,11 @@ class JarServiceNameDetectorTest {
   static String[] getArgs(String jarName) {
     String path = Paths.get("path", "to", "app", jarName).toString();
     return new String[] {"-Dtest=42", "-Xmx666m", "-jar", path, "abc", "def"};
+  }
+
+  static String[] getArgs_jar_command_variant(String jarName) {
+    String path = Paths.get("path", "to", "app", jarName).toString();
+    return new String[] {"-Dtest=42", "-jar", "-Xmx666m", path, "abc", "def"};
   }
 
   @ParameterizedTest
