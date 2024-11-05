@@ -389,9 +389,9 @@ fun CopySpec.copyByteBuddy(jar: Provider<RegularFile>) {
   // META-INF/versions/9/net/bytebuddy to net/bytebuddy to get rid of the duplicate classes.
   from(zipTree(jar)) {
     eachFile {
-      if (path.startsWith("net/bytebuddy/")
-          // this is our class that we have placed in the byte buddy package, need to preserve it
-          && !path.startsWith("net/bytebuddy/agent/builder/AgentBuilderUtil")) {
+      if (path.startsWith("net/bytebuddy/") &&
+        // this is our class that we have placed in the byte buddy package, need to preserve it
+        !path.startsWith("net/bytebuddy/agent/builder/AgentBuilderUtil")) {
         exclude()
       } else if (path.startsWith("META-INF/versions/9/net/bytebuddy/")) {
         path = path.removePrefix("META-INF/versions/9/")
