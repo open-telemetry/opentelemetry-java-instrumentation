@@ -63,7 +63,6 @@ class Jetty12HandlerTest extends AbstractHttpServerTest<Server> {
         unused ->
             Sets.difference(
                 DEFAULT_HTTP_ATTRIBUTES, Collections.singleton(HttpAttributes.HTTP_ROUTE)));
-    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setHasResponseCustomizer(endpoint -> endpoint != EXCEPTION);
   }
 

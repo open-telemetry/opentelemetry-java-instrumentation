@@ -156,7 +156,7 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
     span.hasName(getHandlerSpanName(endpoint)).hasKind(SpanKind.INTERNAL);
     if (endpoint == EXCEPTION) {
       span.hasStatus(StatusData.error());
-      span.hasException(new Exception(EXCEPTION.getBody()));
+      span.hasException(new IllegalStateException(EXCEPTION.getBody()));
     }
     return span;
   }

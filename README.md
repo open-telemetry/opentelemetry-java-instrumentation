@@ -80,9 +80,9 @@ java -javaagent:path/to/opentelemetry-javaagent.jar \
      -jar myapp.jar
 ```
 
-By default, the OpenTelemetry Java agent uses
+By default, the OpenTelemetry Java agent uses the
 [OTLP exporter](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/otlp)
-configured to send data to
+configured to send data to an
 [OpenTelemetry collector](https://github.com/open-telemetry/opentelemetry-collector/blob/main/receiver/otlpreceiver/README.md)
 at `http://localhost:4318`.
 
@@ -197,6 +197,6 @@ Thanks to all the people who already contributed!
 
 [config-sdk]: https://opentelemetry.io/docs/languages/java/configuration/
 
-[manual]: https://opentelemetry.io/docs/instrumentation/java/manual/
+[manual]: https://opentelemetry.io/docs/languages/java/instrumentation/#manual-instrumentation
 
-[suppress]: https://opentelemetry.io/docs/instrumentation/java/automatic/agent-config/#suppressing-specific-auto-instrumentation
+[suppress]: https://opentelemetry.io/docs/zero-code/java/agent/disable/

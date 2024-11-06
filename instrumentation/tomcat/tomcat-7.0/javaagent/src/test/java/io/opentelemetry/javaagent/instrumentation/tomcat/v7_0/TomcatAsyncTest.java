@@ -107,7 +107,6 @@ class TomcatAsyncTest extends AbstractHttpServerTest<Tomcat> {
           return super.expectedHttpRoute(endpoint, method);
         });
 
-    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setHasResponseSpan(endpoint -> endpoint == NOT_FOUND || endpoint == REDIRECT);
   }
 

@@ -69,7 +69,6 @@ public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttp
     options.setTestCaptureRequestParameters(true);
     options.setHasResponseCustomizer(e -> true);
     options.setHasResponseSpan(this::hasResponseSpan);
-    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
   }
 
   protected boolean hasResponseSpan(ServerEndpoint endpoint) {
