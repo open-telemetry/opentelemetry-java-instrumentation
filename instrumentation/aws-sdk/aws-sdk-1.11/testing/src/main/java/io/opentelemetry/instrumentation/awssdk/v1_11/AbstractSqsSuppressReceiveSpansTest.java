@@ -18,6 +18,9 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
@@ -36,7 +39,6 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.incubating.AwsIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import org.elasticmq.rest.sqs.SQSRestServer;
 import org.elasticmq.rest.sqs.SQSRestServerBuilder;
 import org.junit.jupiter.api.AfterEach;
@@ -108,9 +110,9 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 satisfies(
                                     AwsIncubatingAttributes.AWS_REQUEST_ID,
                                     val -> val.isInstanceOf(String.class)),
-                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
-                                equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
-                                equalTo(RpcIncubatingAttributes.RPC_METHOD, "CreateQueue"),
+                                equalTo(RPC_SYSTEM, "aws-api"),
+                                equalTo(RPC_SERVICE, "AmazonSQS"),
+                                equalTo(RPC_METHOD, "CreateQueue"),
                                 equalTo(HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                 equalTo(URL_FULL, "http://localhost:" + sqsPort),
@@ -132,9 +134,9 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 satisfies(
                                     AwsIncubatingAttributes.AWS_REQUEST_ID,
                                     val -> val.isInstanceOf(String.class)),
-                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
-                                equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
-                                equalTo(RpcIncubatingAttributes.RPC_METHOD, "SendMessage"),
+                                equalTo(RPC_SYSTEM, "aws-api"),
+                                equalTo(RPC_SERVICE, "AmazonSQS"),
+                                equalTo(RPC_METHOD, "SendMessage"),
                                 equalTo(HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                 equalTo(URL_FULL, "http://localhost:" + sqsPort),
@@ -162,9 +164,9 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 satisfies(
                                     AwsIncubatingAttributes.AWS_REQUEST_ID,
                                     val -> val.isInstanceOf(String.class)),
-                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
-                                equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
-                                equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),
+                                equalTo(RPC_SYSTEM, "aws-api"),
+                                equalTo(RPC_SERVICE, "AmazonSQS"),
+                                equalTo(RPC_METHOD, "ReceiveMessage"),
                                 equalTo(HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                 equalTo(URL_FULL, "http://localhost:" + sqsPort),
@@ -220,9 +222,9 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 satisfies(
                                     AwsIncubatingAttributes.AWS_REQUEST_ID,
                                     val -> val.isInstanceOf(String.class)),
-                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
-                                equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
-                                equalTo(RpcIncubatingAttributes.RPC_METHOD, "CreateQueue"),
+                                equalTo(RPC_SYSTEM, "aws-api"),
+                                equalTo(RPC_SERVICE, "AmazonSQS"),
+                                equalTo(RPC_METHOD, "CreateQueue"),
                                 equalTo(HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                 equalTo(URL_FULL, "http://localhost:" + sqsPort),
@@ -244,9 +246,9 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 satisfies(
                                     AwsIncubatingAttributes.AWS_REQUEST_ID,
                                     val -> val.isInstanceOf(String.class)),
-                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
-                                equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
-                                equalTo(RpcIncubatingAttributes.RPC_METHOD, "SendMessage"),
+                                equalTo(RPC_SYSTEM, "aws-api"),
+                                equalTo(RPC_SERVICE, "AmazonSQS"),
+                                equalTo(RPC_METHOD, "SendMessage"),
                                 equalTo(HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                 equalTo(URL_FULL, "http://localhost:" + sqsPort),
@@ -274,9 +276,9 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 satisfies(
                                     AwsIncubatingAttributes.AWS_REQUEST_ID,
                                     val -> val.isInstanceOf(String.class)),
-                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
-                                equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
-                                equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),
+                                equalTo(RPC_SYSTEM, "aws-api"),
+                                equalTo(RPC_SERVICE, "AmazonSQS"),
+                                equalTo(RPC_METHOD, "ReceiveMessage"),
                                 equalTo(HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                 equalTo(URL_FULL, "http://localhost:" + sqsPort),
@@ -315,9 +317,9 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 satisfies(
                                     AwsIncubatingAttributes.AWS_REQUEST_ID,
                                     val -> val.isInstanceOf(String.class)),
-                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
-                                equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
-                                equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),
+                                equalTo(RPC_SYSTEM, "aws-api"),
+                                equalTo(RPC_SERVICE, "AmazonSQS"),
+                                equalTo(RPC_METHOD, "ReceiveMessage"),
                                 equalTo(HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                 equalTo(URL_FULL, "http://localhost:" + sqsPort),

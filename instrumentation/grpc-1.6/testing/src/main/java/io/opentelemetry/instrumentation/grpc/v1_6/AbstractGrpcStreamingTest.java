@@ -14,6 +14,10 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 
 import example.GreeterGrpc;
 import example.Helloworld;
@@ -31,7 +35,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -187,12 +190,10 @@ public abstract class AbstractGrpcStreamingTest {
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
                                 addExtraClientAttributes(
-                                    equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"),
-                                    equalTo(RpcIncubatingAttributes.RPC_SERVICE, "example.Greeter"),
-                                    equalTo(RpcIncubatingAttributes.RPC_METHOD, "Conversation"),
-                                    equalTo(
-                                        RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE,
-                                        (long) Status.Code.OK.value()),
+                                    equalTo(RPC_SYSTEM, "grpc"),
+                                    equalTo(RPC_SERVICE, "example.Greeter"),
+                                    equalTo(RPC_METHOD, "Conversation"),
+                                    equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
                             .satisfies(
@@ -204,12 +205,10 @@ public abstract class AbstractGrpcStreamingTest {
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"),
-                                equalTo(RpcIncubatingAttributes.RPC_SERVICE, "example.Greeter"),
-                                equalTo(RpcIncubatingAttributes.RPC_METHOD, "Conversation"),
-                                equalTo(
-                                    RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.OK.value()),
+                                equalTo(RPC_SYSTEM, "grpc"),
+                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                equalTo(RPC_METHOD, "Conversation"),
+                                equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
@@ -234,15 +233,11 @@ public abstract class AbstractGrpcStreamingTest {
                                         point ->
                                             point.hasAttributesSatisfying(
                                                 equalTo(SERVER_ADDRESS, "localhost"),
+                                                equalTo(RPC_METHOD, "Conversation"),
+                                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                                equalTo(RPC_SYSTEM, "grpc"),
                                                 equalTo(
-                                                    RpcIncubatingAttributes.RPC_METHOD,
-                                                    "Conversation"),
-                                                equalTo(
-                                                    RpcIncubatingAttributes.RPC_SERVICE,
-                                                    "example.Greeter"),
-                                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE,
+                                                    RPC_GRPC_STATUS_CODE,
                                                     (long) Status.Code.OK.value()))))));
     testing()
         .waitAndAssertMetrics(
@@ -260,15 +255,11 @@ public abstract class AbstractGrpcStreamingTest {
                                             point.hasAttributesSatisfying(
                                                 equalTo(SERVER_ADDRESS, "localhost"),
                                                 equalTo(SERVER_PORT, server.getPort()),
+                                                equalTo(RPC_METHOD, "Conversation"),
+                                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                                equalTo(RPC_SYSTEM, "grpc"),
                                                 equalTo(
-                                                    RpcIncubatingAttributes.RPC_METHOD,
-                                                    "Conversation"),
-                                                equalTo(
-                                                    RpcIncubatingAttributes.RPC_SERVICE,
-                                                    "example.Greeter"),
-                                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE,
+                                                    RPC_GRPC_STATUS_CODE,
                                                     (long) Status.Code.OK.value()))))));
   }
 

@@ -19,6 +19,9 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
@@ -30,7 +33,6 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.incubating.AwsIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import io.opentelemetry.testing.internal.armeria.internal.shaded.guava.collect.ImmutableList;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -183,9 +185,9 @@ public abstract class AbstractAws2SqsTracingTest {
                                                     .isEqualTo(
                                                         "00000000-0000-0000-0000-000000000000"),
                                             v -> assertThat(v).isEqualTo("UNKNOWN"))),
-                                equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
-                                equalTo(RpcIncubatingAttributes.RPC_SERVICE, "Sqs"),
-                                equalTo(RpcIncubatingAttributes.RPC_METHOD, "CreateQueue"),
+                                equalTo(RPC_SYSTEM, "aws-api"),
+                                equalTo(RPC_SERVICE, "Sqs"),
+                                equalTo(RPC_METHOD, "CreateQueue"),
                                 equalTo(HTTP_REQUEST_METHOD, "POST"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                 satisfies(
@@ -212,9 +214,9 @@ public abstract class AbstractAws2SqsTracingTest {
                                                       .isEqualTo(
                                                           "00000000-0000-0000-0000-000000000000"),
                                               v -> assertThat(v).isEqualTo("UNKNOWN"))),
-                                  equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
-                                  equalTo(RpcIncubatingAttributes.RPC_SERVICE, "Sqs"),
-                                  equalTo(RpcIncubatingAttributes.RPC_METHOD, "SendMessage"),
+                                  equalTo(RPC_SYSTEM, "aws-api"),
+                                  equalTo(RPC_SERVICE, "Sqs"),
+                                  equalTo(RPC_METHOD, "SendMessage"),
                                   equalTo(HTTP_REQUEST_METHOD, "POST"),
                                   equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                   satisfies(
@@ -272,9 +274,9 @@ public abstract class AbstractAws2SqsTracingTest {
                                                         .isEqualTo(
                                                             "00000000-0000-0000-0000-000000000000"),
                                                 v -> assertThat(v).isEqualTo("UNKNOWN"))),
-                                    equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
-                                    equalTo(RpcIncubatingAttributes.RPC_SERVICE, "Sqs"),
-                                    equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),
+                                    equalTo(RPC_SYSTEM, "aws-api"),
+                                    equalTo(RPC_SERVICE, "Sqs"),
+                                    equalTo(RPC_METHOD, "ReceiveMessage"),
                                     equalTo(HTTP_REQUEST_METHOD, "POST"),
                                     equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                     satisfies(
@@ -290,9 +292,9 @@ public abstract class AbstractAws2SqsTracingTest {
                             new ArrayList<>(
                                 Arrays.asList(
                                     equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                    equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
-                                    equalTo(RpcIncubatingAttributes.RPC_SERVICE, "Sqs"),
-                                    equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),
+                                    equalTo(RPC_SYSTEM, "aws-api"),
+                                    equalTo(RPC_SERVICE, "Sqs"),
+                                    equalTo(RPC_METHOD, "ReceiveMessage"),
                                     equalTo(HTTP_REQUEST_METHOD, "POST"),
                                     equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                     satisfies(
@@ -330,9 +332,9 @@ public abstract class AbstractAws2SqsTracingTest {
                             new ArrayList<>(
                                 Arrays.asList(
                                     equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                    equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
-                                    equalTo(RpcIncubatingAttributes.RPC_SERVICE, "Sqs"),
-                                    equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),
+                                    equalTo(RPC_SYSTEM, "aws-api"),
+                                    equalTo(RPC_SERVICE, "Sqs"),
+                                    equalTo(RPC_METHOD, "ReceiveMessage"),
                                     equalTo(HTTP_REQUEST_METHOD, "POST"),
                                     equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                     satisfies(
@@ -505,9 +507,9 @@ public abstract class AbstractAws2SqsTracingTest {
                                                   .isEqualTo(
                                                       "00000000-0000-0000-0000-000000000000"),
                                           v -> assertThat(v.trim()).isEqualTo("UNKNOWN"))),
-                              equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
-                              equalTo(RpcIncubatingAttributes.RPC_SERVICE, "Sqs"),
-                              equalTo(RpcIncubatingAttributes.RPC_METHOD, "SendMessageBatch"),
+                              equalTo(RPC_SYSTEM, "aws-api"),
+                              equalTo(RPC_SERVICE, "Sqs"),
+                              equalTo(RPC_METHOD, "SendMessageBatch"),
                               equalTo(HTTP_REQUEST_METHOD, "POST"),
                               equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                               satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
@@ -530,9 +532,9 @@ public abstract class AbstractAws2SqsTracingTest {
                           .hasTotalRecordedLinks(0)
                           .hasAttributesSatisfyingExactly(
                               equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                              equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
-                              equalTo(RpcIncubatingAttributes.RPC_SERVICE, "Sqs"),
-                              equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),
+                              equalTo(RPC_SYSTEM, "aws-api"),
+                              equalTo(RPC_SERVICE, "Sqs"),
+                              equalTo(RPC_METHOD, "ReceiveMessage"),
                               equalTo(HTTP_REQUEST_METHOD, "POST"),
                               equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                               satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
@@ -573,9 +575,9 @@ public abstract class AbstractAws2SqsTracingTest {
                                   .hasParent(trace.getSpan(0))
                                   .hasAttributesSatisfyingExactly(
                                       equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                      equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
-                                      equalTo(RpcIncubatingAttributes.RPC_SERVICE, "Sqs"),
-                                      equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),
+                                      equalTo(RPC_SYSTEM, "aws-api"),
+                                      equalTo(RPC_SERVICE, "Sqs"),
+                                      equalTo(RPC_METHOD, "ReceiveMessage"),
                                       equalTo(HTTP_REQUEST_METHOD, "POST"),
                                       equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                       satisfies(
