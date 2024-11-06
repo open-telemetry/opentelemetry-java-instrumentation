@@ -74,6 +74,22 @@ class JarServiceNameDetectorTest {
   }
 
   @Test
+  void createResource_processHandleJarExtraFlag() {
+    String path = Paths.get("path", "to", "app", "my-service.jar").toString();
+    JarServiceNameDetector serviceNameProvider =
+        getDetector(
+            new String[] {"-Dtest=42", "-jar", "-Xmx512m", path, "abc", "def"},
+            prop -> null,
+            JarServiceNameDetectorTest::failPath);
+
+    Resource resource = serviceNameProvider.createResource(config);
+
+    assertThat(resource.getAttributes())
+        .hasSize(1)
+        .containsEntry(ServiceAttributes.SERVICE_NAME, "my-service");
+  }
+
+  @Test
   void createResource_processHandleJarWithoutExtension() {
     JarServiceNameDetector serviceNameProvider =
         getDetector(getArgs("my-service"), prop -> null, JarServiceNameDetectorTest::failPath);
