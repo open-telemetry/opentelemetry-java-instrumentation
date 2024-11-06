@@ -48,9 +48,9 @@ class MainJarPathFinder {
     for (String javaArg : javaArgs) {
       if ("-jar".equals(javaArg)) {
         jarOptionFound = true;
-      }
-      // flags can appear between -jar and the jar path, ignore them
-      else if (jarOptionFound && !javaArg.startsWith("-")) {
+      } else if (jarOptionFound
+          && !javaArg.startsWith(
+              "-")) { // flags can appear between -jar and the jar path, ignore them
         return Paths.get(javaArg);
       }
     }
