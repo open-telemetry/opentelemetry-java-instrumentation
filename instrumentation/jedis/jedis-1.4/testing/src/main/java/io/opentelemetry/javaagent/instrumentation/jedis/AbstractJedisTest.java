@@ -6,13 +6,16 @@
 package io.opentelemetry.javaagent.instrumentation.jedis;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -65,11 +68,11 @@ public abstract class AbstractJedisTest {
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET foo ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, host),
-                            equalTo(ServerAttributes.SERVER_PORT, port))));
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(DB_STATEMENT, "SET foo ?"),
+                            equalTo(DB_OPERATION, "SET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port))));
   }
 
   @Test
@@ -86,22 +89,22 @@ public abstract class AbstractJedisTest {
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET foo ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, host),
-                            equalTo(ServerAttributes.SERVER_PORT, port))),
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(DB_STATEMENT, "SET foo ?"),
+                            equalTo(DB_OPERATION, "SET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET foo"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GET"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, host),
-                            equalTo(ServerAttributes.SERVER_PORT, port))));
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(DB_STATEMENT, "GET foo"),
+                            equalTo(DB_OPERATION, "GET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port))));
   }
 
   @Test
@@ -118,21 +121,21 @@ public abstract class AbstractJedisTest {
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET foo ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, host),
-                            equalTo(ServerAttributes.SERVER_PORT, port))),
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(DB_STATEMENT, "SET foo ?"),
+                            equalTo(DB_OPERATION, "SET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("RANDOMKEY")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "RANDOMKEY"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "RANDOMKEY"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, host),
-                            equalTo(ServerAttributes.SERVER_PORT, port))));
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(DB_STATEMENT, "RANDOMKEY"),
+                            equalTo(DB_OPERATION, "RANDOMKEY"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port))));
   }
 }

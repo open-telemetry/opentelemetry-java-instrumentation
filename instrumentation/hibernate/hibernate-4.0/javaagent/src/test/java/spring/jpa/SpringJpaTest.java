@@ -10,12 +10,18 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.regex.Pattern;
 import org.hibernate.Version;
 import org.junit.jupiter.api.Test;
@@ -31,7 +37,7 @@ class SpringJpaTest {
       new AnnotationConfigApplicationContext(PersistenceConfig.class);
   CustomerRepository repo = context.getBean(CustomerRepository.class);
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
+  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @Test
   void testCrud() {
     String version = Version.getVersionString();
@@ -66,18 +72,18 @@ class SpringJpaTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
+                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(DB_NAME, "test"),
+                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                DB_STATEMENT,
                                 val ->
                                     val.matches(
                                         Pattern.compile(
                                             "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName(.*)from Customer(.*)"))),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Customer")),
+                            equalTo(DB_OPERATION, "SELECT"),
+                            equalTo(DB_SQL_TABLE, "Customer")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -121,18 +127,18 @@ class SpringJpaTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
+                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(DB_NAME, "test"),
+                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                DB_STATEMENT,
                                 val ->
                                     val.matches(
                                         Pattern.compile(
                                             "insert into Customer (.*) values \\(.*, \\?, \\?\\)"))),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "INSERT"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Customer")),
+                            equalTo(DB_OPERATION, "INSERT"),
+                            equalTo(DB_SQL_TABLE, "Customer")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -164,14 +170,12 @@ class SpringJpaTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(
-                                DbIncubatingAttributes.DB_STATEMENT,
-                                "call next value for hibernate_sequence"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "CALL")),
+                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(DB_NAME, "test"),
+                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_STATEMENT, "call next value for hibernate_sequence"),
+                            equalTo(DB_CONNECTION_STRING, "hsqldb:mem:"),
+                            equalTo(DB_OPERATION, "CALL")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -188,18 +192,18 @@ class SpringJpaTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(3))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
+                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(DB_NAME, "test"),
+                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                DB_STATEMENT,
                                 val ->
                                     val.matches(
                                         Pattern.compile(
                                             "insert into Customer (.*) values \\(.* \\?, \\?\\)"))),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "INSERT"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Customer")));
+                            equalTo(DB_OPERATION, "INSERT"),
+                            equalTo(DB_SQL_TABLE, "Customer")));
           }
         });
     testing.clearData();
@@ -235,18 +239,18 @@ class SpringJpaTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
+                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(DB_NAME, "test"),
+                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                DB_STATEMENT,
                                 val ->
                                     val.matches(
                                         Pattern.compile(
                                             "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)where ([^.]+).id=\\?"))),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Customer")),
+                            equalTo(DB_OPERATION, "SELECT"),
+                            equalTo(DB_SQL_TABLE, "Customer")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -263,15 +267,15 @@ class SpringJpaTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(3))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
+                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(DB_NAME, "test"),
+                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_CONNECTION_STRING, "hsqldb:mem:"),
                             equalTo(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                DB_STATEMENT,
                                 "update Customer set firstName=?, lastName=? where id=?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "UPDATE"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Customer"))));
+                            equalTo(DB_OPERATION, "UPDATE"),
+                            equalTo(DB_SQL_TABLE, "Customer"))));
     testing.clearData();
 
     Customer foundCustomer =
@@ -301,18 +305,18 @@ class SpringJpaTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
+                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(DB_NAME, "test"),
+                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                DB_STATEMENT,
                                 val ->
                                     val.matches(
                                         Pattern.compile(
                                             "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)(where ([^.]+).lastName=\\?)"))),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Customer"))));
+                            equalTo(DB_OPERATION, "SELECT"),
+                            equalTo(DB_SQL_TABLE, "Customer"))));
     testing.clearData();
 
     testing.runWithSpan("parent", () -> repo.delete(foundCustomer));
@@ -339,18 +343,18 @@ class SpringJpaTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
+                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(DB_NAME, "test"),
+                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                DB_STATEMENT,
                                 val ->
                                     val.matches(
                                         Pattern.compile(
                                             "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)where ([^.]+).id=\\?"))),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Customer")),
+                            equalTo(DB_OPERATION, "SELECT"),
+                            equalTo(DB_SQL_TABLE, "Customer")),
                 span ->
                     span.hasName("Session.delete spring.jpa.Customer")
                         .hasKind(INTERNAL)
@@ -371,15 +375,13 @@ class SpringJpaTest {
                     span.hasName("DELETE test.Customer")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
-                            equalTo(
-                                DbIncubatingAttributes.DB_STATEMENT,
-                                "delete from Customer where id=?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "DELETE"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Customer")));
+                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(DB_NAME, "test"),
+                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_CONNECTION_STRING, "hsqldb:mem:"),
+                            equalTo(DB_STATEMENT, "delete from Customer where id=?"),
+                            equalTo(DB_OPERATION, "DELETE"),
+                            equalTo(DB_SQL_TABLE, "Customer")));
 
           } else {
             String findAction;
@@ -404,18 +406,18 @@ class SpringJpaTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
+                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(DB_NAME, "test"),
+                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_CONNECTION_STRING, "hsqldb:mem:"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                DB_STATEMENT,
                                 val ->
                                     val.matches(
                                         Pattern.compile(
                                             "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)where ([^.]+).id=\\?"))),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Customer")),
+                            equalTo(DB_OPERATION, "SELECT"),
+                            equalTo(DB_SQL_TABLE, "Customer")),
                 span ->
                     span.hasName("Session.merge spring.jpa.Customer")
                         .hasKind(INTERNAL)
@@ -444,15 +446,13 @@ class SpringJpaTest {
                     span.hasName("DELETE test.Customer")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
-                            equalTo(
-                                DbIncubatingAttributes.DB_STATEMENT,
-                                "delete from Customer where id=?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "DELETE"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Customer")));
+                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(DB_NAME, "test"),
+                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_CONNECTION_STRING, "hsqldb:mem:"),
+                            equalTo(DB_STATEMENT, "delete from Customer where id=?"),
+                            equalTo(DB_OPERATION, "DELETE"),
+                            equalTo(DB_SQL_TABLE, "Customer")));
           }
         });
   }

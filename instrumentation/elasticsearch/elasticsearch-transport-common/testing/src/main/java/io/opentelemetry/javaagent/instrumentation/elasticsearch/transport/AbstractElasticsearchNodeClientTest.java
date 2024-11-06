@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Named.named;
@@ -68,9 +70,9 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "ClusterHealthAction"),
+                            equalTo(DB_OPERATION, "ClusterHealthAction"),
                             equalTo(ELASTICSEARCH_ACTION, "ClusterHealthAction"),
                             equalTo(ELASTICSEARCH_REQUEST, "ClusterHealthRequest")),
                 span ->
@@ -117,9 +119,9 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasException(expectedException)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GetAction"),
+                            equalTo(DB_OPERATION, "GetAction"),
                             equalTo(ELASTICSEARCH_ACTION, "GetAction"),
                             equalTo(ELASTICSEARCH_REQUEST, "GetRequest"),
                             equalTo(ELASTICSEARCH_REQUEST_INDICES, "invalid-index")),
@@ -179,9 +181,9 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "CreateIndexAction"),
+                            equalTo(DB_OPERATION, "CreateIndexAction"),
                             equalTo(ELASTICSEARCH_ACTION, "CreateIndexAction"),
                             equalTo(ELASTICSEARCH_REQUEST, "CreateIndexRequest"),
                             equalTo(ELASTICSEARCH_REQUEST_INDICES, indexName))),
@@ -193,9 +195,9 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "ClusterHealthAction"),
+                            equalTo(DB_OPERATION, "ClusterHealthAction"),
                             equalTo(ELASTICSEARCH_ACTION, "ClusterHealthAction"),
                             equalTo(ELASTICSEARCH_REQUEST, "ClusterHealthRequest"))),
         trace ->
@@ -206,9 +208,9 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GetAction"),
+                            equalTo(DB_OPERATION, "GetAction"),
                             equalTo(ELASTICSEARCH_ACTION, "GetAction"),
                             equalTo(ELASTICSEARCH_REQUEST, "GetRequest"),
                             equalTo(ELASTICSEARCH_REQUEST_INDICES, indexName),
@@ -224,9 +226,9 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasAttributesSatisfyingExactly(
                             addIndexActionAttributes(
                                 equalTo(
-                                    DbIncubatingAttributes.DB_SYSTEM,
+                                    DB_SYSTEM,
                                     DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                                equalTo(DbIncubatingAttributes.DB_OPERATION, "IndexAction"),
+                                equalTo(DB_OPERATION, "IndexAction"),
                                 equalTo(ELASTICSEARCH_ACTION, "IndexAction"),
                                 equalTo(ELASTICSEARCH_REQUEST, "IndexRequest"),
                                 equalTo(ELASTICSEARCH_REQUEST_INDICES, indexName),
@@ -243,9 +245,9 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GetAction"),
+                            equalTo(DB_OPERATION, "GetAction"),
                             equalTo(ELASTICSEARCH_ACTION, "GetAction"),
                             equalTo(ELASTICSEARCH_REQUEST, "GetRequest"),
                             equalTo(ELASTICSEARCH_REQUEST_INDICES, indexName),

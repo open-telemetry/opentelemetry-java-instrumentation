@@ -8,6 +8,16 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
@@ -24,10 +34,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.AwsIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
@@ -105,12 +111,12 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
                                 equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RpcIncubatingAttributes.RPC_METHOD, "CreateQueue"),
-                                equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(ServerAttributes.SERVER_PORT, sqsPort),
-                                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
+                                equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                equalTo(URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, sqsPort),
+                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"))),
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
@@ -129,24 +135,20 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
                                 equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RpcIncubatingAttributes.RPC_METHOD, "SendMessage"),
-                                equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(ServerAttributes.SERVER_PORT, sqsPort),
+                                equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                equalTo(URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, sqsPort),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                    MESSAGING_SYSTEM,
                                     MessagingIncubatingAttributes.MessagingSystemIncubatingValues
                                         .AWS_SQS),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                    "testSdkSqs"),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                                equalTo(MESSAGING_OPERATION, "publish"),
                                 satisfies(
-                                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
-                                    val -> val.isInstanceOf(String.class)),
-                                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
+                                    MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1")),
                     span ->
                         span.hasName("testSdkSqs process")
                             .hasKind(SpanKind.CONSUMER)
@@ -163,24 +165,20 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
                                 equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),
-                                equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(ServerAttributes.SERVER_PORT, sqsPort),
+                                equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                equalTo(URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, sqsPort),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                    MESSAGING_SYSTEM,
                                     MessagingIncubatingAttributes.MessagingSystemIncubatingValues
                                         .AWS_SQS),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                    "testSdkSqs"),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
+                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                                equalTo(MESSAGING_OPERATION, "process"),
                                 satisfies(
-                                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
-                                    val -> val.isInstanceOf(String.class)),
-                                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
+                                    MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1")),
                     span ->
                         span.hasName("process child")
                             .hasParent(trace.getSpan(1))
@@ -225,12 +223,12 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
                                 equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RpcIncubatingAttributes.RPC_METHOD, "CreateQueue"),
-                                equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(ServerAttributes.SERVER_PORT, sqsPort),
-                                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))),
+                                equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                equalTo(URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, sqsPort),
+                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"))),
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
@@ -249,24 +247,20 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
                                 equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RpcIncubatingAttributes.RPC_METHOD, "SendMessage"),
-                                equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(ServerAttributes.SERVER_PORT, sqsPort),
+                                equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                equalTo(URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, sqsPort),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                    MESSAGING_SYSTEM,
                                     MessagingIncubatingAttributes.MessagingSystemIncubatingValues
                                         .AWS_SQS),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                    "testSdkSqs"),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                                equalTo(MESSAGING_OPERATION, "publish"),
                                 satisfies(
-                                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
-                                    val -> val.isInstanceOf(String.class)),
-                                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
+                                    MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1")),
                     span ->
                         span.hasName("testSdkSqs process")
                             .hasKind(SpanKind.CONSUMER)
@@ -283,24 +277,20 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
                                 equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),
-                                equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(ServerAttributes.SERVER_PORT, sqsPort),
+                                equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                equalTo(URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, sqsPort),
                                 equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                    MESSAGING_SYSTEM,
                                     MessagingIncubatingAttributes.MessagingSystemIncubatingValues
                                         .AWS_SQS),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                    "testSdkSqs"),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
+                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                                equalTo(MESSAGING_OPERATION, "process"),
                                 satisfies(
-                                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
-                                    val -> val.isInstanceOf(String.class)),
-                                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")),
+                                    MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1")),
                     span ->
                         span.hasName("process child")
                             .hasParent(trace.getSpan(1))
@@ -328,12 +318,12 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
                                 equalTo(RpcIncubatingAttributes.RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),
-                                equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(UrlAttributes.URL_FULL, "http://localhost:" + sqsPort),
-                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(ServerAttributes.SERVER_PORT, sqsPort),
-                                equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1"))));
+                                equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                equalTo(URL_FULL, "http://localhost:" + sqsPort),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, sqsPort),
+                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"))));
   }
 
   @Test

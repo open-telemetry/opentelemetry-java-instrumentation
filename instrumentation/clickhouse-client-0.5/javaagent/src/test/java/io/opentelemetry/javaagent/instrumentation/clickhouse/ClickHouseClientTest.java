@@ -6,6 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.clickhouse;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -25,7 +31,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -335,13 +340,11 @@ class ClickHouseClientTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> attributeAssertions(String statement, String operation) {
     return asList(
-        equalTo(
-            DbIncubatingAttributes.DB_SYSTEM,
-            DbIncubatingAttributes.DbSystemIncubatingValues.CLICKHOUSE),
-        equalTo(DbIncubatingAttributes.DB_NAME, dbName),
-        equalTo(ServerAttributes.SERVER_ADDRESS, host),
-        equalTo(ServerAttributes.SERVER_PORT, port),
-        equalTo(DbIncubatingAttributes.DB_STATEMENT, statement),
-        equalTo(DbIncubatingAttributes.DB_OPERATION, operation));
+        equalTo(DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.CLICKHOUSE),
+        equalTo(DB_NAME, dbName),
+        equalTo(SERVER_ADDRESS, host),
+        equalTo(SERVER_PORT, port),
+        equalTo(DB_STATEMENT, statement),
+        equalTo(DB_OPERATION, operation));
   }
 }
