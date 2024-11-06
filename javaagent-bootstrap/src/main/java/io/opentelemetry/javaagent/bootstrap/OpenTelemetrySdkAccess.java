@@ -22,13 +22,13 @@ public final class OpenTelemetrySdkAccess {
    */
   public interface ForceFlusher {
     /** Executes force flush. */
-    void run(int timeout, TimeUnit unit);
+    void run(long timeout, TimeUnit unit);
   }
 
   private static volatile ForceFlusher forceFlush;
 
   /** Forces flushing of pending spans. */
-  public static void forceFlush(int timeout, TimeUnit unit) {
+  public static void forceFlush(long timeout, TimeUnit unit) {
     forceFlush.run(timeout, unit);
   }
 
