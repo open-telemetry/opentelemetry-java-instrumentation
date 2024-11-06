@@ -107,7 +107,7 @@ class JarServiceNameDetectorTest {
 
   static String[] getArgs_jar_command_variant(String jarName) {
     String path = Paths.get("path", "to", "app", jarName).toString();
-    return new String[] {"-Dtest=42", "-jar", "-Xmx666m", path, "abc", "def"};
+    return new String[] {"-Dtest=42", "-jar", "-Xmx512m", path, "abc", "def"};
   }
 
   @ParameterizedTest
