@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -22,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
@@ -128,9 +128,8 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, (long) port),
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(DB_STATEMENT), "SET foo ?"),
-                            equalTo(SemconvStabilityUtil.getAttributeKey(DB_OPERATION), "SET"))),
+                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -141,8 +140,8 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, (long) port),
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(SemconvStabilityUtil.getAttributeKey(DB_STATEMENT), "GET foo"),
-                            equalTo(SemconvStabilityUtil.getAttributeKey(DB_OPERATION), "GET"))));
+                            equalTo(maybeStable(DB_STATEMENT), "GET foo"),
+                            equalTo(maybeStable(DB_OPERATION), "GET"))));
   }
 
   @Test
@@ -167,9 +166,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, (long) port),
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(DB_STATEMENT),
-                                "SET batch1 ?;SET batch2 ?"))));
+                            equalTo(maybeStable(DB_STATEMENT), "SET batch1 ?;SET batch2 ?"))));
   }
 
   private static void invokeExecute(RBatch batch)
@@ -209,9 +206,7 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, (long) port),
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(DB_STATEMENT),
-                                "MULTI;SET batch1 ?"))
+                            equalTo(maybeStable(DB_STATEMENT), "MULTI;SET batch1 ?"))
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("SET")
@@ -221,9 +216,8 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, (long) port),
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(DB_STATEMENT), "SET batch2 ?"),
-                            equalTo(SemconvStabilityUtil.getAttributeKey(DB_OPERATION), "SET"))
+                            equalTo(maybeStable(DB_STATEMENT), "SET batch2 ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"))
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("EXEC")
@@ -233,8 +227,8 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, (long) port),
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(SemconvStabilityUtil.getAttributeKey(DB_STATEMENT), "EXEC"),
-                            equalTo(SemconvStabilityUtil.getAttributeKey(DB_OPERATION), "EXEC"))
+                            equalTo(maybeStable(DB_STATEMENT), "EXEC"),
+                            equalTo(maybeStable(DB_OPERATION), "EXEC"))
                         .hasParent(trace.getSpan(0))));
   }
 
@@ -255,10 +249,8 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, (long) port),
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(DB_STATEMENT),
-                                "RPUSH list1 ?"),
-                            equalTo(SemconvStabilityUtil.getAttributeKey(DB_OPERATION), "RPUSH"))
+                            equalTo(maybeStable(DB_STATEMENT), "RPUSH list1 ?"),
+                            equalTo(maybeStable(DB_OPERATION), "RPUSH"))
                         .hasNoParent()));
   }
 
@@ -283,9 +275,9 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NETWORK_PEER_PORT, (long) port),
                             equalTo(DB_SYSTEM, "redis"),
                             equalTo(
-                                SemconvStabilityUtil.getAttributeKey(DB_STATEMENT),
+                                maybeStable(DB_STATEMENT),
                                 String.format("EVAL %s 1 map1 ? ?", script)),
-                            equalTo(SemconvStabilityUtil.getAttributeKey(DB_OPERATION), "EVAL"))),
+                            equalTo(maybeStable(DB_OPERATION), "EVAL"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -296,10 +288,8 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, (long) port),
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(DB_STATEMENT),
-                                "HGET map1 key1"),
-                            equalTo(SemconvStabilityUtil.getAttributeKey(DB_OPERATION), "HGET"))));
+                            equalTo(maybeStable(DB_STATEMENT), "HGET map1 key1"),
+                            equalTo(maybeStable(DB_OPERATION), "HGET"))));
   }
 
   @Test
@@ -319,9 +309,8 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, (long) port),
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(DB_STATEMENT), "SADD set1 ?"),
-                            equalTo(SemconvStabilityUtil.getAttributeKey(DB_OPERATION), "SADD"))));
+                            equalTo(maybeStable(DB_STATEMENT), "SADD set1 ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SADD"))));
   }
 
   @Test
@@ -348,10 +337,8 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, (long) port),
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(DB_STATEMENT),
-                                "ZADD sort_set1 ? ? ? ? ? ?"),
-                            equalTo(SemconvStabilityUtil.getAttributeKey(DB_OPERATION), "ZADD"))));
+                            equalTo(maybeStable(DB_STATEMENT), "ZADD sort_set1 ? ? ? ? ? ?"),
+                            equalTo(maybeStable(DB_OPERATION), "ZADD"))));
   }
 
   private static void invokeAddAll(RScoredSortedSet<String> object, Map<String, Double> arg)
@@ -376,10 +363,8 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, (long) port),
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(DB_STATEMENT),
-                                "INCR AtomicLong"),
-                            equalTo(SemconvStabilityUtil.getAttributeKey(DB_OPERATION), "INCR"))));
+                            equalTo(maybeStable(DB_STATEMENT), "INCR AtomicLong"),
+                            equalTo(maybeStable(DB_OPERATION), "INCR"))));
   }
 
   @Test
@@ -404,9 +389,9 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, (long) port),
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(SemconvStabilityUtil.getAttributeKey(DB_OPERATION), "EVAL"),
+                            equalTo(maybeStable(DB_OPERATION), "EVAL"),
                             satisfies(
-                                SemconvStabilityUtil.getAttributeKey(DB_STATEMENT),
+                                maybeStable(DB_STATEMENT),
                                 stringAssert -> stringAssert.startsWith("EVAL")))));
     traceAsserts.add(
         trace ->
@@ -419,9 +404,9 @@ public abstract class AbstractRedissonClientTest {
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, (long) port),
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(SemconvStabilityUtil.getAttributeKey(DB_OPERATION), "EVAL"),
+                            equalTo(maybeStable(DB_OPERATION), "EVAL"),
                             satisfies(
-                                SemconvStabilityUtil.getAttributeKey(DB_STATEMENT),
+                                maybeStable(DB_STATEMENT),
                                 stringAssert -> stringAssert.startsWith("EVAL")))));
     if (lockHas3Traces()) {
       traceAsserts.add(
@@ -435,9 +420,9 @@ public abstract class AbstractRedissonClientTest {
                               equalTo(NETWORK_PEER_ADDRESS, ip),
                               equalTo(NETWORK_PEER_PORT, (long) port),
                               equalTo(DB_SYSTEM, "redis"),
-                              equalTo(SemconvStabilityUtil.getAttributeKey(DB_OPERATION), "DEL"),
+                              equalTo(maybeStable(DB_OPERATION), "DEL"),
                               satisfies(
-                                  SemconvStabilityUtil.getAttributeKey(DB_STATEMENT),
+                                  maybeStable(DB_STATEMENT),
                                   stringAssert -> stringAssert.startsWith("DEL")))));
     }
 

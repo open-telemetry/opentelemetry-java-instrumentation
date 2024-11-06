@@ -5,6 +5,7 @@
 
 package io.opentelemetry.testing.cassandra.v4_4;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -29,7 +30,6 @@ import static org.junit.jupiter.api.Named.named;
 import com.datastax.oss.driver.api.core.CqlSession;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.cassandra.v4.common.AbstractCassandraTest;
-import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -73,15 +73,9 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                                 equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                                 equalTo(NETWORK_PEER_PORT, cassandraPort),
                                 equalTo(DB_SYSTEM, "cassandra"),
-                                equalTo(
-                                    SemconvStabilityUtil.getAttributeKey(DB_NAME),
-                                    parameter.keyspace),
-                                equalTo(
-                                    SemconvStabilityUtil.getAttributeKey(DB_STATEMENT),
-                                    parameter.expectedStatement),
-                                equalTo(
-                                    SemconvStabilityUtil.getAttributeKey(DB_OPERATION),
-                                    parameter.operation),
+                                equalTo(maybeStable(DB_NAME), parameter.keyspace),
+                                equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
+                                equalTo(maybeStable(DB_OPERATION), parameter.operation),
                                 equalTo(DB_CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
                                 equalTo(DB_CASSANDRA_COORDINATOR_DC, "datacenter1"),
                                 satisfies(
@@ -92,9 +86,7 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                                     val -> val.isInstanceOf(Boolean.class)),
                                 equalTo(DB_CASSANDRA_PAGE_SIZE, 5000),
                                 equalTo(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
-                                equalTo(
-                                    SemconvStabilityUtil.getAttributeKey(DB_CASSANDRA_TABLE),
-                                    parameter.table)),
+                                equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table)),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
