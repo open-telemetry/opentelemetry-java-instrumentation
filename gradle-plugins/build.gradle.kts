@@ -24,7 +24,7 @@ configurations.named("compileOnly") {
   extendsFrom(bbGradlePlugin)
 }
 
-val byteBuddyVersion = "1.15.9"
+val byteBuddyVersion = "1.15.10"
 val aetherVersion = "1.1.0"
 
 dependencies {

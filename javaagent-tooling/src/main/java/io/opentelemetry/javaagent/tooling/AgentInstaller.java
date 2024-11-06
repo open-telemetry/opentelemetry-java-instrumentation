@@ -137,7 +137,6 @@ public class AgentInstaller {
             .with(new RedefinitionDiscoveryStrategy())
             .with(AgentBuilder.DescriptionStrategy.Default.POOL_ONLY)
             .with(AgentTooling.poolStrategy())
-            .with(new ClassLoadListener())
             .with(AgentTooling.transformListener())
             .with(AgentTooling.locationStrategy());
     if (JavaModule.isSupported()) {
@@ -172,6 +171,7 @@ public class AgentInstaller {
       agentListener.beforeAgent(autoConfiguredSdk);
     }
 
+    agentBuilder = agentBuilder.with(new ClassLoadListener());
     agentBuilder = configureIgnoredTypes(sdkConfig, extensionClassLoader, agentBuilder);
 
     int numberOfLoadedExtensions = 0;
