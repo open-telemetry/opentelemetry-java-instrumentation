@@ -27,7 +27,13 @@ public final class OpenTelemetrySdkAccess {
 
   private static volatile ForceFlusher forceFlush;
 
-  /** Forces flushing of pending spans. */
+  /** Forces flushing of pending telemetry. */
+  @Deprecated
+  public static void forceFlush(int timeout, TimeUnit unit) {
+    forceFlush((long) timeout, unit);
+  }
+
+  /** Forces flushing of pending telemetry. */
   public static void forceFlush(long timeout, TimeUnit unit) {
     forceFlush.run(timeout, unit);
   }
