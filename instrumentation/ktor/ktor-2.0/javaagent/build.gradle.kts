@@ -25,6 +25,7 @@ dependencies {
   compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
+  testInstrumentation(project(":instrumentation:ktor:ktor-3.0:javaagent"))
 
   testImplementation(project(":instrumentation:ktor:ktor-2.0:testing"))
   testImplementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
