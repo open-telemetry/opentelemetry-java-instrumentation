@@ -6,13 +6,13 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAMESPACE;
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -83,7 +83,7 @@ abstract class AbstractLettuceClientTest {
   protected static List<AttributeAssertion> addExtraAttributes(AttributeAssertion... assertions) {
     List<AttributeAssertion> result = new ArrayList<>(Arrays.asList(assertions));
     if (Boolean.getBoolean("testLatestDeps")) {
-      result.add(equalTo(DbIncubatingAttributes.DB_NAMESPACE, "0"));
+      result.add(equalTo(DB_NAMESPACE, "0"));
     }
     return result;
   }

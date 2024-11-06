@@ -8,6 +8,16 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -29,8 +39,6 @@ import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.ExceptionAttributes;
-import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -755,9 +763,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                                   attrs.get(AttributeKey.longKey("rabbitmq.delivery_mode"));
                               assertTrue(deliveryMode == null || deliveryMode == 2);
 
-                              assertNotNull(
-                                  attrs.get(
-                                      MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE));
+                              assertNotNull(attrs.get(MESSAGING_MESSAGE_BODY_SIZE));
                             });
                   });
           break;
@@ -777,7 +783,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                                       || queue.equals("some-routing-queue")
                                       || queue.startsWith("amq.gen-"));
 
-                              attrs.get(MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE);
+                              attrs.get(MESSAGING_MESSAGE_BODY_SIZE);
                             });
                   });
           break;
@@ -788,7 +794,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                     assertThat(attributes)
                         .satisfies(
                             attrs -> {
-                              attrs.get(MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE);
+                              attrs.get(MESSAGING_MESSAGE_BODY_SIZE);
                             });
                   });
           break;
@@ -819,14 +825,13 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   private static void verifyMessagingAttributes(
       SpanDataAssert span, String exchange, String routingKey, String operation) {
-    span.hasAttribute(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "rabbitmq")
+    span.hasAttribute(MESSAGING_SYSTEM, "rabbitmq")
         .hasAttributesSatisfying(
             attributes -> {
               assertThat(attributes)
                   .satisfies(
                       attrs -> {
-                        String destinationName =
-                            attrs.get(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME);
+                        String destinationName = attrs.get(MESSAGING_DESTINATION_NAME);
                         assertTrue(destinationName == null || destinationName.equals(exchange));
                         String routingKeyAttr =
                             attrs.get(
@@ -840,7 +845,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
             });
 
     if (operation != null && !operation.equals("publish")) {
-      span.hasAttribute(MessagingIncubatingAttributes.MESSAGING_OPERATION, operation);
+      span.hasAttribute(MESSAGING_OPERATION, operation);
     }
   }
 
@@ -870,13 +875,13 @@ class RabbitMqTest extends AbstractRabbitMqTest {
           assertThat(attributes)
               .satisfies(
                   attrs -> {
-                    String peerAddr = attrs.get(NetworkAttributes.NETWORK_PEER_ADDRESS);
+                    String peerAddr = attrs.get(NETWORK_PEER_ADDRESS);
                     assertThat(peerAddr).isIn(rabbitMqIp, null);
 
-                    String networkType = attrs.get(NetworkAttributes.NETWORK_TYPE);
+                    String networkType = attrs.get(NETWORK_TYPE);
                     assertThat(networkType).isIn("ipv4", "ipv6", null);
 
-                    assertNotNull(attrs.get(NetworkAttributes.NETWORK_PEER_PORT));
+                    assertNotNull(attrs.get(NETWORK_PEER_PORT));
                   });
         });
   }
@@ -888,11 +893,9 @@ class RabbitMqTest extends AbstractRabbitMqTest {
               assertThat(events.get(0))
                   .hasName("exception")
                   .hasAttributesSatisfying(
-                      equalTo(ExceptionAttributes.EXCEPTION_TYPE, exception.getClass().getName()),
-                      equalTo(ExceptionAttributes.EXCEPTION_MESSAGE, errorMsg),
-                      satisfies(
-                          ExceptionAttributes.EXCEPTION_STACKTRACE,
-                          val -> val.isInstanceOf(String.class)));
+                      equalTo(EXCEPTION_TYPE, exception.getClass().getName()),
+                      equalTo(EXCEPTION_MESSAGE, errorMsg),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)));
             });
   }
 

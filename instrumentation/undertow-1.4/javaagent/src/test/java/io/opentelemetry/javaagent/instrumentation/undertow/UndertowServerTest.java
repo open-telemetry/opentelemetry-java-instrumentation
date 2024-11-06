@@ -14,6 +14,20 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
+import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableSet;
@@ -23,13 +37,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
-import io.opentelemetry.semconv.ClientAttributes;
-import io.opentelemetry.semconv.ExceptionAttributes;
-import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.UrlAttributes;
-import io.opentelemetry.semconv.UserAgentAttributes;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
@@ -161,7 +168,7 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
   @Override
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
-    options.setHttpAttributes(endpoint -> ImmutableSet.of(NetworkAttributes.NETWORK_PEER_PORT));
+    options.setHttpAttributes(endpoint -> ImmutableSet.of(NETWORK_PEER_PORT));
     options.setHasResponseCustomizer(serverEndpoint -> true);
     options.setUseHttp2(useHttp2());
   }
@@ -192,21 +199,17 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
                             event -> event.hasName("before-event"),
                             event -> event.hasName("after-event"))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(ClientAttributes.CLIENT_ADDRESS, TEST_CLIENT_IP),
-                            equalTo(UrlAttributes.URL_SCHEME, uri.getScheme()),
-                            equalTo(UrlAttributes.URL_PATH, uri.getPath()),
-                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(UserAgentAttributes.USER_AGENT_ORIGINAL, TEST_USER_AGENT),
-                            equalTo(
-                                NetworkAttributes.NETWORK_PROTOCOL_VERSION,
-                                useHttp2() ? "2" : "1.1"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
-                            equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                k -> k.isInstanceOf(Long.class))),
+                            equalTo(CLIENT_ADDRESS, TEST_CLIENT_IP),
+                            equalTo(URL_SCHEME, uri.getScheme()),
+                            equalTo(URL_PATH, uri.getPath()),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(USER_AGENT_ORIGINAL, TEST_USER_AGENT),
+                            equalTo(NETWORK_PROTOCOL_VERSION, useHttp2() ? "2" : "1.1"),
+                            equalTo(SERVER_ADDRESS, uri.getHost()),
+                            equalTo(SERVER_PORT, uri.getPort()),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class))),
                 span ->
                     span.hasName("sendResponse")
                         .hasKind(SpanKind.INTERNAL)
@@ -236,31 +239,24 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
                                 event
                                     .hasName("exception")
                                     .hasAttributesSatisfyingExactly(
+                                        equalTo(EXCEPTION_TYPE, Exception.class.getName()),
                                         equalTo(
-                                            ExceptionAttributes.EXCEPTION_TYPE,
-                                            Exception.class.getName()),
-                                        equalTo(
-                                            ExceptionAttributes.EXCEPTION_MESSAGE,
-                                            "exception after sending response"),
+                                            EXCEPTION_MESSAGE, "exception after sending response"),
                                         satisfies(
-                                            ExceptionAttributes.EXCEPTION_STACKTRACE,
+                                            EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class))))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(ClientAttributes.CLIENT_ADDRESS, TEST_CLIENT_IP),
-                            equalTo(UrlAttributes.URL_SCHEME, uri.getScheme()),
-                            equalTo(UrlAttributes.URL_PATH, uri.getPath()),
-                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(UserAgentAttributes.USER_AGENT_ORIGINAL, TEST_USER_AGENT),
-                            equalTo(
-                                NetworkAttributes.NETWORK_PROTOCOL_VERSION,
-                                useHttp2() ? "2" : "1.1"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
-                            equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                k -> k.isInstanceOf(Long.class))),
+                            equalTo(CLIENT_ADDRESS, TEST_CLIENT_IP),
+                            equalTo(URL_SCHEME, uri.getScheme()),
+                            equalTo(URL_PATH, uri.getPath()),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(USER_AGENT_ORIGINAL, TEST_USER_AGENT),
+                            equalTo(NETWORK_PROTOCOL_VERSION, useHttp2() ? "2" : "1.1"),
+                            equalTo(SERVER_ADDRESS, uri.getHost()),
+                            equalTo(SERVER_PORT, uri.getPort()),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class))),
                 span ->
                     span.hasName("sendResponseWithException")
                         .hasKind(SpanKind.INTERNAL)

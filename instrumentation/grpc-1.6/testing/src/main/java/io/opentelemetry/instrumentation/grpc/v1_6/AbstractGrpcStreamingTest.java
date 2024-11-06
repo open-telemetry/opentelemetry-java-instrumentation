@@ -9,6 +9,11 @@ import static io.opentelemetry.instrumentation.grpc.v1_6.AbstractGrpcTest.addExt
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 
 import example.GreeterGrpc;
 import example.Helloworld;
@@ -25,8 +30,6 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.sdk.trace.data.EventData;
-import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.util.ArrayList;
@@ -190,8 +193,8 @@ public abstract class AbstractGrpcStreamingTest {
                                     equalTo(
                                         RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE,
                                         (long) Status.Code.OK.value()),
-                                    equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                                    equalTo(ServerAttributes.SERVER_PORT, (long) server.getPort())))
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, (long) server.getPort())))
                             .satisfies(
                                 spanData ->
                                     assertThat(spanData.getEvents())
@@ -207,13 +210,11 @@ public abstract class AbstractGrpcStreamingTest {
                                 equalTo(
                                     RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE,
                                     (long) Status.Code.OK.value()),
-                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(ServerAttributes.SERVER_PORT, server.getPort()),
-                                equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(
-                                    NetworkAttributes.NETWORK_PEER_PORT,
-                                    val -> assertThat(val).isNotNull()))
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(NETWORK_TYPE, "ipv4"),
+                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
                             .satisfies(
                                 spanData ->
                                     assertThat(spanData.getEvents())
@@ -232,8 +233,7 @@ public abstract class AbstractGrpcStreamingTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
-                                                equalTo(
-                                                    ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                                equalTo(SERVER_ADDRESS, "localhost"),
                                                 equalTo(
                                                     RpcIncubatingAttributes.RPC_METHOD,
                                                     "Conversation"),
@@ -258,10 +258,8 @@ public abstract class AbstractGrpcStreamingTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
-                                                equalTo(
-                                                    ServerAttributes.SERVER_ADDRESS, "localhost"),
-                                                equalTo(
-                                                    ServerAttributes.SERVER_PORT, server.getPort()),
+                                                equalTo(SERVER_ADDRESS, "localhost"),
+                                                equalTo(SERVER_PORT, server.getPort()),
                                                 equalTo(
                                                     RpcIncubatingAttributes.RPC_METHOD,
                                                     "Conversation"),

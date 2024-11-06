@@ -12,6 +12,8 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
 import static net.spy.memcached.ConnectionFactoryBuilder.Protocol.BINARY;
@@ -144,9 +146,9 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "get"),
+                            equalTo(DB_OPERATION, "get"),
                             equalTo(stringKey("spymemcached.result"), "hit"))));
   }
 
@@ -166,9 +168,9 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "get"),
+                            equalTo(DB_OPERATION, "get"),
                             equalTo(stringKey("spymemcached.result"), "miss"))));
   }
 
@@ -201,9 +203,9 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "get"),
+                            equalTo(DB_OPERATION, "get"),
                             equalTo(booleanKey("spymemcached.command.cancelled"), true))));
   }
 
@@ -256,9 +258,9 @@ class SpymemcachedTest {
                                             val -> val.isInstanceOf(String.class))))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "get"))));
+                            equalTo(DB_OPERATION, "get"))));
   }
 
   @Test
@@ -284,9 +286,9 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "getBulk"))));
+                            equalTo(DB_OPERATION, "getBulk"))));
   }
 
   @Test
@@ -308,9 +310,9 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "set"))));
+                            equalTo(DB_OPERATION, "set"))));
   }
 
   @Test
@@ -344,9 +346,9 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "set"),
+                            equalTo(DB_OPERATION, "set"),
                             equalTo(booleanKey("spymemcached.command.cancelled"), true))));
   }
 
@@ -370,18 +372,18 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "add")),
+                            equalTo(DB_OPERATION, "add")),
                 span ->
                     span.hasName("get")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "get"),
+                            equalTo(DB_OPERATION, "get"),
                             equalTo(stringKey("spymemcached.result"), "hit"))));
   }
 
@@ -406,18 +408,18 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "add")),
+                            equalTo(DB_OPERATION, "add")),
                 span ->
                     span.hasName("add")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "add"))));
+                            equalTo(DB_OPERATION, "add"))));
   }
 
   @Test
@@ -440,18 +442,18 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "delete")),
+                            equalTo(DB_OPERATION, "delete")),
                 span ->
                     span.hasName("get")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "get"),
+                            equalTo(DB_OPERATION, "get"),
                             equalTo(stringKey("spymemcached.result"), "miss"))));
   }
 
@@ -474,9 +476,9 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "delete"))));
+                            equalTo(DB_OPERATION, "delete"))));
   }
 
   @Test
@@ -500,18 +502,18 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "replace")),
+                            equalTo(DB_OPERATION, "replace")),
                 span ->
                     span.hasName("get")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "get"),
+                            equalTo(DB_OPERATION, "get"),
                             equalTo(stringKey("spymemcached.result"), "hit"))));
   }
 
@@ -538,9 +540,9 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "replace"))));
+                            equalTo(DB_OPERATION, "replace"))));
   }
 
   @Test
@@ -565,27 +567,27 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "gets")),
+                            equalTo(DB_OPERATION, "gets")),
                 span ->
                     span.hasName("append")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "append")),
+                            equalTo(DB_OPERATION, "append")),
                 span ->
                     span.hasName("get")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "get"),
+                            equalTo(DB_OPERATION, "get"),
                             equalTo(stringKey("spymemcached.result"), "hit"))));
   }
 
@@ -611,27 +613,27 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "gets")),
+                            equalTo(DB_OPERATION, "gets")),
                 span ->
                     span.hasName("prepend")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "prepend")),
+                            equalTo(DB_OPERATION, "prepend")),
                 span ->
                     span.hasName("get")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "get"),
+                            equalTo(DB_OPERATION, "get"),
                             equalTo(stringKey("spymemcached.result"), "hit"))));
   }
 
@@ -657,18 +659,18 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "gets")),
+                            equalTo(DB_OPERATION, "gets")),
                 span ->
                     span.hasName("cas")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "cas"))));
+                            equalTo(DB_OPERATION, "cas"))));
   }
 
   @Test
@@ -692,9 +694,9 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "cas"))));
+                            equalTo(DB_OPERATION, "cas"))));
   }
 
   @Test
@@ -716,9 +718,9 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "touch"))));
+                            equalTo(DB_OPERATION, "touch"))));
   }
 
   @Test
@@ -741,9 +743,9 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "touch"))));
+                            equalTo(DB_OPERATION, "touch"))));
   }
 
   @Test
@@ -766,9 +768,9 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "getAndTouch"))));
+                            equalTo(DB_OPERATION, "getAndTouch"))));
   }
 
   @Test
@@ -791,9 +793,9 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "getAndTouch"))));
+                            equalTo(DB_OPERATION, "getAndTouch"))));
   }
 
   @Test
@@ -820,18 +822,18 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "decr")),
+                            equalTo(DB_OPERATION, "decr")),
                 span ->
                     span.hasName("get")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "get"),
+                            equalTo(DB_OPERATION, "get"),
                             equalTo(stringKey("spymemcached.result"), "hit"))));
   }
 
@@ -854,9 +856,9 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "decr"))));
+                            equalTo(DB_OPERATION, "decr"))));
   }
 
   @Test
@@ -877,9 +879,9 @@ class SpymemcachedTest {
                             new IllegalArgumentException("Key is too long (maxlen = 250)"))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "decr"))));
+                            equalTo(DB_OPERATION, "decr"))));
   }
 
   @Test
@@ -906,18 +908,18 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "incr")),
+                            equalTo(DB_OPERATION, "incr")),
                 span ->
                     span.hasName("get")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "get"),
+                            equalTo(DB_OPERATION, "get"),
                             equalTo(stringKey("spymemcached.result"), "hit"))));
   }
 
@@ -940,9 +942,9 @@ class SpymemcachedTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "incr"))));
+                            equalTo(DB_OPERATION, "incr"))));
   }
 
   @Test
@@ -963,9 +965,9 @@ class SpymemcachedTest {
                             new IllegalArgumentException("Key is too long (maxlen = 250)"))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "incr"))));
+                            equalTo(DB_OPERATION, "incr"))));
   }
 
   private static String key(String k) {

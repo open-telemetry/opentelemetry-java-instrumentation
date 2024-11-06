@@ -8,6 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.rmi;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 import io.opentelemetry.api.trace.SpanId;
@@ -15,7 +18,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -149,13 +151,11 @@ class RmiTest {
                                             .hasName("exception")
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(
-                                                    ExceptionAttributes.EXCEPTION_TYPE,
+                                                    EXCEPTION_TYPE,
                                                     thrown.getClass().getCanonicalName()),
-                                                equalTo(
-                                                    ExceptionAttributes.EXCEPTION_MESSAGE,
-                                                    thrown.getMessage()),
+                                                equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
                                                 satisfies(
-                                                    ExceptionAttributes.EXCEPTION_STACKTRACE,
+                                                    EXCEPTION_STACKTRACE,
                                                     AbstractAssert::isNotNull)))
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "java_rmi"),
@@ -171,13 +171,11 @@ class RmiTest {
                                             .hasName("exception")
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(
-                                                    ExceptionAttributes.EXCEPTION_TYPE,
+                                                    EXCEPTION_TYPE,
                                                     thrown.getClass().getCanonicalName()),
-                                                equalTo(
-                                                    ExceptionAttributes.EXCEPTION_MESSAGE,
-                                                    thrown.getMessage()),
+                                                equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
                                                 satisfies(
-                                                    ExceptionAttributes.EXCEPTION_STACKTRACE,
+                                                    EXCEPTION_STACKTRACE,
                                                     AbstractAssert::isNotNull)))
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "java_rmi"),

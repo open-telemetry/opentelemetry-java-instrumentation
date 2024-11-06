@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.couchbase;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
@@ -108,11 +110,10 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE),
                             equalTo(
-                                SemconvStabilityUtil.getAttributeKey(
-                                    DbIncubatingAttributes.DB_OPERATION),
+                                SemconvStabilityUtil.getAttributeKey(DB_OPERATION),
                                 "Cluster.openBucket"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -147,11 +148,10 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE),
                             equalTo(
-                                SemconvStabilityUtil.getAttributeKey(
-                                    DbIncubatingAttributes.DB_OPERATION),
+                                SemconvStabilityUtil.getAttributeKey(DB_OPERATION),
                                 "Cluster.openBucket"))),
         trace ->
             trace.hasSpansSatisfyingExactly(

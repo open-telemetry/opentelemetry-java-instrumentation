@@ -9,6 +9,9 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.logs.Severity;
@@ -17,7 +20,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.time.Instant;
 import org.apache.logging.log4j.LogManager;
@@ -131,13 +133,9 @@ abstract class AbstractOpenTelemetryAppenderTest {
                       equalTo(
                           ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
                       equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
-                      equalTo(
-                          ExceptionAttributes.EXCEPTION_TYPE,
-                          IllegalStateException.class.getName()),
-                      equalTo(ExceptionAttributes.EXCEPTION_MESSAGE, "Error!"),
-                      satisfies(
-                          ExceptionAttributes.EXCEPTION_STACKTRACE,
-                          v -> v.contains("logWithExtras")));
+                      equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
+                      equalTo(EXCEPTION_MESSAGE, "Error!"),
+                      satisfies(EXCEPTION_STACKTRACE, v -> v.contains("logWithExtras")));
 
               LogRecordData logRecordData = AssertAccess.getActual(logRecord);
               assertThat(logRecordData.getTimestampEpochNanos())

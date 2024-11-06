@@ -7,6 +7,8 @@ package io.opentelemetry.cassandra.v4.common;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -16,6 +18,10 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASS
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_IDEMPOTENCE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_PAGE_SIZE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_TABLE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
@@ -28,8 +34,6 @@ import com.datastax.oss.driver.internal.core.config.typesafe.DefaultDriverConfig
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
-import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
@@ -106,20 +110,17 @@ public abstract class AbstractCassandraTest {
                                             v -> assertThat(v).isEqualTo("ipv6"))),
                                 equalTo(SERVER_ADDRESS, cassandraHost),
                                 equalTo(SERVER_PORT, cassandraPort),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
-                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
+                                equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                                equalTo(NETWORK_PEER_PORT, cassandraPort),
                                 equalTo(DB_SYSTEM, "cassandra"),
                                 equalTo(
-                                    SemconvStabilityUtil.getAttributeKey(
-                                        DbIncubatingAttributes.DB_NAME),
+                                    SemconvStabilityUtil.getAttributeKey(DB_NAME),
                                     parameter.keyspace),
                                 equalTo(
-                                    SemconvStabilityUtil.getAttributeKey(
-                                        DbIncubatingAttributes.DB_STATEMENT),
+                                    SemconvStabilityUtil.getAttributeKey(DB_STATEMENT),
                                     parameter.expectedStatement),
                                 equalTo(
-                                    SemconvStabilityUtil.getAttributeKey(
-                                        DbIncubatingAttributes.DB_OPERATION),
+                                    SemconvStabilityUtil.getAttributeKey(DB_OPERATION),
                                     parameter.operation),
                                 equalTo(DB_CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
                                 equalTo(DB_CASSANDRA_COORDINATOR_DC, "datacenter1"),
@@ -132,8 +133,7 @@ public abstract class AbstractCassandraTest {
                                 equalTo(DB_CASSANDRA_PAGE_SIZE, 5000),
                                 equalTo(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
                                 equalTo(
-                                    SemconvStabilityUtil.getAttributeKey(
-                                        DbIncubatingAttributes.DB_CASSANDRA_TABLE),
+                                    SemconvStabilityUtil.getAttributeKey(DB_CASSANDRA_TABLE),
                                     parameter.table))));
 
     session.close();
@@ -172,20 +172,17 @@ public abstract class AbstractCassandraTest {
                                             v -> assertThat(v).isEqualTo("ipv6"))),
                                 equalTo(SERVER_ADDRESS, cassandraHost),
                                 equalTo(SERVER_PORT, cassandraPort),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
-                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
+                                equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                                equalTo(NETWORK_PEER_PORT, cassandraPort),
                                 equalTo(DB_SYSTEM, "cassandra"),
                                 equalTo(
-                                    SemconvStabilityUtil.getAttributeKey(
-                                        DbIncubatingAttributes.DB_NAME),
+                                    SemconvStabilityUtil.getAttributeKey(DB_NAME),
                                     parameter.keyspace),
                                 equalTo(
-                                    SemconvStabilityUtil.getAttributeKey(
-                                        DbIncubatingAttributes.DB_STATEMENT),
+                                    SemconvStabilityUtil.getAttributeKey(DB_STATEMENT),
                                     parameter.expectedStatement),
                                 equalTo(
-                                    SemconvStabilityUtil.getAttributeKey(
-                                        DbIncubatingAttributes.DB_OPERATION),
+                                    SemconvStabilityUtil.getAttributeKey(DB_OPERATION),
                                     parameter.operation),
                                 equalTo(DB_CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
                                 equalTo(DB_CASSANDRA_COORDINATOR_DC, "datacenter1"),
@@ -198,8 +195,7 @@ public abstract class AbstractCassandraTest {
                                 equalTo(DB_CASSANDRA_PAGE_SIZE, 5000),
                                 equalTo(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
                                 equalTo(
-                                    SemconvStabilityUtil.getAttributeKey(
-                                        DbIncubatingAttributes.DB_CASSANDRA_TABLE),
+                                    SemconvStabilityUtil.getAttributeKey(DB_CASSANDRA_TABLE),
                                     parameter.table)),
                     span ->
                         span.hasName("child")

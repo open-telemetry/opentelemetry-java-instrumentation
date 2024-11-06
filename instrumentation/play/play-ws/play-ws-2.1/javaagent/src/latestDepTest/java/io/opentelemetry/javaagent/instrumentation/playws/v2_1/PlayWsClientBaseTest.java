@@ -5,6 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.playws.v2_1;
 
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+
 import akka.actor.ActorSystem;
 import akka.stream.Materializer;
 import io.opentelemetry.api.common.AttributeKey;
@@ -12,8 +16,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -78,10 +80,10 @@ abstract class PlayWsClientBaseTest<REQUEST> extends AbstractHttpClientTest<REQU
         uri -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(NetworkAttributes.NETWORK_PROTOCOL_VERSION);
+          attributes.remove(NETWORK_PROTOCOL_VERSION);
           if (uri.toString().endsWith("/circular-redirect")) {
-            attributes.remove(ServerAttributes.SERVER_ADDRESS);
-            attributes.remove(ServerAttributes.SERVER_PORT);
+            attributes.remove(SERVER_ADDRESS);
+            attributes.remove(SERVER_PORT);
           }
           return attributes;
         });

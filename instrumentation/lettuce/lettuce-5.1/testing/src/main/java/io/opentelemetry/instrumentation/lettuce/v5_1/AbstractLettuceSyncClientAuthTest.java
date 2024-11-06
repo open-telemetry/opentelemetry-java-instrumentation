@@ -7,13 +7,17 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import org.junit.jupiter.api.AfterAll;
@@ -71,15 +75,13 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
-                                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                                      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
-                                      equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                      equalTo(ServerAttributes.SERVER_ADDRESS, host),
-                                      equalTo(ServerAttributes.SERVER_PORT, port),
-                                      equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                      equalTo(
-                                          DbIncubatingAttributes.DB_STATEMENT,
-                                          "CLIENT SETINFO lib-name Lettuce")))),
+                                      equalTo(NETWORK_TYPE, "ipv4"),
+                                      equalTo(NETWORK_PEER_ADDRESS, ip),
+                                      equalTo(NETWORK_PEER_PORT, port),
+                                      equalTo(SERVER_ADDRESS, host),
+                                      equalTo(SERVER_PORT, port),
+                                      equalTo(DB_SYSTEM, "redis"),
+                                      equalTo(DB_STATEMENT, "CLIENT SETINFO lib-name Lettuce")))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
@@ -87,14 +89,14 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
-                                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                                      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
-                                      equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                      equalTo(ServerAttributes.SERVER_ADDRESS, host),
-                                      equalTo(ServerAttributes.SERVER_PORT, port),
-                                      equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
+                                      equalTo(NETWORK_TYPE, "ipv4"),
+                                      equalTo(NETWORK_PEER_ADDRESS, ip),
+                                      equalTo(NETWORK_PEER_PORT, port),
+                                      equalTo(SERVER_ADDRESS, host),
+                                      equalTo(SERVER_PORT, port),
+                                      equalTo(DB_SYSTEM, "redis"),
                                       satisfies(
-                                          DbIncubatingAttributes.DB_STATEMENT,
+                                          DB_STATEMENT,
                                           stringAssert ->
                                               stringAssert.startsWith("CLIENT SETINFO lib-ver"))))),
               trace ->
@@ -104,13 +106,13 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
-                                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                                      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
-                                      equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                      equalTo(ServerAttributes.SERVER_ADDRESS, host),
-                                      equalTo(ServerAttributes.SERVER_PORT, port),
-                                      equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                      equalTo(DbIncubatingAttributes.DB_STATEMENT, "AUTH ?")))
+                                      equalTo(NETWORK_TYPE, "ipv4"),
+                                      equalTo(NETWORK_PEER_ADDRESS, ip),
+                                      equalTo(NETWORK_PEER_PORT, port),
+                                      equalTo(SERVER_ADDRESS, host),
+                                      equalTo(SERVER_PORT, port),
+                                      equalTo(DB_SYSTEM, "redis"),
+                                      equalTo(DB_STATEMENT, "AUTH ?")))
                               .hasEventsSatisfyingExactly(
                                   event -> event.hasName("redis.encode.start"),
                                   event -> event.hasName("redis.encode.end"))));
@@ -125,13 +127,13 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
                                   addExtraAttributes(
-                                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                                      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
-                                      equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                      equalTo(ServerAttributes.SERVER_ADDRESS, host),
-                                      equalTo(ServerAttributes.SERVER_PORT, port),
-                                      equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                                      equalTo(DbIncubatingAttributes.DB_STATEMENT, "AUTH ?")))
+                                      equalTo(NETWORK_TYPE, "ipv4"),
+                                      equalTo(NETWORK_PEER_ADDRESS, ip),
+                                      equalTo(NETWORK_PEER_PORT, port),
+                                      equalTo(SERVER_ADDRESS, host),
+                                      equalTo(SERVER_PORT, port),
+                                      equalTo(DB_SYSTEM, "redis"),
+                                      equalTo(DB_STATEMENT, "AUTH ?")))
                               .hasEventsSatisfyingExactly(
                                   event -> event.hasName("redis.encode.start"),
                                   event -> event.hasName("redis.encode.end"))));

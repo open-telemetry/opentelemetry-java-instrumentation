@@ -7,6 +7,10 @@ package io.opentelemetry.instrumentation.couchbase;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 
 import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.cluster.BucketSettings;
@@ -121,26 +125,17 @@ public abstract class AbstractCouchbaseTest {
     span.hasName(spanName).hasKind(SpanKind.CLIENT);
 
     List<AttributeAssertion> assertions = new ArrayList<>();
-    assertions.add(
-        equalTo(
-            DbIncubatingAttributes.DB_SYSTEM,
-            DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE));
+    assertions.add(equalTo(DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE));
     if (operation != null) {
-      assertions.add(
-          equalTo(
-              SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_OPERATION),
-              operation));
+      assertions.add(equalTo(SemconvStabilityUtil.getAttributeKey(DB_OPERATION), operation));
     }
     if (bucketName != null) {
-      assertions.add(
-          equalTo(
-              SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_NAME), bucketName));
+      assertions.add(equalTo(SemconvStabilityUtil.getAttributeKey(DB_NAME), bucketName));
     }
     if (statement != null) {
       assertions.add(
           satisfies(
-              SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_STATEMENT),
-              s -> s.startsWith(statement)));
+              SemconvStabilityUtil.getAttributeKey(DB_STATEMENT), s -> s.startsWith(statement)));
     }
     assertions.addAll(couchbaseAttributes());
 
