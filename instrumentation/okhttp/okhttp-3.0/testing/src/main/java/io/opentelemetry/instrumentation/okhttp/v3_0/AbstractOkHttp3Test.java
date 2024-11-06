@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.okhttp.v3_0;
 
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -12,7 +13,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.NetworkAttributes;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collections;
@@ -124,7 +124,7 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
               || "https://192.0.2.1/".equals(uri.toString())
               || "http://192.0.2.1/".equals(uri.toString())
               || resolveAddress("/read-timeout").toString().equals(uri.toString())) {
-            attributes.remove(NetworkAttributes.NETWORK_PROTOCOL_VERSION);
+            attributes.remove(NETWORK_PROTOCOL_VERSION);
           }
 
           return attributes;

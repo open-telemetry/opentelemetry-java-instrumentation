@@ -6,6 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.instrumentationapi;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -20,8 +23,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.testing.AgentSpanTesting;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.semconv.ErrorAttributes;
-import io.opentelemetry.semconv.HttpAttributes;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -106,9 +107,9 @@ class ContextBridgeTest {
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HttpAttributes.HTTP_ROUTE, "/test/server/*"),
-                            equalTo(ErrorAttributes.ERROR_TYPE, "_OTHER"))));
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_ROUTE, "/test/server/*"),
+                            equalTo(ERROR_TYPE, "_OTHER"))));
   }
 
   @Test
@@ -127,8 +128,8 @@ class ContextBridgeTest {
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HttpAttributes.HTTP_ROUTE, "/test/controller/:id"),
-                            equalTo(ErrorAttributes.ERROR_TYPE, "_OTHER"))));
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_ROUTE, "/test/controller/:id"),
+                            equalTo(ERROR_TYPE, "_OTHER"))));
   }
 }

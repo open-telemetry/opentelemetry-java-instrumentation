@@ -9,6 +9,16 @@ import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
@@ -18,9 +28,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.AwsIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
@@ -179,13 +186,12 @@ public abstract class AbstractAws2SqsTracingTest {
                                 equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
                                 equalTo(RpcIncubatingAttributes.RPC_SERVICE, "Sqs"),
                                 equalTo(RpcIncubatingAttributes.RPC_METHOD, "CreateQueue"),
-                                equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                 satisfies(
-                                    UrlAttributes.URL_FULL,
-                                    v -> v.startsWith("http://localhost:" + sqsPort)),
-                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(ServerAttributes.SERVER_PORT, sqsPort))),
+                                    URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, sqsPort))),
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> {
@@ -209,25 +215,20 @@ public abstract class AbstractAws2SqsTracingTest {
                                   equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
                                   equalTo(RpcIncubatingAttributes.RPC_SERVICE, "Sqs"),
                                   equalTo(RpcIncubatingAttributes.RPC_METHOD, "SendMessage"),
-                                  equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
-                                  equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                  equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                  equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                   satisfies(
-                                      UrlAttributes.URL_FULL,
-                                      v -> v.startsWith("http://localhost:" + sqsPort)),
-                                  equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                                  equalTo(ServerAttributes.SERVER_PORT, sqsPort),
+                                      URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+                                  equalTo(SERVER_ADDRESS, "localhost"),
+                                  equalTo(SERVER_PORT, sqsPort),
                                   equalTo(
-                                      MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                      MESSAGING_SYSTEM,
                                       MessagingIncubatingAttributes.MessagingSystemIncubatingValues
                                           .AWS_SQS),
-                                  equalTo(
-                                      MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                      "testSdkSqs"),
-                                  equalTo(
-                                      MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                                  equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                                  equalTo(MESSAGING_OPERATION, "publish"),
                                   satisfies(
-                                      MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
-                                      v -> v.isInstanceOf(String.class))));
+                                      MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class))));
 
                       if (captureHeaders) {
                         attributes.add(
@@ -274,13 +275,12 @@ public abstract class AbstractAws2SqsTracingTest {
                                     equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
                                     equalTo(RpcIncubatingAttributes.RPC_SERVICE, "Sqs"),
                                     equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),
-                                    equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
-                                    equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                    equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                     satisfies(
-                                        UrlAttributes.URL_FULL,
-                                        v -> v.startsWith("http://localhost:" + sqsPort)),
-                                    equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                                    equalTo(ServerAttributes.SERVER_PORT, sqsPort))));
+                                        URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, sqsPort))));
               }
 
               spanAsserts.addAll(
@@ -293,26 +293,19 @@ public abstract class AbstractAws2SqsTracingTest {
                                     equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
                                     equalTo(RpcIncubatingAttributes.RPC_SERVICE, "Sqs"),
                                     equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),
-                                    equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
-                                    equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                    equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                     satisfies(
-                                        UrlAttributes.URL_FULL,
-                                        v -> v.startsWith("http://localhost:" + sqsPort)),
-                                    equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                                    equalTo(ServerAttributes.SERVER_PORT, sqsPort),
+                                        URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, sqsPort),
                                     equalTo(
-                                        MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                        MESSAGING_SYSTEM,
                                         MessagingIncubatingAttributes
                                             .MessagingSystemIncubatingValues.AWS_SQS),
-                                    equalTo(
-                                        MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                        "testSdkSqs"),
-                                    equalTo(
-                                        MessagingIncubatingAttributes.MESSAGING_OPERATION,
-                                        "receive"),
-                                    equalTo(
-                                        MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT,
-                                        1)));
+                                    equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                                    equalTo(MESSAGING_OPERATION, "receive"),
+                                    equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
 
                         if (captureHeaders) {
                           attributes.add(
@@ -340,26 +333,20 @@ public abstract class AbstractAws2SqsTracingTest {
                                     equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
                                     equalTo(RpcIncubatingAttributes.RPC_SERVICE, "Sqs"),
                                     equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),
-                                    equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
-                                    equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                    equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                     satisfies(
-                                        UrlAttributes.URL_FULL,
-                                        v -> v.startsWith("http://localhost:" + sqsPort)),
-                                    equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                                    equalTo(ServerAttributes.SERVER_PORT, sqsPort),
+                                        URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, sqsPort),
                                     equalTo(
-                                        MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                        MESSAGING_SYSTEM,
                                         MessagingIncubatingAttributes
                                             .MessagingSystemIncubatingValues.AWS_SQS),
-                                    equalTo(
-                                        MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                        "testSdkSqs"),
-                                    equalTo(
-                                        MessagingIncubatingAttributes.MESSAGING_OPERATION,
-                                        "process"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                                    equalTo(MESSAGING_OPERATION, "process"),
                                     satisfies(
-                                        MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
-                                        v -> v.isInstanceOf(String.class))));
+                                        MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class))));
 
                         if (captureHeaders) {
                           attributes.add(
@@ -521,22 +508,17 @@ public abstract class AbstractAws2SqsTracingTest {
                               equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
                               equalTo(RpcIncubatingAttributes.RPC_SERVICE, "Sqs"),
                               equalTo(RpcIncubatingAttributes.RPC_METHOD, "SendMessageBatch"),
-                              equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
-                              equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                              satisfies(
-                                  UrlAttributes.URL_FULL,
-                                  v -> v.startsWith("http://localhost:" + sqsPort)),
-                              equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                              equalTo(ServerAttributes.SERVER_PORT, sqsPort),
+                              equalTo(HTTP_REQUEST_METHOD, "POST"),
+                              equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                              satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+                              equalTo(SERVER_ADDRESS, "localhost"),
+                              equalTo(SERVER_PORT, sqsPort),
                               equalTo(
-                                  MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                  MESSAGING_SYSTEM,
                                   MessagingIncubatingAttributes.MessagingSystemIncubatingValues
                                       .AWS_SQS),
-                              equalTo(
-                                  MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                  "testSdkSqs"),
-                              equalTo(
-                                  MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish")));
+                              equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                              equalTo(MESSAGING_OPERATION, "publish")));
             },
             trace -> {
               List<Consumer<SpanDataAssert>> spanAsserts = new ArrayList<>();
@@ -551,23 +533,18 @@ public abstract class AbstractAws2SqsTracingTest {
                               equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
                               equalTo(RpcIncubatingAttributes.RPC_SERVICE, "Sqs"),
                               equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),
-                              equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
-                              equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                              satisfies(
-                                  UrlAttributes.URL_FULL,
-                                  v -> v.startsWith("http://localhost:" + sqsPort)),
-                              equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                              equalTo(ServerAttributes.SERVER_PORT, sqsPort),
+                              equalTo(HTTP_REQUEST_METHOD, "POST"),
+                              equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                              satisfies(URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
+                              equalTo(SERVER_ADDRESS, "localhost"),
+                              equalTo(SERVER_PORT, sqsPort),
                               equalTo(
-                                  MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                  MESSAGING_SYSTEM,
                                   MessagingIncubatingAttributes.MessagingSystemIncubatingValues
                                       .AWS_SQS),
-                              equalTo(
-                                  MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                  "testSdkSqs"),
-                              equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "receive"),
-                              equalTo(
-                                  MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 3)));
+                              equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                              equalTo(MESSAGING_OPERATION, "receive"),
+                              equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 3)));
 
               // one of the 3 process spans is expected to not have a span link
               for (int i = 0; i <= 2; i++) {
@@ -599,26 +576,21 @@ public abstract class AbstractAws2SqsTracingTest {
                                       equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
                                       equalTo(RpcIncubatingAttributes.RPC_SERVICE, "Sqs"),
                                       equalTo(RpcIncubatingAttributes.RPC_METHOD, "ReceiveMessage"),
-                                      equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "POST"),
-                                      equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
+                                      equalTo(HTTP_REQUEST_METHOD, "POST"),
+                                      equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                       satisfies(
-                                          UrlAttributes.URL_FULL,
+                                          URL_FULL,
                                           v -> v.startsWith("http://localhost:" + sqsPort)),
-                                      equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                                      equalTo(ServerAttributes.SERVER_PORT, sqsPort),
+                                      equalTo(SERVER_ADDRESS, "localhost"),
+                                      equalTo(SERVER_PORT, sqsPort),
                                       equalTo(
-                                          MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                          MESSAGING_SYSTEM,
                                           MessagingIncubatingAttributes
                                               .MessagingSystemIncubatingValues.AWS_SQS),
-                                      equalTo(
-                                          MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                          "testSdkSqs"),
-                                      equalTo(
-                                          MessagingIncubatingAttributes.MESSAGING_OPERATION,
-                                          "process"),
+                                      equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                                      equalTo(MESSAGING_OPERATION, "process"),
                                       satisfies(
-                                          MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
-                                          v -> v.isInstanceOf(String.class)));
+                                          MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class)));
                             },
                             span ->
                                 span.hasName("process child")

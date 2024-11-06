@@ -7,6 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -16,7 +19,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -199,14 +201,10 @@ class SpringRmiTest {
                               event
                                   .hasName("exception")
                                   .hasAttributesSatisfying(
-                                      equalTo(
-                                          ExceptionAttributes.EXCEPTION_TYPE,
-                                          error.getClass().getCanonicalName()),
-                                      equalTo(
-                                          ExceptionAttributes.EXCEPTION_MESSAGE,
-                                          error.getMessage()),
+                                      equalTo(EXCEPTION_TYPE, error.getClass().getCanonicalName()),
+                                      equalTo(EXCEPTION_MESSAGE, error.getMessage()),
                                       satisfies(
-                                          ExceptionAttributes.EXCEPTION_STACKTRACE,
+                                          EXCEPTION_STACKTRACE,
                                           val -> val.isInstanceOf(String.class)))));
           assertions.add(
               span ->
@@ -219,14 +217,10 @@ class SpringRmiTest {
                               event
                                   .hasName("exception")
                                   .hasAttributesSatisfying(
-                                      equalTo(
-                                          ExceptionAttributes.EXCEPTION_TYPE,
-                                          error.getClass().getCanonicalName()),
-                                      equalTo(
-                                          ExceptionAttributes.EXCEPTION_MESSAGE,
-                                          error.getMessage()),
+                                      equalTo(EXCEPTION_TYPE, error.getClass().getCanonicalName()),
+                                      equalTo(EXCEPTION_MESSAGE, error.getMessage()),
                                       satisfies(
-                                          ExceptionAttributes.EXCEPTION_STACKTRACE,
+                                          EXCEPTION_STACKTRACE,
                                           val -> val.isInstanceOf(String.class))))
                       .hasAttributesSatisfying(
                           equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "spring_rmi"),
@@ -247,13 +241,10 @@ class SpringRmiTest {
                                     .hasName("exception")
                                     .hasAttributesSatisfying(
                                         equalTo(
-                                            ExceptionAttributes.EXCEPTION_TYPE,
-                                            error.getClass().getCanonicalName()),
-                                        equalTo(
-                                            ExceptionAttributes.EXCEPTION_MESSAGE,
-                                            error.getMessage()),
+                                            EXCEPTION_TYPE, error.getClass().getCanonicalName()),
+                                        equalTo(EXCEPTION_MESSAGE, error.getMessage()),
                                         satisfies(
-                                            ExceptionAttributes.EXCEPTION_STACKTRACE,
+                                            EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class))))
                         .hasAttributesSatisfying(
                             equalTo(RpcIncubatingAttributes.RPC_SYSTEM, testSource.serverSystem),

@@ -11,6 +11,11 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.or
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Named.named;
@@ -19,7 +24,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -78,12 +82,12 @@ public abstract class AbstractElasticsearchTransportClientTest
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             addNetworkTypeAttribute(
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, getAddress()),
-                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, getPort()),
+                                equalTo(NETWORK_PEER_ADDRESS, getAddress()),
+                                equalTo(NETWORK_PEER_PORT, getPort()),
                                 equalTo(
-                                    DbIncubatingAttributes.DB_SYSTEM,
+                                    DB_SYSTEM,
                                     DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                                equalTo(DbIncubatingAttributes.DB_OPERATION, "ClusterHealthAction"),
+                                equalTo(DB_OPERATION, "ClusterHealthAction"),
                                 equalTo(ELASTICSEARCH_ACTION, "ClusterHealthAction"),
                                 equalTo(ELASTICSEARCH_REQUEST, "ClusterHealthRequest"))),
                 span ->
@@ -137,9 +141,9 @@ public abstract class AbstractElasticsearchTransportClientTest
                                             RemoteTransportException.class.getName())))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GetAction"),
+                            equalTo(DB_OPERATION, "GetAction"),
                             equalTo(ELASTICSEARCH_ACTION, "GetAction"),
                             equalTo(ELASTICSEARCH_REQUEST, "GetRequest"),
                             equalTo(ELASTICSEARCH_REQUEST_INDICES, "invalid-index")),
@@ -195,12 +199,12 @@ public abstract class AbstractElasticsearchTransportClientTest
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             addNetworkTypeAttribute(
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, getAddress()),
-                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, getPort()),
+                                equalTo(NETWORK_PEER_ADDRESS, getAddress()),
+                                equalTo(NETWORK_PEER_PORT, getPort()),
                                 equalTo(
-                                    DbIncubatingAttributes.DB_SYSTEM,
+                                    DB_SYSTEM,
                                     DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                                equalTo(DbIncubatingAttributes.DB_OPERATION, "CreateIndexAction"),
+                                equalTo(DB_OPERATION, "CreateIndexAction"),
                                 equalTo(ELASTICSEARCH_ACTION, "CreateIndexAction"),
                                 equalTo(ELASTICSEARCH_REQUEST, "CreateIndexRequest"),
                                 equalTo(ELASTICSEARCH_REQUEST_INDICES, indexName)))),
@@ -212,9 +216,9 @@ public abstract class AbstractElasticsearchTransportClientTest
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
+                                DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, getPutMappingActionName()),
+                            equalTo(DB_OPERATION, getPutMappingActionName()),
                             equalTo(ELASTICSEARCH_ACTION, getPutMappingActionName()),
                             equalTo(ELASTICSEARCH_REQUEST, "PutMappingRequest"))),
         trace ->
@@ -225,12 +229,12 @@ public abstract class AbstractElasticsearchTransportClientTest
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             addIndexActionAttributes(
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, getAddress()),
-                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, getPort()),
+                                equalTo(NETWORK_PEER_ADDRESS, getAddress()),
+                                equalTo(NETWORK_PEER_PORT, getPort()),
                                 equalTo(
-                                    DbIncubatingAttributes.DB_SYSTEM,
+                                    DB_SYSTEM,
                                     DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                                equalTo(DbIncubatingAttributes.DB_OPERATION, "IndexAction"),
+                                equalTo(DB_OPERATION, "IndexAction"),
                                 equalTo(ELASTICSEARCH_ACTION, "IndexAction"),
                                 equalTo(ELASTICSEARCH_REQUEST, "IndexRequest"),
                                 equalTo(ELASTICSEARCH_REQUEST_INDICES, indexName),
@@ -248,12 +252,12 @@ public abstract class AbstractElasticsearchTransportClientTest
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             addNetworkTypeAttribute(
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, getAddress()),
-                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, getPort()),
+                                equalTo(NETWORK_PEER_ADDRESS, getAddress()),
+                                equalTo(NETWORK_PEER_PORT, getPort()),
                                 equalTo(
-                                    DbIncubatingAttributes.DB_SYSTEM,
+                                    DB_SYSTEM,
                                     DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                                equalTo(DbIncubatingAttributes.DB_OPERATION, "GetAction"),
+                                equalTo(DB_OPERATION, "GetAction"),
                                 equalTo(ELASTICSEARCH_ACTION, "GetAction"),
                                 equalTo(ELASTICSEARCH_REQUEST, "GetRequest"),
                                 equalTo(ELASTICSEARCH_REQUEST_INDICES, indexName),
@@ -268,12 +272,12 @@ public abstract class AbstractElasticsearchTransportClientTest
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             addNetworkTypeAttribute(
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, getAddress()),
-                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, getPort()),
+                                equalTo(NETWORK_PEER_ADDRESS, getAddress()),
+                                equalTo(NETWORK_PEER_PORT, getPort()),
                                 equalTo(
-                                    DbIncubatingAttributes.DB_SYSTEM,
+                                    DB_SYSTEM,
                                     DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                                equalTo(DbIncubatingAttributes.DB_OPERATION, "GetAction"),
+                                equalTo(DB_OPERATION, "GetAction"),
                                 equalTo(ELASTICSEARCH_ACTION, "GetAction"),
                                 equalTo(ELASTICSEARCH_REQUEST, "GetRequest"),
                                 equalTo(ELASTICSEARCH_REQUEST_INDICES, indexName),
@@ -291,7 +295,7 @@ public abstract class AbstractElasticsearchTransportClientTest
     if (hasNetworkType()) {
       result.add(
           satisfies(
-              NetworkAttributes.NETWORK_TYPE,
+              NETWORK_TYPE,
               k ->
                   k.satisfiesAnyOf(
                       val -> assertThat(val).isEqualTo("ipv4"),

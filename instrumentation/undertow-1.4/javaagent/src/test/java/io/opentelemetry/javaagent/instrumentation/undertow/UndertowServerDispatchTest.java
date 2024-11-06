@@ -11,13 +11,13 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 
 import com.google.common.collect.ImmutableSet;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
-import io.opentelemetry.semconv.NetworkAttributes;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.util.Headers;
@@ -130,6 +130,6 @@ class UndertowServerDispatchTest extends AbstractHttpServerTest<Undertow> {
     options.setTestException(false);
     options.setHasResponseCustomizer(endpoint -> true);
 
-    options.setHttpAttributes(endpoint -> ImmutableSet.of(NetworkAttributes.NETWORK_PEER_PORT));
+    options.setHttpAttributes(endpoint -> ImmutableSet.of(NETWORK_PEER_PORT));
   }
 }

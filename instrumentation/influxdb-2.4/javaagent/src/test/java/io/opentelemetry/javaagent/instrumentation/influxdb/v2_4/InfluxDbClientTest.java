@@ -6,6 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -13,8 +19,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
@@ -318,13 +322,13 @@ class InfluxDbClientTest {
     List<AttributeAssertion> result = new ArrayList<>();
     result.addAll(
         asList(
-            equalTo(DbIncubatingAttributes.DB_SYSTEM, "influxdb"),
-            equalTo(DbIncubatingAttributes.DB_NAME, databaseName),
-            equalTo(ServerAttributes.SERVER_ADDRESS, host),
-            equalTo(ServerAttributes.SERVER_PORT, port),
-            equalTo(DbIncubatingAttributes.DB_OPERATION, operation)));
+            equalTo(DB_SYSTEM, "influxdb"),
+            equalTo(DB_NAME, databaseName),
+            equalTo(SERVER_ADDRESS, host),
+            equalTo(SERVER_PORT, port),
+            equalTo(DB_OPERATION, operation)));
     if (statement != null) {
-      result.add(equalTo(DbIncubatingAttributes.DB_STATEMENT, statement));
+      result.add(equalTo(DB_STATEMENT, statement));
     }
     return result;
   }

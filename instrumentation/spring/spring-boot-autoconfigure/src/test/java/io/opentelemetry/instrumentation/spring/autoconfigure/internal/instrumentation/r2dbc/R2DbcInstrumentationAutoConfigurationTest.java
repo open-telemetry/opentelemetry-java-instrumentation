@@ -5,11 +5,12 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.r2dbc;
 
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -51,14 +52,12 @@ class R2DbcInstrumentationAutoConfigurationTest {
                   trace.hasSpansSatisfyingExactly(
                       span ->
                           span.hasAttribute(
-                              DbIncubatingAttributes.DB_STATEMENT,
+                              DB_STATEMENT,
                               "CREATE TABLE IF NOT EXISTS player(id INT NOT NULL AUTO_INCREMENT, name VARCHAR(?), age INT, PRIMARY KEY (id))")),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
-                          span.hasAttribute(
-                              DbIncubatingAttributes.DB_STATEMENT,
-                              "SELECT * FROM player WHERE id = ?")));
+                          span.hasAttribute(DB_STATEMENT, "SELECT * FROM player WHERE id = ?")));
         });
   }
 }

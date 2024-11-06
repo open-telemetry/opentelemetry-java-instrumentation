@@ -7,6 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.google.common.collect.ImmutableMap;
@@ -14,7 +17,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.junit.jupiter.api.AfterAll;
@@ -117,10 +119,10 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                             equalTo(
                                 stringKey("camel.uri"),
                                 "cql://" + host + ":" + cassandraPort + "/test"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
+                            equalTo(DB_NAME, "test"),
                             equalTo(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                DB_STATEMENT,
                                 "select * from test.users where id=? ALLOW FILTERING"),
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "cassandra"))));
+                            equalTo(DB_SYSTEM, "cassandra"))));
   }
 }

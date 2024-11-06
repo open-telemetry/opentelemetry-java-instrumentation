@@ -10,13 +10,17 @@ import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -39,15 +43,12 @@ public abstract class AbstractJmsTest {
     List<AttributeAssertion> attributeAssertions =
         new ArrayList<>(
             asList(
-                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "jms"),
-                equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, destinationName),
-                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
-                satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
-                    val -> val.isInstanceOf(String.class))));
+                equalTo(MESSAGING_SYSTEM, "jms"),
+                equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                equalTo(MESSAGING_OPERATION, "publish"),
+                satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class))));
     if (destinationName.equals("(temporary)")) {
-      attributeAssertions.add(
-          equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY, true));
+      attributeAssertions.add(equalTo(MESSAGING_DESTINATION_TEMPORARY, true));
     }
     if (testHeaders) {
       attributeAssertions.add(
@@ -89,20 +90,17 @@ public abstract class AbstractJmsTest {
     List<AttributeAssertion> attributeAssertions =
         new ArrayList<>(
             asList(
-                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "jms"),
-                equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, destinationName),
-                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, operation)));
+                equalTo(MESSAGING_SYSTEM, "jms"),
+                equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                equalTo(MESSAGING_OPERATION, operation)));
     if (msgId != null) {
-      attributeAssertions.add(equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, msgId));
+      attributeAssertions.add(equalTo(MESSAGING_MESSAGE_ID, msgId));
     } else {
       attributeAssertions.add(
-          satisfies(
-              MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
-              val -> val.isInstanceOf(String.class)));
+          satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
     }
     if (destinationName.equals("(temporary)")) {
-      attributeAssertions.add(
-          equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY, true));
+      attributeAssertions.add(equalTo(MESSAGING_DESTINATION_TEMPORARY, true));
     }
     if (testHeaders) {
       attributeAssertions.add(

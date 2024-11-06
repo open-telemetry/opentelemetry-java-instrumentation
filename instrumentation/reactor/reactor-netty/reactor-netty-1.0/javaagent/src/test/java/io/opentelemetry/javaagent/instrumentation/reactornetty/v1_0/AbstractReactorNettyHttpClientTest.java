@@ -10,6 +10,12 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.netty.handler.codec.http.HttpMethod;
@@ -26,11 +32,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.ErrorAttributes;
-import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.UrlAttributes;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.time.Duration;
@@ -136,13 +137,13 @@ abstract class AbstractReactorNettyHttpClientTest
     // unopened port or non routable address
     if ("http://localhost:61/".equals(uri.toString())
         || "https://192.0.2.1/".equals(uri.toString())) {
-      attributes.remove(NetworkAttributes.NETWORK_PROTOCOL_VERSION);
+      attributes.remove(NETWORK_PROTOCOL_VERSION);
     }
 
     if (uri.toString().contains("/read-timeout")) {
-      attributes.remove(NetworkAttributes.NETWORK_PROTOCOL_VERSION);
-      attributes.remove(ServerAttributes.SERVER_ADDRESS);
-      attributes.remove(ServerAttributes.SERVER_PORT);
+      attributes.remove(NETWORK_PROTOCOL_VERSION);
+      attributes.remove(SERVER_ADDRESS);
+      attributes.remove(SERVER_PORT);
     }
     return attributes;
   }
@@ -310,11 +311,11 @@ abstract class AbstractReactorNettyHttpClientTest
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(UrlAttributes.URL_FULL, uri.toString()),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
-                            equalTo(ErrorAttributes.ERROR_TYPE, "cancelled")),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(URL_FULL, uri.toString()),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, uri.getPort()),
+                            equalTo(ERROR_TYPE, "cancelled")),
                 span ->
                     span.hasName("test-http-server")
                         .hasKind(SpanKind.SERVER)

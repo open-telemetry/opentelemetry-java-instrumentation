@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.play.v2_4.client;
 
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -12,7 +14,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.NetworkAttributes;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Map;
@@ -86,7 +87,7 @@ class PlayWsClientTest extends AbstractHttpClientTest<WSRequest> {
         uri -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(NetworkAttributes.NETWORK_PROTOCOL_VERSION);
+          attributes.remove(NETWORK_PROTOCOL_VERSION);
           return attributes;
         });
 

@@ -6,13 +6,17 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import org.junit.jupiter.api.AfterAll;
@@ -68,12 +72,12 @@ class Jedis40ClientTest {
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET foo ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"),
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip))));
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(DB_STATEMENT, "SET foo ?"),
+                            equalTo(DB_OPERATION, "SET"),
+                            equalTo(NETWORK_TYPE, "ipv4"),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip))));
   }
 
   @Test
@@ -90,24 +94,24 @@ class Jedis40ClientTest {
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET foo ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"),
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip))),
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(DB_STATEMENT, "SET foo ?"),
+                            equalTo(DB_OPERATION, "SET"),
+                            equalTo(NETWORK_TYPE, "ipv4"),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "GET foo"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GET"),
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip))));
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(DB_STATEMENT, "GET foo"),
+                            equalTo(DB_OPERATION, "GET"),
+                            equalTo(NETWORK_TYPE, "ipv4"),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip))));
   }
 
   @Test
@@ -124,23 +128,23 @@ class Jedis40ClientTest {
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "SET foo ?"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SET"),
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip))),
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(DB_STATEMENT, "SET foo ?"),
+                            equalTo(DB_OPERATION, "SET"),
+                            equalTo(NETWORK_TYPE, "ipv4"),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("RANDOMKEY")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "RANDOMKEY"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "RANDOMKEY"),
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip))));
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(DB_STATEMENT, "RANDOMKEY"),
+                            equalTo(DB_OPERATION, "RANDOMKEY"),
+                            equalTo(NETWORK_TYPE, "ipv4"),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip))));
   }
 }

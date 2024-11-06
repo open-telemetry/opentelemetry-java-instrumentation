@@ -8,6 +8,14 @@ package io.opentelemetry.instrumentation.mongo.testing;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_MONGODB_COLLECTION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
@@ -18,8 +26,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.Socket;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -503,7 +509,7 @@ public abstract class AbstractMongoClientTest<T> {
   }
 
   @SuppressWarnings("deprecation")
-  // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
+  // TODO DB_CONNECTION_STRING deprecation
   void mongoSpan(
       SpanDataAssert span,
       String operation,
@@ -519,17 +525,17 @@ public abstract class AbstractMongoClientTest<T> {
     }
 
     span.hasAttributesSatisfyingExactly(
-        equalTo(ServerAttributes.SERVER_ADDRESS, host),
-        equalTo(ServerAttributes.SERVER_PORT, port),
+        equalTo(SERVER_ADDRESS, host),
+        equalTo(SERVER_PORT, port),
         satisfies(
-            DbIncubatingAttributes.DB_STATEMENT,
+            DB_STATEMENT,
             val ->
                 val.satisfies(
                     statement -> assertThat(statements).contains(statement.replaceAll(" ", "")))),
-        equalTo(DbIncubatingAttributes.DB_SYSTEM, "mongodb"),
-        equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "mongodb://localhost:" + port),
-        equalTo(DbIncubatingAttributes.DB_NAME, dbName),
-        equalTo(DbIncubatingAttributes.DB_OPERATION, operation),
-        equalTo(DbIncubatingAttributes.DB_MONGODB_COLLECTION, collection));
+        equalTo(DB_SYSTEM, "mongodb"),
+        equalTo(DB_CONNECTION_STRING, "mongodb://localhost:" + port),
+        equalTo(DB_NAME, dbName),
+        equalTo(DB_OPERATION, operation),
+        equalTo(DB_MONGODB_COLLECTION, collection));
   }
 }

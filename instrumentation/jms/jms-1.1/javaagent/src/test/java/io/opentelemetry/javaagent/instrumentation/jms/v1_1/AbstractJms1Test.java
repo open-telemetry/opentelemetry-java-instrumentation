@@ -10,6 +10,11 @@ import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
@@ -18,7 +23,6 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
@@ -128,24 +132,20 @@ abstract class AbstractJms1Test {
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "jms"),
-                            equalTo(
-                                MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                destinationName),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId),
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                            equalTo(MESSAGING_OPERATION, "publish"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span ->
                     span.hasName(destinationName + " process")
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "jms"),
-                            equalTo(
-                                MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                destinationName),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId),
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                            equalTo(MESSAGING_OPERATION, "process"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
@@ -211,12 +211,10 @@ abstract class AbstractJms1Test {
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "jms"),
-                            equalTo(
-                                MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                destinationName),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId),
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                            equalTo(MESSAGING_OPERATION, "publish"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary),
                             equalTo(
                                 stringArrayKey("messaging.header.test_message_header"),
@@ -229,12 +227,10 @@ abstract class AbstractJms1Test {
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "jms"),
-                            equalTo(
-                                MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                destinationName),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId),
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                            equalTo(MESSAGING_OPERATION, "process"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary),
                             equalTo(
                                 stringArrayKey("messaging.header.test_message_header"),
@@ -285,12 +281,10 @@ abstract class AbstractJms1Test {
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "jms"),
-                            equalTo(
-                                MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                destinationName),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId),
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                            equalTo(MESSAGING_OPERATION, "publish"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary))),
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -300,20 +294,17 @@ abstract class AbstractJms1Test {
                         .hasNoParent()
                         .hasTotalRecordedLinks(0)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "jms"),
-                            equalTo(
-                                MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                destinationName),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "receive"),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId),
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                            equalTo(MESSAGING_OPERATION, "receive"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary))));
   }
 
   static AttributeAssertion messagingTempDestination(boolean isTemporary) {
     return isTemporary
-        ? equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY, true)
-        : satisfies(
-            MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY, AbstractAssert::isNull);
+        ? equalTo(MESSAGING_DESTINATION_TEMPORARY, true)
+        : satisfies(MESSAGING_DESTINATION_TEMPORARY, AbstractAssert::isNull);
   }
 
   static final class EmptyReceiveArgumentsProvider implements ArgumentsProvider {

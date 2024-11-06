@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.armeria.grpc.v1_14;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.linecorp.armeria.client.grpc.GrpcClients;
@@ -18,7 +20,6 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import org.junit.jupiter.api.Test;
@@ -81,8 +82,8 @@ class ArmeriaGrpcTest {
                             equalTo(
                                 RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE,
                                 (long) Status.Code.OK.value()),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(ServerAttributes.SERVER_PORT, (long) server.httpPort()))
+                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(SERVER_PORT, (long) server.httpPort()))
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event
@@ -108,8 +109,8 @@ class ArmeriaGrpcTest {
                             equalTo(
                                 RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE,
                                 (long) Status.Code.OK.value()),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(ServerAttributes.SERVER_PORT, server.httpPort()))
+                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(SERVER_PORT, server.httpPort()))
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event
