@@ -82,9 +82,7 @@ class JarServiceNameDetectorTest {
 
     Resource resource = serviceNameProvider.createResource(config);
 
-    assertThat(resource.getAttributes())
-        .hasSize(1)
-        .containsEntry(ServiceAttributes.SERVICE_NAME, "my-service");
+    assertThat(resource.getAttributes()).hasSize(1).containsEntry(SERVICE_NAME, "my-service");
   }
 
   @Test
