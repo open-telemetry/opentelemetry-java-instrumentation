@@ -50,7 +50,7 @@ class QuarkusSmokeTest extends SmokeTest {
     traces.countFilteredResourceAttributes("telemetry.distro.version", currentAgentVersion) == 1
 
     and: "service.name is detected from manifest"
-    traces.countFilteredResourceAttributes(ServiceAttributes.SERVICE_NAME.key, "smoke-test-quarkus-images") == 1
+    traces.countFilteredResourceAttributes(ServiceAttributes.SERVICE_NAME.key, "quarkus") == 1
 
     cleanup:
     stopTarget()
