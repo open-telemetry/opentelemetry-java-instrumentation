@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jdbc.test;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
@@ -33,6 +32,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.beans.PropertyVetoException;
 import java.io.Closeable;
 import java.io.IOException;
@@ -76,7 +76,8 @@ class JdbcInstrumentationTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
-  static final AttributeKey<String> DB_CONNECTION_STRING = DB_CONNECTION_STRING;
+  static final AttributeKey<String> DB_CONNECTION_STRING =
+      DbIncubatingAttributes.DB_CONNECTION_STRING;
 
   private static final String dbName = "jdbcUnitTest";
   private static final String dbNameLower = dbName.toLowerCase(Locale.ROOT);
