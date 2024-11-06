@@ -74,7 +74,7 @@ class JarServiceNameDetectorTest {
   }
 
   @Test
-  void createResource_processHandleJar_jar_command_variant() {
+  void createResource_processHandleJarExtraFlag() {
     String path = Paths.get("path", "to", "app", "my-service.jar").toString();
     JarServiceNameDetector serviceNameProvider =
         getDetector(
