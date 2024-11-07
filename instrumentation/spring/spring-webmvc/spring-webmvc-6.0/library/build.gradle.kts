@@ -2,6 +2,18 @@ plugins {
   id("otel.library-instrumentation")
 }
 
+repositories {
+  mavenLocal()
+  mavenCentral()
+}
+
+configurations.all {
+  resolutionStrategy {
+    force("io.opentelemetry:opentelemetry-context:1.44.0-SNAPSHOT")
+    force("io.opentelemetry:opentelemetry-api:1.44.0-SNAPSHOT")
+  }
+}
+
 dependencies {
   compileOnly("org.springframework:spring-webmvc:6.0.0")
   compileOnly("jakarta.servlet:jakarta.servlet-api:5.0.0")
