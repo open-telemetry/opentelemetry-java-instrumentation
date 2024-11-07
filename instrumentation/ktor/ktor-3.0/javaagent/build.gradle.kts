@@ -13,7 +13,7 @@ muzzle {
     assertInverse.set(true)
     excludeInstrumentationName("ktor-server")
     // missing dependencies
-    skip("1.1.0", "1.1.5")
+    skip("1.1.0", "1.1.1", "1.1.5")
   }
   pass {
     group.set("io.ktor")
@@ -22,7 +22,7 @@ muzzle {
     assertInverse.set(true)
     excludeInstrumentationName("ktor-client")
     // missing dependencies
-    skip("1.1.0")
+    skip("1.1.0", "1.1.1")
   }
 }
 
