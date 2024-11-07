@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.ratpack.v1_7.internal.ContextHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import ratpack.exec.Downstream;
@@ -41,7 +42,10 @@ public class RequestActionSupportInstrumentation implements TypeInstrumentation 
         RequestActionSupportInstrumentation.class.getName() + "$SendAdvice");
     transformer.applyAdviceToMethod(
         isMethod().and(named("connect")).and(takesArgument(0, named("ratpack.exec.Downstream"))),
-        RequestActionSupportInstrumentation.class.getName() + "$ConnectAdvice");
+        RequestActionSupportInstrumentation.class.getName() + "$ConnectDownstreamAdvice");
+    transformer.applyAdviceToMethod(
+        isMethod().and(named("connect")).and(takesArgument(0, named("ratpack.exec.Downstream"))),
+        RequestActionSupportInstrumentation.class.getName() + "$ContextAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -49,22 +53,29 @@ public class RequestActionSupportInstrumentation implements TypeInstrumentation 
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void injectChannelAttribute(
-        @Advice.FieldValue("execution") Execution execution,
-        @Advice.Argument(value = 0, readOnly = false) Downstream<?> downstream,
-        @Advice.Argument(value = 1, readOnly = false) Channel channel) {
+        @Advice.FieldValue("execution") Execution execution, @Advice.Argument(1) Channel channel) {
       RatpackSingletons.propagateContextToChannel(execution, channel);
     }
   }
 
-  public static class ConnectAdvice {
+  @SuppressWarnings("unused")
+  public static class ConnectDownstreamAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope injectChannelAttribute(
-        @Advice.FieldValue("execution") Execution execution,
-        @Advice.Argument(value = 0, readOnly = false) Downstream<?> downstream) {
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
+    public static Object wrapDownstream(@Advice.Argument(0) Downstream<?> downstream) {
       // Propagate the current context to downstream
-      // since that the is the subsequent
-      downstream = DownstreamWrapper.wrapIfNeeded(downstream);
+      // since that is the subsequent code chained to the http client call
+      return DownstreamWrapper.wrapIfNeeded(downstream);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ContextAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Scope injectChannelAttribute(
+        @Advice.FieldValue("execution") Execution execution) {
 
       // Capture the CLIENT span and make it current before cally Netty layer
       return execution
@@ -74,7 +85,7 @@ public class RequestActionSupportInstrumentation implements TypeInstrumentation 
           .orElse(null);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void exit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();

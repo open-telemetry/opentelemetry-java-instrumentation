@@ -15,6 +15,8 @@ import io.opentelemetry.instrumentation.ratpack.v1_7.OpenTelemetryExecIntercepto
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
+import net.bytebuddy.asm.Advice.AssignReturned.ToFields.ToField;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import ratpack.exec.ExecInitializer;
@@ -44,43 +46,48 @@ public class DefaultExecControllerInstrumentation implements TypeInstrumentation
         DefaultExecControllerInstrumentation.class.getName() + "$ConstructorAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class SetInitializersAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void enter(
-        @Advice.Argument(value = 0, readOnly = false)
-            ImmutableList<? extends ExecInitializer> initializers) {
-      initializers =
-          ImmutableList.<ExecInitializer>builder()
-              .addAll(initializers)
-              .add(OpenTelemetryExecInitializer.INSTANCE)
-              .build();
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
+    public static ImmutableList<? extends ExecInitializer> enter(
+        @Advice.Argument(0) ImmutableList<? extends ExecInitializer> initializers) {
+      return ImmutableList.<ExecInitializer>builder()
+          .addAll(initializers)
+          .add(OpenTelemetryExecInitializer.INSTANCE)
+          .build();
     }
   }
 
+  @SuppressWarnings("unused")
   public static class SetInterceptorsAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void enter(
-        @Advice.Argument(value = 0, readOnly = false)
-            ImmutableList<? extends ExecInterceptor> interceptors) {
-      interceptors =
-          ImmutableList.<ExecInterceptor>builder()
-              .addAll(interceptors)
-              .add(OpenTelemetryExecInterceptor.INSTANCE)
-              .build();
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
+    public static ImmutableList<? extends ExecInterceptor> enter(
+        @Advice.Argument(0) ImmutableList<? extends ExecInterceptor> interceptors) {
+      return ImmutableList.<ExecInterceptor>builder()
+          .addAll(interceptors)
+          .add(OpenTelemetryExecInterceptor.INSTANCE)
+          .build();
     }
   }
 
+  @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
     @SuppressWarnings("UnusedVariable")
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void exit(
-        @Advice.FieldValue(value = "initializers", readOnly = false)
-            ImmutableList<? extends ExecInitializer> initializers,
-        @Advice.FieldValue(value = "interceptors", readOnly = false)
-            ImmutableList<? extends ExecInterceptor> interceptors) {
-      initializers = ImmutableList.of(OpenTelemetryExecInitializer.INSTANCE);
-      interceptors = ImmutableList.of(OpenTelemetryExecInterceptor.INSTANCE);
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.AssignReturned.ToFields({
+      @ToField(value = "initializers", index = 0),
+      @ToField(value = "interceptors", index = 1)
+    })
+    public static Object[] exit(
+        @Advice.FieldValue("initializers") ImmutableList<? extends ExecInitializer> initializers,
+        @Advice.FieldValue("interceptors") ImmutableList<? extends ExecInterceptor> interceptors) {
+      return new Object[] {
+        ImmutableList.of(OpenTelemetryExecInitializer.INSTANCE),
+        ImmutableList.of(OpenTelemetryExecInterceptor.INSTANCE)
+      };
     }
   }
 }

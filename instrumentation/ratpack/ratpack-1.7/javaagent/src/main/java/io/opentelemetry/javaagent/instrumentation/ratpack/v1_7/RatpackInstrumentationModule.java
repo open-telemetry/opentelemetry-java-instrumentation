@@ -29,6 +29,11 @@ public class RatpackInstrumentationModule extends InstrumentationModule
   }
 
   @Override
+  public boolean isIndyModule() {
+    return true;
+  }
+
+  @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // Only activate when running ratpack 1.7 or later
     return hasClassesNamed("ratpack.exec.util.retry.Delay");

@@ -34,13 +34,13 @@ public class ServerRegistryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class BuildAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void injectTracing(@Advice.Return(readOnly = false) Registry registry) {
-      registry =
-          registry.join(
-              Registry.single(
-                  HandlerDecorator.prepend(
-                      RatpackSingletons.telemetry().getOpenTelemetryServerHandler())));
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.AssignReturned.ToReturned
+    public static Registry injectTracing(@Advice.Return Registry registry) {
+      return registry.join(
+          Registry.single(
+              HandlerDecorator.prepend(
+                  RatpackSingletons.telemetry().getOpenTelemetryServerHandler())));
     }
   }
 }

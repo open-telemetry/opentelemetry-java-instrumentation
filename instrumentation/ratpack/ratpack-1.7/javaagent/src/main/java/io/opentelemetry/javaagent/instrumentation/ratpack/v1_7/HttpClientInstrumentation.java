@@ -37,10 +37,10 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class OfAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void injectTracing(@Advice.Return(readOnly = false) HttpClient httpClient)
-        throws Exception {
-      httpClient = RatpackSingletons.telemetry().instrumentHttpClient(httpClient);
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.AssignReturned.ToReturned
+    public static HttpClient injectTracing(@Advice.Return HttpClient httpClient) throws Exception {
+      return RatpackSingletons.telemetry().instrumentHttpClient(httpClient);
     }
   }
 }
