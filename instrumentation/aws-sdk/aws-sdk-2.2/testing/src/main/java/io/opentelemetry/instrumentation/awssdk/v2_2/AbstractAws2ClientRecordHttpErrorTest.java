@@ -14,12 +14,14 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.incubating.AwsIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
@@ -175,9 +177,9 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                           equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                           equalTo(
                               stringKey("url.full"), "http://127.0.0.1:" + server.httpPort() + "/"),
-                          equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api"),
-                          equalTo(RpcIncubatingAttributes.RPC_SERVICE, service),
-                          equalTo(RpcIncubatingAttributes.RPC_METHOD, operation),
+                          equalTo(RPC_SYSTEM, "aws-api"),
+                          equalTo(RPC_SERVICE, service),
+                          equalTo(RPC_METHOD, operation),
                           equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                           equalTo(AwsIncubatingAttributes.AWS_REQUEST_ID, requestId),
                           equalTo(stringKey("aws.table.name"), "sometable"),
