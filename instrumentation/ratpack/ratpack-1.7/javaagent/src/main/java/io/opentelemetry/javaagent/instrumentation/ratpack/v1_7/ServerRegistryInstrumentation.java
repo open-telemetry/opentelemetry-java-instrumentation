@@ -14,6 +14,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import ratpack.handling.HandlerDecorator;
 import ratpack.registry.Registry;
 
 public class ServerRegistryInstrumentation implements TypeInstrumentation {
@@ -34,9 +35,12 @@ public class ServerRegistryInstrumentation implements TypeInstrumentation {
   public static class BuildAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void injectTracing(@Advice.Return(readOnly = false) Registry registry)
-        throws Exception {
-      registry = registry.join(Registry.of(RatpackSingletons.telemetry()::configureServerRegistry));
+    public static void injectTracing(@Advice.Return(readOnly = false) Registry registry) {
+      registry =
+          registry.join(
+              Registry.single(
+                  HandlerDecorator.prepend(
+                      RatpackSingletons.telemetry().getOpenTelemetryServerHandler())));
     }
   }
 }

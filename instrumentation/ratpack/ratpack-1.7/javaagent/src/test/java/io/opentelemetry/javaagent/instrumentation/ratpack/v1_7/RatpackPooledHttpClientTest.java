@@ -5,11 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.ratpack.v1_7;
 
-import com.google.common.collect.ImmutableList;
 import io.netty.channel.ConnectTimeoutException;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.ratpack.client.AbstractRatpackPooledHttpClientTest;
-import io.opentelemetry.instrumentation.ratpack.v1_7.OpenTelemetryExecInitializer;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
@@ -17,28 +15,14 @@ import io.opentelemetry.semconv.NetworkAttributes;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import ratpack.exec.internal.DefaultExecController;
 import ratpack.http.client.HttpClientReadTimeoutException;
 
 class RatpackPooledHttpClientTest extends AbstractRatpackPooledHttpClientTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
-
-  @BeforeAll
-  @Override
-  protected void setUpClient() throws Exception {
-    exec.run(
-        unused -> {
-          ((DefaultExecController) exec.getController())
-              .setInitializers(ImmutableList.of(OpenTelemetryExecInitializer.INSTANCE));
-          client = buildHttpClient();
-          singleConnectionClient = buildHttpClient(spec -> spec.poolSize(1));
-        });
-  }
 
   @Override
   protected Set<AttributeKey<?>> computeHttpAttributes(URI uri) {
