@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.couchbase;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -24,7 +25,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicReference;
@@ -112,9 +112,7 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(DB_OPERATION),
-                                "Cluster.openBucket"))),
+                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -150,9 +148,7 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(DB_OPERATION),
-                                "Cluster.openBucket"))),
+                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->

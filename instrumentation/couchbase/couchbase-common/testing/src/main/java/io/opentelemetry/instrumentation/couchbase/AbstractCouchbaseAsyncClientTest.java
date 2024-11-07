@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.couchbase;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -23,7 +24,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
@@ -93,9 +93,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(DB_OPERATION),
-                                "Cluster.openBucket")),
+                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
                 span ->
                     assertCouchbaseSpan(span, "ClusterManager.hasBucket")
                         .hasParent(trace.getSpan(0))));
@@ -136,9 +134,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(DB_OPERATION),
-                                "Cluster.openBucket")),
+                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
                 span ->
                     assertCouchbaseSpan(span, "Bucket.upsert", bucketSettings.name())
                         .hasParent(trace.getSpan(1))));
@@ -186,9 +182,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(DB_OPERATION),
-                                "Cluster.openBucket")),
+                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
                 span ->
                     assertCouchbaseSpan(span, "Bucket.upsert", bucketSettings.name())
                         .hasParent(trace.getSpan(1)),
@@ -233,9 +227,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(DB_OPERATION),
-                                "Cluster.openBucket")),
+                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket")),
                 span ->
                     assertCouchbaseSpan(
                             span,
