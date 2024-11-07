@@ -21,6 +21,8 @@ muzzle {
     versions.set("[2.0.0,3.0.0)")
     assertInverse.set(true)
     excludeInstrumentationName("ktor-client")
+    // missing dependencies
+    skip("1.1.0")
   }
 }
 
