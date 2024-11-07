@@ -12,22 +12,10 @@ import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
 import kotlinx.coroutines.runBlocking
 
 class KtorHttpClientSingleConnection(
+  private val client: HttpClient,
   private val host: String,
-  private val port: Int,
-  private val installTracing: HttpClientConfig<*>.() -> Unit,
+  private val port: Int
 ) : SingleConnection {
-
-  private val client: HttpClient
-
-  init {
-    val engine = CIO.create {
-      maxConnectionsCount = 1
-    }
-
-    client = HttpClient(engine) {
-      installTracing()
-    }
-  }
 
   override fun doRequest(path: String, requestHeaders: MutableMap<String, String>) = runBlocking {
     val request = HttpRequestBuilder(
