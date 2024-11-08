@@ -14,7 +14,7 @@ muzzle {
 val testLatestDeps = findProperty("testLatestDeps") as Boolean
 
 dependencies {
-  library("org.apache.logging.log4j:log4j-core:2.17.0")
+  library("org.apache.logging.log4j:log4j-core:2.0")
 
   compileOnly(project(":javaagent-bootstrap"))
 

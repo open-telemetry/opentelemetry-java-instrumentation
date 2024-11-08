@@ -14,6 +14,9 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Instrument
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.LogEventMapper;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -24,13 +27,12 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.message.Message;
-import org.apache.logging.log4j.util.StackLocator;
 
 public final class Log4jHelper {
 
   private static final LogEventMapper<Map<String, String>> mapper;
-
   private static final boolean captureExperimentalAttributes;
+  private static final MethodHandle stackTraceMethodHandle = getStackTraceMethodHandle();
 
   static {
     InstrumentationConfig config = AgentInstrumentationConfig.get();
@@ -98,10 +100,51 @@ public final class Log4jHelper {
         threadName,
         threadId,
         () ->
-            location != null ? location : StackLocator.getInstance().calcLocation(loggerClassName),
+            location != null ? location : getLocation(loggerClassName),
         Context.current());
     builder.setTimestamp(Instant.now());
     builder.emit();
+  }
+
+  private static StackTraceElement getLocation(String loggerClassName) {
+    if (stackTraceMethodHandle == null) {
+      return null;
+    }
+
+    try {
+      return (StackTraceElement) stackTraceMethodHandle.invoke(loggerClassName);
+    } catch (Throwable exception) {
+      return null;
+    }
+  }
+
+  private static MethodHandle getStackTraceMethodHandle() {
+    // since 2.9.0
+    Class<?> stackTraceClass = null;
+    try {
+      stackTraceClass = Class.forName("org.apache.logging.log4j.util.StackLocatorUtil");
+    } catch (ClassNotFoundException exception) {
+      // ignore
+    }
+    if (stackTraceClass == null) {
+      try {
+        stackTraceClass = Class.forName("org.apache.logging.log4j.core.impl.Log4jLogEvent");
+      } catch (ClassNotFoundException exception) {
+        // ignore
+      }
+    }
+    if (stackTraceClass == null) {
+      return null;
+    }
+    try {
+      return MethodHandles.lookup()
+          .findStatic(
+              stackTraceClass,
+              "calcLocation",
+              MethodType.methodType(StackTraceElement.class, String.class));
+    } catch (Exception exception) {
+      return null;
+    }
   }
 
   private enum ContextDataAccessorImpl implements ContextDataAccessor<Map<String, String>> {
