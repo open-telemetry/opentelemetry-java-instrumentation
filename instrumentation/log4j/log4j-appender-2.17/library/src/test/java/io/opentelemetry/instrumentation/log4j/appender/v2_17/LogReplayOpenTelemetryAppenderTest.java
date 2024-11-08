@@ -7,19 +7,15 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FILEPATH;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_LINENO;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import java.util.List;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
-import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
@@ -102,14 +98,12 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
                 .hasResource(resource)
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasAttributesSatisfyingExactly(
-                    equalTo(THREAD_NAME, Thread.currentThread().getName()),
-                    equalTo(THREAD_ID, Thread.currentThread().getId()),
-                    equalTo(CODE_NAMESPACE, LogReplayOpenTelemetryAppenderTest.class.getName()),
-                    equalTo(CODE_FUNCTION, "twoLogsStringMapMessage"),
-                    satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
-                    equalTo(CODE_FILEPATH, "LogReplayOpenTelemetryAppenderTest.java"),
-                    equalTo(stringKey("log4j.map_message.key1"), "val1"),
-                    equalTo(stringKey("log4j.map_message.key2"), "val2")));
+                    addLocationAttributes(
+                        "twoLogsStringMapMessage",
+                        equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                        equalTo(THREAD_ID, Thread.currentThread().getId()),
+                        equalTo(stringKey("log4j.map_message.key1"), "val1"),
+                        equalTo(stringKey("log4j.map_message.key2"), "val2"))));
   }
 
   @Test
@@ -138,13 +132,16 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("a message")
                 .hasAttributesSatisfyingExactly(
-                    equalTo(THREAD_NAME, Thread.currentThread().getName()),
-                    equalTo(THREAD_ID, Thread.currentThread().getId()),
-                    equalTo(CODE_NAMESPACE, LogReplayOpenTelemetryAppenderTest.class.getName()),
-                    equalTo(CODE_FUNCTION, "twoLogsStructuredDataMessage"),
-                    satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
-                    equalTo(CODE_FILEPATH, "LogReplayOpenTelemetryAppenderTest.java"),
-                    equalTo(stringKey("log4j.map_message.key1"), "val1"),
-                    equalTo(stringKey("log4j.map_message.key2"), "val2")));
+                    addLocationAttributes(
+                        "twoLogsStructuredDataMessage",
+                        equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                        equalTo(THREAD_ID, Thread.currentThread().getId()),
+                        equalTo(stringKey("log4j.map_message.key1"), "val1"),
+                        equalTo(stringKey("log4j.map_message.key2"), "val2"))));
+  }
+
+  private static List<AttributeAssertion> addLocationAttributes(
+      String methodName, AttributeAssertion... assertions) {
+    return addLocationAttributes(LogReplayOpenTelemetryAppenderTest.class, methodName, assertions);
   }
 }
