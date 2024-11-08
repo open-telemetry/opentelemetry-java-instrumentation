@@ -99,8 +99,7 @@ public final class Log4jHelper {
         contextData,
         threadName,
         threadId,
-        () ->
-            location != null ? location : getLocation(loggerClassName),
+        () -> location != null ? location : getLocation(loggerClassName),
         Context.current());
     builder.setTimestamp(Instant.now());
     builder.emit();
