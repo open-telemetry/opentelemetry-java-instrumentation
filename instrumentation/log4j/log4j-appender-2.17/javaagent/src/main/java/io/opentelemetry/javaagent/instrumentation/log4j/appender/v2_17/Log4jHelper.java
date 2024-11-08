@@ -24,6 +24,7 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.message.Message;
+import org.apache.logging.log4j.util.StackLocator;
 
 public final class Log4jHelper {
 
@@ -36,6 +37,9 @@ public final class Log4jHelper {
 
     captureExperimentalAttributes =
         config.getBoolean("otel.instrumentation.log4j-appender.experimental-log-attributes", false);
+    boolean captureCodeAttributes =
+        config.getBoolean(
+            "otel.instrumentation.log4j-appender.experimental.capture-code-attributes", false);
     boolean captureMapMessageAttributes =
         config.getBoolean(
             "otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes",
@@ -51,13 +55,20 @@ public final class Log4jHelper {
         new LogEventMapper<>(
             ContextDataAccessorImpl.INSTANCE,
             captureExperimentalAttributes,
+            captureCodeAttributes,
             captureMapMessageAttributes,
             captureMarkerAttribute,
             captureContextDataAttributes);
   }
 
   public static void capture(
-      Logger logger, Level level, Marker marker, Message message, Throwable throwable) {
+      Logger logger,
+      String loggerClassName,
+      StackTraceElement location,
+      Level level,
+      Marker marker,
+      Message message,
+      Throwable throwable) {
     String instrumentationName = logger.getName();
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";
@@ -86,6 +97,8 @@ public final class Log4jHelper {
         contextData,
         threadName,
         threadId,
+        () ->
+            location != null ? location : StackLocator.getInstance().calcLocation(loggerClassName),
         Context.current());
     builder.setTimestamp(Instant.now());
     builder.emit();

@@ -12,6 +12,12 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FILEPATH;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_LINENO;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.logs.Severity;
@@ -20,7 +26,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.time.Instant;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -31,6 +36,7 @@ import org.apache.logging.log4j.core.impl.Log4jLogEvent;
 import org.apache.logging.log4j.message.FormattedMessage;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
+import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AssertAccess;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -96,11 +102,12 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("log message 1")
                     .hasAttributesSatisfyingExactly(
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_NAME,
-                            Thread.currentThread().getName()),
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId())));
+                        equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                        equalTo(THREAD_ID, Thread.currentThread().getId()),
+                        equalTo(CODE_NAMESPACE, AbstractOpenTelemetryAppenderTest.class.getName()),
+                        equalTo(CODE_FUNCTION, "logNoSpan"),
+                        satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
+                        equalTo(CODE_FILEPATH, "AbstractOpenTelemetryAppenderTest.java")));
   }
 
   @Test
@@ -130,9 +137,12 @@ abstract class AbstractOpenTelemetryAppenderTest {
                   .hasSeverity(Severity.INFO)
                   .hasSeverityText("INFO")
                   .hasAttributesSatisfyingExactly(
-                      equalTo(
-                          ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                      equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
+                      equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                      equalTo(THREAD_ID, Thread.currentThread().getId()),
+                      equalTo(CODE_NAMESPACE, AbstractOpenTelemetryAppenderTest.class.getName()),
+                      equalTo(CODE_FUNCTION, "logWithExtras"),
+                      satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
+                      equalTo(CODE_FILEPATH, "AbstractOpenTelemetryAppenderTest.java"),
                       equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
                       equalTo(EXCEPTION_MESSAGE, "Error!"),
                       satisfies(EXCEPTION_STACKTRACE, v -> v.contains("logWithExtras")));
@@ -164,11 +174,12 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("log message 1")
                     .hasAttributesSatisfyingExactly(
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_NAME,
-                            Thread.currentThread().getName()),
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
+                        equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                        equalTo(THREAD_ID, Thread.currentThread().getId()),
+                        equalTo(CODE_NAMESPACE, AbstractOpenTelemetryAppenderTest.class.getName()),
+                        equalTo(CODE_FUNCTION, "logContextData"),
+                        satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
+                        equalTo(CODE_FILEPATH, "AbstractOpenTelemetryAppenderTest.java"),
                         equalTo(stringKey("key1"), "val1"),
                         equalTo(stringKey("key2"), "val2")));
   }
@@ -189,11 +200,12 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasResource(resource)
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasAttributesSatisfyingExactly(
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_NAME,
-                            Thread.currentThread().getName()),
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
+                        equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                        equalTo(THREAD_ID, Thread.currentThread().getId()),
+                        equalTo(CODE_NAMESPACE, AbstractOpenTelemetryAppenderTest.class.getName()),
+                        equalTo(CODE_FUNCTION, "logStringMapMessage"),
+                        satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
+                        equalTo(CODE_FILEPATH, "AbstractOpenTelemetryAppenderTest.java"),
                         equalTo(stringKey("log4j.map_message.key1"), "val1"),
                         equalTo(stringKey("log4j.map_message.key2"), "val2")));
   }
@@ -215,11 +227,12 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("val2")
                     .hasAttributesSatisfyingExactly(
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_NAME,
-                            Thread.currentThread().getName()),
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
+                        equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                        equalTo(THREAD_ID, Thread.currentThread().getId()),
+                        equalTo(CODE_NAMESPACE, AbstractOpenTelemetryAppenderTest.class.getName()),
+                        equalTo(CODE_FUNCTION, "logStringMapMessageWithSpecialAttribute"),
+                        satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
+                        equalTo(CODE_FILEPATH, "AbstractOpenTelemetryAppenderTest.java"),
                         equalTo(stringKey("log4j.map_message.key1"), "val1")));
   }
 
@@ -255,11 +268,12 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("a message")
                     .hasAttributesSatisfyingExactly(
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_NAME,
-                            Thread.currentThread().getName()),
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
+                        equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                        equalTo(THREAD_ID, Thread.currentThread().getId()),
+                        equalTo(CODE_NAMESPACE, AbstractOpenTelemetryAppenderTest.class.getName()),
+                        equalTo(CODE_FUNCTION, "logStructuredDataMessage"),
+                        satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
+                        equalTo(CODE_FILEPATH, "AbstractOpenTelemetryAppenderTest.java"),
                         equalTo(stringKey("log4j.map_message.key1"), "val1"),
                         equalTo(stringKey("log4j.map_message.key2"), "val2")));
   }

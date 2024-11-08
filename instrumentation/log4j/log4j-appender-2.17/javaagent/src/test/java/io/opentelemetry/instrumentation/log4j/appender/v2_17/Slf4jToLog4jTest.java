@@ -11,6 +11,12 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FILEPATH;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_LINENO;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
@@ -19,11 +25,11 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
+import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -103,11 +109,12 @@ class Slf4jToLog4jTest {
             List<AttributeAssertion> attributeAsserts =
                 new ArrayList<>(
                     Arrays.asList(
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_NAME,
-                            Thread.currentThread().getName()),
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId())));
+                        equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                        equalTo(THREAD_ID, Thread.currentThread().getId()),
+                        equalTo(CODE_NAMESPACE, Slf4jToLog4jTest.class.getName()),
+                        equalTo(CODE_FUNCTION, "performLogging"),
+                        satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
+                        equalTo(CODE_FILEPATH, "Slf4jToLog4jTest.java")));
             if (logException) {
               attributeAsserts.addAll(
                   Arrays.asList(
@@ -145,14 +152,16 @@ class Slf4jToLog4jTest {
                 .hasAttributesSatisfyingExactly(
                     equalTo(AttributeKey.stringKey("key1"), "val1"),
                     equalTo(AttributeKey.stringKey("key2"), "val2"),
-                    equalTo(
-                        ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                    equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId())));
+                    equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                    equalTo(THREAD_ID, Thread.currentThread().getId()),
+                    equalTo(CODE_NAMESPACE, Slf4jToLog4jTest.class.getName()),
+                    equalTo(CODE_FUNCTION, "testMdc"),
+                    satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
+                    equalTo(CODE_FILEPATH, "Slf4jToLog4jTest.java")));
   }
 
   @Test
   public void testMarker() {
-
     String markerName = "aMarker";
     Marker marker = MarkerFactory.getMarker(markerName);
 
@@ -161,8 +170,12 @@ class Slf4jToLog4jTest {
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord.hasAttributesSatisfyingExactly(
-                equalTo(ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
+                equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                equalTo(THREAD_ID, Thread.currentThread().getId()),
+                equalTo(CODE_NAMESPACE, Slf4jToLog4jTest.class.getName()),
+                equalTo(CODE_FUNCTION, "testMarker"),
+                satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
+                equalTo(CODE_FILEPATH, "Slf4jToLog4jTest.java"),
                 equalTo(AttributeKey.stringKey("log4j.marker"), markerName)));
   }
 
