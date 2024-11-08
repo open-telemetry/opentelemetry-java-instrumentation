@@ -118,15 +118,16 @@ public final class Log4jHelper {
   }
 
   private static MethodHandle getStackTraceMethodHandle() {
-    // since 2.9.0
     Class<?> stackTraceClass = null;
     try {
+      // since 2.9.0
       stackTraceClass = Class.forName("org.apache.logging.log4j.util.StackLocatorUtil");
     } catch (ClassNotFoundException exception) {
       // ignore
     }
     if (stackTraceClass == null) {
       try {
+        // before 2.9.0
         stackTraceClass = Class.forName("org.apache.logging.log4j.core.impl.Log4jLogEvent");
       } catch (ClassNotFoundException exception) {
         // ignore
