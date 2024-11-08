@@ -10,6 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -38,6 +39,9 @@ public class RediscalaClientTest {
 
   private static GenericContainer<?> redisServer;
 
+  @SuppressWarnings("deprecation") // DB_OPERATION is  deprecated
+  public static final AttributeKey<String> DB_OPERATION = DbIncubatingAttributes.DB_OPERATION;
+
   private static String host;
   private static int port;
   private static Object system;
@@ -47,7 +51,7 @@ public class RediscalaClientTest {
   static void setUp() throws Exception {
     redisServer = new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
     redisServer.start();
-    cleanup.deferCleanup(redisServer::stop);
+    //    cleanup.deferCleanup(redisServer::stop);
 
     host = redisServer.getHost();
     port = redisServer.getMappedPort(6379);
@@ -97,7 +101,7 @@ public class RediscalaClientTest {
   }
 
   @Test
-  void testGetCommand() throws Exception {
+  void testGetCommand() {
     Pair<Future<Object>, Future<Option<String>>> result =
         testing.runWithSpan(
             "parent",
@@ -131,20 +135,20 @@ public class RediscalaClientTest {
                     span.hasName("SET")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "SET")),
+                            equalTo(DB_OPERATION, "SET")),
                 span ->
                     span.hasName("GET")
                         .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfying(
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "GET"))));
+                            equalTo(DB_OPERATION, "GET"))));
   }
 
   @Test
-  public void testSetCommand() throws Exception {
+  public void testSetCommand() {
     ByteStringSerializer<String> serializer = ByteStringSerializer$.MODULE$.String();
 
     Future<Object> value =
@@ -171,6 +175,6 @@ public class RediscalaClientTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfying(
                             equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, "SET"))));
+                            equalTo(DB_OPERATION, "SET"))));
   }
 }
