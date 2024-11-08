@@ -90,7 +90,7 @@ public class RediscalaClientTest {
   }
 
   @AfterAll
-   static void tearDown() throws Exception {
+  static void tearDown() throws Exception {
     if (system != null) {
       system.getClass().getMethod("terminate").invoke(system);
     }
