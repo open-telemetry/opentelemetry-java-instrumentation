@@ -24,6 +24,7 @@ import static VertxReactiveWebServer.TEST_REQUEST_ID_ATTRIBUTE
 import static VertxReactiveWebServer.TEST_REQUEST_ID_PARAMETER
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
 
@@ -96,8 +97,8 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
             "${maybeStable(DbIncubatingAttributes.DB_NAME)}" "test"
-            "$DbIncubatingAttributes.DB_USER" "SA"
-            "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
+            "$DbIncubatingAttributes.DB_USER" emitStableDatabaseSemconv() ? null : "SA"
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" emitStableDatabaseSemconv() ? null : "hsqldb:mem:"
             "${maybeStable(DbIncubatingAttributes.DB_STATEMENT)}" "SELECT id, name, price, weight FROM products"
             "${maybeStable(DbIncubatingAttributes.DB_OPERATION)}" "SELECT"
             "${maybeStable(DbIncubatingAttributes.DB_SQL_TABLE)}" "products"
@@ -196,8 +197,8 @@ class VertxReactivePropagationTest extends AgentInstrumentationSpecification {
             attributes {
               "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
               "${maybeStable(DbIncubatingAttributes.DB_NAME)}" "test"
-              "$DbIncubatingAttributes.DB_USER" "SA"
-              "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
+              "$DbIncubatingAttributes.DB_USER" emitStableDatabaseSemconv() ? null : "SA"
+              "$DbIncubatingAttributes.DB_CONNECTION_STRING" emitStableDatabaseSemconv() ? null : "hsqldb:mem:"
               "${maybeStable(DbIncubatingAttributes.DB_STATEMENT)}" "SELECT id AS request$requestId, name, price, weight FROM products"
               "${maybeStable(DbIncubatingAttributes.DB_OPERATION)}" "SELECT"
               "${maybeStable(DbIncubatingAttributes.DB_SQL_TABLE)}" "products"
