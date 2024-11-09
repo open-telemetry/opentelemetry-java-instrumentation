@@ -18,7 +18,7 @@ dependencies {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.lettuce.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true")
@@ -26,8 +26,6 @@ tasks {
   }
 
   val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.instrumentation.lettuce.experimental-span-attributes=true")
-    jvmArgs("-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true")
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 
