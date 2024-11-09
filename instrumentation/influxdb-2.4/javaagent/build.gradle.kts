@@ -36,7 +36,10 @@ testing {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
+    // we disable the okhttp instrumentation, so we don't need to assert on the okhttp spans
+    // from the okhttp instrumentation we need OkHttp3IgnoredTypesConfigurer to fix context leaks
+    jvmArgs("-Dotel.instrumentation.okhttp.enabled=false")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
@@ -44,14 +47,6 @@ tasks {
     check {
       dependsOn(testing.suites)
     }
-  }
-}
-
-tasks {
-  withType<Test>().configureEach {
-    // we disable the okhttp instrumentation, so we don't need to assert on the okhttp spans
-    // from the okhttp instrumentation we need OkHttp3IgnoredTypesConfigurer to fix context leaks
-    jvmArgs("-Dotel.instrumentation.okhttp.enabled=false")
   }
 
   val testStableSemconv by registering(Test::class) {
