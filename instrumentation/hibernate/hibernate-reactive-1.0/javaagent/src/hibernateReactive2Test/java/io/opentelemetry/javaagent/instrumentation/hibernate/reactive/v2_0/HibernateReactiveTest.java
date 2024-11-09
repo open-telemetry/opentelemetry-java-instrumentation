@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.reactive.v2_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -299,7 +300,7 @@ class HibernateReactiveTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_NAME), DB),
-                            equalTo(DB_USER, USER_DB),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "select v1_0.id,v1_0.name from Value v1_0 where v1_0.id=$1"),

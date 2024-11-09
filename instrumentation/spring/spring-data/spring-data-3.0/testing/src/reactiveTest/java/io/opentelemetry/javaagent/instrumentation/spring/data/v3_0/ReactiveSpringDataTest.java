@@ -85,7 +85,7 @@ class ReactiveSpringDataTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "h2"),
                             equalTo(maybeStable(DB_NAME), "db"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(maybeStable(DB_STATEMENT), "SELECT CUSTOMER.* FROM CUSTOMER"),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "CUSTOMER"),

@@ -71,7 +71,7 @@ class QueryTest extends AbstractHibernateTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "h2"),
                             equalTo(maybeStable(DB_NAME), "db1"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "h2:mem:"),
@@ -129,7 +129,7 @@ class QueryTest extends AbstractHibernateTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "h2"),
                             equalTo(maybeStable(DB_NAME), "db1"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "h2:mem:"),
@@ -203,7 +203,7 @@ class QueryTest extends AbstractHibernateTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "h2"),
                             equalTo(maybeStable(DB_NAME), "db1"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "h2:mem:"),

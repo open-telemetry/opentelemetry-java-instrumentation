@@ -76,7 +76,7 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
@@ -133,7 +133,7 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
@@ -178,7 +178,7 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "call next value for hibernate_sequence"),
@@ -204,7 +204,7 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
@@ -253,7 +253,7 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
@@ -283,7 +283,7 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
@@ -323,7 +323,7 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
@@ -363,7 +363,7 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
@@ -397,7 +397,7 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
@@ -430,7 +430,7 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
@@ -472,7 +472,7 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),

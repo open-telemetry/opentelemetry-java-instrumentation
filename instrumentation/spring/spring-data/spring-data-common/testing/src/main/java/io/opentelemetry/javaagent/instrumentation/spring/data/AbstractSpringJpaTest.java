@@ -92,7 +92,7 @@ public abstract class AbstractSpringJpaTest<
                 .hasAttributesSatisfyingExactly(
                     equalTo(DB_SYSTEM, "hsqldb"),
                     equalTo(maybeStable(DB_NAME), "test"),
-                    equalTo(DB_USER, "sa"),
+                    equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                     equalTo(
                         DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                     satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("insert ")),
@@ -115,7 +115,7 @@ public abstract class AbstractSpringJpaTest<
                 .hasAttributesSatisfyingExactly(
                     equalTo(DB_SYSTEM, "hsqldb"),
                     equalTo(maybeStable(DB_NAME), "test"),
-                    equalTo(DB_USER, "sa"),
+                    equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                     equalTo(
                         DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                     satisfies(
@@ -128,7 +128,7 @@ public abstract class AbstractSpringJpaTest<
                 .hasAttributesSatisfyingExactly(
                     equalTo(DB_SYSTEM, "hsqldb"),
                     equalTo(maybeStable(DB_NAME), "test"),
-                    equalTo(DB_USER, "sa"),
+                    equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                     equalTo(
                         DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                     satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("insert ")),
@@ -164,7 +164,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
@@ -202,7 +202,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
@@ -216,7 +216,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
@@ -242,7 +242,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
@@ -268,7 +268,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
@@ -282,7 +282,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
@@ -317,7 +317,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
@@ -364,7 +364,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),

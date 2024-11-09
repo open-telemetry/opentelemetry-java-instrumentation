@@ -198,7 +198,7 @@ class OpenTelemetryConnectionTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, dbInfo.getSystem()),
                             equalTo(maybeStable(DB_NAME), dbInfo.getName()),
-                            equalTo(DB_USER, dbInfo.getUser()),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : dbInfo.getUser()),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : dbInfo.getShortUrl()),

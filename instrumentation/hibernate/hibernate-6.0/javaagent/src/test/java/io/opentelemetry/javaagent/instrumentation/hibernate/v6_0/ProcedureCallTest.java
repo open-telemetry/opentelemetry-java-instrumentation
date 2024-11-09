@@ -111,7 +111,7 @@ public class ProcedureCallTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(DB_USER, "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
