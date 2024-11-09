@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -163,7 +164,8 @@ class LettuceSyncClientTest {
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "redis"), equalTo(DB_OPERATION, "SET"))));
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"))));
   }
 
   @Test
@@ -178,7 +180,8 @@ class LettuceSyncClientTest {
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "redis"), equalTo(DB_OPERATION, "GET"))));
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(maybeStable(DB_OPERATION), "GET"))));
   }
 
   @Test
@@ -193,7 +196,8 @@ class LettuceSyncClientTest {
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "redis"), equalTo(DB_OPERATION, "GET"))));
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(maybeStable(DB_OPERATION), "GET"))));
   }
 
   @Test
@@ -208,7 +212,8 @@ class LettuceSyncClientTest {
                     span.hasName("RANDOMKEY")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "redis"), equalTo(DB_OPERATION, "RANDOMKEY"))));
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"))));
   }
 
   @Test
@@ -223,7 +228,8 @@ class LettuceSyncClientTest {
                     span.hasName("LPUSH")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "redis"), equalTo(DB_OPERATION, "LPUSH"))));
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(maybeStable(DB_OPERATION), "LPUSH"))));
   }
 
   @Test
@@ -238,7 +244,8 @@ class LettuceSyncClientTest {
                     span.hasName("HMSET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "redis"), equalTo(DB_OPERATION, "HMSET"))));
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(maybeStable(DB_OPERATION), "HMSET"))));
   }
 
   @Test
@@ -253,7 +260,8 @@ class LettuceSyncClientTest {
                     span.hasName("HGETALL")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "redis"), equalTo(DB_OPERATION, "HGETALL"))));
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(maybeStable(DB_OPERATION), "HGETALL"))));
   }
 
   @Test
@@ -284,7 +292,8 @@ class LettuceSyncClientTest {
                     span.hasName("DEBUG")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "redis"), equalTo(DB_OPERATION, "DEBUG"))));
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(maybeStable(DB_OPERATION), "DEBUG"))));
   }
 
   @Test
@@ -317,6 +326,7 @@ class LettuceSyncClientTest {
                     span.hasName("SHUTDOWN")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "redis"), equalTo(DB_OPERATION, "SHUTDOWN"))));
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"))));
   }
 }

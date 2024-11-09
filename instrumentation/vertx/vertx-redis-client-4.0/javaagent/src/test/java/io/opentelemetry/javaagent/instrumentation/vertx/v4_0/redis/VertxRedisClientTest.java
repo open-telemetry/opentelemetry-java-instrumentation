@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.redis;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
@@ -223,8 +224,8 @@ class VertxRedisClientTest {
     } else {
       return new AttributeAssertion[] {
         equalTo(DB_SYSTEM, "redis"),
-        equalTo(DB_STATEMENT, statement),
-        equalTo(DB_OPERATION, operation),
+        equalTo(maybeStable(DB_STATEMENT), statement),
+        equalTo(maybeStable(DB_OPERATION), operation),
         equalTo(DB_REDIS_DATABASE_INDEX, 1),
         equalTo(SERVER_ADDRESS, host),
         equalTo(SERVER_PORT, port),

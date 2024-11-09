@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
@@ -64,7 +65,7 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(DB_SYSTEM, "redis"),
-                                    equalTo(DB_STATEMENT, "SET a ?")))
+                                    equalTo(maybeStable(DB_STATEMENT), "SET a ?")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end")),
@@ -80,7 +81,7 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(DB_SYSTEM, "redis"),
-                                    equalTo(DB_STATEMENT, "GET a")))
+                                    equalTo(maybeStable(DB_STATEMENT), "GET a")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));

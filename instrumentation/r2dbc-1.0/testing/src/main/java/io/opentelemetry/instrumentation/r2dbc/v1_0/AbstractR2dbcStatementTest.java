@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -170,11 +171,11 @@ public abstract class AbstractR2dbcStatementTest {
                                     DB_CONNECTION_STRING,
                                     parameter.system + "://localhost:" + port),
                                 equalTo(DB_SYSTEM, parameter.system),
-                                equalTo(DB_NAME, DB),
+                                equalTo(maybeStable(DB_NAME), DB),
                                 equalTo(DB_USER, USER_DB),
-                                equalTo(DB_STATEMENT, parameter.expectedStatement),
-                                equalTo(DB_OPERATION, parameter.operation),
-                                equalTo(DB_SQL_TABLE, parameter.table),
+                                equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
+                                equalTo(maybeStable(DB_OPERATION), parameter.operation),
+                                equalTo(maybeStable(DB_SQL_TABLE), parameter.table),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port)),
                     span ->

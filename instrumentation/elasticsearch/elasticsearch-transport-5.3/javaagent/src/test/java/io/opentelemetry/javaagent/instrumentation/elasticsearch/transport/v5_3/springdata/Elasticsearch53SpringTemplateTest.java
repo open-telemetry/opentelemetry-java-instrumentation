@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_3.
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -175,7 +176,7 @@ class Elasticsearch53SpringTemplateTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(DB_OPERATION, "RefreshAction"),
+                            equalTo(maybeStable(DB_OPERATION), "RefreshAction"),
                             equalTo(stringKey("elasticsearch.action"), "RefreshAction"),
                             equalTo(stringKey("elasticsearch.request"), "RefreshRequest"),
                             equalTo(stringKey("elasticsearch.request.indices"), indexName))));
@@ -230,7 +231,7 @@ class Elasticsearch53SpringTemplateTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(DB_OPERATION, "CreateIndexAction"),
+                            equalTo(maybeStable(DB_OPERATION), "CreateIndexAction"),
                             equalTo(stringKey("elasticsearch.action"), "CreateIndexAction"),
                             equalTo(stringKey("elasticsearch.request"), "CreateIndexRequest"),
                             equalTo(stringKey("elasticsearch.request.indices"), indexName))),
@@ -244,7 +245,7 @@ class Elasticsearch53SpringTemplateTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(DB_OPERATION, "ClusterHealthAction"),
+                            equalTo(maybeStable(DB_OPERATION), "ClusterHealthAction"),
                             equalTo(stringKey("elasticsearch.action"), "ClusterHealthAction"),
                             equalTo(stringKey("elasticsearch.request"), "ClusterHealthRequest"))),
         trace ->
@@ -257,7 +258,7 @@ class Elasticsearch53SpringTemplateTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(DB_OPERATION, "SearchAction"),
+                            equalTo(maybeStable(DB_OPERATION), "SearchAction"),
                             equalTo(stringKey("elasticsearch.action"), "SearchAction"),
                             equalTo(stringKey("elasticsearch.request"), "SearchRequest"),
                             equalTo(stringKey("elasticsearch.request.indices"), indexName),
@@ -272,7 +273,7 @@ class Elasticsearch53SpringTemplateTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(DB_OPERATION, "IndexAction"),
+                            equalTo(maybeStable(DB_OPERATION), "IndexAction"),
                             equalTo(stringKey("elasticsearch.action"), "IndexAction"),
                             equalTo(stringKey("elasticsearch.request"), "IndexRequest"),
                             equalTo(stringKey("elasticsearch.request.indices"), indexName),
@@ -292,7 +293,7 @@ class Elasticsearch53SpringTemplateTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(DB_OPERATION, "RefreshAction"),
+                            equalTo(maybeStable(DB_OPERATION), "RefreshAction"),
                             equalTo(stringKey("elasticsearch.action"), "RefreshAction"),
                             equalTo(stringKey("elasticsearch.request"), "RefreshRequest"),
                             equalTo(stringKey("elasticsearch.request.indices"), indexName),
@@ -309,7 +310,7 @@ class Elasticsearch53SpringTemplateTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(DB_OPERATION, "SearchAction"),
+                            equalTo(maybeStable(DB_OPERATION), "SearchAction"),
                             equalTo(stringKey("elasticsearch.action"), "SearchAction"),
                             equalTo(stringKey("elasticsearch.request"), "SearchRequest"),
                             equalTo(stringKey("elasticsearch.request.indices"), indexName),
@@ -393,7 +394,7 @@ class Elasticsearch53SpringTemplateTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(DB_OPERATION, "SearchAction"),
+                            equalTo(maybeStable(DB_OPERATION), "SearchAction"),
                             equalTo(stringKey("elasticsearch.action"), "SearchAction"),
                             equalTo(stringKey("elasticsearch.request"), "SearchRequest"),
                             equalTo(stringKey("elasticsearch.request.indices"), indexName))));

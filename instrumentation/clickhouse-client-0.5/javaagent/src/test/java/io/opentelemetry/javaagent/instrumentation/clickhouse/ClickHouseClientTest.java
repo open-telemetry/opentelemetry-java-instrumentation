@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.clickhouse;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -341,10 +342,10 @@ class ClickHouseClientTest {
   private static List<AttributeAssertion> attributeAssertions(String statement, String operation) {
     return asList(
         equalTo(DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.CLICKHOUSE),
-        equalTo(DB_NAME, dbName),
+        equalTo(maybeStable(DB_NAME), dbName),
         equalTo(SERVER_ADDRESS, host),
         equalTo(SERVER_PORT, port),
-        equalTo(DB_STATEMENT, statement),
-        equalTo(DB_OPERATION, operation));
+        equalTo(maybeStable(DB_STATEMENT), statement),
+        equalTo(maybeStable(DB_OPERATION), operation));
   }
 }
