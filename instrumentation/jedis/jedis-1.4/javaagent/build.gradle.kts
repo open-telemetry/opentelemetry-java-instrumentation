@@ -39,12 +39,8 @@ testing {
 }
 
 tasks {
-  withType<Test>().configureEach {
+  test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
-  check {
-    dependsOn(testing.suites)
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -52,6 +48,7 @@ tasks {
   }
 
   check {
+    dependsOn(testing.suites)
     dependsOn(testStableSemconv)
   }
 }

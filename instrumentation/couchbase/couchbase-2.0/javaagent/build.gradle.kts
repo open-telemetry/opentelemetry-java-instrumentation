@@ -40,6 +40,9 @@ tasks {
   }
 
   val testStableSemconv by registering(Test::class) {
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 

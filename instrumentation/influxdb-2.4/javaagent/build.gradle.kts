@@ -55,6 +55,7 @@ tasks {
   }
 
   val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.instrumentation.okhttp.enabled=false")
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 
