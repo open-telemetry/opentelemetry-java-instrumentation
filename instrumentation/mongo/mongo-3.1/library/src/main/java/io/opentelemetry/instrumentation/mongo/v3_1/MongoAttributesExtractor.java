@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Arrays.asList;
 
@@ -32,7 +33,8 @@ class MongoAttributesExtractor implements AttributesExtractor<CommandStartedEven
     if (collectionName != null) {
       if (emitStableDatabaseSemconv()) {
         attributes.put(DB_COLLECTION_NAME, collectionName);
-      } else {
+      }
+      if (emitOldDatabaseSemconv()) {
         attributes.put(DB_MONGODB_COLLECTION, collectionName);
       }
     }
