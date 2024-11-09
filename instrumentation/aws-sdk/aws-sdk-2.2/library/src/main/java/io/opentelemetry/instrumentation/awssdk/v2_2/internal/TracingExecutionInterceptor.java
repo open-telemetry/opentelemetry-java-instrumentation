@@ -336,7 +336,8 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       if (operation != null) {
         if (SemconvStability.emitStableDatabaseSemconv()) {
           span.setAttribute(DB_OPERATION_NAME, operation);
-        } else {
+        }
+        if (SemconvStability.emitOldDatabaseSemconv()) {
           span.setAttribute(DB_OPERATION, operation);
         }
       }

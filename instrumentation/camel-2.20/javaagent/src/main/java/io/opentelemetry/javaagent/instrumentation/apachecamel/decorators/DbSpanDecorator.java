@@ -129,7 +129,8 @@ class DbSpanDecorator extends BaseSpanDecorator {
     if (statement != null) {
       if (SemconvStability.emitStableDatabaseSemconv()) {
         attributes.put(DbIncubatingAttributes.DB_QUERY_TEXT, statement);
-      } else {
+      }
+      if (SemconvStability.emitOldDatabaseSemconv()) {
         attributes.put(DbIncubatingAttributes.DB_STATEMENT, statement);
       }
     }
@@ -137,7 +138,8 @@ class DbSpanDecorator extends BaseSpanDecorator {
     if (dbName != null) {
       if (SemconvStability.emitStableDatabaseSemconv()) {
         attributes.put(DbIncubatingAttributes.DB_NAMESPACE, dbName);
-      } else {
+      }
+      if (SemconvStability.emitOldDatabaseSemconv()) {
         attributes.put(DbIncubatingAttributes.DB_NAME, dbName);
       }
     }
