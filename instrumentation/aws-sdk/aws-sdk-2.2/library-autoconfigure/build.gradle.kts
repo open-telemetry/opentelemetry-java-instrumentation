@@ -31,4 +31,12 @@ tasks {
     systemProperty("otel.instrumentation.messaging.experimental.capture-headers", "test-message-header")
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
 }

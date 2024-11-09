@@ -72,4 +72,12 @@ tasks {
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", true)
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
 }
