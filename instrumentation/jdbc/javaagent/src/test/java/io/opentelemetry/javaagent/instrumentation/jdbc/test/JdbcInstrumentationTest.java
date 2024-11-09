@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jdbc.test;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -375,15 +374,7 @@ class JdbcInstrumentationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, system),
                             equalTo(maybeStable(DB_NAME), dbNameLower),
-                            satisfies(
-                                DB_USER,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isNull();
-                                  } else {
-                                    val.isEqualTo(username);
-                                  }
-                                }),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
                             equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
@@ -502,15 +493,7 @@ class JdbcInstrumentationTest {
                         .hasAttributesSatisfying(
                             equalTo(DB_SYSTEM, system),
                             equalTo(maybeStable(DB_NAME), dbNameLower),
-                            satisfies(
-                                DB_USER,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isNull();
-                                  } else {
-                                    val.isEqualTo(username);
-                                  }
-                                }),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
                             equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
@@ -547,15 +530,7 @@ class JdbcInstrumentationTest {
                         .hasAttributesSatisfying(
                             equalTo(DB_SYSTEM, system),
                             equalTo(maybeStable(DB_NAME), dbNameLower),
-                            satisfies(
-                                DB_USER,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isNull();
-                                  } else {
-                                    val.isEqualTo(username);
-                                  }
-                                }),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
                             equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
@@ -592,15 +567,7 @@ class JdbcInstrumentationTest {
                         .hasAttributesSatisfying(
                             equalTo(DB_SYSTEM, system),
                             equalTo(maybeStable(DB_NAME), dbNameLower),
-                            satisfies(
-                                DB_USER,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isNull();
-                                  } else {
-                                    val.isEqualTo(username);
-                                  }
-                                }),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
                             equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
@@ -736,15 +703,7 @@ class JdbcInstrumentationTest {
                         .hasAttributesSatisfying(
                             equalTo(DB_SYSTEM, system),
                             equalTo(maybeStable(DB_NAME), dbNameLower),
-                            satisfies(
-                                DB_USER,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isNull();
-                                  } else {
-                                    val.isEqualTo(username);
-                                  }
-                                }),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
                             equalTo(maybeStable(DB_STATEMENT), query),
                             equalTo(maybeStable(DB_OPERATION), "CREATE TABLE"),
@@ -846,15 +805,7 @@ class JdbcInstrumentationTest {
                         .hasAttributesSatisfying(
                             equalTo(DB_SYSTEM, system),
                             equalTo(maybeStable(DB_NAME), dbNameLower),
-                            satisfies(
-                                DB_USER,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isNull();
-                                  } else {
-                                    val.isEqualTo(username);
-                                  }
-                                }),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
                             equalTo(maybeStable(DB_STATEMENT), query),
                             equalTo(maybeStable(DB_OPERATION), "CREATE TABLE"),
@@ -961,15 +912,7 @@ class JdbcInstrumentationTest {
                         .hasAttributesSatisfying(
                             equalTo(DB_SYSTEM, system),
                             equalTo(maybeStable(DB_NAME), dbNameLower),
-                            satisfies(
-                                DB_USER,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isNull();
-                                  } else {
-                                    val.isEqualTo(username);
-                                  }
-                                }),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
                             equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
@@ -1038,15 +981,7 @@ class JdbcInstrumentationTest {
                                       datasource.getClass().getName()),
                                   equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "getConnection"),
                                   equalTo(DB_SYSTEM, system),
-                                  satisfies(
-                                      DB_USER,
-                                      val -> {
-                                        if (emitStableDatabaseSemconv()) {
-                                          val.isNull();
-                                        } else {
-                                          val.isEqualTo(user);
-                                        }
-                                      }),
+                                  equalTo(DB_USER, emitStableDatabaseSemconv() ? null : user),
                                   equalTo(maybeStable(DB_NAME), "jdbcunittest"),
                                   equalTo(
                                       DB_CONNECTION_STRING,
@@ -1063,15 +998,7 @@ class JdbcInstrumentationTest {
                                 datasource.getClass().getName()),
                             equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "getConnection"),
                             equalTo(DB_SYSTEM, system),
-                            satisfies(
-                                DB_USER,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isNull();
-                                  } else {
-                                    val.isEqualTo(user);
-                                  }
-                                }),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : user),
                             equalTo(maybeStable(DB_NAME), "jdbcunittest"),
                             equalTo(
                                 DB_CONNECTION_STRING,
