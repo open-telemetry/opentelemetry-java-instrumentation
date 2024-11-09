@@ -170,7 +170,9 @@ public abstract class AbstractR2dbcStatementTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(
                                     DB_CONNECTION_STRING,
-                                    parameter.system + "://localhost:" + port),
+                                    emitStableDatabaseSemconv()
+                                        ? null
+                                        : parameter.system + "://localhost:" + port),
                                 equalTo(DB_SYSTEM, parameter.system),
                                 equalTo(maybeStable(DB_NAME), DB),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
