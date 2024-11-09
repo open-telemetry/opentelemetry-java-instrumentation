@@ -378,7 +378,9 @@ class JdbcInstrumentationTest {
                             satisfies(
                                 DB_USER,
                                 val -> {
-                                  if (username != null) {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isNull();
+                                  } else {
                                     val.isEqualTo(username);
                                   }
                                 }),
@@ -503,7 +505,9 @@ class JdbcInstrumentationTest {
                             satisfies(
                                 DB_USER,
                                 val -> {
-                                  if (username != null) {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isNull();
+                                  } else {
                                     val.isEqualTo(username);
                                   }
                                 }),
@@ -546,7 +550,9 @@ class JdbcInstrumentationTest {
                             satisfies(
                                 DB_USER,
                                 val -> {
-                                  if (username != null) {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isNull();
+                                  } else {
                                     val.isEqualTo(username);
                                   }
                                 }),
@@ -589,7 +595,9 @@ class JdbcInstrumentationTest {
                             satisfies(
                                 DB_USER,
                                 val -> {
-                                  if (username != null) {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isNull();
+                                  } else {
                                     val.isEqualTo(username);
                                   }
                                 }),
@@ -731,7 +739,9 @@ class JdbcInstrumentationTest {
                             satisfies(
                                 DB_USER,
                                 val -> {
-                                  if (username != null) {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isNull();
+                                  } else {
                                     val.isEqualTo(username);
                                   }
                                 }),
@@ -839,7 +849,9 @@ class JdbcInstrumentationTest {
                             satisfies(
                                 DB_USER,
                                 val -> {
-                                  if (username != null) {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isNull();
+                                  } else {
                                     val.isEqualTo(username);
                                   }
                                 }),
@@ -952,7 +964,9 @@ class JdbcInstrumentationTest {
                             satisfies(
                                 DB_USER,
                                 val -> {
-                                  if (username != null) {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isNull();
+                                  } else {
                                     val.isEqualTo(username);
                                   }
                                 }),
@@ -1027,7 +1041,9 @@ class JdbcInstrumentationTest {
                                   satisfies(
                                       DB_USER,
                                       val -> {
-                                        if (user != null) {
+                                        if (emitStableDatabaseSemconv()) {
+                                          val.isNull();
+                                        } else {
                                           val.isEqualTo(user);
                                         }
                                       }),
@@ -1050,7 +1066,9 @@ class JdbcInstrumentationTest {
                             satisfies(
                                 DB_USER,
                                 val -> {
-                                  if (user != null) {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isNull();
+                                  } else {
                                     val.isEqualTo(user);
                                   }
                                 }),
@@ -1225,7 +1243,7 @@ class JdbcInstrumentationTest {
                         .hasAttributesSatisfying(
                             equalTo(DB_SYSTEM, "hsqldb"),
                             equalTo(maybeStable(DB_NAME), dbNameLower),
-                            equalTo(DB_USER, "SA"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "SA"),
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
