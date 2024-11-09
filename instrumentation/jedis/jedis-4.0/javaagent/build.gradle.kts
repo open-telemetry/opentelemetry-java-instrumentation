@@ -30,4 +30,12 @@ tasks {
     jvmArgs("-Djava.net.preferIPv4Stack=true")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
 }
