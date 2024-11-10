@@ -5,6 +5,7 @@
 
 package io.opentelemetry.testing.cassandra.v4_4;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -64,10 +65,15 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                             .hasAttributesSatisfyingExactly(
                                 satisfies(
                                     NETWORK_TYPE,
-                                    val ->
+                                    val -> {
+                                      if (emitStableDatabaseSemconv()) {
+                                        val.isNull();
+                                      } else {
                                         val.satisfiesAnyOf(
                                             v -> assertThat(v).isEqualTo("ipv4"),
-                                            v -> assertThat(v).isEqualTo("ipv6"))),
+                                            v -> assertThat(v).isEqualTo("ipv6"));
+                                      }
+                                    }),
                                 equalTo(SERVER_ADDRESS, cassandraHost),
                                 equalTo(SERVER_PORT, cassandraPort),
                                 equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
