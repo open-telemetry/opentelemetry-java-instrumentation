@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.mongo.testing;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -528,14 +530,16 @@ public abstract class AbstractMongoClientTest<T> {
         equalTo(SERVER_ADDRESS, host),
         equalTo(SERVER_PORT, port),
         satisfies(
-            DB_STATEMENT,
+            maybeStable(DB_STATEMENT),
             val ->
                 val.satisfies(
                     statement -> assertThat(statements).contains(statement.replaceAll(" ", "")))),
         equalTo(DB_SYSTEM, "mongodb"),
-        equalTo(DB_CONNECTION_STRING, "mongodb://localhost:" + port),
-        equalTo(DB_NAME, dbName),
-        equalTo(DB_OPERATION, operation),
-        equalTo(DB_MONGODB_COLLECTION, collection));
+        equalTo(
+            DB_CONNECTION_STRING,
+            emitStableDatabaseSemconv() ? null : "mongodb://localhost:" + port),
+        equalTo(maybeStable(DB_NAME), dbName),
+        equalTo(maybeStable(DB_OPERATION), operation),
+        equalTo(maybeStable(DB_MONGODB_COLLECTION), collection));
   }
 }

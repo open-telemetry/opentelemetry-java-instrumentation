@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jdbc.datasource;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -42,7 +43,7 @@ class JdbcTelemetryTest {
                 span -> span.hasName("TestDataSource.getConnection"),
                 span ->
                     span.hasName("SELECT dbname")
-                        .hasAttribute(equalTo(DB_STATEMENT, "SELECT ?;"))));
+                        .hasAttribute(equalTo(maybeStable(DB_STATEMENT), "SELECT ?;"))));
   }
 
   @Test
@@ -118,7 +119,7 @@ class JdbcTelemetryTest {
                 span -> span.hasName("TestDataSource.getConnection"),
                 span ->
                     span.hasName("SELECT dbname")
-                        .hasAttribute(equalTo(DB_STATEMENT, "SELECT 1;"))));
+                        .hasAttribute(equalTo(maybeStable(DB_STATEMENT), "SELECT 1;"))));
   }
 
   @Test

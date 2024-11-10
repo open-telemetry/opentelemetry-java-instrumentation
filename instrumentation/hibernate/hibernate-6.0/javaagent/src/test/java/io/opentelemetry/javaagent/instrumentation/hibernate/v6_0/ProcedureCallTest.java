@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v6_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -108,11 +110,13 @@ public class ProcedureCallTest {
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "hsqldb"),
-                            equalTo(DB_NAME, "test"),
-                            equalTo(DB_USER, "sa"),
-                            equalTo(DB_CONNECTION_STRING, "hsqldb:mem:"),
-                            equalTo(DB_STATEMENT, "{call TEST_PROC()}"),
-                            equalTo(DB_OPERATION, "CALL")),
+                            equalTo(maybeStable(DB_NAME), "test"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
+                            equalTo(maybeStable(DB_STATEMENT), "{call TEST_PROC()}"),
+                            equalTo(maybeStable(DB_OPERATION), "CALL")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(SpanKind.INTERNAL)

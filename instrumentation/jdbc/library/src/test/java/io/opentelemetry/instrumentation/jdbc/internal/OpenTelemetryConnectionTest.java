@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createStatementInstrumenter;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -195,12 +197,14 @@ class OpenTelemetryConnectionTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, dbInfo.getSystem()),
-                            equalTo(DB_NAME, dbInfo.getName()),
-                            equalTo(DB_USER, dbInfo.getUser()),
-                            equalTo(DB_CONNECTION_STRING, dbInfo.getShortUrl()),
-                            equalTo(DB_STATEMENT, query),
-                            equalTo(DB_OPERATION, "SELECT"),
-                            equalTo(DB_SQL_TABLE, "users"),
+                            equalTo(maybeStable(DB_NAME), dbInfo.getName()),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : dbInfo.getUser()),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : dbInfo.getShortUrl()),
+                            equalTo(maybeStable(DB_STATEMENT), query),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "users"),
                             equalTo(SERVER_ADDRESS, dbInfo.getHost()),
                             equalTo(SERVER_PORT, dbInfo.getPort()))));
   }

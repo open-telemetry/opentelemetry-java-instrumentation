@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -81,7 +82,9 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
                                       equalTo(DB_SYSTEM, "redis"),
-                                      equalTo(DB_STATEMENT, "CLIENT SETINFO lib-name Lettuce")))),
+                                      equalTo(
+                                          maybeStable(DB_STATEMENT),
+                                          "CLIENT SETINFO lib-name Lettuce")))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
@@ -96,7 +99,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(SERVER_PORT, port),
                                       equalTo(DB_SYSTEM, "redis"),
                                       satisfies(
-                                          DB_STATEMENT,
+                                          maybeStable(DB_STATEMENT),
                                           stringAssert ->
                                               stringAssert.startsWith("CLIENT SETINFO lib-ver"))))),
               trace ->
@@ -112,7 +115,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
                                       equalTo(DB_SYSTEM, "redis"),
-                                      equalTo(DB_STATEMENT, "AUTH ?")))
+                                      equalTo(maybeStable(DB_STATEMENT), "AUTH ?")))
                               .hasEventsSatisfyingExactly(
                                   event -> event.hasName("redis.encode.start"),
                                   event -> event.hasName("redis.encode.end"))));
@@ -133,7 +136,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
                                       equalTo(DB_SYSTEM, "redis"),
-                                      equalTo(DB_STATEMENT, "AUTH ?")))
+                                      equalTo(maybeStable(DB_STATEMENT), "AUTH ?")))
                               .hasEventsSatisfyingExactly(
                                   event -> event.hasName("redis.encode.start"),
                                   event -> event.hasName("redis.encode.end"))));

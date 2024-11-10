@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
@@ -166,7 +167,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(DB_SYSTEM, "redis"),
-                                    equalTo(DB_STATEMENT, "SET TESTSETKEY ?")))
+                                    equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
@@ -212,7 +213,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                           equalTo(SERVER_ADDRESS, host),
                                           equalTo(SERVER_PORT, port),
                                           equalTo(DB_SYSTEM, "redis"),
-                                          equalTo(DB_STATEMENT, "GET TESTKEY")))
+                                          equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY")))
                                   .hasEventsSatisfyingExactly(
                                       event -> event.hasName("redis.encode.start"),
                                       event -> event.hasName("redis.encode.end"))));
@@ -291,7 +292,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                           equalTo(SERVER_ADDRESS, host),
                                           equalTo(SERVER_PORT, port),
                                           equalTo(DB_SYSTEM, "redis"),
-                                          equalTo(DB_STATEMENT, "GET NON_EXISTENT_KEY")))
+                                          equalTo(
+                                              maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY")))
                                   .hasEventsSatisfyingExactly(
                                       event -> event.hasName("redis.encode.start"),
                                       event -> event.hasName("redis.encode.end"))));
@@ -357,7 +359,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                           equalTo(SERVER_ADDRESS, host),
                                           equalTo(SERVER_PORT, port),
                                           equalTo(DB_SYSTEM, "redis"),
-                                          equalTo(DB_STATEMENT, "RANDOMKEY")))
+                                          equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY")))
                                   .hasEventsSatisfyingExactly(
                                       event -> event.hasName("redis.encode.start"),
                                       event -> event.hasName("redis.encode.end"))));
@@ -418,7 +420,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                     equalTo(SERVER_PORT, port),
                                     equalTo(DB_SYSTEM, "redis"),
                                     equalTo(
-                                        DB_STATEMENT, "HMSET TESTHM firstname ? lastname ? age ?")))
+                                        maybeStable(DB_STATEMENT),
+                                        "HMSET TESTHM firstname ? lastname ? age ?")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))),
@@ -435,7 +438,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(DB_SYSTEM, "redis"),
-                                    equalTo(DB_STATEMENT, "HGETALL TESTHM")))
+                                    equalTo(maybeStable(DB_STATEMENT), "HGETALL TESTHM")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.data.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -82,12 +84,14 @@ class ReactiveSpringDataTest {
                                     .isLessThanOrEqualTo(trace.getSpan(1).getEndEpochNanos()))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "h2"),
-                            equalTo(DB_NAME, "db"),
-                            equalTo(DB_USER, "sa"),
-                            equalTo(DB_STATEMENT, "SELECT CUSTOMER.* FROM CUSTOMER"),
-                            equalTo(DB_OPERATION, "SELECT"),
-                            equalTo(DB_SQL_TABLE, "CUSTOMER"),
-                            equalTo(DB_CONNECTION_STRING, "h2:mem://localhost"),
+                            equalTo(maybeStable(DB_NAME), "db"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(maybeStable(DB_STATEMENT), "SELECT CUSTOMER.* FROM CUSTOMER"),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "CUSTOMER"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "h2:mem://localhost"),
                             equalTo(SERVER_ADDRESS, "localhost"))));
   }
 }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -80,8 +81,8 @@ class Jedis30ClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(DB_STATEMENT, "SET foo ?"),
-                            equalTo(DB_OPERATION, "SET"),
+                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, "ipv4"),
@@ -104,8 +105,8 @@ class Jedis30ClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(DB_STATEMENT, "SET foo ?"),
-                            equalTo(DB_OPERATION, "SET"),
+                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, "ipv4"),
@@ -118,8 +119,8 @@ class Jedis30ClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(DB_STATEMENT, "GET foo"),
-                            equalTo(DB_OPERATION, "GET"),
+                            equalTo(maybeStable(DB_STATEMENT), "GET foo"),
+                            equalTo(maybeStable(DB_OPERATION), "GET"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, "ipv4"),
@@ -142,8 +143,8 @@ class Jedis30ClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(DB_STATEMENT, "SET foo ?"),
-                            equalTo(DB_OPERATION, "SET"),
+                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, "ipv4"),
@@ -156,8 +157,8 @@ class Jedis30ClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(DB_STATEMENT, "RANDOMKEY"),
-                            equalTo(DB_OPERATION, "RANDOMKEY"),
+                            equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
+                            equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_TYPE, "ipv4"),

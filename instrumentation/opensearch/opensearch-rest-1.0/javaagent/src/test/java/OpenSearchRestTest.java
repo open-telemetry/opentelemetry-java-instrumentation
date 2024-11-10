@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -102,8 +103,8 @@ public class OpenSearchRestTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "opensearch"),
-                            equalTo(DB_OPERATION, "GET"),
-                            equalTo(DB_STATEMENT, "GET _cluster/health")),
+                            equalTo(maybeStable(DB_OPERATION), "GET"),
+                            equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
@@ -167,8 +168,8 @@ public class OpenSearchRestTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "opensearch"),
-                            equalTo(DB_OPERATION, "GET"),
-                            equalTo(DB_STATEMENT, "GET _cluster/health")),
+                            equalTo(maybeStable(DB_OPERATION), "GET"),
+                            equalTo(maybeStable(DB_STATEMENT), "GET _cluster/health")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)

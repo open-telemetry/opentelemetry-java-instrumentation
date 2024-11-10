@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -130,7 +131,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(DB_SYSTEM, "redis"),
-                                    equalTo(DB_STATEMENT, "SET TESTSETKEY ?")))
+                                    equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
@@ -156,7 +157,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(DB_SYSTEM, "redis"),
-                                    equalTo(DB_STATEMENT, "GET TESTKEY")))
+                                    equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
@@ -182,7 +183,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(DB_SYSTEM, "redis"),
-                                    equalTo(DB_STATEMENT, "GET NON_EXISTENT_KEY")))
+                                    equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
@@ -208,7 +209,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(DB_SYSTEM, "redis"),
-                                    equalTo(DB_STATEMENT, "RANDOMKEY")))
+                                    equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
@@ -244,7 +245,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, containerConnection.port),
                                     equalTo(DB_SYSTEM, "redis"),
-                                    equalTo(DB_STATEMENT, "LPUSH TESTLIST ?")))
+                                    equalTo(maybeStable(DB_STATEMENT), "LPUSH TESTLIST ?")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
@@ -271,7 +272,8 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(SERVER_PORT, port),
                                     equalTo(DB_SYSTEM, "redis"),
                                     equalTo(
-                                        DB_STATEMENT, "HMSET user firstname ? lastname ? age ?")))
+                                        maybeStable(DB_STATEMENT),
+                                        "HMSET user firstname ? lastname ? age ?")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
@@ -297,7 +299,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(DB_SYSTEM, "redis"),
-                                    equalTo(DB_STATEMENT, "HGETALL TESTHM")))
+                                    equalTo(maybeStable(DB_STATEMENT), "HGETALL TESTHM")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
@@ -330,7 +332,9 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(DB_SYSTEM, "redis"),
-                                    equalTo(DB_STATEMENT, "EVAL " + b64Script + " 1 TESTLIST ? ?")))
+                                    equalTo(
+                                        maybeStable(DB_STATEMENT),
+                                        "EVAL " + b64Script + " 1 TESTLIST ? ?")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
@@ -357,7 +361,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
                                     equalTo(DB_SYSTEM, "redis"),
-                                    equalTo(DB_STATEMENT, "MSET key1 ? key2 ?")))
+                                    equalTo(maybeStable(DB_STATEMENT), "MSET key1 ? key2 ?")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
@@ -387,7 +391,9 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, containerConnection.port),
                                       equalTo(DB_SYSTEM, "redis"),
-                                      equalTo(DB_STATEMENT, "CLIENT SETINFO lib-name Lettuce")))),
+                                      equalTo(
+                                          maybeStable(DB_STATEMENT),
+                                          "CLIENT SETINFO lib-name Lettuce")))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
@@ -402,7 +408,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       equalTo(SERVER_PORT, containerConnection.port),
                                       equalTo(DB_SYSTEM, "redis"),
                                       satisfies(
-                                          DB_STATEMENT,
+                                          maybeStable(DB_STATEMENT),
                                           stringAssert ->
                                               stringAssert.startsWith("CLIENT SETINFO lib-ver"))))),
               trace ->
@@ -418,7 +424,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, containerConnection.port),
                                       equalTo(DB_SYSTEM, "redis"),
-                                      equalTo(DB_STATEMENT, "DEBUG SEGFAULT")))));
+                                      equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT")))));
     } else {
       testing()
           .waitAndAssertTraces(
@@ -435,7 +441,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, containerConnection.port),
                                       equalTo(DB_SYSTEM, "redis"),
-                                      equalTo(DB_STATEMENT, "DEBUG SEGFAULT")))
+                                      equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT")))
                               // these are no longer recorded since Lettuce 6.1.6
                               .hasEventsSatisfyingExactly(
                                   event -> event.hasName("redis.encode.start"),
@@ -475,7 +481,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, containerConnection.port),
                                     equalTo(DB_SYSTEM, "redis"),
-                                    equalTo(DB_STATEMENT, "SHUTDOWN NOSAVE"))));
+                                    equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE"))));
               } else {
                 trace.hasSpansSatisfyingExactly(
                     span ->
@@ -491,7 +497,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, containerConnection.port),
                                     equalTo(DB_SYSTEM, "redis"),
-                                    equalTo(DB_STATEMENT, "SHUTDOWN NOSAVE")))
+                                    equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end")));

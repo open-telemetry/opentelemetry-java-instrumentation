@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -137,23 +138,23 @@ class PutGetTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "geode"),
-                            equalTo(DB_NAME, "test-region"),
-                            equalTo(DB_OPERATION, "clear")),
+                            equalTo(maybeStable(DB_NAME), "test-region"),
+                            equalTo(maybeStable(DB_OPERATION), "clear")),
                 span ->
                     span.hasName("put test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "geode"),
-                            equalTo(DB_NAME, "test-region"),
-                            equalTo(DB_OPERATION, "put")),
+                            equalTo(maybeStable(DB_NAME), "test-region"),
+                            equalTo(maybeStable(DB_OPERATION), "put")),
                 span ->
                     span.hasName(verb.concat(" test-region"))
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "geode"),
-                            equalTo(DB_NAME, "test-region"),
-                            equalTo(DB_OPERATION, verb),
-                            equalTo(DB_STATEMENT, query))));
+                            equalTo(maybeStable(DB_NAME), "test-region"),
+                            equalTo(maybeStable(DB_OPERATION), verb),
+                            equalTo(maybeStable(DB_STATEMENT), query))));
   }
 
   static class Card implements DataSerializable {
