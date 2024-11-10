@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
-import com.amazonaws.services.kinesis.AmazonKinesisClientBuilder;
+import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class Aws1KinesisClientTest extends AbstractAws1KinesisClientTest {
+class DynamoDbClientTest extends AbstractDynamoDbClientTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
@@ -20,7 +20,7 @@ class Aws1KinesisClientTest extends AbstractAws1KinesisClientTest {
   }
 
   @Override
-  public AmazonKinesisClientBuilder configureClient(AmazonKinesisClientBuilder clientBuilder) {
+  public AmazonDynamoDBClientBuilder configureClient(AmazonDynamoDBClientBuilder clientBuilder) {
     return clientBuilder.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true)

@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.kinesis.AmazonKinesisClientBuilder;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class Aws1S3ClientTest extends AbstractAws1S3ClientTest {
+class KinesisClientTest extends AbstractKinesisClientTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
@@ -20,7 +20,7 @@ class Aws1S3ClientTest extends AbstractAws1S3ClientTest {
   }
 
   @Override
-  public AmazonS3ClientBuilder configureClient(AmazonS3ClientBuilder clientBuilder) {
+  public AmazonKinesisClientBuilder configureClient(AmazonKinesisClientBuilder clientBuilder) {
     return clientBuilder.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
             .setCaptureExperimentalSpanAttributes(true)

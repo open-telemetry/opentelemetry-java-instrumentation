@@ -38,8 +38,10 @@ import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 
-public abstract class AbstractAws1BaseClientTest {
+public abstract class AbstractBaseAwsClientTest {
   protected abstract InstrumentationExtension testing();
+
+  protected abstract boolean hasRequestId();
 
   protected static MockWebServerExtension server = new MockWebServerExtension();
   protected static AwsClientBuilder.EndpointConfiguration endpoint;
@@ -62,23 +64,18 @@ public abstract class AbstractAws1BaseClientTest {
     server.stop();
   }
 
-  @SuppressWarnings("unchecked")
-  public void requestWithMockedResponse(
+  public void assertRequestWithMockedResponse(
       Object response,
       Object client,
       String service,
       String operation,
       String method,
       Map<String, String> additionalAttributes)
-      throws NoSuchFieldException, IllegalAccessException {
+      throws Exception {
 
     assertThat(response).isNotNull();
 
-    Field requestHandler2sField = AmazonWebServiceClient.class.getDeclaredField("requestHandler2s");
-    requestHandler2sField.setAccessible(true);
-    List<RequestHandler2> requestHandler2s =
-        (List<RequestHandler2>) requestHandler2sField.get(client);
-
+    List<RequestHandler2> requestHandler2s = extractRequestHandlers(client);
     assertThat(requestHandler2s).isNotNull();
     assertThat(
             requestHandler2s.stream()
@@ -104,6 +101,13 @@ public abstract class AbstractAws1BaseClientTest {
                                   equalTo(RPC_METHOD, operation),
                                   equalTo(stringKey("aws.endpoint"), endpoint.getServiceEndpoint()),
                                   equalTo(stringKey("aws.agent"), "java-aws-sdk")));
+
+                      if (hasRequestId()) {
+                        attributes.add(
+                            satisfies(
+                                stringKey("aws.request_id"), v -> v.isInstanceOf(String.class)));
+                      }
+
                       additionalAttributes.forEach(
                           (k, v) -> attributes.add(equalTo(stringKey(k), v)));
 
@@ -112,5 +116,12 @@ public abstract class AbstractAws1BaseClientTest {
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(attributes);
                     }));
+  }
+
+  @SuppressWarnings("unchecked")
+  protected List<RequestHandler2> extractRequestHandlers(Object client) throws Exception {
+    Field requestHandler2sField = AmazonWebServiceClient.class.getDeclaredField("requestHandler2s");
+    requestHandler2sField.setAccessible(true);
+    return (List<RequestHandler2>) requestHandler2sField.get(client);
   }
 }

@@ -19,19 +19,19 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public abstract class AbstractAws1KinesisClientTest extends AbstractAws1BaseClientTest {
+public abstract class AbstractKinesisClientTest extends AbstractBaseAwsClientTest {
 
   public abstract AmazonKinesisClientBuilder configureClient(AmazonKinesisClientBuilder client);
+
+  @Override
+  protected boolean hasRequestId() {
+    return false;
+  }
 
   @ParameterizedTest
   @MethodSource("provideArguments")
   public void testSendRequestWithMockedResponse(
-      String operation,
-      String method,
-      Function<AmazonKinesis, Object> call,
-      Map<String, String> additionalAttributes)
-      throws Exception {
-
+      String operation, Function<AmazonKinesis, Object> call) throws Exception {
     AmazonKinesisClientBuilder clientBuilder = AmazonKinesisClientBuilder.standard();
 
     AmazonKinesis client =
@@ -42,30 +42,28 @@ public abstract class AbstractAws1KinesisClientTest extends AbstractAws1BaseClie
 
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, ""));
 
+    Map<String, String> additionalAttributes = ImmutableMap.of("aws.stream.name", "somestream");
     Object response = call.apply(client);
-    requestWithMockedResponse(response, client, "Kinesis", operation, method, additionalAttributes);
+    assertRequestWithMockedResponse(
+        response, client, "Kinesis", operation, "POST", additionalAttributes);
   }
 
   private static Stream<Arguments> provideArguments() {
     return Stream.of(
         Arguments.of(
             "DeleteStream",
-            "POST",
             (Function<AmazonKinesis, Object>)
-                c -> c.deleteStream(new DeleteStreamRequest().withStreamName("somestream")),
-            ImmutableMap.of("aws.stream.name", "somestream")),
+                c -> c.deleteStream(new DeleteStreamRequest().withStreamName("somestream"))),
         // Some users may implicitly subclass the request object to mimic a fluent style
         Arguments.of(
-            "DeleteStream",
-            "POST",
+            "CustomDeleteStream",
             (Function<AmazonKinesis, Object>)
-                c ->
-                    c.deleteStream(
-                        new DeleteStreamRequest() {
-                          {
-                            withStreamName("somestream");
-                          }
-                        }),
-            ImmutableMap.of("aws.stream.name", "somestream")));
+                c -> c.deleteStream(new CustomDeleteStreamRequest("somestream"))));
+  }
+
+  public static class CustomDeleteStreamRequest extends DeleteStreamRequest {
+    public CustomDeleteStreamRequest(String streamName) {
+      withStreamName(streamName);
+    }
   }
 }

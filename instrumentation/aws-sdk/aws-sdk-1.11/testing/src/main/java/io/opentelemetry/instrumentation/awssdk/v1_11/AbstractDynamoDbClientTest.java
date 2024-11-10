@@ -14,9 +14,14 @@ import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import org.junit.jupiter.api.Test;
 
-public abstract class AbstractAws1DynamoDbClientTest extends AbstractAws1BaseClientTest {
+public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTest {
 
   public abstract AmazonDynamoDBClientBuilder configureClient(AmazonDynamoDBClientBuilder client);
+
+  @Override
+  protected boolean hasRequestId() {
+    return false;
+  }
 
   @Test
   public void sendRequestWithMockedResponse() throws Exception {
@@ -30,7 +35,7 @@ public abstract class AbstractAws1DynamoDbClientTest extends AbstractAws1BaseCli
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, ""));
 
     Object response = client.createTable(new CreateTableRequest("sometable", null));
-    requestWithMockedResponse(
+    assertRequestWithMockedResponse(
         response,
         client,
         "DynamoDBv2",
