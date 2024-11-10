@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttrib
 import javax.annotation.Nullable;
 
 public enum VertxSqlClientAttributesGetter
-    implements SqlClientAttributesGetter<VertxSqlClientRequest> {
+    implements SqlClientAttributesGetter<VertxSqlClientRequest, Void> {
   INSTANCE;
 
   @Override
