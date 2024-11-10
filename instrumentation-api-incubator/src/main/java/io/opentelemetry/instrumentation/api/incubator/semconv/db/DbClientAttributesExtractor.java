@@ -12,6 +12,9 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
+import javax.annotation.Nullable;
 
 /**
  * Extractor of <a
@@ -22,16 +25,23 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability;
  * attribute extraction from request/response objects.
  */
 public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
-    extends DbClientCommonAttributesExtractor<
-        REQUEST, RESPONSE, DbClientAttributesGetter<REQUEST>> {
+    implements AttributesExtractor<REQUEST, RESPONSE>, SpanKeyProvider {
 
   // copied from DbIncubatingAttributes
+  private static final AttributeKey<String> DB_NAME = AttributeKey.stringKey("db.name");
+  private static final AttributeKey<String> DB_NAMESPACE = AttributeKey.stringKey("db.namespace");
+  private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
+  private static final AttributeKey<String> DB_USER = AttributeKey.stringKey("db.user");
+  private static final AttributeKey<String> DB_CONNECTION_STRING =
+      AttributeKey.stringKey("db.connection_string");
   private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
   private static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.query.text");
 
   private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
   private static final AttributeKey<String> DB_OPERATION_NAME =
       AttributeKey.stringKey("db.operation.name");
+
+  private final DbClientAttributesGetter<REQUEST> getter;
 
   /** Creates the database client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
@@ -40,20 +50,41 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   DbClientAttributesExtractor(DbClientAttributesGetter<REQUEST> getter) {
-    super(getter);
+    this.getter = getter;
   }
 
   @Override
+  @SuppressWarnings("deprecation") // using deprecated semconv
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    super.onStart(attributes, parentContext, request);
-
+    internalSet(attributes, DB_SYSTEM, getter.getDbSystem(request));
     if (SemconvStability.emitStableDatabaseSemconv()) {
+      internalSet(attributes, DB_NAMESPACE, getter.getDbNamespace(request));
       internalSet(attributes, DB_QUERY_TEXT, getter.getDbQueryText(request));
       internalSet(attributes, DB_OPERATION_NAME, getter.getDbOperationName(request));
     }
     if (SemconvStability.emitOldDatabaseSemconv()) {
+      internalSet(attributes, DB_USER, getter.getUser(request));
+      internalSet(attributes, DB_NAME, getter.getDbNamespace(request));
+      internalSet(attributes, DB_CONNECTION_STRING, getter.getConnectionString(request));
       internalSet(attributes, DB_STATEMENT, getter.getDbQueryText(request));
       internalSet(attributes, DB_OPERATION, getter.getDbOperationName(request));
     }
+  }
+
+  @Override
+  public void onEnd(
+      AttributesBuilder attributes,
+      Context context,
+      REQUEST request,
+      @Nullable RESPONSE response,
+      @Nullable Throwable error) {}
+
+  /**
+   * This method is internal and is hence not for public use. Its API is unstable and can change at
+   * any time.
+   */
+  @Override
+  public SpanKey internalGetSpanKey() {
+    return SpanKey.DB_CLIENT;
   }
 }
