@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 final class CouchbaseAttributesGetter
@@ -47,5 +49,16 @@ final class CouchbaseAttributesGetter
   @Nullable
   public String getDbOperationName(CouchbaseRequestInfo couchbaseRequest) {
     return couchbaseRequest.operation();
+  }
+
+  @Nullable
+  @Override
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
+      CouchbaseRequestInfo couchbaseRequest, @Nullable Void unused) {
+    SocketAddress peerAddress = couchbaseRequest.getPeerAddress();
+    if (peerAddress instanceof InetSocketAddress) {
+      return (InetSocketAddress) peerAddress;
+    }
+    return null;
   }
 }

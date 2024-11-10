@@ -12,7 +12,7 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExecution> {
+public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExecution, Void> {
   INSTANCE;
 
   @Override
@@ -44,5 +44,17 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
   @Nullable
   public String getRawQueryText(DbExecution request) {
     return request.getRawQueryText();
+  }
+
+  @Nullable
+  @Override
+  public String getServerAddress(DbExecution request) {
+    return request.getHost();
+  }
+
+  @Nullable
+  @Override
+  public Integer getServerPort(DbExecution request) {
+    return request.getPort();
   }
 }

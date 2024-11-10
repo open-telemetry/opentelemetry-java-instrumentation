@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
 import javax.annotation.Nullable;
 
@@ -44,6 +45,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
 
   private final DbClientAttributesGetter<REQUEST, RESPONSE> getter;
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
+  private final ServerAttributesExtractor<REQUEST, RESPONSE> serverAttributesExtractor;
 
   /** Creates the database client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
@@ -56,6 +58,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
     internalNetworkExtractor =
         new InternalNetworkAttributesExtractor<>(
             getter, SemconvStability.emitOldDatabaseSemconv(), false);
+    serverAttributesExtractor = ServerAttributesExtractor.create(getter);
   }
 
   @Override
@@ -74,6 +77,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       internalSet(attributes, DB_STATEMENT, getter.getDbQueryText(request));
       internalSet(attributes, DB_OPERATION, getter.getDbOperationName(request));
     }
+    serverAttributesExtractor.onStart(attributes, parentContext, request);
   }
 
   @Override

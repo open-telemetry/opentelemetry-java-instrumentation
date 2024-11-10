@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
 final class RedissonDbAttributesGetter implements DbClientAttributesGetter<RedissonRequest, Void> {
@@ -44,5 +45,11 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
   @Override
   public String getDbOperationName(RedissonRequest request) {
     return request.getOperation();
+  }
+
+  @Override
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
+      RedissonRequest request, @Nullable Void unused) {
+    return request.getAddress();
   }
 }

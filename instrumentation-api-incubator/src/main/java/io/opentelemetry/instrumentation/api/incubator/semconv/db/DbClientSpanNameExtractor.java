@@ -18,7 +18,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
    * @see DbClientAttributesGetter#getDbNamespace(Object) used to extract {@code <db.namespace>}.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      DbClientAttributesGetter<REQUEST, Void> getter) {
+      DbClientAttributesGetter<REQUEST, ?> getter) {
     return new GenericDbClientSpanNameExtractor<>(getter);
   }
 
@@ -65,9 +65,9 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
   private static final class GenericDbClientSpanNameExtractor<REQUEST>
       extends DbClientSpanNameExtractor<REQUEST> {
 
-    private final DbClientAttributesGetter<REQUEST, Void> getter;
+    private final DbClientAttributesGetter<REQUEST, ?> getter;
 
-    private GenericDbClientSpanNameExtractor(DbClientAttributesGetter<REQUEST, Void> getter) {
+    private GenericDbClientSpanNameExtractor(DbClientAttributesGetter<REQUEST, ?> getter) {
       this.getter = getter;
     }
 

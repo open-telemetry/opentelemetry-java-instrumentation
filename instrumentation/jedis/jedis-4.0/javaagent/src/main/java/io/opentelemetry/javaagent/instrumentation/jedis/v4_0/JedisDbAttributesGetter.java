@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
@@ -42,5 +44,16 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   @Override
   public String getDbOperationName(JedisRequest request) {
     return request.getOperation();
+  }
+
+  @Override
+  @Nullable
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
+      JedisRequest jedisRequest, @Nullable Void unused) {
+    SocketAddress socketAddress = jedisRequest.getRemoteSocketAddress();
+    if (socketAddress instanceof InetSocketAddress) {
+      return (InetSocketAddress) socketAddress;
+    }
+    return null;
   }
 }
