@@ -2,9 +2,49 @@
 
 ## Unreleased
 
+### Migration notes
+
+- Spring Boot Starter Scheduling instrumentation scope name changed from
+  `io.opentelemetry.spring-scheduling-3.1` to `io.opentelemetry.spring-boot-autoconfigure`
+  to reflect the module's name.
+- Default flush timeout for aws lambda flush javaagent instrumentation changed from 1 second
+  to 10 seconds to match the flush timeout used in the aws lambda library instrumentation.
+  ([#12576](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12576))
+
+### 📈 Enhancements
+
+- Delegate loading of java package to platform loader
+  ([#12505](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12505))
+- Set up virtual field transforms before otel sdk is initialized
+  ([#12444](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12444))
 - Update azure-core-tracing-opentelemetry version and improve HTTP suppression to back off
-  when Azure SDK tracing was disabled.
+  when Azure SDK tracing is disabled.
   ([#12489](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12489))
+- Ktor2 http client uses low level instrumentation
+  ([#12530](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12530))
+- Add logback mdc instrumentation to spring boot starter
+  ([#12515](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12515))
+- Run class load listener only once
+  ([#12565](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12565))
+- Remove duplicate byte buddy classes to reduce agent jar file size
+  ([#12571](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12571))
+- Support additional JVM arg syntax in service name resource detector
+  ([#12544](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12544))
+- Fix warning about setting VirtualField supplier twice
+  ([#12584](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12584))
+
+### 🛠️ Bug fixes
+
+- Fix derby directory connection string parser
+  ([#12479](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12479))
+- Improve whitespace handling in oracle jdbc url parser
+  ([#12512](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12512))
+- Fix SpanKey bridging for unbridgeable span
+  ([#12511](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12511))
+- Fix lettuce instrumentation and tests to pass against latest version
+  ([#12552](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12552))
+- fix: Kafka initialization occasionally failed due to concurrent injection of OpenTelemetryMetricsReporter (to #12538)
+  ([#12583](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12583))
 
 ## Version 2.9.0 (2024-10-17)
 
