@@ -32,7 +32,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
    *     procedure name.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      SqlClientAttributesGetter<REQUEST> getter) {
+      SqlClientAttributesGetter<REQUEST, ?> getter) {
     return new SqlClientSpanNameExtractor<>(getter);
   }
 
@@ -85,9 +85,9 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
     // a dedicated sanitizer just for extracting the operation and identifier name
     private static final SqlStatementSanitizer sanitizer = SqlStatementSanitizer.create(true);
 
-    private final SqlClientAttributesGetter<REQUEST> getter;
+    private final SqlClientAttributesGetter<REQUEST, ?> getter;
 
-    private SqlClientSpanNameExtractor(SqlClientAttributesGetter<REQUEST> getter) {
+    private SqlClientSpanNameExtractor(SqlClientAttributesGetter<REQUEST, ?> getter) {
       this.getter = getter;
     }
 

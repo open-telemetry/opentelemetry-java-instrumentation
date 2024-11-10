@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import javax.annotation.Nullable;
 
 /**
@@ -18,7 +19,8 @@ import javax.annotation.Nullable;
  * from the attribute methods, but implement as many as possible for best compliance with the
  * OpenTelemetry specification.
  */
-public interface DbClientAttributesGetter<REQUEST, RESPONSE> {
+public interface DbClientAttributesGetter<REQUEST, RESPONSE>
+    extends NetworkAttributesGetter<REQUEST, RESPONSE> {
 
   @Deprecated
   @Nullable

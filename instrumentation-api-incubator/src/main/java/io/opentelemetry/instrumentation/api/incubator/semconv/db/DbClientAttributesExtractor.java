@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
 import javax.annotation.Nullable;
 
 /**
@@ -41,16 +42,20 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   private static final AttributeKey<String> DB_OPERATION_NAME =
       AttributeKey.stringKey("db.operation.name");
 
-  private final DbClientAttributesGetter<REQUEST, Void> getter;
+  private final DbClientAttributesGetter<REQUEST, RESPONSE> getter;
+  private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
 
   /** Creates the database client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      DbClientAttributesGetter<REQUEST, Void> getter) {
+      DbClientAttributesGetter<REQUEST, RESPONSE> getter) {
     return new DbClientAttributesExtractor<>(getter);
   }
 
-  DbClientAttributesExtractor(DbClientAttributesGetter<REQUEST, Void> getter) {
+  DbClientAttributesExtractor(DbClientAttributesGetter<REQUEST, RESPONSE> getter) {
     this.getter = getter;
+    internalNetworkExtractor =
+        new InternalNetworkAttributesExtractor<>(
+            getter, SemconvStability.emitOldDatabaseSemconv(), false);
   }
 
   @Override
@@ -77,7 +82,9 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       Context context,
       REQUEST request,
       @Nullable RESPONSE response,
-      @Nullable Throwable error) {}
+      @Nullable Throwable error) {
+    internalNetworkExtractor.onEnd(attributes, request, response);
+  }
 
   /**
    * This method is internal and is hence not for public use. Its API is unstable and can change at

@@ -40,7 +40,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
 
   /** Creates the SQL client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      SqlClientAttributesGetter<REQUEST> getter) {
+      SqlClientAttributesGetter<REQUEST, RESPONSE> getter) {
     return SqlClientAttributesExtractor.<REQUEST, RESPONSE>builder(getter).build();
   }
 
@@ -49,7 +49,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
    * client attributes extractor.
    */
   public static <REQUEST, RESPONSE> SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
-      SqlClientAttributesGetter<REQUEST> getter) {
+      SqlClientAttributesGetter<REQUEST, RESPONSE> getter) {
     return new SqlClientAttributesExtractorBuilder<>(getter);
   }
 
@@ -61,10 +61,10 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   private final boolean statementSanitizationEnabled;
 
   private final AttributesExtractor<REQUEST, RESPONSE> delegate;
-  private final SqlClientAttributesGetter<REQUEST> getter;
+  private final SqlClientAttributesGetter<REQUEST, RESPONSE> getter;
 
   SqlClientAttributesExtractor(
-      SqlClientAttributesGetter<REQUEST> getter,
+      SqlClientAttributesGetter<REQUEST, RESPONSE> getter,
       AttributeKey<String> oldSemconvTableAttribute,
       boolean statementSanitizationEnabled) {
     this.delegate = DbClientAttributesExtractor.create(getter);
