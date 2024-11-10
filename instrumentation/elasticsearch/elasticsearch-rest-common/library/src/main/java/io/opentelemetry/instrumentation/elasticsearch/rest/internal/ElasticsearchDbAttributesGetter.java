@@ -22,7 +22,7 @@ import org.apache.http.HttpEntity;
  * any time.
  */
 final class ElasticsearchDbAttributesGetter
-    implements DbClientAttributesGetter<ElasticsearchRestRequest> {
+    implements DbClientAttributesGetter<ElasticsearchRestRequest, Void> {
 
   private static final Logger logger =
       Logger.getLogger(ElasticsearchDbAttributesGetter.class.getName());

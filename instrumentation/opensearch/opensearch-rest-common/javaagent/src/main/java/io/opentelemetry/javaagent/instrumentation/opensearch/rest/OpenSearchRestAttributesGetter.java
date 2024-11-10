@@ -10,7 +10,7 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class OpenSearchRestAttributesGetter
-    implements DbClientAttributesGetter<OpenSearchRestRequest> {
+    implements DbClientAttributesGetter<OpenSearchRestRequest, Void> {
 
   @Override
   public String getDbSystem(OpenSearchRestRequest request) {

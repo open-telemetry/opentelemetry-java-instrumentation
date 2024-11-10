@@ -18,7 +18,7 @@ import javax.annotation.Nullable;
  * from the attribute methods, but implement as many as possible for best compliance with the
  * OpenTelemetry specification.
  */
-public interface DbClientAttributesGetter<REQUEST> {
+public interface DbClientAttributesGetter<REQUEST, RESPONSE> {
 
   @Deprecated
   @Nullable

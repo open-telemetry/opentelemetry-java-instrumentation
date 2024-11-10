@@ -10,7 +10,7 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class ElasticsearchTransportAttributesGetter
-    implements DbClientAttributesGetter<ElasticTransportRequest> {
+    implements DbClientAttributesGetter<ElasticTransportRequest, Void> {
 
   @Override
   public String getDbSystem(ElasticTransportRequest request) {

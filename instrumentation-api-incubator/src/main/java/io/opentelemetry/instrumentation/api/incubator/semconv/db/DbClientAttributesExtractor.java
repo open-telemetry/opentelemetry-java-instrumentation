@@ -41,15 +41,15 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   private static final AttributeKey<String> DB_OPERATION_NAME =
       AttributeKey.stringKey("db.operation.name");
 
-  private final DbClientAttributesGetter<REQUEST> getter;
+  private final DbClientAttributesGetter<REQUEST, Void> getter;
 
   /** Creates the database client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      DbClientAttributesGetter<REQUEST> getter) {
+      DbClientAttributesGetter<REQUEST, Void> getter) {
     return new DbClientAttributesExtractor<>(getter);
   }
 
-  DbClientAttributesExtractor(DbClientAttributesGetter<REQUEST> getter) {
+  DbClientAttributesExtractor(DbClientAttributesGetter<REQUEST, Void> getter) {
     this.getter = getter;
   }
 
