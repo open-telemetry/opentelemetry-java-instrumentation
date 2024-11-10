@@ -7,13 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AbstractDynamoDbClientTest;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class DynamoDbClientTest extends AbstractDynamoDbClientTest {
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Override
   protected InstrumentationExtension testing() {
@@ -21,7 +21,7 @@ class DynamoDbClientTest extends AbstractDynamoDbClientTest {
   }
 
   @Override
-  public AmazonDynamoDBClientBuilder configureClient(AmazonDynamoDBClientBuilder clientBuilder) {
-    return clientBuilder;
+  public AmazonDynamoDBClientBuilder configureClient(AmazonDynamoDBClientBuilder client) {
+    return client;
   }
 }
