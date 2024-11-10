@@ -279,8 +279,8 @@ abstract class AbstractOpenTelemetryAppenderTest {
       Class<?> testClass, String methodName, AttributeAssertion... assertions) {
     String selector = System.getProperty("Log4j2.contextSelector");
     boolean async = selector != null && selector.endsWith("AsyncLoggerContextSelector");
-    if (async) {
-      // code attributes as not added by default when async logger is used
+    if (async && !Boolean.getBoolean("testLatestDeps")) {
+      // source info is not available by default when async logger is used in non latest dep tests
       return Arrays.asList(assertions);
     }
 
