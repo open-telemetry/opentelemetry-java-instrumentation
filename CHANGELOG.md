@@ -30,8 +30,6 @@
   ([#12571](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12571))
 - Support additional JVM arg syntax in service name resource detector
   ([#12544](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12544))
-- Fix warning about setting VirtualField supplier twice
-  ([#12584](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12584))
 
 ### 🛠️ Bug fixes
 
