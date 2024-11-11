@@ -317,11 +317,11 @@ final class OpenTelemetryTracing implements Tracing {
       }
       if (key.equals("db.namespace") && SemconvStability.emitOldDatabaseSemconv()) {
         // map backwards into db.redis.database.index
-        int val = Integer.parseInt(value);
+        long val = Long.parseLong(value);
         if (span != null) {
           span.setAttribute(DB_REDIS_DATABASE_INDEX, val);
         } else {
-          spanBuilder.setAttribute(DB_REDIS_DATABASE_INDEX, (long) val);
+          spanBuilder.setAttribute(DB_REDIS_DATABASE_INDEX, val);
         }
         return this;
       }
