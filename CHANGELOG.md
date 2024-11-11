@@ -43,7 +43,7 @@
   ([#12511](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12511))
 - Fix lettuce instrumentation and tests to pass against latest version
   ([#12552](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12552))
-- fix: Kafka initialization occasionally failed due to concurrent injection of OpenTelemetryMetricsReporter (to #12538)
+- Fix Kafka initialization occasionally failed due to concurrent injection of OpenTelemetryMetricsReporter
   ([#12583](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12583))
 
 ## Version 2.9.0 (2024-10-17)
