@@ -7,20 +7,23 @@ package io.opentelemetry.javaagent.instrumentation.rediscala;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import com.google.common.util.concurrent.SettableFuture;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import java.time.Duration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.shaded.org.apache.commons.lang3.tuple.Pair;
 import redis.ByteStringDeserializer;
 import redis.ByteStringDeserializer$;
 import redis.ByteStringSerializer;
@@ -98,31 +101,26 @@ class RediscalaClientTest {
   }
 
   @Test
-  void testGetCommand() {
-    Pair<Future<Object>, Future<Option<String>>> result =
-        testing.runWithSpan(
-            "parent",
-            () -> {
-              ByteStringSerializer<String> serializer = ByteStringSerializer$.MODULE$.String();
-              ByteStringDeserializer<String> deserializer =
-                  ByteStringDeserializer$.MODULE$.String();
-              Future<Object> writeFuture =
-                  redisClient.set(
-                      "bar",
-                      "baz",
-                      Option.apply(null),
-                      Option.apply(null),
-                      false,
-                      false,
-                      serializer);
-              Future<Option<String>> valueFuture = redisClient.get("bar", deserializer);
-              return Pair.of(writeFuture, valueFuture);
-            });
+  void testGetCommand() throws Exception {
+    SettableFuture<Future<Object>> writeFutureRef = SettableFuture.create();
+    ;
+    SettableFuture<Future<Option<String>>> valueFutureRef = SettableFuture.create();
 
-    await().atMost(java.time.Duration.ofSeconds(3)).until(() -> result.getLeft().isCompleted());
-    await().atMost(java.time.Duration.ofSeconds(3)).until(() -> result.getRight().isCompleted());
-    assertThat(result.getLeft().value().get().get()).isEqualTo(true);
-    assertThat(result.getRight().value().get().get().get()).isEqualTo("baz");
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          ByteStringSerializer<String> serializer = ByteStringSerializer$.MODULE$.String();
+          ByteStringDeserializer<String> deserializer = ByteStringDeserializer$.MODULE$.String();
+          writeFutureRef.set(
+              redisClient.set(
+                  "bar", "baz", Option.apply(null), Option.apply(null), false, false, serializer));
+          valueFutureRef.set(redisClient.get("bar", deserializer));
+        });
+
+    await().atMost(Duration.ofSeconds(3)).until(() -> writeFutureRef.get().isCompleted());
+    await().atMost(Duration.ofSeconds(3)).until(() -> valueFutureRef.get().isCompleted());
+    assertThat(writeFutureRef.get().value().get().get()).isEqualTo(true);
+    assertThat(valueFutureRef.get().value().get().get().get()).isEqualTo("baz");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -133,15 +131,13 @@ class RediscalaClientTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DB_OPERATION, "SET")),
+                            equalTo(DB_SYSTEM, REDIS), equalTo(DB_OPERATION, "SET")),
                 span ->
                     span.hasName("GET")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DB_OPERATION, "GET"))));
+                            equalTo(DB_SYSTEM, REDIS), equalTo(DB_OPERATION, "GET"))));
   }
 
   @Test
@@ -160,7 +156,7 @@ class RediscalaClientTest {
                     false,
                     false,
                     serializer));
-    await().atMost(java.time.Duration.ofSeconds(3)).until(value::isCompleted);
+    await().atMost(Duration.ofSeconds(3)).until(value::isCompleted);
     assertThat(value.value().get().get()).isEqualTo(true);
     testing.waitAndAssertTraces(
         trace ->
@@ -171,7 +167,6 @@ class RediscalaClientTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfying(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(DB_OPERATION, "SET"))));
+                            equalTo(DB_SYSTEM, REDIS), equalTo(DB_OPERATION, "SET"))));
   }
 }
