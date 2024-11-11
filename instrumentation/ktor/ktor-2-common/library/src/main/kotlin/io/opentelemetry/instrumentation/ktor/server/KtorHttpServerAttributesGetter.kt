@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ktor.v2_0.server
+package io.opentelemetry.instrumentation.ktor.server
 
 import io.ktor.server.plugins.*
 import io.ktor.server.request.*
@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.ktor.isIpAddress
 
 internal enum class KtorHttpServerAttributesGetter :
   HttpServerAttributesGetter<ApplicationRequest, ApplicationResponse> {
-  INSTANCE, ;
+  INSTANCE;
 
   override fun getHttpRequestMethod(request: ApplicationRequest): String {
     return request.httpMethod.value
