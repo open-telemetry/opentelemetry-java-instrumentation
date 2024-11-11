@@ -21,20 +21,38 @@ import javax.annotation.Nullable;
 @SuppressWarnings("deprecation") // using deprecated semconv
 public interface DbClientAttributesGetter<REQUEST> extends DbClientCommonAttributesGetter<REQUEST> {
 
+  /**
+   * @deprecated Use {@link #getDbQueryText(REQUEST)} instead.
+   */
+  @Deprecated
   @Nullable
-  String getDbSystem(REQUEST request);
-
-  @Nullable
-  String getDbNamespace(REQUEST request);
+  default String getStatement(REQUEST request) {
+    return getDbQueryText(request);
+  }
 
   // TODO (trask) add default implementation that returns null
   @Nullable
   String getDbQueryText(REQUEST request);
 
+  /**
+   * @deprecated Use {@link #getDbOperationName(REQUEST)} instead.
+   */
+  @Deprecated
+  @Nullable
+  default String getOperation(REQUEST request) {
+    return getDbOperationName(request);
+  }
+
   // TODO (trask) add default implementation that returns null
   //  after https://github.com/open-telemetry/semantic-conventions/pull/1566
   @Nullable
   String getDbOperationName(REQUEST request);
+
+  @Nullable
+  String getDbSystem(REQUEST request);
+
+  @Nullable
+  String getDbNamespace(REQUEST request);
 
   /**
    * @deprecated Use {@link #getDbSystem(Object)} instead.
@@ -46,12 +64,6 @@ public interface DbClientAttributesGetter<REQUEST> extends DbClientCommonAttribu
     return getDbSystem(request);
   }
 
-  @Deprecated
-  @Nullable
-  default String getUser(REQUEST request) {
-    return null;
-  }
-
   /**
    * @deprecated Use {@link #getDbNamespace(Object)} instead.
    */
@@ -59,29 +71,5 @@ public interface DbClientAttributesGetter<REQUEST> extends DbClientCommonAttribu
   @Nullable
   default String getName(REQUEST request) {
     return getDbNamespace(request);
-  }
-
-  @Deprecated
-  @Nullable
-  default String getConnectionString(REQUEST request) {
-    return null;
-  }
-
-  /**
-   * @deprecated Use {@link #getDbQueryText(REQUEST)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String getStatement(REQUEST request) {
-    return getDbQueryText(request);
-  }
-
-  /**
-   * @deprecated Use {@link #getDbOperationName(REQUEST)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String getOperation(REQUEST request) {
-    return getDbOperationName(request);
   }
 }
