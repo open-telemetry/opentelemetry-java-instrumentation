@@ -92,10 +92,10 @@ class RediscalaClientTest {
 
   @AfterAll
   static void tearDown() throws Exception {
+    redisServer.stop();
     if (system != null) {
       system.getClass().getMethod("terminate").invoke(system);
     }
-    redisServer.stop();
   }
 
   @Test
