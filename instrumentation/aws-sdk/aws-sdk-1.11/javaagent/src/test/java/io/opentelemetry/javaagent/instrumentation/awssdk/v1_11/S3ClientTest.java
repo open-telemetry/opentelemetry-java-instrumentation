@@ -42,7 +42,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-@SuppressWarnings("deprecation") // AmazonS3Client constructor is deprecated
 class S3ClientTest extends AbstractS3ClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -82,6 +81,7 @@ class S3ClientTest extends AbstractS3ClientTest {
 
   @ParameterizedTest
   @MethodSource("provideS3Arguments")
+  @SuppressWarnings("deprecation") // AmazonS3Client constructor is deprecated
   void testRequestHandlerIsHookedUpWithConstructor(boolean addHandler, int size) throws Exception {
     String accessKey = "asdf";
     String secretKey = "qwerty";
@@ -100,6 +100,7 @@ class S3ClientTest extends AbstractS3ClientTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // AmazonS3Client constructor is deprecated
   void testNaughtyRequestHandlerDoesntBreakTheTrace() {
     AmazonS3Client client = new AmazonS3Client(credentialsProvider);
     client.addRequestHandler(
