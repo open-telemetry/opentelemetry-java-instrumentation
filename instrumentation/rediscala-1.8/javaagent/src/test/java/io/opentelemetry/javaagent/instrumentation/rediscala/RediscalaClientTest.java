@@ -11,9 +11,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -35,12 +35,11 @@ class RediscalaClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
-
   private static GenericContainer<?> redisServer;
 
   @SuppressWarnings("deprecation") // DB_OPERATION is  deprecated
-  public static final AttributeKey<String> DB_OPERATION = DbIncubatingAttributes.DB_OPERATION;
+  private static final AttributeKey<String> DB_OPERATION =
+      SemconvStabilityUtil.maybeStable(DbIncubatingAttributes.DB_OPERATION);
 
   private static Object system;
   private static RedisClient redisClient;
