@@ -68,6 +68,7 @@ public interface DbClientAttributesGetter<REQUEST> extends DbClientCommonAttribu
    * @deprecated Use {@link #getDbNamespace(Object)} instead.
    */
   @Deprecated
+  @Override
   @Nullable
   default String getName(REQUEST request) {
     return getDbNamespace(request);
