@@ -30,7 +30,7 @@ import redis.RedisDispatcher;
 import scala.Option;
 import scala.concurrent.Future;
 
-public class RediscalaClientTest {
+class RediscalaClientTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -42,8 +42,6 @@ public class RediscalaClientTest {
   @SuppressWarnings("deprecation") // DB_OPERATION is  deprecated
   public static final AttributeKey<String> DB_OPERATION = DbIncubatingAttributes.DB_OPERATION;
 
-  private static String host;
-  private static int port;
   private static Object system;
   private static RedisClient redisClient;
 
@@ -51,10 +49,9 @@ public class RediscalaClientTest {
   static void setUp() throws Exception {
     redisServer = new GenericContainer<>("redis:6.2.3-alpine").withExposedPorts(6379);
     redisServer.start();
-    //    cleanup.deferCleanup(redisServer::stop);
 
-    host = redisServer.getHost();
-    port = redisServer.getMappedPort(6379);
+    String host = redisServer.getHost();
+    Integer port = redisServer.getMappedPort(6379);
 
     try {
       Class<?> clazz = Class.forName("akka.actor.ActorSystem");
@@ -98,6 +95,7 @@ public class RediscalaClientTest {
     if (system != null) {
       system.getClass().getMethod("terminate").invoke(system);
     }
+    redisServer.stop();
   }
 
   @Test
