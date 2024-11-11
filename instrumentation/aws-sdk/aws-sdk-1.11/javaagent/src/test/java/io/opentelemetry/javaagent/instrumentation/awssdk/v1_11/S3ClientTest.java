@@ -83,9 +83,7 @@ class S3ClientTest extends AbstractS3ClientTest {
   @MethodSource("provideS3Arguments")
   @SuppressWarnings("deprecation") // AmazonS3Client constructor is deprecated
   void testRequestHandlerIsHookedUpWithConstructor(boolean addHandler, int size) throws Exception {
-    String accessKey = "asdf";
-    String secretKey = "qwerty";
-    BasicAWSCredentials credentials = new BasicAWSCredentials(accessKey, secretKey);
+    BasicAWSCredentials credentials = new BasicAWSCredentials("asdf", "qwerty");
     AmazonS3Client client = new AmazonS3Client(credentials);
     if (addHandler) {
       client.addRequestHandler(new RequestHandler2() {});

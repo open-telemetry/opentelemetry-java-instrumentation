@@ -9,7 +9,6 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -159,42 +158,25 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName("S3.GetObject")
-                          .hasKind(CLIENT)
-                          .hasStatus(StatusData.error())
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(URL_FULL, server.httpUri().toString()),
-                              equalTo(HTTP_REQUEST_METHOD, "GET"),
-                              equalTo(SERVER_PORT, server.httpPort()),
-                              equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                              equalTo(RPC_SYSTEM, "aws-api"),
-                              equalTo(RPC_SERVICE, "Amazon S3"),
-                              equalTo(RPC_METHOD, "GetObject"),
-                              equalTo(stringKey("aws.endpoint"), server.httpUri().toString()),
-                              equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                              equalTo(stringKey("aws.bucket.name"), "someBucket"),
-                              satisfies(
-                                  ERROR_TYPE,
-                                  val ->
-                                      val.satisfiesAnyOf(
-                                          v ->
-                                              assertThat(v)
-                                                  .isEqualTo(SdkClientException.class.getName()),
-                                          v ->
-                                              assertThat(v)
-                                                  .isEqualTo(
-                                                      AmazonClientException.class.getName()))));
-
-                      try {
-                        span.hasException(
-                            new AmazonClientException("Unable to execute HTTP request"));
-                      } catch (AssertionError e) {
-                        span.hasException(
-                            new SdkClientException(
-                                "Unable to execute HTTP request: Request did not complete before the request timeout configuration."));
-                      }
-                    }));
+                    span ->
+                        span.hasName("S3.GetObject")
+                            .hasKind(CLIENT)
+                            .hasStatus(StatusData.error())
+                            .hasNoParent()
+                            .hasException(
+                                new SdkClientException(
+                                    "Unable to execute HTTP request: Request did not complete before the request timeout configuration."))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(URL_FULL, server.httpUri().toString()),
+                                equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                equalTo(SERVER_PORT, server.httpPort()),
+                                equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                                equalTo(RPC_SYSTEM, "aws-api"),
+                                equalTo(RPC_SERVICE, "Amazon S3"),
+                                equalTo(RPC_METHOD, "GetObject"),
+                                equalTo(stringKey("aws.endpoint"), server.httpUri().toString()),
+                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                                equalTo(stringKey("aws.bucket.name"), "someBucket"),
+                                equalTo(ERROR_TYPE, SdkClientException.class.getName()))));
   }
 }
