@@ -18,23 +18,40 @@ import javax.annotation.Nullable;
  * from the attribute methods, but implement as many as possible for best compliance with the
  * OpenTelemetry specification.
  */
-public interface DbClientAttributesGetter<REQUEST> {
+@SuppressWarnings("deprecation") // using deprecated semconv
+public interface DbClientAttributesGetter<REQUEST> extends DbClientCommonAttributesGetter<REQUEST> {
 
-  @Deprecated
   @Nullable
-  default String getSystem(REQUEST request) {
+  String getDbSystem(REQUEST request);
+
+  @Nullable
+  String getDbNamespace(REQUEST request);
+
+  @Nullable
+  default String getDbQueryText(REQUEST request) {
     return null;
   }
 
-  // TODO: make this required to implement
   @Nullable
-  default String getDbSystem(REQUEST request) {
-    return getSystem(request);
+  default String getDbOperationName(REQUEST request) {
+    return null;
+  }
+
+  /**
+   * @deprecated Use {@link #getDbSystem(Object)} instead.
+   */
+  @Deprecated
+  @Override
+  @Nullable
+  default String getSystem(REQUEST request) {
+    return getDbSystem(request);
   }
 
   @Deprecated
   @Nullable
-  String getUser(REQUEST request);
+  default String getUser(REQUEST request) {
+    return null;
+  }
 
   /**
    * @deprecated Use {@link #getDbNamespace(Object)} instead.
@@ -42,18 +59,14 @@ public interface DbClientAttributesGetter<REQUEST> {
   @Deprecated
   @Nullable
   default String getName(REQUEST request) {
-    return null;
-  }
-
-  // TODO: make this required to implement
-  @Nullable
-  default String getDbNamespace(REQUEST request) {
-    return getName(request);
+    return getDbNamespace(request);
   }
 
   @Deprecated
   @Nullable
-  String getConnectionString(REQUEST request);
+  default String getConnectionString(REQUEST request) {
+    return null;
+  }
 
   /**
    * @deprecated Use {@link #getDbQueryText(REQUEST)} instead.
@@ -61,13 +74,7 @@ public interface DbClientAttributesGetter<REQUEST> {
   @Deprecated
   @Nullable
   default String getStatement(REQUEST request) {
-    return null;
-  }
-
-  // TODO: make this required to implement
-  @Nullable
-  default String getDbQueryText(REQUEST request) {
-    return getStatement(request);
+    return getDbQueryText(request);
   }
 
   /**
@@ -76,12 +83,6 @@ public interface DbClientAttributesGetter<REQUEST> {
   @Deprecated
   @Nullable
   default String getOperation(REQUEST request) {
-    return null;
-  }
-
-  // TODO: make this required to implement
-  @Nullable
-  default String getDbOperationName(REQUEST request) {
-    return getOperation(request);
+    return getDbOperationName(request);
   }
 }
