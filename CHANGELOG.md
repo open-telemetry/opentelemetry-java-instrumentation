@@ -7,7 +7,7 @@
 - Spring Boot Starter Scheduling instrumentation scope name changed from
   `io.opentelemetry.spring-scheduling-3.1` to `io.opentelemetry.spring-boot-autoconfigure`
   to reflect the module's name.
-- Default flush timeout for aws lambda flush javaagent instrumentation changed from 1 second
+- Default flush timeout for aws lambda javaagent instrumentation changed from 1 second
   to 10 seconds to match the flush timeout used in the aws lambda library instrumentation.
   ([#12576](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12576))
 
