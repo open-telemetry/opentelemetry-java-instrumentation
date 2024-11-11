@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 
 public abstract class AbstractBaseAwsClientTest {
   protected abstract InstrumentationExtension testing();
@@ -49,16 +50,20 @@ public abstract class AbstractBaseAwsClientTest {
       new AWSStaticCredentialsProvider(new AnonymousAWSCredentials());
 
   @BeforeAll
-  public static void setUp() {
+  static void setUp() {
     System.setProperty(SDKGlobalConfiguration.ACCESS_KEY_SYSTEM_PROPERTY, "my-access-key");
     System.setProperty(SDKGlobalConfiguration.SECRET_KEY_SYSTEM_PROPERTY, "my-secret-key");
     server.start();
     endpoint = new AwsClientBuilder.EndpointConfiguration(server.httpUri().toString(), "us-west-2");
+  }
+
+  @BeforeEach
+  void reset() {
     server.beforeTestExecution(null);
   }
 
   @AfterAll
-  public static void cleanUp() {
+  static void cleanUp() {
     System.clearProperty(SDKGlobalConfiguration.ACCESS_KEY_SYSTEM_PROPERTY);
     System.clearProperty(SDKGlobalConfiguration.SECRET_KEY_SYSTEM_PROPERTY);
     server.stop();
