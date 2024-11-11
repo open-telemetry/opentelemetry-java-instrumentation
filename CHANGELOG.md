@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### 🌟 New javaagent instrumentation
+
+- Ktor 3 instrumentation
+  ([#12562](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12562))
+
+### 🌟 New library instrumentation
+
+- Ktor 3 instrumentation
+  ([#12562](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12562))
+
 ### Migration notes
 
 - Spring Boot Starter Scheduling instrumentation scope name changed from
