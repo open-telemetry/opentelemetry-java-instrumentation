@@ -27,15 +27,14 @@ public interface DbClientAttributesGetter<REQUEST> extends DbClientCommonAttribu
   @Nullable
   String getDbNamespace(REQUEST request);
 
+  // TODO (trask) add default implementation that returns null
   @Nullable
-  default String getDbQueryText(REQUEST request) {
-    return null;
-  }
+  String getDbQueryText(REQUEST request);
 
+  // TODO (trask) add default implementation that returns null
+  //  after https://github.com/open-telemetry/semantic-conventions/pull/1566
   @Nullable
-  default String getDbOperationName(REQUEST request) {
-    return null;
-  }
+  String getDbOperationName(REQUEST request);
 
   /**
    * @deprecated Use {@link #getDbSystem(Object)} instead.
