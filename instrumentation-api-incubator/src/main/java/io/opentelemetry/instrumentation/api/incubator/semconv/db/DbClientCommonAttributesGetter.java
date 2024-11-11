@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 import javax.annotation.Nullable;
 
 /** An interface for getting attributes common to database clients. */
-@Deprecated
+@Deprecated // to be removed in 3.0.0
 public interface DbClientCommonAttributesGetter<REQUEST> {
 
   @Nullable
