@@ -9,6 +9,15 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -103,19 +112,16 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                       .hasNoParent()
                       .hasAttributesSatisfyingExactly(
                           equalTo(
-                              MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                              MESSAGING_SYSTEM,
                               MessagingIncubatingAttributes.MessagingSystemIncubatingValues.KAFKA),
-                          equalTo(
-                              MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                              STREAM_PENDING),
-                          equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                          equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
+                          equalTo(MESSAGING_OPERATION, "publish"),
                           satisfies(MESSAGING_CLIENT_ID, k -> k.startsWith("producer")),
                           satisfies(
-                              MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
+                              MESSAGING_DESTINATION_PARTITION_ID,
                               k -> k.isInstanceOf(String.class)),
-                          equalTo(MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
-                          equalTo(
-                              MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY, "10")));
+                          equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
+                          equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10")));
           producerPendingRef.set(trace.getSpan(0));
         },
         trace -> {
@@ -126,21 +132,15 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                     new ArrayList<>(
                         asList(
                             equalTo(
-                                MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                MESSAGING_SYSTEM,
                                 MessagingIncubatingAttributes.MessagingSystemIncubatingValues
                                     .KAFKA),
-                            equalTo(
-                                MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                STREAM_PENDING),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "receive"),
+                            equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
+                            equalTo(MESSAGING_OPERATION, "receive"),
                             satisfies(MESSAGING_CLIENT_ID, k -> k.endsWith("consumer")),
-                            equalTo(
-                                MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 1)));
+                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
                 if (Boolean.getBoolean("testLatestDeps")) {
-                  assertions.add(
-                      equalTo(
-                          MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
-                          "test-application"));
+                  assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test-application"));
                 }
                 span.hasName(STREAM_PENDING + " receive")
                     .hasKind(SpanKind.CONSUMER)
@@ -153,33 +153,24 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                     new ArrayList<>(
                         asList(
                             equalTo(
-                                MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                MESSAGING_SYSTEM,
                                 MessagingIncubatingAttributes.MessagingSystemIncubatingValues
                                     .KAFKA),
-                            equalTo(
-                                MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                STREAM_PENDING),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
+                            equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
+                            equalTo(MESSAGING_OPERATION, "process"),
                             satisfies(MESSAGING_CLIENT_ID, k -> k.endsWith("consumer")),
+                            satisfies(MESSAGING_MESSAGE_BODY_SIZE, k -> k.isInstanceOf(Long.class)),
                             satisfies(
-                                MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
-                                k -> k.isInstanceOf(Long.class)),
-                            satisfies(
-                                MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
+                                MESSAGING_DESTINATION_PARTITION_ID,
                                 k -> k.isInstanceOf(String.class)),
-                            equalTo(
-                                MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
-                            equalTo(
-                                MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY, "10"),
+                            equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
+                            equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                             satisfies(
                                 longKey("kafka.record.queue_time_ms"),
                                 k -> k.isGreaterThanOrEqualTo(0)),
                             equalTo(stringKey("asdf"), "testing")));
                 if (Boolean.getBoolean("testLatestDeps")) {
-                  assertions.add(
-                      equalTo(
-                          MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
-                          "test-application"));
+                  assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test-application"));
                 }
                 span.hasName(STREAM_PENDING + " process")
                     .hasKind(SpanKind.CONSUMER)
@@ -196,18 +187,15 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                       .hasSpanId(receivedContext.getSpanId())
                       .hasAttributesSatisfyingExactly(
                           equalTo(
-                              MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                              MESSAGING_SYSTEM,
                               MessagingIncubatingAttributes.MessagingSystemIncubatingValues.KAFKA),
-                          equalTo(
-                              MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                              STREAM_PROCESSED),
-                          equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                          equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
+                          equalTo(MESSAGING_OPERATION, "publish"),
                           satisfies(MESSAGING_CLIENT_ID, k -> k.endsWith("producer")),
                           satisfies(
-                              MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
+                              MESSAGING_DESTINATION_PARTITION_ID,
                               k -> k.isInstanceOf(String.class)),
-                          equalTo(
-                              MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET, 0)));
+                          equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0)));
 
           producerProcessedRef.set(trace.getSpan(2));
         },
@@ -219,20 +207,15 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                       new ArrayList<>(
                           asList(
                               equalTo(
-                                  MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                  MESSAGING_SYSTEM,
                                   MessagingIncubatingAttributes.MessagingSystemIncubatingValues
                                       .KAFKA),
-                              equalTo(
-                                  MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                  STREAM_PROCESSED),
-                              equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "receive"),
+                              equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
+                              equalTo(MESSAGING_OPERATION, "receive"),
                               satisfies(MESSAGING_CLIENT_ID, k -> k.startsWith("consumer")),
-                              equalTo(
-                                  MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 1)));
+                              equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
                   if (Boolean.getBoolean("testLatestDeps")) {
-                    assertions.add(
-                        equalTo(
-                            MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
+                    assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
                   }
                   span.hasName(STREAM_PROCESSED + " receive")
                       .hasKind(SpanKind.CONSUMER)
@@ -245,32 +228,25 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                       new ArrayList<>(
                           asList(
                               equalTo(
-                                  MessagingIncubatingAttributes.MESSAGING_SYSTEM,
+                                  MESSAGING_SYSTEM,
                                   MessagingIncubatingAttributes.MessagingSystemIncubatingValues
                                       .KAFKA),
-                              equalTo(
-                                  MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                  STREAM_PROCESSED),
-                              equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
+                              equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
+                              equalTo(MESSAGING_OPERATION, "process"),
                               satisfies(MESSAGING_CLIENT_ID, k -> k.startsWith("consumer")),
                               satisfies(
-                                  MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
-                                  k -> k.isInstanceOf(Long.class)),
+                                  MESSAGING_MESSAGE_BODY_SIZE, k -> k.isInstanceOf(Long.class)),
                               satisfies(
-                                  MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
+                                  MESSAGING_DESTINATION_PARTITION_ID,
                                   k -> k.isInstanceOf(String.class)),
-                              equalTo(
-                                  MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
-                              equalTo(
-                                  MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY, "10"),
+                              equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
+                              equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
                               satisfies(
                                   longKey("kafka.record.queue_time_ms"),
                                   k -> k.isGreaterThanOrEqualTo(0)),
                               equalTo(longKey("testing"), 123)));
                   if (Boolean.getBoolean("testLatestDeps")) {
-                    assertions.add(
-                        equalTo(
-                            MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
+                    assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
                   }
                   span.hasName(STREAM_PROCESSED + " process")
                       .hasKind(SpanKind.CONSUMER)

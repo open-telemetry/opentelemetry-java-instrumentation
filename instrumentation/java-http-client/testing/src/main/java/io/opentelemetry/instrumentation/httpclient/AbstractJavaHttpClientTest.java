@@ -5,11 +5,12 @@
 
 package io.opentelemetry.instrumentation.httpclient;
 
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.NetworkAttributes;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -94,7 +95,7 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
           if ("http://localhost:61/".equals(uri.toString())
               || "https://192.0.2.1/".equals(uri.toString())
               || uri.toString().contains("/read-timeout")) {
-            attributes.remove(NetworkAttributes.NETWORK_PROTOCOL_VERSION);
+            attributes.remove(NETWORK_PROTOCOL_VERSION);
           }
           return attributes;
         });

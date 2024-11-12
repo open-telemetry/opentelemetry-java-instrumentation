@@ -44,12 +44,12 @@ dependencies {
 configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.guava:guava:19.0")
 
 tasks {
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 
   check {

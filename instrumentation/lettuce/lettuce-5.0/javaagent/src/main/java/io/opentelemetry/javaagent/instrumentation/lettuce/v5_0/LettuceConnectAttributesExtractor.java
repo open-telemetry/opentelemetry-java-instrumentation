@@ -26,7 +26,6 @@ final class LettuceConnectAttributesExtractor implements AttributesExtractor<Red
       if (SemconvStability.emitStableDatabaseSemconv()) {
         attributes.put(DbIncubatingAttributes.DB_NAMESPACE, String.valueOf(database));
       }
-
       if (SemconvStability.emitOldDatabaseSemconv()) {
         attributes.put(DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX, (long) database);
       }

@@ -16,6 +16,7 @@ import scala.concurrent.duration.Duration
 import spock.lang.Shared
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable
 
 class RediscalaClientTest extends AgentInstrumentationSpecification {
 
@@ -91,7 +92,7 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
           kind CLIENT
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "redis"
-            "$DbIncubatingAttributes.DB_OPERATION" "SET"
+            "${maybeStable(DbIncubatingAttributes.DB_OPERATION)}" "SET"
           }
         }
       }
@@ -126,7 +127,7 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "redis"
-            "$DbIncubatingAttributes.DB_OPERATION" "SET"
+            "${maybeStable(DbIncubatingAttributes.DB_OPERATION)}" "SET"
           }
         }
         span(2) {
@@ -135,7 +136,7 @@ class RediscalaClientTest extends AgentInstrumentationSpecification {
           childOf span(0)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "redis"
-            "$DbIncubatingAttributes.DB_OPERATION" "GET"
+            "${maybeStable(DbIncubatingAttributes.DB_OPERATION)}" "GET"
           }
         }
       }

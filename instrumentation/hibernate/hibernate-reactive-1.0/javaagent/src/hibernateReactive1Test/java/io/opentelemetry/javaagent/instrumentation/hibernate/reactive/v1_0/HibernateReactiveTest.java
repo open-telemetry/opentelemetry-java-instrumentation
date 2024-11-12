@@ -5,15 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.reactive.v1_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.vertx.core.Vertx;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
@@ -301,13 +307,13 @@ class HibernateReactiveTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_NAME, DB),
-                            equalTo(DbIncubatingAttributes.DB_USER, USER_DB),
+                            equalTo(maybeStable(DB_NAME), DB),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
                             equalTo(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                maybeStable(DB_STATEMENT),
                                 "select value0_.id as id1_0_0_, value0_.name as name2_0_0_ from Value value0_ where value0_.id=$1"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value"),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Value"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port)),
                 span ->

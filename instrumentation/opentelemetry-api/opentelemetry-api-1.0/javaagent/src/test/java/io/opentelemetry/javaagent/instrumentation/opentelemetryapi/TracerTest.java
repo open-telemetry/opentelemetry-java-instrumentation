@@ -13,6 +13,8 @@ import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.api.trace.StatusCode.ERROR;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -25,7 +27,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.ExceptionAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import org.junit.jupiter.api.DisplayName;
@@ -241,12 +242,8 @@ class TracerTest {
                                 event
                                     .hasName("exception")
                                     .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            ExceptionAttributes.EXCEPTION_TYPE,
-                                            "java.lang.IllegalStateException"),
-                                        equalTo(
-                                            ExceptionAttributes.EXCEPTION_STACKTRACE,
-                                            writer.toString()),
+                                        equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
+                                        equalTo(EXCEPTION_STACKTRACE, writer.toString()),
                                         equalTo(stringKey("dog"), "bark")))));
   }
 

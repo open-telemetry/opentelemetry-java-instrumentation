@@ -8,9 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.MessageConsumer;
@@ -57,12 +60,10 @@ class Jms1SuppressReceiveSpansTest extends AbstractJms1Test {
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "jms"),
-                            equalTo(
-                                MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                destinationName),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId),
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                            equalTo(MESSAGING_OPERATION, "publish"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span ->
                     span.hasName(destinationName + " receive")
@@ -70,12 +71,10 @@ class Jms1SuppressReceiveSpansTest extends AbstractJms1Test {
                         .hasParent(trace.getSpan(1))
                         .hasTotalRecordedLinks(0)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "jms"),
-                            equalTo(
-                                MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                destinationName),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "receive"),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId),
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                            equalTo(MESSAGING_OPERATION, "receive"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary))),
         trace ->
             trace.hasSpansSatisfyingExactly(span -> span.hasName("consumer parent").hasNoParent()));
