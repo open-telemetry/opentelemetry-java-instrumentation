@@ -5,10 +5,17 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
 final class RequestAccess {
@@ -20,6 +27,165 @@ final class RequestAccess {
           return new RequestAccess(type);
         }
       };
+
+  private static final ObjectMapper objectMapper = new ObjectMapper();
+
+  @Nullable
+  private static JsonNode parseTargetBody(ByteBuffer buffer) {
+    try {
+      byte[] bytes;
+      // Create duplicate to avoid mutating the original buffer position
+      ByteBuffer duplicate = buffer.duplicate();
+      if (buffer.hasArray()) {
+        bytes =
+            Arrays.copyOfRange(
+                duplicate.array(),
+                duplicate.arrayOffset(),
+                duplicate.arrayOffset() + duplicate.remaining());
+      } else {
+        bytes = new byte[buffer.remaining()];
+        buffer.get(bytes);
+      }
+      return objectMapper.readTree(bytes);
+    } catch (IOException e) {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static JsonNode getJsonBody(Object target) {
+    if (target == null) {
+      return null;
+    }
+
+    RequestAccess access = REQUEST_ACCESSORS.get(target.getClass());
+    ByteBuffer bodyBuffer = invokeOrNullGeneric(access.getBody, target, ByteBuffer.class);
+    if (bodyBuffer == null) {
+      return null;
+    }
+
+    return parseTargetBody(bodyBuffer);
+  }
+
+  @Nullable
+  private static String findFirstMatchingPath(JsonNode jsonBody, String... paths) {
+    if (jsonBody == null) {
+      return null;
+    }
+
+    return Stream.of(paths)
+        .map(
+            path -> {
+              JsonNode node = jsonBody.at(path);
+              if (node != null && !node.isMissingNode()) {
+                return node.asText();
+              }
+              return null;
+            })
+        .filter(Objects::nonNull)
+        .findFirst()
+        .orElse(null);
+  }
+
+  @Nullable
+  private static String approximateTokenCount(JsonNode jsonBody, String... textPaths) {
+    if (jsonBody == null) {
+      return null;
+    }
+
+    return Stream.of(textPaths)
+        .map(
+            path -> {
+              JsonNode node = jsonBody.at(path);
+              if (node != null && !node.isMissingNode()) {
+                int tokenEstimate = (int) Math.ceil(node.asText().length() / 6.0);
+                return Integer.toString(tokenEstimate);
+              }
+              return null;
+            })
+        .filter(Objects::nonNull)
+        .findFirst()
+        .orElse(null);
+  }
+
+  @Nullable
+  static String getMaxTokens(Object target) {
+    return findFirstMatchingPath(
+        getJsonBody(target), "/textGenerationConfig/maxTokenCount", "/max_tokens", "/max_gen_len");
+  }
+
+  @Nullable
+  static String getTemperature(Object target) {
+    return findFirstMatchingPath(
+        getJsonBody(target), "/textGenerationConfig/temperature", "/temperature");
+  }
+
+  @Nullable
+  static String getTopP(Object target) {
+    return findFirstMatchingPath(getJsonBody(target), "/textGenerationConfig/topP", "/top_p", "/p");
+  }
+
+  @Nullable
+  static String getInputTokens(Object target) {
+    JsonNode jsonBody = getJsonBody(target);
+    if (jsonBody == null) {
+      return null;
+    }
+
+    // Try direct tokens counts first
+    String directCount =
+        findFirstMatchingPath(
+            jsonBody,
+            "/inputTextTokenCount",
+            "/usage/input_tokens",
+            "/usage/prompt_tokens",
+            "/prompt_token_count");
+
+    if (directCount != null) {
+      return directCount;
+    }
+
+    // Fall back to token approximation
+    return approximateTokenCount(jsonBody, "/prompt", "/message");
+  }
+
+  @Nullable
+  static String getOutputTokens(Object target) {
+    JsonNode jsonBody = getJsonBody(target);
+    if (jsonBody == null) {
+      return null;
+    }
+
+    // Try direct token counts first
+    String directCount =
+        findFirstMatchingPath(
+            jsonBody,
+            "/results/0/tokenCount",
+            "/usage/output_tokens",
+            "/usage/completion_tokens",
+            "/generation_token_count");
+
+    if (directCount != null) {
+      return directCount;
+    }
+
+    return approximateTokenCount(jsonBody, "/outputs/0/text", "/text");
+  }
+
+  @Nullable
+  static String getFinishReasons(Object target) {
+    String finishReason =
+        findFirstMatchingPath(
+            getJsonBody(target),
+            "/results/0/completionReason",
+            "/stop_reason",
+            "/generations/0/finish_reason",
+            "/choices/0/finish_reason",
+            "/outputs/0/stop_reason",
+            "/finish_reason");
+
+    return finishReason != null ? "[" + finishReason + "]" : null;
+  }
 
   @Nullable
   static String getLambdaName(Object request) {
@@ -185,6 +351,19 @@ final class RequestAccess {
     }
   }
 
+  @Nullable
+  private static <T> T invokeOrNullGeneric(
+      @Nullable MethodHandle method, Object obj, Class<T> returnType) {
+    if (method == null) {
+      return null;
+    }
+    try {
+      return returnType.cast(method.invoke(obj));
+    } catch (Throwable e) {
+      return null;
+    }
+  }
+
   @Nullable private final MethodHandle getBucketName;
   @Nullable private final MethodHandle getQueueUrl;
   @Nullable private final MethodHandle getQueueName;
@@ -195,6 +374,7 @@ final class RequestAccess {
   @Nullable private final MethodHandle getDataSourceId;
   @Nullable private final MethodHandle getGuardrailId;
   @Nullable private final MethodHandle getModelId;
+  @Nullable private final MethodHandle getBody;
   @Nullable private final MethodHandle getStateMachineArn;
   @Nullable private final MethodHandle getStepFunctionsActivityArn;
   @Nullable private final MethodHandle getSnsTopicArn;
@@ -203,29 +383,31 @@ final class RequestAccess {
   @Nullable private final MethodHandle getLambdaResourceId;
 
   private RequestAccess(Class<?> clz) {
-    getBucketName = findAccessorOrNull(clz, "getBucketName");
-    getQueueUrl = findAccessorOrNull(clz, "getQueueUrl");
-    getQueueName = findAccessorOrNull(clz, "getQueueName");
-    getStreamName = findAccessorOrNull(clz, "getStreamName");
-    getTableName = findAccessorOrNull(clz, "getTableName");
-    getAgentId = findAccessorOrNull(clz, "getAgentId");
-    getKnowledgeBaseId = findAccessorOrNull(clz, "getKnowledgeBaseId");
-    getDataSourceId = findAccessorOrNull(clz, "getDataSourceId");
-    getGuardrailId = findAccessorOrNull(clz, "getGuardrailId");
-    getModelId = findAccessorOrNull(clz, "getModelId");
-    getStateMachineArn = findAccessorOrNull(clz, "getStateMachineArn");
-    getStepFunctionsActivityArn = findAccessorOrNull(clz, "getActivityArn");
-    getSnsTopicArn = findAccessorOrNull(clz, "getTopicArn");
-    getSecretArn = findAccessorOrNull(clz, "getARN");
-    getLambdaName = findAccessorOrNull(clz, "getFunctionName");
-    getLambdaResourceId = findAccessorOrNull(clz, "getUUID");
+    getBucketName = findAccessorOrNull(clz, "getBucketName", String.class);
+    getQueueUrl = findAccessorOrNull(clz, "getQueueUrl", String.class);
+    getQueueName = findAccessorOrNull(clz, "getQueueName", String.class);
+    getStreamName = findAccessorOrNull(clz, "getStreamName", String.class);
+    getTableName = findAccessorOrNull(clz, "getTableName", String.class);
+    getAgentId = findAccessorOrNull(clz, "getAgentId", String.class);
+    getKnowledgeBaseId = findAccessorOrNull(clz, "getKnowledgeBaseId", String.class);
+    getDataSourceId = findAccessorOrNull(clz, "getDataSourceId", String.class);
+    getGuardrailId = findAccessorOrNull(clz, "getGuardrailId", String.class);
+    getModelId = findAccessorOrNull(clz, "getModelId", String.class);
+    getBody = findAccessorOrNull(clz, "getBody", ByteBuffer.class);
+    getStateMachineArn = findAccessorOrNull(clz, "getStateMachineArn", String.class);
+    getStepFunctionsActivityArn = findAccessorOrNull(clz, "getActivityArn", String.class);
+    getSnsTopicArn = findAccessorOrNull(clz, "getTopicArn", String.class);
+    getSecretArn = findAccessorOrNull(clz, "getARN", String.class);
+    getLambdaName = findAccessorOrNull(clz, "getFunctionName", String.class);
+    getLambdaResourceId = findAccessorOrNull(clz, "getUUID", String.class);
   }
 
   @Nullable
-  private static MethodHandle findAccessorOrNull(Class<?> clz, String methodName) {
+  private static MethodHandle findAccessorOrNull(
+      Class<?> clz, String methodName, Class<?> returnType) {
     try {
       return MethodHandles.publicLookup()
-          .findVirtual(clz, methodName, MethodType.methodType(String.class));
+          .findVirtual(clz, methodName, MethodType.methodType(returnType));
     } catch (Throwable t) {
       return null;
     }
