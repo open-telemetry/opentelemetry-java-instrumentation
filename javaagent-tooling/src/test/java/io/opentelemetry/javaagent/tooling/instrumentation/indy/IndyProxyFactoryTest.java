@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.javaagent.bootstrap.IndyProxy;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.dummies.DummyAnnotation;
 import java.lang.invoke.CallSite;
 import java.lang.invoke.ConstantCallSite;
@@ -317,6 +318,28 @@ public class IndyProxyFactoryTest {
         .hasSize(2)
         .anySatisfy(method -> assertThat(method.getName()).isEqualTo("publicMethod"))
         .anySatisfy(method -> assertThat(method.getName()).isEqualTo("publicStaticMethod"));
+  }
+
+  @Test
+  void verifyUnwrap() throws Exception {
+    Class<?> proxy = generateProxy(WrappingTest.class);
+    Object proxyInstance = proxy.getConstructor().newInstance();
+    assertThat(proxyInstance)
+        .describedAs("proxies should implement IndyProxy")
+        .isNotInstanceOf(WrappingTest.class)
+        .isInstanceOf(IndyProxy.class);
+
+    WrappingTest unwrapped = IndyProxy.unwrapIfNeeded(proxyInstance, WrappingTest.class);
+    assertThat(unwrapped).isInstanceOf(WrappingTest.class).isNotInstanceOf(IndyProxy.class);
+
+    assertThat(IndyProxy.unwrapIfNeeded(unwrapped, WrappingTest.class))
+        .describedAs("unwrap an already unwrapped is a no-op")
+        .isSameAs(unwrapped);
+  }
+
+  public static class WrappingTest {
+
+    public WrappingTest() {}
   }
 
   private static Class<?> generateProxy(Class<?> clazz) {

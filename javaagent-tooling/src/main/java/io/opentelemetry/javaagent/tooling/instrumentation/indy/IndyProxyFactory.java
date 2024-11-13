@@ -5,12 +5,15 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
+import io.opentelemetry.javaagent.bootstrap.IndyProxy;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.List;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.method.ParameterDescription;
+import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
@@ -87,10 +90,12 @@ public class IndyProxyFactory {
   public DynamicType.Unloaded<?> generateProxy(
       TypeDescription classToProxy, String proxyClassName) {
     TypeDescription.Generic superClass = classToProxy.getSuperClass();
+    List<TypeDefinition> interfaces = new ArrayList<>(classToProxy.getInterfaces());
+    interfaces.add(TypeDescription.ForLoadedType.of(IndyProxy.class));
     DynamicType.Builder<?> builder =
         new ByteBuddy()
             .subclass(superClass, ConstructorStrategy.Default.NO_CONSTRUCTORS)
-            .implement(classToProxy.getInterfaces())
+            .implement(interfaces)
             .name(proxyClassName)
             .annotateType(classToProxy.getDeclaredAnnotations())
             // field must be public to enable resolving the proxy target using introspection
