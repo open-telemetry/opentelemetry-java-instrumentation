@@ -7,9 +7,11 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX;
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -80,10 +82,15 @@ abstract class AbstractLettuceClientTest {
     }
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> addExtraAttributes(AttributeAssertion... assertions) {
     List<AttributeAssertion> result = new ArrayList<>(Arrays.asList(assertions));
     if (Boolean.getBoolean("testLatestDeps")) {
-      result.add(equalTo(DB_NAMESPACE, "0"));
+      if (SemconvStability.emitStableDatabaseSemconv()) {
+        result.add(equalTo(DB_NAMESPACE, "0"));
+      } else {
+        result.add(equalTo(DB_REDIS_DATABASE_INDEX, 0));
+      }
     }
     return result;
   }
