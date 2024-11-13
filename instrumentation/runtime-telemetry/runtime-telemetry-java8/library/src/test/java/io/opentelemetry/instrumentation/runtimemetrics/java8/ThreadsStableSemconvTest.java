@@ -20,7 +20,6 @@ import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
-import org.junit.jupiter.api.condition.EnabledOnJre;
 import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -40,8 +39,7 @@ class ThreadsStableSemconvTest {
   @Mock private ThreadMXBean threadBean;
 
   @Test
-  @EnabledOnJre(JRE.JAVA_8)
-  void registerObservers_Java8() {
+  void registerObservers_Java8Jmx() {
     when(threadBean.getThreadCount()).thenReturn(7);
     when(threadBean.getDaemonThreadCount()).thenReturn(2);
 
@@ -73,6 +71,46 @@ class ThreadsStableSemconvTest {
                                                 .hasValue(5)
                                                 .hasAttributesSatisfying(
                                                     equalTo(JVM_THREAD_DAEMON, false))))));
+  }
+
+  @Test
+  @EnabledForJreRange(min = JRE.JAVA_9)
+  void registerObservers_Java8Thread() {
+    Thread threadInfo1 = mock(Thread.class, new ThreadInfoAnswer(false, Thread.State.RUNNABLE));
+    Thread threadInfo2 = mock(Thread.class, new ThreadInfoAnswer(true, Thread.State.WAITING));
+
+    Thread[] threads = new Thread[] {threadInfo1, threadInfo2};
+
+    Threads.INSTANCE
+        .registerObservers(testing.getOpenTelemetry(), () -> threads)
+        .forEach(cleanup::deferCleanup);
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.runtime-telemetry-java8",
+        "jvm.thread.count",
+        metrics ->
+            metrics.anySatisfy(
+                metricData ->
+                    assertThat(metricData)
+                        .hasInstrumentationScope(EXPECTED_SCOPE)
+                        .hasDescription("Number of executing platform threads.")
+                        .hasUnit("{thread}")
+                        .hasLongSumSatisfying(
+                            sum ->
+                                sum.isNotMonotonic()
+                                    .hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(1)
+                                                .hasAttributesSatisfying(
+                                                    equalTo(JVM_THREAD_DAEMON, false),
+                                                    equalTo(JVM_THREAD_STATE, "runnable")),
+                                        point ->
+                                            point
+                                                .hasValue(1)
+                                                .hasAttributesSatisfying(
+                                                    equalTo(JVM_THREAD_DAEMON, true),
+                                                    equalTo(JVM_THREAD_STATE, "waiting"))))));
   }
 
   @Test
@@ -135,7 +173,7 @@ class ThreadsStableSemconvTest {
       String methodName = invocation.getMethod().getName();
       if (methodName.equals("isDaemon")) {
         return isDaemon;
-      } else if (methodName.equals("getThreadState")) {
+      } else if (methodName.equals("getThreadState") || methodName.equals("getState")) {
         return state;
       }
       return null;
