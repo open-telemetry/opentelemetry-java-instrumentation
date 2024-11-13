@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.EnabledOnJre;
 import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -42,6 +43,7 @@ class ThreadsStableSemconvTest {
   @Mock private ThreadMXBean threadBean;
 
   @Test
+  @EnabledOnJre(JRE.JAVA_8)
   void registerObservers_Java8Jmx() {
     when(threadBean.getThreadCount()).thenReturn(7);
     when(threadBean.getDaemonThreadCount()).thenReturn(2);
@@ -77,7 +79,6 @@ class ThreadsStableSemconvTest {
   }
 
   @Test
-  @EnabledForJreRange(min = JRE.JAVA_9)
   void registerObservers_Java8Thread() {
     Thread threadInfo1 = mock(Thread.class, new ThreadInfoAnswer(false, Thread.State.RUNNABLE));
     Thread threadInfo2 = mock(Thread.class, new ThreadInfoAnswer(true, Thread.State.WAITING));
