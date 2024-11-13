@@ -18,6 +18,9 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledForJreRange;
 import org.junit.jupiter.api.condition.JRE;
@@ -156,6 +159,13 @@ class ThreadsStableSemconvTest {
                                                 .hasAttributesSatisfying(
                                                     equalTo(JVM_THREAD_DAEMON, true),
                                                     equalTo(JVM_THREAD_STATE, "waiting"))))));
+  }
+
+  @Test
+  void getThreads() {
+    Thread[] threads = Threads.getThreads();
+    Set<Thread> set = new HashSet<>(Arrays.asList(threads));
+    assertThat(set).contains(Thread.currentThread());
   }
 
   static final class ThreadInfoAnswer implements Answer<Object> {

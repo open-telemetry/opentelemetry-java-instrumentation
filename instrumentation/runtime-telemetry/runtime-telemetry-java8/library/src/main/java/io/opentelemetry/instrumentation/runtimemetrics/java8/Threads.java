@@ -19,7 +19,6 @@ import java.lang.invoke.MethodType;
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -58,7 +57,7 @@ public final class Threads {
 
   /** Register observers for java runtime class metrics. */
   public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
-    return INSTANCE.registerObservers(openTelemetry, !isJava9OrNewer() && GET_THREADS != null);
+    return INSTANCE.registerObservers(openTelemetry, !isJava9OrNewer());
   }
 
   private List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry, boolean useThread) {
@@ -100,7 +99,6 @@ public final class Threads {
   }
 
   @Nullable private static final MethodHandle THREAD_INFO_IS_DAEMON;
-  @Nullable private static final Method GET_THREADS;
 
   static {
     MethodHandle isDaemon;
@@ -112,17 +110,6 @@ public final class Threads {
       isDaemon = null;
     }
     THREAD_INFO_IS_DAEMON = isDaemon;
-    Method getThreads = null;
-    // only on jdk8
-    if (THREAD_INFO_IS_DAEMON == null) {
-      try {
-        getThreads = Thread.class.getDeclaredMethod("getThreads");
-        getThreads.setAccessible(true);
-      } catch (Exception e) {
-        getThreads = null;
-      }
-    }
-    GET_THREADS = getThreads;
   }
 
   private static boolean isJava9OrNewer() {
@@ -153,12 +140,22 @@ public final class Threads {
     };
   }
 
-  private static Thread[] getThreads() {
-    try {
-      return requireNonNull((Thread[]) GET_THREADS.invoke(null));
-    } catch (Exception e) {
-      throw new IllegalStateException("Unexpected error happened during Thread#getThreads()", e);
+  // Visible for testing
+  static Thread[] getThreads() {
+    ThreadGroup threadGroup = Thread.currentThread().getThreadGroup();
+    while (threadGroup.getParent() != null) {
+      threadGroup = threadGroup.getParent();
     }
+    // use a slightly larger array in case new threads are created
+    int count = threadGroup.activeCount() + 10;
+    Thread[] threads = new Thread[count];
+    int resultSize = threadGroup.enumerate(threads);
+    if (resultSize == threads.length) {
+      return threads;
+    }
+    Thread[] result = new Thread[resultSize];
+    System.arraycopy(threads, 0, result, 0, resultSize);
+    return result;
   }
 
   private static Consumer<ObservableLongMeasurement> java9AndNewerCallback(
