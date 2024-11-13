@@ -19,6 +19,7 @@ public interface IndyProxy {
   default Object unwrap() {
     try {
       // current implementation based on introspection + public delegate field
+      // TODO: replace this implementation with proper implementation on the proxy class
       Field delegate = this.getClass().getField("delegate");
       return delegate.get(this);
     } catch (NoSuchFieldException | IllegalAccessException e) {
