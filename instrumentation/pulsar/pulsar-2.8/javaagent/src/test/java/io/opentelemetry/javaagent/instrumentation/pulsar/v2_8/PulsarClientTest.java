@@ -678,19 +678,15 @@ class PulsarClientTest extends AbstractPulsarClientTest {
     String topic = "persistent://public/default/testSendMessageWithTxn";
     admin.topics().createNonPartitionedTopic(topic);
     producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
-    Transaction txn = client.newTransaction()
-        .withTransactionTimeout(5, TimeUnit.SECONDS).build().get();
+    Transaction txn =
+        client.newTransaction().withTransactionTimeout(5, TimeUnit.SECONDS).build().get();
 
-    testing.runWithSpan("parent1",
-        () -> producer.newMessage(txn).value("test1").send());
+    testing.runWithSpan("parent1", () -> producer.newMessage(txn).value("test1").send());
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent1")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent(),
+                span -> span.hasName("parent1").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
                     span.hasName("Txn Produce Register Topic")
                         .hasKind(SpanKind.PRODUCER)
@@ -698,7 +694,6 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                 span ->
                     span.hasName(topic + " publish")
                         .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(1))
-            ));
+                        .hasParent(trace.getSpan(1))));
   }
 }

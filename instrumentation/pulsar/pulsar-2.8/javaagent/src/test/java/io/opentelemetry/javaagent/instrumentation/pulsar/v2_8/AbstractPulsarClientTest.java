@@ -94,8 +94,11 @@ abstract class AbstractPulsarClientTest {
 
     brokerHost = pulsar.getHost();
     brokerPort = pulsar.getMappedPort(6650);
-    client = PulsarClient.builder().serviceUrl(pulsar.getPulsarBrokerUrl())
-        .enableTransaction(true).build();
+    client =
+        PulsarClient.builder()
+            .serviceUrl(pulsar.getPulsarBrokerUrl())
+            .enableTransaction(true)
+            .build();
     admin = PulsarAdmin.builder().serviceHttpUrl(pulsar.getHttpServiceUrl()).build();
   }
 

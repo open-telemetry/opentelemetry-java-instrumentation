@@ -156,13 +156,12 @@ public final class PulsarSingletons {
   private static Instrumenter<String, Void> createTxnProduceInstrumenter() {
     InstrumenterBuilder<String, Void> instrumenterBuilder =
         Instrumenter.builder(
-            TELEMETRY,
-            INSTRUMENTATION_NAME, request -> "Txn Produce Register Topic");
+            TELEMETRY, INSTRUMENTATION_NAME, request -> "Txn Produce Register Topic");
     return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysProducer());
   }
 
-  public static Context startAndEndTxnProduceRegister(Context parent, Timer timer,
-      Throwable throwable) {
+  public static Context startAndEndTxnProduceRegister(
+      Context parent, Timer timer, Throwable throwable) {
     if (!TXN_PRODUCE_INSTRUMENTER.shouldStart(parent, "")) {
       return null;
     }
@@ -232,18 +231,19 @@ public final class PulsarSingletons {
   public static CompletableFuture<Void> wrap(CompletableFuture<Void> future, Timer timer) {
     Context parent = Context.current();
     CompletableFuture<Void> result = new CompletableFuture<>();
-    future.whenComplete((unused, t) -> {
-      Context context = startAndEndTxnProduceRegister(parent, timer, t);
-      runWithContext(
-          context,
-          () -> {
-            if (t != null) {
-              result.completeExceptionally(t);
-            } else {
-              result.complete(null);
-            }
-          });
-    });
+    future.whenComplete(
+        (unused, t) -> {
+          Context context = startAndEndTxnProduceRegister(parent, timer, t);
+          runWithContext(
+              context,
+              () -> {
+                if (t != null) {
+                  result.completeExceptionally(t);
+                } else {
+                  result.complete(null);
+                }
+              });
+        });
 
     return result;
   }

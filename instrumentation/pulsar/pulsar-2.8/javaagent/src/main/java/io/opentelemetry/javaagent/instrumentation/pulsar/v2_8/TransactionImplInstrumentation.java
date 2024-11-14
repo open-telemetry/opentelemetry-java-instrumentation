@@ -1,4 +1,14 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
+
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -9,11 +19,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-import static net.bytebuddy.matcher.ElementMatchers.isPublic;
-import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
-
 public class TransactionImplInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -22,10 +27,11 @@ public class TransactionImplInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(named("registerProducedTopic")
-        .and(isPublic())
-        .and(takesArguments(1))
-        .and(takesArgument(0, named("java.lang.String"))),
+    transformer.applyAdviceToMethod(
+        named("registerProducedTopic")
+            .and(isPublic())
+            .and(takesArguments(1))
+            .and(takesArgument(0, named("java.lang.String"))),
         TransactionImplInstrumentation.class.getName() + "$RegisterProducedTopicAdvice");
   }
 
@@ -38,7 +44,8 @@ public class TransactionImplInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void after(@Advice.Enter Timer timer,
+    public static void after(
+        @Advice.Enter Timer timer,
         @Advice.Return(readOnly = false) CompletableFuture<Void> future) {
       future = PulsarSingletons.wrap(future, timer);
     }
