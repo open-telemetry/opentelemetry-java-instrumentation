@@ -66,7 +66,6 @@ public final class ReflectionHelper {
         || !VirtualFieldInstalledMarker.class.isAssignableFrom(containingClass)
         || !IndyProxy.class.isAssignableFrom(containingClass)) {
       // nothing to filter when class does not have any added virtual fields
-      System.out.println("no interface to filter" + containingClass);
       return interfaces;
     }
     List<Class<?>> result = new ArrayList<>(interfaces.length);
