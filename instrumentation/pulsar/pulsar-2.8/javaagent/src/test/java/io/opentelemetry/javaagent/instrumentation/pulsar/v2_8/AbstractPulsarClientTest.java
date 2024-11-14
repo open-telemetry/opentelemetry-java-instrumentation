@@ -88,6 +88,8 @@ abstract class AbstractPulsarClientTest {
     pulsar =
         new PulsarContainer(DEFAULT_IMAGE_NAME)
             .withEnv("PULSAR_MEM", "-Xmx128m")
+            .withEnv("PULSAR_PREFIX_transactionCoordinatorEnabled", "true")
+            .withEnv("PULSAR_PREFIX_transactionMetadataStoreProviderClassName", "org.apache.pulsar.transaction.coordinator.impl.InMemTransactionMetadataStoreProvider")
             .withLogConsumer(new Slf4jLogConsumer(logger))
             .withStartupTimeout(Duration.ofMinutes(2));
     pulsar.start();
