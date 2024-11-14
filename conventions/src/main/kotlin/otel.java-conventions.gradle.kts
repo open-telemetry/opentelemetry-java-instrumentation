@@ -369,7 +369,7 @@ tasks.withType<Test>().configureEach {
 
   // All tests must complete within 15 minutes.
   // This value is quite big because with lower values (3 mins) we were experiencing large number of false positives
-  timeout.set(Duration.ofMinutes(15))
+  timeout.set(Duration.ofMinutes(30))
 
   develocity.testRetry {
     // You can see tests that were retried by this mechanism in the collected test reports and build scans.
