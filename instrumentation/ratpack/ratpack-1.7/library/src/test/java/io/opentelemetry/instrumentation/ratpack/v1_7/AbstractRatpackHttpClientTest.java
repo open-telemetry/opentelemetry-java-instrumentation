@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.ratpack.v1_7;
 
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+
 import com.google.common.collect.ImmutableList;
 import io.netty.channel.ConnectTimeoutException;
 import io.opentelemetry.api.common.AttributeKey;
@@ -12,7 +14,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.NetworkAttributes;
 import java.net.URI;
 import java.time.Duration;
 import java.util.HashSet;
@@ -152,11 +153,13 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
     optionsBuilder.disableTestReusedRequest();
 
     optionsBuilder.setHttpAttributes(this::getHttpAttributes);
+
+    optionsBuilder.spanEndsAfterBody();
   }
 
   protected Set<AttributeKey<?>> getHttpAttributes(URI uri) {
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-    attributes.remove(NetworkAttributes.NETWORK_PROTOCOL_VERSION);
+    attributes.remove(NETWORK_PROTOCOL_VERSION);
     return attributes;
   }
 }

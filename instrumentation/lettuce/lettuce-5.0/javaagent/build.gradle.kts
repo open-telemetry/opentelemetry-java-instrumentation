@@ -22,9 +22,19 @@ dependencies {
   latestDepTestLibrary("io.lettuce:lettuce-core:5.0.+") // see lettuce-5.1 module
 }
 
-tasks.withType<Test>().configureEach {
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.lettuce.experimental-span-attributes=true")
-  jvmArgs("-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true")
-  usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+tasks {
+  withType<Test>().configureEach {
+    // TODO run tests both with and without experimental span attributes
+    jvmArgs("-Dotel.instrumentation.lettuce.experimental-span-attributes=true")
+    jvmArgs("-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true")
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
 }

@@ -530,10 +530,12 @@ public enum JdbcConnectionUrlParser {
   },
 
   ORACLE_AT() {
+    private final Pattern descriptionPattern = Pattern.compile("@\\s*\\(\\s*description");
+
     @Override
     @CanIgnoreReturnValue
     DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
-      if (jdbcUrl.contains("@(description")) {
+      if (descriptionPattern.matcher(jdbcUrl).find()) {
         return ORACLE_AT_DESCRIPTION.doParse(jdbcUrl, builder);
       }
       String user;
@@ -565,7 +567,7 @@ public enum JdbcConnectionUrlParser {
 
   /**
    * This parser can locate incorrect data if multiple addresses are defined but not everything is
-   * defined in the first block. (It would locate data from subsequent address blocks.
+   * defined in the first block. It would locate data from subsequent address blocks.
    */
   ORACLE_AT_DESCRIPTION() {
     private final Pattern hostPattern = Pattern.compile("\\(\\s*host\\s*=\\s*([^ )]+)\\s*\\)");
@@ -752,7 +754,12 @@ public enum JdbcConnectionUrlParser {
         builder.subtype("directory").host(null).port(null);
         String urlInstance = details.substring("directory:".length());
         if (!urlInstance.isEmpty()) {
-          instance = urlInstance;
+          int dbNameStartLocation = urlInstance.lastIndexOf('/');
+          if (dbNameStartLocation != -1) {
+            instance = urlInstance.substring(dbNameStartLocation + 1);
+          } else {
+            instance = urlInstance;
+          }
         }
       } else if (details.startsWith("classpath:")) {
         builder.subtype("classpath").host(null).port(null);

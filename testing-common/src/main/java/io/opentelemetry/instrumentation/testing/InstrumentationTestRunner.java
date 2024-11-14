@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -15,7 +15,6 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -182,9 +181,7 @@ public abstract class InstrumentationTestRunner {
               Collection<MetricData> metrics = instrumentationMetrics(instrumentationName);
               assertThat(metrics).isNotEmpty();
               for (Consumer<MetricAssert> assertion : assertions) {
-                assertThat(metrics)
-                    .anySatisfy(
-                        metric -> assertion.accept(OpenTelemetryAssertions.assertThat(metric)));
+                assertThat(metrics).anySatisfy(metric -> assertion.accept(assertThat(metric)));
               }
             });
   }

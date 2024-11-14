@@ -17,9 +17,10 @@ import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
-import javax.management.MBeanServer;
+import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 
 /** A class responsible for maintaining the set of metrics to collect and report. */
@@ -36,18 +37,19 @@ class MetricRegistrar {
   /**
    * Accepts a MetricExtractor for registration and activation.
    *
-   * @param server the MBeanServer to use to query for metric values
-   * @param objectNames the Objectnames that are known to the server and that know the attribute
-   *     that is required to get the metric values
-   * @param extractor the MetricExtractor responsible for getting the metric values
+   * @param connection the {@link MBeanServerConnection} to use to query for metric values
+   * @param objectNames the {@link ObjectName} that are known to the server and that know the
+   *     attribute that is required to get the metric values
+   * @param extractor the {@link MetricExtractor} responsible for getting the metric values
+   * @param attributeInfo the {@link AttributeInfo}
    */
   void enrollExtractor(
-      MBeanServer server,
+      MBeanServerConnection connection,
       Collection<ObjectName> objectNames,
       MetricExtractor extractor,
       AttributeInfo attributeInfo) {
     // For the first enrollment of the extractor we have to build the corresponding Instrument
-    DetectionStatus status = new DetectionStatus(server, objectNames);
+    DetectionStatus status = new DetectionStatus(connection, objectNames);
     boolean firstEnrollment;
     synchronized (extractor) {
       firstEnrollment = extractor.getStatus() == null;
@@ -55,79 +57,76 @@ class MetricRegistrar {
       extractor.setStatus(status);
     }
 
-    if (firstEnrollment) {
-      MetricInfo metricInfo = extractor.getInfo();
-      String metricName = metricInfo.getMetricName();
-      MetricInfo.Type instrumentType = metricInfo.getType();
-      String description =
-          metricInfo.getDescription() != null
-              ? metricInfo.getDescription()
-              : attributeInfo.getDescription();
-      String unit = metricInfo.getUnit();
+    if (!firstEnrollment) {
+      return;
+    }
 
-      switch (instrumentType) {
-          // CHECKSTYLE:OFF
-        case COUNTER:
-          {
-            // CHECKSTYLE:ON
-            LongCounterBuilder builder = meter.counterBuilder(metricName);
-            if (description != null) {
-              builder = builder.setDescription(description);
-            }
-            if (unit != null) {
-              builder = builder.setUnit(unit);
-            }
+    MetricInfo metricInfo = extractor.getInfo();
+    String metricName = metricInfo.getMetricName();
+    MetricInfo.Type instrumentType = metricInfo.getType();
+    String description =
+        metricInfo.getDescription() != null
+            ? metricInfo.getDescription()
+            : attributeInfo.getDescription();
+    String unit = metricInfo.getUnit();
 
-            if (attributeInfo.usesDoubleValues()) {
-              builder.ofDoubles().buildWithCallback(doubleTypeCallback(extractor));
-            } else {
-              builder.buildWithCallback(longTypeCallback(extractor));
-            }
-            logger.log(INFO, "Created Counter for {0}", metricName);
+    switch (instrumentType) {
+        // CHECKSTYLE:OFF
+      case COUNTER:
+        {
+          // CHECKSTYLE:ON
+          LongCounterBuilder builder = meter.counterBuilder(metricName);
+          Optional.ofNullable(description).ifPresent(builder::setDescription);
+          Optional.ofNullable(unit).ifPresent(builder::setUnit);
+
+          if (attributeInfo.usesDoubleValues()) {
+            builder.ofDoubles().buildWithCallback(doubleTypeCallback(extractor));
+          } else {
+            builder.buildWithCallback(longTypeCallback(extractor));
           }
-          break;
+          logger.log(INFO, "Created Counter for {0}", metricName);
+        }
+        break;
 
-          // CHECKSTYLE:OFF
-        case UPDOWNCOUNTER:
-          {
-            // CHECKSTYLE:ON
-            LongUpDownCounterBuilder builder = meter.upDownCounterBuilder(metricName);
-            if (description != null) {
-              builder = builder.setDescription(description);
-            }
-            if (unit != null) {
-              builder = builder.setUnit(unit);
-            }
+        // CHECKSTYLE:OFF
+      case UPDOWNCOUNTER:
+        {
+          // CHECKSTYLE:ON
+          LongUpDownCounterBuilder builder = meter.upDownCounterBuilder(metricName);
+          Optional.ofNullable(description).ifPresent(builder::setDescription);
+          Optional.ofNullable(unit).ifPresent(builder::setUnit);
 
-            if (attributeInfo.usesDoubleValues()) {
-              builder.ofDoubles().buildWithCallback(doubleTypeCallback(extractor));
-            } else {
-              builder.buildWithCallback(longTypeCallback(extractor));
-            }
-            logger.log(INFO, "Created UpDownCounter for {0}", metricName);
+          if (attributeInfo.usesDoubleValues()) {
+            builder.ofDoubles().buildWithCallback(doubleTypeCallback(extractor));
+          } else {
+            builder.buildWithCallback(longTypeCallback(extractor));
           }
-          break;
+          logger.log(INFO, "Created UpDownCounter for {0}", metricName);
+        }
+        break;
 
-          // CHECKSTYLE:OFF
-        case GAUGE:
-          {
-            // CHECKSTYLE:ON
-            DoubleGaugeBuilder builder = meter.gaugeBuilder(metricName);
-            if (description != null) {
-              builder = builder.setDescription(description);
-            }
-            if (unit != null) {
-              builder = builder.setUnit(unit);
-            }
+        // CHECKSTYLE:OFF
+      case GAUGE:
+        {
+          // CHECKSTYLE:ON
+          DoubleGaugeBuilder builder = meter.gaugeBuilder(metricName);
+          Optional.ofNullable(description).ifPresent(builder::setDescription);
+          Optional.ofNullable(unit).ifPresent(builder::setUnit);
 
-            if (attributeInfo.usesDoubleValues()) {
-              builder.buildWithCallback(doubleTypeCallback(extractor));
-            } else {
-              builder.ofLongs().buildWithCallback(longTypeCallback(extractor));
-            }
-            logger.log(INFO, "Created Gauge for {0}", metricName);
+          if (attributeInfo.usesDoubleValues()) {
+            builder.buildWithCallback(doubleTypeCallback(extractor));
+          } else {
+            builder.ofLongs().buildWithCallback(longTypeCallback(extractor));
           }
-      }
+          logger.log(INFO, "Created Gauge for {0}", metricName);
+        }
+        break;
+        // CHECKSTYLE:OFF
+      case STATE:
+        {
+          // CHECKSTYLE:ON
+          throw new IllegalStateException("state metrics should not be registered");
+        }
     }
   }
 
@@ -139,13 +138,13 @@ class MetricRegistrar {
     return measurement -> {
       DetectionStatus status = extractor.getStatus();
       if (status != null) {
-        MBeanServer server = status.getServer();
+        MBeanServerConnection connection = status.getConnection();
         for (ObjectName objectName : status.getObjectNames()) {
           Number metricValue =
-              extractor.getMetricValueExtractor().extractNumericalAttribute(server, objectName);
+              extractor.getMetricValueExtractor().extractNumericalAttribute(connection, objectName);
           if (metricValue != null) {
             // get the metric attributes
-            Attributes attr = createMetricAttributes(server, objectName, extractor);
+            Attributes attr = createMetricAttributes(connection, objectName, extractor);
             measurement.record(metricValue.doubleValue(), attr);
           }
         }
@@ -161,13 +160,13 @@ class MetricRegistrar {
     return measurement -> {
       DetectionStatus status = extractor.getStatus();
       if (status != null) {
-        MBeanServer server = status.getServer();
+        MBeanServerConnection connection = status.getConnection();
         for (ObjectName objectName : status.getObjectNames()) {
           Number metricValue =
-              extractor.getMetricValueExtractor().extractNumericalAttribute(server, objectName);
+              extractor.getMetricValueExtractor().extractNumericalAttribute(connection, objectName);
           if (metricValue != null) {
             // get the metric attributes
-            Attributes attr = createMetricAttributes(server, objectName, extractor);
+            Attributes attr = createMetricAttributes(connection, objectName, extractor);
             measurement.record(metricValue.longValue(), attr);
           }
         }
@@ -180,11 +179,10 @@ class MetricRegistrar {
    * the metric values
    */
   static Attributes createMetricAttributes(
-      MBeanServer server, ObjectName objectName, MetricExtractor extractor) {
-    MetricAttribute[] metricAttributes = extractor.getAttributes();
+      MBeanServerConnection connection, ObjectName objectName, MetricExtractor extractor) {
     AttributesBuilder attrBuilder = Attributes.builder();
-    for (MetricAttribute metricAttribute : metricAttributes) {
-      String attributeValue = metricAttribute.acquireAttributeValue(server, objectName);
+    for (MetricAttribute metricAttribute : extractor.getAttributes()) {
+      String attributeValue = metricAttribute.acquireAttributeValue(connection, objectName);
       if (attributeValue != null) {
         attrBuilder = attrBuilder.put(metricAttribute.getAttributeName(), attributeValue);
       }

@@ -5,17 +5,24 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.AwsIncubatingAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
@@ -29,6 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -58,6 +66,7 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
     server.start();
   }
 
+  @AfterAll
   public static void cleanup() {
     server.stop();
   }
@@ -117,6 +126,7 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
         "otel.instrumentation.aws-sdk.experimental-record-individual-http-error", false);
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   public void testSendDynamoDbRequestWithRetries() {
     cleanResponses();
@@ -156,50 +166,48 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
 
     getTesting()
         .waitAndAssertTraces(
-            trace -> {
-              trace.hasSpansSatisfyingExactly(
-                  span -> {
-                    span.hasKind(SpanKind.CLIENT);
-                    span.hasNoParent();
-                    span.hasAttributesSatisfying(
-                        attributes -> {
-                          assertThat(attributes)
-                              .containsEntry(ServerAttributes.SERVER_ADDRESS, "127.0.0.1")
-                              .containsEntry(ServerAttributes.SERVER_PORT, server.httpPort())
-                              .containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, method)
-                              .containsEntry(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
-                              .containsEntry(RpcIncubatingAttributes.RPC_SYSTEM, "aws-api")
-                              .containsEntry(RpcIncubatingAttributes.RPC_SERVICE, service)
-                              .containsEntry(RpcIncubatingAttributes.RPC_METHOD, operation)
-                              .containsEntry("aws.agent", "java-aws-sdk")
-                              .containsEntry("aws.requestId", requestId)
-                              .containsEntry("aws.table.name", "sometable")
-                              .containsEntry(DbIncubatingAttributes.DB_SYSTEM, "dynamodb")
-                              .containsEntry(DbIncubatingAttributes.DB_OPERATION, operation);
-                        });
-                    if (isRecordIndividualHttpErrorEnabled()) {
-                      span.hasEventsSatisfyingExactly(
-                          event ->
-                              event
-                                  .hasName("HTTP request failure")
-                                  .hasAttributesSatisfyingExactly(
-                                      equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 500),
-                                      equalTo(
-                                          AttributeKey.stringKey("aws.http.error_message"),
-                                          "DynamoDB could not process your request")),
-                          event ->
-                              event
-                                  .hasName("HTTP request failure")
-                                  .hasAttributesSatisfyingExactly(
-                                      equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 503),
-                                      equalTo(
-                                          AttributeKey.stringKey("aws.http.error_message"),
-                                          "DynamoDB is currently unavailable")));
-                    } else {
-                      span.hasEventsSatisfying(events -> assertThat(events.size()).isEqualTo(0));
-                    }
-                  });
-            });
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> {
+                      span.hasKind(SpanKind.CLIENT);
+                      span.hasNoParent();
+                      span.hasAttributesSatisfyingExactly(
+                          equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                          equalTo(SERVER_PORT, server.httpPort()),
+                          equalTo(HTTP_REQUEST_METHOD, method),
+                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                          equalTo(
+                              stringKey("url.full"), "http://127.0.0.1:" + server.httpPort() + "/"),
+                          equalTo(RPC_SYSTEM, "aws-api"),
+                          equalTo(RPC_SERVICE, service),
+                          equalTo(RPC_METHOD, operation),
+                          equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                          equalTo(AwsIncubatingAttributes.AWS_REQUEST_ID, requestId),
+                          equalTo(stringKey("aws.table.name"), "sometable"),
+                          equalTo(DB_SYSTEM, "dynamodb"),
+                          equalTo(maybeStable(DB_OPERATION), operation));
+                      if (isRecordIndividualHttpErrorEnabled()) {
+                        span.hasEventsSatisfyingExactly(
+                            event ->
+                                event
+                                    .hasName("HTTP request failure")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(HTTP_RESPONSE_STATUS_CODE, 500),
+                                        equalTo(
+                                            stringKey("aws.http.error_message"),
+                                            "DynamoDB could not process your request")),
+                            event ->
+                                event
+                                    .hasName("HTTP request failure")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(HTTP_RESPONSE_STATUS_CODE, 503),
+                                        equalTo(
+                                            stringKey("aws.http.error_message"),
+                                            "DynamoDB is currently unavailable")));
+                      } else {
+                        span.hasEventsSatisfying(events -> assertThat(events.size()).isEqualTo(0));
+                      }
+                    }));
 
     // make sure the response body input stream is still available and check its content to be
     // expected

@@ -25,7 +25,7 @@ import org.bson.json.JsonWriterSettings;
 
 class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStartedEvent> {
 
-  // copied from DbIncubatingAttributes.DbSystemValues
+  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
   private static final String MONGODB = "mongodb";
 
   @Nullable private static final Method IS_TRUNCATED_METHOD;
@@ -50,10 +50,11 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   }
 
   @Override
-  public String getSystem(CommandStartedEvent event) {
+  public String getDbSystem(CommandStartedEvent event) {
     return MONGODB;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(CommandStartedEvent event) {
@@ -62,10 +63,11 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
 
   @Override
   @Nullable
-  public String getName(CommandStartedEvent event) {
+  public String getDbNamespace(CommandStartedEvent event) {
     return event.getDatabaseName();
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(CommandStartedEvent event) {
@@ -85,13 +87,13 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   }
 
   @Override
-  public String getStatement(CommandStartedEvent event) {
+  public String getDbQueryText(CommandStartedEvent event) {
     return sanitizeStatement(event.getCommand());
   }
 
   @Override
   @Nullable
-  public String getOperation(CommandStartedEvent event) {
+  public String getDbOperationName(CommandStartedEvent event) {
     return event.getCommandName();
   }
 

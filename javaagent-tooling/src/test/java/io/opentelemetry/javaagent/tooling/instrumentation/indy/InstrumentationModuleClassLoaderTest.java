@@ -8,6 +8,9 @@ package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.tooling.BytecodeWithUrl;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.dummies.Bar;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.dummies.Foo;
@@ -21,8 +24,10 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
@@ -190,6 +195,49 @@ class InstrumentationModuleClassLoaderTest {
       moduleSourceCl.close();
     }
   }
+
+  public static class HidingModule extends InstrumentationModule
+      implements ExperimentalInstrumentationModule {
+
+    List<String> hiddenPackages = new ArrayList<>();
+
+    public HidingModule() {
+      super("hiding-module");
+    }
+
+    @Override
+    public List<TypeInstrumentation> typeInstrumentations() {
+      return Collections.emptyList();
+    }
+
+    @Override
+    public List<String> agentPackagesToHide() {
+      return hiddenPackages;
+    }
+  }
+
+  @Test
+  public void testAgentClassHiding() throws ClassNotFoundException {
+    HidingModule module = new HidingModule();
+
+    ClassLoader agentCl = HideMe.class.getClassLoader();
+
+    InstrumentationModuleClassLoader nothingHidden =
+        new InstrumentationModuleClassLoader(null, agentCl, ElementMatchers.any());
+    nothingHidden.installModule(module);
+
+    assertThat(nothingHidden.loadClass(HideMe.class.getName())).isSameAs(HideMe.class);
+
+    module.hiddenPackages.add(HideMe.class.getPackage().getName());
+    InstrumentationModuleClassLoader classHidden =
+        new InstrumentationModuleClassLoader(null, agentCl, ElementMatchers.any());
+    classHidden.installModule(module);
+
+    assertThatThrownBy(() -> classHidden.loadClass(HideMe.class.getName()))
+        .isInstanceOf(ClassNotFoundException.class);
+  }
+
+  public static class HideMe {}
 
   private static String getClassFile(Class<?> cl) {
     return cl.getName().replace('.', '/') + ".class";

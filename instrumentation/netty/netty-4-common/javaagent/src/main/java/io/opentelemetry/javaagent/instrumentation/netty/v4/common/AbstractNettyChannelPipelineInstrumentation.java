@@ -22,6 +22,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Iterator;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -154,11 +155,13 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
   public static class RemoveLastAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void removeHandler(
-        @Advice.This ChannelPipeline pipeline,
-        @Advice.Return(readOnly = false) ChannelHandler handler) {
+    @Advice.AssignReturned.ToReturned
+    public static ChannelHandler removeHandler(
+        @Advice.This ChannelPipeline pipeline, @Advice.Return ChannelHandler returnHandler) {
       VirtualField<ChannelHandler, ChannelHandler> virtualField =
           VirtualField.find(ChannelHandler.class, ChannelHandler.class);
+      // TODO remove this extra variable when migrating to "indy only" instrumentation.
+      ChannelHandler handler = returnHandler;
       ChannelHandler ourHandler = virtualField.get(handler);
       if (ourHandler != null) {
         // Context is null when our handler has already been removed. This happens when calling
@@ -176,6 +179,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
           handler = pipeline.removeLast();
         }
       }
+      return handler;
     }
   }
 
@@ -183,9 +187,14 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
   public static class AddAfterAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void addAfterHandler(
-        @Advice.This ChannelPipeline pipeline,
-        @Advice.Argument(value = 1, readOnly = false) String name) {
+    @Advice.AssignReturned.ToArguments(@ToArgument(1))
+    public static String addAfterHandler(
+        @Advice.This ChannelPipeline pipeline, @Advice.Argument(value = 1) String nameArg) {
+      // TODO remove this extra variable when migrating to "indy only" instrumentation.
+      // using an intermediate variable is required to keep the advice work with "inlined" and
+      // "indy" this is probably a minor side-effect of using @Advice.AssignReturned.ToArguments
+      // with and inlined advice.
+      String name = nameArg;
       ChannelHandler handler = pipeline.get(name);
       if (handler != null) {
         VirtualField<ChannelHandler, ChannelHandler> virtualField =
@@ -195,6 +204,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
           name = ourHandler.getClass().getName();
         }
       }
+      return name;
     }
   }
 

@@ -37,22 +37,22 @@ enum RocketMqProducerAttributeExtractor
       case FIFO:
         attributes.put(
             MESSAGING_ROCKETMQ_MESSAGE_TYPE,
-            MessagingIncubatingAttributes.MessagingRocketmqMessageTypeValues.FIFO);
+            MessagingIncubatingAttributes.MessagingRocketmqMessageTypeIncubatingValues.FIFO);
         break;
       case DELAY:
         attributes.put(
             MESSAGING_ROCKETMQ_MESSAGE_TYPE,
-            MessagingIncubatingAttributes.MessagingRocketmqMessageTypeValues.DELAY);
+            MessagingIncubatingAttributes.MessagingRocketmqMessageTypeIncubatingValues.DELAY);
         break;
       case TRANSACTION:
         attributes.put(
             MESSAGING_ROCKETMQ_MESSAGE_TYPE,
-            MessagingIncubatingAttributes.MessagingRocketmqMessageTypeValues.TRANSACTION);
+            MessagingIncubatingAttributes.MessagingRocketmqMessageTypeIncubatingValues.TRANSACTION);
         break;
       default:
         attributes.put(
             MESSAGING_ROCKETMQ_MESSAGE_TYPE,
-            MessagingIncubatingAttributes.MessagingRocketmqMessageTypeValues.NORMAL);
+            MessagingIncubatingAttributes.MessagingRocketmqMessageTypeIncubatingValues.NORMAL);
     }
   }
 

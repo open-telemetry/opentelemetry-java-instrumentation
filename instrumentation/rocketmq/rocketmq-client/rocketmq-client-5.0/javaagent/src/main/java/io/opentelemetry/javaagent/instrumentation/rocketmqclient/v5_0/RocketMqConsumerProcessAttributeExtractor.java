@@ -23,6 +23,7 @@ enum RocketMqConsumerProcessAttributeExtractor
     implements AttributesExtractor<MessageView, ConsumeResult> {
   INSTANCE;
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, MessageView messageView) {

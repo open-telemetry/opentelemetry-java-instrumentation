@@ -23,15 +23,19 @@ public class ArmeriaInstrumenterBuilderFactory {
 
   public static DefaultHttpServerInstrumenterBuilder<ServiceRequestContext, RequestLog>
       getServerBuilder(OpenTelemetry openTelemetry) {
-    return new DefaultHttpServerInstrumenterBuilder<>(
-            INSTRUMENTATION_NAME, openTelemetry, ArmeriaHttpServerAttributesGetter.INSTANCE)
-        .setHeaderGetter(RequestContextGetter.INSTANCE);
+    return DefaultHttpServerInstrumenterBuilder.create(
+        INSTRUMENTATION_NAME,
+        openTelemetry,
+        ArmeriaHttpServerAttributesGetter.INSTANCE,
+        RequestContextGetter.INSTANCE);
   }
 
   public static DefaultHttpClientInstrumenterBuilder<ClientRequestContext, RequestLog>
       getClientBuilder(OpenTelemetry openTelemetry) {
-    return new DefaultHttpClientInstrumenterBuilder<>(
-            INSTRUMENTATION_NAME, openTelemetry, ArmeriaHttpClientAttributesGetter.INSTANCE)
-        .setHeaderSetter(ClientRequestContextSetter.INSTANCE);
+    return DefaultHttpClientInstrumenterBuilder.create(
+        INSTRUMENTATION_NAME,
+        openTelemetry,
+        ArmeriaHttpClientAttributesGetter.INSTANCE,
+        ClientRequestContextSetter.INSTANCE);
   }
 }

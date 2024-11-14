@@ -97,7 +97,7 @@ public abstract class AbstractServletFilterTest
         span ->
             span.hasName("BasicErrorController.error")
                 .hasKind(SpanKind.INTERNAL)
-                .hasAttributesSatisfying(Attributes::isEmpty));
+                .hasAttributes(Attributes.empty()));
     return spanAssertions;
   }
 

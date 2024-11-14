@@ -29,6 +29,8 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
+import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
+import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -75,7 +77,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.assertj.core.api.AssertAccess;
@@ -115,12 +116,23 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
   protected void configure(HttpServerTestOptions options) {}
 
-  public static <T> T controller(ServerEndpoint endpoint, Supplier<T> closure) {
+  public static <T, E extends Throwable> T controller(
+      ServerEndpoint endpoint, ThrowingSupplier<T, E> closure) throws E {
     assert Span.current().getSpanContext().isValid() : "Controller should have a parent span.";
     if (endpoint == NOT_FOUND) {
       return closure.get();
     }
-    return GlobalTraceUtil.runWithSpan("controller", () -> closure.get());
+    return GlobalTraceUtil.runWithSpan("controller", closure);
+  }
+
+  public static <E extends Throwable> void controller(
+      ServerEndpoint endpoint, ThrowingRunnable<E> closure) throws E {
+    controller(
+        endpoint,
+        () -> {
+          closure.run();
+          return null;
+        });
   }
 
   protected AggregatedHttpRequest request(ServerEndpoint uri, String method) {
@@ -665,7 +677,9 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             if (options.hasResponseSpan.test(endpoint)) {
               int parentIndex = spanAssertions.size() - 1;
               spanAssertions.add(
-                  span -> assertResponseSpan(span, trace.getSpan(parentIndex), method, endpoint));
+                  span ->
+                      assertResponseSpan(
+                          span, trace.getSpan(parentIndex), trace.getSpan(0), method, endpoint));
             }
 
             if (options.hasErrorPageSpans.test(endpoint)) {
@@ -704,6 +718,16 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
     throw new UnsupportedOperationException(
         "assertHandlerSpan not implemented in " + getClass().getName());
+  }
+
+  @CanIgnoreReturnValue
+  protected SpanDataAssert assertResponseSpan(
+      SpanDataAssert span,
+      SpanData controllerSpan,
+      SpanData handlerSpan,
+      String method,
+      ServerEndpoint endpoint) {
+    return assertResponseSpan(span, controllerSpan, method, endpoint);
   }
 
   @CanIgnoreReturnValue
@@ -851,9 +875,13 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
         endpoint, method, route);
   }
 
+  public final boolean hasHttpRouteAttribute(ServerEndpoint endpoint) {
+    return options.httpAttributes.apply(endpoint).contains(HttpAttributes.HTTP_ROUTE);
+  }
+
   public String expectedHttpRoute(ServerEndpoint endpoint, String method) {
     // no need to compute route if we're not expecting it
-    if (!options.httpAttributes.apply(endpoint).contains(HttpAttributes.HTTP_ROUTE)) {
+    if (!hasHttpRouteAttribute(endpoint)) {
       return null;
     }
 

@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties;
 
+import io.opentelemetry.api.internal.ConfigUtil;
 import io.opentelemetry.exporter.otlp.internal.OtlpConfigUtil;
+import io.opentelemetry.instrumentation.resources.ResourceProviderPropertiesCustomizer;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.time.Duration;
@@ -28,22 +30,75 @@ public class SpringConfigProperties implements ConfigProperties {
   private final ExpressionParser parser;
   private final OtlpExporterProperties otlpExporterProperties;
   private final OtelResourceProperties resourceProperties;
-  private final PropagationProperties propagationProperties;
   private final ConfigProperties otelSdkProperties;
+  private final ConfigProperties customizedListProperties;
+  private final Map<String, List<String>> listPropertyValues = new HashMap<>();
+
+  static final String DISABLED_KEY = "otel.java.disabled.resource.providers";
+  static final String ENABLED_KEY = "otel.java.enabled.resource.providers";
 
   public SpringConfigProperties(
       Environment environment,
       ExpressionParser parser,
       OtlpExporterProperties otlpExporterProperties,
       OtelResourceProperties resourceProperties,
-      PropagationProperties propagationProperties,
+      OtelSpringProperties otelSpringProperties,
       ConfigProperties otelSdkProperties) {
     this.environment = environment;
     this.parser = parser;
     this.otlpExporterProperties = otlpExporterProperties;
     this.resourceProperties = resourceProperties;
-    this.propagationProperties = propagationProperties;
     this.otelSdkProperties = otelSdkProperties;
+    this.customizedListProperties =
+        createCustomizedListProperties(otelSdkProperties, otelSpringProperties);
+
+    listPropertyValues.put(ENABLED_KEY, otelSpringProperties.getJavaEnabledResourceProviders());
+    listPropertyValues.put(DISABLED_KEY, otelSpringProperties.getJavaDisabledResourceProviders());
+    listPropertyValues.put(
+        "otel.experimental.metrics.view.config",
+        otelSpringProperties.getExperimentalMetricsViewConfig());
+    listPropertyValues.put(
+        "otel.experimental.resource.disabled.keys",
+        otelSpringProperties.getExperimentalResourceDisabledKeys());
+    listPropertyValues.put("otel.propagators", otelSpringProperties.getPropagators());
+  }
+
+  private static Map<String, String> createMapForListProperty(
+      String key, List<String> springList, ConfigProperties configProperties) {
+    if (!springList.isEmpty()) {
+      return Collections.singletonMap(key, String.join(",", springList));
+    } else {
+      String otelList = configProperties.getString(key);
+      if (otelList != null) {
+        return Collections.singletonMap(key, otelList);
+      }
+    }
+    return Collections.emptyMap();
+  }
+
+  private static ConfigProperties createCustomizedListProperties(
+      ConfigProperties configProperties, OtelSpringProperties otelSpringProperties) {
+    // io.opentelemetry.instrumentation.resources.ResourceProviderPropertiesCustomizer
+    // has already been applied before this point, so we have to apply the same logic here
+    // the logic is implemented here:
+    // https://github.com/open-telemetry/opentelemetry-java/blob/325822ce8527b83a09274c86a5123a214db80c1d/sdk-extensions/autoconfigure/src/main/java/io/opentelemetry/sdk/autoconfigure/AutoConfiguredOpenTelemetrySdkBuilder.java#L634-L641
+    // ResourceProviderPropertiesCustomizer gets applied by "propertiesCustomizers"
+    // and spring properties by "configPropertiesCustomizer", which is later
+    Map<String, String> map =
+        new HashMap<>(
+            createMapForListProperty(
+                ENABLED_KEY,
+                otelSpringProperties.getJavaEnabledResourceProviders(),
+                configProperties));
+    map.putAll(
+        createMapForListProperty(
+            DISABLED_KEY,
+            otelSpringProperties.getJavaDisabledResourceProviders(),
+            configProperties));
+
+    return DefaultConfigProperties.createFromMap(
+        new ResourceProviderPropertiesCustomizer()
+            .customize(DefaultConfigProperties.createFromMap(map)));
   }
 
   // visible for testing
@@ -51,22 +106,23 @@ public class SpringConfigProperties implements ConfigProperties {
       Environment env,
       OtlpExporterProperties otlpExporterProperties,
       OtelResourceProperties resourceProperties,
-      PropagationProperties propagationProperties,
+      OtelSpringProperties otelSpringProperties,
       ConfigProperties fallback) {
     return new SpringConfigProperties(
         env,
         new SpelExpressionParser(),
         otlpExporterProperties,
         resourceProperties,
-        propagationProperties,
+        otelSpringProperties,
         fallback);
   }
 
   @Nullable
   @Override
   public String getString(String name) {
-    String value = environment.getProperty(name, String.class);
-    if (value == null && name.equals("otel.exporter.otlp.protocol")) {
+    String normalizedName = ConfigUtil.normalizeEnvironmentVariableKey(name);
+    String value = environment.getProperty(normalizedName, String.class);
+    if (value == null && normalizedName.equals("otel.exporter.otlp.protocol")) {
       // SDK autoconfigure module defaults to `grpc`, but this module aligns with recommendation
       // in specification to default to `http/protobuf`
       return OtlpConfigUtil.PROTOCOL_HTTP_PROTOBUF;
@@ -77,35 +133,51 @@ public class SpringConfigProperties implements ConfigProperties {
   @Nullable
   @Override
   public Boolean getBoolean(String name) {
-    return or(environment.getProperty(name, Boolean.class), otelSdkProperties.getBoolean(name));
+    return or(
+        environment.getProperty(ConfigUtil.normalizeEnvironmentVariableKey(name), Boolean.class),
+        otelSdkProperties.getBoolean(name));
   }
 
   @Nullable
   @Override
   public Integer getInt(String name) {
-    return or(environment.getProperty(name, Integer.class), otelSdkProperties.getInt(name));
+    return or(
+        environment.getProperty(ConfigUtil.normalizeEnvironmentVariableKey(name), Integer.class),
+        otelSdkProperties.getInt(name));
   }
 
   @Nullable
   @Override
   public Long getLong(String name) {
-    return or(environment.getProperty(name, Long.class), otelSdkProperties.getLong(name));
+    return or(
+        environment.getProperty(ConfigUtil.normalizeEnvironmentVariableKey(name), Long.class),
+        otelSdkProperties.getLong(name));
   }
 
   @Nullable
   @Override
   public Double getDouble(String name) {
-    return or(environment.getProperty(name, Double.class), otelSdkProperties.getDouble(name));
+    return or(
+        environment.getProperty(ConfigUtil.normalizeEnvironmentVariableKey(name), Double.class),
+        otelSdkProperties.getDouble(name));
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public List<String> getList(String name) {
-    if (name.equals("otel.propagators")) {
-      return propagationProperties.getPropagators();
+
+    String normalizedName = ConfigUtil.normalizeEnvironmentVariableKey(name);
+
+    List<String> list = listPropertyValues.get(normalizedName);
+    if (list != null) {
+      List<String> c = customizedListProperties.getList(name);
+      if (!c.isEmpty()) {
+        return c;
+      }
+      return list;
     }
 
-    return or(environment.getProperty(name, List.class), otelSdkProperties.getList(name));
+    return or(environment.getProperty(normalizedName, List.class), otelSdkProperties.getList(name));
   }
 
   @Nullable
@@ -123,8 +195,10 @@ public class SpringConfigProperties implements ConfigProperties {
   @Override
   public Map<String, String> getMap(String name) {
     Map<String, String> otelSdkMap = otelSdkProperties.getMap(name);
+
+    String normalizedName = ConfigUtil.normalizeEnvironmentVariableKey(name);
     // maps from config properties are not supported by Environment, so we have to fake it
-    switch (name) {
+    switch (normalizedName) {
       case "otel.resource.attributes":
         return mergeWithOtel(resourceProperties.getAttributes(), otelSdkMap);
       case "otel.exporter.otlp.headers":
@@ -139,7 +213,7 @@ public class SpringConfigProperties implements ConfigProperties {
         break;
     }
 
-    String value = environment.getProperty(name);
+    String value = environment.getProperty(normalizedName);
     if (value == null) {
       return otelSdkMap;
     }

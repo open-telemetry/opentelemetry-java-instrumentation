@@ -6,47 +6,52 @@
 package io.opentelemetry.instrumentation.okhttp.v3_0.internal;
 
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
-import okhttp3.Request;
+import okhttp3.Connection;
+import okhttp3.Interceptor;
 import okhttp3.Response;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public enum OkHttpAttributesGetter implements HttpClientAttributesGetter<Request, Response> {
+public enum OkHttpAttributesGetter
+    implements HttpClientAttributesGetter<Interceptor.Chain, Response> {
   INSTANCE;
 
   @Override
-  public String getHttpRequestMethod(Request request) {
-    return request.method();
+  public String getHttpRequestMethod(Interceptor.Chain chain) {
+    return chain.request().method();
   }
 
   @Override
-  public String getUrlFull(Request request) {
-    return request.url().toString();
+  public String getUrlFull(Interceptor.Chain chain) {
+    return chain.request().url().toString();
   }
 
   @Override
-  public List<String> getHttpRequestHeader(Request request, String name) {
-    return request.headers(name);
+  public List<String> getHttpRequestHeader(Interceptor.Chain chain, String name) {
+    return chain.request().headers(name);
   }
 
   @Override
   public Integer getHttpResponseStatusCode(
-      Request request, Response response, @Nullable Throwable error) {
+      Interceptor.Chain chain, Response response, @Nullable Throwable error) {
     return response.code();
   }
 
   @Override
-  public List<String> getHttpResponseHeader(Request request, Response response, String name) {
+  public List<String> getHttpResponseHeader(
+      Interceptor.Chain chain, Response response, String name) {
     return response.headers(name);
   }
 
   @Nullable
   @Override
-  public String getNetworkProtocolName(Request request, @Nullable Response response) {
+  public String getNetworkProtocolName(Interceptor.Chain chain, @Nullable Response response) {
     if (response == null) {
       return null;
     }
@@ -67,7 +72,7 @@ public enum OkHttpAttributesGetter implements HttpClientAttributesGetter<Request
 
   @Nullable
   @Override
-  public String getNetworkProtocolVersion(Request request, @Nullable Response response) {
+  public String getNetworkProtocolVersion(Interceptor.Chain chain, @Nullable Response response) {
     if (response == null) {
       return null;
     }
@@ -90,12 +95,28 @@ public enum OkHttpAttributesGetter implements HttpClientAttributesGetter<Request
 
   @Override
   @Nullable
-  public String getServerAddress(Request request) {
-    return request.url().host();
+  public String getServerAddress(Interceptor.Chain chain) {
+    return chain.request().url().host();
   }
 
   @Override
-  public Integer getServerPort(Request request) {
-    return request.url().port();
+  public Integer getServerPort(Interceptor.Chain chain) {
+    return chain.request().url().port();
+  }
+
+  @Nullable
+  @Override
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
+      Interceptor.Chain chain, @Nullable Response response) {
+    Connection connection = chain.connection();
+    if (connection == null) {
+      return null;
+    }
+    SocketAddress socketAddress = connection.socket().getRemoteSocketAddress();
+    if (socketAddress instanceof InetSocketAddress) {
+      return (InetSocketAddress) socketAddress;
+    } else {
+      return null;
+    }
   }
 }

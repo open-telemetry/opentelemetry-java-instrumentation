@@ -15,16 +15,18 @@ import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpClientInstrum
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
-import okhttp3.Request;
+import okhttp3.Interceptor;
 import okhttp3.Response;
 
 /** A builder of {@link OkHttpTelemetry}. */
 public final class OkHttpTelemetryBuilder {
 
-  private final DefaultHttpClientInstrumenterBuilder<Request, Response> builder;
+  private final DefaultHttpClientInstrumenterBuilder<Interceptor.Chain, Response> builder;
+  private final OpenTelemetry openTelemetry;
 
   OkHttpTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder = OkHttpClientInstrumenterBuilderFactory.create(openTelemetry);
+    this.openTelemetry = openTelemetry;
   }
 
   /**
@@ -33,7 +35,7 @@ public final class OkHttpTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder addAttributeExtractor(
-      AttributesExtractor<? super Request, ? super Response> attributesExtractor) {
+      AttributesExtractor<? super Interceptor.Chain, ? super Response> attributesExtractor) {
     builder.addAttributeExtractor(attributesExtractor);
     return this;
   }
@@ -95,7 +97,9 @@ public final class OkHttpTelemetryBuilder {
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder setSpanNameExtractor(
-      Function<SpanNameExtractor<? super Request>, ? extends SpanNameExtractor<? super Request>>
+      Function<
+              SpanNameExtractor<? super Interceptor.Chain>,
+              ? extends SpanNameExtractor<? super Interceptor.Chain>>
           spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
@@ -105,6 +109,6 @@ public final class OkHttpTelemetryBuilder {
    * Returns a new {@link OkHttpTelemetry} with the settings of this {@link OkHttpTelemetryBuilder}.
    */
   public OkHttpTelemetry build() {
-    return new OkHttpTelemetry(builder.build(), builder.getOpenTelemetry().getPropagators());
+    return new OkHttpTelemetry(builder.build(), openTelemetry.getPropagators());
   }
 }

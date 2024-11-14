@@ -12,12 +12,12 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridgin
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationDoubleHistogramBuilder;
 import java.util.List;
 
-final class ApplicationDoubleHistogramBuilder137 extends ApplicationDoubleHistogramBuilder
+public class ApplicationDoubleHistogramBuilder137 extends ApplicationDoubleHistogramBuilder
     implements ExtendedDoubleHistogramBuilder {
 
   private final io.opentelemetry.api.metrics.DoubleHistogramBuilder agentBuilder;
 
-  ApplicationDoubleHistogramBuilder137(
+  protected ApplicationDoubleHistogramBuilder137(
       io.opentelemetry.api.metrics.DoubleHistogramBuilder agentBuilder) {
     super(agentBuilder);
     this.agentBuilder = agentBuilder;

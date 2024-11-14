@@ -40,7 +40,7 @@ public final class NetworkReadHandler extends AbstractThreadDispatchingHandler {
         meter
             .histogramBuilder(Constants.METRIC_NAME_NETWORK_DURATION)
             .setDescription(Constants.METRIC_DESCRIPTION_NETWORK_DURATION)
-            .setUnit(Constants.MILLISECONDS)
+            .setUnit(Constants.SECONDS)
             .build();
   }
 
@@ -81,7 +81,7 @@ public final class NetworkReadHandler extends AbstractThreadDispatchingHandler {
     @Override
     public void accept(RecordedEvent ev) {
       bytesHistogram.record(ev.getLong(BYTES_READ), attributes);
-      durationHistogram.record(DurationUtil.toMillis(ev.getDuration()), attributes);
+      durationHistogram.record(DurationUtil.toSeconds(ev.getDuration()), attributes);
     }
   }
 }

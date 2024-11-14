@@ -40,12 +40,73 @@ dependencies {
 
   testLibrary("org.elasticsearch.plugin:transport-netty4-client:6.0.0")
 
+  testImplementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
   testImplementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
   testImplementation("org.apache.logging.log4j:log4j-core:2.11.0")
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
 }
 
-tasks.withType<Test>().configureEach {
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
+testing {
+  suites {
+    val elasticsearch6Test by registering(JvmTestSuite::class) {
+      dependencies {
+        if (latestDepTest) {
+          implementation("org.elasticsearch.client:transport:6.4.+")
+          implementation("org.elasticsearch.plugin:transport-netty4-client:6.4.+")
+        } else {
+          implementation("org.elasticsearch.client:transport:6.0.0")
+          implementation("org.elasticsearch.plugin:transport-netty4-client:6.0.0")
+        }
+        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
+        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
+      }
+    }
+
+    val elasticsearch65Test by registering(JvmTestSuite::class) {
+      dependencies {
+        if (latestDepTest) {
+          implementation("org.elasticsearch.client:transport:6.+")
+          implementation("org.elasticsearch.plugin:transport-netty4-client:6.+")
+        } else {
+          implementation("org.elasticsearch.client:transport:6.5.0")
+          implementation("org.elasticsearch.plugin:transport-netty4-client:6.5.0")
+        }
+        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
+        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
+      }
+    }
+
+    val elasticsearch7Test by registering(JvmTestSuite::class) {
+      dependencies {
+        if (latestDepTest) {
+          implementation("org.elasticsearch.client:transport:+")
+          implementation("org.elasticsearch.plugin:transport-netty4-client:+")
+        } else {
+          implementation("org.elasticsearch.client:transport:7.0.0")
+          implementation("org.elasticsearch.plugin:transport-netty4-client:7.0.0")
+        }
+        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing"))
+        implementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
+      }
+    }
+  }
+}
+
+tasks {
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    // TODO run tests both with and without experimental span attributes
+    jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testing.suites)
+    dependsOn(testStableSemconv)
+  }
 }

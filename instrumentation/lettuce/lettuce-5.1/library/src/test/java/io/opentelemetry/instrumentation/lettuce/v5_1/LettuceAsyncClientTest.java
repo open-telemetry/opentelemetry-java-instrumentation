@@ -16,7 +16,7 @@ class LettuceAsyncClientTest extends AbstractLettuceAsyncClientTest {
   static InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Override
-  public InstrumentationExtension getInstrumentationExtension() {
+  public InstrumentationExtension testing() {
     return testing;
   }
 
@@ -24,9 +24,7 @@ class LettuceAsyncClientTest extends AbstractLettuceAsyncClientTest {
   protected RedisClient createClient(String uri) {
     return RedisClient.create(
         ClientResources.builder()
-            .tracing(
-                LettuceTelemetry.create(getInstrumentationExtension().getOpenTelemetry())
-                    .newTracing())
+            .tracing(LettuceTelemetry.create(testing().getOpenTelemetry()).newTracing())
             .build(),
         uri);
   }

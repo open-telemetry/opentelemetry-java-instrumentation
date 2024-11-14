@@ -43,6 +43,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -118,7 +119,10 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> assertClientSpan(span, uri, method, responseCode, null).hasNoParent(),
+                span ->
+                    assertClientSpan(span, uri, method, responseCode, null)
+                        .hasNoParent()
+                        .hasStatus(StatusData.unset()),
                 span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
   }
 
@@ -444,6 +448,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
           try {
             doRequest(method, uri);
           } catch (Throwable ignored) {
+            // ignored
           }
         });
 
@@ -955,6 +960,75 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     pool.shutdown();
   }
 
+  @Test
+  void spanEndsAfterBodyReceived() throws Exception {
+    assumeTrue(options.isSpanEndsAfterBody());
+
+    String method = "GET";
+    URI uri = resolveAddress("/long-request");
+
+    int responseCode =
+        doRequest(
+            method,
+            uri,
+            // the time that server waits before completing the response
+            Collections.singletonMap("delay", String.valueOf(TimeUnit.SECONDS.toMillis(1))));
+
+    assertThat(responseCode).isEqualTo(200);
+
+    testing.waitAndAssertTraces(
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  assertClientSpan(span, uri, method, 200, null)
+                      .hasNoParent()
+                      .hasStatus(StatusData.unset()),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
+          SpanData span = trace.getSpan(0);
+          // make sure the span is at least as long as the delay we set when sending the request
+          assertThat(
+                  span.getEndEpochNanos() - span.getStartEpochNanos()
+                      >= TimeUnit.SECONDS.toNanos(1))
+              .describedAs("Span duration should be at least 1s")
+              .isTrue();
+        });
+  }
+
+  @Test
+  void spanEndsAfterHeadersReceived() throws Exception {
+    assumeTrue(options.isSpanEndsAfterHeaders());
+
+    String method = "GET";
+    URI uri = resolveAddress("/long-request");
+
+    int responseCode =
+        doRequest(
+            method,
+            uri,
+            // the time that server waits before completing the response, we expect the response
+            // headers to arrive much sooner
+            Collections.singletonMap("delay", String.valueOf(TimeUnit.SECONDS.toMillis(2))));
+
+    assertThat(responseCode).isEqualTo(200);
+
+    testing.waitAndAssertTraces(
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  assertClientSpan(span, uri, method, 200, null)
+                      .hasNoParent()
+                      .hasStatus(StatusData.unset()),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
+          SpanData span = trace.getSpan(0);
+          // verify that the span length is less than the delay used to complete the response body
+          assertThat(
+                  span.getEndEpochNanos() - span.getStartEpochNanos()
+                      <= TimeUnit.SECONDS.toNanos(2))
+              .describedAs("Span duration should be less than 2s")
+              .isTrue();
+        });
+  }
+
   // Visible for spock bridge.
   SpanDataAssert assertClientSpan(
       SpanDataAssert span,
@@ -999,7 +1073,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 // TODO: Move to test knob rather than always treating as optional
                 if (attrs.get(NetworkAttributes.NETWORK_PEER_ADDRESS) != null) {
                   assertThat(attrs)
-                      .containsEntry(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1");
+                      .hasEntrySatisfying(
+                          NetworkAttributes.NETWORK_PEER_ADDRESS,
+                          addr -> assertThat(addr).isIn("127.0.0.1", "0:0:0:0:0:0:0:1"));
                 }
                 if (attrs.get(NetworkAttributes.NETWORK_PEER_PORT) != null) {
                   assertThat(attrs)
@@ -1048,7 +1124,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     return span.hasName("test-http-server").hasKind(SpanKind.SERVER);
   }
 
-  protected int doRequest(String method, URI uri) throws Exception {
+  private int doRequest(String method, URI uri) throws Exception {
     return doRequest(method, uri, Collections.emptyMap());
   }
 

@@ -64,6 +64,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .ignoreClass("org.springframework.jndi.")
         .ignoreClass("org.springframework.lang.")
         .ignoreClass("org.springframework.messaging.")
+        .allowClass("org.springframework.messaging.support.GenericMessage")
         .ignoreClass("org.springframework.objenesis.")
         .ignoreClass("org.springframework.orm.")
         .ignoreClass("org.springframework.scripting.")

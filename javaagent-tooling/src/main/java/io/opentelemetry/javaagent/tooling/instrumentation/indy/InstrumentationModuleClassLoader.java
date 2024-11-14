@@ -77,6 +77,13 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
    */
   private final ElementMatcher<String> agentClassNamesMatcher;
 
+  /**
+   * Mutable set of packages from the agent classloader to hide. So even if a class matches {@link
+   * #agentClassNamesMatcher}, it will not be attempted to be loaded from the agent classloader if
+   * it is from any of these packages.
+   */
+  private final Set<String> hiddenAgentPackages;
+
   private final Set<InstrumentationModule> installedModules;
 
   public InstrumentationModuleClassLoader(
@@ -98,6 +105,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     this.agentOrExtensionCl = agentOrExtensionCl;
     this.instrumentedCl = instrumentedCl;
     this.agentClassNamesMatcher = classesToLoadFromAgentOrExtensionCl;
+    this.hiddenAgentPackages = Collections.newSetFromMap(new ConcurrentHashMap<>());
   }
 
   /**
@@ -109,10 +117,17 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
     if (cachedLookup == null) {
       // Load the injected copy of LookupExposer and invoke it
       try {
+        MethodType getLookupType = MethodType.methodType(MethodHandles.Lookup.class);
         // we don't mind the race condition causing the initialization to run multiple times here
         Class<?> lookupExposer = loadClass(LookupExposer.class.getName());
-        cachedLookup = (MethodHandles.Lookup) lookupExposer.getMethod("getLookup").invoke(null);
-      } catch (Exception e) {
+        // Note: we must use MethodHandles instead of reflection here to avoid a recursion
+        // for our internal ReflectionInstrumentationModule which instruments reflection methods
+        cachedLookup =
+            (MethodHandles.Lookup)
+                MethodHandles.publicLookup()
+                    .findStatic(lookupExposer, "getLookup", getLookupType)
+                    .invoke();
+      } catch (Throwable e) {
         throw new IllegalStateException(e);
       }
     }
@@ -134,6 +149,10 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
                     className -> className,
                     className -> BytecodeWithUrl.create(className, agentOrExtensionCl)));
     installInjectedClasses(classesToInject);
+    if (module instanceof ExperimentalInstrumentationModule) {
+      hiddenAgentPackages.addAll(
+          ((ExperimentalInstrumentationModule) module).agentPackagesToHide());
+    }
   }
 
   public synchronized boolean hasModuleInstalled(InstrumentationModule module) {
@@ -178,6 +197,15 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   public static final Map<String, byte[]> bytecodeOverride = new ConcurrentHashMap<>();
 
   @Override
+  public Class<?> loadClass(String name) throws ClassNotFoundException {
+    // We explicitly override loadClass from ClassLoader to ensure
+    // that loadClass is properly excluded from our internal ClassLoader Instrumentations
+    // (e.g. LoadInjectedClassInstrumentation, BooDelegationInstrumentation)
+    // Otherwise this will cause recursion in invokedynamic linkage
+    return loadClass(name, false);
+  }
+
+  @Override
   @SuppressWarnings("removal") // AccessController is deprecated for removal
   protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
     synchronized (getClassLoadingLock(name)) {
@@ -219,7 +247,15 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   }
 
   private boolean shouldLoadFromAgent(String dotClassName) {
-    return agentClassNamesMatcher.matches(dotClassName);
+    if (!agentClassNamesMatcher.matches(dotClassName)) {
+      return false;
+    }
+    for (String packageName : hiddenAgentPackages) {
+      if (dotClassName.startsWith(packageName)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private static Class<?> tryLoad(@Nullable ClassLoader cl, String name) {
@@ -290,12 +326,23 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
   }
 
   private Class<?> defineClassWithPackage(String name, byte[] bytecode) {
-    int lastDotIndex = name.lastIndexOf('.');
-    if (lastDotIndex != -1) {
-      String packageName = name.substring(0, lastDotIndex);
-      safeDefinePackage(packageName);
+    try {
+      int lastDotIndex = name.lastIndexOf('.');
+      if (lastDotIndex != -1) {
+        String packageName = name.substring(0, lastDotIndex);
+        safeDefinePackage(packageName);
+      }
+      return defineClass(name, bytecode, 0, bytecode.length, PROTECTION_DOMAIN);
+    } catch (LinkageError error) {
+      // Precaution against linkage error due to nested instrumentations happening
+      // it might be possible that e.g. an advice class has already been defined
+      // during an instrumentation of defineClass
+      Class<?> clazz = findLoadedClass(name);
+      if (clazz != null) {
+        return clazz;
+      }
+      throw error;
     }
-    return defineClass(name, bytecode, 0, bytecode.length, PROTECTION_DOMAIN);
   }
 
   private void safeDefinePackage(String packageName) {

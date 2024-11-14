@@ -139,7 +139,8 @@ class Struts2ActionSpanTest extends AbstractHttpServerTest<Server> {
         .hasKind(SpanKind.INTERNAL);
 
     if (endpoint.equals(EXCEPTION)) {
-      span.hasStatus(StatusData.error()).hasException(new Exception(EXCEPTION.getBody()));
+      span.hasStatus(StatusData.error())
+          .hasException(new IllegalStateException(EXCEPTION.getBody()));
     }
 
     span.hasAttributesSatisfyingExactly(

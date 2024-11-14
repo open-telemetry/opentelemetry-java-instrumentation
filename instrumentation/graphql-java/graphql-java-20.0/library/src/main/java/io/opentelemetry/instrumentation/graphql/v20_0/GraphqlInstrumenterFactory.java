@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.graphql.v20_0;
 import graphql.schema.DataFetchingEnvironment;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.graphql.internal.OpenTelemetryInstrumentationHelper;
 
 final class GraphqlInstrumenterFactory {
@@ -28,10 +27,6 @@ final class GraphqlInstrumenterFactory {
             INSTRUMENTATION_NAME,
             environment -> environment.getExecutionStepInfo().getField().getName())
         .addAttributesExtractor(new GraphqlDataFetcherAttributesExtractor())
-        .setSpanStatusExtractor(
-            (spanStatusBuilder, environment, unused, error) ->
-                SpanStatusExtractor.getDefault()
-                    .extract(spanStatusBuilder, environment, null, error))
         .setEnabled(enabled)
         .buildInstrumenter();
   }

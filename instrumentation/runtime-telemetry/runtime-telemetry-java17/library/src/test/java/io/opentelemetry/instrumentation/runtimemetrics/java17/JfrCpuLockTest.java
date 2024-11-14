@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java17;
 
-import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.MILLISECONDS;
+import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
@@ -51,7 +51,7 @@ class JfrCpuLockTest {
         metric ->
             metric
                 .hasName("jvm.cpu.longlock")
-                .hasUnit(MILLISECONDS)
+                .hasUnit(SECONDS)
                 .hasHistogramSatisfying(histogram -> {}));
   }
 }

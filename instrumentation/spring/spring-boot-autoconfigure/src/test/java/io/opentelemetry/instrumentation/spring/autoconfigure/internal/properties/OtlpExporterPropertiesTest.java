@@ -92,7 +92,7 @@ class OtlpExporterPropertiesTest {
         new SpelExpressionParser(),
         context.getBean(OtlpExporterProperties.class),
         new OtelResourceProperties(),
-        new PropagationProperties(),
+        new OtelSpringProperties(),
         DefaultConfigProperties.createFromMap(Collections.emptyMap()));
   }
 }

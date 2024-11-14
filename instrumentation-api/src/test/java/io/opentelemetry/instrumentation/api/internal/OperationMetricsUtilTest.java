@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterProvider;
@@ -13,7 +15,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.lang.reflect.Proxy;
 import java.util.concurrent.atomic.AtomicBoolean;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -29,7 +30,7 @@ class OperationMetricsUtilTest {
             "test metrics", meter -> null, (s, doubleHistogramBuilder) -> warning.set(true));
     operationMetrics.create(testing.getOpenTelemetry().getMeter("test"));
 
-    Assertions.assertThat(warning).isFalse();
+    assertThat(warning).isFalse();
   }
 
   @Test
@@ -40,7 +41,7 @@ class OperationMetricsUtilTest {
             "test metrics", meter -> null, (s, doubleHistogramBuilder) -> warning.set(true));
     operationMetrics.create(MeterProvider.noop().get("test"));
 
-    Assertions.assertThat(warning).isFalse();
+    assertThat(warning).isFalse();
   }
 
   @Test
@@ -65,7 +66,7 @@ class OperationMetricsUtilTest {
                 });
     operationMetrics.create(meter);
 
-    Assertions.assertThat(warning).isTrue();
+    assertThat(warning).isTrue();
   }
 
   private static DoubleHistogramBuilder proxyDoubleHistogramBuilder(Meter meter) {

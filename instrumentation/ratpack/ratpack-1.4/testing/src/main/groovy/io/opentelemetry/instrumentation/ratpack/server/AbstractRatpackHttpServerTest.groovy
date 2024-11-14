@@ -5,18 +5,23 @@
 
 package io.opentelemetry.instrumentation.ratpack.server
 
-
+import io.netty.buffer.ByteBuf
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.trace.data.SpanData
+import org.junit.Assume
+import org.reactivestreams.Subscriber
+import org.reactivestreams.Subscription
 import ratpack.error.ServerErrorHandler
 import ratpack.handling.Context
 import ratpack.server.RatpackServer
 import ratpack.server.RatpackServerSpec
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.api.trace.SpanKind.SERVER
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
@@ -27,6 +32,14 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
 
 abstract class AbstractRatpackHttpServerTest extends HttpServerTest<RatpackServer> {
+
+  protected static final ServerEndpoint POST_STREAM =
+      new ServerEndpoint(
+          "POST_STREAM",
+          "post-stream",
+          SUCCESS.getStatus(),
+          SUCCESS.getBody(),
+          false)
 
   abstract void configure(RatpackServerSpec serverSpec)
 
@@ -100,12 +113,60 @@ abstract class AbstractRatpackHttpServerTest extends HttpServerTest<RatpackServe
             }
           }
         }
+        it.prefix(POST_STREAM.rawPath()) {
+          it.all { context ->
+            handlePostStream(context)
+          }
+        }
       }
       configure(it)
     }
 
     assert ratpack.bindPort == bindPort
     return ratpack
+  }
+
+  def handlePostStream(context) {
+    controller(POST_STREAM) {
+      context.request.bodyStream.subscribe(new Subscriber<ByteBuf>() {
+        private Subscription subscription
+        private int count
+        private String traceId
+
+        @Override
+        void onSubscribe(Subscription subscription) {
+          this.subscription = subscription
+          traceId = Span.current().getSpanContext().getTraceId()
+          subscription.request(1)
+        }
+
+        @Override
+        void onNext(ByteBuf byteBuf) {
+          assert traceId == Span.current().getSpanContext().getTraceId()
+          if (count < 2) {
+            runWithSpan("onNext") {
+              count++
+            }
+          }
+          byteBuf.release()
+          subscription.request(1)
+        }
+
+        @Override
+        void onError(Throwable throwable) {
+          // prints the assertion error from onNext
+          throwable.printStackTrace()
+          context.response.status(500).send(throwable.message)
+        }
+
+        @Override
+        void onComplete() {
+          runWithSpan("onComplete") {
+            context.response.status(200).send(POST_STREAM.body)
+          }
+        }
+      })
+    }
   }
 
   // TODO(anuraaga): The default Ratpack error handler also returns a 500 which is all we test, so
@@ -155,5 +216,59 @@ abstract class AbstractRatpackHttpServerTest extends HttpServerTest<RatpackServe
   @Override
   String expectedHttpRoute(ServerEndpoint endpoint, String method) {
     return endpoint.status == 404 ? "/" : endpoint == PATH_PARAM ? "/path/:id/param" : endpoint.path
+  }
+
+  boolean testPostStream() {
+    true
+  }
+
+  def "test post stream"() {
+    Assume.assumeTrue(testPostStream())
+
+    when:
+    // body should be large enough to trigger multiple calls to onNext
+    def body = "foobar" * 10000
+    def response = client.post(resolveAddress(POST_STREAM), body).aggregate().join()
+
+    then:
+    response.status().code() == POST_STREAM.status
+    response.contentUtf8() == POST_STREAM.body
+
+    def hasHandlerSpan = hasHandlerSpan(POST_STREAM)
+    // when using javaagent instrumentation the parent of reactive callbacks is the controller span
+    // where subscribe was called, for library instrumentation server span is the parent
+    def reactiveCallbackParent = hasHandlerSpan ? 2 : 0
+    assertTraces(1) {
+      trace(0, 5 + (hasHandlerSpan ? 1 : 0)) {
+        span(0) {
+          name "POST /post-stream"
+          kind SERVER
+          hasNoParent()
+        }
+        if (hasHandlerSpan) {
+          span(1) {
+            name "/post-stream"
+            childOf span(0)
+          }
+        }
+        def offset = hasHandlerSpan ? 1 : 0
+        span(1 + offset) {
+          name "controller"
+          childOf span(offset)
+        }
+        span(2 + offset) {
+          name "onNext"
+          childOf span(reactiveCallbackParent)
+        }
+        span(3 + offset) {
+          name "onNext"
+          childOf span(reactiveCallbackParent)
+        }
+        span(4 + offset) {
+          name "onComplete"
+          childOf span(reactiveCallbackParent)
+        }
+      }
+    }
   }
 }

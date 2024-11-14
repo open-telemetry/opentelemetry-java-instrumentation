@@ -30,7 +30,7 @@ provides.
   - Can set different defaults for properties
   - Can customize tracer configuration programmatically
   - Can provide custom exporter, propagator, sampler
-  - Can hook into bytebuddy to customize bytecode manipulation
+  - Can hook into ByteBuddy to customize bytecode manipulation
 - Noteworthy instrumentation
   - Log injection of IDs (logback, log4j2, log4j)
   - Automatic context propagation across `Executor`s

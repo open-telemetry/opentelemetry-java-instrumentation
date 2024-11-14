@@ -11,12 +11,12 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridgin
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_38.metrics.ApplicationLongGaugeBuilder138;
 import java.util.List;
 
-final class ApplicationLongGaugeBuilder138Incubator extends ApplicationLongGaugeBuilder138
+public class ApplicationLongGaugeBuilder138Incubator extends ApplicationLongGaugeBuilder138
     implements ExtendedLongGaugeBuilder {
 
   private final io.opentelemetry.api.metrics.LongGaugeBuilder agentBuilder;
 
-  ApplicationLongGaugeBuilder138Incubator(
+  protected ApplicationLongGaugeBuilder138Incubator(
       io.opentelemetry.api.metrics.LongGaugeBuilder agentBuilder) {
     super(agentBuilder);
     this.agentBuilder = agentBuilder;
