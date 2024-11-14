@@ -686,9 +686,9 @@ class PulsarClientTest extends AbstractPulsarClientTest {
             .create();
     Transaction txn =
         client.newTransaction().withTransactionTimeout(5, TimeUnit.SECONDS).build().get();
+    testing.runWithSpan("parent1", () -> producer.newMessage(txn).value("test1").send());
     txn.commit();
 
-    testing.runWithSpan("parent1", () -> producer.newMessage(txn).value("test1").send());
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
