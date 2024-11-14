@@ -67,15 +67,8 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
         return;
       }
       Object bean = springCtx.getBean("otelAutoDispatcherFilter");
-      OpenTelemetryHandlerMappingFilter filter;
-      if (bean instanceof OpenTelemetryHandlerMappingFilter) {
-        // TODO: remove this branch once advices are not inlined anymore as it's no longer relevant
-        // inline advice: no proxy class is used
-        filter = (OpenTelemetryHandlerMappingFilter) bean;
-      } else {
-        filter = IndyProxyHelper.unwrapIfNeeded(bean, OpenTelemetryHandlerMappingFilter.class);
-      }
-      filter.setHandlerMappings(handlerMappings);
+      OpenTelemetryHandlerMappingFilter filter =
+          IndyProxyHelper.unwrapIfNeeded(bean, OpenTelemetryHandlerMappingFilter.class);
     }
   }
 

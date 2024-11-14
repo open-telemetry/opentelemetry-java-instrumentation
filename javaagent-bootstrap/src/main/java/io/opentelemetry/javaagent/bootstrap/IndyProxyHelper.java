@@ -26,6 +26,6 @@ public class IndyProxyHelper {
       throw new IllegalStateException(e);
     }
 
-    return null;
+    throw new IllegalArgumentException("unexpected object type");
   }
 }
