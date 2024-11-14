@@ -72,7 +72,7 @@ public class IndyProxyFactory {
   private static final String DELEGATE_FIELD_NAME = "delegate";
 
   // Matches the single method of IndyProxy interface
-  private static final String PROXY_DELEGATE_NAME = "__getIndyProxyDelegate";
+  static final String PROXY_DELEGATE_NAME = "__getIndyProxyDelegate";
 
   private final MethodDescription.InDefinedShape indyBootstrapMethod;
 

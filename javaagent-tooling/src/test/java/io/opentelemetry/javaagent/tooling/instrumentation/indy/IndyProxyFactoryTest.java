@@ -315,9 +315,11 @@ public class IndyProxyFactoryTest {
 
     assertThat(proxy.getConstructors()).hasSize(1);
     assertThat(proxy.getDeclaredMethods())
-        .hasSize(2)
+        .hasSize(3)
         .anySatisfy(method -> assertThat(method.getName()).isEqualTo("publicMethod"))
-        .anySatisfy(method -> assertThat(method.getName()).isEqualTo("publicStaticMethod"));
+        .anySatisfy(method -> assertThat(method.getName()).isEqualTo("publicStaticMethod"))
+        .anySatisfy(method -> assertThat(method.getName()).isEqualTo(
+            IndyProxyFactory.PROXY_DELEGATE_NAME));
   }
 
   @Test
