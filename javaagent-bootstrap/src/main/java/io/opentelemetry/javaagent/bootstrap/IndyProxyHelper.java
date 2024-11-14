@@ -9,8 +9,7 @@ import java.lang.reflect.Field;
 
 public class IndyProxyHelper {
 
-  private IndyProxyHelper() {
-  }
+  private IndyProxyHelper() {}
 
   public static <T> T unwrapIfNeeded(Object o, Class<T> type) {
     if (type.isAssignableFrom(o.getClass())) {
