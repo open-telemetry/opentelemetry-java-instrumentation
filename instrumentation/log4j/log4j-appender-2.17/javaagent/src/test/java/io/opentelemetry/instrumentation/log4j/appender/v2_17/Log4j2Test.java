@@ -11,6 +11,12 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FILEPATH;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_LINENO;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -22,7 +28,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,6 +40,7 @@ import org.apache.logging.log4j.MarkerManager;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
+import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AssertAccess;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -112,11 +118,12 @@ class Log4j2Test {
             List<AttributeAssertion> attributeAsserts =
                 new ArrayList<>(
                     Arrays.asList(
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_NAME,
-                            Thread.currentThread().getName()),
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId())));
+                        equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                        equalTo(THREAD_ID, Thread.currentThread().getId()),
+                        equalTo(CODE_NAMESPACE, Log4j2Test.class.getName()),
+                        equalTo(CODE_FUNCTION, "performLogging"),
+                        satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
+                        equalTo(CODE_FILEPATH, "Log4j2Test.java")));
             if (logException) {
               attributeAsserts.addAll(
                   Arrays.asList(
@@ -158,9 +165,12 @@ class Log4j2Test {
                 .hasAttributesSatisfyingExactly(
                     equalTo(AttributeKey.stringKey("key1"), "val1"),
                     equalTo(AttributeKey.stringKey("key2"), "val2"),
-                    equalTo(
-                        ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                    equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId())));
+                    equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                    equalTo(THREAD_ID, Thread.currentThread().getId()),
+                    equalTo(CODE_NAMESPACE, Log4j2Test.class.getName()),
+                    equalTo(CODE_FUNCTION, "testContextData"),
+                    satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
+                    equalTo(CODE_FILEPATH, "Log4j2Test.java")));
   }
 
   @Test
@@ -180,9 +190,12 @@ class Log4j2Test {
                 .hasAttributesSatisfyingExactly(
                     equalTo(AttributeKey.stringKey("log4j.map_message.key1"), "val1"),
                     equalTo(AttributeKey.stringKey("log4j.map_message.key2"), "val2"),
-                    equalTo(
-                        ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                    equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId())));
+                    equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                    equalTo(THREAD_ID, Thread.currentThread().getId()),
+                    equalTo(CODE_NAMESPACE, Log4j2Test.class.getName()),
+                    equalTo(CODE_FUNCTION, "testStringMapMessage"),
+                    satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
+                    equalTo(CODE_FILEPATH, "Log4j2Test.java")));
   }
 
   @Test
@@ -201,9 +214,12 @@ class Log4j2Test {
                 .hasSeverityText("INFO")
                 .hasAttributesSatisfyingExactly(
                     equalTo(AttributeKey.stringKey("log4j.map_message.key1"), "val1"),
-                    equalTo(
-                        ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                    equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId())));
+                    equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                    equalTo(THREAD_ID, Thread.currentThread().getId()),
+                    equalTo(CODE_NAMESPACE, Log4j2Test.class.getName()),
+                    equalTo(CODE_FUNCTION, "testStringMapMessageWithSpecialAttribute"),
+                    satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
+                    equalTo(CODE_FILEPATH, "Log4j2Test.java")));
   }
 
   @Test
@@ -223,9 +239,12 @@ class Log4j2Test {
                 .hasAttributesSatisfyingExactly(
                     equalTo(AttributeKey.stringKey("log4j.map_message.key1"), "val1"),
                     equalTo(AttributeKey.stringKey("log4j.map_message.key2"), "val2"),
-                    equalTo(
-                        ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                    equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId())));
+                    equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                    equalTo(THREAD_ID, Thread.currentThread().getId()),
+                    equalTo(CODE_NAMESPACE, Log4j2Test.class.getName()),
+                    equalTo(CODE_FUNCTION, "testStructuredDataMapMessage"),
+                    satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
+                    equalTo(CODE_FILEPATH, "Log4j2Test.java")));
   }
 
   @Test
@@ -238,8 +257,12 @@ class Log4j2Test {
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord.hasAttributesSatisfyingExactly(
-                equalTo(ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
+                equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                equalTo(THREAD_ID, Thread.currentThread().getId()),
+                equalTo(CODE_NAMESPACE, Log4j2Test.class.getName()),
+                equalTo(CODE_FUNCTION, "testMarker"),
+                satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
+                equalTo(CODE_FILEPATH, "Log4j2Test.java"),
                 equalTo(AttributeKey.stringKey("log4j.marker"), markerName)));
   }
 
