@@ -20,7 +20,7 @@
  * limitations under the License.
  */
 
-package io.opentelemetry.instrumentation.ratpack.v1_7;
+package io.opentelemetry.instrumentation.ratpack.v1_7.internal;
 
 import static java.util.logging.Level.WARNING;
 
@@ -32,6 +32,10 @@ import ratpack.handling.Context;
 // Copied from
 // https://github.com/ratpack/ratpack/blob/master/ratpack-core/src/main/java/ratpack/core/error/internal/DefaultProductionErrorHandler.java
 // since it is internal and has had breaking changes.
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 final class OpenTelemetryFallbackErrorHandler implements ClientErrorHandler, ServerErrorHandler {
 
   static final OpenTelemetryFallbackErrorHandler INSTANCE = new OpenTelemetryFallbackErrorHandler();

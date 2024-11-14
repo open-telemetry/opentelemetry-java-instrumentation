@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ratpack.v1_7;
+package io.opentelemetry.instrumentation.ratpack.v1_7.internal;
 
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.util.List;
@@ -11,7 +11,11 @@ import javax.annotation.Nullable;
 import ratpack.http.client.HttpResponse;
 import ratpack.http.client.RequestSpec;
 
-enum RatpackHttpClientAttributesGetter
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public enum RatpackHttpClientAttributesGetter
     implements HttpClientAttributesGetter<RequestSpec, HttpResponse> {
   INSTANCE;
 

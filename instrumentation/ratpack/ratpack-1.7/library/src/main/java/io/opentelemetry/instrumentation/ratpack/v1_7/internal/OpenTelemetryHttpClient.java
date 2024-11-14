@@ -3,23 +3,26 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ratpack.v1_7;
+package io.opentelemetry.instrumentation.ratpack.v1_7.internal;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.ratpack.v1_7.internal.ContextHolder;
 import io.opentelemetry.semconv.HttpAttributes;
 import ratpack.exec.Execution;
 import ratpack.http.client.HttpClient;
 import ratpack.http.client.HttpResponse;
 import ratpack.http.client.RequestSpec;
 
-final class OpenTelemetryHttpClient {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class OpenTelemetryHttpClient {
 
   private final Instrumenter<RequestSpec, HttpResponse> instrumenter;
 
-  OpenTelemetryHttpClient(Instrumenter<RequestSpec, HttpResponse> instrumenter) {
+  public OpenTelemetryHttpClient(Instrumenter<RequestSpec, HttpResponse> instrumenter) {
     this.instrumenter = instrumenter;
   }
 

@@ -8,37 +8,41 @@ package io.opentelemetry.javaagent.instrumentation.ratpack.v1_7;
 import io.netty.channel.Channel;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
-import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackTelemetry;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.ContextHolder;
+import io.opentelemetry.instrumentation.ratpack.v1_7.internal.OpenTelemetryHttpClient;
+import io.opentelemetry.instrumentation.ratpack.v1_7.internal.OpenTelemetryServerHandler;
+import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackClientInstrumenterBuilderFactory;
+import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackServerInstrumenterBuilderFactory;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import ratpack.exec.Execution;
 
 public final class RatpackSingletons {
 
   static {
-    TELEMETRY =
-        RatpackTelemetry.builder(GlobalOpenTelemetry.get())
-            .configure(AgentCommonConfig.get())
-            .build();
+    HTTP_CLIENT =
+        new OpenTelemetryHttpClient(
+            RatpackClientInstrumenterBuilderFactory.create(
+                    "io.opentelemetry.ratpack-1.7", GlobalOpenTelemetry.get())
+                .configure(AgentCommonConfig.get())
+                .build());
+    SERVER_HANDLER =
+        new OpenTelemetryServerHandler(
+            RatpackServerInstrumenterBuilderFactory.create(
+                    "io.opentelemetry.ratpack-1.7", GlobalOpenTelemetry.get())
+                .configure(AgentCommonConfig.get())
+                .build());
   }
 
-  private static final Instrumenter<String, Void> INSTRUMENTER =
-      Instrumenter.<String, Void>builder(
-              GlobalOpenTelemetry.get(), "io.opentelemetry.ratpack-1.7", s -> s)
-          .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
-          .buildInstrumenter();
+  private static final OpenTelemetryHttpClient HTTP_CLIENT;
+  private static final OpenTelemetryServerHandler SERVER_HANDLER;
 
-  public static Instrumenter<String, Void> instrumenter() {
-    return INSTRUMENTER;
+  public static OpenTelemetryHttpClient httpClient() {
+    return HTTP_CLIENT;
   }
 
-  private static final RatpackTelemetry TELEMETRY;
-
-  public static RatpackTelemetry telemetry() {
-    return TELEMETRY;
+  public static OpenTelemetryServerHandler serverHandler() {
+    return SERVER_HANDLER;
   }
 
   public static void propagateContextToChannel(Execution execution, Channel channel) {

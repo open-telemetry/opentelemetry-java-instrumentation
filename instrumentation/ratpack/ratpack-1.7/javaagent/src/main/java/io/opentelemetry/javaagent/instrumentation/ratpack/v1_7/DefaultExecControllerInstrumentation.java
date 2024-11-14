@@ -10,8 +10,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.google.common.collect.ImmutableList;
-import io.opentelemetry.instrumentation.ratpack.v1_7.OpenTelemetryExecInitializer;
-import io.opentelemetry.instrumentation.ratpack.v1_7.OpenTelemetryExecInterceptor;
+import io.opentelemetry.instrumentation.ratpack.v1_7.internal.OpenTelemetryExecInitializer;
+import io.opentelemetry.instrumentation.ratpack.v1_7.internal.OpenTelemetryExecInterceptor;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;

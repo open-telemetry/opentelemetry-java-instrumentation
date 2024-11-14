@@ -11,6 +11,8 @@ import com.google.common.collect.ImmutableList;
 import io.netty.channel.ConnectTimeoutException;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.ratpack.v1_7.internal.OpenTelemetryExecInitializer;
+import io.opentelemetry.instrumentation.ratpack.v1_7.internal.OpenTelemetryExecInterceptor;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;

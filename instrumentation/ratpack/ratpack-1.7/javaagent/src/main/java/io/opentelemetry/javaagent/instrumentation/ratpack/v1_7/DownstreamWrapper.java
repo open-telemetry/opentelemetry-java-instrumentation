@@ -9,7 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import ratpack.exec.Downstream;
 
-public class DownstreamWrapper<T> implements Downstream<T> {
+public final class DownstreamWrapper<T> implements Downstream<T> {
 
   private final Downstream<T> delegate;
   private final Context parentContext;

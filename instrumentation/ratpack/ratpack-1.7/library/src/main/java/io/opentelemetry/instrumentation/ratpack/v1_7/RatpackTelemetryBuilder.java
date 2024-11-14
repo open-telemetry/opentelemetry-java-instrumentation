@@ -9,11 +9,12 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackClientInstrumenterBuilderFactory;
+import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackServerInstrumenterBuilderFactory;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -32,17 +33,9 @@ public final class RatpackTelemetryBuilder {
 
   RatpackTelemetryBuilder(OpenTelemetry openTelemetry) {
     clientBuilder =
-        DefaultHttpClientInstrumenterBuilder.create(
-            INSTRUMENTATION_NAME,
-            openTelemetry,
-            RatpackHttpClientAttributesGetter.INSTANCE,
-            RequestHeaderSetter.INSTANCE);
+        RatpackClientInstrumenterBuilderFactory.create(INSTRUMENTATION_NAME, openTelemetry);
     serverBuilder =
-        DefaultHttpServerInstrumenterBuilder.create(
-            INSTRUMENTATION_NAME,
-            openTelemetry,
-            RatpackHttpAttributesGetter.INSTANCE,
-            RatpackGetter.INSTANCE);
+        RatpackServerInstrumenterBuilderFactory.create(INSTRUMENTATION_NAME, openTelemetry);
   }
 
   /**
@@ -171,13 +164,6 @@ public final class RatpackTelemetryBuilder {
       Function<SpanNameExtractor<? super Request>, ? extends SpanNameExtractor<? super Request>>
           serverSpanNameExtractor) {
     serverBuilder.setSpanNameExtractor(serverSpanNameExtractor);
-    return this;
-  }
-
-  @CanIgnoreReturnValue
-  public RatpackTelemetryBuilder configure(CommonConfig config) {
-    clientBuilder.configure(config);
-    serverBuilder.configure(config);
     return this;
   }
 

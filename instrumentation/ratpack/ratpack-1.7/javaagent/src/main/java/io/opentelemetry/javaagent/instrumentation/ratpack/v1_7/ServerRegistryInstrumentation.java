@@ -38,9 +38,7 @@ public class ServerRegistryInstrumentation implements TypeInstrumentation {
     @Advice.AssignReturned.ToReturned
     public static Registry injectTracing(@Advice.Return Registry registry) {
       return registry.join(
-          Registry.single(
-              HandlerDecorator.prepend(
-                  RatpackSingletons.telemetry().getOpenTelemetryServerHandler())));
+          Registry.single(HandlerDecorator.prepend(RatpackSingletons.serverHandler())));
     }
   }
 }
