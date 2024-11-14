@@ -69,6 +69,7 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
       Object bean = springCtx.getBean("otelAutoDispatcherFilter");
       OpenTelemetryHandlerMappingFilter filter =
           IndyProxyHelper.unwrapIfNeeded(bean, OpenTelemetryHandlerMappingFilter.class);
+      filter.setHandlerMappings(handlerMappings);
     }
   }
 
