@@ -48,7 +48,7 @@ public class DefaultExecControllerInstrumentation implements TypeInstrumentation
 
   @SuppressWarnings("unused")
   public static class SetInitializersAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static ImmutableList<? extends ExecInitializer> enter(
         @Advice.Argument(0) ImmutableList<? extends ExecInitializer> initializers) {
@@ -61,7 +61,7 @@ public class DefaultExecControllerInstrumentation implements TypeInstrumentation
 
   @SuppressWarnings("unused")
   public static class SetInterceptorsAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static ImmutableList<? extends ExecInterceptor> enter(
         @Advice.Argument(0) ImmutableList<? extends ExecInterceptor> interceptors) {
@@ -76,7 +76,7 @@ public class DefaultExecControllerInstrumentation implements TypeInstrumentation
   public static class ConstructorAdvice {
 
     @SuppressWarnings("UnusedVariable")
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     @Advice.AssignReturned.ToFields({
       @ToField(value = "initializers", index = 0),
       @ToField(value = "interceptors", index = 1)

@@ -61,7 +61,7 @@ public class RequestActionSupportInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class ConnectDownstreamAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static Object wrapDownstream(@Advice.Argument(0) Downstream<?> downstream) {
       // Propagate the current context to downstream
@@ -73,7 +73,7 @@ public class RequestActionSupportInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class ContextAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope injectChannelAttribute(
         @Advice.FieldValue("execution") Execution execution) {
 
@@ -85,7 +85,7 @@ public class RequestActionSupportInstrumentation implements TypeInstrumentation 
           .orElse(null);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exit(@Advice.Enter Scope scope) {
       if (scope != null) {
         scope.close();

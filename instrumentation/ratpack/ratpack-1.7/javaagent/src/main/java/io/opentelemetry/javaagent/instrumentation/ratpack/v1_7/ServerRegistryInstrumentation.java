@@ -34,7 +34,7 @@ public class ServerRegistryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class BuildAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     @Advice.AssignReturned.ToReturned
     public static Registry injectTracing(@Advice.Return Registry registry) {
       return registry.join(

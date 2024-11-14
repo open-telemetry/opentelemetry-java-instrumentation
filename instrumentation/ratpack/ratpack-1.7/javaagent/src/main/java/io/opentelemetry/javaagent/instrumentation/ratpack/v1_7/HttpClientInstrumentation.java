@@ -37,7 +37,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class OfAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     @Advice.AssignReturned.ToReturned
     public static HttpClient injectTracing(@Advice.Return HttpClient httpClient) throws Exception {
       return RatpackSingletons.telemetry().instrumentHttpClient(httpClient);
