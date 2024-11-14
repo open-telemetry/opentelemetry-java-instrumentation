@@ -677,8 +677,13 @@ class PulsarClientTest extends AbstractPulsarClientTest {
   void testSendMessageWithTxn() throws Exception {
     String topic = "persistent://public/default/testSendMessageWithTxn";
     admin.topics().createNonPartitionedTopic(topic);
-    producer = client.newProducer(Schema.STRING).topic(topic)
-        .sendTimeout(0, TimeUnit.SECONDS).enableBatching(false).create();
+    producer =
+        client
+            .newProducer(Schema.STRING)
+            .topic(topic)
+            .sendTimeout(0, TimeUnit.SECONDS)
+            .enableBatching(false)
+            .create();
     Transaction txn =
         client.newTransaction().withTransactionTimeout(5, TimeUnit.SECONDS).build().get();
     txn.commit();
