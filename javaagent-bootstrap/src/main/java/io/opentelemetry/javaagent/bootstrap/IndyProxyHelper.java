@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
-import java.lang.reflect.Field;
-
 public class IndyProxyHelper {
 
   private IndyProxyHelper() {}
@@ -15,15 +13,12 @@ public class IndyProxyHelper {
     if (type.isAssignableFrom(o.getClass())) {
       return type.cast(o);
     }
-    // public delegate field on indy proxy
-    try {
-      Field delegateField = o.getClass().getField("delegate");
-      Object delegate = delegateField.get(o);
+
+    if (o instanceof IndyProxy) {
+      Object delegate = ((IndyProxy) o).__getIndyProxyDelegate();
       if (type.isAssignableFrom(delegate.getClass())) {
         return type.cast(delegate);
       }
-    } catch (NoSuchFieldException | IllegalAccessException e) {
-      throw new IllegalStateException(e);
     }
 
     throw new IllegalArgumentException("unexpected object type");

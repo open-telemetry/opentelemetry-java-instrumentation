@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.reflection;
 
+import io.opentelemetry.javaagent.bootstrap.IndyProxy;
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldAccessorMarker;
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldDetector;
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker;
@@ -38,8 +39,9 @@ public final class ReflectionHelper {
 
   public static Method[] filterMethods(Class<?> containingClass, Method[] methods) {
     if (methods.length == 0
-        || !VirtualFieldInstalledMarker.class.isAssignableFrom(containingClass)) {
-      // nothing to filter when class does not have any added virtual fields
+        || !VirtualFieldInstalledMarker.class.isAssignableFrom(containingClass)
+        || !IndyProxy.class.isAssignableFrom(containingClass)) {
+      // nothing to filter when class does not have any added virtual fields or is not a proxy
       return methods;
     }
     List<Method> result = new ArrayList<>(methods.length);
@@ -50,6 +52,9 @@ public final class ReflectionHelper {
               || method.getName().startsWith("__set__opentelemetryVirtualField$"))) {
         continue;
       }
+      if (method.getName().equals("__getIndyProxyDelegate")) {
+        continue;
+      }
       result.add(method);
     }
     return result.toArray(new Method[0]);
@@ -58,8 +63,10 @@ public final class ReflectionHelper {
   @SuppressWarnings("unused")
   public static Class<?>[] filterInterfaces(Class<?>[] interfaces, Class<?> containingClass) {
     if (interfaces.length == 0
-        || !VirtualFieldInstalledMarker.class.isAssignableFrom(containingClass)) {
+        || !VirtualFieldInstalledMarker.class.isAssignableFrom(containingClass)
+        || !IndyProxy.class.isAssignableFrom(containingClass)) {
       // nothing to filter when class does not have any added virtual fields
+      System.out.println("no interface to filter" + containingClass);
       return interfaces;
     }
     List<Class<?>> result = new ArrayList<>(interfaces.length);
@@ -73,6 +80,8 @@ public final class ReflectionHelper {
           && interfaceClass.isSynthetic()
           && interfaceClass.getName().contains("VirtualFieldAccessor$")) {
         virtualFieldClassNames.add(interfaceClass.getName());
+        continue;
+      } else if (IndyProxy.class.isAssignableFrom(interfaceClass)) {
         continue;
       }
       result.add(interfaceClass);
