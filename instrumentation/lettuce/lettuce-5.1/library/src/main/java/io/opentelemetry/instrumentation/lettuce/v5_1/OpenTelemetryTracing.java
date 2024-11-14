@@ -43,6 +43,8 @@ final class OpenTelemetryTracing implements Tracing {
   private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
   private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
   private static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.query.text");
+  private static final AttributeKey<Long> DB_REDIS_DATABASE_INDEX =
+      AttributeKey.longKey("db.redis.database_index");
   // copied from DbIncubatingAttributes.DbSystemIncubatingValues
   private static final String REDIS = "redis";
 
@@ -311,6 +313,16 @@ final class OpenTelemetryTracing implements Tracing {
       }
       if (key.equals("redis.args")) {
         argsString = value;
+        return this;
+      }
+      if (key.equals("db.namespace") && SemconvStability.emitOldDatabaseSemconv()) {
+        // map backwards into db.redis.database.index
+        long val = Long.parseLong(value);
+        if (span != null) {
+          span.setAttribute(DB_REDIS_DATABASE_INDEX, val);
+        } else {
+          spanBuilder.setAttribute(DB_REDIS_DATABASE_INDEX, val);
+        }
         return this;
       }
       if (span != null) {

@@ -16,6 +16,7 @@ import io.opentelemetry.semconv.ExceptionAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Marker;
@@ -29,6 +30,12 @@ import org.apache.logging.log4j.message.Message;
  */
 public final class LogEventMapper<T> {
 
+  // copied from CodeIncubatingAttributes
+  private static final AttributeKey<String> CODE_FILEPATH = AttributeKey.stringKey("code.filepath");
+  private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function");
+  private static final AttributeKey<Long> CODE_LINENO = AttributeKey.longKey("code.lineno");
+  private static final AttributeKey<String> CODE_NAMESPACE =
+      AttributeKey.stringKey("code.namespace");
   // copied from ThreadIncubatingAttributes
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
   private static final AttributeKey<String> THREAD_NAME = AttributeKey.stringKey("thread.name");
@@ -45,6 +52,7 @@ public final class LogEventMapper<T> {
   private final ContextDataAccessor<T> contextDataAccessor;
 
   private final boolean captureExperimentalAttributes;
+  private final boolean captureCodeAttributes;
   private final boolean captureMapMessageAttributes;
   private final boolean captureMarkerAttribute;
   private final List<String> captureContextDataAttributes;
@@ -53,11 +61,13 @@ public final class LogEventMapper<T> {
   public LogEventMapper(
       ContextDataAccessor<T> contextDataAccessor,
       boolean captureExperimentalAttributes,
+      boolean captureCodeAttributes,
       boolean captureMapMessageAttributes,
       boolean captureMarkerAttribute,
       List<String> captureContextDataAttributes) {
 
     this.contextDataAccessor = contextDataAccessor;
+    this.captureCodeAttributes = captureCodeAttributes;
     this.captureExperimentalAttributes = captureExperimentalAttributes;
     this.captureMapMessageAttributes = captureMapMessageAttributes;
     this.captureMarkerAttribute = captureMarkerAttribute;
@@ -71,13 +81,11 @@ public final class LogEventMapper<T> {
    *
    * <ul>
    *   <li>Fully qualified class name - {@link LogEvent#getLoggerFqcn()}
-   *   <li>Thread name - {@link LogEvent#getThreadName()}
-   *   <li>Thread id - {@link LogEvent#getThreadId()}
    *   <li>Thread priority - {@link LogEvent#getThreadPriority()}
-   *   <li>Marker - {@link LogEvent#getMarker()}
    *   <li>Nested diagnostic context - {@link LogEvent#getContextStack()}
    * </ul>
    */
+  @SuppressWarnings("TooManyParameters")
   public void mapLogEvent(
       LogRecordBuilder builder,
       Message message,
@@ -87,6 +95,7 @@ public final class LogEventMapper<T> {
       T contextData,
       String threadName,
       long threadId,
+      Supplier<StackTraceElement> sourceSupplier,
       Context context) {
 
     AttributesBuilder attributes = Attributes.builder();
@@ -114,6 +123,22 @@ public final class LogEventMapper<T> {
     if (captureExperimentalAttributes) {
       attributes.put(THREAD_NAME, threadName);
       attributes.put(THREAD_ID, threadId);
+    }
+
+    if (captureCodeAttributes) {
+      StackTraceElement source = sourceSupplier.get();
+      if (source != null) {
+        String fileName = source.getFileName();
+        if (fileName != null) {
+          attributes.put(CODE_FILEPATH, fileName);
+        }
+        attributes.put(CODE_NAMESPACE, source.getClassName());
+        attributes.put(CODE_FUNCTION, source.getMethodName());
+        int lineNumber = source.getLineNumber();
+        if (lineNumber > 0) {
+          attributes.put(CODE_LINENO, lineNumber);
+        }
+      }
     }
 
     builder.setAllAttributes(attributes.build());

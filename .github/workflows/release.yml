@@ -249,6 +249,8 @@ jobs:
         run: .github/scripts/use-cla-approved-github-bot.sh
 
       - name: Wait for release to be available in maven central
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
         run: |
           until curl --silent \
                      --show-error \
