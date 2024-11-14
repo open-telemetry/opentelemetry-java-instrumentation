@@ -20,6 +20,7 @@ import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.MessageListener;
 import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
+import org.apache.pulsar.client.api.transaction.Transaction;
 import org.junit.jupiter.api.Test;
 
 class PulsarClientTest extends AbstractPulsarClientTest {
@@ -443,5 +444,34 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                         .hasLinks(LinkData.create(producerSpan2.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(topic2, msgId2.toString(), false))));
+  }
+
+  @Test
+  void testSendMessageWithTxn() throws Exception {
+    String topic = "persistent://public/default/testSendMessageWithTxn";
+    admin.topics().createNonPartitionedTopic(topic);
+    producer = client.newProducer(Schema.STRING).topic(topic).enableBatching(false).create();
+    Transaction txn = client.newTransaction()
+        .withTransactionTimeout(5, TimeUnit.SECONDS).build().get();
+
+    testing.runWithSpan("parent1",
+        () -> producer.newMessage(txn).value("test1").send());
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("parent1")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent(),
+                span ->
+                    span.hasName("Txn Produce Register Topic")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(topic + " publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(1))
+            ));
   }
 }

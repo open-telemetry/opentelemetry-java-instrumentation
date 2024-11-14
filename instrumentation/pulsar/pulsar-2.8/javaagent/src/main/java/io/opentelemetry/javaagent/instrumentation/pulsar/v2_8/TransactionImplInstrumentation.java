@@ -1,0 +1,46 @@
+package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
+
+import io.opentelemetry.instrumentation.api.internal.Timer;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons;
+import java.util.concurrent.CompletableFuture;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
+
+public class TransactionImplInstrumentation implements TypeInstrumentation {
+  @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    return named("org.apache.pulsar.client.impl.ProducerImpl");
+  }
+
+  @Override
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(named("registerProducedTopic")
+        .and(isPublic())
+        .and(takesArguments(1))
+        .and(takesArgument(0, named("java.lang.String"))),
+        TransactionImplInstrumentation.class.getName() + "$RegisterProducedTopicAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class RegisterProducedTopicAdvice {
+
+    @Advice.OnMethodEnter
+    public static Timer before() {
+      return Timer.start();
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void after(@Advice.Enter Timer timer,
+        @Advice.Return(readOnly = false) CompletableFuture<Void> future) {
+      future = PulsarSingletons.wrap(future, timer);
+    }
+  }
+}

@@ -52,6 +52,8 @@ public final class PulsarSingletons {
       createConsumerBatchReceiveInstrumenter();
   private static final Instrumenter<PulsarRequest, Void> PRODUCER_INSTRUMENTER =
       createProducerInstrumenter();
+  private static final Instrumenter<String, Void> TXN_PRODUCE_INSTRUMENTER =
+      createTxnProduceInstrumenter();
 
   public static Instrumenter<PulsarRequest, Void> consumerProcessInstrumenter() {
     return CONSUMER_PROCESS_INSTRUMENTER;
@@ -148,6 +150,23 @@ public final class PulsarSingletons {
     return builder.buildProducerInstrumenter(MessageTextMapSetter.INSTANCE);
   }
 
+  private static Instrumenter<String, Void> createTxnProduceInstrumenter() {
+    InstrumenterBuilder<String, Void> instrumenterBuilder =
+        Instrumenter.builder(
+            TELEMETRY,
+            INSTRUMENTATION_NAME, request -> "Txn Produce Register Topic");
+    return instrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysProducer());
+  }
+
+  public static Context startAndEndTxnProduceRegister(Context parent, Timer timer,
+      Throwable throwable) {
+    if (!TXN_PRODUCE_INSTRUMENTER.shouldStart(parent, "")) {
+      return null;
+    }
+    return InstrumenterUtil.startAndEnd(
+        TXN_PRODUCE_INSTRUMENTER, parent, "", null, throwable, timer.startTime(), timer.now());
+  }
+
   private static <T> AttributesExtractor<T, Void> createMessagingAttributesExtractor(
       MessagingAttributesGetter<T, Void> getter, MessageOperation operation) {
     return MessagingAttributesExtractor.builder(getter, operation)
@@ -205,6 +224,25 @@ public final class PulsarSingletons {
         throwable,
         timer.startTime(),
         timer.now());
+  }
+
+  public static CompletableFuture<Void> wrap(CompletableFuture<Void> future, Timer timer) {
+    Context parent = Context.current();
+    CompletableFuture<Void> result = new CompletableFuture<>();
+    future.whenComplete((unused, t) -> {
+      Context context = startAndEndTxnProduceRegister(parent, timer, t);
+      runWithContext(
+          context,
+          () -> {
+            if (t != null) {
+              result.completeExceptionally(t);
+            } else {
+              result.complete(null);
+            }
+          });
+    });
+
+    return result;
   }
 
   public static CompletableFuture<Message<?>> wrap(
