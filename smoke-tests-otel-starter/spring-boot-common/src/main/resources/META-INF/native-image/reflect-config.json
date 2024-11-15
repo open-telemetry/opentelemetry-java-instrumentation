@@ -1244,5 +1244,35 @@
     "condition": {
       "typeReachable": "org.apache.kafka.common.utils.AppInfoParser"
     }
+  },
+  {
+    "name": "io.netty.util.internal.shaded.org.jctools.queues.unpadded.MpscUnpaddedArrayQueueProducerIndexField",
+    "fields": [
+      {
+        "name": "producerIndex"
+      }
+    ],
+    "condition": {
+      "typeReachable": "io.netty.util.internal.shaded.org.jctools.queues.unpadded.MpscUnpaddedArrayQueueProducerIndexField"
+    }
+  }
+  ,
+  {
+    "condition": {
+      "typeReachable": "io.netty.resolver.dns.DnsServerAddressStreamProviders"
+    },
+    "name": "io.netty.resolver.dns.macos.MacOSDnsServerAddressStreamProvider",
+    "methods": [
+      {
+        "name": "<init>",
+        "parameterTypes": []
+      }
+    ]
+  },
+  {
+    "condition": {
+      "typeReachable": "io.netty.resolver.dns.DnsServerAddressStreamProviders$1"
+    },
+    "name": "io.netty.resolver.dns.macos.MacOSDnsServerAddressStreamProvider"
   }
 ]
