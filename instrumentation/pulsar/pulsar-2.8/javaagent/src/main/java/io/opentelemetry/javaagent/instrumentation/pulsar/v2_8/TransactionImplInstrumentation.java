@@ -22,7 +22,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class TransactionImplInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.apache.pulsar.client.impl.ProducerImpl");
+    return named("org.apache.pulsar.client.impl.transaction.TransactionImpl");
   }
 
   @Override
