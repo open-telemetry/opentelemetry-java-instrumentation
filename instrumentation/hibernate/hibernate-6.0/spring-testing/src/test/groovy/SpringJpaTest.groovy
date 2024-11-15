@@ -14,6 +14,8 @@ import spring.jpa.PersistenceConfig
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable
 
 class SpringJpaTest extends AgentInstrumentationSpecification {
 
@@ -62,12 +64,12 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           childOf span(1)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
-            "$DbIncubatingAttributes.DB_NAME" "test"
-            "$DbIncubatingAttributes.DB_USER" "sa"
-            "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-            "$DbIncubatingAttributes.DB_STATEMENT" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName(.*)from Customer(.*)/
-            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
-            "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
+            "${maybeStable(DbIncubatingAttributes.DB_NAME)}" "test"
+            "$DbIncubatingAttributes.DB_USER" emitStableDatabaseSemconv() ? null : "sa"
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" emitStableDatabaseSemconv() ? null : "hsqldb:mem:"
+            "${maybeStable(DbIncubatingAttributes.DB_STATEMENT)}" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName(.*)from Customer(.*)/
+            "${maybeStable(DbIncubatingAttributes.DB_OPERATION)}" "SELECT"
+            "${maybeStable(DbIncubatingAttributes.DB_SQL_TABLE)}" "Customer"
           }
         }
         span(3) {
@@ -118,11 +120,11 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             childOf span(1)
             attributes {
               "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
-              "$DbIncubatingAttributes.DB_NAME" "test"
-              "$DbIncubatingAttributes.DB_USER" "sa"
-              "$DbIncubatingAttributes.DB_STATEMENT" "call next value for Customer_SEQ"
-              "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-              "$DbIncubatingAttributes.DB_OPERATION" "CALL"
+              "${maybeStable(DbIncubatingAttributes.DB_NAME)}" "test"
+              "$DbIncubatingAttributes.DB_USER" emitStableDatabaseSemconv() ? null : "sa"
+              "${maybeStable(DbIncubatingAttributes.DB_STATEMENT)}" "call next value for Customer_SEQ"
+              "$DbIncubatingAttributes.DB_CONNECTION_STRING" emitStableDatabaseSemconv() ? null : "hsqldb:mem:"
+              "${maybeStable(DbIncubatingAttributes.DB_OPERATION)}" "CALL"
             }
           }
           span(3) {
@@ -139,12 +141,12 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             childOf span(3)
             attributes {
               "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
-              "$DbIncubatingAttributes.DB_NAME" "test"
-              "$DbIncubatingAttributes.DB_USER" "sa"
-              "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-              "$DbIncubatingAttributes.DB_STATEMENT" ~/insert into Customer \(.*\) values \(.*\)/
-              "$DbIncubatingAttributes.DB_OPERATION" "INSERT"
-              "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
+              "${maybeStable(DbIncubatingAttributes.DB_NAME)}" "test"
+              "$DbIncubatingAttributes.DB_USER" emitStableDatabaseSemconv() ? null : "sa"
+              "$DbIncubatingAttributes.DB_CONNECTION_STRING" emitStableDatabaseSemconv() ? null : "hsqldb:mem:"
+              "${maybeStable(DbIncubatingAttributes.DB_STATEMENT)}" ~/insert into Customer \(.*\) values \(.*\)/
+              "${maybeStable(DbIncubatingAttributes.DB_OPERATION)}" "INSERT"
+              "${maybeStable(DbIncubatingAttributes.DB_SQL_TABLE)}" "Customer"
             }
           }
         } else {
@@ -154,12 +156,12 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             childOf span(1)
             attributes {
               "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
-              "$DbIncubatingAttributes.DB_NAME" "test"
-              "$DbIncubatingAttributes.DB_USER" "sa"
-              "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-              "$DbIncubatingAttributes.DB_STATEMENT" ~/insert into Customer \(.*\) values \(.*\)/
-              "$DbIncubatingAttributes.DB_OPERATION" "INSERT"
-              "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
+              "${maybeStable(DbIncubatingAttributes.DB_NAME)}" "test"
+              "$DbIncubatingAttributes.DB_USER" emitStableDatabaseSemconv() ? null : "sa"
+              "$DbIncubatingAttributes.DB_CONNECTION_STRING" emitStableDatabaseSemconv() ? null : "hsqldb:mem:"
+              "${maybeStable(DbIncubatingAttributes.DB_STATEMENT)}" ~/insert into Customer \(.*\) values \(.*\)/
+              "${maybeStable(DbIncubatingAttributes.DB_OPERATION)}" "INSERT"
+              "${maybeStable(DbIncubatingAttributes.DB_SQL_TABLE)}" "Customer"
             }
           }
           span(3) {
@@ -209,12 +211,12 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           kind CLIENT
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
-            "$DbIncubatingAttributes.DB_NAME" "test"
-            "$DbIncubatingAttributes.DB_USER" "sa"
-            "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-            "$DbIncubatingAttributes.DB_STATEMENT" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName (.*)from Customer (.*)where ([^.]+)\.id( ?)=( ?)\?/
-            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
-            "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
+            "${maybeStable(DbIncubatingAttributes.DB_NAME)}" "test"
+            "$DbIncubatingAttributes.DB_USER" emitStableDatabaseSemconv() ? null : "sa"
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" emitStableDatabaseSemconv() ? null : "hsqldb:mem:"
+            "${maybeStable(DbIncubatingAttributes.DB_STATEMENT)}" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName (.*)from Customer (.*)where ([^.]+)\.id( ?)=( ?)\?/
+            "${maybeStable(DbIncubatingAttributes.DB_OPERATION)}" "SELECT"
+            "${maybeStable(DbIncubatingAttributes.DB_SQL_TABLE)}" "Customer"
           }
         }
         span(3) {
@@ -230,12 +232,12 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           kind CLIENT
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
-            "$DbIncubatingAttributes.DB_NAME" "test"
-            "$DbIncubatingAttributes.DB_USER" "sa"
-            "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-            "$DbIncubatingAttributes.DB_STATEMENT" ~/update Customer set firstName=\?,(.*)lastName=\? where id=\?/
-            "$DbIncubatingAttributes.DB_OPERATION" "UPDATE"
-            "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
+            "${maybeStable(DbIncubatingAttributes.DB_NAME)}" "test"
+            "$DbIncubatingAttributes.DB_USER" emitStableDatabaseSemconv() ? null : "sa"
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" emitStableDatabaseSemconv() ? null : "hsqldb:mem:"
+            "${maybeStable(DbIncubatingAttributes.DB_STATEMENT)}" ~/update Customer set firstName=\?,(.*)lastName=\? where id=\?/
+            "${maybeStable(DbIncubatingAttributes.DB_OPERATION)}" "UPDATE"
+            "${maybeStable(DbIncubatingAttributes.DB_SQL_TABLE)}" "Customer"
           }
         }
       }
@@ -273,12 +275,12 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           childOf span(1)
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
-            "$DbIncubatingAttributes.DB_NAME" "test"
-            "$DbIncubatingAttributes.DB_USER" "sa"
-            "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-            "$DbIncubatingAttributes.DB_STATEMENT" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName (.*)from Customer (.*)(where ([^.]+)\.lastName( ?)=( ?)\?|)/
-            "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
-            "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
+            "${maybeStable(DbIncubatingAttributes.DB_NAME)}" "test"
+            "$DbIncubatingAttributes.DB_USER" emitStableDatabaseSemconv() ? null : "sa"
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" emitStableDatabaseSemconv() ? null : "hsqldb:mem:"
+            "${maybeStable(DbIncubatingAttributes.DB_STATEMENT)}" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName (.*)from Customer (.*)(where ([^.]+)\.lastName( ?)=( ?)\?|)/
+            "${maybeStable(DbIncubatingAttributes.DB_OPERATION)}" "SELECT"
+            "${maybeStable(DbIncubatingAttributes.DB_SQL_TABLE)}" "Customer"
           }
         }
       }
@@ -317,12 +319,12 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             childOf span(1)
             attributes {
               "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
-              "$DbIncubatingAttributes.DB_NAME" "test"
-              "$DbIncubatingAttributes.DB_USER" "sa"
-              "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-              "$DbIncubatingAttributes.DB_STATEMENT" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName (.*)from Customer (.*)where ([^.]+)\.id( ?)=( ?)\?/
-              "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
-              "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
+              "${maybeStable(DbIncubatingAttributes.DB_NAME)}" "test"
+              "$DbIncubatingAttributes.DB_USER" emitStableDatabaseSemconv() ? null : "sa"
+              "$DbIncubatingAttributes.DB_CONNECTION_STRING" emitStableDatabaseSemconv() ? null : "hsqldb:mem:"
+              "${maybeStable(DbIncubatingAttributes.DB_STATEMENT)}" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName (.*)from Customer (.*)where ([^.]+)\.id( ?)=( ?)\?/
+              "${maybeStable(DbIncubatingAttributes.DB_OPERATION)}" "SELECT"
+              "${maybeStable(DbIncubatingAttributes.DB_SQL_TABLE)}" "Customer"
             }
           }
         }
@@ -342,12 +344,12 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
             childOf span(1)
             attributes {
               "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
-              "$DbIncubatingAttributes.DB_NAME" "test"
-              "$DbIncubatingAttributes.DB_USER" "sa"
-              "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-              "$DbIncubatingAttributes.DB_STATEMENT" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName (.*)from Customer (.*)where ([^.]+)\.id( ?)=( ?)\?/
-              "$DbIncubatingAttributes.DB_OPERATION" "SELECT"
-              "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
+              "${maybeStable(DbIncubatingAttributes.DB_NAME)}" "test"
+              "$DbIncubatingAttributes.DB_USER" emitStableDatabaseSemconv() ? null : "sa"
+              "$DbIncubatingAttributes.DB_CONNECTION_STRING" emitStableDatabaseSemconv() ? null : "hsqldb:mem:"
+              "${maybeStable(DbIncubatingAttributes.DB_STATEMENT)}" ~/select ([^.]+)\.id([^,]*),([^.]+)\.firstName([^,]*),([^.]+)\.lastName (.*)from Customer (.*)where ([^.]+)\.id( ?)=( ?)\?/
+              "${maybeStable(DbIncubatingAttributes.DB_OPERATION)}" "SELECT"
+              "${maybeStable(DbIncubatingAttributes.DB_SQL_TABLE)}" "Customer"
             }
           }
         }
@@ -372,12 +374,12 @@ class SpringJpaTest extends AgentInstrumentationSpecification {
           kind CLIENT
           attributes {
             "$DbIncubatingAttributes.DB_SYSTEM" "hsqldb"
-            "$DbIncubatingAttributes.DB_NAME" "test"
-            "$DbIncubatingAttributes.DB_USER" "sa"
-            "$DbIncubatingAttributes.DB_CONNECTION_STRING" "hsqldb:mem:"
-            "$DbIncubatingAttributes.DB_STATEMENT" "delete from Customer where id=?"
-            "$DbIncubatingAttributes.DB_OPERATION" "DELETE"
-            "$DbIncubatingAttributes.DB_SQL_TABLE" "Customer"
+            "${maybeStable(DbIncubatingAttributes.DB_NAME)}" "test"
+            "$DbIncubatingAttributes.DB_USER" emitStableDatabaseSemconv() ? null : "sa"
+            "$DbIncubatingAttributes.DB_CONNECTION_STRING" emitStableDatabaseSemconv() ? null : "hsqldb:mem:"
+            "${maybeStable(DbIncubatingAttributes.DB_STATEMENT)}" "delete from Customer where id=?"
+            "${maybeStable(DbIncubatingAttributes.DB_OPERATION)}" "DELETE"
+            "${maybeStable(DbIncubatingAttributes.DB_SQL_TABLE)}" "Customer"
           }
         }
       }

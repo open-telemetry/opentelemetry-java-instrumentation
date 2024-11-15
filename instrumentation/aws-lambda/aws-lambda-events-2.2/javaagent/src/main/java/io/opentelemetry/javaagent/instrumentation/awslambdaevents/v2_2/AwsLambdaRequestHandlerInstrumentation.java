@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaInstrumentationHelper.flushTimeout;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -114,7 +115,7 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
             .end(functionContext, input, result, throwable);
       }
 
-      OpenTelemetrySdkAccess.forceFlush(1, TimeUnit.SECONDS);
+      OpenTelemetrySdkAccess.forceFlush(flushTimeout().toNanos(), TimeUnit.NANOSECONDS);
     }
   }
 }

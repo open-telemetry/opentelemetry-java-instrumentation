@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrsclient;
 
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientHandlerException;
 import com.sun.jersey.api.client.ClientResponse;
@@ -17,7 +19,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
-import io.opentelemetry.semconv.NetworkAttributes;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Map;
@@ -54,7 +55,7 @@ class JaxRsClientV1Test extends AbstractHttpClientTest<WebResource.Builder> {
         serverEndpoint -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(NetworkAttributes.NETWORK_PROTOCOL_VERSION);
+          attributes.remove(NETWORK_PROTOCOL_VERSION);
           return attributes;
         });
   }

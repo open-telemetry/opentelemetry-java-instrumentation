@@ -9,6 +9,8 @@ import static graphql.schema.idl.TypeRuntimeWiring.newTypeWiring;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 
 import graphql.ExecutionResult;
 import graphql.GraphQL;
@@ -25,7 +27,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -245,11 +246,9 @@ public abstract class AbstractGraphqlTest {
                                     event
                                         .hasName("exception")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                ExceptionAttributes.EXCEPTION_TYPE,
-                                                "InvalidSyntax"),
+                                            equalTo(EXCEPTION_TYPE, "InvalidSyntax"),
                                             satisfies(
-                                                ExceptionAttributes.EXCEPTION_MESSAGE,
+                                                EXCEPTION_MESSAGE,
                                                 message ->
                                                     message.startsWithIgnoringCase(
                                                         "Invalid Syntax"))))));
@@ -287,11 +286,9 @@ public abstract class AbstractGraphqlTest {
                                     event
                                         .hasName("exception")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                ExceptionAttributes.EXCEPTION_TYPE,
-                                                "ValidationError"),
+                                            equalTo(EXCEPTION_TYPE, "ValidationError"),
                                             satisfies(
-                                                ExceptionAttributes.EXCEPTION_MESSAGE,
+                                                EXCEPTION_MESSAGE,
                                                 message ->
                                                     message.startsWith("Validation error"))))));
   }

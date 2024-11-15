@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.testing.junit.db;
 
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CASSANDRA_TABLE;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_COSMOSDB_CONTAINER;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_MONGODB_COLLECTION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -39,14 +38,13 @@ public class SemconvStabilityUtil {
     map.put(DB_SQL_TABLE, DB_COLLECTION_NAME);
     map.put(DB_CASSANDRA_TABLE, DB_COLLECTION_NAME);
     map.put(DB_MONGODB_COLLECTION, DB_COLLECTION_NAME);
-    map.put(DB_COSMOSDB_CONTAINER, DB_COLLECTION_NAME);
     return map;
   }
 
   private SemconvStabilityUtil() {}
 
   @SuppressWarnings("unchecked")
-  public static <T> AttributeKey<T> getAttributeKey(AttributeKey<T> oldKey) {
+  public static <T> AttributeKey<T> maybeStable(AttributeKey<T> oldKey) {
     // not testing database/dup
     if (SemconvStability.emitStableDatabaseSemconv()) {
       return (AttributeKey<T>) oldToNewMap.get(oldKey);

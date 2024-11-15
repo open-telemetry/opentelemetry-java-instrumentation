@@ -7,10 +7,13 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import java.util.List;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
 import org.junit.jupiter.api.AfterEach;
@@ -95,11 +98,12 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
                 .hasResource(resource)
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasAttributesSatisfyingExactly(
-                    equalTo(
-                        ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                    equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
-                    equalTo(stringKey("log4j.map_message.key1"), "val1"),
-                    equalTo(stringKey("log4j.map_message.key2"), "val2")));
+                    addLocationAttributes(
+                        "twoLogsStringMapMessage",
+                        equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                        equalTo(THREAD_ID, Thread.currentThread().getId()),
+                        equalTo(stringKey("log4j.map_message.key1"), "val1"),
+                        equalTo(stringKey("log4j.map_message.key2"), "val2"))));
   }
 
   @Test
@@ -128,10 +132,16 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("a message")
                 .hasAttributesSatisfyingExactly(
-                    equalTo(
-                        ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                    equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
-                    equalTo(stringKey("log4j.map_message.key1"), "val1"),
-                    equalTo(stringKey("log4j.map_message.key2"), "val2")));
+                    addLocationAttributes(
+                        "twoLogsStructuredDataMessage",
+                        equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                        equalTo(THREAD_ID, Thread.currentThread().getId()),
+                        equalTo(stringKey("log4j.map_message.key1"), "val1"),
+                        equalTo(stringKey("log4j.map_message.key2"), "val2"))));
+  }
+
+  private static List<AttributeAssertion> addLocationAttributes(
+      String methodName, AttributeAssertion... assertions) {
+    return addLocationAttributes(LogReplayOpenTelemetryAppenderTest.class, methodName, assertions);
   }
 }

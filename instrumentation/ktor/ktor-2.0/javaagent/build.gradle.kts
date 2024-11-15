@@ -7,10 +7,22 @@ plugins {
 
 muzzle {
   pass {
-    group.set("org.jetbrains.kotlinx")
-    module.set("ktor-server-core")
-    versions.set("[2.0.0,)")
+    group.set("io.ktor")
+    module.set("ktor-client-core")
+    versions.set("[2.0.0,3.0.0)")
     assertInverse.set(true)
+    excludeInstrumentationName("ktor-server")
+    // missing dependencies
+    skip("1.1.0", "1.1.1", "1.1.5")
+  }
+  pass {
+    group.set("io.ktor")
+    module.set("ktor-server-core")
+    versions.set("[2.0.0,3.0.0)")
+    assertInverse.set(true)
+    excludeInstrumentationName("ktor-client")
+    // missing dependencies
+    skip("1.1.0", "1.1.1")
   }
 }
 
@@ -25,6 +37,7 @@ dependencies {
   compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
+  testInstrumentation(project(":instrumentation:ktor:ktor-3.0:javaagent"))
 
   testImplementation(project(":instrumentation:ktor:ktor-2.0:testing"))
   testImplementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")

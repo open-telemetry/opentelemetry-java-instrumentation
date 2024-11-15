@@ -7,18 +7,22 @@ package io.opentelemetry.javaagent.instrumentation.redisson;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
-import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.net.InetAddress;
@@ -117,18 +121,12 @@ public abstract class AbstractRedissonAsyncClientTest {
                     span.hasName("SET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(
-                                    DbIncubatingAttributes.DB_STATEMENT),
-                                "SET foo ?"),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(
-                                    DbIncubatingAttributes.DB_OPERATION),
-                                "SET"))));
+                            equalTo(NETWORK_TYPE, "ipv4"),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, (long) port),
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"))));
   }
 
   @Test
@@ -156,18 +154,12 @@ public abstract class AbstractRedissonAsyncClientTest {
                     span.hasName("SADD")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(
-                                    DbIncubatingAttributes.DB_STATEMENT),
-                                "SADD set1 ?"),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(
-                                    DbIncubatingAttributes.DB_OPERATION),
-                                "SADD"))
+                            equalTo(NETWORK_TYPE, "ipv4"),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, (long) port),
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(maybeStable(DB_STATEMENT), "SADD set1 ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SADD"))
                         .hasParent(trace.getSpan(0)),
                 span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
   }
@@ -236,48 +228,33 @@ public abstract class AbstractRedissonAsyncClientTest {
                     span.hasName("DB Query")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(
-                                    DbIncubatingAttributes.DB_STATEMENT),
-                                "MULTI;SET batch1 ?"))
+                            equalTo(NETWORK_TYPE, "ipv4"),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, (long) port),
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(maybeStable(DB_STATEMENT), "MULTI;SET batch1 ?"))
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("SET")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(
-                                    DbIncubatingAttributes.DB_STATEMENT),
-                                "SET batch2 ?"),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(
-                                    DbIncubatingAttributes.DB_OPERATION),
-                                "SET"))
+                            equalTo(NETWORK_TYPE, "ipv4"),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, (long) port),
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(maybeStable(DB_STATEMENT), "SET batch2 ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET"))
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("EXEC")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, (long) port),
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "redis"),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(
-                                    DbIncubatingAttributes.DB_STATEMENT),
-                                "EXEC"),
-                            equalTo(
-                                SemconvStabilityUtil.getAttributeKey(
-                                    DbIncubatingAttributes.DB_OPERATION),
-                                "EXEC"))
+                            equalTo(NETWORK_TYPE, "ipv4"),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, (long) port),
+                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(maybeStable(DB_STATEMENT), "EXEC"),
+                            equalTo(maybeStable(DB_OPERATION), "EXEC"))
                         .hasParent(trace.getSpan(0)),
                 span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
   }

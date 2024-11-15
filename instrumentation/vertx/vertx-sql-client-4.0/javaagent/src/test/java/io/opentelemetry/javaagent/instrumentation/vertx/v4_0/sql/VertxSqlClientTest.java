@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -12,6 +14,11 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -19,7 +26,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.vertx.core.Vertx;
 import io.vertx.pgclient.PgConnectOptions;
 import io.vertx.pgclient.PgException;
@@ -134,11 +140,11 @@ class VertxSqlClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_NAME, DB),
-                            equalTo(DbIncubatingAttributes.DB_USER, USER_DB),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "select * from test"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "test"),
+                            equalTo(maybeStable(DB_NAME), DB),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from test"),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "test"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port)),
                 span ->
@@ -190,9 +196,9 @@ class VertxSqlClientTest {
                                             EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class))))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_NAME, DB),
-                            equalTo(DbIncubatingAttributes.DB_USER, USER_DB),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "invalid"),
+                            equalTo(maybeStable(DB_NAME), DB),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                            equalTo(maybeStable(DB_STATEMENT), "invalid"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port)),
                 span ->
@@ -224,13 +230,11 @@ class VertxSqlClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_NAME, DB),
-                            equalTo(DbIncubatingAttributes.DB_USER, USER_DB),
-                            equalTo(
-                                DbIncubatingAttributes.DB_STATEMENT,
-                                "select * from test where id = $1"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "test"),
+                            equalTo(maybeStable(DB_NAME), DB),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from test where id = $1"),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "test"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
   }
@@ -256,13 +260,13 @@ class VertxSqlClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_NAME, DB),
-                            equalTo(DbIncubatingAttributes.DB_USER, USER_DB),
+                            equalTo(maybeStable(DB_NAME), DB),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
                             equalTo(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                maybeStable(DB_STATEMENT),
                                 "insert into test values ($1, $2) returning *"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "INSERT"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "test"),
+                            equalTo(maybeStable(DB_OPERATION), "INSERT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "test"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
   }
@@ -344,11 +348,11 @@ class VertxSqlClientTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(DbIncubatingAttributes.DB_NAME, DB),
-                                equalTo(DbIncubatingAttributes.DB_USER, USER_DB),
-                                equalTo(DbIncubatingAttributes.DB_STATEMENT, "select * from test"),
-                                equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-                                equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "test"),
+                                equalTo(maybeStable(DB_NAME), DB),
+                                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                                equalTo(maybeStable(DB_STATEMENT), "select * from test"),
+                                equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                                equalTo(maybeStable(DB_SQL_TABLE), "test"),
                                 equalTo(SERVER_ADDRESS, host),
                                 equalTo(SERVER_PORT, port)),
                     span ->
@@ -409,13 +413,12 @@ class VertxSqlClientTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(DbIncubatingAttributes.DB_NAME, DB),
-                                equalTo(DbIncubatingAttributes.DB_USER, USER_DB),
+                                equalTo(maybeStable(DB_NAME), DB),
+                                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
                                 equalTo(
-                                    DbIncubatingAttributes.DB_STATEMENT,
-                                    "select * from test where id = $1"),
-                                equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-                                equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "test"),
+                                    maybeStable(DB_STATEMENT), "select * from test where id = $1"),
+                                equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                                equalTo(maybeStable(DB_SQL_TABLE), "test"),
                                 equalTo(SERVER_ADDRESS, host),
                                 equalTo(SERVER_PORT, port)),
                     span ->

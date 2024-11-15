@@ -7,6 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
@@ -18,7 +26,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -105,25 +112,20 @@ public class SpringRabbitMqTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "rabbitmq"),
-                equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, destination),
-                satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
-                    AbstractLongAssert::isNotNegative)));
+                equalTo(MESSAGING_SYSTEM, "rabbitmq"),
+                equalTo(MESSAGING_DESTINATION_NAME, destination),
+                satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)));
     if (operation != null) {
-      assertions.add(equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, operation));
+      assertions.add(equalTo(MESSAGING_OPERATION, operation));
     }
     if (peerAddress != null) {
-      assertions.add(equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"));
-      assertions.add(equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, peerAddress));
-      assertions.add(
-          satisfies(NetworkAttributes.NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative));
+      assertions.add(equalTo(NETWORK_TYPE, "ipv4"));
+      assertions.add(equalTo(NETWORK_PEER_ADDRESS, peerAddress));
+      assertions.add(satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative));
     }
     if (routingKey) {
       assertions.add(
-          satisfies(
-              MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY,
-              AbstractStringAssert::isNotBlank));
+          satisfies(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, AbstractStringAssert::isNotBlank));
     }
     if (testHeaders) {
       assertions.add(
@@ -213,12 +215,10 @@ public class SpringRabbitMqTest {
                       span.hasName("basic.ack")
                           .hasKind(SpanKind.CLIENT)
                           .hasAttributesSatisfyingExactly(
-                              equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                              equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, ip),
-                              satisfies(
-                                  NetworkAttributes.NETWORK_PEER_PORT,
-                                  AbstractLongAssert::isNotNegative),
-                              equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "rabbitmq")));
+                              equalTo(NETWORK_TYPE, "ipv4"),
+                              equalTo(NETWORK_PEER_ADDRESS, ip),
+                              satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative),
+                              equalTo(MESSAGING_SYSTEM, "rabbitmq")));
             });
       }
     }

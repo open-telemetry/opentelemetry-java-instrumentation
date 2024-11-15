@@ -8,6 +8,9 @@ package io.opentelemetry.instrumentation.logback.appender.v1_0;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
@@ -16,7 +19,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.util.ArrayList;
@@ -169,13 +171,10 @@ class LogbackTest {
             if (logException) {
               attributeAsserts.addAll(
                   Arrays.asList(
-                      equalTo(
-                          ExceptionAttributes.EXCEPTION_TYPE,
-                          IllegalStateException.class.getName()),
-                      equalTo(ExceptionAttributes.EXCEPTION_MESSAGE, "hello"),
+                      equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
+                      equalTo(EXCEPTION_MESSAGE, "hello"),
                       satisfies(
-                          ExceptionAttributes.EXCEPTION_STACKTRACE,
-                          v -> v.contains(LogbackTest.class.getName()))));
+                          EXCEPTION_STACKTRACE, v -> v.contains(LogbackTest.class.getName()))));
             }
             logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
           });

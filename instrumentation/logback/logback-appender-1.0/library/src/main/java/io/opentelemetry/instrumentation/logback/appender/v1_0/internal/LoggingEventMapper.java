@@ -110,16 +110,7 @@ public final class LoggingEventMapper {
     builder.emit();
   }
 
-  /**
-   * Map the {@link ILoggingEvent} data model onto the {@link LogRecordBuilder}. Unmapped fields
-   * include:
-   *
-   * <ul>
-   *   <li>Thread name - {@link ILoggingEvent#getThreadName()}
-   *   <li>Marker - {@link ILoggingEvent#getMarker()}
-   *   <li>Mapped diagnostic context - {@link ILoggingEvent#getMDCPropertyMap()}
-   * </ul>
-   */
+  /** Map the {@link ILoggingEvent} data model onto the {@link LogRecordBuilder}. */
   private void mapLoggingEvent(
       LogRecordBuilder builder, ILoggingEvent loggingEvent, long threadId) {
     // message

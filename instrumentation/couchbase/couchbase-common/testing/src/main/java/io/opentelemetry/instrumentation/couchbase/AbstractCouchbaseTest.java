@@ -5,8 +5,13 @@
 
 package io.opentelemetry.instrumentation.couchbase;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 
 import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.cluster.BucketSettings;
@@ -19,7 +24,6 @@ import com.couchbase.mock.http.query.QueryServer;
 import com.couchbase.mock.httpio.HttpServer;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
-import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
@@ -121,26 +125,15 @@ public abstract class AbstractCouchbaseTest {
     span.hasName(spanName).hasKind(SpanKind.CLIENT);
 
     List<AttributeAssertion> assertions = new ArrayList<>();
-    assertions.add(
-        equalTo(
-            DbIncubatingAttributes.DB_SYSTEM,
-            DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE));
+    assertions.add(equalTo(DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE));
     if (operation != null) {
-      assertions.add(
-          equalTo(
-              SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_OPERATION),
-              operation));
+      assertions.add(equalTo(maybeStable(DB_OPERATION), operation));
     }
     if (bucketName != null) {
-      assertions.add(
-          equalTo(
-              SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_NAME), bucketName));
+      assertions.add(equalTo(maybeStable(DB_NAME), bucketName));
     }
     if (statement != null) {
-      assertions.add(
-          satisfies(
-              SemconvStabilityUtil.getAttributeKey(DbIncubatingAttributes.DB_STATEMENT),
-              s -> s.startsWith(statement)));
+      assertions.add(satisfies(maybeStable(DB_STATEMENT), s -> s.startsWith(statement)));
     }
     assertions.addAll(couchbaseAttributes());
 

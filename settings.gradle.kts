@@ -13,7 +13,7 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.develocity") version "3.18.1"
+  id("com.gradle.develocity") version "3.18.2"
   id("com.gradle.common-custom-user-data-gradle-plugin") version "2.0.2"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
   // this can't live in pluginManagement currently due to
@@ -402,6 +402,10 @@ include(":instrumentation:ktor:ktor-1.0:library")
 include(":instrumentation:ktor:ktor-2.0:javaagent")
 include(":instrumentation:ktor:ktor-2.0:library")
 include(":instrumentation:ktor:ktor-2.0:testing")
+include(":instrumentation:ktor:ktor-2-common:library")
+include(":instrumentation:ktor:ktor-3.0:javaagent")
+include(":instrumentation:ktor:ktor-3.0:library")
+include(":instrumentation:ktor:ktor-3.0:testing")
 include(":instrumentation:ktor:ktor-common:library")
 include(":instrumentation:kubernetes-client-7.0:javaagent")
 include(":instrumentation:kubernetes-client-7.0:javaagent-unit-tests")

@@ -224,7 +224,7 @@ public class AgentInstaller {
                 (builder, typeDescription, classLoader, module, protectionDomain) -> builder);
 
     VirtualFieldImplementationInstallerFactory virtualFieldInstallerFactory =
-        new VirtualFieldImplementationInstallerFactory();
+        VirtualFieldImplementationInstallerFactory.getInstance();
     for (EarlyInstrumentationModule earlyInstrumentationModule :
         loadOrdered(EarlyInstrumentationModule.class, Utils.getExtensionsClassLoader())) {
 
