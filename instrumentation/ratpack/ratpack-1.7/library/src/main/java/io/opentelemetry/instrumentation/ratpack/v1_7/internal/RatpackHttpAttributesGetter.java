@@ -17,7 +17,7 @@ import ratpack.server.PublicAddress;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public enum RatpackHttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
+enum RatpackHttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
   INSTANCE;
 
   @Override

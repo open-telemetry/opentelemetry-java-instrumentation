@@ -38,9 +38,8 @@ class RatpackPooledHttpClientTest extends AbstractRatpackPooledHttpClientTest {
         HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER);
     optionsBuilder.setClientSpanErrorMapper(
         (uri, exception) -> {
-          if (uri.toString().equals("https://192.0.2.1/")) {
-            return new ConnectTimeoutException("Connect timeout (PT2S) connecting to " + uri);
-          } else if (OS.WINDOWS.isCurrentOs() && uri.toString().equals("http://localhost:61/")) {
+          if (uri.toString().equals("https://192.0.2.1/")
+              || (OS.WINDOWS.isCurrentOs() && uri.toString().equals("http://localhost:61/"))) {
             return new ConnectTimeoutException("Connect timeout (PT2S) connecting to " + uri);
           } else if (uri.getPath().equals("/read-timeout")) {
             return new HttpClientReadTimeoutException(

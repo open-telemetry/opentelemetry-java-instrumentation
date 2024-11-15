@@ -38,7 +38,6 @@ public class RatpackInstrumentationModule extends InstrumentationModule
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new DefaultExecControllerInstrumentation(),
-        new ServerRegistryInstrumentation(),
         new HttpClientInstrumentation(),
         new RequestActionSupportInstrumentation());
   }

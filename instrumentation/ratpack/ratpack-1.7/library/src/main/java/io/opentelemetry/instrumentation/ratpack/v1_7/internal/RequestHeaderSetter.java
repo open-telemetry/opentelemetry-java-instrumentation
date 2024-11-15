@@ -13,7 +13,7 @@ import ratpack.http.client.RequestSpec;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public enum RequestHeaderSetter implements TextMapSetter<RequestSpec> {
+enum RequestHeaderSetter implements TextMapSetter<RequestSpec> {
   INSTANCE;
 
   @Override
