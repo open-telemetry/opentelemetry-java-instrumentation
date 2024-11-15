@@ -21,7 +21,6 @@ dependencies {
   implementation(project(":instrumentation:netty:netty-4.1:library"))
   implementation(project(":instrumentation:ratpack:ratpack-1.7:library"))
 
-  testLibrary("io.ratpack:ratpack-test:1.7.0")
   testImplementation(project(":instrumentation:ratpack:ratpack-1.4:testing"))
   testInstrumentation(project(":instrumentation:ratpack:ratpack-1.4:javaagent"))
 }
