@@ -23,6 +23,7 @@ import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import io.opentelemetry.semconv.ExceptionAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.logstash.logback.marker.LogstashMarker;
@@ -70,7 +70,13 @@ public final class LoggingEventMapper {
   private static final AttributeKey<List<String>> LOG_BODY_PARAMETERS =
       AttributeKey.stringArrayKey("log.body.parameters");
 
-  private static final Cache<Class<?>, Field> valueField = Cache.bounded(20);
+  private static final ClassValue<FieldReader> valueField =
+      new ClassValue<FieldReader>() {
+        @Override
+        protected FieldReader computeValue(Class<?> type) {
+          return createFieldReader(type);
+        }
+      };
 
   private final boolean captureExperimentalAttributes;
   private final List<String> captureMdcAttributes;
@@ -288,13 +294,13 @@ public final class LoggingEventMapper {
     List<KeyValuePair> keyValuePairs = loggingEvent.getKeyValuePairs();
     if (keyValuePairs != null) {
       for (KeyValuePair keyValuePair : keyValuePairs) {
-        captureKeyValueAttribute(attributes, keyValuePair.key, keyValuePair.value);
+        captureAttribute(attributes, keyValuePair.key, keyValuePair.value);
       }
     }
   }
 
-  private static void captureKeyValueAttribute(
-      AttributesBuilder attributes, Object key, Object value) {
+  // visible for testing
+  static void captureAttribute(AttributesBuilder attributes, Object key, Object value) {
     // empty values are not serialized
     if (key != null && value != null) {
       String keyStr = key.toString();
@@ -310,12 +316,8 @@ public final class LoggingEventMapper {
         attributes.put(keyStr, ((Number) value).doubleValue());
       } else if (value.getClass().isArray()) {
         if (value instanceof boolean[] || value instanceof Boolean[]) {
-          captureKeyArrayValueAttribute(
-              attributes,
-              AttributeKey.booleanArrayKey(keyStr),
-              value,
-              Boolean[]::new,
-              o -> (Boolean) o);
+          captureArrayValueAttribute(
+              attributes, AttributeKey.booleanArrayKey(keyStr), value, o -> (Boolean) o);
         } else if (value instanceof byte[]
             || value instanceof Byte[]
             || value instanceof int[]
@@ -324,36 +326,26 @@ public final class LoggingEventMapper {
             || value instanceof Long[]
             || value instanceof short[]
             || value instanceof Short[]) {
-          captureKeyArrayValueAttribute(
-              attributes,
-              AttributeKey.longArrayKey(keyStr),
-              value,
-              Long[]::new,
-              o -> ((Number) o).longValue());
+          captureArrayValueAttribute(
+              attributes, AttributeKey.longArrayKey(keyStr), value, o -> ((Number) o).longValue());
         } else if (value instanceof float[]
             || value instanceof Float[]
             || value instanceof double[]
             || value instanceof Double[]) {
-          captureKeyArrayValueAttribute(
+          captureArrayValueAttribute(
               attributes,
               AttributeKey.doubleArrayKey(keyStr),
               value,
-              Double[]::new,
               o -> ((Number) o).doubleValue());
         } else {
-          captureKeyArrayValueAttribute(
-              attributes,
-              AttributeKey.stringArrayKey(keyStr),
-              value,
-              String[]::new,
-              String::valueOf);
+          captureArrayValueAttribute(
+              attributes, AttributeKey.stringArrayKey(keyStr), value, String::valueOf);
         }
       } else if (value instanceof Collection) {
-        captureKeyArrayValueAttribute(
+        captureArrayValueAttribute(
             attributes,
             AttributeKey.stringArrayKey(keyStr),
             ((Collection<?>) value).toArray(),
-            String[]::new,
             String::valueOf);
       } else {
         attributes.put(getAttributeKey(keyStr), String.valueOf(value));
@@ -361,29 +353,22 @@ public final class LoggingEventMapper {
     }
   }
 
-  private static <T> void captureKeyArrayValueAttribute(
+  private static <T> void captureArrayValueAttribute(
       AttributesBuilder attributes,
       AttributeKey<List<T>> key,
       Object array,
-      IntFunction<T[]> newArray,
       Function<Object, T> extractor) {
-    int length = java.lang.reflect.Array.getLength(array);
-    T[] typedArray = newArray.apply(length);
-    int offset = 0;
+    List<T> list = new ArrayList<>();
+    int length = Array.getLength(array);
     for (int i = 0; i < length; i++) {
-      Object value = java.lang.reflect.Array.get(array, i);
-      // empty values are not serialized
+      Object value = Array.get(array, i);
       if (value != null) {
-        typedArray[i - offset] = extractor.apply(value);
-      } else {
-        offset++;
+        list.add(extractor.apply(value));
       }
     }
     // empty lists are not serialized
-    if (length != offset) {
-      attributes.put(
-          key,
-          Arrays.asList(offset == 0 ? typedArray : Arrays.copyOf(typedArray, length - offset)));
+    if (!list.isEmpty()) {
+      attributes.put(key, list);
     }
   }
 
@@ -520,67 +505,84 @@ public final class LoggingEventMapper {
   @NoMuzzle
   private static void captureLogstashMarkerAttributes(
       AttributesBuilder attributes, LogstashMarker logstashMarker) {
-    if (logstashMarker instanceof SingleFieldAppendingMarker) {
-      SingleFieldAppendingMarker singleFieldAppendingMarker =
-          (SingleFieldAppendingMarker) logstashMarker;
-      String fieldName = singleFieldAppendingMarker.getFieldName();
-      Object fieldValue = extractFieldValue(singleFieldAppendingMarker);
-      captureKeyValueAttribute(attributes, fieldName, fieldValue);
-    } else if (logstashMarker instanceof MapEntriesAppendingMarker) {
-      MapEntriesAppendingMarker mapEntriesAppendingMarker =
-          (MapEntriesAppendingMarker) logstashMarker;
-      Map<?, ?> map = extractMapValue(mapEntriesAppendingMarker);
-      if (map != null) {
+    FieldReader fieldReader = valueField.get(logstashMarker.getClass());
+    if (fieldReader != null) {
+      fieldReader.read(attributes, logstashMarker);
+    }
+  }
+
+  @NoMuzzle
+  private static boolean isSingleFieldAppendingMarker(Class<?> type) {
+    return SingleFieldAppendingMarker.class.isAssignableFrom(type);
+  }
+
+  @NoMuzzle
+  private static boolean isMapEntriesAppendingMarker(Class<?> type) {
+    return MapEntriesAppendingMarker.class.isAssignableFrom(type);
+  }
+
+  private static FieldReader createFieldReader(Class<?> type) {
+    if (isSingleFieldAppendingMarker(type)) {
+      // ObjectAppendingMarker.fieldValue since v7.0
+      // ObjectAppendingMarker.object since v3.0
+      // RawJsonAppendingMarker.rawJson since v3.0
+      return createStringReader(findValueField(type, "fieldValue", "object", "rawJson"));
+    } else if (isMapEntriesAppendingMarker(type)) {
+      // MapEntriesAppendingMarker.map since v3.0
+      return createMapReader(findValueField(type, "map"));
+    }
+    return null;
+  }
+
+  @NoMuzzle
+  private static String getSingleFieldAppendingMarkerName(Object logstashMarker) {
+    SingleFieldAppendingMarker singleFieldAppendingMarker =
+        (SingleFieldAppendingMarker) logstashMarker;
+    return singleFieldAppendingMarker.getFieldName();
+  }
+
+  @Nullable
+  private static FieldReader createStringReader(Field field) {
+    if (field == null) {
+      return null;
+    }
+    return (attributes, logstashMarker) -> {
+      String fieldName = getSingleFieldAppendingMarkerName(logstashMarker);
+      Object fieldValue = extractFieldValue(field, logstashMarker);
+      captureAttribute(attributes, fieldName, fieldValue);
+    };
+  }
+
+  @Nullable
+  private static FieldReader createMapReader(Field field) {
+    if (field == null) {
+      return null;
+    }
+    return (attributes, logstashMarker) -> {
+      Object fieldValue = extractFieldValue(field, logstashMarker);
+      if (fieldValue instanceof Map) {
+        Map<?, ?> map = (Map<?, ?>) fieldValue;
         for (Map.Entry<?, ?> entry : map.entrySet()) {
           Object key = entry.getKey();
           Object value = entry.getValue();
-          captureKeyValueAttribute(attributes, key, value);
+          captureAttribute(attributes, key, value);
         }
       }
-    }
+    };
   }
 
   @Nullable
-  private static Object extractFieldValue(SingleFieldAppendingMarker singleFieldAppendingMarker) {
-    // ObjectAppendingMarker.fieldValue since v7.0
-    // ObjectAppendingMarker.object since v3.0
-    // RawJsonAppendingMarker.rawJson since v3.0
-    Field field =
-        valueField.computeIfAbsent(
-            singleFieldAppendingMarker.getClass(),
-            clazz -> findValueField(clazz, new String[] {"fieldValue", "object", "rawJson"}));
-    if (field != null) {
-      try {
-        return field.get(singleFieldAppendingMarker);
-      } catch (IllegalAccessException e) {
-        // ignore
-      }
+  private static Object extractFieldValue(Field field, Object logstashMarker) {
+    try {
+      return field.get(logstashMarker);
+    } catch (IllegalAccessException e) {
+      // ignore
     }
     return null;
   }
 
   @Nullable
-  private static Map<?, ?> extractMapValue(MapEntriesAppendingMarker mapEntriesAppendingMarker) {
-    // MapEntriesAppendingMarker.map since v3.0
-    Field field =
-        valueField.computeIfAbsent(
-            mapEntriesAppendingMarker.getClass(),
-            clazz -> findValueField(clazz, new String[] {"map"}));
-    if (field != null) {
-      try {
-        Object value = field.get(mapEntriesAppendingMarker);
-        if (value instanceof Map) {
-          return (Map<?, ?>) value;
-        }
-      } catch (IllegalAccessException e) {
-        // ignore
-      }
-    }
-    return null;
-  }
-
-  @Nullable
-  private static Field findValueField(Class<?> clazz, String[] fieldNames) {
+  private static Field findValueField(Class<?> clazz, String... fieldNames) {
     for (String fieldName : fieldNames) {
       try {
         Field field = clazz.getDeclaredField(fieldName);
@@ -596,23 +598,17 @@ public final class LoggingEventMapper {
   private static boolean supportsLogstashMarkers() {
     try {
       Class.forName("net.logstash.logback.marker.LogstashMarker");
-    } catch (ClassNotFoundException e) {
-      return false;
-    }
-
-    try {
       Class.forName("net.logstash.logback.marker.SingleFieldAppendingMarker");
-    } catch (ClassNotFoundException e) {
-      return false;
-    }
-
-    try {
       Class.forName("net.logstash.logback.marker.MapEntriesAppendingMarker");
     } catch (ClassNotFoundException e) {
       return false;
     }
 
     return true;
+  }
+
+  private interface FieldReader {
+    void read(AttributesBuilder attributes, LogstashMarker logstashMarker);
   }
 
   /**
