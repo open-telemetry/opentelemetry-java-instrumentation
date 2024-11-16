@@ -11,7 +11,8 @@ import org.springframework.scheduling.support.ScheduledMethodRunnable;
 
 public class SpringSchedulingCodeAttributesGetter implements CodeAttributesGetter<Runnable> {
   private static final Class<?> outcomeTrackingRunnableClass = getOutcomeTrackingRunnableClass();
-  private static final Field outcomeTrackingRunnableField = getOutcomeTrackingRunnableField(outcomeTrackingRunnableClass);
+  private static final Field outcomeTrackingRunnableField =
+      getOutcomeTrackingRunnableField(outcomeTrackingRunnableClass);
 
   private static Class<?> getOutcomeTrackingRunnableClass() {
     try {
@@ -32,7 +33,9 @@ public class SpringSchedulingCodeAttributesGetter implements CodeAttributesGette
   }
 
   private static Runnable unwrap(Runnable runnable) {
-    if (outcomeTrackingRunnableClass != null && outcomeTrackingRunnableField != null && outcomeTrackingRunnableClass.isAssignableFrom(runnable.getClass())) {
+    if (outcomeTrackingRunnableClass != null
+        && outcomeTrackingRunnableField != null
+        && outcomeTrackingRunnableClass.isAssignableFrom(runnable.getClass())) {
       try {
         // task may be wrapped multiple times so
         return unwrap((Runnable) outcomeTrackingRunnableField.get(runnable));
