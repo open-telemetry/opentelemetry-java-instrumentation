@@ -448,14 +448,10 @@ public final class LoggingEventMapper {
 
   private static void captureLogstashAttributes(
       AttributesBuilder attributes, ILoggingEvent loggingEvent) {
-    try {
-      if (supportsMultipleMarkers && hasMultipleMarkers(loggingEvent)) {
-        captureMultipleLogstashAttributes(attributes, loggingEvent);
-      } else {
-        captureSingleLogstashAttribute(attributes, loggingEvent);
-      }
-    } catch (Throwable e) {
-      // ignore
+    if (supportsMultipleMarkers && hasMultipleMarkers(loggingEvent)) {
+      captureMultipleLogstashAttributes(attributes, loggingEvent);
+    } else {
+      captureSingleLogstashAttribute(attributes, loggingEvent);
     }
   }
 
@@ -465,13 +461,11 @@ public final class LoggingEventMapper {
   }
 
   @SuppressWarnings("deprecation") // getMarker is deprecate since 1.3.0
-  @NoMuzzle
   private static void captureSingleLogstashAttribute(
       AttributesBuilder attributes, ILoggingEvent loggingEvent) {
     Marker marker = loggingEvent.getMarker();
     if (isLogstashMarker(marker)) {
-      LogstashMarker logstashMarker = (LogstashMarker) marker;
-      captureLogstashMarker(attributes, logstashMarker);
+      captureLogstashMarker(attributes, marker);
     }
   }
 
@@ -480,31 +474,28 @@ public final class LoggingEventMapper {
       AttributesBuilder attributes, ILoggingEvent loggingEvent) {
     for (Marker marker : loggingEvent.getMarkerList()) {
       if (isLogstashMarker(marker)) {
-        LogstashMarker logstashMarker = (LogstashMarker) marker;
-        captureLogstashMarker(attributes, logstashMarker);
+        captureLogstashMarker(attributes, marker);
       }
     }
   }
 
   @NoMuzzle
-  private static void captureLogstashMarker(
-      AttributesBuilder attributes, LogstashMarker logstashMarker) {
+  private static void captureLogstashMarker(AttributesBuilder attributes, Marker marker) {
+    LogstashMarker logstashMarker = (LogstashMarker) marker;
     captureLogstashMarkerAttributes(attributes, logstashMarker);
 
     if (logstashMarker.hasReferences()) {
       for (Iterator<Marker> it = logstashMarker.iterator(); it.hasNext(); ) {
         Marker referenceMarker = it.next();
         if (isLogstashMarker(referenceMarker)) {
-          LogstashMarker referenceLogstashMarker = (LogstashMarker) referenceMarker;
-          captureLogstashMarker(attributes, referenceLogstashMarker);
+          captureLogstashMarker(attributes, referenceMarker);
         }
       }
     }
   }
 
-  @NoMuzzle
   private static void captureLogstashMarkerAttributes(
-      AttributesBuilder attributes, LogstashMarker logstashMarker) {
+      AttributesBuilder attributes, Object logstashMarker) {
     FieldReader fieldReader = valueField.get(logstashMarker.getClass());
     if (fieldReader != null) {
       fieldReader.read(attributes, logstashMarker);
@@ -608,7 +599,7 @@ public final class LoggingEventMapper {
   }
 
   private interface FieldReader {
-    void read(AttributesBuilder attributes, LogstashMarker logstashMarker);
+    void read(AttributesBuilder attributes, Object logstashMarker);
   }
 
   /**
