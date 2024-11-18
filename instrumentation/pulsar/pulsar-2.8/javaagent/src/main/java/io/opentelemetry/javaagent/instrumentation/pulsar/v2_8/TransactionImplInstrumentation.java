@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons;
@@ -31,23 +30,17 @@ public class TransactionImplInstrumentation implements TypeInstrumentation {
         named("registerProducedTopic")
             .and(isPublic())
             .and(takesArguments(1))
-            .and(takesArgument(0, named("java.lang.String"))),
+            .and(takesArgument(0, String.class)),
         TransactionImplInstrumentation.class.getName() + "$RegisterProducedTopicAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class RegisterProducedTopicAdvice {
 
-    @Advice.OnMethodEnter
-    public static Timer before() {
-      return Timer.start();
-    }
-
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void after(
-        @Advice.Enter Timer timer,
         @Advice.Return(readOnly = false) CompletableFuture<Void> future) {
-      future = PulsarSingletons.wrap(future, timer);
+      future = PulsarSingletons.wrap(future);
     }
   }
 }

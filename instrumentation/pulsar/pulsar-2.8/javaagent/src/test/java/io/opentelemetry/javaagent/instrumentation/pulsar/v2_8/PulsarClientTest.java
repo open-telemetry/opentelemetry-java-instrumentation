@@ -694,12 +694,8 @@ class PulsarClientTest extends AbstractPulsarClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent1").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("Txn Produce Register Topic")
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(0)),
-                span ->
                     span.hasName(topic + " publish")
                         .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(1))));
+                        .hasParent(trace.getSpan(0))));
   }
 }
