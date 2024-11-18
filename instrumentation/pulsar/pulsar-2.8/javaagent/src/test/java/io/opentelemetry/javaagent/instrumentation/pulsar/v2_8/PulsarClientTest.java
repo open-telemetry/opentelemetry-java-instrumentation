@@ -684,10 +684,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
             .sendTimeout(0, TimeUnit.SECONDS)
             .enableBatching(false)
             .create();
-    Transaction txn =
-        client.newTransaction().withTransactionTimeout(5, TimeUnit.SECONDS).build().get();
-    testing.runWithSpan("parent1", () -> producer.newMessage(txn).value("test1").send());
-    txn.commit();
+    Transaction transaction =
+        client.newTransaction().withTransactionTimeout(15, TimeUnit.SECONDS).build().get();
+    testing.runWithSpan("parent1", () -> producer.newMessage(transaction).value("test1").send());
+    transaction.commit();
 
     testing.waitAndAssertTraces(
         trace ->
