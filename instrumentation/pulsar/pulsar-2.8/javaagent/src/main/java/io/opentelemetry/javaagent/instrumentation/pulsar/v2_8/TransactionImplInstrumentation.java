@@ -38,8 +38,7 @@ public class TransactionImplInstrumentation implements TypeInstrumentation {
   public static class RegisterProducedTopicAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void after(
-        @Advice.Return(readOnly = false) CompletableFuture<Void> future) {
+    public static void after(@Advice.Return(readOnly = false) CompletableFuture<Void> future) {
       future = PulsarSingletons.wrap(future);
     }
   }

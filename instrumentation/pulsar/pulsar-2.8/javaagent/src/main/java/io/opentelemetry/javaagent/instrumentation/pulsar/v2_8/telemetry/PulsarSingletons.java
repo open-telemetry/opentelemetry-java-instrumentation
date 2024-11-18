@@ -223,8 +223,7 @@ public final class PulsarSingletons {
                   } else {
                     result.complete(null);
                   }
-                })
-    );
+                }));
 
     return result;
   }
