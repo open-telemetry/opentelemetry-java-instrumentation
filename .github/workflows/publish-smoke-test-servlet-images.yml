@@ -67,7 +67,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Gradle cache
-        uses: gradle/actions/setup-gradle@d156388eb19639ec20ade50009f3d199ce1e2808 # v4.1.0
+        uses: gradle/actions/setup-gradle@473878a77f1b98e2b5ac4af93489d1656a80a5ed # v4.2.0
         with:
           # only push cache for one matrix option per OS since github action cache space is limited
           cache-read-only: ${{ matrix.smoke-test-suite != 'tomcat' }}
