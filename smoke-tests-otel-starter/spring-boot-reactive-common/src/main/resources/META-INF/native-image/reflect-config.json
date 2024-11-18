@@ -1,0 +1,13 @@
+[
+  {
+    "name": "io.netty.util.internal.shaded.org.jctools.queues.unpadded.MpscUnpaddedArrayQueueProducerIndexField",
+    "fields": [
+      {
+        "name": "producerIndex"
+      }
+    ],
+    "condition": {
+      "typeReachable": "io.netty.util.internal.shaded.org.jctools.queues.unpadded.MpscUnpaddedArrayQueueProducerIndexField"
+    }
+  }
+]
