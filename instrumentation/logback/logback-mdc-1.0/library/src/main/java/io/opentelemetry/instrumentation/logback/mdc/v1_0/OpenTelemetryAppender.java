@@ -17,7 +17,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
-import io.opentelemetry.instrumentation.logback.mdc.v1_0.internal.UnionMap;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -83,6 +82,9 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     }
 
     Map<String, String> contextData = new HashMap<>();
+    if (eventContext != null) {
+      contextData.putAll(eventContext);
+    }
     Context context = Context.current();
     Span currentSpan = Span.fromContext(context);
 
@@ -102,20 +104,14 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
                   "baggage." + key, value.getValue()));
     }
 
-    if (eventContext == null) {
-      eventContext = contextData;
-    } else {
-      eventContext = new UnionMap<>(eventContext, contextData);
-    }
-    Map<String, String> eventContextMap = eventContext;
     LoggerContextVO oldVo = event.getLoggerContextVO();
     LoggerContextVO vo =
         oldVo != null
-            ? new LoggerContextVO(oldVo.getName(), eventContextMap, oldVo.getBirthTime())
+            ? new LoggerContextVO(oldVo.getName(), contextData, oldVo.getBirthTime())
             : null;
 
     try {
-      MDC_MAP_FIELD.set(event, eventContextMap);
+      MDC_MAP_FIELD.set(event, contextData);
     } catch (IllegalAccessException ignored) {
       // setAccessible(true) was called on the field
     }

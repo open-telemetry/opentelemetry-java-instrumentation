@@ -34,6 +34,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureKeyValuePairAttributes = false;
   private boolean captureLoggerContext = false;
   private boolean captureArguments = false;
+  private boolean captureLogstashAttributes = false;
   private List<String> captureMdcAttributes = emptyList();
 
   private volatile OpenTelemetry openTelemetry;
@@ -81,6 +82,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             .setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes)
             .setCaptureLoggerContext(captureLoggerContext)
             .setCaptureArguments(captureArguments)
+            .setCaptureLogstashAttributes(captureLogstashAttributes)
             .build();
     eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
     super.start();
@@ -173,6 +175,15 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    */
   public void setCaptureArguments(boolean captureArguments) {
     this.captureArguments = captureArguments;
+  }
+
+  /**
+   * Sets whether the Logstash attributes should be set to logs.
+   *
+   * @param captureLogstashAttributes To enable or disable capturing Logstash attributes
+   */
+  public void setCaptureLogstashAttributes(boolean captureLogstashAttributes) {
+    this.captureLogstashAttributes = captureLogstashAttributes;
   }
 
   /** Configures the {@link MDC} attributes that will be copied to logs. */
