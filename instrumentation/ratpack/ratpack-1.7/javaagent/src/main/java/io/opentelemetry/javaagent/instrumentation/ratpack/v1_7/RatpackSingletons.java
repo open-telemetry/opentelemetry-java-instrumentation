@@ -11,9 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.ContextHolder;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.OpenTelemetryHttpClient;
-import io.opentelemetry.instrumentation.ratpack.v1_7.internal.OpenTelemetryServerHandler;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackClientInstrumenterBuilderFactory;
-import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackServerInstrumenterBuilderFactory;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import ratpack.exec.Execution;
 
@@ -26,23 +24,12 @@ public final class RatpackSingletons {
                     "io.opentelemetry.ratpack-1.7", GlobalOpenTelemetry.get())
                 .configure(AgentCommonConfig.get())
                 .build());
-    SERVER_HANDLER =
-        new OpenTelemetryServerHandler(
-            RatpackServerInstrumenterBuilderFactory.create(
-                    "io.opentelemetry.ratpack-1.7", GlobalOpenTelemetry.get())
-                .configure(AgentCommonConfig.get())
-                .build());
   }
 
   private static final OpenTelemetryHttpClient HTTP_CLIENT;
-  private static final OpenTelemetryServerHandler SERVER_HANDLER;
 
   public static OpenTelemetryHttpClient httpClient() {
     return HTTP_CLIENT;
-  }
-
-  public static OpenTelemetryServerHandler serverHandler() {
-    return SERVER_HANDLER;
   }
 
   public static void propagateContextToChannel(Execution execution, Channel channel) {

@@ -14,7 +14,7 @@ import ratpack.http.client.RequestSpec;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class RatpackClientInstrumenterBuilderFactory {
+public final class RatpackClientInstrumenterBuilderFactory {
   private RatpackClientInstrumenterBuilderFactory() {}
 
   public static DefaultHttpClientInstrumenterBuilder<RequestSpec, HttpResponse> create(

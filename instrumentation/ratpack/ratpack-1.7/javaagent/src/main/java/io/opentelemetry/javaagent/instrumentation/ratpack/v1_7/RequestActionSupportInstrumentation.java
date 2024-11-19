@@ -77,7 +77,7 @@ public class RequestActionSupportInstrumentation implements TypeInstrumentation 
     public static Scope injectChannelAttribute(
         @Advice.FieldValue("execution") Execution execution) {
 
-      // Capture the CLIENT span and make it current before cally Netty layer
+      // Capture the CLIENT span and make it current before calling Netty layer
       return execution
           .maybeGet(ContextHolder.class)
           .map(ContextHolder::context)
