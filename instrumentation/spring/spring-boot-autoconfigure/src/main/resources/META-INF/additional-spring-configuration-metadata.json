@@ -412,6 +412,12 @@
       "defaultValue": false
     },
     {
+      "name": "otel.instrumentation.logback-appender.experimental.capture-logstash-attributes",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of Logstash attributes, supported are those added to logs via `Markers.append()`, `Markers.appendEntries()`, `Markers.appendArray()` and `Markers.appendRaw()` methods.",
+      "defaultValue": false
+    },
+    {
       "name": "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
       "type": "java.util.List<java.lang.String>",
       "description": "MDC attributes to capture. Use the wildcard character <code>*</code> to capture all attributes."

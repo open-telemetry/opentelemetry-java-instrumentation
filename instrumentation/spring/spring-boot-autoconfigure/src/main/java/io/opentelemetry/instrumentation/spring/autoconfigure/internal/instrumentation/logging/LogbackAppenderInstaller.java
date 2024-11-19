@@ -143,6 +143,14 @@ class LogbackAppenderInstaller {
       openTelemetryAppender.setCaptureArguments(captureArguments.booleanValue());
     }
 
+    Boolean captureLogstashAttributes =
+        evaluateBooleanProperty(
+            applicationEnvironmentPreparedEvent,
+            "otel.instrumentation.logback-appender.experimental.capture-logstash-attributes");
+    if (captureLogstashAttributes != null) {
+      openTelemetryAppender.setCaptureLogstashAttributes(captureLogstashAttributes.booleanValue());
+    }
+
     String mdcAttributeProperty =
         applicationEnvironmentPreparedEvent
             .getEnvironment()
