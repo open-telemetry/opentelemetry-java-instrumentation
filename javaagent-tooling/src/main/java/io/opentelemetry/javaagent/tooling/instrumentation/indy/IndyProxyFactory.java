@@ -13,6 +13,8 @@ import java.util.List;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.method.ParameterDescription;
+import net.bytebuddy.description.modifier.SyntheticState;
+import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
@@ -120,7 +122,8 @@ public class IndyProxyFactory {
     // Implement IndyProxy class and return the delegate field
     builder =
         builder
-            .defineMethod(PROXY_DELEGATE_NAME, Object.class, Modifier.PUBLIC)
+            .defineMethod(
+                PROXY_DELEGATE_NAME, Object.class, Visibility.PUBLIC, SyntheticState.SYNTHETIC)
             .intercept(FieldAccessor.ofField(DELEGATE_FIELD_NAME));
 
     return builder.make();
