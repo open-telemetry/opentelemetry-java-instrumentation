@@ -310,7 +310,7 @@ public class IndyProxyFactoryTest {
   }
 
   @Test
-  void verifyNonPublicMembersIgnored() throws Exception {
+  void verifyNonPublicMembersIgnored() {
     Class<?> proxy = generateProxy(IgnoreNonPublicMethods.class);
 
     assertThat(proxy.getConstructors()).hasSize(1);
@@ -318,8 +318,12 @@ public class IndyProxyFactoryTest {
         .hasSize(3)
         .anySatisfy(method -> assertThat(method.getName()).isEqualTo("publicMethod"))
         .anySatisfy(method -> assertThat(method.getName()).isEqualTo("publicStaticMethod"))
-        .anySatisfy(method -> assertThat(method.getName()).isEqualTo(
-            IndyProxyFactory.PROXY_DELEGATE_NAME));
+        // IndyProxy implementation visible but later hidden by reflection instrumentation
+        .anySatisfy(
+            method -> {
+              assertThat(method.getName()).isEqualTo(IndyProxyFactory.PROXY_DELEGATE_NAME);
+              assertThat(method.isSynthetic()).isTrue();
+            });
   }
 
   @Test
