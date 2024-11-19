@@ -38,22 +38,20 @@ public final class ReflectionHelper {
   }
 
   public static Method[] filterMethods(Class<?> containingClass, Method[] methods) {
-    if (methods.length == 0
-        || !VirtualFieldInstalledMarker.class.isAssignableFrom(containingClass)
-        || !IndyProxy.class.isAssignableFrom(containingClass)) {
-      // nothing to filter when class does not have any added virtual fields or is not a proxy
+    // nothing to filter when class does not have any added virtual fields or is not a proxy
+    if (methods.length == 0 || noInterfaceToHide(containingClass)) {
       return methods;
     }
     List<Method> result = new ArrayList<>(methods.length);
     for (Method method : methods) {
-      // virtual field accessor methods are marked as synthetic
-      if (method.isSynthetic()
-          && (method.getName().startsWith("__get__opentelemetryVirtualField$")
-              || method.getName().startsWith("__set__opentelemetryVirtualField$"))) {
-        continue;
-      }
-      if (method.getName().equals("__getIndyProxyDelegate")) {
-        continue;
+      // virtual field accessor or proxy methods are marked as synthetic
+      if (method.isSynthetic()) {
+        String name = method.getName();
+        if ((name.startsWith("__get__opentelemetryVirtualField$")
+            || name.startsWith("__set__opentelemetryVirtualField$")
+            || name.equals("__getIndyProxyDelegate"))) {
+          continue;
+        }
       }
       result.add(method);
     }
@@ -62,10 +60,8 @@ public final class ReflectionHelper {
 
   @SuppressWarnings("unused")
   public static Class<?>[] filterInterfaces(Class<?>[] interfaces, Class<?> containingClass) {
-    if (interfaces.length == 0
-        || !VirtualFieldInstalledMarker.class.isAssignableFrom(containingClass)
-        || !IndyProxy.class.isAssignableFrom(containingClass)) {
-      // nothing to filter when class does not have any added virtual fields
+    // nothing to filter when class does not have any added virtual fields or is not a proxy
+    if (interfaces.length == 0 || noInterfaceToHide(containingClass)) {
       return interfaces;
     }
     List<Class<?>> result = new ArrayList<>(interfaces.length);
@@ -75,21 +71,24 @@ public final class ReflectionHelper {
       // filter out virtual field marker and accessor interfaces
       if (interfaceClass == VirtualFieldInstalledMarker.class) {
         continue;
+      } else if (interfaceClass == IndyProxy.class) {
+        continue;
       } else if (VirtualFieldAccessorMarker.class.isAssignableFrom(interfaceClass)
           && interfaceClass.isSynthetic()
           && interfaceClass.getName().contains("VirtualFieldAccessor$")) {
         virtualFieldClassNames.add(interfaceClass.getName());
         continue;
-      } else if (IndyProxy.class.isAssignableFrom(interfaceClass)) {
-        continue;
       }
       result.add(interfaceClass);
     }
-
     if (!virtualFieldClassNames.isEmpty()) {
       VirtualFieldDetector.markVirtualFields(containingClass, virtualFieldClassNames);
     }
-
     return result.toArray(new Class<?>[0]);
+  }
+
+  private static boolean noInterfaceToHide(Class<?> containingClass) {
+    return !VirtualFieldInstalledMarker.class.isAssignableFrom(containingClass)
+        && !IndyProxy.class.isAssignableFrom(containingClass);
   }
 }
