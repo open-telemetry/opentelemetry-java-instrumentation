@@ -27,6 +27,7 @@ import org.apache.pulsar.client.api.MessageListener;
 import org.apache.pulsar.client.api.Messages;
 import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
+import org.apache.pulsar.client.api.transaction.Transaction;
 import org.junit.jupiter.api.Test;
 
 class PulsarClientTest extends AbstractPulsarClientTest {
@@ -670,5 +671,31 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                         });
                               });
                         }));
+  }
+
+  @Test
+  void testSendMessageWithTxn() throws Exception {
+    String topic = "persistent://public/default/testSendMessageWithTxn";
+    admin.topics().createNonPartitionedTopic(topic);
+    producer =
+        client
+            .newProducer(Schema.STRING)
+            .topic(topic)
+            .sendTimeout(0, TimeUnit.SECONDS)
+            .enableBatching(false)
+            .create();
+    Transaction transaction =
+        client.newTransaction().withTransactionTimeout(15, TimeUnit.SECONDS).build().get();
+    testing.runWithSpan("parent1", () -> producer.newMessage(transaction).value("test1").send());
+    transaction.commit();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent1").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(topic + " publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))));
   }
 }
