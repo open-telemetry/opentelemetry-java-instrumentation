@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
+
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 
-// Originally had this as a groovy class but was getting some weird errors.
 @Path("/ignored")
 public interface Resource {
   @Path("ignored")
