@@ -10,9 +10,9 @@ import java.net.URI;
 import org.junit.jupiter.api.condition.OS;
 import ratpack.http.client.HttpClientReadTimeoutException;
 
-public final class RatpackTestSingletons {
+public final class RatpackTestUtils {
 
-  private RatpackTestSingletons() {}
+  private RatpackTestUtils() {}
 
   public static Throwable ratpackClientSpanErrorMapper(URI uri, Throwable exception) {
     if (uri.toString().equals("https://192.0.2.1/")

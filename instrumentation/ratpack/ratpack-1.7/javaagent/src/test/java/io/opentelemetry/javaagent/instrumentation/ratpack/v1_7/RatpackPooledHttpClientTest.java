@@ -24,6 +24,6 @@ class RatpackPooledHttpClientTest extends AbstractRatpackPooledHttpClientTest {
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     super.configure(optionsBuilder);
-    optionsBuilder.setClientSpanErrorMapper(RatpackTestSingletons::ratpackClientSpanErrorMapper);
+    optionsBuilder.setClientSpanErrorMapper(RatpackTestUtils::ratpackClientSpanErrorMapper);
   }
 }
