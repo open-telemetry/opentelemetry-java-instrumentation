@@ -78,7 +78,7 @@ class Aws0ClientTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private static final AWSCredentialsProviderChain credentialsProvider =
+  private static final AWSCredentialsProviderChain CREDENTIALS_PROVIDER_CHAIN =
       new AWSCredentialsProviderChain(
           new EnvironmentVariableCredentialsProvider(),
           new SystemPropertiesCredentialsProvider(),
@@ -238,7 +238,7 @@ class Aws0ClientTest {
   void testSendS3RequestToClosedPort() {
     AmazonS3Client client =
         new AmazonS3Client(
-                credentialsProvider,
+                CREDENTIALS_PROVIDER_CHAIN,
                 new ClientConfiguration()
                     .withRetryPolicy(
                         PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(0)))
@@ -274,7 +274,7 @@ class Aws0ClientTest {
 
   @Test
   void testNaughtyRequestHandlerDoesntBreakTheTrace() {
-    AmazonS3Client client = new AmazonS3Client(credentialsProvider);
+    AmazonS3Client client = new AmazonS3Client(CREDENTIALS_PROVIDER_CHAIN);
     client.addRequestHandler(
         new RequestHandler2() {
           @Override
