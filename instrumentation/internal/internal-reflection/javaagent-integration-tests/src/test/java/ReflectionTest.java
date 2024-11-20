@@ -5,6 +5,8 @@
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import instrumentation.TestHelperClass;
+import io.opentelemetry.javaagent.bootstrap.IndyProxy;
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldAccessorMarker;
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker;
 import java.io.ObjectStreamClass;
@@ -42,7 +44,37 @@ public class ReflectionTest {
   void testGeneratedSerialVersionUid() {
     // expected value is computed with serialver utility that comes with jdk
     assertThat(ObjectStreamClass.lookup(TestClass.class).getSerialVersionUID())
-        .isEqualTo(-1508684692096503670L);
+        .isEqualTo(-4292813100633930936L);
     assertThat(TestClass.class.getDeclaredFields().length).isEqualTo(0);
+  }
+
+  @Test
+  void testInjectedClassProxyUnwrap() throws Exception {
+    TestClass testClass = new TestClass();
+    Class<?> helperType = testClass.testHelperClass();
+    assertThat(helperType)
+        .describedAs("unable to resolve injected class from instrumented class")
+        .isNotNull();
+
+    Object instance = helperType.getConstructor().newInstance();
+    if (IndyProxy.class.isAssignableFrom(helperType)) {
+      // indy advice: must be an indy proxy
+
+      for (Method method : helperType.getMethods()) {
+        assertThat(method.getName())
+            .describedAs("proxy method must be hidden from reflection")
+            .isNotEqualTo("__getIndyProxyDelegate");
+      }
+
+      assertThat(instance).isInstanceOf(IndyProxy.class);
+
+      Object proxyDelegate = ((IndyProxy) instance).__getIndyProxyDelegate();
+      assertThat(proxyDelegate).isNotInstanceOf(IndyProxy.class);
+
+    } else {
+      // inline advice: must be of the expected type
+      assertThat(helperType).isEqualTo(TestHelperClass.class);
+      assertThat(instance).isInstanceOf(TestHelperClass.class).isNotInstanceOf(IndyProxy.class);
+    }
   }
 }
