@@ -103,6 +103,7 @@ final class AwsSdkInstrumenterFactory {
         .build();
   }
 
+
   Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter() {
     MessageOperation operation = MessageOperation.RECEIVE;
     SqsReceiveRequestAttributesGetter getter = SqsReceiveRequestAttributesGetter.INSTANCE;
@@ -183,6 +184,18 @@ final class AwsSdkInstrumenterFactory {
         SpanKindExtractor.alwaysProducer(),
         attributesExtractors(),
         singletonList(messagingAttributeExtractor),
+        true);
+  }
+
+  Instrumenter<Request<?>, Response<?>> dynamoInstrumenter() {
+    DynamoAttributesExtractor dynamoAttributesExtractor = new DynamoAttributesExtractor();
+
+    return createInstrumenter(
+        openTelemetry,
+        spanName,
+        SpanKindExtractor.alwaysClient(),
+        attributesExtractors(),
+        singletonList(dynamoAttributesExtractor),
         true);
   }
 

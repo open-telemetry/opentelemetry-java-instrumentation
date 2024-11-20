@@ -31,21 +31,26 @@ final class TracingRequestHandler extends RequestHandler2 {
       ContextKey.named(TracingRequestHandler.class.getName() + ".Timer");
   private static final ContextKey<Boolean> REQUEST_SPAN_SUPPRESSED_KEY =
       ContextKey.named(TracingRequestHandler.class.getName() + ".RequestSpanSuppressed");
+  private static final String SEND_MESSAGE_REQUEST = "com.amazonaws.services.sqs.model.SendMessageRequest";
+  private static final String DYNAMODBV2 = "com.amazonaws.services.dynamodbv2.model";
 
   private final Instrumenter<Request<?>, Response<?>> requestInstrumenter;
   private final Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter;
   private final Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
+  private final Instrumenter<Request<?>, Response<?>> dynamoInstrumenter;
 
   TracingRequestHandler(
       Instrumenter<Request<?>, Response<?>> requestInstrumenter,
       Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter,
       Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter,
-      Instrumenter<Request<?>, Response<?>> producerInstrumenter) {
+      Instrumenter<Request<?>, Response<?>> producerInstrumenter,
+      Instrumenter<Request<?>, Response<?>> dynamoInstrumenter) {
     this.requestInstrumenter = requestInstrumenter;
     this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
     this.producerInstrumenter = producerInstrumenter;
+    this.dynamoInstrumenter = dynamoInstrumenter;
   }
 
   @Override
@@ -53,6 +58,7 @@ final class TracingRequestHandler extends RequestHandler2 {
     // GeneratePresignedUrlRequest doesn't result in actual request, beforeRequest is the only
     // method called for it. Span created here would never be ended and scope would be leaked when
     // running with java agent.
+    System.out.println(request.getOriginalRequest().getClass().getName());
     if ("com.amazonaws.services.s3.model.GeneratePresignedUrlRequest"
         .equals(request.getOriginalRequest().getClass().getName())) {
       return;
@@ -151,14 +157,17 @@ final class TracingRequestHandler extends RequestHandler2 {
       }
       return;
     }
-
     instrumenter.end(context, request, response, error);
   }
 
   private Instrumenter<Request<?>, Response<?>> getInstrumenter(Request<?> request) {
-    boolean isSqsProducer =
-        "com.amazonaws.services.sqs.model.SendMessageRequest"
-            .equals(request.getOriginalRequest().getClass().getName());
-    return isSqsProducer ? producerInstrumenter : requestInstrumenter;
+    String className = request.getOriginalRequest().getClass().getName();
+    if (className.startsWith(DYNAMODBV2)) {
+      return dynamoInstrumenter;
+    }
+    else if (className.equals(SEND_MESSAGE_REQUEST)) {
+      return producerInstrumenter;
+    }
+    return requestInstrumenter;
   }
 }
