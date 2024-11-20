@@ -15,8 +15,7 @@ class IndyProxyHelperTest {
   @Test
   void wrongType() {
     assertThrows(
-        IllegalArgumentException.class,
-        () -> IndyProxyHelper.unwrapIfNeeded("", Integer.class));
+        IllegalArgumentException.class, () -> IndyProxyHelper.unwrapIfNeeded("", Integer.class));
     assertThrows(
         IllegalArgumentException.class,
         () -> IndyProxyHelper.unwrapIfNeeded(proxy(""), Integer.class));
