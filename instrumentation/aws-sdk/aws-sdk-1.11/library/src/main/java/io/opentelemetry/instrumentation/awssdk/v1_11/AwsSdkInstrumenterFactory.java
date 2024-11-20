@@ -103,7 +103,6 @@ final class AwsSdkInstrumenterFactory {
         .build();
   }
 
-
   Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter() {
     MessageOperation operation = MessageOperation.RECEIVE;
     SqsReceiveRequestAttributesGetter getter = SqsReceiveRequestAttributesGetter.INSTANCE;

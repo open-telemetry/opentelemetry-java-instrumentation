@@ -164,8 +164,7 @@ final class TracingRequestHandler extends RequestHandler2 {
     String className = request.getOriginalRequest().getClass().getName();
     if (className.startsWith(DYNAMODBV2)) {
       return dynamoInstrumenter;
-    }
-    else if (className.equals(SEND_MESSAGE_REQUEST)) {
+    } else if (className.equals(SEND_MESSAGE_REQUEST)) {
       return producerInstrumenter;
     }
     return requestInstrumenter;
