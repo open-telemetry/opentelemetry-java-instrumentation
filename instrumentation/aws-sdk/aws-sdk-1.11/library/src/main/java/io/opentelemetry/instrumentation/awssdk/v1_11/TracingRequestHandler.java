@@ -31,7 +31,8 @@ final class TracingRequestHandler extends RequestHandler2 {
       ContextKey.named(TracingRequestHandler.class.getName() + ".Timer");
   private static final ContextKey<Boolean> REQUEST_SPAN_SUPPRESSED_KEY =
       ContextKey.named(TracingRequestHandler.class.getName() + ".RequestSpanSuppressed");
-  private static final String SEND_MESSAGE_REQUEST = "com.amazonaws.services.sqs.model.SendMessageRequest";
+  private static final String SEND_MESSAGE_REQUEST =
+      "com.amazonaws.services.sqs.model.SendMessageRequest";
   private static final String DYNAMODBV2 = "com.amazonaws.services.dynamodbv2.model";
 
   private final Instrumenter<Request<?>, Response<?>> requestInstrumenter;
@@ -58,7 +59,6 @@ final class TracingRequestHandler extends RequestHandler2 {
     // GeneratePresignedUrlRequest doesn't result in actual request, beforeRequest is the only
     // method called for it. Span created here would never be ended and scope would be leaked when
     // running with java agent.
-    System.out.println(request.getOriginalRequest().getClass().getName());
     if ("com.amazonaws.services.s3.model.GeneratePresignedUrlRequest"
         .equals(request.getOriginalRequest().getClass().getName())) {
       return;
