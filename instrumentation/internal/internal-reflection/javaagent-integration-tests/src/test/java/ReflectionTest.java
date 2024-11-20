@@ -66,6 +66,12 @@ public class ReflectionTest {
             .isNotEqualTo("__getIndyProxyDelegate");
       }
 
+      for (Class<?> interfaceType : helperType.getInterfaces()) {
+        assertThat(interfaceType)
+            .describedAs("indy proxy interface must be hidden from reflection")
+            .isNotEqualTo(IndyProxy.class);
+      }
+
       assertThat(instance).isInstanceOf(IndyProxy.class);
 
       Object proxyDelegate = ((IndyProxy) instance).__getIndyProxyDelegate();
