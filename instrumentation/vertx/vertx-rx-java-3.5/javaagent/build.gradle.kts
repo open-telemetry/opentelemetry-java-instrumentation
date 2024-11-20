@@ -44,11 +44,11 @@ testing {
       dependencies {
         implementation("org.hsqldb:hsqldb:2.3.4")
 
-        implementation("io.vertx:vertx-web:+")
-        implementation("io.vertx:vertx-rx-java2:+")
-        implementation("io.vertx:vertx-web-client:+")
-        implementation("io.vertx:vertx-jdbc-client:+")
-        implementation("io.vertx:vertx-circuit-breaker:+")
+        implementation("io.vertx:vertx-web:latest.release")
+        implementation("io.vertx:vertx-rx-java2:latest.release")
+        implementation("io.vertx:vertx-web-client:latest.release")
+        implementation("io.vertx:vertx-jdbc-client:latest.release")
+        implementation("io.vertx:vertx-circuit-breaker:latest.release")
       }
     }
   }

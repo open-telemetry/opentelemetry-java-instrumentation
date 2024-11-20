@@ -8,12 +8,12 @@ val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.43.0"
+val otelSdkVersion = "1.44.1"
 val otelContribVersion = "1.40.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.23"
+val groovyVersion = "4.0.24"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -40,8 +40,8 @@ val DEPENDENCY_BOMS = listOf(
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
-val errorProneVersion = "2.35.1"
-val byteBuddyVersion = "1.15.7"
+val errorProneVersion = "2.36.0"
+val byteBuddyVersion = "1.15.10"
 val asmVersion = "9.7.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
@@ -94,7 +94,7 @@ val DEPENDENCIES = listOf(
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
   "commons-fileupload:commons-fileupload:1.5",
-  "commons-io:commons-io:2.17.0",
+  "commons-io:commons-io:2.18.0",
   "commons-lang:commons-lang:2.6",
   "commons-logging:commons-logging:1.3.4",
   "commons-validator:commons-validator:1.9.0",

@@ -15,8 +15,9 @@ jobs:
     with:
       project: ":smoke-tests:images:quarkus"
       publish: true
-      # Quarkus 2.0+ does not support Java 8
+      # Quarkus 3.7+ requires Java 17+
       skip-java-8: true
+      skip-java-11: true
 
   workflow-notification:
     needs:

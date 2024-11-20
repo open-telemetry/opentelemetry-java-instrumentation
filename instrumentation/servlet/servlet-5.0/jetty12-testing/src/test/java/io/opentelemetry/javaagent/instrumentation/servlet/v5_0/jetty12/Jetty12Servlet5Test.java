@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.jetty12;
 
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
-
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
@@ -30,7 +28,6 @@ public abstract class Jetty12Servlet5Test
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
     options.setTestNotFound(false);
-    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setContextPath("/jetty-context");
   }
 
@@ -64,8 +61,7 @@ public abstract class Jetty12Servlet5Test
 
   @Override
   public void addServlet(
-      ServletContextHandler servletContext, String path, Class<? extends Servlet> servlet)
-      throws Exception {
+      ServletContextHandler servletContext, String path, Class<? extends Servlet> servlet) {
     servletContext.addServlet(servlet, path);
   }
 }

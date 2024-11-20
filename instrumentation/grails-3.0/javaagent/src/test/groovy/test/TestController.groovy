@@ -58,7 +58,7 @@ class TestController implements Controller {
   @Action
   def exception() {
     controller(EXCEPTION) {
-      throw new Exception(EXCEPTION.body)
+      throw new IllegalStateException(EXCEPTION.body)
     }
   }
 

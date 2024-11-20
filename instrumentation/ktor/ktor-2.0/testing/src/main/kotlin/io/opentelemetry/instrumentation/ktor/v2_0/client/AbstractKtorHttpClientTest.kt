@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES
 import io.opentelemetry.semconv.NetworkAttributes
 import kotlinx.coroutines.*
+import org.junit.jupiter.api.AfterAll
 import java.net.URI
 
 abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBuilder>() {
@@ -26,6 +27,19 @@ abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBu
     install(HttpRedirect)
 
     installTracing()
+  }
+  private val singleConnectionClient = HttpClient(CIO) {
+    engine {
+      maxConnectionsCount = 1
+    }
+
+    installTracing()
+  }
+
+  @AfterAll
+  fun tearDown() {
+    client.close()
+    singleConnectionClient.close()
   }
 
   abstract fun HttpClientConfig<*>.installTracing()
@@ -60,15 +74,14 @@ abstract class AbstractKtorHttpClientTest : AbstractHttpClientTest<HttpRequestBu
   override fun configure(optionsBuilder: HttpClientTestOptions.Builder) {
     with(optionsBuilder) {
       disableTestReadTimeout()
-      // this instrumentation creates a span per each physical request
-      // related issue https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/5722
-      disableTestRedirects()
+      markAsLowLevelInstrumentation()
+      setMaxRedirects(20)
       spanEndsAfterBody()
 
       setHttpAttributes { DEFAULT_HTTP_ATTRIBUTES - setOf(NetworkAttributes.NETWORK_PROTOCOL_VERSION) }
 
       setSingleConnectionFactory { host, port ->
-        KtorHttpClientSingleConnection(host, port) { installTracing() }
+        KtorHttpClientSingleConnection(singleConnectionClient, host, port)
       }
     }
   }

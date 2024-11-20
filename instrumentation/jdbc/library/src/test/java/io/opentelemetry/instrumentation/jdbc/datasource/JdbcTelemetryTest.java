@@ -5,13 +5,14 @@
 
 package io.opentelemetry.instrumentation.jdbc.datasource;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -42,7 +43,7 @@ class JdbcTelemetryTest {
                 span -> span.hasName("TestDataSource.getConnection"),
                 span ->
                     span.hasName("SELECT dbname")
-                        .hasAttribute(equalTo(DbIncubatingAttributes.DB_STATEMENT, "SELECT ?;"))));
+                        .hasAttribute(equalTo(maybeStable(DB_STATEMENT), "SELECT ?;"))));
   }
 
   @Test
@@ -118,7 +119,7 @@ class JdbcTelemetryTest {
                 span -> span.hasName("TestDataSource.getConnection"),
                 span ->
                     span.hasName("SELECT dbname")
-                        .hasAttribute(equalTo(DbIncubatingAttributes.DB_STATEMENT, "SELECT 1;"))));
+                        .hasAttribute(equalTo(maybeStable(DB_STATEMENT), "SELECT 1;"))));
   }
 
   @Test

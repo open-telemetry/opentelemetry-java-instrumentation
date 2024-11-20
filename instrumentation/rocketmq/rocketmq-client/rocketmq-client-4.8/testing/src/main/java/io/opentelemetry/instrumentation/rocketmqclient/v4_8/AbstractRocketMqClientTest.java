@@ -7,6 +7,12 @@ package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,7 +23,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.rocketmqclient.v4_8.base.BaseConf;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -139,18 +144,12 @@ abstract class AbstractRocketMqClientTest {
                         span.hasName(sharedTopic + " publish")
                             .hasKind(SpanKind.PRODUCER)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "rocketmq"),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                    sharedTopic),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
+                                equalTo(MESSAGING_OPERATION, "publish"),
                                 satisfies(
-                                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
-                                    val -> val.isInstanceOf(String.class)),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG,
-                                    "TagA"),
+                                    MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, "TagA"),
                                 satisfies(
                                     AttributeKey.stringKey("messaging.rocketmq.broker_address"),
                                     val -> val.isInstanceOf(String.class)),
@@ -162,21 +161,15 @@ abstract class AbstractRocketMqClientTest {
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "rocketmq"),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                    sharedTopic),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
+                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
+                                equalTo(MESSAGING_OPERATION, "process"),
                                 satisfies(
-                                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
+                                    MESSAGING_MESSAGE_BODY_SIZE,
                                     val -> val.isInstanceOf(Long.class)),
                                 satisfies(
-                                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
-                                    val -> val.isInstanceOf(String.class)),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG,
-                                    "TagA"),
+                                    MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, "TagA"),
                                 satisfies(
                                     AttributeKey.stringKey("messaging.rocketmq.broker_address"),
                                     val -> val.isInstanceOf(String.class)),
@@ -215,18 +208,12 @@ abstract class AbstractRocketMqClientTest {
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "rocketmq"),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                    sharedTopic),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
+                                equalTo(MESSAGING_OPERATION, "publish"),
                                 satisfies(
-                                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
-                                    val -> val.isInstanceOf(String.class)),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG,
-                                    "TagA"),
+                                    MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, "TagA"),
                                 satisfies(
                                     AttributeKey.stringKey("messaging.rocketmq.broker_address"),
                                     val -> val.isInstanceOf(String.class)),
@@ -238,21 +225,15 @@ abstract class AbstractRocketMqClientTest {
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "rocketmq"),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                    sharedTopic),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
+                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
+                                equalTo(MESSAGING_OPERATION, "process"),
                                 satisfies(
-                                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
+                                    MESSAGING_MESSAGE_BODY_SIZE,
                                     val -> val.isInstanceOf(Long.class)),
                                 satisfies(
-                                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
-                                    val -> val.isInstanceOf(String.class)),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG,
-                                    "TagA"),
+                                    MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, "TagA"),
                                 satisfies(
                                     AttributeKey.stringKey("messaging.rocketmq.broker_address"),
                                     val -> val.isInstanceOf(String.class)),
@@ -304,14 +285,11 @@ abstract class AbstractRocketMqClientTest {
                           .hasKind(SpanKind.PRODUCER)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "rocketmq"),
-                              equalTo(
-                                  MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                  sharedTopic),
-                              equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                              equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                              equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
+                              equalTo(MESSAGING_OPERATION, "publish"),
                               satisfies(
-                                  MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
-                                  val -> val.isInstanceOf(String.class)),
+                                  MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                               satisfies(
                                   AttributeKey.stringKey("messaging.rocketmq.broker_address"),
                                   val -> val.isInstanceOf(String.class)),
@@ -333,30 +311,23 @@ abstract class AbstractRocketMqClientTest {
                         span.hasName("multiple_sources receive")
                             .hasKind(SpanKind.CONSUMER)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "rocketmq"),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "receive")),
+                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                equalTo(MESSAGING_OPERATION, "receive")),
                     span ->
                         span.hasName(sharedTopic + " process")
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(0))
                             .hasLinksSatisfying(links(producerSpanContext.get()))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "rocketmq"),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                    sharedTopic),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
+                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
+                                equalTo(MESSAGING_OPERATION, "process"),
                                 satisfies(
-                                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
+                                    MESSAGING_MESSAGE_BODY_SIZE,
                                     val -> val.isInstanceOf(Long.class)),
                                 satisfies(
-                                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
-                                    val -> val.isInstanceOf(String.class)),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG,
-                                    "TagA"),
+                                    MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, "TagA"),
                                 satisfies(
                                     AttributeKey.stringKey("messaging.rocketmq.broker_address"),
                                     val -> val.isNotEmpty()),
@@ -372,21 +343,15 @@ abstract class AbstractRocketMqClientTest {
                             .hasParent(trace.getSpan(0))
                             .hasLinksSatisfying(links(producerSpanContext.get()))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "rocketmq"),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                    sharedTopic),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
+                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
+                                equalTo(MESSAGING_OPERATION, "process"),
                                 satisfies(
-                                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
+                                    MESSAGING_MESSAGE_BODY_SIZE,
                                     val -> val.isInstanceOf(Long.class)),
                                 satisfies(
-                                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
-                                    val -> val.isInstanceOf(String.class)),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG,
-                                    "TagB"),
+                                    MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, "TagB"),
                                 satisfies(
                                     AttributeKey.stringKey("messaging.rocketmq.broker_address"),
                                     val -> val.isNotEmpty()),
@@ -430,18 +395,12 @@ abstract class AbstractRocketMqClientTest {
                             .hasKind(SpanKind.PRODUCER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "rocketmq"),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                    sharedTopic),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
+                                equalTo(MESSAGING_OPERATION, "publish"),
                                 satisfies(
-                                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
-                                    val -> val.isInstanceOf(String.class)),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG,
-                                    "TagA"),
+                                    MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, "TagA"),
                                 satisfies(
                                     AttributeKey.stringKey("messaging.rocketmq.broker_address"),
                                     val -> val.isInstanceOf(String.class)),
@@ -457,21 +416,15 @@ abstract class AbstractRocketMqClientTest {
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "rocketmq"),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                    sharedTopic),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
+                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
+                                equalTo(MESSAGING_OPERATION, "process"),
                                 satisfies(
-                                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
+                                    MESSAGING_MESSAGE_BODY_SIZE,
                                     val -> val.isInstanceOf(Long.class)),
                                 satisfies(
-                                    MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
-                                    val -> val.isInstanceOf(String.class)),
-                                equalTo(
-                                    MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG,
-                                    "TagA"),
+                                    MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                                equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, "TagA"),
                                 satisfies(
                                     AttributeKey.stringKey("messaging.rocketmq.broker_address"),
                                     val -> val.isInstanceOf(String.class)),

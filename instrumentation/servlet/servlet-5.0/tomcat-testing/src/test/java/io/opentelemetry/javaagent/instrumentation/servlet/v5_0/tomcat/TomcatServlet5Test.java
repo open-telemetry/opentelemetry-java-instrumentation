@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.tomcat;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -71,7 +70,6 @@ public abstract class TomcatServlet5Test extends AbstractServlet5Test<Tomcat, Co
   @Override
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
-    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setContextPath("/tomcat-context");
     options.setTestError(testError());
   }

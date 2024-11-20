@@ -15,6 +15,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.Sets;
@@ -25,7 +26,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.io.IOException;
 import java.io.Writer;
@@ -79,11 +79,8 @@ class JettyHandlerTest extends AbstractHttpServerTest<Server> {
   @Override
   protected void configure(HttpServerTestOptions options) {
     options.setHttpAttributes(
-        unused ->
-            Sets.difference(
-                DEFAULT_HTTP_ATTRIBUTES, Collections.singleton(HttpAttributes.HTTP_ROUTE)));
+        unused -> Sets.difference(DEFAULT_HTTP_ATTRIBUTES, Collections.singleton(HTTP_ROUTE)));
     options.setHasResponseSpan(endpoint -> endpoint == REDIRECT || endpoint == ERROR);
-    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setHasResponseCustomizer(endpoint -> endpoint != EXCEPTION);
   }
 

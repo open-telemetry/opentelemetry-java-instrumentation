@@ -36,7 +36,7 @@ class FinatraController extends Controller {
   any(EXCEPTION.getPath) { request: Request =>
     controller(
       EXCEPTION,
-      supplier(() => throw new Exception(EXCEPTION.getBody))
+      supplier(() => throw new IllegalStateException(EXCEPTION.getBody))
     )
   }
 

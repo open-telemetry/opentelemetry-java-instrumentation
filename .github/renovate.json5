@@ -46,8 +46,8 @@
       "groupName": "quarkus packages"
     },
     {
-      "matchPackagePrefixes": ["com.gradle.enterprise"],
-      "groupName": "gradle enterprise packages"
+      "matchPackagePrefixes": ["com.gradle.develocity"],
+      "groupName": "gradle develocity packages"
     },
     {
       "matchPackagePrefixes": ["org.eclipse.jetty:"],

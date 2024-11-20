@@ -40,4 +40,17 @@ tasks {
   sourcesJar {
     dependsOn("generateJflex")
   }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  val testBothSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database/dup")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+    dependsOn(testBothSemconv)
+  }
 }

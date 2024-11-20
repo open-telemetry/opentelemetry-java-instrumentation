@@ -6,6 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -16,9 +20,6 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.UrlAttributes;
-import io.opentelemetry.semconv.UserAgentAttributes;
 import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
 import java.util.HashMap;
 import java.util.Map;
@@ -84,10 +85,10 @@ public class AwsLambdaApiGatewayHandlerTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-2024"),
                             equalTo(FaasIncubatingAttributes.FAAS_TRIGGER, "http"),
-                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "PUT"),
-                            equalTo(UserAgentAttributes.USER_AGENT_ORIGINAL, "Clever Client"),
-                            equalTo(UrlAttributes.URL_FULL, "http://localhost:2024/hello/world"),
-                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 201L))));
+                            equalTo(HTTP_REQUEST_METHOD, "PUT"),
+                            equalTo(USER_AGENT_ORIGINAL, "Clever Client"),
+                            equalTo(URL_FULL, "http://localhost:2024/hello/world"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 201L))));
   }
 
   public static class TestRequestHandlerApiGateway

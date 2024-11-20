@@ -62,10 +62,9 @@ public class OpenTelemetryAppender extends AbstractAppender {
   private volatile OpenTelemetry openTelemetry;
 
   private final BlockingQueue<LogEventToReplay> eventsToReplay;
-
   private final AtomicBoolean replayLimitWarningLogged = new AtomicBoolean();
-
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
+  private final boolean captureCodeAttributes;
 
   /**
    * Installs the {@code openTelemetry} instance on any {@link OpenTelemetryAppender}s identified in
@@ -98,6 +97,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
       implements org.apache.logging.log4j.core.util.Builder<OpenTelemetryAppender> {
 
     @PluginBuilderAttribute private boolean captureExperimentalAttributes;
+    @PluginBuilderAttribute private boolean captureCodeAttributes;
     @PluginBuilderAttribute private boolean captureMapMessageAttributes;
     @PluginBuilderAttribute private boolean captureMarkerAttribute;
     @PluginBuilderAttribute private String captureContextDataAttributes;
@@ -113,6 +113,20 @@ public class OpenTelemetryAppender extends AbstractAppender {
     @CanIgnoreReturnValue
     public B setCaptureExperimentalAttributes(boolean captureExperimentalAttributes) {
       this.captureExperimentalAttributes = captureExperimentalAttributes;
+      return asBuilder();
+    }
+
+    /**
+     * Sets whether the code attributes (file name, class name, method name and line number) should
+     * be set to logs. Enabling these attributes can potentially impact performance (see
+     * https://logging.apache.org/log4j/2.x/manual/performance.html#layouts-location).
+     *
+     * @param captureCodeAttributes To enable or disable the code attributes (file name, class name,
+     *     method name and line number)
+     */
+    @CanIgnoreReturnValue
+    public B captureCodeAttributes(boolean captureCodeAttributes) {
+      this.captureCodeAttributes = captureCodeAttributes;
       return asBuilder();
     }
 
@@ -170,6 +184,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
           isIgnoreExceptions(),
           getPropertyArray(),
           captureExperimentalAttributes,
+          captureCodeAttributes,
           captureMapMessageAttributes,
           captureMarkerAttribute,
           captureContextDataAttributes,
@@ -185,6 +200,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean ignoreExceptions,
       Property[] properties,
       boolean captureExperimentalAttributes,
+      boolean captureCodeAttributes,
       boolean captureMapMessageAttributes,
       boolean captureMarkerAttribute,
       String captureContextDataAttributes,
@@ -196,10 +212,12 @@ public class OpenTelemetryAppender extends AbstractAppender {
         new LogEventMapper<>(
             ContextDataAccessorImpl.INSTANCE,
             captureExperimentalAttributes,
+            captureCodeAttributes,
             captureMapMessageAttributes,
             captureMarkerAttribute,
             splitAndFilterBlanksAndNulls(captureContextDataAttributes));
     this.openTelemetry = openTelemetry;
+    this.captureCodeAttributes = captureCodeAttributes;
     if (numLogsCapturedBeforeOtelInstall != 0) {
       this.eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
     } else {
@@ -257,7 +275,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
         return;
       }
 
-      LogEventToReplay logEventToReplay = new LogEventToReplay(event);
+      LogEventToReplay logEventToReplay = new LogEventToReplay(event, captureCodeAttributes);
 
       if (!eventsToReplay.offer(logEventToReplay) && !replayLimitWarningLogged.getAndSet(true)) {
         String message =
@@ -309,6 +327,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
         contextData,
         event.getThreadName(),
         event.getThreadId(),
+        event::getSource,
         context);
 
     Instant timestamp = event.getInstant();

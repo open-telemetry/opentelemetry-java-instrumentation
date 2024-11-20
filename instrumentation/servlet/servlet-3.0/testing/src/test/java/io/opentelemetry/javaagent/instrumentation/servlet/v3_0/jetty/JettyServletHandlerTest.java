@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.jetty;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -18,7 +19,6 @@ import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.AbstractServlet3T
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.TestServlet3;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.semconv.HttpAttributes;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.HashSet;
@@ -41,12 +41,11 @@ class JettyServletHandlerTest extends AbstractServlet3Test<Server, ServletHandle
     super.configure(options);
     options.setContextPath("");
     options.setTestNotFound(false);
-    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setHttpAttributes(
         serverEndpoint -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(HttpAttributes.HTTP_ROUTE);
+          attributes.remove(HTTP_ROUTE);
           return attributes;
         });
   }

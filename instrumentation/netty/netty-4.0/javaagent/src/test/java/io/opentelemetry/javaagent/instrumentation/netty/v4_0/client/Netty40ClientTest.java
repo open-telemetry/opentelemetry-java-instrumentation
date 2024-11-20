@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0.client;
 
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -27,7 +30,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.ServerAttributes;
 import java.net.URI;
 import java.util.Collections;
 import java.util.HashSet;
@@ -174,8 +176,8 @@ class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
         return Collections.emptySet();
     }
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-    attributes.remove(ServerAttributes.SERVER_ADDRESS);
-    attributes.remove(ServerAttributes.SERVER_PORT);
+    attributes.remove(SERVER_ADDRESS);
+    attributes.remove(SERVER_PORT);
     return attributes;
   }
 }

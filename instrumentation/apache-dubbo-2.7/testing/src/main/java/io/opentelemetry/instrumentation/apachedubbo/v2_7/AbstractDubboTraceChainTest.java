@@ -8,6 +8,14 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -18,8 +26,6 @@ import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.MiddleServiceImpl;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
@@ -172,29 +178,26 @@ public abstract class AbstractDubboTraceChainTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(
-                                    RpcIncubatingAttributes.RPC_SYSTEM,
+                                    RPC_SYSTEM,
                                     RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
-                                equalTo(
-                                    RpcIncubatingAttributes.RPC_SERVICE,
-                                    "org.apache.dubbo.rpc.service.GenericService"),
-                                equalTo(RpcIncubatingAttributes.RPC_METHOD, "$invoke"),
-                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(RPC_SERVICE, "org.apache.dubbo.rpc.service.GenericService"),
+                                equalTo(RPC_METHOD, "$invoke"),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                 satisfies(
-                                    ServerAttributes.SERVER_PORT, k -> k.isInstanceOf(Long.class)),
-                                satisfies(
-                                    NetworkAttributes.NETWORK_PEER_ADDRESS,
+                                    NETWORK_PEER_ADDRESS,
                                     k ->
                                         k.satisfiesAnyOf(
                                             val -> assertThat(val).isNull(),
                                             val -> assertThat(val).isInstanceOf(String.class))),
                                 satisfies(
-                                    NetworkAttributes.NETWORK_PEER_PORT,
+                                    NETWORK_PEER_PORT,
                                     k ->
                                         k.satisfiesAnyOf(
                                             val -> assertThat(val).isNull(),
                                             val -> assertThat(val).isInstanceOf(Long.class))),
                                 satisfies(
-                                    NetworkAttributes.NETWORK_TYPE,
+                                    NETWORK_TYPE,
                                     k ->
                                         k.satisfiesAnyOf(
                                             val -> assertThat(val).isNull(),
@@ -207,20 +210,16 @@ public abstract class AbstractDubboTraceChainTest {
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfying(
                                 equalTo(
-                                    RpcIncubatingAttributes.RPC_SYSTEM,
+                                    RPC_SYSTEM,
                                     RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
                                 equalTo(
-                                    RpcIncubatingAttributes.RPC_SERVICE,
+                                    RPC_SERVICE,
                                     "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
-                                equalTo(RpcIncubatingAttributes.RPC_METHOD, "hello"),
+                                equalTo(RPC_METHOD, "hello"),
+                                satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
+                                satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)),
                                 satisfies(
-                                    NetworkAttributes.NETWORK_PEER_ADDRESS,
-                                    k -> k.isInstanceOf(String.class)),
-                                satisfies(
-                                    NetworkAttributes.NETWORK_PEER_PORT,
-                                    k -> k.isInstanceOf(Long.class)),
-                                satisfies(
-                                    NetworkAttributes.NETWORK_TYPE,
+                                    NETWORK_TYPE,
                                     k ->
                                         k.satisfiesAnyOf(
                                             val -> assertThat(val).isNull(),
@@ -232,29 +231,26 @@ public abstract class AbstractDubboTraceChainTest {
                             .hasParent(trace.getSpan(2))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(
-                                    RpcIncubatingAttributes.RPC_SYSTEM,
+                                    RPC_SYSTEM,
                                     RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
-                                equalTo(
-                                    RpcIncubatingAttributes.RPC_SERVICE,
-                                    "org.apache.dubbo.rpc.service.GenericService"),
-                                equalTo(RpcIncubatingAttributes.RPC_METHOD, "$invoke"),
-                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(RPC_SERVICE, "org.apache.dubbo.rpc.service.GenericService"),
+                                equalTo(RPC_METHOD, "$invoke"),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                 satisfies(
-                                    ServerAttributes.SERVER_PORT, k -> k.isInstanceOf(Long.class)),
-                                satisfies(
-                                    NetworkAttributes.NETWORK_PEER_ADDRESS,
+                                    NETWORK_PEER_ADDRESS,
                                     k ->
                                         k.satisfiesAnyOf(
                                             val -> assertThat(val).isNull(),
                                             val -> assertThat(val).isInstanceOf(String.class))),
                                 satisfies(
-                                    NetworkAttributes.NETWORK_PEER_PORT,
+                                    NETWORK_PEER_PORT,
                                     k ->
                                         k.satisfiesAnyOf(
                                             val -> assertThat(val).isNull(),
                                             val -> assertThat(val).isInstanceOf(Long.class))),
                                 satisfies(
-                                    NetworkAttributes.NETWORK_TYPE,
+                                    NETWORK_TYPE,
                                     k ->
                                         k.satisfiesAnyOf(
                                             val -> assertThat(val).isNull(),
@@ -267,20 +263,16 @@ public abstract class AbstractDubboTraceChainTest {
                             .hasParent(trace.getSpan(3))
                             .hasAttributesSatisfying(
                                 equalTo(
-                                    RpcIncubatingAttributes.RPC_SYSTEM,
+                                    RPC_SYSTEM,
                                     RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
                                 equalTo(
-                                    RpcIncubatingAttributes.RPC_SERVICE,
+                                    RPC_SERVICE,
                                     "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"),
-                                equalTo(RpcIncubatingAttributes.RPC_METHOD, "hello"),
+                                equalTo(RPC_METHOD, "hello"),
+                                satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
+                                satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)),
                                 satisfies(
-                                    NetworkAttributes.NETWORK_PEER_ADDRESS,
-                                    k -> k.isInstanceOf(String.class)),
-                                satisfies(
-                                    NetworkAttributes.NETWORK_PEER_PORT,
-                                    k -> k.isInstanceOf(Long.class)),
-                                satisfies(
-                                    NetworkAttributes.NETWORK_TYPE,
+                                    NETWORK_TYPE,
                                     k ->
                                         k.satisfiesAnyOf(
                                             val -> assertThat(val).isNull(),
@@ -353,29 +345,26 @@ public abstract class AbstractDubboTraceChainTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(
-                                    RpcIncubatingAttributes.RPC_SYSTEM,
+                                    RPC_SYSTEM,
                                     RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
-                                equalTo(
-                                    RpcIncubatingAttributes.RPC_SERVICE,
-                                    "org.apache.dubbo.rpc.service.GenericService"),
-                                equalTo(RpcIncubatingAttributes.RPC_METHOD, "$invoke"),
-                                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                                equalTo(RPC_SERVICE, "org.apache.dubbo.rpc.service.GenericService"),
+                                equalTo(RPC_METHOD, "$invoke"),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                 satisfies(
-                                    ServerAttributes.SERVER_PORT, k -> k.isInstanceOf(Long.class)),
-                                satisfies(
-                                    NetworkAttributes.NETWORK_PEER_ADDRESS,
+                                    NETWORK_PEER_ADDRESS,
                                     k ->
                                         k.satisfiesAnyOf(
                                             val -> assertThat(val).isNull(),
                                             val -> assertThat(val).isInstanceOf(String.class))),
                                 satisfies(
-                                    NetworkAttributes.NETWORK_PEER_PORT,
+                                    NETWORK_PEER_PORT,
                                     k ->
                                         k.satisfiesAnyOf(
                                             val -> assertThat(val).isNull(),
                                             val -> assertThat(val).isInstanceOf(Long.class))),
                                 satisfies(
-                                    NetworkAttributes.NETWORK_TYPE,
+                                    NETWORK_TYPE,
                                     k ->
                                         k.satisfiesAnyOf(
                                             val -> assertThat(val).isNull(),
@@ -388,20 +377,16 @@ public abstract class AbstractDubboTraceChainTest {
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfying(
                                 equalTo(
-                                    RpcIncubatingAttributes.RPC_SYSTEM,
+                                    RPC_SYSTEM,
                                     RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
                                 equalTo(
-                                    RpcIncubatingAttributes.RPC_SERVICE,
+                                    RPC_SERVICE,
                                     "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
-                                equalTo(RpcIncubatingAttributes.RPC_METHOD, "hello"),
+                                equalTo(RPC_METHOD, "hello"),
+                                satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
+                                satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)),
                                 satisfies(
-                                    NetworkAttributes.NETWORK_PEER_ADDRESS,
-                                    k -> k.isInstanceOf(String.class)),
-                                satisfies(
-                                    NetworkAttributes.NETWORK_PEER_PORT,
-                                    k -> k.isInstanceOf(Long.class)),
-                                satisfies(
-                                    NetworkAttributes.NETWORK_TYPE,
+                                    NETWORK_TYPE,
                                     k ->
                                         k.satisfiesAnyOf(
                                             val -> assertThat(val).isNull(),

@@ -67,7 +67,25 @@ tasks {
     jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
   }
 
+  val testStableSemconv by registering(Test::class) {
+    filter {
+      excludeTestsMatching("SlickTest")
+    }
+    jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  val testSlickStableSemconv by registering(Test::class) {
+    filter {
+      includeTestsMatching("SlickTest")
+    }
+    include("**/SlickTest.*")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
   check {
     dependsOn(testSlick)
+    dependsOn(testStableSemconv)
+    dependsOn(testSlickStableSemconv)
   }
 }

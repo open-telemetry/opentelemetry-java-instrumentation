@@ -22,6 +22,9 @@ on:
       skip-java-8:
         type: boolean
         required: false
+      skip-java-11:
+        type: boolean
+        required: false
       skip-java-17:
         type: boolean
         required: false
@@ -61,7 +64,7 @@ jobs:
         run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
 
       - name: Set up Gradle cache
-        uses: gradle/actions/setup-gradle@d156388eb19639ec20ade50009f3d199ce1e2808 # v4.1.0
+        uses: gradle/actions/setup-gradle@473878a77f1b98e2b5ac4af93489d1656a80a5ed # v4.2.0
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
@@ -70,6 +73,7 @@ jobs:
         run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -Ptag=${{ env.TAG }} -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java 11 Docker image
+        if: "!inputs.skip-java-11"
         run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -Ptag=${{ env.TAG }} -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java 17 Docker image
