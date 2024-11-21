@@ -50,6 +50,7 @@ dependencies {
   implementation(project(":instrumentation:log4j:log4j-appender-2.17:library"))
   compileOnly("org.apache.logging.log4j:log4j-core:2.17.0")
   implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
+  implementation(project(":instrumentation:logback:logback-mdc-1.0:library"))
   compileOnly("ch.qos.logback:logback-classic:1.0.0")
   implementation(project(":instrumentation:jdbc:library"))
 
@@ -179,10 +180,6 @@ configurations.configureEach {
 }
 
 tasks {
-  check {
-    dependsOn(testing.suites)
-  }
-
   compileTestJava {
     options.compilerArgs.add("-parameters")
   }
@@ -213,5 +210,14 @@ tasks {
 
   withType(Jar::class) {
     from(sourceSets["javaSpring3"].output)
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testing.suites)
+    dependsOn(testStableSemconv)
   }
 }

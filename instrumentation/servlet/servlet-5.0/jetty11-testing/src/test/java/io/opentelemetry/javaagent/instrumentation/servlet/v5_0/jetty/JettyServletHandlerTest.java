@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.jetty;
 
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -13,7 +13,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.AbstractServlet5Test;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.TestServlet5;
-import io.opentelemetry.semconv.HttpAttributes;
 import jakarta.servlet.Servlet;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -36,12 +35,11 @@ class JettyServletHandlerTest extends AbstractServlet5Test<Server, ServletHandle
     super.configure(options);
     options.setContextPath("");
     options.setTestNotFound(false);
-    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setHttpAttributes(
         serverEndpoint -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(HttpAttributes.HTTP_ROUTE);
+          attributes.remove(HTTP_ROUTE);
           return attributes;
         });
   }

@@ -227,7 +227,6 @@ public class AbstractRestletServerTest extends AbstractHttpServerTest<Component>
     super.configure(options);
     options.setTestPathParam(true);
     options.setTestErrorBody(false);
-    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setExpectedHttpRoute(
         (endpoint, method) -> {
           if (HttpConstants._OTHER.equals(method)) {

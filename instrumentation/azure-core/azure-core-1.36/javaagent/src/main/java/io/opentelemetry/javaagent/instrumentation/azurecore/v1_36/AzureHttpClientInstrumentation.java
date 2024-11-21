@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.azure.core.http.HttpResponse;
 import io.opentelemetry.context.Scope;
@@ -35,12 +36,14 @@ public class AzureHttpClientInstrumentation implements TypeInstrumentation {
         isMethod()
             .and(isPublic())
             .and(named("send"))
+            .and(takesArgument(1, named("com.azure.core.util.Context")))
             .and(returns(named("reactor.core.publisher.Mono"))),
         this.getClass().getName() + "$SuppressNestedClientMonoAdvice");
     transformer.applyAdviceToMethod(
         isMethod()
             .and(isPublic())
             .and(named("sendSync"))
+            .and(takesArgument(1, named("com.azure.core.util.Context")))
             .and(returns(named("com.azure.core.http.HttpResponse"))),
         this.getClass().getName() + "$SuppressNestedClientSyncAdvice");
   }
@@ -48,8 +51,10 @@ public class AzureHttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SuppressNestedClientMonoAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void asyncSendExit(@Advice.Return(readOnly = false) Mono<HttpResponse> mono) {
-      mono = disallowNestedClientSpanMono(mono);
+    public static void asyncSendExit(
+        @Advice.Argument(1) com.azure.core.util.Context azContext,
+        @Advice.Return(readOnly = false) Mono<HttpResponse> mono) {
+      mono = disallowNestedClientSpanMono(mono, azContext);
     }
   }
 
@@ -57,8 +62,10 @@ public class AzureHttpClientInstrumentation implements TypeInstrumentation {
   public static class SuppressNestedClientSyncAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void syncSendEnter(@Advice.Local("otelScope") Scope scope) {
-      scope = disallowNestedClientSpanSync();
+    public static void syncSendEnter(
+        @Advice.Argument(1) com.azure.core.util.Context azContext,
+        @Advice.Local("otelScope") Scope scope) {
+      scope = disallowNestedClientSpanSync(azContext);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class)

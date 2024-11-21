@@ -6,7 +6,7 @@
 
   <servlet>
     <servlet-name>wsServlet</servlet-name>
-    <servlet-class>TestWsServlet</servlet-class>
+    <servlet-class>io.opentelemetry.javaagent.instrumentation.cxf.TestWsServlet</servlet-class>
     <load-on-startup>1</load-on-startup>
   </servlet>
 

@@ -35,7 +35,7 @@ public class K6Container {
 
   public GenericContainer<?> build() {
     String k6OutputFile = namingConventions.container.k6Results(agent);
-    return new GenericContainer<>(DockerImageName.parse("loadimpact/k6"))
+    return new GenericContainer<>(DockerImageName.parse("grafana/k6"))
         .withNetwork(network)
         .withNetworkAliases("k6")
         .withLogConsumer(new Slf4jLogConsumer(logger))

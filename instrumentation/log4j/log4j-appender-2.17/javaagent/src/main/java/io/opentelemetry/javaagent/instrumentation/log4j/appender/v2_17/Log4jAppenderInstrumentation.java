@@ -73,6 +73,8 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
         @Advice.This Logger logger,
         @Advice.Argument(0) Level level,
         @Advice.Argument(1) Marker marker,
+        @Advice.Argument(2) String loggerClassName,
+        @Advice.Argument(3) StackTraceElement location,
         @Advice.Argument(4) Message message,
         @Advice.Argument(5) Throwable t,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
@@ -80,7 +82,7 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
       // logging framework delegates to another
       callDepth = CallDepth.forClass(LoggerProvider.class);
       if (callDepth.getAndIncrement() == 0) {
-        Log4jHelper.capture(logger, level, marker, message, t);
+        Log4jHelper.capture(logger, loggerClassName, location, level, marker, message, t);
       }
     }
 
@@ -96,6 +98,7 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.This Logger logger,
+        @Advice.Argument(0) String loggerClassName,
         @Advice.Argument(1) Level level,
         @Advice.Argument(2) Marker marker,
         @Advice.Argument(3) Message message,
@@ -105,7 +108,7 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
       // logging framework delegates to another
       callDepth = CallDepth.forClass(LoggerProvider.class);
       if (callDepth.getAndIncrement() == 0) {
-        Log4jHelper.capture(logger, level, marker, message, t);
+        Log4jHelper.capture(logger, loggerClassName, null, level, marker, message, t);
       }
     }
 

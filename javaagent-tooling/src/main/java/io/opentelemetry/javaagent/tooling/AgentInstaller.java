@@ -13,6 +13,7 @@ import static java.util.Arrays.asList;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
 import static net.bytebuddy.matcher.ElementMatchers.any;
+import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextStorage;
@@ -30,11 +31,15 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.EarlyInstrumentationModule;
 import io.opentelemetry.javaagent.tooling.asyncannotationsupport.WeakRefAsyncOperationEndStrategies;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesConfigurer;
 import io.opentelemetry.javaagent.tooling.config.ConfigPropertiesBridge;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
+import io.opentelemetry.javaagent.tooling.field.FieldBackedImplementationConfiguration;
+import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
+import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstallerFactory;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredClassLoadersMatcher;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
@@ -49,6 +54,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -84,6 +90,8 @@ public class AgentInstaller {
 
   private static final Map<String, List<Runnable>> CLASS_LOAD_CALLBACKS = new HashMap<>();
 
+  private static volatile boolean instrumentationInstalled;
+
   public static void installBytebuddyAgent(
       Instrumentation inst, ClassLoader extensionClassLoader, EarlyInitAgentConfig earlyConfig) {
     addByteBuddyRawSetting();
@@ -98,7 +106,7 @@ public class AgentInstaller {
     if (earlyConfig.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
       setupUnsafe(inst);
       List<AgentListener> agentListeners = loadOrdered(AgentListener.class, extensionClassLoader);
-      installBytebuddyAgent(inst, extensionClassLoader, agentListeners);
+      installBytebuddyAgent(inst, extensionClassLoader, agentListeners, earlyConfig);
     } else {
       logger.fine("Tracing is disabled, not installing instrumentations.");
     }
@@ -107,13 +115,43 @@ public class AgentInstaller {
   private static void installBytebuddyAgent(
       Instrumentation inst,
       ClassLoader extensionClassLoader,
-      Iterable<AgentListener> agentListeners) {
+      Iterable<AgentListener> agentListeners,
+      EarlyInitAgentConfig earlyConfig) {
 
     WeakRefAsyncOperationEndStrategies.initialize();
-
     EmbeddedInstrumentationProperties.setPropertiesLoader(extensionClassLoader);
-
     setDefineClassHandler();
+    FieldBackedImplementationConfiguration.configure(earlyConfig);
+
+    AgentBuilder agentBuilder =
+        new AgentBuilder.Default(
+                // default method graph compiler inspects the class hierarchy, we don't need it, so
+                // we use a simpler and faster strategy instead
+                new ByteBuddy()
+                    .with(MethodGraph.Compiler.ForDeclaredMethods.INSTANCE)
+                    .with(VisibilityBridgeStrategy.Default.NEVER)
+                    .with(InstrumentedType.Factory.Default.FROZEN))
+            .with(AgentBuilder.TypeStrategy.Default.DECORATE)
+            .disableClassFormatChanges()
+            .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
+            .with(new RedefinitionDiscoveryStrategy())
+            .with(AgentBuilder.DescriptionStrategy.Default.POOL_ONLY)
+            .with(AgentTooling.poolStrategy())
+            .with(AgentTooling.transformListener())
+            .with(AgentTooling.locationStrategy());
+    if (JavaModule.isSupported()) {
+      agentBuilder = agentBuilder.with(new ExposeAgentBootstrapListener(inst));
+    }
+    if (logger.isLoggable(FINE)) {
+      agentBuilder =
+          agentBuilder
+              .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
+              .with(new RedefinitionDiscoveryStrategy())
+              .with(new RedefinitionLoggingListener())
+              .with(new TransformLoggingListener());
+    }
+
+    installEarlyInstrumentation(agentBuilder, inst);
 
     // If noop OpenTelemetry is enabled, autoConfiguredSdk will be null and AgentListeners are not
     // called
@@ -133,37 +171,8 @@ public class AgentInstaller {
       agentListener.beforeAgent(autoConfiguredSdk);
     }
 
-    AgentBuilder agentBuilder =
-        new AgentBuilder.Default(
-                // default method graph compiler inspects the class hierarchy, we don't need it, so
-                // we use a simpler and faster strategy instead
-                new ByteBuddy()
-                    .with(MethodGraph.Compiler.ForDeclaredMethods.INSTANCE)
-                    .with(VisibilityBridgeStrategy.Default.NEVER)
-                    .with(InstrumentedType.Factory.Default.FROZEN))
-            .with(AgentBuilder.TypeStrategy.Default.DECORATE)
-            .disableClassFormatChanges()
-            .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
-            .with(new RedefinitionDiscoveryStrategy())
-            .with(AgentBuilder.DescriptionStrategy.Default.POOL_ONLY)
-            .with(AgentTooling.poolStrategy())
-            .with(new ClassLoadListener())
-            .with(AgentTooling.transformListener())
-            .with(AgentTooling.locationStrategy());
-    if (JavaModule.isSupported()) {
-      agentBuilder = agentBuilder.with(new ExposeAgentBootstrapListener(inst));
-    }
-
+    agentBuilder = agentBuilder.with(new ClassLoadListener());
     agentBuilder = configureIgnoredTypes(sdkConfig, extensionClassLoader, agentBuilder);
-
-    if (logger.isLoggable(FINE)) {
-      agentBuilder =
-          agentBuilder
-              .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
-              .with(new RedefinitionDiscoveryStrategy())
-              .with(new RedefinitionLoggingListener())
-              .with(new TransformLoggingListener());
-    }
 
     int numberOfLoadedExtensions = 0;
     for (AgentExtension agentExtension : loadOrdered(AgentExtension.class, extensionClassLoader)) {
@@ -191,11 +200,42 @@ public class AgentInstaller {
 
     agentBuilder = AgentBuilderUtil.optimize(agentBuilder);
     ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
+    instrumentationInstalled = true;
     ClassFileTransformerHolder.setClassFileTransformer(resettableClassFileTransformer);
 
     addHttpServerResponseCustomizers(extensionClassLoader);
 
     runAfterAgentListeners(agentListeners, autoConfiguredSdk, sdkConfig);
+  }
+
+  private static void installEarlyInstrumentation(
+      AgentBuilder agentBuilder, Instrumentation instrumentation) {
+    // We are only going to install the virtual fields here. Installing virtual field changes class
+    // structure and can not be applied to already loaded classes.
+    agentBuilder = agentBuilder.with(AgentBuilder.RedefinitionStrategy.DISABLED);
+
+    AgentBuilder.Identified.Extendable extendableAgentBuilder =
+        agentBuilder
+            .ignore(
+                target -> instrumentationInstalled, // turn off after instrumentation is installed
+                Objects::nonNull)
+            .type(none())
+            .transform(
+                (builder, typeDescription, classLoader, module, protectionDomain) -> builder);
+
+    VirtualFieldImplementationInstallerFactory virtualFieldInstallerFactory =
+        VirtualFieldImplementationInstallerFactory.getInstance();
+    for (EarlyInstrumentationModule earlyInstrumentationModule :
+        loadOrdered(EarlyInstrumentationModule.class, Utils.getExtensionsClassLoader())) {
+
+      VirtualFieldImplementationInstaller contextProvider =
+          virtualFieldInstallerFactory.create(
+              earlyInstrumentationModule.getInstrumentationModule());
+      extendableAgentBuilder = contextProvider.injectFields(extendableAgentBuilder);
+    }
+
+    agentBuilder = AgentBuilderUtil.optimize(extendableAgentBuilder);
+    agentBuilder.installOn(instrumentation);
   }
 
   private static void copyNecessaryConfigToSystemProperties(ConfigProperties config) {

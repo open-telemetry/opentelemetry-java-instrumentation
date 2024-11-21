@@ -49,7 +49,6 @@ public abstract class AbstractServletFilterTest
     options.setHasResponseSpan(
         endpoint -> endpoint == REDIRECT || endpoint == ERROR || endpoint == NOT_FOUND);
     options.setTestPathParam(true);
-    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
   }
 
   @Override
@@ -98,7 +97,7 @@ public abstract class AbstractServletFilterTest
         span ->
             span.hasName("BasicErrorController.error")
                 .hasKind(SpanKind.INTERNAL)
-                .hasAttributesSatisfying(Attributes::isEmpty));
+                .hasAttributes(Attributes.empty()));
     return spanAssertions;
   }
 

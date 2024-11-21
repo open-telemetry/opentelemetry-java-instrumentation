@@ -7,13 +7,21 @@ package io.opentelemetry.javaagent.instrumentation.vertx.kafka.v3_6;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
@@ -195,27 +203,23 @@ public abstract class AbstractVertxKafkaTest {
     }
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> sendAttributes(
       KafkaProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
-                equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, record.topic()),
-                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(MESSAGING_DESTINATION_NAME, record.topic()),
+                equalTo(MESSAGING_OPERATION, "publish"),
                 satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
+                    AttributeKey.stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("producer")),
-                satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
-                    AbstractStringAssert::isNotEmpty),
-                satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
-                    AbstractLongAssert::isNotNegative)));
+                satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
+                satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
     String messageKey = record.key();
     if (messageKey != null) {
-      assertions.add(
-          equalTo(MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
+      assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
     }
     return assertions;
   }
@@ -228,43 +232,39 @@ public abstract class AbstractVertxKafkaTest {
     return batchConsumerAttributes(topic, "process");
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> batchConsumerAttributes(String topic, String operation) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
-                equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, topic),
-                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, operation),
+                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(MESSAGING_DESTINATION_NAME, topic),
+                equalTo(MESSAGING_OPERATION, operation),
                 satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
+                    AttributeKey.stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("consumer")),
-                satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT,
-                    AbstractLongAssert::isPositive)));
+                satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive)));
     // consumer group is not available in version 0.11
     if (Boolean.getBoolean("testLatestDeps")) {
-      assertions.add(equalTo(MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
+      assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
     }
     return assertions;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> processAttributes(
       KafkaProducerRecord<String, String> record) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "kafka"),
-                equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, record.topic()),
-                equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
+                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(MESSAGING_DESTINATION_NAME, record.topic()),
+                equalTo(MESSAGING_OPERATION, "process"),
                 satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
+                    AttributeKey.stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("consumer")),
-                satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
-                    AbstractStringAssert::isNotEmpty),
-                satisfies(
-                    MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
-                    AbstractLongAssert::isNotNegative)));
+                satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
+                satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
     if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
       assertions.add(
           satisfies(
@@ -273,19 +273,17 @@ public abstract class AbstractVertxKafkaTest {
     }
     // consumer group is not available in version 0.11
     if (Boolean.getBoolean("testLatestDeps")) {
-      assertions.add(equalTo(MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
+      assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
     }
     String messageKey = record.key();
     if (messageKey != null) {
-      assertions.add(
-          equalTo(MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
+      assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
     }
     String messageValue = record.value();
     if (messageValue != null) {
       assertions.add(
           equalTo(
-              MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
-              messageValue.getBytes(StandardCharsets.UTF_8).length));
+              MESSAGING_MESSAGE_BODY_SIZE, messageValue.getBytes(StandardCharsets.UTF_8).length));
     }
     return assertions;
   }

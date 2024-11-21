@@ -16,6 +16,7 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.semconv.HttpAttributes;
 import java.io.BufferedReader;
@@ -50,8 +51,10 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
+  private static final AttributeKey<String> DB_OPERATION_NAME =
+      AttributeKey.stringKey("db.operation.name");
   private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
-  // copied from DbIncubatingAttributes.DbSystemValues
+  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
   private static final String DB_SYSTEM_DYNAMODB = "dynamodb";
   // copied from AwsIncubatingAttributes
   private static final AttributeKey<String> AWS_REQUEST_ID =
@@ -331,7 +334,12 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       span.setAttribute(DB_SYSTEM, DB_SYSTEM_DYNAMODB);
       String operation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
       if (operation != null) {
-        span.setAttribute(DB_OPERATION, operation);
+        if (SemconvStability.emitStableDatabaseSemconv()) {
+          span.setAttribute(DB_OPERATION_NAME, operation);
+        }
+        if (SemconvStability.emitOldDatabaseSemconv()) {
+          span.setAttribute(DB_OPERATION, operation);
+        }
       }
     }
   }

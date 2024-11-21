@@ -5,8 +5,11 @@
 
 package io.opentelemetry.testing.cassandra.v4_4;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -27,7 +30,6 @@ import static org.junit.jupiter.api.Named.named;
 import com.datastax.oss.driver.api.core.CqlSession;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.cassandra.v4.common.AbstractCassandraTest;
-import io.opentelemetry.semconv.NetworkAttributes;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -36,6 +38,7 @@ import reactor.core.publisher.Flux;
 
 public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideReactiveParameters")
   void reactiveTest(Parameter parameter) {
@@ -67,12 +70,12 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                                             v -> assertThat(v).isEqualTo("ipv6"))),
                                 equalTo(SERVER_ADDRESS, cassandraHost),
                                 equalTo(SERVER_PORT, cassandraPort),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, cassandraIp),
-                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, cassandraPort),
+                                equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                                equalTo(NETWORK_PEER_PORT, cassandraPort),
                                 equalTo(DB_SYSTEM, "cassandra"),
-                                equalTo(DB_NAME, parameter.keyspace),
-                                equalTo(DB_STATEMENT, parameter.expectedStatement),
-                                equalTo(DB_OPERATION, parameter.operation),
+                                equalTo(maybeStable(DB_NAME), parameter.keyspace),
+                                equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
+                                equalTo(maybeStable(DB_OPERATION), parameter.operation),
                                 equalTo(DB_CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
                                 equalTo(DB_CASSANDRA_COORDINATOR_DC, "datacenter1"),
                                 satisfies(
@@ -83,7 +86,7 @@ public abstract class AbstractCassandra44Test extends AbstractCassandraTest {
                                     val -> val.isInstanceOf(Boolean.class)),
                                 equalTo(DB_CASSANDRA_PAGE_SIZE, 5000),
                                 equalTo(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
-                                equalTo(DB_CASSANDRA_TABLE, parameter.table)),
+                                equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table)),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)

@@ -18,10 +18,11 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -30,6 +31,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.List;
@@ -37,6 +39,7 @@ import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.core.StandardHost;
 import org.apache.catalina.startup.Tomcat;
+import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
@@ -99,7 +102,6 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
     options.setHasResponseCustomizer(serverEndpoint -> true);
     options.setTestCaptureRequestParameters(true);
     options.setTestErrorBody(false);
-    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
 
     options.setHasResponseSpan(
         endpoint -> endpoint == REDIRECT || endpoint == ERROR || endpoint == NOT_FOUND);
@@ -116,12 +118,19 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
   @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
-    if (endpoint.equals(REDIRECT)) {
-      span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendRedirect"));
-    } else if (endpoint.equals(NOT_FOUND)) {
-      span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"));
+    String methodName;
+    if (endpoint == REDIRECT) {
+      methodName = "sendRedirect";
+    } else if (endpoint == NOT_FOUND || endpoint == ERROR) {
+      methodName = "sendError";
+    } else {
+      throw new AssertionError("Unexpected endpoint: " + endpoint.name());
     }
-    span.hasKind(SpanKind.INTERNAL).hasAttributesSatisfying(Attributes::isEmpty);
+    span.hasKind(SpanKind.INTERNAL)
+        .satisfies(spanData -> assertThat(spanData.getName()).endsWith("." + methodName))
+        .hasAttributesSatisfyingExactly(
+            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, methodName),
+            satisfies(CodeIncubatingAttributes.CODE_NAMESPACE, AbstractStringAssert::isNotEmpty));
     return span;
   }
 }

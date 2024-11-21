@@ -61,18 +61,18 @@ public class ResourceInjectionInstrumentation implements TypeInstrumentation {
   public static class GetResourceAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
+    @Advice.AssignReturned.ToReturned
+    public static URL onExit(
         @Advice.This ClassLoader classLoader,
         @Advice.Argument(0) String name,
-        @Advice.Return(readOnly = false) URL resource) {
-      if (resource != null) {
-        return;
+        @Advice.Return URL resource) {
+      if (resource == null) {
+        URL helper = HelperResources.loadOne(classLoader, name);
+        if (helper != null) {
+          return helper;
+        }
       }
-
-      URL helper = HelperResources.loadOne(classLoader, name);
-      if (helper != null) {
-        resource = helper;
-      }
+      return resource;
     }
   }
 
@@ -80,18 +80,18 @@ public class ResourceInjectionInstrumentation implements TypeInstrumentation {
   public static class GetResourcesAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
+    @Advice.AssignReturned.ToReturned
+    public static Enumeration<URL> onExit(
         @Advice.This ClassLoader classLoader,
         @Advice.Argument(0) String name,
-        @Advice.Return(readOnly = false) Enumeration<URL> resources) {
+        @Advice.Return Enumeration<URL> resources) {
       List<URL> helpers = HelperResources.loadAll(classLoader, name);
       if (helpers.isEmpty()) {
-        return;
+        return resources;
       }
 
       if (!resources.hasMoreElements()) {
-        resources = Collections.enumeration(helpers);
-        return;
+        return Collections.enumeration(helpers);
       }
 
       List<URL> result = Collections.list(resources);
@@ -108,8 +108,7 @@ public class ResourceInjectionInstrumentation implements TypeInstrumentation {
           result.add(helperUrl);
         }
       }
-
-      resources = Collections.enumeration(result);
+      return Collections.enumeration(result);
     }
   }
 
@@ -117,22 +116,22 @@ public class ResourceInjectionInstrumentation implements TypeInstrumentation {
   public static class GetResourceAsStreamAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
+    @Advice.AssignReturned.ToReturned
+    public static InputStream onExit(
         @Advice.This ClassLoader classLoader,
         @Advice.Argument(0) String name,
-        @Advice.Return(readOnly = false) InputStream inputStream) {
-      if (inputStream != null) {
-        return;
-      }
-
-      URL helper = HelperResources.loadOne(classLoader, name);
-      if (helper != null) {
-        try {
-          inputStream = helper.openStream();
-        } catch (IOException ignored) {
-          // ClassLoader.getResourceAsStream also ignores io exceptions from opening the stream
+        @Advice.Return InputStream inputStream) {
+      if (inputStream == null) {
+        URL helper = HelperResources.loadOne(classLoader, name);
+        if (helper != null) {
+          try {
+            return helper.openStream();
+          } catch (IOException ignored) {
+            // ClassLoader.getResourceAsStream also ignores io exceptions from opening the stream
+          }
         }
       }
+      return inputStream;
     }
   }
 }

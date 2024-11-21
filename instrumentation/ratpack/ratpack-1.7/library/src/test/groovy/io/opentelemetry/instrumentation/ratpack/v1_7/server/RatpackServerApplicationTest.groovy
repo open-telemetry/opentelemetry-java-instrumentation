@@ -10,7 +10,7 @@ import com.google.inject.Provides
 import groovy.transform.CompileStatic
 import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.instrumentation.ratpack.v1_7.OpenTelemetryServerHandler
+import io.opentelemetry.instrumentation.ratpack.v1_7.internal.OpenTelemetryServerHandler
 import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackFunctionalTest
 import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackTelemetry
 import io.opentelemetry.sdk.OpenTelemetrySdk

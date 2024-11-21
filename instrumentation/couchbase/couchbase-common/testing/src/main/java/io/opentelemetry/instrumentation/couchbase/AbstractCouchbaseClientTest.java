@@ -5,7 +5,10 @@
 
 package io.opentelemetry.instrumentation.couchbase;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Named.named;
 
@@ -32,6 +35,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest {
 
   @RegisterExtension
@@ -106,9 +110,9 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.COUCHBASE),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "Cluster.openBucket"))),
+                                DB_SYSTEM,
+                                DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE),
+                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -142,9 +146,9 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.COUCHBASE),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "Cluster.openBucket"))),
+                                DB_SYSTEM,
+                                DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE),
+                            equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
