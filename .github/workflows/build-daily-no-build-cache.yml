@@ -8,6 +8,7 @@ on:
 
 jobs:
   common:
+    if: github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
     uses: ./.github/workflows/build-common.yml
     with:
       no-build-cache: true
@@ -15,6 +16,7 @@ jobs:
       GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
 
   test-latest-deps:
+    if: github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
     uses: ./.github/workflows/reusable-test-latest-deps.yml
     with:
       no-build-cache: true
