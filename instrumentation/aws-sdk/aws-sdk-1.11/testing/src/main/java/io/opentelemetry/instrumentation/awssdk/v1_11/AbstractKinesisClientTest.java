@@ -8,16 +8,19 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 import com.amazonaws.services.kinesis.AmazonKinesis;
 import com.amazonaws.services.kinesis.AmazonKinesisClientBuilder;
 import com.amazonaws.services.kinesis.model.DeleteStreamRequest;
-import com.google.common.collect.ImmutableMap;
+
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import static io.opentelemetry.instrumentation.awssdk.v1_11.AttributeKeyPair.createStringKeyPair;
 
 public abstract class AbstractKinesisClientTest extends AbstractBaseAwsClientTest {
 
@@ -42,7 +45,9 @@ public abstract class AbstractKinesisClientTest extends AbstractBaseAwsClientTes
 
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, ""));
 
-    Map<String, String> additionalAttributes = ImmutableMap.of("aws.stream.name", "somestream");
+    List<AttributeKeyPair<?>> additionalAttributes = Arrays.asList(
+        createStringKeyPair("aws.stream.name", "somestream")
+    );
     Object response = call.apply(client);
     assertRequestWithMockedResponse(
         response, client, "Kinesis", operation, "POST", additionalAttributes);
