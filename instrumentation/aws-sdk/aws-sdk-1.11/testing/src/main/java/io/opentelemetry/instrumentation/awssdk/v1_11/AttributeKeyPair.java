@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import groovyjarjarantlr4.v4.runtime.misc.Nullable;
@@ -19,7 +24,8 @@ public class AttributeKeyPair<T> {
     return new AttributeKeyPair<>(AttributeKey.stringKey(keyString), val);
   }
 
-  public static AttributeKeyPair<List<String>> createStringArrayKeyPair(String keyString, List<String> val) {
+  public static AttributeKeyPair<List<String>> createStringArrayKeyPair(
+      String keyString, List<String> val) {
     return new AttributeKeyPair<>(AttributeKey.stringArrayKey(keyString), val);
   }
 
@@ -29,7 +35,7 @@ public class AttributeKeyPair<T> {
 
   @SuppressWarnings("unchecked")
   public AttributeKey<String> getStringKey() {
-    if (key.getType() != AttributeType.STRING){
+    if (key.getType() != AttributeType.STRING) {
       return null;
     }
     return (AttributeKey<String>) key;
@@ -45,8 +51,8 @@ public class AttributeKeyPair<T> {
   }
 
   @SuppressWarnings("unchecked")
-  public String getStringVal(){
-    if (key.getType() != AttributeType.STRING){
+  public String getStringVal() {
+    if (key.getType() != AttributeType.STRING) {
       return null;
     }
     return (String) value;
@@ -54,10 +60,10 @@ public class AttributeKeyPair<T> {
 
   @SuppressWarnings("unchecked")
   @Nullable
-  public List<String> getStringArrayVal(){
-    if (key.getType() != AttributeType.STRING_ARRAY){
+  public List<String> getStringArrayVal() {
+    if (key.getType() != AttributeType.STRING_ARRAY) {
       return null;
     }
-    return (List<String>)value;
+    return (List<String>) value;
   }
 }

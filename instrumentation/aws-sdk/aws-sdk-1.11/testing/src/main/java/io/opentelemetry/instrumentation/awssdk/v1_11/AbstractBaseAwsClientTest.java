@@ -118,7 +118,8 @@ public abstract class AbstractBaseAwsClientTest {
                             if (att.getType() == AttributeType.STRING) {
                               attributes.add(equalTo(att.getStringKey(), att.getStringVal()));
                             } else if (att.getType() == AttributeType.STRING_ARRAY) {
-                              attributes.add(equalTo(att.getStringArrayKey(), att.getStringArrayVal()));
+                              attributes.add(
+                                  equalTo(att.getStringArrayKey(), att.getStringArrayVal()));
                             }
                           });
 

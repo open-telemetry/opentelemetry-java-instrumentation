@@ -53,8 +53,8 @@ public abstract class AbstractSnsClientTest extends AbstractBaseAwsClientTest {
 
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, body));
 
-    List<AttributeKeyPair<?>> additionalAttributes = Arrays.asList(
-        createStringKeyPair(MESSAGING_DESTINATION_NAME.toString(), "somearn"));
+    List<AttributeKeyPair<?>> additionalAttributes =
+        Arrays.asList(createStringKeyPair(MESSAGING_DESTINATION_NAME.toString(), "somearn"));
 
     Object response = call.apply(client);
     assertRequestWithMockedResponse(
