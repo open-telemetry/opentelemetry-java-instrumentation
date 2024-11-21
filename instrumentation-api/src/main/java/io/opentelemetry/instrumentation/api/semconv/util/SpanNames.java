@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/** A utility class used to generate span names. */
 public final class SpanNames {
 
   private static final Cache<Class<?>, Map<String, String>> spanNameCaches = Cache.weak();
