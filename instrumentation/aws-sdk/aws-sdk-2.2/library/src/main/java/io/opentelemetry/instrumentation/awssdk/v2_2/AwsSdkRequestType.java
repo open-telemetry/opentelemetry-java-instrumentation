@@ -23,6 +23,12 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttrib
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.AWS_STREAM_NAME;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.AWS_TABLE_NAME;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.GEN_AI_MODEL;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.GEN_AI_REQUEST_MAX_TOKENS;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.GEN_AI_REQUEST_TEMPERATURE;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.GEN_AI_REQUEST_TOP_P;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.GEN_AI_RESPONSE_FINISH_REASONS;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.GEN_AI_USAGE_INPUT_TOKENS;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.AwsExperimentalAttributes.GEN_AI_USAGE_OUTPUT_TOKENS;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.FieldMapping.request;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.FieldMapping.response;
 
@@ -51,7 +57,15 @@ enum AwsSdkRequestType {
   BEDROCKKNOWLEDGEBASEOPERATION(
       request(AWS_KNOWLEDGE_BASE_ID.getKey(), "knowledgeBaseId"),
       response(AWS_KNOWLEDGE_BASE_ID.getKey(), "knowledgeBaseId")),
-  BEDROCKRUNTIME(request(GEN_AI_MODEL.getKey(), "modelId")),
+  BEDROCKRUNTIME(
+      request(GEN_AI_MODEL.getKey(), "modelId"),
+      request(GEN_AI_REQUEST_MAX_TOKENS.getKey(), "body"),
+      request(GEN_AI_REQUEST_TEMPERATURE.getKey(), "body"),
+      request(GEN_AI_REQUEST_TOP_P.getKey(), "body"),
+      request(GEN_AI_USAGE_INPUT_TOKENS.getKey(), "body"),
+      response(GEN_AI_RESPONSE_FINISH_REASONS.getKey(), "body"),
+      response(GEN_AI_USAGE_INPUT_TOKENS.getKey(), "body"),
+      response(GEN_AI_USAGE_OUTPUT_TOKENS.getKey(), "body")),
   STEPFUNCTION(
       request(AWS_STATE_MACHINE_ARN.getKey(), "stateMachineArn"),
       request(AWS_STEP_FUNCTIONS_ACTIVITY_ARN.getKey(), "activityArn")),
