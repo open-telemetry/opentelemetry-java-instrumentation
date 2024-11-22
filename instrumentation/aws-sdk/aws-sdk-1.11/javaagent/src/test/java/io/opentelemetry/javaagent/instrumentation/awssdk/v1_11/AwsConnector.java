@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.awssdk.v1_11;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -23,14 +28,14 @@ import com.amazonaws.services.sqs.model.GetQueueAttributesRequest;
 import com.amazonaws.services.sqs.model.PurgeQueueRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
+import java.time.Duration;
+import java.util.Collections;
+import java.util.EnumSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.utility.DockerImageName;
-import java.time.Duration;
-import java.util.Collections;
-import java.util.EnumSet;
 
 class AwsConnector {
   private static final Logger logger = LoggerFactory.getLogger(AwsConnector.class);
@@ -42,36 +47,50 @@ class AwsConnector {
   static AwsConnector localStack() {
     AwsConnector awsConnector = new AwsConnector();
 
-    AwsConnector.localStack = new LocalStackContainer(DockerImageName.parse("localstack/localstack:2.0.2"))
-        .withServices(LocalStackContainer.Service.SQS, LocalStackContainer.Service.SNS, LocalStackContainer.Service.S3)
-        .withEnv("DEBUG", "1")
-        .withEnv("SQS_PROVIDER", "elasticmq")
-        .withStartupTimeout(Duration.ofMinutes(2));
+    AwsConnector.localStack =
+        new LocalStackContainer(DockerImageName.parse("localstack/localstack:2.0.2"))
+            .withServices(
+                LocalStackContainer.Service.SQS,
+                LocalStackContainer.Service.SNS,
+                LocalStackContainer.Service.S3)
+            .withEnv("DEBUG", "1")
+            .withEnv("SQS_PROVIDER", "elasticmq")
+            .withStartupTimeout(Duration.ofMinutes(2));
     localStack.start();
     localStack.followOutput(new Slf4jLogConsumer(LoggerFactory.getLogger("test")));
 
-    AWSCredentialsProvider credentialsProvider = new AWSStaticCredentialsProvider(new BasicAWSCredentials(localStack .getAccessKey(), localStack.getSecretKey()));
+    AWSCredentialsProvider credentialsProvider =
+        new AWSStaticCredentialsProvider(
+            new BasicAWSCredentials(localStack.getAccessKey(), localStack.getSecretKey()));
 
-    sqsClient = AmazonSQSAsyncClient.asyncBuilder()
-        .withEndpointConfiguration(getEndpointConfiguration(localStack, LocalStackContainer.Service.SQS))
-        .withCredentials(credentialsProvider)
-        .build();
+    sqsClient =
+        AmazonSQSAsyncClient.asyncBuilder()
+            .withEndpointConfiguration(
+                getEndpointConfiguration(localStack, LocalStackContainer.Service.SQS))
+            .withCredentials(credentialsProvider)
+            .build();
 
-    s3Client = AmazonS3Client.builder()
-        .withEndpointConfiguration(getEndpointConfiguration(localStack, LocalStackContainer.Service.S3))
-        .withCredentials(credentialsProvider)
-        .build();
+    s3Client =
+        AmazonS3Client.builder()
+            .withEndpointConfiguration(
+                getEndpointConfiguration(localStack, LocalStackContainer.Service.S3))
+            .withCredentials(credentialsProvider)
+            .build();
 
-    snsClient = AmazonSNSAsyncClient.asyncBuilder()
-        .withEndpointConfiguration(getEndpointConfiguration(localStack, LocalStackContainer.Service.SNS))
-        .withCredentials(credentialsProvider)
-        .build();
+    snsClient =
+        AmazonSNSAsyncClient.asyncBuilder()
+            .withEndpointConfiguration(
+                getEndpointConfiguration(localStack, LocalStackContainer.Service.SNS))
+            .withCredentials(credentialsProvider)
+            .build();
 
     return awsConnector;
   }
 
-  static AwsClientBuilder.EndpointConfiguration getEndpointConfiguration(LocalStackContainer localStack, LocalStackContainer.Service service) {
-    return new AwsClientBuilder.EndpointConfiguration(localStack.getEndpointOverride(service).toString(), localStack.getRegion());
+  static AwsClientBuilder.EndpointConfiguration getEndpointConfiguration(
+      LocalStackContainer localStack, LocalStackContainer.Service service) {
+    return new AwsClientBuilder.EndpointConfiguration(
+        localStack.getEndpointOverride(service).toString(), localStack.getRegion());
   }
 
   String createQueue(String queueName) {
@@ -81,40 +100,43 @@ class AwsConnector {
 
   String getQueueArn(String queueUrl) {
     logger.info("Get ARN for queue {}", queueUrl);
-    return sqsClient.getQueueAttributes(
-            new GetQueueAttributesRequest(queueUrl)
-                .withAttributeNames("QueueArn")).getAttributes()
+    return sqsClient
+        .getQueueAttributes(new GetQueueAttributesRequest(queueUrl).withAttributeNames("QueueArn"))
+        .getAttributes()
         .get("QueueArn");
   }
 
   void setTopicPublishingPolicy(String topicArn) {
     logger.info("Set policy for topic, {}", topicArn);
-    String SNS_POLICY = "{" +
-        "  \"Statement\": [" +
-        "    {" +
-        "      \"Effect\": \"Allow\"," +
-        "      \"Principal\": \"*\"," +
-        "      \"Action\": \"sns:Publish\"," +
-        "      \"Resource\": \"%s\"" +
-        "    }]" +
-        "}";
-    snsClient.setTopicAttributes(new SetTopicAttributesRequest(topicArn, "Policy", String.format(SNS_POLICY, topicArn)));
+    String SNS_POLICY =
+        "{"
+            + "  \"Statement\": ["
+            + "    {"
+            + "      \"Effect\": \"Allow\","
+            + "      \"Principal\": \"*\","
+            + "      \"Action\": \"sns:Publish\","
+            + "      \"Resource\": \"%s\""
+            + "    }]"
+            + "}";
+    snsClient.setTopicAttributes(
+        new SetTopicAttributesRequest(topicArn, "Policy", String.format(SNS_POLICY, topicArn)));
   }
 
   void setQueuePublishingPolicy(String queueUrl, String queueArn) {
     logger.info("Set policy for queue {}", queueArn);
-    String SQS_POLICY = "{" +
-        "  \"Statement\": [" +
-        "    {" +
-        "      \"Effect\": \"Allow\"," +
-        "      \"Principal\": \"*\"," +
-        "      \"Action\": \"sqs:SendMessage\"," +
-        "      \"Resource\": \"%s\"" +
-        "    }]" +
-        "}";
-    sqsClient.setQueueAttributes(queueUrl, Collections.singletonMap("Policy", String.format(SQS_POLICY, queueArn)));
+    String SQS_POLICY =
+        "{"
+            + "  \"Statement\": ["
+            + "    {"
+            + "      \"Effect\": \"Allow\","
+            + "      \"Principal\": \"*\","
+            + "      \"Action\": \"sqs:SendMessage\","
+            + "      \"Resource\": \"%s\""
+            + "    }]"
+            + "}";
+    sqsClient.setQueueAttributes(
+        queueUrl, Collections.singletonMap("Policy", String.format(SQS_POLICY, queueArn)));
   }
-
 
   void createBucket(String bucketName) {
     logger.info("Create bucket {}", bucketName);
@@ -132,24 +154,28 @@ class AwsConnector {
 
   void enableS3ToSqsNotifications(String bucketName, String sqsQueueArn) {
     logger.info("Enable notification for bucket {} to queue {}", bucketName, sqsQueueArn);
-    BucketNotificationConfiguration notificationConfiguration = new BucketNotificationConfiguration();
-    notificationConfiguration.addConfiguration("sqsQueueConfig",
+    BucketNotificationConfiguration notificationConfiguration =
+        new BucketNotificationConfiguration();
+    notificationConfiguration.addConfiguration(
+        "sqsQueueConfig",
         new QueueConfiguration(sqsQueueArn, EnumSet.of(S3Event.ObjectCreatedByPut)));
-    s3Client.setBucketNotificationConfiguration(new SetBucketNotificationConfigurationRequest(
-        bucketName, notificationConfiguration));
+    s3Client.setBucketNotificationConfiguration(
+        new SetBucketNotificationConfigurationRequest(bucketName, notificationConfiguration));
   }
 
   void enableS3ToSnsNotifications(String bucketName, String snsTopicArn) {
-    logger.info("Enable notification for bucket {} to topic {}", bucketName , snsTopicArn);
-    BucketNotificationConfiguration notificationConfiguration = new BucketNotificationConfiguration();
-    notificationConfiguration.addConfiguration("snsTopicConfig",
+    logger.info("Enable notification for bucket {} to topic {}", bucketName, snsTopicArn);
+    BucketNotificationConfiguration notificationConfiguration =
+        new BucketNotificationConfiguration();
+    notificationConfiguration.addConfiguration(
+        "snsTopicConfig",
         new TopicConfiguration(snsTopicArn, EnumSet.of(S3Event.ObjectCreatedByPut)));
-    s3Client.setBucketNotificationConfiguration(new SetBucketNotificationConfigurationRequest(
-        bucketName, notificationConfiguration));
+    s3Client.setBucketNotificationConfiguration(
+        new SetBucketNotificationConfigurationRequest(bucketName, notificationConfiguration));
   }
 
   String createTopicAndSubscribeQueue(String topicName, String queueArn) {
-    logger.info( "Create topic {} and subscribe to queue {}", topicName, queueArn);
+    logger.info("Create topic {} and subscribe to queue {}", topicName, queueArn);
     CreateTopicResult ctr = snsClient.createTopic(topicName);
     snsClient.subscribe(ctr.getTopicArn(), "sqs", queueArn);
     return ctr.getTopicArn();
