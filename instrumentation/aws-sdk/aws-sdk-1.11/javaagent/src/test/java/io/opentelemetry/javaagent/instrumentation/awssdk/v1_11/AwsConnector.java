@@ -108,7 +108,7 @@ class AwsConnector {
 
   void setTopicPublishingPolicy(String topicArn) {
     logger.info("Set policy for topic, {}", topicArn);
-    String SNS_POLICY =
+    String snsPolicy =
         "{"
             + "  \"Statement\": ["
             + "    {"
@@ -119,12 +119,12 @@ class AwsConnector {
             + "    }]"
             + "}";
     snsClient.setTopicAttributes(
-        new SetTopicAttributesRequest(topicArn, "Policy", String.format(SNS_POLICY, topicArn)));
+        new SetTopicAttributesRequest(topicArn, "Policy", String.format(snsPolicy, topicArn)));
   }
 
   void setQueuePublishingPolicy(String queueUrl, String queueArn) {
     logger.info("Set policy for queue {}", queueArn);
-    String SQS_POLICY =
+    String sqsPolicy =
         "{"
             + "  \"Statement\": ["
             + "    {"
@@ -135,7 +135,7 @@ class AwsConnector {
             + "    }]"
             + "}";
     sqsClient.setQueueAttributes(
-        queueUrl, Collections.singletonMap("Policy", String.format(SQS_POLICY, queueArn)));
+        queueUrl, Collections.singletonMap("Policy", String.format(sqsPolicy, queueArn)));
   }
 
   void createBucket(String bucketName) {
