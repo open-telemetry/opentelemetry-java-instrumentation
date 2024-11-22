@@ -8,7 +8,7 @@ plugins {
 }
 
 dependencies {
-  jmhImplementation("org.springframework.boot:spring-boot-starter-web:3.3.6")
+  jmhImplementation("org.springframework.boot:spring-boot-starter-web:3.4.0")
 }
 
 tasks {
