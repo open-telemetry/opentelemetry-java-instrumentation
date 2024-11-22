@@ -16,7 +16,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
-public class DynamoAttributesExtractor implements AttributesExtractor<Request<?>, Response<?>> {
+public class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Response<?>> {
 
   private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
   private static final AttributeKey<List<String>> AWS_TABLE_NAMES =

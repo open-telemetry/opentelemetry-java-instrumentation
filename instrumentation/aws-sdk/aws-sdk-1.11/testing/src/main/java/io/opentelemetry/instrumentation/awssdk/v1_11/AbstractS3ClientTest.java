@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -34,7 +35,6 @@ import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -83,12 +83,12 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
             "CreateBucket",
             "PUT",
             (Function<AmazonS3, Object>) c -> c.createBucket("testbucket"),
-            Collections.singletonList(createStringKeyPair("aws.bucket.name", "testbucket"))),
+            singletonList(createStringKeyPair("aws.bucket.name", "testbucket"))),
         Arguments.of(
             "GetObject",
             "GET",
             (Function<AmazonS3, Object>) c -> c.getObject("someBucket", "someKey"),
-            Collections.singletonList(createStringKeyPair("aws.bucket.name", "someBucket"))));
+            singletonList(createStringKeyPair("aws.bucket.name", "someBucket"))));
   }
 
   @Test

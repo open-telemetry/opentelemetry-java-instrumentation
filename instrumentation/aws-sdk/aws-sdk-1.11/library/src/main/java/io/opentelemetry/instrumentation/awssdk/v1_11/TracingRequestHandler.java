@@ -39,19 +39,19 @@ final class TracingRequestHandler extends RequestHandler2 {
   private final Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter;
   private final Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter;
   private final Instrumenter<Request<?>, Response<?>> producerInstrumenter;
-  private final Instrumenter<Request<?>, Response<?>> dynamoInstrumenter;
+  private final Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter;
 
   TracingRequestHandler(
       Instrumenter<Request<?>, Response<?>> requestInstrumenter,
       Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter,
       Instrumenter<SqsProcessRequest, Response<?>> consumerProcessInstrumenter,
       Instrumenter<Request<?>, Response<?>> producerInstrumenter,
-      Instrumenter<Request<?>, Response<?>> dynamoInstrumenter) {
+      Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter) {
     this.requestInstrumenter = requestInstrumenter;
     this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
     this.producerInstrumenter = producerInstrumenter;
-    this.dynamoInstrumenter = dynamoInstrumenter;
+    this.dynamoDbInstrumenter = dynamoDbInstrumenter;
   }
 
   @Override
@@ -163,7 +163,7 @@ final class TracingRequestHandler extends RequestHandler2 {
   private Instrumenter<Request<?>, Response<?>> getInstrumenter(Request<?> request) {
     String className = request.getOriginalRequest().getClass().getName();
     if (className.startsWith(DYNAMODBV2)) {
-      return dynamoInstrumenter;
+      return dynamoDbInstrumenter;
     } else if (className.equals(SEND_MESSAGE_REQUEST)) {
       return producerInstrumenter;
     }
