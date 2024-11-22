@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
-import static io.opentelemetry.instrumentation.awssdk.v1_11.AttributeKeyPair.createStringKeyPair;
 import static io.opentelemetry.instrumentation.test.utils.PortUtils.UNUSABLE_PORT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -30,6 +29,7 @@ import com.amazonaws.retry.PredefinedRetryPolicies;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
@@ -61,7 +61,7 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
       String operation,
       String method,
       Function<AmazonS3, Object> call,
-      List<AttributeKeyPair<?>> additionalAttributes)
+      List<AttributeAssertion> additionalAttributes)
       throws Exception {
 
     AmazonS3 client =
@@ -83,12 +83,12 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
             "CreateBucket",
             "PUT",
             (Function<AmazonS3, Object>) c -> c.createBucket("testbucket"),
-            singletonList(createStringKeyPair("aws.bucket.name", "testbucket"))),
+            singletonList(equalTo(stringKey("aws.bucket.name"), "testbucket"))),
         Arguments.of(
             "GetObject",
             "GET",
             (Function<AmazonS3, Object>) c -> c.getObject("someBucket", "someKey"),
-            singletonList(createStringKeyPair("aws.bucket.name", "someBucket"))));
+            singletonList(equalTo(stringKey("aws.bucket.name"), "someBucket"))));
   }
 
   @Test
