@@ -80,9 +80,7 @@ jobs:
       - name: Generate license report
         env:
           GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-        # currently ignoring inputs.no-build-cache and always running with --no-build-cache
-        # see https://github.com/jk1/Gradle-License-Report/issues/231
-        run: ./gradlew generateLicenseReport --no-build-cache
+        run: ./gradlew generateLicenseReport ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
 
       - name: Check licenses
         run: |
