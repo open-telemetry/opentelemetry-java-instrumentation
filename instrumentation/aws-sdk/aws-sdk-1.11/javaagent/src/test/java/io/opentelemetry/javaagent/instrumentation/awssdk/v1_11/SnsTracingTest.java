@@ -49,7 +49,7 @@ class SnsTracingTest {
 
   @Test
   @SuppressWarnings("deprecation") // MESSAGING_OPERATION is deprecated
-  void testSNSNotificationTriggersSQSMessageConsumedWithAwsSdk() {
+  void testSnsNotificationTriggersSqsMessageConsumedWithAwsSdk() {
     String queueName = "snsToSqsTestQueue";
     String topicName = "snsToSqsTestTopic";
 

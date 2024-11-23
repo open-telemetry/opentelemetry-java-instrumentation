@@ -51,7 +51,7 @@ class S3TracingTest {
   }
 
   @Test
-  void testS3UploadTriggersSQSMessage() {
+  void testS3UploadTriggersSqsMessage() {
     String queueName = "s3ToSqsTestQueue";
     String bucketName = "otel-s3-to-sqs-test-bucket";
 
