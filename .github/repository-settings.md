@@ -80,6 +80,6 @@ for [`dependabot/**/**`](https://github.com/open-telemetry/community/blob/main/d
 - `SONATYPE_KEY` - owned by [@trask](https://github.com/trask)
 - `SONATYPE_USER` - owned by [@trask](https://github.com/trask)
 
-### Repository secrets
+### Organization secrets
 
 - `OPENTELEMETRYBOT_GITHUB_TOKEN`
