@@ -280,11 +280,6 @@ tasks {
       charSet = "UTF-8"
       breakIterator(true)
 
-      // TODO (trask) revisit to see if url is fixed
-      // currently broken because https://docs.oracle.com/javase/8/docs/api/element-list is missing
-      // and redirects
-      // links("https://docs.oracle.com/javase/8/docs/api/")
-
       addStringOption("Xdoclint:none", "-quiet")
       // non-standard option to fail on warnings, see https://bugs.openjdk.java.net/browse/JDK-8200363
       addStringOption("Xwerror", "-quiet")
