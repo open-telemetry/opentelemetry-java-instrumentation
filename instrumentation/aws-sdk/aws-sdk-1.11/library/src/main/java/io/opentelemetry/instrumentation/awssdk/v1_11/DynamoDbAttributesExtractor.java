@@ -19,7 +19,7 @@ import javax.annotation.Nullable;
 public class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Response<?>> {
 
   private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
-  private static final AttributeKey<List<String>> AWS_TABLE_NAMES =
+  private static final AttributeKey<List<String>> AWS_DYNAMODB_TABLE_NAMES =
       AttributeKey.stringArrayKey("aws.dynamodb.table_names");
 
   private static final String DYNAMODB = "dynamodb";
@@ -29,7 +29,7 @@ public class DynamoDbAttributesExtractor implements AttributesExtractor<Request<
     AttributesExtractorUtil.internalSet(attributes, DB_SYSTEM, DYNAMODB);
     String tableName = RequestAccess.getTableName(request.getOriginalRequest());
     AttributesExtractorUtil.internalSet(
-        attributes, AWS_TABLE_NAMES, Collections.singletonList(tableName));
+        attributes, AWS_DYNAMODB_TABLE_NAMES, Collections.singletonList(tableName));
   }
 
   @Override
