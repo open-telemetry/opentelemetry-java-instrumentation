@@ -9,7 +9,8 @@ dependencies {
 
 tasks {
   shadowJar {
-    relocate("com.google.protobuf", "io.opentelemetry.proto.internal.protobuf")
+    relocate("io.opentelemetry.proto", "io.opentelemetry.testing.internal.proto")
+    relocate("com.google.protobuf", "io.opentelemetry.testing.internal.protobuf")
   }
 
   val extractShadowJar by registering(Copy::class) {

@@ -26,6 +26,7 @@ dependencies {
   implementation(platform("io.grpc:grpc-bom:1.68.1"))
   implementation("org.slf4j:slf4j-api")
   implementation("io.opentelemetry:opentelemetry-api")
+  implementation("io.opentelemetry.proto:opentelemetry-proto")
   implementation("org.testcontainers:testcontainers")
   implementation("com.fasterxml.jackson.core:jackson-databind")
   implementation("com.google.protobuf:protobuf-java-util:4.28.3")
@@ -36,9 +37,8 @@ dependencies {
   testImplementation("com.github.docker-java:docker-java-core:$dockerJavaVersion")
   testImplementation("com.github.docker-java:docker-java-transport-httpclient5:$dockerJavaVersion")
 
-  // make IntelliJ see shaded Armeria and opentelemetry-proto
+  // make IntelliJ see shaded Armeria
   testCompileOnly(project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
-  testCompileOnly(project(":testing:proto-shaded-for-testing", configuration = "shadow"))
 }
 
 tasks {

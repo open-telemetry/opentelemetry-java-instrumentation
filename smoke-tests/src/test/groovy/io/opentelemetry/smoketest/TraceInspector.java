@@ -5,12 +5,12 @@
 
 package io.opentelemetry.smoketest;
 
+import com.google.protobuf.ByteString;
 import groovy.lang.GString;
 import io.opentelemetry.api.trace.TraceId;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.proto.common.v1.AnyValue;
 import io.opentelemetry.proto.common.v1.KeyValue;
-import io.opentelemetry.proto.internal.protobuf.ByteString;
 import io.opentelemetry.proto.trace.v1.ResourceSpans;
 import io.opentelemetry.proto.trace.v1.Span;
 import java.util.Collection;
