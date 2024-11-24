@@ -12,7 +12,10 @@ import java.util.List;
 import java.util.function.Supplier;
 
 /**
- * Registers measurements that generate experimental metrics about file descriptor.
+ * Registers measurements that generate experimental metrics about file descriptor. This metrics are
+ * experimental, see <a
+ * href="https://github.com/open-telemetry/semantic-conventions/issues/1275">File Descriptor metrics
+ * semantic conventions</a>
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
