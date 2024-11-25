@@ -39,15 +39,13 @@ import org.testcontainers.utility.DockerImageName;
 
 class AwsConnector {
   private static final Logger logger = LoggerFactory.getLogger(AwsConnector.class);
-  static LocalStackContainer localStack;
-  private static AmazonSQSAsync sqsClient;
-  private static AmazonS3 s3Client;
-  private static AmazonSNSAsync snsClient;
+  private final LocalStackContainer localStack;
+  private final AmazonSQSAsync sqsClient;
+  private final AmazonS3 s3Client;
+  private final AmazonSNSAsync snsClient;
 
-  static AwsConnector localStack() {
-    AwsConnector awsConnector = new AwsConnector();
-
-    AwsConnector.localStack =
+  AwsConnector() {
+    localStack =
         new LocalStackContainer(DockerImageName.parse("localstack/localstack:2.0.2"))
             .withServices(
                 LocalStackContainer.Service.SQS,
@@ -83,8 +81,6 @@ class AwsConnector {
                 getEndpointConfiguration(localStack, LocalStackContainer.Service.SNS))
             .withCredentials(credentialsProvider)
             .build();
-
-    return awsConnector;
   }
 
   static AwsClientBuilder.EndpointConfiguration getEndpointConfiguration(

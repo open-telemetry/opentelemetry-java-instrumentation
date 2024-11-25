@@ -43,7 +43,7 @@ class S3TracingTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private static final AwsConnector awsConnector = AwsConnector.localStack();
+  private static final AwsConnector awsConnector = new AwsConnector();
 
   @AfterAll
   static void cleanUp() {
