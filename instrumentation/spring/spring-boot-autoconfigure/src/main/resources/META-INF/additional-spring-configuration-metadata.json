@@ -489,6 +489,12 @@
       "defaultValue": true
     },
     {
+      "name": "otel.instrumentation.spring-scheduling.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the Spring Scheduling instrumentation.",
+      "defaultValue": true
+    },
+    {
       "name": "otel.java.enabled.resource.providers",
       "type": "java.util.List<java.lang.String>",
       "description": "Enables one or more <code>ResourceProvider</code> types. If unset, all resource providers are enabled. Each entry is the fully qualified classname of a <code>ResourceProvider</code>."
