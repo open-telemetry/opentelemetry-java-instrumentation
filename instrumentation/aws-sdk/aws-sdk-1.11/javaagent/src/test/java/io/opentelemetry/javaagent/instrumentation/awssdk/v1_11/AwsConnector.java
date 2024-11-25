@@ -31,14 +31,12 @@ import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.EnumSet;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.utility.DockerImageName;
 
 class AwsConnector {
-  private static final Logger logger = LoggerFactory.getLogger(AwsConnector.class);
   private final LocalStackContainer localStack;
   private final AmazonSQSAsync sqsClient;
   private final AmazonS3 s3Client;
@@ -90,12 +88,10 @@ class AwsConnector {
   }
 
   String createQueue(String queueName) {
-    logger.info("Create queue {}", queueName);
     return sqsClient.createQueue(queueName).getQueueUrl();
   }
 
   String getQueueArn(String queueUrl) {
-    logger.info("Get ARN for queue {}", queueUrl);
     return sqsClient
         .getQueueAttributes(new GetQueueAttributesRequest(queueUrl).withAttributeNames("QueueArn"))
         .getAttributes()
@@ -103,7 +99,6 @@ class AwsConnector {
   }
 
   void setTopicPublishingPolicy(String topicArn) {
-    logger.info("Set policy for topic, {}", topicArn);
     String snsPolicy =
         "{"
             + "  \"Statement\": ["
@@ -119,7 +114,6 @@ class AwsConnector {
   }
 
   void setQueuePublishingPolicy(String queueUrl, String queueArn) {
-    logger.info("Set policy for queue {}", queueArn);
     String sqsPolicy =
         "{"
             + "  \"Statement\": ["
@@ -135,12 +129,10 @@ class AwsConnector {
   }
 
   void createBucket(String bucketName) {
-    logger.info("Create bucket {}", bucketName);
     s3Client.createBucket(bucketName);
   }
 
   void deleteBucket(String bucketName) {
-    logger.info("Delete bucket {}", bucketName);
     ObjectListing objectListing = s3Client.listObjects(bucketName);
     for (S3ObjectSummary element : objectListing.getObjectSummaries()) {
       s3Client.deleteObject(bucketName, element.getKey());
@@ -149,7 +141,6 @@ class AwsConnector {
   }
 
   void enableS3ToSqsNotifications(String bucketName, String sqsQueueArn) {
-    logger.info("Enable notification for bucket {} to queue {}", bucketName, sqsQueueArn);
     BucketNotificationConfiguration notificationConfiguration =
         new BucketNotificationConfiguration();
     notificationConfiguration.addConfiguration(
@@ -160,7 +151,6 @@ class AwsConnector {
   }
 
   void enableS3ToSnsNotifications(String bucketName, String snsTopicArn) {
-    logger.info("Enable notification for bucket {} to topic {}", bucketName, snsTopicArn);
     BucketNotificationConfiguration notificationConfiguration =
         new BucketNotificationConfiguration();
     notificationConfiguration.addConfiguration(
@@ -171,24 +161,20 @@ class AwsConnector {
   }
 
   String createTopicAndSubscribeQueue(String topicName, String queueArn) {
-    logger.info("Create topic {} and subscribe to queue {}", topicName, queueArn);
     CreateTopicResult ctr = snsClient.createTopic(topicName);
     snsClient.subscribe(ctr.getTopicArn(), "sqs", queueArn);
     return ctr.getTopicArn();
   }
 
   ReceiveMessageResult receiveMessage(String queueUrl) {
-    logger.info("Receive message from queue {}", queueUrl);
     return sqsClient.receiveMessage(new ReceiveMessageRequest(queueUrl).withWaitTimeSeconds(20));
   }
 
   void purgeQueue(String queueUrl) {
-    logger.info("Purge queue {}", queueUrl);
     sqsClient.purgeQueue(new PurgeQueueRequest(queueUrl));
   }
 
   void putSampleData(String bucketName) {
-    logger.info("Put sample data to bucket {}", bucketName);
     s3Client.putObject(bucketName, "otelTestKey", "otelTestData");
   }
 
