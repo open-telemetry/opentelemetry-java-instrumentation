@@ -19,7 +19,7 @@ import io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.internal.Aerosp
 import io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.metrics.AerospikeMetrics;
 
 public final class AersopikeSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aerospike-client-7.0";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aerospike-client";
 
   private static final Instrumenter<AerospikeRequest, Void> INSTRUMENTER;
 

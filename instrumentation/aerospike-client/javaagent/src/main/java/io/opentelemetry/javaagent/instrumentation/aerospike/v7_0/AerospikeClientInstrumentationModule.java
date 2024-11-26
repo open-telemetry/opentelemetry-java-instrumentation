@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class AerospikeClientInstrumentationModule extends InstrumentationModule {
 
   public AerospikeClientInstrumentationModule() {
-    super("aerospike-client", "aerospike-client-7.0.0");
+    super("aerospike-client");
   }
 
   @Override
