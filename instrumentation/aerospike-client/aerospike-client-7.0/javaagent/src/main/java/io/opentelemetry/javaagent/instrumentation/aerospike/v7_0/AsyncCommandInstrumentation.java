@@ -48,7 +48,10 @@ public class AsyncCommandInstrumentation implements TypeInstrumentation {
         isMethod().and(named("onSuccess")), this.getClass().getName() + "$GetOnSuccessAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod().and(named("onFailure").and(takesArgument(0, named("com.aerospike.client.AerospikeException")))),
+        isMethod()
+            .and(
+                named("onFailure")
+                    .and(takesArgument(0, named("com.aerospike.client.AerospikeException")))),
         this.getClass().getName() + "$GetOnFailureAdvice");
   }
 

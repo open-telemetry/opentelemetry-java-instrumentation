@@ -38,13 +38,17 @@ public class AerospikeClientInstrumentation implements TypeInstrumentation {
         isMethod()
             .and(takesGenericArguments(iterableHasAtLeastOne(named("com.aerospike.client.Key"))))
             .and(
-                not(takesGenericArguments(iterableHasAtLeastOne(named("com.aerospike.client.async.EventLoop"))))),
+                not(
+                    takesGenericArguments(
+                        iterableHasAtLeastOne(named("com.aerospike.client.async.EventLoop"))))),
         this.getClass().getName() + "$SyncCommandAdvice");
 
     transformer.applyAdviceToMethod(
         isMethod()
             .and(takesGenericArguments(iterableHasAtLeastOne(named("com.aerospike.client.Key"))))
-            .and(takesGenericArguments(iterableHasAtLeastOne(named("com.aerospike.client.async.EventLoop")))),
+            .and(
+                takesGenericArguments(
+                    iterableHasAtLeastOne(named("com.aerospike.client.async.EventLoop")))),
         this.getClass().getName() + "$AsyncCommandAdvice");
   }
 
@@ -75,9 +79,7 @@ public class AerospikeClientInstrumentation implements TypeInstrumentation {
       requestContext = AerospikeRequestContext.attach(request, context);
     }
 
-    @Advice.OnMethodExit(
-        onThrowable = Throwable.class,
-        suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopInstrumentation(
         @Advice.Thrown Throwable ex,
         @Advice.Local("AerospikeContext") AerospikeRequestContext requestContext) {
@@ -113,9 +115,7 @@ public class AerospikeClientInstrumentation implements TypeInstrumentation {
       requestContext = AerospikeRequestContext.attach(request, context);
     }
 
-    @Advice.OnMethodExit(
-        onThrowable = Throwable.class,
-        suppress = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopInstrumentaionIfError(
         @Advice.Thrown Throwable ex,
         @Advice.Local("AerospikeContext") AerospikeRequestContext requestContext) {
