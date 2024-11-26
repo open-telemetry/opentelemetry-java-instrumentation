@@ -8,7 +8,7 @@ rules:
     metricAttribute:
       context: param(context)
       camel_version: beanattr(CamelVersion)
-      package_scan_class_resolver: beanattr(PackageScanClassResolver)
+      camel_class_resolver: beanattr(PackageScanClassResolver)
     mapping:
       StartedRoutes:
         metric: route.started
