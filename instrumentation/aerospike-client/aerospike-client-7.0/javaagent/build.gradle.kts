@@ -12,8 +12,8 @@ muzzle {
 }
 
 dependencies {
-  library("com.aerospike:aerospike-client:7.0.0")
-  implementation("io.opentelemetry:opentelemetry-extension-incubator")
+  implementation("com.aerospike:aerospike-client:7.0.0")
+  implementation("io.opentelemetry:opentelemetry-api-incubator")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")

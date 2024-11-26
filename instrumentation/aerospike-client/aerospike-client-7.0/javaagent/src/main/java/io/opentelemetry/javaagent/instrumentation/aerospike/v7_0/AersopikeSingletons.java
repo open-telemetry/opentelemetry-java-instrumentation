@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.aerospike.v7_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -13,7 +14,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.internal.AerospikeRequest;
 import io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.metrics.AerospikeMetrics;
 
 public final class AersopikeSingletons {
@@ -33,7 +35,7 @@ public final class AersopikeSingletons {
                 DbClientSpanNameExtractor.create(aerospikeDbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(aerospikeDbAttributesGetter))
             .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributesGetter));
-    InstrumentationConfig instrumentationConfig = InstrumentationConfig.get();
+    InstrumentationConfig instrumentationConfig = AgentInstrumentationConfig.get();
     if (instrumentationConfig.getBoolean(
         "otel.instrumentation.aerospike.experimental-span-attributes", false)) {
       builder.addAttributesExtractor(new AerospikeClientAttributeExtractor());

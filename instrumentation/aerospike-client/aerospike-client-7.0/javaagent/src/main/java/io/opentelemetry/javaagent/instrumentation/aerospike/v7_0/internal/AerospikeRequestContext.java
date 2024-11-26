@@ -3,22 +3,31 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.aerospike.v7_0;
+package io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.internal;
+
+import static io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.AersopikeSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class AerospikeRequestContext {
   private static final ThreadLocal<AerospikeRequestContext> contextThreadLocal =
       new ThreadLocal<>();
   private AerospikeRequest request;
   private Context context;
+  private Throwable throwable;
 
   private AerospikeRequestContext() {}
 
   public static AerospikeRequestContext attach(AerospikeRequest request, Context context) {
-
-    AerospikeRequestContext requestContext = new AerospikeRequestContext();
+    AerospikeRequestContext requestContext = current();
+    if (requestContext != null) {
+      requestContext.detachContext();
+    }
+    requestContext = new AerospikeRequestContext();
     requestContext.request = request;
     requestContext.context = context;
     contextThreadLocal.set(requestContext);
@@ -26,6 +35,13 @@ public final class AerospikeRequestContext {
   }
 
   public void detachAndEnd() {
+    detachContext();
+    if (request != null) {
+      endSpan();
+    }
+  }
+
+  public void detachContext() {
     contextThreadLocal.remove();
   }
 
@@ -33,15 +49,15 @@ public final class AerospikeRequestContext {
     return contextThreadLocal.get();
   }
 
-  public void endSpan(Instrumenter<AerospikeRequest, Void> instrumenter, Throwable throwable) {
-    instrumenter.end(context, request, null, throwable);
+  public void endSpan() {
+    instrumenter().end(context, request, null, throwable);
   }
 
   public AerospikeRequest getRequest() {
     return request;
   }
 
-  public Context getContext() {
-    return context;
+  public void setThrowable(Throwable throwable) {
+    this.throwable = throwable;
   }
 }

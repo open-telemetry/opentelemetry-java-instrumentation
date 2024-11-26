@@ -10,6 +10,8 @@ import com.aerospike.client.ResultCode;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.internal.AerospikeRequest;
+import io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.internal.AerospikeSemanticAttributes;
 import javax.annotation.Nullable;
 
 final class AerospikeClientAttributeExtractor
@@ -18,10 +20,7 @@ final class AerospikeClientAttributeExtractor
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, AerospikeRequest aerospikeRequest) {
-    attributes.put(
-        AerospikeSemanticAttributes.AEROSPIKE_NAMESPACE, aerospikeRequest.getNamespace());
     attributes.put(AerospikeSemanticAttributes.AEROSPIKE_SET_NAME, aerospikeRequest.getSet());
-    attributes.put(AerospikeSemanticAttributes.AEROSPIKE_USER_KEY, aerospikeRequest.getUserKey());
   }
 
   @Override
@@ -31,22 +30,21 @@ final class AerospikeClientAttributeExtractor
       AerospikeRequest aerospikeRequest,
       @Nullable Void unused,
       @Nullable Throwable error) {
-    attributes.put(
-        AerospikeSemanticAttributes.AEROSPIKE_STATUS, aerospikeRequest.getStatus().name());
+    if (aerospikeRequest.getNode() != null) {
+      String nodeName = aerospikeRequest.getNode().getName();
+      attributes.put(AerospikeSemanticAttributes.AEROSPIKE_NODE_NAME, nodeName);
+    }
+
     if (error != null) {
       if (error instanceof AerospikeException) {
         AerospikeException aerospikeException = (AerospikeException) error;
         attributes.put(
-            AerospikeSemanticAttributes.AEROSPIKE_ERROR_CODE, aerospikeException.getResultCode());
+            AerospikeSemanticAttributes.AEROSPIKE_STATUS, aerospikeException.getResultCode());
       } else {
-        attributes.put(AerospikeSemanticAttributes.AEROSPIKE_ERROR_CODE, ResultCode.CLIENT_ERROR);
+        attributes.put(AerospikeSemanticAttributes.AEROSPIKE_STATUS, ResultCode.CLIENT_ERROR);
       }
     } else {
-      attributes.put(AerospikeSemanticAttributes.AEROSPIKE_ERROR_CODE, ResultCode.OK);
-      if (aerospikeRequest.getSize() != null) {
-        attributes.put(
-            AerospikeSemanticAttributes.AEROSPIKE_TRANSFER_SIZE, aerospikeRequest.getSize());
-      }
+      attributes.put(AerospikeSemanticAttributes.AEROSPIKE_STATUS, ResultCode.OK);
     }
   }
 }

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.aerospike.v7_0;
 
 import com.aerospike.client.cluster.Node;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
+import io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.internal.AerospikeRequest;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 

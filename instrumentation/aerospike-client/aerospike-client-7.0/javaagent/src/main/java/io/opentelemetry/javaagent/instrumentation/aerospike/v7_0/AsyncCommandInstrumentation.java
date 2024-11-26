@@ -5,21 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.aerospike.v7_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.AersopikeSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperClass;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesGenericArguments;
 
-import com.aerospike.client.Key;
+import com.aerospike.client.AerospikeException;
+import com.aerospike.client.cluster.Node;
 import com.aerospike.client.command.Command;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.Locale;
+import io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.internal.AerospikeRequestContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -40,39 +40,87 @@ public class AsyncCommandInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isConstructor().and(isPublic()), this.getClass().getName() + "$ConstructorAdvice");
+
+    transformer.applyAdviceToMethod(
+        isMethod().and(named("getNode")), this.getClass().getName() + "$GetNodeAdvice");
+
+    transformer.applyAdviceToMethod(
+        isMethod().and(named("onSuccess")), this.getClass().getName() + "$GetOnSuccessAdvice");
+
+    transformer.applyAdviceToMethod(
+        isMethod().and(named("onFailure").and(takesGenericArguments(AerospikeException.class))),
+        this.getClass().getName() + "$GetOnFailureAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
+
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(@Advice.This Command command, @Advice.AllArguments Object[] objects) {
-      Key key = null;
-      for (Object object : objects) {
-        if (object instanceof Key) {
-          key = (Key) object;
-          break;
-        }
-      }
-      if (key == null) {
-        return;
-      }
+    public static void getCommand(@Advice.This Command command) {
       VirtualField<Command, AerospikeRequestContext> virtualField =
           VirtualField.find(Command.class, AerospikeRequestContext.class);
       AerospikeRequestContext requestContext = virtualField.get(command);
+      // If the AerospikeRequestContext is already there in VirtualField then we do not need
+      // to override it when constructor of other subclasses of AsyncCommand executes as
+      // AsyncCommand follows multilevel inheritance.
       if (requestContext != null) {
         return;
       }
-      Context parentContext = currentContext();
-      AerospikeRequest request =
-          AerospikeRequest.create(command.getClass().getSimpleName().toUpperCase(Locale.ROOT), key);
-      if (!instrumenter().shouldStart(parentContext, request)) {
+      requestContext = AerospikeRequestContext.current();
+      if (requestContext == null) {
         return;
       }
-      Context context = instrumenter().start(parentContext, request);
-      AerospikeRequestContext aerospikeRequestContext =
-          AerospikeRequestContext.attach(request, context);
+      virtualField.set(command, requestContext);
+      requestContext.detachContext();
+    }
+  }
 
-      virtualField.set(command, aerospikeRequestContext);
+  @SuppressWarnings("unused")
+  public static class GetNodeAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void getNode(@Advice.Return Node node, @Advice.This Command command) {
+      VirtualField<Command, AerospikeRequestContext> virtualField =
+          VirtualField.find(Command.class, AerospikeRequestContext.class);
+      AerospikeRequestContext requestContext = virtualField.get(command);
+      if (requestContext == null || requestContext.getRequest().getNode() != null) {
+        return;
+      }
+      requestContext.getRequest().setNode(node);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class GetOnSuccessAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void stopInstrumentation(@Advice.This Command command) {
+      VirtualField<Command, AerospikeRequestContext> virtualField =
+          VirtualField.find(Command.class, AerospikeRequestContext.class);
+      AerospikeRequestContext requestContext = virtualField.get(command);
+      if (requestContext == null) {
+        return;
+      }
+      virtualField.set(command, null);
+      requestContext.endSpan();
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class GetOnFailureAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void stopInstrumentation(
+        @Advice.Argument(0) AerospikeException ae, @Advice.This Command command) {
+      VirtualField<Command, AerospikeRequestContext> virtualField =
+          VirtualField.find(Command.class, AerospikeRequestContext.class);
+      AerospikeRequestContext requestContext = virtualField.get(command);
+      if (requestContext == null) {
+        return;
+      }
+      virtualField.set(command, null);
+      requestContext.setThrowable(ae);
+      requestContext.endSpan();
     }
   }
 }

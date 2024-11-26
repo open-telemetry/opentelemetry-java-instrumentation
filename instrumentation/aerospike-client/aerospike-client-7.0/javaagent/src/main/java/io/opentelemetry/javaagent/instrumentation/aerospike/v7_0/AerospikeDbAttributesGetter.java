@@ -6,38 +6,39 @@
 package io.opentelemetry.javaagent.instrumentation.aerospike.v7_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
+import io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.internal.AerospikeRequest;
+import io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.internal.AerospikeSemanticAttributes;
 import javax.annotation.Nullable;
 
 final class AerospikeDbAttributesGetter implements DbClientAttributesGetter<AerospikeRequest> {
 
   @Override
-  public String getSystem(AerospikeRequest request) {
+  public String getDbSystem(AerospikeRequest request) {
     return AerospikeSemanticAttributes.DbSystemValues.AEROSPIKE;
   }
 
   @Override
-  @Nullable
-  public String getUser(AerospikeRequest request) {
-    return null;
-  }
-
-  @Override
-  public String getName(AerospikeRequest request) {
-    return null;
-  }
-
-  @Override
-  public String getConnectionString(AerospikeRequest request) {
-    return null;
-  }
-
-  @Override
-  public String getStatement(AerospikeRequest request) {
-    return null;
-  }
-
-  @Override
-  public String getOperation(AerospikeRequest request) {
+  public String getDbOperationName(AerospikeRequest request) {
     return request.getOperation();
+  }
+
+  @Nullable
+  @Override
+  public String getDbNamespace(AerospikeRequest request) {
+    return request.getNamespace();
+  }
+
+  @Deprecated
+  @Nullable
+  @Override
+  public String getUser(AerospikeRequest aerospikeRequest) {
+    return null;
+  }
+
+  @Deprecated
+  @Nullable
+  @Override
+  public String getConnectionString(AerospikeRequest aerospikeRequest) {
+    return null;
   }
 }

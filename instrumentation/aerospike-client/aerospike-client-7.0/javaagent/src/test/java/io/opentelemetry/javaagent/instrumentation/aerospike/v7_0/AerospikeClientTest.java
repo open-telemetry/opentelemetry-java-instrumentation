@@ -9,6 +9,12 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static java.util.Collections.singletonList;
 
 import com.aerospike.client.AerospikeClient;
@@ -20,10 +26,8 @@ import com.aerospike.client.async.NioEventLoops;
 import com.aerospike.client.policy.ClientPolicy;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterAll;
@@ -34,17 +38,14 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class AerospikeClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  public static final AttributeKey<String> AEROSPIKE_STATUS = stringKey("aerospike.status");
-  public static final AttributeKey<Long> AEROSPIKE_ERROR_CODE = longKey("aerospike.error.code");
-  public static final AttributeKey<String> AEROSPIKE_NAMESPACE = stringKey("aerospike.namespace");
-  public static final AttributeKey<String> AEROSPIKE_SET_NAME = stringKey("aerospike.set.name");
-  public static final AttributeKey<String> AEROSPIKE_USER_KEY = stringKey("aerospike.user.key");
-  public static final AttributeKey<Long> AEROSPIKE_TRANSFER_SIZE =
-      longKey("aerospike.transfer.size");
+  public static final AttributeKey<Long> AEROSPIKE_STATUS = longKey("db.status");
+  public static final AttributeKey<String> AEROSPIKE_SET_NAME = stringKey("db.set.name");
+  public static final AttributeKey<String> AEROSPIKE_NODE_NAME = stringKey("db.node.name");
 
   static GenericContainer<?> aerospikeServer =
       new GenericContainer<>("aerospike/aerospike-server:6.2.0.0")
@@ -58,7 +59,7 @@ class AerospikeClientTest {
   @BeforeAll
   static void setupSpec() {
     aerospikeServer.start();
-    port = aerospikeServer.getMappedPort(3000);
+    port = 3000;
     ClientPolicy clientPolicy = new ClientPolicy();
     int eventLoopSize = Runtime.getRuntime().availableProcessors();
     System.out.println(eventLoopSize);
@@ -67,7 +68,7 @@ class AerospikeClientTest {
     clientPolicy.eventLoops = new NioEventLoops(eventPolicy, eventLoopSize);
     clientPolicy.maxConnsPerNode = eventLoopSize;
     clientPolicy.failIfNotConnected = true;
-    aerospikeClient = new AerospikeClient(clientPolicy, "localhost", port);
+    aerospikeClient = new AerospikeClient(clientPolicy, "localhost", 3000);
   }
 
   @AfterAll
@@ -92,70 +93,19 @@ class AerospikeClientTest {
           instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
           trace.hasSpansSatisfyingExactly(
               span ->
-                  span.hasName("ASYNCWRITE")
+                  span.hasName("PUT test")
                       .hasKind(SpanKind.CLIENT)
                       .hasAttributesSatisfyingExactly(
-                          equalTo(SemanticAttributes.DB_SYSTEM, "aerospike"),
-                          equalTo(SemanticAttributes.DB_OPERATION, "ASYNCWRITE"),
-                          equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                          equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                          equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                          equalTo(AEROSPIKE_NAMESPACE, "test"),
+                          equalTo(DB_SYSTEM, "aerospike"),
+                          equalTo(DB_OPERATION, "PUT"),
+                          equalTo(NETWORK_PEER_PORT, port),
+                          equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                          equalTo(NETWORK_TYPE, "ipv4"),
+                          equalTo(DB_NAME, "test"),
+                          equalTo(AEROSPIKE_NODE_NAME, "BB9040017AC4202"),
                           equalTo(AEROSPIKE_SET_NAME, "test-set"),
-                          equalTo(AEROSPIKE_USER_KEY, "data1"),
-                          equalTo(AEROSPIKE_STATUS, "SUCCESS"),
-                          equalTo(AEROSPIKE_ERROR_CODE, 0)));
+                          equalTo(AEROSPIKE_STATUS, 0)));
         });
-
-    testing.waitAndAssertMetrics(
-        instrumentationName.get(),
-        "aerospike.requests",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            counter ->
-                                counter.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfying(
-                                                equalTo(AEROSPIKE_NAMESPACE, "test"),
-                                                equalTo(AEROSPIKE_SET_NAME, "test-set"),
-                                                equalTo(AEROSPIKE_USER_KEY, "data1"),
-                                                equalTo(
-                                                    SemanticAttributes.DB_OPERATION, "ASYNCWRITE"),
-                                                equalTo(
-                                                    SemanticAttributes.DB_SYSTEM, "aerospike"))))));
-    testing.waitAndAssertMetrics(
-        instrumentationName.get(),
-        "aerospike.response",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasName("aerospike.response")
-                        .hasLongSumSatisfying(
-                            counter ->
-                                counter.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfying(
-                                                equalTo(AEROSPIKE_NAMESPACE, "test"),
-                                                equalTo(AEROSPIKE_SET_NAME, "test-set"),
-                                                equalTo(AEROSPIKE_USER_KEY, "data1"),
-                                                equalTo(
-                                                    SemanticAttributes.DB_OPERATION, "ASYNCWRITE"),
-                                                equalTo(SemanticAttributes.DB_SYSTEM, "aerospike"),
-                                                equalTo(AEROSPIKE_ERROR_CODE, 0),
-                                                equalTo(AEROSPIKE_STATUS, "SUCCESS"),
-                                                equalTo(
-                                                    NetworkAttributes.NETWORK_PEER_ADDRESS,
-                                                    "127.0.0.1"),
-                                                equalTo(
-                                                    SemanticAttributes.NETWORK_TYPE, "ipv4"))))));
 
     testing.waitAndAssertMetrics(
         instrumentationName.get(),
@@ -171,13 +121,10 @@ class AerospikeClientTest {
                                         point
                                             .hasValue(0)
                                             .hasAttributesSatisfying(
-                                                equalTo(AEROSPIKE_NAMESPACE, "test"),
+                                                equalTo(DB_NAME, "test"),
                                                 equalTo(AEROSPIKE_SET_NAME, "test-set"),
-                                                equalTo(AEROSPIKE_USER_KEY, "data1"),
-                                                equalTo(
-                                                    SemanticAttributes.DB_OPERATION, "ASYNCWRITE"),
-                                                equalTo(
-                                                    SemanticAttributes.DB_SYSTEM, "aerospike"))))));
+                                                equalTo(DB_OPERATION, "PUT"),
+                                                equalTo(DB_SYSTEM, "aerospike"))))));
 
     testing.waitAndAssertMetrics(
         instrumentationName.get(),
@@ -192,17 +139,15 @@ class AerospikeClientTest {
                                 histogram.hasPointsSatisfying(
                                     point ->
                                         point.hasAttributesSatisfying(
-                                            equalTo(AEROSPIKE_NAMESPACE, "test"),
+                                            equalTo(DB_NAME, "test"),
+                                            equalTo(AEROSPIKE_NODE_NAME, "BB9040017AC4202"),
                                             equalTo(AEROSPIKE_SET_NAME, "test-set"),
-                                            equalTo(AEROSPIKE_USER_KEY, "data1"),
-                                            equalTo(SemanticAttributes.DB_OPERATION, "ASYNCWRITE"),
-                                            equalTo(SemanticAttributes.DB_SYSTEM, "aerospike"),
-                                            equalTo(AEROSPIKE_ERROR_CODE, 0),
-                                            equalTo(AEROSPIKE_STATUS, "SUCCESS"),
-                                            equalTo(
-                                                NetworkAttributes.NETWORK_PEER_ADDRESS,
-                                                "127.0.0.1"),
-                                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"))))));
+                                            equalTo(DB_OPERATION, "PUT"),
+                                            equalTo(DB_SYSTEM, "aerospike"),
+                                            equalTo(AEROSPIKE_STATUS, 0),
+                                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                            equalTo(NETWORK_PEER_PORT, 3000),
+                                            equalTo(NETWORK_TYPE, "ipv4"))))));
   }
 
   @Test
@@ -220,112 +165,36 @@ class AerospikeClientTest {
           instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
           trace.hasSpansSatisfyingExactly(
               span ->
-                  span.hasName("PUT")
+                  span.hasName("PUT test")
                       .hasKind(SpanKind.CLIENT)
                       .hasAttributesSatisfyingExactly(
-                          equalTo(SemanticAttributes.DB_SYSTEM, "aerospike"),
-                          equalTo(SemanticAttributes.DB_OPERATION, "PUT"),
-                          equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                          equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                          equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                          equalTo(AEROSPIKE_NAMESPACE, "test"),
+                          equalTo(DB_SYSTEM, "aerospike"),
+                          equalTo(DB_OPERATION, "PUT"),
+                          equalTo(DB_NAME, "test"),
                           equalTo(AEROSPIKE_SET_NAME, "test-set"),
-                          equalTo(AEROSPIKE_USER_KEY, "data2"),
-                          equalTo(AEROSPIKE_STATUS, "SUCCESS"),
-                          equalTo(AEROSPIKE_ERROR_CODE, 0)));
+                          equalTo(AEROSPIKE_STATUS, 0),
+                          equalTo(AEROSPIKE_NODE_NAME, "BB9040017AC4202"),
+                          equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                          equalTo(NETWORK_PEER_PORT, 3000),
+                          equalTo(NETWORK_TYPE, "ipv4")));
         },
         trace -> {
           instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
           trace.hasSpansSatisfyingExactly(
               span ->
-                  span.hasName("GET")
+                  span.hasName("GET test")
                       .hasKind(SpanKind.CLIENT)
                       .hasAttributesSatisfyingExactly(
-                          equalTo(SemanticAttributes.DB_SYSTEM, "aerospike"),
-                          equalTo(SemanticAttributes.DB_OPERATION, "GET"),
-                          equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                          equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                          equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                          equalTo(AEROSPIKE_NAMESPACE, "test"),
+                          equalTo(DB_SYSTEM, "aerospike"),
+                          equalTo(DB_OPERATION, "GET"),
+                          equalTo(DB_NAME, "test"),
                           equalTo(AEROSPIKE_SET_NAME, "test-set"),
-                          equalTo(AEROSPIKE_USER_KEY, "data2"),
-                          equalTo(AEROSPIKE_STATUS, "SUCCESS"),
-                          equalTo(AEROSPIKE_ERROR_CODE, 0),
-                          equalTo(AEROSPIKE_TRANSFER_SIZE, 6)));
+                          equalTo(AEROSPIKE_STATUS, 0),
+                          equalTo(AEROSPIKE_NODE_NAME, "BB9040017AC4202"),
+                          equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                          equalTo(NETWORK_PEER_PORT, 3000),
+                          equalTo(NETWORK_TYPE, "ipv4")));
         });
-
-    testing.waitAndAssertMetrics(
-        instrumentationName.get(),
-        "aerospike.requests",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            counter ->
-                                counter.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfying(
-                                                equalTo(AEROSPIKE_NAMESPACE, "test"),
-                                                equalTo(AEROSPIKE_SET_NAME, "test-set"),
-                                                equalTo(AEROSPIKE_USER_KEY, "data2"),
-                                                equalTo(SemanticAttributes.DB_OPERATION, "PUT"),
-                                                equalTo(SemanticAttributes.DB_SYSTEM, "aerospike")),
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfying(
-                                                equalTo(AEROSPIKE_NAMESPACE, "test"),
-                                                equalTo(AEROSPIKE_SET_NAME, "test-set"),
-                                                equalTo(AEROSPIKE_USER_KEY, "data2"),
-                                                equalTo(SemanticAttributes.DB_OPERATION, "GET"),
-                                                equalTo(
-                                                    SemanticAttributes.DB_SYSTEM, "aerospike"))))));
-
-    testing.waitAndAssertMetrics(
-        instrumentationName.get(),
-        "aerospike.response",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasName("aerospike.response")
-                        .hasLongSumSatisfying(
-                            counter ->
-                                counter.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfying(
-                                                equalTo(AEROSPIKE_NAMESPACE, "test"),
-                                                equalTo(AEROSPIKE_SET_NAME, "test-set"),
-                                                equalTo(AEROSPIKE_USER_KEY, "data2"),
-                                                equalTo(SemanticAttributes.DB_OPERATION, "PUT"),
-                                                equalTo(SemanticAttributes.DB_SYSTEM, "aerospike"),
-                                                equalTo(AEROSPIKE_ERROR_CODE, 0),
-                                                equalTo(AEROSPIKE_STATUS, "SUCCESS"),
-                                                equalTo(
-                                                    NetworkAttributes.NETWORK_PEER_ADDRESS,
-                                                    "127.0.0.1"),
-                                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4")),
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfying(
-                                                equalTo(AEROSPIKE_NAMESPACE, "test"),
-                                                equalTo(AEROSPIKE_SET_NAME, "test-set"),
-                                                equalTo(AEROSPIKE_USER_KEY, "data2"),
-                                                equalTo(SemanticAttributes.DB_OPERATION, "GET"),
-                                                equalTo(SemanticAttributes.DB_SYSTEM, "aerospike"),
-                                                equalTo(AEROSPIKE_ERROR_CODE, 0),
-                                                equalTo(AEROSPIKE_STATUS, "SUCCESS"),
-                                                equalTo(
-                                                    NetworkAttributes.NETWORK_PEER_ADDRESS,
-                                                    "127.0.0.1"),
-                                                equalTo(
-                                                    SemanticAttributes.NETWORK_TYPE, "ipv4"))))));
 
     testing.waitAndAssertMetrics(
         instrumentationName.get(),
@@ -341,21 +210,18 @@ class AerospikeClientTest {
                                         point
                                             .hasValue(0)
                                             .hasAttributesSatisfying(
-                                                equalTo(AEROSPIKE_NAMESPACE, "test"),
+                                                equalTo(DB_NAME, "test"),
                                                 equalTo(AEROSPIKE_SET_NAME, "test-set"),
-                                                equalTo(AEROSPIKE_USER_KEY, "data2"),
-                                                equalTo(SemanticAttributes.DB_OPERATION, "PUT"),
-                                                equalTo(SemanticAttributes.DB_SYSTEM, "aerospike")),
+                                                equalTo(DB_OPERATION, "PUT"),
+                                                equalTo(DB_SYSTEM, "aerospike")),
                                     point ->
                                         point
                                             .hasValue(0)
                                             .hasAttributesSatisfying(
-                                                equalTo(AEROSPIKE_NAMESPACE, "test"),
+                                                equalTo(DB_NAME, "test"),
                                                 equalTo(AEROSPIKE_SET_NAME, "test-set"),
-                                                equalTo(AEROSPIKE_USER_KEY, "data2"),
-                                                equalTo(SemanticAttributes.DB_OPERATION, "GET"),
-                                                equalTo(
-                                                    SemanticAttributes.DB_SYSTEM, "aerospike"))))));
+                                                equalTo(DB_OPERATION, "GET"),
+                                                equalTo(DB_SYSTEM, "aerospike"))))));
 
     testing.waitAndAssertMetrics(
         instrumentationName.get(),
@@ -370,57 +236,25 @@ class AerospikeClientTest {
                                 histogram.hasPointsSatisfying(
                                     point ->
                                         point.hasAttributesSatisfying(
-                                            equalTo(AEROSPIKE_NAMESPACE, "test"),
+                                            equalTo(DB_SYSTEM, "aerospike"),
+                                            equalTo(DB_NAME, "test"),
+                                            equalTo(DB_OPERATION, "PUT"),
                                             equalTo(AEROSPIKE_SET_NAME, "test-set"),
-                                            equalTo(AEROSPIKE_USER_KEY, "data2"),
-                                            equalTo(SemanticAttributes.DB_OPERATION, "PUT"),
-                                            equalTo(SemanticAttributes.DB_SYSTEM, "aerospike"),
-                                            equalTo(AEROSPIKE_ERROR_CODE, 0),
-                                            equalTo(AEROSPIKE_STATUS, "SUCCESS"),
-                                            equalTo(
-                                                NetworkAttributes.NETWORK_PEER_ADDRESS,
-                                                "127.0.0.1"),
-                                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4")),
+                                            equalTo(AEROSPIKE_STATUS, 0),
+                                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                            equalTo(NETWORK_PEER_PORT, 3000),
+                                            equalTo(NETWORK_TYPE, "ipv4"),
+                                            equalTo(AEROSPIKE_NODE_NAME, "BB9040017AC4202")),
                                     point ->
                                         point.hasAttributesSatisfying(
-                                            equalTo(AEROSPIKE_NAMESPACE, "test"),
+                                            equalTo(DB_NAME, "test"),
                                             equalTo(AEROSPIKE_SET_NAME, "test-set"),
-                                            equalTo(AEROSPIKE_USER_KEY, "data2"),
-                                            equalTo(SemanticAttributes.DB_OPERATION, "GET"),
-                                            equalTo(SemanticAttributes.DB_SYSTEM, "aerospike"),
-                                            equalTo(AEROSPIKE_ERROR_CODE, 0),
-                                            equalTo(AEROSPIKE_STATUS, "SUCCESS"),
-                                            equalTo(
-                                                NetworkAttributes.NETWORK_PEER_ADDRESS,
-                                                "127.0.0.1"),
-                                            equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"))))));
-
-    testing.waitAndAssertMetrics(
-        instrumentationName.get(),
-        "aerospike.record.size",
-        metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("By")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasSum(6)
-                                            .hasAttributesSatisfying(
-                                                equalTo(AEROSPIKE_NAMESPACE, "test"),
-                                                equalTo(AEROSPIKE_SET_NAME, "test-set"),
-                                                equalTo(AEROSPIKE_USER_KEY, "data2"),
-                                                equalTo(SemanticAttributes.DB_OPERATION, "GET"),
-                                                equalTo(SemanticAttributes.DB_SYSTEM, "aerospike"),
-                                                equalTo(AEROSPIKE_ERROR_CODE, 0),
-                                                equalTo(AEROSPIKE_STATUS, "SUCCESS"),
-                                                equalTo(
-                                                    NetworkAttributes.NETWORK_PEER_ADDRESS,
-                                                    "127.0.0.1"),
-                                                equalTo(
-                                                    SemanticAttributes.NETWORK_TYPE, "ipv4"))))));
+                                            equalTo(DB_OPERATION, "GET"),
+                                            equalTo(DB_SYSTEM, "aerospike"),
+                                            equalTo(AEROSPIKE_STATUS, 0),
+                                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                            equalTo(NETWORK_PEER_PORT, 3000),
+                                            equalTo(NETWORK_TYPE, "ipv4"),
+                                            equalTo(AEROSPIKE_NODE_NAME, "BB9040017AC4202"))))));
   }
 }
