@@ -23,13 +23,18 @@ public class AerospikeClientInstrumentationModule extends InstrumentationModule 
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("com.aerospike.client.IAerospikeClient");
+    return hasClassesNamed("com.aerospike.client.IAerospikeClient").
+        and(hasClassesNamed("com.aerospike.client.command.Command")).
+        and(hasClassesNamed("com.aerospike.client.command.SyncCommand")).
+        and(hasClassesNamed("com.aerospike.client.async.AsyncCommand")).
+        and(hasClassesNamed("com.aerospike.client.async.EventLoop")).
+        and(hasClassesNamed("com.aerospike.client.Key"));
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new IAerospikeClientInstrumentation(),
+        new AerospikeClientInstrumentation(),
         new SyncCommandInstrumentation(),
         new AsyncCommandInstrumentation());
   }

@@ -62,7 +62,6 @@ class AerospikeClientTest {
     port = 3000;
     ClientPolicy clientPolicy = new ClientPolicy();
     int eventLoopSize = Runtime.getRuntime().availableProcessors();
-    System.out.println(eventLoopSize);
     EventPolicy eventPolicy = new EventPolicy();
     eventPolicy.commandsPerEventLoop = 2;
     clientPolicy.eventLoops = new NioEventLoops(eventPolicy, eventLoopSize);

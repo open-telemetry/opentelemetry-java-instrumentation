@@ -6,13 +6,13 @@ muzzle {
   pass {
     group.set("com.aerospike")
     module.set("aerospike-client")
-    versions.set("[7.0.0,)")
+    versions.set("[4.0.0,)")
     assertInverse.set(true)
   }
 }
 
 dependencies {
-  implementation("com.aerospike:aerospike-client:7.0.0")
+  library("com.aerospike:aerospike-client:8.0.0")
   implementation("io.opentelemetry:opentelemetry-api-incubator")
 
   compileOnly("com.google.auto.value:auto-value-annotations")

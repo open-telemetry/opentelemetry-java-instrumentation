@@ -26,8 +26,4 @@ public final class CustomElementMatcher {
       return false;
     };
   }
-
-  public static ElementMatcher<TypeDescription.Generic> argumentOfType(Class<?> clazz) {
-    return typeDescription -> typeDescription.asErasure().represents(clazz);
-  }
 }

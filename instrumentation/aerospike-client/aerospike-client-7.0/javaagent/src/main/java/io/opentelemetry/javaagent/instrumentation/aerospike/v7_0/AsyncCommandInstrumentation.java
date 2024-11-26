@@ -11,7 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesGenericArguments;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.aerospike.client.AerospikeException;
 import com.aerospike.client.cluster.Node;
@@ -48,7 +48,7 @@ public class AsyncCommandInstrumentation implements TypeInstrumentation {
         isMethod().and(named("onSuccess")), this.getClass().getName() + "$GetOnSuccessAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod().and(named("onFailure").and(takesGenericArguments(AerospikeException.class))),
+        isMethod().and(named("onFailure").and(takesArgument(0, named("com.aerospike.client.AerospikeException")))),
         this.getClass().getName() + "$GetOnFailureAdvice");
   }
 
