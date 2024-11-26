@@ -8,8 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.SemanticAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.SemanticAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -26,7 +29,6 @@ import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.
 import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.config.TriggerTaskConfig;
 import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.service.LambdaTaskConfigurer;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
@@ -163,14 +165,14 @@ class SpringSchedulingTest {
                           .hasEventsSatisfyingExactly(
                               event ->
                                   event
-                                      .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+                                      .hasName("exception")
                                       .hasAttributesSatisfying(
                                           equalTo(
-                                              SemanticAttributes.EXCEPTION_TYPE,
+                                              EXCEPTION_TYPE,
                                               IllegalStateException.class.getName()),
-                                          equalTo(SemanticAttributes.EXCEPTION_MESSAGE, "failure"),
+                                          equalTo(EXCEPTION_MESSAGE, "failure"),
                                           satisfies(
-                                              SemanticAttributes.EXCEPTION_STACKTRACE,
+                                              EXCEPTION_STACKTRACE,
                                               value -> value.isInstanceOf(String.class)))),
                   span -> span.hasName("error-handler").hasParent(trace.getSpan(0))));
     }

@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -21,6 +22,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Iterator;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -40,14 +42,14 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isMethod()
-            .and(named("remove").or(named("replace")))
+            .and(namedOneOf("remove", "replace"))
             .and(takesArgument(0, named("io.netty.channel.ChannelHandler"))),
         AbstractNettyChannelPipelineInstrumentation.class.getName() + "$RemoveAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("remove").or(named("replace"))).and(takesArgument(0, String.class)),
+        isMethod().and(namedOneOf("remove", "replace")).and(takesArgument(0, String.class)),
         AbstractNettyChannelPipelineInstrumentation.class.getName() + "$RemoveByNameAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(named("remove").or(named("replace"))).and(takesArgument(0, Class.class)),
+        isMethod().and(namedOneOf("remove", "replace")).and(takesArgument(0, Class.class)),
         AbstractNettyChannelPipelineInstrumentation.class.getName() + "$RemoveByClassAdvice");
     transformer.applyAdviceToMethod(
         isMethod().and(named("removeFirst")).and(returns(named("io.netty.channel.ChannelHandler"))),
@@ -153,11 +155,13 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
   public static class RemoveLastAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void removeHandler(
-        @Advice.This ChannelPipeline pipeline,
-        @Advice.Return(readOnly = false) ChannelHandler handler) {
+    @Advice.AssignReturned.ToReturned
+    public static ChannelHandler removeHandler(
+        @Advice.This ChannelPipeline pipeline, @Advice.Return ChannelHandler returnHandler) {
       VirtualField<ChannelHandler, ChannelHandler> virtualField =
           VirtualField.find(ChannelHandler.class, ChannelHandler.class);
+      // TODO remove this extra variable when migrating to "indy only" instrumentation.
+      ChannelHandler handler = returnHandler;
       ChannelHandler ourHandler = virtualField.get(handler);
       if (ourHandler != null) {
         // Context is null when our handler has already been removed. This happens when calling
@@ -167,17 +171,15 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
           pipeline.remove(ourHandler);
         }
         virtualField.set(handler, null);
-      } else if (handler
-          .getClass()
-          .getName()
-          .startsWith("io.opentelemetry.javaagent.instrumentation.netty.")) {
-        handler = pipeline.removeLast();
-      } else if (handler
-          .getClass()
-          .getName()
-          .startsWith("io.opentelemetry.instrumentation.netty.")) {
-        handler = pipeline.removeLast();
+      } else {
+        String handlerClassName = handler.getClass().getName();
+        if (handlerClassName.endsWith("TracingHandler")
+            && (handlerClassName.startsWith("io.opentelemetry.javaagent.instrumentation.netty.")
+                || handlerClassName.startsWith("io.opentelemetry.instrumentation.netty."))) {
+          handler = pipeline.removeLast();
+        }
       }
+      return handler;
     }
   }
 
@@ -185,9 +187,14 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
   public static class AddAfterAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void addAfterHandler(
-        @Advice.This ChannelPipeline pipeline,
-        @Advice.Argument(value = 1, readOnly = false) String name) {
+    @Advice.AssignReturned.ToArguments(@ToArgument(1))
+    public static String addAfterHandler(
+        @Advice.This ChannelPipeline pipeline, @Advice.Argument(value = 1) String nameArg) {
+      // TODO remove this extra variable when migrating to "indy only" instrumentation.
+      // using an intermediate variable is required to keep the advice work with "inlined" and
+      // "indy" this is probably a minor side-effect of using @Advice.AssignReturned.ToArguments
+      // with and inlined advice.
+      String name = nameArg;
       ChannelHandler handler = pipeline.get(name);
       if (handler != null) {
         VirtualField<ChannelHandler, ChannelHandler> virtualField =
@@ -197,6 +204,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
           name = ourHandler.getClass().getName();
         }
       }
+      return name;
     }
   }
 
@@ -210,8 +218,9 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
       for (Iterator<ChannelHandler> iterator = map.values().iterator(); iterator.hasNext(); ) {
         ChannelHandler handler = iterator.next();
         String handlerClassName = handler.getClass().getName();
-        if (handlerClassName.startsWith("io.opentelemetry.javaagent.instrumentation.netty.")
-            || handlerClassName.startsWith("io.opentelemetry.instrumentation.netty.")) {
+        if (handlerClassName.endsWith("TracingHandler")
+            && (handlerClassName.startsWith("io.opentelemetry.javaagent.instrumentation.netty.")
+                || handlerClassName.startsWith("io.opentelemetry.instrumentation.netty."))) {
           iterator.remove();
         }
       }

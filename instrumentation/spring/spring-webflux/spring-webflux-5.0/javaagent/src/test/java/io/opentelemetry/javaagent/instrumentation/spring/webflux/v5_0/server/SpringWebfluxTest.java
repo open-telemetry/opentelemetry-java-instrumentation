@@ -9,25 +9,25 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.SemanticAttributes.CLIENT_ADDRESS;
-import static io.opentelemetry.semconv.SemanticAttributes.ERROR_TYPE;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_EVENT_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_STACKTRACE;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_REQUEST_METHOD;
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_RESPONSE_STATUS_CODE;
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_ROUTE;
-import static io.opentelemetry.semconv.SemanticAttributes.NETWORK_PROTOCOL_VERSION;
-import static io.opentelemetry.semconv.SemanticAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.SemanticAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.SemanticAttributes.URL_PATH;
-import static io.opentelemetry.semconv.SemanticAttributes.URL_SCHEME;
-import static io.opentelemetry.semconv.SemanticAttributes.USER_AGENT_ORIGINAL;
+import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
+import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.EventDataAssert;
@@ -114,10 +114,8 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
@@ -235,10 +233,8 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
@@ -343,10 +339,8 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
@@ -416,10 +410,8 @@ public class SpringWebfluxTest {
                         .hasStatus(StatusData.unset())
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
@@ -444,7 +436,7 @@ public class SpringWebfluxTest {
   private static void resource404Exception(EventDataAssert event) {
     if (Boolean.getBoolean("testLatestDeps")) {
       event
-          .hasName(EXCEPTION_EVENT_NAME)
+          .hasName("exception")
           .hasAttributesSatisfyingExactly(
               equalTo(
                   EXCEPTION_TYPE,
@@ -453,7 +445,7 @@ public class SpringWebfluxTest {
               satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)));
     } else {
       event
-          .hasName(EXCEPTION_EVENT_NAME)
+          .hasName("exception")
           .hasAttributesSatisfyingExactly(
               equalTo(EXCEPTION_TYPE, "org.springframework.web.server.ResponseStatusException"),
               equalTo(EXCEPTION_MESSAGE, "Response status 404"),
@@ -477,10 +469,8 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
@@ -518,10 +508,8 @@ public class SpringWebfluxTest {
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
@@ -548,7 +536,7 @@ public class SpringWebfluxTest {
                       .hasEventsSatisfyingExactly(
                           event ->
                               event
-                                  .hasName(EXCEPTION_EVENT_NAME)
+                                  .hasName("exception")
                                   .hasAttributesSatisfyingExactly(
                                       equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
                                       equalTo(EXCEPTION_MESSAGE, "bad things happen"),
@@ -599,10 +587,8 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
@@ -628,10 +614,8 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
@@ -680,10 +664,8 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
@@ -762,10 +744,8 @@ public class SpringWebfluxTest {
                         .hasStatus(StatusData.unset())
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),

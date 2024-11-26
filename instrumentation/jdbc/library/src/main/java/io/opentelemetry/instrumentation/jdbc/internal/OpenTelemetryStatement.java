@@ -38,19 +38,29 @@ import java.util.ArrayList;
 public class OpenTelemetryStatement<S extends Statement> implements Statement {
 
   protected final S delegate;
+  protected final OpenTelemetryConnection connection;
   protected final DbInfo dbInfo;
   protected final String query;
   protected final Instrumenter<DbRequest, Void> instrumenter;
 
   private final ArrayList<String> batchCommands = new ArrayList<>();
 
-  OpenTelemetryStatement(S delegate, DbInfo dbInfo, Instrumenter<DbRequest, Void> instrumenter) {
-    this(delegate, dbInfo, null, instrumenter);
+  OpenTelemetryStatement(
+      S delegate,
+      OpenTelemetryConnection connection,
+      DbInfo dbInfo,
+      Instrumenter<DbRequest, Void> instrumenter) {
+    this(delegate, connection, dbInfo, null, instrumenter);
   }
 
   OpenTelemetryStatement(
-      S delegate, DbInfo dbInfo, String query, Instrumenter<DbRequest, Void> instrumenter) {
+      S delegate,
+      OpenTelemetryConnection connection,
+      DbInfo dbInfo,
+      String query,
+      Instrumenter<DbRequest, Void> instrumenter) {
     this.delegate = delegate;
+    this.connection = connection;
     this.dbInfo = dbInfo;
     this.query = query;
     this.instrumenter = instrumenter;
@@ -230,8 +240,8 @@ public class OpenTelemetryStatement<S extends Statement> implements Statement {
   }
 
   @Override
-  public Connection getConnection() throws SQLException {
-    return delegate.getConnection();
+  public Connection getConnection() {
+    return connection;
   }
 
   @Override

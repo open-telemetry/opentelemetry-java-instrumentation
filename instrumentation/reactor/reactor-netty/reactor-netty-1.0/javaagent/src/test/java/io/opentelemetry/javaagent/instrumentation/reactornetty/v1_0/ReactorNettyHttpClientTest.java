@@ -5,10 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+
 import io.netty.channel.ChannelOption;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.SemanticAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpHeaderNames;
 import java.net.URI;
 import java.util.HashSet;
@@ -61,8 +63,8 @@ class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
       // net.peer.sock.* attributes
       Set<AttributeKey<?>> attributes =
           new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-      attributes.remove(SemanticAttributes.SERVER_ADDRESS);
-      attributes.remove(SemanticAttributes.SERVER_PORT);
+      attributes.remove(SERVER_ADDRESS);
+      attributes.remove(SERVER_PORT);
       return attributes;
     }
     return super.getHttpAttributes(uri);

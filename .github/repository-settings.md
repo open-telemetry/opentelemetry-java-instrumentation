@@ -20,6 +20,11 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
 
 ## Branch protections
 
+The order of branch protection rules
+[can be important](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/defining-the-mergeability-of-pull-requests/managing-a-branch-protection-rule#about-branch-protection-rules).
+The branch protection rules below should be added before the `**/**` branch protection rule
+(this may require deleting the `**/**` rule and recreating it at the end).
+
 ### `main`
 
 - Require branches to be up to date before merging: UNCHECKED
@@ -59,8 +64,6 @@ for [`dependabot/**/**`](https://github.com/open-telemetry/community/blob/main/d
 
 ## Secrets and variables > Actions
 
-- `GE_CACHE_PASSWORD`
-- `GE_CACHE_USERNAME`
 - `GPG_PASSWORD` - stored in OpenTelemetry-Java 1Password
 - `GPG_PRIVATE_KEY` - stored in OpenTelemetry-Java 1Password
 - `GRADLE_ENTERPRISE_ACCESS_KEY` - owned by [@trask](https://github.com/trask)

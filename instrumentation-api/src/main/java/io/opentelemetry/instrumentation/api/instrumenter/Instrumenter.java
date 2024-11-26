@@ -11,13 +11,12 @@ import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.instrumentation.api.internal.HttpRouteState;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterAccess;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ListIterator;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 
@@ -42,6 +41,9 @@ import javax.annotation.Nullable;
  * the Instrumenter API</a> page.
  */
 public class Instrumenter<REQUEST, RESPONSE> {
+
+  private static final ContextKey<OperationListener[]> START_OPERATION_LISTENERS =
+      ContextKey.named("instrumenter-start-operation-listeners");
 
   /**
    * Returns a new {@link InstrumenterBuilder}.
@@ -71,26 +73,28 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final SpanNameExtractor<? super REQUEST> spanNameExtractor;
   private final SpanKindExtractor<? super REQUEST> spanKindExtractor;
   private final SpanStatusExtractor<? super REQUEST, ? super RESPONSE> spanStatusExtractor;
-  private final List<? extends SpanLinksExtractor<? super REQUEST>> spanLinksExtractors;
-  private final List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>>
-      attributesExtractors;
-  private final List<? extends ContextCustomizer<? super REQUEST>> contextCustomizers;
-  private final List<? extends OperationListener> operationListeners;
+  private final SpanLinksExtractor<? super REQUEST>[] spanLinksExtractors;
+  private final AttributesExtractor<? super REQUEST, ? super RESPONSE>[] attributesExtractors;
+  private final ContextCustomizer<? super REQUEST>[] contextCustomizers;
+  private final OperationListener[] operationListeners;
   private final ErrorCauseExtractor errorCauseExtractor;
+  private final boolean propagateOperationListenersToOnEnd;
   private final boolean enabled;
   private final SpanSuppressor spanSuppressor;
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   Instrumenter(InstrumenterBuilder<REQUEST, RESPONSE> builder) {
     this.instrumentationName = builder.instrumentationName;
     this.tracer = builder.buildTracer();
     this.spanNameExtractor = builder.spanNameExtractor;
     this.spanKindExtractor = builder.spanKindExtractor;
     this.spanStatusExtractor = builder.spanStatusExtractor;
-    this.spanLinksExtractors = new ArrayList<>(builder.spanLinksExtractors);
-    this.attributesExtractors = new ArrayList<>(builder.attributesExtractors);
-    this.contextCustomizers = new ArrayList<>(builder.contextCustomizers);
-    this.operationListeners = builder.buildOperationListeners();
+    this.spanLinksExtractors = builder.spanLinksExtractors.toArray(new SpanLinksExtractor[0]);
+    this.attributesExtractors = builder.attributesExtractors.toArray(new AttributesExtractor[0]);
+    this.contextCustomizers = builder.contextCustomizers.toArray(new ContextCustomizer[0]);
+    this.operationListeners = builder.buildOperationListeners().toArray(new OperationListener[0]);
     this.errorCauseExtractor = builder.errorCauseExtractor;
+    this.propagateOperationListenersToOnEnd = builder.propagateOperationListenersToOnEnd;
     this.enabled = builder.enabled;
     this.spanSuppressor = builder.buildSpanSuppressor();
   }
@@ -192,17 +196,29 @@ public class Instrumenter<REQUEST, RESPONSE> {
     Span span = spanBuilder.setParent(context).startSpan();
     context = context.with(span);
 
-    if (!operationListeners.isEmpty()) {
+    if (operationListeners.length != 0) {
       // operation listeners run after span start, so that they have access to the current span
       // for capturing exemplars
       long startNanos = getNanos(startTime);
-      for (OperationListener operationListener : operationListeners) {
-        context = operationListener.onStart(context, attributes, startNanos);
+      for (int i = 0; i < operationListeners.length; i++) {
+        context = operationListeners[i].onStart(context, attributes, startNanos);
       }
+    }
+    if (propagateOperationListenersToOnEnd || context.get(START_OPERATION_LISTENERS) != null) {
+      // when start and end are not called on the same instrumenter we need to use the operation
+      // listeners that were used during start in end to correctly handle metrics like
+      // http.server.active_requests that is recorded both in start and end
+      //
+      // need to also add when there is already START_OPERATION_LISTENERS, otherwise this
+      // instrumenter will call its parent's operation listeners in doEnd
+      context = context.with(START_OPERATION_LISTENERS, operationListeners);
     }
 
     if (localRoot) {
       context = LocalRootSpan.store(context, span);
+      if (spanKind == SpanKind.SERVER) {
+        HttpRouteState.updateSpan(context, span);
+      }
     }
 
     return spanSuppressor.storeInContext(context, spanKind, span);
@@ -227,12 +243,14 @@ public class Instrumenter<REQUEST, RESPONSE> {
     }
     span.setAllAttributes(attributes);
 
-    if (!operationListeners.isEmpty()) {
+    OperationListener[] operationListeners = context.get(START_OPERATION_LISTENERS);
+    if (operationListeners == null) {
+      operationListeners = this.operationListeners;
+    }
+    if (operationListeners.length != 0) {
       long endNanos = getNanos(endTime);
-      ListIterator<? extends OperationListener> i =
-          operationListeners.listIterator(operationListeners.size());
-      while (i.hasPrevious()) {
-        i.previous().onEnd(context, attributes, endNanos);
+      for (int i = operationListeners.length - 1; i >= 0; i--) {
+        operationListeners[i].onEnd(context, attributes, endNanos);
       }
     }
 

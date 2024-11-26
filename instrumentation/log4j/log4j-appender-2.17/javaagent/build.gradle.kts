@@ -14,7 +14,7 @@ muzzle {
 val testLatestDeps = findProperty("testLatestDeps") as Boolean
 
 dependencies {
-  library("org.apache.logging.log4j:log4j-core:2.17.0")
+  library("org.apache.logging.log4j:log4j-core:2.0")
 
   compileOnly(project(":javaagent-bootstrap"))
 
@@ -24,7 +24,7 @@ dependencies {
 
   if (testLatestDeps) {
     // this dependency is needed for the slf4j->log4j test
-    testImplementation("org.apache.logging.log4j:log4j-slf4j2-impl:+")
+    testImplementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.+")
     testCompileOnly("biz.aQute.bnd:biz.aQute.bnd.annotation:7.0.0")
   } else {
     // log4j 2.17 doesn't have an slf4j2 bridge
@@ -37,7 +37,7 @@ dependencies {
   }
 
   // this is needed for the async logging test
-  testImplementation("com.lmax:disruptor:3.4.2")
+  testLibrary("com.lmax:disruptor:3.4.2")
 }
 
 tasks.withType<Test>().configureEach {
@@ -56,9 +56,10 @@ tasks {
 
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental log attributes
+  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
+  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-code-attributes=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-map-message-attributes=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=*")
-  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-marker-attribute=true")
 }
 

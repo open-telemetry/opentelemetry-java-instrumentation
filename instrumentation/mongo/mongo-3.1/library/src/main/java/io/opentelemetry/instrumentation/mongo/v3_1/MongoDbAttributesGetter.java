@@ -9,7 +9,6 @@ import com.mongodb.ServerAddress;
 import com.mongodb.connection.ConnectionDescription;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
@@ -25,6 +24,9 @@ import org.bson.json.JsonWriter;
 import org.bson.json.JsonWriterSettings;
 
 class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStartedEvent> {
+
+  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
+  private static final String MONGODB = "mongodb";
 
   @Nullable private static final Method IS_TRUNCATED_METHOD;
   private static final String HIDDEN_CHAR = "?";
@@ -48,10 +50,11 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   }
 
   @Override
-  public String getSystem(CommandStartedEvent event) {
-    return SemanticAttributes.DbSystemValues.MONGODB;
+  public String getDbSystem(CommandStartedEvent event) {
+    return MONGODB;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(CommandStartedEvent event) {
@@ -60,10 +63,11 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
 
   @Override
   @Nullable
-  public String getName(CommandStartedEvent event) {
+  public String getDbNamespace(CommandStartedEvent event) {
     return event.getDatabaseName();
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(CommandStartedEvent event) {
@@ -83,13 +87,13 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
   }
 
   @Override
-  public String getStatement(CommandStartedEvent event) {
+  public String getDbQueryText(CommandStartedEvent event) {
     return sanitizeStatement(event.getCommand());
   }
 
   @Override
   @Nullable
-  public String getOperation(CommandStartedEvent event) {
+  public String getDbOperationName(CommandStartedEvent event) {
     return event.getCommandName();
   }
 

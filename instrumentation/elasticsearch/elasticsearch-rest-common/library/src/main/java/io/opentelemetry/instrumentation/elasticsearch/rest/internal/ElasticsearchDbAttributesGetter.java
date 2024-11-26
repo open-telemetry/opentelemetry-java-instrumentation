@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.elasticsearch.rest.internal;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -28,6 +27,9 @@ final class ElasticsearchDbAttributesGetter
   private static final Logger logger =
       Logger.getLogger(ElasticsearchDbAttributesGetter.class.getName());
 
+  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
+  private static final String ELASTICSEARCH = "elasticsearch";
+
   private final boolean captureSearchQuery;
 
   ElasticsearchDbAttributesGetter(boolean captureSearchQuery) {
@@ -35,10 +37,11 @@ final class ElasticsearchDbAttributesGetter
   }
 
   @Override
-  public String getSystem(ElasticsearchRestRequest request) {
-    return SemanticAttributes.DbSystemValues.ELASTICSEARCH;
+  public String getDbSystem(ElasticsearchRestRequest request) {
+    return ELASTICSEARCH;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(ElasticsearchRestRequest request) {
@@ -47,10 +50,11 @@ final class ElasticsearchDbAttributesGetter
 
   @Override
   @Nullable
-  public String getName(ElasticsearchRestRequest request) {
+  public String getDbNamespace(ElasticsearchRestRequest request) {
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(ElasticsearchRestRequest request) {
@@ -59,7 +63,7 @@ final class ElasticsearchDbAttributesGetter
 
   @Override
   @Nullable
-  public String getStatement(ElasticsearchRestRequest request) {
+  public String getDbQueryText(ElasticsearchRestRequest request) {
     ElasticsearchEndpointDefinition epDefinition = request.getEndpointDefinition();
     HttpEntity httpEntity = request.getHttpEntity();
     if (captureSearchQuery
@@ -83,7 +87,7 @@ final class ElasticsearchDbAttributesGetter
 
   @Override
   @Nullable
-  public String getOperation(ElasticsearchRestRequest request) {
+  public String getDbOperationName(ElasticsearchRestRequest request) {
     ElasticsearchEndpointDefinition endpointDefinition = request.getEndpointDefinition();
     return endpointDefinition != null ? endpointDefinition.getEndpointName() : null;
   }

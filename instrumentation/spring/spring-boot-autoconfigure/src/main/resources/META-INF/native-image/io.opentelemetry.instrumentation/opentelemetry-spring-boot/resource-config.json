@@ -1,0 +1,9 @@
+{
+  "resources": {
+    "includes": [
+      {
+        "pattern": "META-INF/io/opentelemetry/instrumentation/.*.properties"
+      }
+    ]
+  }
+}

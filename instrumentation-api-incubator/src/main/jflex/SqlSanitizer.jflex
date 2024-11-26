@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import java.util.regex.Pattern;
+
 %%
 
 %final
@@ -16,19 +18,20 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 %unicode
 %ignorecase
 
-COMMA               = ","
-OPEN_PAREN          = "("
-CLOSE_PAREN         = ")"
-OPEN_COMMENT        = "/*"
-CLOSE_COMMENT       = "*/"
-IDENTIFIER          = ([:letter:] | "_") ([:letter:] | [0-9] | [_.])*
-BASIC_NUM           = [.+-]* [0-9] ([0-9] | [eE.+-])*
-HEX_NUM             = "0x" ([a-f] | [A-F] | [0-9])+
-QUOTED_STR          = "'" ("''" | [^'])* "'"
-DOUBLE_QUOTED_STR   = "\"" ("\"\"" | [^\"])* "\""
-DOLLAR_QUOTED_STR   = "$$" [^$]* "$$"
-BACKTICK_QUOTED_STR = "`" [^`]* "`"
-WHITESPACE          = [ \t\r\n]+
+COMMA                = ","
+OPEN_PAREN           = "("
+CLOSE_PAREN          = ")"
+OPEN_COMMENT         = "/*"
+CLOSE_COMMENT        = "*/"
+IDENTIFIER           = ([:letter:] | "_") ([:letter:] | [0-9] | [_.])*
+BASIC_NUM            = [.+-]* [0-9] ([0-9] | [eE.+-])*
+HEX_NUM              = "0x" ([a-f] | [A-F] | [0-9])+
+QUOTED_STR           = "'" ("''" | [^'])* "'"
+DOUBLE_QUOTED_STR    = "\"" ("\"\"" | [^\"])* "\""
+DOLLAR_QUOTED_STR    = "$$" [^$]* "$$"
+BACKTICK_QUOTED_STR  = "`" [^`]* "`"
+POSTGRE_PARAM_MARKER = "$"[0-9]*
+WHITESPACE           = [ \t\r\n]+
 
 %{
   static SqlStatementInfo sanitize(String statement, SqlDialect dialect) {
@@ -51,6 +54,10 @@ WHITESPACE          = [ \t\r\n]+
 
   // max length of the sanitized statement - SQLs longer than this will be trimmed
   static final int LIMIT = 32 * 1024;
+
+  // Match on strings like "IN(?, ?, ...)"
+  private static final Pattern IN_STATEMENT_PATTERN = Pattern.compile("(\\sIN\\s*)\\(\\s*\\?\\s*(?:,\\s*\\?\\s*)*+\\)", Pattern.CASE_INSENSITIVE);
+  private static final String IN_STATEMENT_NORMALIZED = "$1(?)";
 
   private final StringBuilder builder = new StringBuilder();
 
@@ -122,10 +129,53 @@ WHITESPACE          = [ \t\r\n]+
     /** @return true if all statement info is gathered */
     boolean handleNext() {
       return false;
-     }
+    }
+
+    /** @return true if all statement info is gathered */
+    boolean handleOperationTarget(String target) {
+      return false;
+    }
+
+    boolean expectingOperationTarget() {
+      return false;
+    }
 
     SqlStatementInfo getResult(String fullStatement) {
       return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT), mainIdentifier);
+    }
+  }
+
+  private abstract class DdlOperation extends Operation {
+    private String operationTarget = "";
+    private boolean expectingOperationTarget = true;
+
+    boolean expectingOperationTarget() {
+      return expectingOperationTarget;
+    }
+
+    boolean handleOperationTarget(String target) {
+      operationTarget = target;
+      expectingOperationTarget = false;
+      return false;
+    }
+
+    boolean shouldHandleIdentifier() {
+      // Return true only if the provided value corresponds to a table, as it will be used to set the attribute `db.sql.table`.
+      return "TABLE".equals(operationTarget);
+    }
+
+    boolean handleIdentifier() {
+      if (shouldHandleIdentifier()) {
+        mainIdentifier = readIdentifierName();
+      }
+      return true;
+    }
+
+    SqlStatementInfo getResult(String fullStatement) {
+      if (!"".equals(operationTarget)) {
+        return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT) + " " + operationTarget, mainIdentifier);
+      }
+      return super.getResult(fullStatement);
     }
   }
 
@@ -273,12 +323,25 @@ WHITESPACE          = [ \t\r\n]+
     }
   }
 
+  private class Create extends DdlOperation {
+  }
+
+  private class Drop extends DdlOperation {
+  }
+
+  private class Alter extends DdlOperation {
+  }
+
   private SqlStatementInfo getResult() {
     if (builder.length() > LIMIT) {
       builder.delete(LIMIT, builder.length());
     }
     String fullStatement = builder.toString();
-    return operation.getResult(fullStatement);
+
+    // Normalize all 'in (?, ?, ...)' statements to in (?) to reduce cardinality
+    String normalizedStatement = IN_STATEMENT_PATTERN.matcher(fullStatement).replaceAll(IN_STATEMENT_NORMALIZED);
+
+    return operation.getResult(normalizedStatement);
   }
 
 %}
@@ -329,6 +392,27 @@ WHITESPACE          = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
+  "CREATE" {
+          if (!insideComment) {
+            setOperation(new Create());
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "DROP" {
+          if (!insideComment) {
+            setOperation(new Drop());
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "ALTER" {
+          if (!insideComment) {
+            setOperation(new Alter());
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
   "FROM" {
           if (!insideComment && !extractionDone) {
             if (operation == NoOp.INSTANCE) {
@@ -357,11 +441,27 @@ WHITESPACE          = [ \t\r\n]+
       }
   "NEXT" {
           if (!insideComment && !extractionDone) {
-              extractionDone = operation.handleNext();
-            }
+            extractionDone = operation.handleNext();
+          }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
+  "IF" | "NOT" | "EXISTS" {
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "TABLE" | "INDEX" | "DATABASE" | "PROCEDURE" | "VIEW" {
+          if (!insideComment && !extractionDone) {
+            if (operation.expectingOperationTarget()) {
+              extractionDone = operation.handleOperationTarget(yytext());
+            } else {
+              extractionDone = operation.handleIdentifier();
+            }
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+
   {COMMA} {
           if (!insideComment && !extractionDone) {
             extractionDone = operation.handleComma();
@@ -421,7 +521,7 @@ WHITESPACE          = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
 
-  {BACKTICK_QUOTED_STR} {
+  {BACKTICK_QUOTED_STR} | {POSTGRE_PARAM_MARKER} {
         if (!insideComment && !extractionDone) {
           extractionDone = operation.handleIdentifier();
         }

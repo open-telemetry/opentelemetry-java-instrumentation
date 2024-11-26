@@ -12,8 +12,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.NetworkAttributes;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
@@ -54,7 +53,7 @@ class NetworkAttributesExtractorInetSocketAddressTest {
     extractor.onEnd(endAttributes, Context.root(), local, peer, null);
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.NETWORK_TYPE, "ipv4"),
+            entry(NetworkAttributes.NETWORK_TYPE, "ipv4"),
             entry(NetworkAttributes.NETWORK_LOCAL_ADDRESS, "1.2.3.4"),
             entry(NetworkAttributes.NETWORK_LOCAL_PORT, 8080L),
             entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "4.3.2.1"),

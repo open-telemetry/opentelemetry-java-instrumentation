@@ -1,7 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
-  id("com.github.johnrengelman.shadow")
+  id("com.gradleup.shadow")
 }
 
 apply from: "$rootDir/gradle/shadow.gradle"
@@ -70,10 +70,9 @@ tasks {
     // exclude known bootstrap dependencies - they can't appear in the inst/ directory
     dependencies {
       exclude("io.opentelemetry:opentelemetry-api")
-      exclude("io.opentelemetry:opentelemetry-api-events")
       exclude("io.opentelemetry:opentelemetry-context")
-      // metrics advice API
-      exclude("io.opentelemetry:opentelemetry-extension-incubator")
+      // events API and metrics advice API
+      exclude("io.opentelemetry:opentelemetry-api-incubator")
     }
   }
 

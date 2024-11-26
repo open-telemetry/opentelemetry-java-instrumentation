@@ -22,7 +22,7 @@ public class RxJava2Test extends AbstractRxJava2Test {
   }
 
   @BeforeAll
-  public void setupSpec() {
+  public void setup() {
     tracingAssembly.enable();
   }
 }

@@ -5,14 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.reactive.v1_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_SQL_TABLE;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_USER;
-import static io.opentelemetry.semconv.SemanticAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.SemanticAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -47,6 +49,7 @@ class HibernateReactiveTest {
 
   private static final Vertx vertx = Vertx.vertx();
   private static GenericContainer<?> container;
+  private static String host;
   private static int port;
   private static EntityManagerFactory entityManagerFactory;
   private static Mutiny.SessionFactory mutinySessionFactory;
@@ -64,7 +67,9 @@ class HibernateReactiveTest {
             .withStartupTimeout(Duration.ofMinutes(2));
     container.start();
 
+    host = container.getHost();
     port = container.getMappedPort(5432);
+    System.setProperty("db.host", host);
     System.setProperty("db.port", String.valueOf(port));
 
     entityManagerFactory =
@@ -145,7 +150,7 @@ class HibernateReactiveTest {
                                   .find(Value.class, 1L)
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
-                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+                        .whenComplete((value, throwable) -> complete(result, null, throwable))));
     result.get(30, TimeUnit.SECONDS);
 
     assertTrace();
@@ -170,7 +175,7 @@ class HibernateReactiveTest {
                                   .get(Value.class, 1L)
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
-                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+                        .whenComplete((value, throwable) -> complete(result, null, throwable))));
     result.get(30, TimeUnit.SECONDS);
 
     assertTrace();
@@ -195,7 +200,7 @@ class HibernateReactiveTest {
                                   .withTransaction(transaction -> session.find(Value.class, 1L))
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
-                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+                        .whenComplete((value, throwable) -> complete(result, null, throwable))));
     result.get(30, TimeUnit.SECONDS);
 
     assertTrace();
@@ -220,7 +225,7 @@ class HibernateReactiveTest {
                                   .withTransaction(transaction -> session.get(Value.class, 1L))
                                   .thenAccept(value -> testing.runWithSpan("callback", () -> {}));
                             })
-                        .whenComplete((value, throwable) -> complete(result, value, throwable))));
+                        .whenComplete((value, throwable) -> complete(result, null, throwable))));
     result.get(30, TimeUnit.SECONDS);
 
     assertTrace();
@@ -291,6 +296,7 @@ class HibernateReactiveTest {
     }
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static void assertTrace() {
     testing.waitAndAssertTraces(
         trace ->
@@ -301,14 +307,14 @@ class HibernateReactiveTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_NAME, DB),
-                            equalTo(DB_USER, USER_DB),
+                            equalTo(maybeStable(DB_NAME), DB),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
                             equalTo(
-                                DB_STATEMENT,
-                                "select value0_.id as id1_0_0_, value0_.name as name2_0_0_ from Value value0_ where value0_.id=$?"),
-                            equalTo(DB_OPERATION, "SELECT"),
-                            equalTo(DB_SQL_TABLE, "Value"),
-                            equalTo(SERVER_ADDRESS, "localhost"),
+                                maybeStable(DB_STATEMENT),
+                                "select value0_.id as id1_0_0_, value0_.name as name2_0_0_ from Value value0_ where value0_.id=$1"),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Value"),
+                            equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port)),
                 span ->
                     span.hasName("callback")

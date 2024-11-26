@@ -13,7 +13,7 @@ import javax.management.ObjectName;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class DruidInstrumentationTest extends AbstractDruidInstrumentationTest {
+class DruidInstrumentationTest extends AbstractDruidInstrumentationTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();

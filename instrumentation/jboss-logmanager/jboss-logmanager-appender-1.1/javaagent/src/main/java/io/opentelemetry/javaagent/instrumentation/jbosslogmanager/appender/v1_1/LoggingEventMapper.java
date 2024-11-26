@@ -16,8 +16,9 @@ import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.semconv.ExceptionAttributes;
+import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
@@ -36,7 +37,7 @@ public final class LoggingEventMapper {
   private final List<String> captureMdcAttributes;
 
   private static final boolean captureExperimentalAttributes =
-      InstrumentationConfig.get()
+      AgentInstrumentationConfig.get()
           .getBoolean("otel.instrumentation.jboss-logmanager.experimental-log-attributes", false);
 
   // cached as an optimization
@@ -44,7 +45,7 @@ public final class LoggingEventMapper {
 
   private LoggingEventMapper() {
     this.captureMdcAttributes =
-        InstrumentationConfig.get()
+        AgentInstrumentationConfig.get()
             .getList(
                 "otel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes",
                 emptyList());
@@ -82,18 +83,18 @@ public final class LoggingEventMapper {
     if (throwable != null) {
       // TODO (trask) extract method for recording exception into
       // io.opentelemetry:opentelemetry-api
-      attributes.put(SemanticAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
-      attributes.put(SemanticAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
+      attributes.put(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
+      attributes.put(ExceptionAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
       StringWriter writer = new StringWriter();
       throwable.printStackTrace(new PrintWriter(writer));
-      attributes.put(SemanticAttributes.EXCEPTION_STACKTRACE, writer.toString());
+      attributes.put(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
     }
     captureMdcAttributes(attributes);
 
     if (captureExperimentalAttributes) {
       Thread currentThread = Thread.currentThread();
-      attributes.put(SemanticAttributes.THREAD_NAME, currentThread.getName());
-      attributes.put(SemanticAttributes.THREAD_ID, currentThread.getId());
+      attributes.put(ThreadIncubatingAttributes.THREAD_NAME, currentThread.getName());
+      attributes.put(ThreadIncubatingAttributes.THREAD_ID, currentThread.getId());
     }
 
     builder.setAllAttributes(attributes.build());

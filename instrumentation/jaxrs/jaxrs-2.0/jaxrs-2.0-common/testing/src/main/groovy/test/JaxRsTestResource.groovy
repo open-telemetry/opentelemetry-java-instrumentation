@@ -119,7 +119,7 @@ class JaxRsTestResource {
   void asyncOp(@Suspended AsyncResponse response, @QueryParam("action") String action) {
     CompletableFuture.runAsync({
       // await for the test method to verify that there are no spans yet
-      BARRIER.await(1, SECONDS)
+      BARRIER.await(10, SECONDS)
 
       switch (action) {
         case "succeed":
@@ -144,7 +144,7 @@ class JaxRsTestResource {
     def result = new CompletableFuture<String>()
     CompletableFuture.runAsync({
       // await for the test method to verify that there are no spans yet
-      BARRIER.await(1, SECONDS)
+      BARRIER.await(10, SECONDS)
 
       switch (action) {
         case "succeed":

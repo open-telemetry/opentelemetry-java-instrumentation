@@ -14,7 +14,6 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import okhttp3.Response;
 
 /** Entrypoint for instrumenting OkHttp clients. */
@@ -32,10 +31,11 @@ public final class OkHttpTelemetry {
     return new OkHttpTelemetryBuilder(openTelemetry);
   }
 
-  private final Instrumenter<Request, Response> instrumenter;
+  private final Instrumenter<Interceptor.Chain, Response> instrumenter;
   private final ContextPropagators propagators;
 
-  OkHttpTelemetry(Instrumenter<Request, Response> instrumenter, ContextPropagators propagators) {
+  OkHttpTelemetry(
+      Instrumenter<Interceptor.Chain, Response> instrumenter, ContextPropagators propagators) {
     this.instrumenter = instrumenter;
     this.propagators = propagators;
   }

@@ -51,8 +51,12 @@ public class OpenTelemetryPreparedStatement<S extends PreparedStatement>
     extends OpenTelemetryStatement<S> implements PreparedStatement {
 
   public OpenTelemetryPreparedStatement(
-      S delegate, DbInfo dbInfo, String query, Instrumenter<DbRequest, Void> instrumenter) {
-    super(delegate, dbInfo, query, instrumenter);
+      S delegate,
+      OpenTelemetryConnection connection,
+      DbInfo dbInfo,
+      String query,
+      Instrumenter<DbRequest, Void> instrumenter) {
+    super(delegate, connection, dbInfo, query, instrumenter);
   }
 
   @Override

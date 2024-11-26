@@ -16,7 +16,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.UrlAttributes
 import ratpack.exec.Execution
 import ratpack.exec.Promise
 import ratpack.func.Action
@@ -34,9 +34,9 @@ import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_REQUEST_METHOD
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_ROUTE
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_RESPONSE_STATUS_CODE
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE
 
 class InstrumentedHttpClientTest extends Specification {
 
@@ -105,13 +105,13 @@ class InstrumentedHttpClientTest extends Specification {
 
         def attributes = spanData.attributes.asMap()
         attributes[HTTP_ROUTE] == "/foo"
-        attributes[SemanticAttributes.URL_PATH] == "/foo"
+        attributes[UrlAttributes.URL_PATH] == "/foo"
         attributes[HTTP_REQUEST_METHOD] == "GET"
         attributes[HTTP_RESPONSE_STATUS_CODE] == 200L
 
         def attsApi = spanDataApi.attributes.asMap()
         attsApi[HTTP_ROUTE] == "/bar"
-        attsApi[SemanticAttributes.URL_PATH] == "/bar"
+        attsApi[UrlAttributes.URL_PATH] == "/bar"
         attsApi[HTTP_REQUEST_METHOD] == "GET"
         attsApi[HTTP_RESPONSE_STATUS_CODE] == 200L
       }
@@ -176,7 +176,7 @@ class InstrumentedHttpClientTest extends Specification {
 
         def attributes = spanData.attributes.asMap()
         attributes[HTTP_ROUTE] == "/path-name"
-        attributes[SemanticAttributes.URL_PATH] == "/path-name"
+        attributes[UrlAttributes.URL_PATH] == "/path-name"
         attributes[HTTP_REQUEST_METHOD] == "GET"
         attributes[HTTP_RESPONSE_STATUS_CODE] == 200L
       }
@@ -234,7 +234,7 @@ class InstrumentedHttpClientTest extends Specification {
 
         def attributes = spanData.attributes.asMap()
         attributes[HTTP_ROUTE] == "/path-name"
-        attributes[SemanticAttributes.URL_PATH] == "/path-name"
+        attributes[UrlAttributes.URL_PATH] == "/path-name"
         attributes[HTTP_REQUEST_METHOD] == "GET"
         attributes[HTTP_RESPONSE_STATUS_CODE] == 200L
       }

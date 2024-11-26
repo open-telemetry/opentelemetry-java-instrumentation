@@ -16,7 +16,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.PeerIncubatingAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -97,6 +97,6 @@ class PeerServiceAttributesExtractorTest {
     // then
     assertThat(startAttributes.build()).isEmpty();
     assertThat(endAttributes.build())
-        .containsOnly(entry(SemanticAttributes.PEER_SERVICE, "myService"));
+        .containsOnly(entry(PeerIncubatingAttributes.PEER_SERVICE, "myService"));
   }
 }

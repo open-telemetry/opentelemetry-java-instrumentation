@@ -13,6 +13,7 @@ muzzle {
 
     excludeInstrumentationName("aws-sdk-2.2-sqs")
     excludeInstrumentationName("aws-sdk-2.2-sns")
+    excludeInstrumentationName("aws-sdk-2.2-lambda")
 
     // several software.amazon.awssdk artifacts are missing for this version
     skip("2.17.200")
@@ -43,6 +44,7 @@ muzzle {
     extraDependency("software.amazon.awssdk:protocol-core")
 
     excludeInstrumentationName("aws-sdk-2.2-sns")
+    excludeInstrumentationName("aws-sdk-2.2-lambda")
 
     // several software.amazon.awssdk artifacts are missing for this version
     skip("2.17.200")
@@ -57,6 +59,21 @@ muzzle {
     extraDependency("software.amazon.awssdk:protocol-core")
 
     excludeInstrumentationName("aws-sdk-2.2-sqs")
+    excludeInstrumentationName("aws-sdk-2.2-lambda")
+
+    // several software.amazon.awssdk artifacts are missing for this version
+    skip("2.17.200")
+  }
+  pass {
+    group.set("software.amazon.awssdk")
+    module.set("lambda")
+    versions.set("[2.17.0,)")
+    // Used by all SDK services, the only case it isn't is an SDK extension such as a custom HTTP
+    // client, which is not target of instrumentation anyways.
+    extraDependency("software.amazon.awssdk:protocol-core")
+
+    excludeInstrumentationName("aws-sdk-2.2-sqs")
+    excludeInstrumentationName("aws-sdk-2.2-sns")
 
     // several software.amazon.awssdk artifacts are missing for this version
     skip("2.17.200")
@@ -71,6 +88,8 @@ dependencies {
   library("software.amazon.awssdk:sqs:2.2.0")
 
   testImplementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
+  testImplementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
+
   // Make sure these don't add HTTP headers
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-5.0:javaagent"))
@@ -79,6 +98,7 @@ dependencies {
   testLibrary("software.amazon.awssdk:dynamodb:2.2.0")
   testLibrary("software.amazon.awssdk:ec2:2.2.0")
   testLibrary("software.amazon.awssdk:kinesis:2.2.0")
+  testLibrary("software.amazon.awssdk:lambda:2.2.0")
   testLibrary("software.amazon.awssdk:rds:2.2.0")
   testLibrary("software.amazon.awssdk:s3:2.2.0")
   testLibrary("software.amazon.awssdk:sqs:2.2.0")
@@ -143,5 +163,17 @@ tasks {
     mergeServiceFiles {
       include("software/amazon/awssdk/global/handlers/execution.interceptors")
     }
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    filter {
+      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+    }
+    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
   }
 }

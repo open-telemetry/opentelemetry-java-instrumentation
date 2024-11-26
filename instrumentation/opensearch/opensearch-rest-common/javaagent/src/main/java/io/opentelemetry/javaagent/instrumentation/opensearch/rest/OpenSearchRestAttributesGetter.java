@@ -6,17 +6,18 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class OpenSearchRestAttributesGetter
     implements DbClientAttributesGetter<OpenSearchRestRequest> {
 
   @Override
-  public String getSystem(OpenSearchRestRequest request) {
-    return SemanticAttributes.DbSystemValues.OPENSEARCH;
+  public String getDbSystem(OpenSearchRestRequest request) {
+    return DbIncubatingAttributes.DbSystemIncubatingValues.OPENSEARCH;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(OpenSearchRestRequest request) {
@@ -25,10 +26,11 @@ final class OpenSearchRestAttributesGetter
 
   @Override
   @Nullable
-  public String getName(OpenSearchRestRequest request) {
+  public String getDbNamespace(OpenSearchRestRequest request) {
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(OpenSearchRestRequest request) {
@@ -37,13 +39,13 @@ final class OpenSearchRestAttributesGetter
 
   @Override
   @Nullable
-  public String getStatement(OpenSearchRestRequest request) {
+  public String getDbQueryText(OpenSearchRestRequest request) {
     return request.getMethod() + " " + request.getOperation();
   }
 
   @Override
   @Nullable
-  public String getOperation(OpenSearchRestRequest request) {
+  public String getDbOperationName(OpenSearchRestRequest request) {
     return request.getMethod();
   }
 }

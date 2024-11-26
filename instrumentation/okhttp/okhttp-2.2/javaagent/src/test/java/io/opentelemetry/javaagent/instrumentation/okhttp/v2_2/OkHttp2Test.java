@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.okhttp.v2_2;
 
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
@@ -18,7 +20,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashSet;
@@ -37,7 +38,7 @@ public class OkHttp2Test extends AbstractHttpClientTest<Request> {
   private static final OkHttpClient clientWithReadTimeout = new OkHttpClient();
 
   @BeforeAll
-  void setupSpec() {
+  void setup() {
     client.setConnectTimeout(CONNECTION_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
     clientWithReadTimeout.setConnectTimeout(CONNECTION_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
     clientWithReadTimeout.setReadTimeout(READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
@@ -104,7 +105,7 @@ public class OkHttp2Test extends AbstractHttpClientTest<Request> {
           if ("http://localhost:61/".equals(uri.toString())
               || "https://192.0.2.1/".equals(uri.toString())
               || resolveAddress("/read-timeout").toString().equals(uri.toString())) {
-            attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION);
+            attributes.remove(NETWORK_PROTOCOL_VERSION);
           }
           return attributes;
         });

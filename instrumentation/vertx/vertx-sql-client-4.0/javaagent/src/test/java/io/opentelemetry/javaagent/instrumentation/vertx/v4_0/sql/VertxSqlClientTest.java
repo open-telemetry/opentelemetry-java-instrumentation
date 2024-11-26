@@ -5,19 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_SQL_TABLE;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_STATEMENT;
-import static io.opentelemetry.semconv.SemanticAttributes.DB_USER;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_EVENT_NAME;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_STACKTRACE;
-import static io.opentelemetry.semconv.SemanticAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.SemanticAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.SemanticAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -51,6 +52,7 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class VertxSqlClientTest {
   private static final Logger logger = LoggerFactory.getLogger(VertxSqlClientTest.class);
 
@@ -67,6 +69,7 @@ class VertxSqlClientTest {
   private static GenericContainer<?> container;
   private static Vertx vertx;
   private static Pool pool;
+  private static String host;
   private static int port;
 
   @BeforeAll
@@ -81,11 +84,12 @@ class VertxSqlClientTest {
             .withStartupTimeout(Duration.ofMinutes(2));
     container.start();
     vertx = Vertx.vertx();
+    host = container.getHost();
     port = container.getMappedPort(5432);
     PgConnectOptions options =
         new PgConnectOptions()
             .setPort(port)
-            .setHost(container.getHost())
+            .setHost(host)
             .setDatabase(DB)
             .setUser(USER_DB)
             .setPassword(PW_DB);
@@ -136,12 +140,12 @@ class VertxSqlClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_NAME, DB),
-                            equalTo(DB_USER, USER_DB),
-                            equalTo(DB_STATEMENT, "select * from test"),
-                            equalTo(DB_OPERATION, "SELECT"),
-                            equalTo(DB_SQL_TABLE, "test"),
-                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(maybeStable(DB_NAME), DB),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from test"),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "test"),
+                            equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port)),
                 span ->
                     span.hasName("callback")
@@ -182,7 +186,7 @@ class VertxSqlClientTest {
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event
-                                    .hasName(EXCEPTION_EVENT_NAME)
+                                    .hasName("exception")
                                     .hasAttributesSatisfyingExactly(
                                         equalTo(EXCEPTION_TYPE, PgException.class.getName()),
                                         satisfies(
@@ -192,10 +196,10 @@ class VertxSqlClientTest {
                                             EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class))))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_NAME, DB),
-                            equalTo(DB_USER, USER_DB),
-                            equalTo(DB_STATEMENT, "invalid"),
-                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(maybeStable(DB_NAME), DB),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                            equalTo(maybeStable(DB_STATEMENT), "invalid"),
+                            equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port)),
                 span ->
                     span.hasName("callback")
@@ -226,12 +230,12 @@ class VertxSqlClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_NAME, DB),
-                            equalTo(DB_USER, USER_DB),
-                            equalTo(DB_STATEMENT, "select * from test where id = $?"),
-                            equalTo(DB_OPERATION, "SELECT"),
-                            equalTo(DB_SQL_TABLE, "test"),
-                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(maybeStable(DB_NAME), DB),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                            equalTo(maybeStable(DB_STATEMENT), "select * from test where id = $1"),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "test"),
+                            equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
   }
 
@@ -256,12 +260,14 @@ class VertxSqlClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_NAME, DB),
-                            equalTo(DB_USER, USER_DB),
-                            equalTo(DB_STATEMENT, "insert into test values ($?, $?) returning *"),
-                            equalTo(DB_OPERATION, "INSERT"),
-                            equalTo(DB_SQL_TABLE, "test"),
-                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(maybeStable(DB_NAME), DB),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                "insert into test values ($1, $2) returning *"),
+                            equalTo(maybeStable(DB_OPERATION), "INSERT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "test"),
+                            equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
   }
 
@@ -342,12 +348,12 @@ class VertxSqlClientTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(DB_NAME, DB),
-                                equalTo(DB_USER, USER_DB),
-                                equalTo(DB_STATEMENT, "select * from test"),
-                                equalTo(DB_OPERATION, "SELECT"),
-                                equalTo(DB_SQL_TABLE, "test"),
-                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(maybeStable(DB_NAME), DB),
+                                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                                equalTo(maybeStable(DB_STATEMENT), "select * from test"),
+                                equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                                equalTo(maybeStable(DB_SQL_TABLE), "test"),
+                                equalTo(SERVER_ADDRESS, host),
                                 equalTo(SERVER_PORT, port)),
                     span ->
                         span.hasName("callback")
@@ -373,23 +379,22 @@ class VertxSqlClientTest {
     for (CompletableFuture<Object> future : futureList) {
       executorService.submit(
           () -> {
-            testing
-                .runWithSpan(
-                    "parent",
-                    () ->
-                        pool.withConnection(
+            testing.runWithSpan(
+                "parent",
+                () ->
+                    pool.withConnection(
                             conn ->
                                 conn.preparedQuery("select * from test where id = $1")
-                                    .execute(Tuple.of(1))))
-                .onComplete(
-                    rowSetAsyncResult -> {
-                      if (rowSetAsyncResult.succeeded()) {
-                        future.complete(rowSetAsyncResult.result());
-                      } else {
-                        future.completeExceptionally(rowSetAsyncResult.cause());
-                      }
-                      latch.countDown();
-                    });
+                                    .execute(Tuple.of(1)))
+                        .onComplete(
+                            rowSetAsyncResult -> {
+                              if (rowSetAsyncResult.succeeded()) {
+                                future.complete(rowSetAsyncResult.result());
+                              } else {
+                                future.completeExceptionally(rowSetAsyncResult.cause());
+                              }
+                              latch.countDown();
+                            }));
           });
     }
     latch.await(30, TimeUnit.SECONDS);
@@ -408,12 +413,13 @@ class VertxSqlClientTest {
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(DB_NAME, DB),
-                                equalTo(DB_USER, USER_DB),
-                                equalTo(DB_STATEMENT, "select * from test where id = $?"),
-                                equalTo(DB_OPERATION, "SELECT"),
-                                equalTo(DB_SQL_TABLE, "test"),
-                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(maybeStable(DB_NAME), DB),
+                                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                                equalTo(
+                                    maybeStable(DB_STATEMENT), "select * from test where id = $1"),
+                                equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                                equalTo(maybeStable(DB_SQL_TABLE), "test"),
+                                equalTo(SERVER_ADDRESS, host),
                                 equalTo(SERVER_PORT, port)),
                     span ->
                         span.hasName("callback")

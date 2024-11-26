@@ -10,7 +10,8 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.HttpAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -18,15 +19,13 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 public final class HttpServerTestOptions {
 
   public static final Set<AttributeKey<?>> DEFAULT_HTTP_ATTRIBUTES =
       Collections.unmodifiableSet(
-          new HashSet<>(
-              Arrays.asList(SemanticAttributes.HTTP_ROUTE, SemanticAttributes.SERVER_PORT)));
+          new HashSet<>(Arrays.asList(HttpAttributes.HTTP_ROUTE, ServerAttributes.SERVER_PORT)));
 
   public static final SpanNameMapper DEFAULT_EXPECTED_SERVER_SPAN_NAME_MAPPER =
       (uri, method, route) -> {
@@ -41,13 +40,13 @@ public final class HttpServerTestOptions {
   BiFunction<ServerEndpoint, String, String> expectedHttpRoute = (endpoint, method) -> null;
   Function<ServerEndpoint, String> sockPeerAddr = unused -> "127.0.0.1";
   String contextPath = "";
-  Throwable expectedException = new Exception(EXCEPTION.body);
-  Supplier<String> metricsInstrumentationName = () -> null;
+  Throwable expectedException = new IllegalStateException(EXCEPTION.body);
   // we're calling /success in the test, and most servers respond with 200 anyway
   int responseCodeOnNonStandardHttpMethod = ServerEndpoint.SUCCESS.status;
 
   Predicate<ServerEndpoint> hasHandlerSpan = unused -> false;
   Predicate<ServerEndpoint> hasResponseSpan = unused -> false;
+  Predicate<ServerEndpoint> hasRenderSpan = unused -> false;
   Predicate<ServerEndpoint> hasErrorPageSpans = unused -> false;
   Predicate<ServerEndpoint> hasResponseCustomizer = unused -> false;
 
@@ -64,6 +63,7 @@ public final class HttpServerTestOptions {
   boolean testHttpPipelining = true;
   boolean testNonStandardHttpMethod = true;
   boolean verifyServerSpanEndTime = true;
+  boolean useHttp2 = false;
 
   HttpServerTestOptions() {}
 
@@ -107,13 +107,6 @@ public final class HttpServerTestOptions {
   }
 
   @CanIgnoreReturnValue
-  public HttpServerTestOptions setMetricsInstrumentationName(
-      Supplier<String> metricsInstrumentationName) {
-    this.metricsInstrumentationName = metricsInstrumentationName;
-    return this;
-  }
-
-  @CanIgnoreReturnValue
   public HttpServerTestOptions setResponseCodeOnNonStandardHttpMethod(
       int responseCodeOnNonStandardHttpMethod) {
     this.responseCodeOnNonStandardHttpMethod = responseCodeOnNonStandardHttpMethod;
@@ -129,6 +122,12 @@ public final class HttpServerTestOptions {
   @CanIgnoreReturnValue
   public HttpServerTestOptions setHasResponseSpan(Predicate<ServerEndpoint> hasResponseSpan) {
     this.hasResponseSpan = hasResponseSpan;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setHasRenderSpan(Predicate<ServerEndpoint> hasRenderSpan) {
+    this.hasRenderSpan = hasRenderSpan;
     return this;
   }
 
@@ -218,6 +217,17 @@ public final class HttpServerTestOptions {
   public HttpServerTestOptions setVerifyServerSpanEndTime(boolean verifyServerSpanEndTime) {
     this.verifyServerSpanEndTime = verifyServerSpanEndTime;
     return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setUseHttp2(boolean useHttp2) {
+    this.useHttp2 = useHttp2;
+    return this;
+  }
+
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions useHttp2() {
+    return setUseHttp2(true);
   }
 
   @FunctionalInterface

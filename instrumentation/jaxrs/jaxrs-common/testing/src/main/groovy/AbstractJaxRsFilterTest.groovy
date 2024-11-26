@@ -4,7 +4,9 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
+import io.opentelemetry.semconv.ErrorAttributes
+import io.opentelemetry.semconv.HttpAttributes
 import org.junit.jupiter.api.Assumptions
 import spock.lang.Unroll
 
@@ -79,13 +81,13 @@ abstract class AbstractJaxRsFilterTest extends AgentInstrumentationSpecification
           name controllerName
           if (abortPrematch) {
             attributes {
-              "$SemanticAttributes.CODE_NAMESPACE" "JaxRsFilterTest\$PrematchRequestFilter"
-              "$SemanticAttributes.CODE_FUNCTION" "filter"
+              "$CodeIncubatingAttributes.CODE_NAMESPACE" "JaxRsFilterTest\$PrematchRequestFilter"
+              "$CodeIncubatingAttributes.CODE_FUNCTION" "filter"
             }
           } else {
             attributes {
-              "$SemanticAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
-              "$SemanticAttributes.CODE_FUNCTION" "hello"
+              "$CodeIncubatingAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
+              "$CodeIncubatingAttributes.CODE_FUNCTION" "hello"
             }
           }
         }
@@ -130,9 +132,9 @@ abstract class AbstractJaxRsFilterTest extends AgentInstrumentationSpecification
           kind SERVER
           if (!runsOnServer()) {
             attributes {
-              "$SemanticAttributes.HTTP_REQUEST_METHOD" method
-              "$SemanticAttributes.HTTP_ROUTE" route
-              "$SemanticAttributes.ERROR_TYPE" "_OTHER"
+              "$HttpAttributes.HTTP_REQUEST_METHOD" method
+              "$HttpAttributes.HTTP_ROUTE" route
+              "$ErrorAttributes.ERROR_TYPE" "_OTHER"
             }
           }
         }
@@ -141,8 +143,8 @@ abstract class AbstractJaxRsFilterTest extends AgentInstrumentationSpecification
           name controller1Name
           kind INTERNAL
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
-            "$SemanticAttributes.CODE_FUNCTION" "nested"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" ~/Resource[$]Test*/
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "nested"
           }
         }
       }

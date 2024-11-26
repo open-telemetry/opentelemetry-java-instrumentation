@@ -25,10 +25,12 @@ public class VertxWebServer extends AbstractVertxWebServer {
   public void start(Future<Void> startFuture) {
     int port = config().getInteger(CONFIG_HTTP_SERVER_PORT);
     Router router = buildRouter();
+    Router mainRouter = Router.router(vertx);
+    mainRouter.mountSubRouter("/vertx-app", router);
 
     vertx
         .createHttpServer()
-        .requestHandler(router::accept)
+        .requestHandler(mainRouter::accept)
         .listen(port, it -> startFuture.complete());
   }
 }

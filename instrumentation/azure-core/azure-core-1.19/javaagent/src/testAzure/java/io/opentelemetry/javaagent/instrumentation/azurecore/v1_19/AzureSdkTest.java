@@ -55,6 +55,6 @@ class AzureSdkTest {
                     span.hasName("hello")
                         .hasKind(SpanKind.INTERNAL)
                         .hasStatus(StatusData.ok())
-                        .hasAttributesSatisfying(Attributes::isEmpty)));
+                        .hasAttributes(Attributes.empty())));
   }
 }

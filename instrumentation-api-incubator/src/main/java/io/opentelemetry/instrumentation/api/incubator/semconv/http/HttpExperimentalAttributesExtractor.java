@@ -7,18 +7,24 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpCommonAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
 
 public final class HttpExperimentalAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
+
+  // copied from HttpIncubatingAttributes
+  static final AttributeKey<Long> HTTP_REQUEST_BODY_SIZE =
+      AttributeKey.longKey("http.request.body.size");
+  static final AttributeKey<Long> HTTP_RESPONSE_BODY_SIZE =
+      AttributeKey.longKey("http.response.body.size");
 
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       HttpClientAttributesGetter<REQUEST, RESPONSE> getter) {
@@ -49,11 +55,11 @@ public final class HttpExperimentalAttributesExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
 
     Long requestBodySize = requestBodySize(request);
-    internalSet(attributes, SemanticAttributes.HTTP_REQUEST_BODY_SIZE, requestBodySize);
+    internalSet(attributes, HTTP_REQUEST_BODY_SIZE, requestBodySize);
 
     if (response != null) {
       Long responseBodySize = responseBodySize(request, response);
-      internalSet(attributes, SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, responseBodySize);
+      internalSet(attributes, HTTP_RESPONSE_BODY_SIZE, responseBodySize);
     }
   }
 

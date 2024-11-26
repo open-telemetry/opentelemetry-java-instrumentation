@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -15,7 +15,6 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -122,12 +121,21 @@ public abstract class InstrumentationTestRunner {
     try {
       await()
           .untilAsserted(() -> doAssertTraces(traceComparator, assertionsList, verifyScopeVersion));
-    } catch (ConditionTimeoutException e) {
-      // Don't throw this failure since the stack is the awaitility thread, causing confusion.
-      // Instead, just assert one more time on the test thread, which will fail with a better stack
-      // trace.
-      // TODO(anuraaga): There is probably a better way to do this.
-      doAssertTraces(traceComparator, assertionsList, verifyScopeVersion);
+    } catch (Throwable t) {
+      // awaitility is doing a jmx call that is not implemented in GraalVM:
+      // call:
+      // https://github.com/awaitility/awaitility/blob/fbe16add874b4260dd240108304d5c0be84eabc8/awaitility/src/main/java/org/awaitility/core/ConditionAwaiter.java#L157
+      // see https://github.com/oracle/graal/issues/6101 (spring boot graal native image)
+      if (t.getClass().getName().equals("com.oracle.svm.core.jdk.UnsupportedFeatureError")
+          || t instanceof ConditionTimeoutException) {
+        // Don't throw this failure since the stack is the awaitility thread, causing confusion.
+        // Instead, just assert one more time on the test thread, which will fail with a better
+        // stack trace.
+        // TODO(anuraaga): There is probably a better way to do this.
+        doAssertTraces(traceComparator, assertionsList, verifyScopeVersion);
+      } else {
+        throw t;
+      }
     }
   }
 
@@ -173,9 +181,7 @@ public abstract class InstrumentationTestRunner {
               Collection<MetricData> metrics = instrumentationMetrics(instrumentationName);
               assertThat(metrics).isNotEmpty();
               for (Consumer<MetricAssert> assertion : assertions) {
-                assertThat(metrics)
-                    .anySatisfy(
-                        metric -> assertion.accept(OpenTelemetryAssertions.assertThat(metric)));
+                assertThat(metrics).anySatisfy(metric -> assertion.accept(assertThat(metric)));
               }
             });
   }

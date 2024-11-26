@@ -25,6 +25,7 @@ import io.opentelemetry.api.metrics.ObservableLongGauge;
 import io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
+import java.lang.reflect.Method;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -116,7 +117,7 @@ class MeterTest {
                                                 .hasAttributesSatisfying(
                                                     equalTo(AttributeKey.stringKey("q"), "r"))))));
 
-    observableCounter.close();
+    close(observableCounter);
 
     // sleep exporter interval
     Thread.sleep(100);
@@ -192,7 +193,7 @@ class MeterTest {
                                                 .hasAttributesSatisfying(
                                                     equalTo(AttributeKey.stringKey("q"), "r"))))));
 
-    observableCounter.close();
+    close(observableCounter);
 
     // sleep exporter interval
     Thread.sleep(100);
@@ -267,7 +268,7 @@ class MeterTest {
                                                 .hasAttributesSatisfying(
                                                     equalTo(AttributeKey.stringKey("q"), "r"))))));
 
-    observableCounter.close();
+    close(observableCounter);
 
     // sleep exporter interval
     Thread.sleep(100);
@@ -343,7 +344,7 @@ class MeterTest {
                                                 .hasAttributesSatisfying(
                                                     equalTo(AttributeKey.stringKey("q"), "r"))))));
 
-    observableCounter.close();
+    close(observableCounter);
 
     // sleep exporter interval
     Thread.sleep(100);
@@ -448,7 +449,7 @@ class MeterTest {
                                             .hasAttributesSatisfying(
                                                 equalTo(AttributeKey.stringKey("q"), "r"))))));
 
-    observableGauge.close();
+    close(observableGauge);
 
     // sleep exporter interval
     Thread.sleep(100);
@@ -490,7 +491,7 @@ class MeterTest {
                                             .hasAttributesSatisfying(
                                                 equalTo(AttributeKey.stringKey("q"), "r"))))));
 
-    observableGauge.close();
+    close(observableGauge);
 
     // sleep exporter interval
     Thread.sleep(100);
@@ -498,5 +499,15 @@ class MeterTest {
     Thread.sleep(100);
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
+  }
+
+  private static void close(Object observableInstrument) {
+    // our bridge includes close method, although it was added in 1.12
+    try {
+      Method close = observableInstrument.getClass().getDeclaredMethod("close");
+      close.invoke(observableInstrument);
+    } catch (Exception exception) {
+      throw new IllegalStateException("Failed to call close", exception);
+    }
   }
 }

@@ -7,10 +7,10 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.code;
 
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
 
 /**
@@ -20,6 +20,11 @@ import javax.annotation.Nullable;
  */
 public final class CodeAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
+
+  // copied from CodeIncubatingAttributes
+  private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function");
+  private static final AttributeKey<String> CODE_NAMESPACE =
+      AttributeKey.stringKey("code.namespace");
 
   /** Creates the code attributes extractor. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
@@ -37,9 +42,9 @@ public final class CodeAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     Class<?> cls = getter.getCodeClass(request);
     if (cls != null) {
-      internalSet(attributes, SemanticAttributes.CODE_NAMESPACE, cls.getName());
+      internalSet(attributes, CODE_NAMESPACE, cls.getName());
     }
-    internalSet(attributes, SemanticAttributes.CODE_FUNCTION, getter.getMethodName(request));
+    internalSet(attributes, CODE_FUNCTION, getter.getMethodName(request));
   }
 
   @Override

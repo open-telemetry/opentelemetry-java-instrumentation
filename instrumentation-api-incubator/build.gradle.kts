@@ -13,7 +13,7 @@ group = "io.opentelemetry.instrumentation"
 dependencies {
   api("io.opentelemetry.semconv:opentelemetry-semconv")
   api(project(":instrumentation-api"))
-  implementation("io.opentelemetry:opentelemetry-extension-incubator")
+  implementation("io.opentelemetry:opentelemetry-api-incubator")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
@@ -21,6 +21,7 @@ dependencies {
   testImplementation(project(":testing-common"))
   testImplementation("io.opentelemetry:opentelemetry-sdk")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
+  testImplementation("io.opentelemetry.semconv:opentelemetry-semconv-incubating")
 }
 
 tasks {
@@ -38,5 +39,18 @@ tasks {
 
   sourcesJar {
     dependsOn("generateJflex")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  val testBothSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database/dup")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+    dependsOn(testBothSemconv)
   }
 }

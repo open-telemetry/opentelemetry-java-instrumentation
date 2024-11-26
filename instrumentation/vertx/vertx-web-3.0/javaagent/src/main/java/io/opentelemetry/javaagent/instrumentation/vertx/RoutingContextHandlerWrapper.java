@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
@@ -29,13 +30,15 @@ public final class RoutingContextHandlerWrapper implements Handler<RoutingContex
   @Override
   public void handle(RoutingContext context) {
     Context otelContext = Context.current();
-    HttpServerRoute.update(
-        otelContext,
-        HttpServerRouteSource.CONTROLLER,
-        RoutingContextHandlerWrapper::getRoute,
-        context);
+    // remember currently set route so it could be restored
+    RoutingContextUtil.setRoute(context, RouteHolder.get(otelContext));
+    String route = getRoute(otelContext, context);
+    if (route != null && route.endsWith("/")) {
+      route = route.substring(0, route.length() - 1);
+    }
+    HttpServerRoute.update(otelContext, HttpServerRouteSource.NESTED_CONTROLLER, route);
 
-    try {
+    try (Scope ignore = RouteHolder.init(otelContext, route).makeCurrent()) {
       handler.handle(context);
     } catch (Throwable throwable) {
       Span serverSpan = LocalRootSpan.fromContextOrNull(otelContext);
@@ -47,7 +50,9 @@ public final class RoutingContextHandlerWrapper implements Handler<RoutingContex
   }
 
   private static String getRoute(Context otelContext, RoutingContext routingContext) {
-    return routingContext.currentRoute().getPath();
+    String route = routingContext.currentRoute().getPath();
+    String existingRoute = RouteHolder.get(otelContext);
+    return existingRoute != null ? existingRoute + route : route;
   }
 
   private static Throwable unwrapThrowable(Throwable throwable) {

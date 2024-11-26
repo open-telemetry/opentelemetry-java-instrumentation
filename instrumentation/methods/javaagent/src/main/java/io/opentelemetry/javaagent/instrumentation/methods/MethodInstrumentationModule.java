@@ -6,13 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.methods;
 
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,7 +30,7 @@ public class MethodInstrumentationModule extends InstrumentationModule {
 
     Map<String, Set<String>> classMethodsToTrace =
         MethodsConfigurationParser.parse(
-            InstrumentationConfig.get().getString(TRACE_METHODS_CONFIG));
+            AgentInstrumentationConfig.get().getString(TRACE_METHODS_CONFIG));
 
     typeInstrumentations =
         classMethodsToTrace.entrySet().stream()
@@ -45,7 +45,9 @@ public class MethodInstrumentationModule extends InstrumentationModule {
   public List<String> getAdditionalHelperClassNames() {
     return typeInstrumentations.isEmpty()
         ? emptyList()
-        : singletonList("io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons");
+        : Arrays.asList(
+            "io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons",
+            "io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons$BootstrapLoader");
   }
 
   @Override

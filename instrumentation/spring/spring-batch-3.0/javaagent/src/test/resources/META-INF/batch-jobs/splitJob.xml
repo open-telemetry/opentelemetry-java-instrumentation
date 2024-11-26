@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<job id="splitJob" xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="1.0">
+<job id="splitJob" xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/jobXML_1_0.xsd"
+     version="1.0">
   <split id="split">
     <flow id="splitFlow1">
       <step id="splitFlowStep1">
-        <batchlet ref="jsr.TestBatchlet"/>
+        <batchlet ref="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.jsr.TestBatchlet"/>
       </step>
     </flow>
     <flow id="splitFlow2">
       <step id="splitFlowStep2">
-        <batchlet ref="jsr.TestBatchlet"/>
+        <batchlet ref="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.jsr.TestBatchlet"/>
       </step>
     </flow>
   </split>

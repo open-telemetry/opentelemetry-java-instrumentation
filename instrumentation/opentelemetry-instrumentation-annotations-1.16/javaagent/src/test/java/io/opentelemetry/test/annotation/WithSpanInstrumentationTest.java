@@ -15,7 +15,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.lang.reflect.Modifier;
 import java.util.concurrent.CompletableFuture;
 import net.bytebuddy.ByteBuddy;
@@ -55,9 +55,11 @@ class WithSpanInstrumentationTest {
                                         assertThat(attributes)
                                             .containsOnly(
                                                 entry(
-                                                    SemanticAttributes.CODE_NAMESPACE,
+                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
                                                     TracedWithSpan.class.getName()),
-                                                entry(SemanticAttributes.CODE_FUNCTION, "otel")))));
+                                                entry(
+                                                    CodeIncubatingAttributes.CODE_FUNCTION,
+                                                    "otel")))));
   }
 
   @Test
@@ -80,10 +82,10 @@ class WithSpanInstrumentationTest {
                                         assertThat(attributes)
                                             .containsOnly(
                                                 entry(
-                                                    SemanticAttributes.CODE_NAMESPACE,
+                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
                                                     TracedWithSpan.class.getName()),
                                                 entry(
-                                                    SemanticAttributes.CODE_FUNCTION,
+                                                    CodeIncubatingAttributes.CODE_FUNCTION,
                                                     "namedOtel")))));
   }
 
@@ -107,10 +109,10 @@ class WithSpanInstrumentationTest {
                                         assertThat(attributes)
                                             .containsOnly(
                                                 entry(
-                                                    SemanticAttributes.CODE_NAMESPACE,
+                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
                                                     TracedWithSpan.class.getName()),
                                                 entry(
-                                                    SemanticAttributes.CODE_FUNCTION,
+                                                    CodeIncubatingAttributes.CODE_FUNCTION,
                                                     "someKind")))));
   }
 
@@ -134,9 +136,11 @@ class WithSpanInstrumentationTest {
                                         assertThat(attributes)
                                             .containsOnly(
                                                 entry(
-                                                    SemanticAttributes.CODE_NAMESPACE,
+                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
                                                     TracedWithSpan.class.getName()),
-                                                entry(SemanticAttributes.CODE_FUNCTION, "server"))),
+                                                entry(
+                                                    CodeIncubatingAttributes.CODE_FUNCTION,
+                                                    "server"))),
                         span ->
                             assertThat(span)
                                 .hasName("TracedWithSpan.otel")
@@ -147,9 +151,11 @@ class WithSpanInstrumentationTest {
                                         assertThat(attributes)
                                             .containsOnly(
                                                 entry(
-                                                    SemanticAttributes.CODE_NAMESPACE,
+                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
                                                     TracedWithSpan.class.getName()),
-                                                entry(SemanticAttributes.CODE_FUNCTION, "otel")))));
+                                                entry(
+                                                    CodeIncubatingAttributes.CODE_FUNCTION,
+                                                    "otel")))));
   }
 
   @Test
@@ -158,7 +164,7 @@ class WithSpanInstrumentationTest {
     new TracedWithSpan().ignored();
 
     Thread.sleep(500); // sleep a bit just to make sure no span is captured
-    assertThat(testing.waitForTraces(0));
+    assertThat(testing.waitForTraces(0)).isEmpty();
   }
 
   @Test
@@ -182,10 +188,10 @@ class WithSpanInstrumentationTest {
                                         assertThat(attributes)
                                             .containsOnly(
                                                 entry(
-                                                    SemanticAttributes.CODE_NAMESPACE,
+                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
                                                     TracedWithSpan.class.getName()),
                                                 entry(
-                                                    SemanticAttributes.CODE_FUNCTION,
+                                                    CodeIncubatingAttributes.CODE_FUNCTION,
                                                     "completionStage")))));
   }
 
@@ -212,10 +218,10 @@ class WithSpanInstrumentationTest {
                                         assertThat(attributes)
                                             .containsOnly(
                                                 entry(
-                                                    SemanticAttributes.CODE_NAMESPACE,
+                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
                                                     TracedWithSpan.class.getName()),
                                                 entry(
-                                                    SemanticAttributes.CODE_FUNCTION,
+                                                    CodeIncubatingAttributes.CODE_FUNCTION,
                                                     "completionStage")))));
   }
 
@@ -239,10 +245,10 @@ class WithSpanInstrumentationTest {
                                         assertThat(attributes)
                                             .containsOnly(
                                                 entry(
-                                                    SemanticAttributes.CODE_NAMESPACE,
+                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
                                                     TracedWithSpan.class.getName()),
                                                 entry(
-                                                    SemanticAttributes.CODE_FUNCTION,
+                                                    CodeIncubatingAttributes.CODE_FUNCTION,
                                                     "completionStage")))));
   }
 
@@ -253,7 +259,7 @@ class WithSpanInstrumentationTest {
     new TracedWithSpan().completionStage(future);
 
     Thread.sleep(500); // sleep a bit just to make sure no span is captured
-    assertThat(testing.waitForTraces(0));
+    assertThat(testing.waitForTraces(0)).isEmpty();
 
     future.complete("Done");
 
@@ -272,10 +278,10 @@ class WithSpanInstrumentationTest {
                                         assertThat(attributes)
                                             .containsOnly(
                                                 entry(
-                                                    SemanticAttributes.CODE_NAMESPACE,
+                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
                                                     TracedWithSpan.class.getName()),
                                                 entry(
-                                                    SemanticAttributes.CODE_FUNCTION,
+                                                    CodeIncubatingAttributes.CODE_FUNCTION,
                                                     "completionStage")))));
   }
 
@@ -286,7 +292,7 @@ class WithSpanInstrumentationTest {
     new TracedWithSpan().completionStage(future);
 
     Thread.sleep(500); // sleep a bit just to make sure no span is captured
-    assertThat(testing.waitForTraces(0));
+    assertThat(testing.waitForTraces(0)).isEmpty();
 
     future.completeExceptionally(new IllegalArgumentException("Boom"));
 
@@ -306,10 +312,10 @@ class WithSpanInstrumentationTest {
                                         assertThat(attributes)
                                             .containsOnly(
                                                 entry(
-                                                    SemanticAttributes.CODE_NAMESPACE,
+                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
                                                     TracedWithSpan.class.getName()),
                                                 entry(
-                                                    SemanticAttributes.CODE_FUNCTION,
+                                                    CodeIncubatingAttributes.CODE_FUNCTION,
                                                     "completionStage")))));
   }
 
@@ -334,10 +340,10 @@ class WithSpanInstrumentationTest {
                                         assertThat(attributes)
                                             .containsOnly(
                                                 entry(
-                                                    SemanticAttributes.CODE_NAMESPACE,
+                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
                                                     TracedWithSpan.class.getName()),
                                                 entry(
-                                                    SemanticAttributes.CODE_FUNCTION,
+                                                    CodeIncubatingAttributes.CODE_FUNCTION,
                                                     "completableFuture")))));
   }
 
@@ -364,10 +370,10 @@ class WithSpanInstrumentationTest {
                                         assertThat(attributes)
                                             .containsOnly(
                                                 entry(
-                                                    SemanticAttributes.CODE_NAMESPACE,
+                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
                                                     TracedWithSpan.class.getName()),
                                                 entry(
-                                                    SemanticAttributes.CODE_FUNCTION,
+                                                    CodeIncubatingAttributes.CODE_FUNCTION,
                                                     "completableFuture")))));
   }
 
@@ -391,10 +397,10 @@ class WithSpanInstrumentationTest {
                                         assertThat(attributes)
                                             .containsOnly(
                                                 entry(
-                                                    SemanticAttributes.CODE_NAMESPACE,
+                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
                                                     TracedWithSpan.class.getName()),
                                                 entry(
-                                                    SemanticAttributes.CODE_FUNCTION,
+                                                    CodeIncubatingAttributes.CODE_FUNCTION,
                                                     "completableFuture")))));
   }
 
@@ -405,7 +411,7 @@ class WithSpanInstrumentationTest {
     new TracedWithSpan().completableFuture(future);
 
     Thread.sleep(500); // sleep a bit just to make sure no span is captured
-    assertThat(testing.waitForTraces(0));
+    assertThat(testing.waitForTraces(0)).isEmpty();
 
     future.complete("Done");
 
@@ -424,10 +430,10 @@ class WithSpanInstrumentationTest {
                                         assertThat(attributes)
                                             .containsOnly(
                                                 entry(
-                                                    SemanticAttributes.CODE_NAMESPACE,
+                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
                                                     TracedWithSpan.class.getName()),
                                                 entry(
-                                                    SemanticAttributes.CODE_FUNCTION,
+                                                    CodeIncubatingAttributes.CODE_FUNCTION,
                                                     "completableFuture")))));
   }
 
@@ -438,7 +444,7 @@ class WithSpanInstrumentationTest {
     new TracedWithSpan().completableFuture(future);
 
     Thread.sleep(500); // sleep a bit just to make sure no span is captured
-    assertThat(testing.waitForTraces(0));
+    assertThat(testing.waitForTraces(0)).isEmpty();
 
     future.completeExceptionally(new IllegalArgumentException("Boom"));
 
@@ -458,10 +464,10 @@ class WithSpanInstrumentationTest {
                                         assertThat(attributes)
                                             .containsOnly(
                                                 entry(
-                                                    SemanticAttributes.CODE_NAMESPACE,
+                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
                                                     TracedWithSpan.class.getName()),
                                                 entry(
-                                                    SemanticAttributes.CODE_FUNCTION,
+                                                    CodeIncubatingAttributes.CODE_FUNCTION,
                                                     "completableFuture")))));
   }
 
@@ -485,10 +491,10 @@ class WithSpanInstrumentationTest {
                                         assertThat(attributes)
                                             .containsOnly(
                                                 entry(
-                                                    SemanticAttributes.CODE_NAMESPACE,
+                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
                                                     TracedWithSpan.class.getName()),
                                                 entry(
-                                                    SemanticAttributes.CODE_FUNCTION,
+                                                    CodeIncubatingAttributes.CODE_FUNCTION,
                                                     "withSpanAttributes"),
                                                 entry(
                                                     AttributeKey.stringKey("implicitName"), "foo"),
@@ -548,9 +554,11 @@ class WithSpanInstrumentationTest {
                                         assertThat(attributes)
                                             .containsOnly(
                                                 entry(
-                                                    SemanticAttributes.CODE_NAMESPACE,
+                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
                                                     "GeneratedJava6TestClass"),
-                                                entry(SemanticAttributes.CODE_FUNCTION, "run"))),
+                                                entry(
+                                                    CodeIncubatingAttributes.CODE_FUNCTION,
+                                                    "run"))),
                         span ->
                             assertThat(span)
                                 .hasName("intercept")

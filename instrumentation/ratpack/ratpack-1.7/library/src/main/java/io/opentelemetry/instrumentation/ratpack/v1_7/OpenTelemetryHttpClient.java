@@ -9,7 +9,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.ContextHolder;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.HttpAttributes;
 import ratpack.exec.Execution;
 import ratpack.http.client.HttpClient;
 import ratpack.http.client.HttpResponse;
@@ -37,7 +37,7 @@ final class OpenTelemetryHttpClient {
                 Context otelCtx = instrumenter.start(parentOtelCtx, requestSpec);
                 Span span = Span.fromContext(otelCtx);
                 String path = requestSpec.getUri().getPath();
-                span.setAttribute(SemanticAttributes.HTTP_ROUTE, path);
+                span.setAttribute(HttpAttributes.HTTP_ROUTE, path);
                 Execution.current().add(new ContextHolder(otelCtx, requestSpec));
               });
 

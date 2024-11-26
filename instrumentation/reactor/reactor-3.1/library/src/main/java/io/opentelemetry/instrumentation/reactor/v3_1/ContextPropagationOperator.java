@@ -27,6 +27,7 @@ import static java.lang.invoke.MethodType.methodType;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
+import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.util.function.BiFunction;
@@ -132,6 +133,20 @@ public final class ContextPropagationOperator {
   public static Context getOpenTelemetryContext(
       reactor.util.context.Context context, Context defaultTraceContext) {
     return context.getOrDefault(TRACE_CONTEXT_KEY, defaultTraceContext);
+  }
+
+  /**
+   * Gets Trace {@link Context} from Reactor {@link reactor.util.context.ContextView}.
+   *
+   * @param contextView Reactor's context to get trace context from.
+   * @param defaultTraceContext Default value to be returned if no trace context is found on Reactor
+   *     context.
+   * @return Trace context or default value.
+   */
+  @NoMuzzle
+  public static Context getOpenTelemetryContextFromContextView(
+      reactor.util.context.ContextView contextView, Context defaultTraceContext) {
+    return contextView.getOrDefault(TRACE_CONTEXT_KEY, defaultTraceContext);
   }
 
   ContextPropagationOperator(boolean captureExperimentalSpanAttributes) {

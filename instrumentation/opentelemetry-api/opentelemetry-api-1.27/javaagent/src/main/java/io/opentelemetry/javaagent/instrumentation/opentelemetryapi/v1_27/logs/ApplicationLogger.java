@@ -8,11 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs;
 import application.io.opentelemetry.api.logs.LogRecordBuilder;
 import application.io.opentelemetry.api.logs.Logger;
 
-class ApplicationLogger implements Logger {
+public class ApplicationLogger implements Logger {
 
   private final io.opentelemetry.api.logs.Logger agentLogger;
 
-  ApplicationLogger(io.opentelemetry.api.logs.Logger agentLogger) {
+  protected ApplicationLogger(io.opentelemetry.api.logs.Logger agentLogger) {
     this.agentLogger = agentLogger;
   }
 

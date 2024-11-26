@@ -5,6 +5,7 @@
 
 package server;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.controller;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -14,7 +15,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
-import io.opentelemetry.instrumentation.test.base.HttpServerTest;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerResponse;
@@ -31,6 +31,8 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
   public Router buildRouter() {
     Router router = Router.router(vertx);
 
+    // verify that calling RoutingContext::next doesn't affect http.route
+    router.route(SUCCESS.getPath()).handler(RoutingContext::next);
     //noinspection Convert2Lambda
     router
         .route(SUCCESS.getPath())
@@ -40,7 +42,7 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
             new Handler<RoutingContext>() {
               @Override
               public void handle(RoutingContext ctx) {
-                HttpServerTest.controller(
+                controller(
                     SUCCESS,
                     () -> {
                       end(ctx.response().setStatusCode(SUCCESS.getStatus()), SUCCESS.getBody());
@@ -52,7 +54,7 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
         .route(INDEXED_CHILD.getPath())
         .handler(
             ctx ->
-                HttpServerTest.controller(
+                controller(
                     INDEXED_CHILD,
                     () -> {
                       INDEXED_CHILD.collectSpanAttributes(it -> ctx.request().getParam(it));
@@ -63,7 +65,7 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
         .route(QUERY_PARAM.getPath())
         .handler(
             ctx ->
-                HttpServerTest.controller(
+                controller(
                     QUERY_PARAM,
                     () -> {
                       end(
@@ -75,7 +77,7 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
         .route(REDIRECT.getPath())
         .handler(
             ctx ->
-                HttpServerTest.controller(
+                controller(
                     REDIRECT,
                     () -> {
                       end(
@@ -88,7 +90,7 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
         .route(ERROR.getPath())
         .handler(
             ctx ->
-                HttpServerTest.controller(
+                controller(
                     ERROR,
                     () -> {
                       end(ctx.response().setStatusCode(ERROR.getStatus()), ERROR.getBody());
@@ -98,16 +100,16 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
         .route(EXCEPTION.getPath())
         .handler(
             ctx ->
-                HttpServerTest.controller(
+                controller(
                     EXCEPTION,
                     () -> {
-                      throw new Exception(EXCEPTION.getBody());
+                      throw new IllegalStateException(EXCEPTION.getBody());
                     }));
     router
         .route("/path/:id/param")
         .handler(
             ctx ->
-                HttpServerTest.controller(
+                controller(
                     PATH_PARAM,
                     () -> {
                       end(
@@ -119,7 +121,7 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
         .route(CAPTURE_HEADERS.getPath())
         .handler(
             ctx ->
-                HttpServerTest.controller(
+                controller(
                     CAPTURE_HEADERS,
                     () -> {
                       end(

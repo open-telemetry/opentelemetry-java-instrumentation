@@ -20,7 +20,9 @@ dependencies {
     .find { it.group.equals("io.opentelemetry.semconv")
             && it.name.equals("opentelemetry-semconv") }
     ?: throw Exception("semconv constraint not found")
-  otelBom.addExtra(semconvConstraint.group, semconvConstraint.name, semconvConstraint.version ?: throw Exception("missing version"))
+  val semconvVersion = semconvConstraint.version ?: throw Exception("missing version")
+  otelBom.addExtra(semconvConstraint.group, semconvConstraint.name, semconvVersion)
+  otelBom.addExtra(semconvConstraint.group, "opentelemetry-semconv-incubating", semconvVersion)
 }
 
 otelBom.projectFilter.set { it.findProperty("otel.stable") != "true" }

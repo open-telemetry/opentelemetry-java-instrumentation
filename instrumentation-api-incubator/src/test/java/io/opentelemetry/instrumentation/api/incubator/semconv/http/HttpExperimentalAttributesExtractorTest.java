@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.entry;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpCommonAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.HttpIncubatingAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -43,10 +43,9 @@ class HttpExperimentalAttributesExtractorTest {
       HttpCommonAttributesGetter<String, String> getter,
       AttributesExtractor<String, String> extractor) {
 
-    doReturn(singletonList("123")).when(getter).getHttpRequestHeader("request", "content-length");
-    doReturn(singletonList("42"))
-        .when(getter)
-        .getHttpResponseHeader("request", "response", "content-length");
+    when(getter.getHttpRequestHeader("request", "content-length")).thenReturn(singletonList("123"));
+    when(getter.getHttpResponseHeader("request", "response", "content-length"))
+        .thenReturn(singletonList("42"));
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), "request");
@@ -55,7 +54,7 @@ class HttpExperimentalAttributesExtractorTest {
     extractor.onEnd(attributes, Context.root(), "request", "response", null);
     assertThat(attributes.build())
         .containsOnly(
-            entry(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 123L),
-            entry(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 42L));
+            entry(HttpIncubatingAttributes.HTTP_REQUEST_BODY_SIZE, 123L),
+            entry(HttpIncubatingAttributes.HTTP_RESPONSE_BODY_SIZE, 42L));
   }
 }

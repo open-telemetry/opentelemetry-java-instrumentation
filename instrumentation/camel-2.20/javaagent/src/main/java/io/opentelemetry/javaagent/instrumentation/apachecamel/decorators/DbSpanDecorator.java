@@ -25,9 +25,10 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.URI;
 import java.util.Map;
 import org.apache.camel.Endpoint;
@@ -36,7 +37,7 @@ import org.apache.camel.Exchange;
 class DbSpanDecorator extends BaseSpanDecorator {
 
   private static final SqlStatementSanitizer sanitizer =
-      SqlStatementSanitizer.create(CommonConfig.get().isStatementSanitizationEnabled());
+      SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
   private final String component;
   private final String system;
@@ -114,6 +115,7 @@ class DbSpanDecorator extends BaseSpanDecorator {
     }
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   public void pre(
       AttributesBuilder attributes,
@@ -122,14 +124,24 @@ class DbSpanDecorator extends BaseSpanDecorator {
       CamelDirection camelDirection) {
     super.pre(attributes, exchange, endpoint, camelDirection);
 
-    attributes.put(SemanticAttributes.DB_SYSTEM, system);
+    attributes.put(DbIncubatingAttributes.DB_SYSTEM, system);
     String statement = getStatement(exchange, endpoint);
     if (statement != null) {
-      attributes.put(SemanticAttributes.DB_STATEMENT, statement);
+      if (SemconvStability.emitStableDatabaseSemconv()) {
+        attributes.put(DbIncubatingAttributes.DB_QUERY_TEXT, statement);
+      }
+      if (SemconvStability.emitOldDatabaseSemconv()) {
+        attributes.put(DbIncubatingAttributes.DB_STATEMENT, statement);
+      }
     }
     String dbName = getDbName(endpoint);
     if (dbName != null) {
-      attributes.put(SemanticAttributes.DB_NAME, dbName);
+      if (SemconvStability.emitStableDatabaseSemconv()) {
+        attributes.put(DbIncubatingAttributes.DB_NAMESPACE, dbName);
+      }
+      if (SemconvStability.emitOldDatabaseSemconv()) {
+        attributes.put(DbIncubatingAttributes.DB_NAME, dbName);
+      }
     }
   }
 }

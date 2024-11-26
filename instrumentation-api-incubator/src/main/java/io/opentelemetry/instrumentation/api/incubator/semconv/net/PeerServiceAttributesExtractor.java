@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.net;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
 
 /**
@@ -19,6 +19,9 @@ import javax.annotation.Nullable;
  */
 public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
+
+  // copied from PeerIncubatingAttributes
+  private static final AttributeKey<String> PEER_SERVICE = AttributeKey.stringKey("peer.service");
 
   private final ServerAttributesGetter<REQUEST> attributesGetter;
   private final PeerServiceResolver peerServiceResolver;
@@ -60,7 +63,7 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
     Integer serverPort = attributesGetter.getServerPort(request);
     String peerService = mapToPeerService(serverAddress, serverPort);
     if (peerService != null) {
-      attributes.put(SemanticAttributes.PEER_SERVICE, peerService);
+      attributes.put(PEER_SERVICE, peerService);
     }
   }
 

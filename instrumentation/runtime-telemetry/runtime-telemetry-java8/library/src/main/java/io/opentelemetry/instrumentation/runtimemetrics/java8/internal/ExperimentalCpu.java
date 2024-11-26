@@ -15,9 +15,7 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
- * Registers measurements that generate experimental metrics about CPU. These metrics will only be
- * generated the preview of stable JVM semantic conventions (e.g. by setting the {@code
- * otel.semconv-stability.opt-in} system property to {@code jvm}) is enabled.
+ * Registers measurements that generate experimental metrics about CPU.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.

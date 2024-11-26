@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
 
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+
 import com.ning.http.client.AsyncCompletionHandler;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.AsyncHttpClientConfig;
@@ -18,7 +20,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Map;
@@ -35,12 +36,24 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
   private static final int CONNECTION_TIMEOUT_MS = (int) CONNECTION_TIMEOUT.toMillis();
   private static final int READ_TIMEOUT_MS = (int) READ_TIMEOUT.toMillis();
 
-  private static final AsyncHttpClient client =
-      new AsyncHttpClient(
-          new AsyncHttpClientConfig.Builder()
-              .setConnectTimeout(CONNECTION_TIMEOUT_MS)
-              .setReadTimeout(READ_TIMEOUT_MS)
-              .build());
+  private static final AsyncHttpClient client = buildClient(false);
+  private static final AsyncHttpClient clientWithReadTimeout = buildClient(true);
+
+  private static AsyncHttpClient buildClient(boolean readTimeout) {
+    AsyncHttpClientConfig.Builder builder =
+        new AsyncHttpClientConfig.Builder().setConnectTimeout(CONNECTION_TIMEOUT_MS);
+    if (readTimeout) {
+      builder.setReadTimeout(READ_TIMEOUT_MS);
+    }
+    return new AsyncHttpClient(builder.build());
+  }
+
+  private static AsyncHttpClient getClient(URI uri) {
+    if (uri.toString().contains("/read-timeout")) {
+      return clientWithReadTimeout;
+    }
+    return client;
+  }
 
   @Override
   public Request buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -54,7 +67,7 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
   @Override
   public int sendRequest(Request request, String method, URI uri, Map<String, String> headers)
       throws ExecutionException, InterruptedException {
-    return client.executeRequest(request).get().getStatusCode();
+    return getClient(uri).executeRequest(request).get().getStatusCode();
   }
 
   @Override
@@ -64,24 +77,26 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
       URI uri,
       Map<String, String> headers,
       HttpClientResult requestResult) {
-    client.executeRequest(
-        request,
-        new AsyncCompletionHandler<Void>() {
-          @Override
-          public Void onCompleted(Response response) {
-            requestResult.complete(response.getStatusCode());
-            return null;
-          }
+    getClient(uri)
+        .executeRequest(
+            request,
+            new AsyncCompletionHandler<Void>() {
+              @Override
+              public Void onCompleted(Response response) {
+                requestResult.complete(response.getStatusCode());
+                return null;
+              }
 
-          @Override
-          public void onThrowable(Throwable throwable) {
-            requestResult.complete(throwable);
-          }
-        });
+              @Override
+              public void onThrowable(Throwable throwable) {
+                requestResult.complete(throwable);
+              }
+            });
   }
 
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+    optionsBuilder.spanEndsAfterBody();
     optionsBuilder.disableTestRedirects();
 
     // disable read timeout test for non latest because it is flaky with 1.9.0
@@ -93,7 +108,7 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
         endpoint -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION);
+          attributes.remove(NETWORK_PROTOCOL_VERSION);
           return attributes;
         });
   }

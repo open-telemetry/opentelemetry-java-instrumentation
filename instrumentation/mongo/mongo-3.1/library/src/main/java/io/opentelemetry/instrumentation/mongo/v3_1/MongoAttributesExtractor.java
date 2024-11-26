@@ -5,10 +5,12 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1;
 
-import static io.opentelemetry.semconv.SemanticAttributes.DB_MONGODB_COLLECTION;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static java.util.Arrays.asList;
 
 import com.mongodb.event.CommandStartedEvent;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -18,12 +20,23 @@ import javax.annotation.Nullable;
 import org.bson.BsonValue;
 
 class MongoAttributesExtractor implements AttributesExtractor<CommandStartedEvent, Void> {
+  // copied from DbIncubatingAttributes
+  private static final AttributeKey<String> DB_COLLECTION_NAME =
+      AttributeKey.stringKey("db.collection.name");
+  private static final AttributeKey<String> DB_MONGODB_COLLECTION =
+      AttributeKey.stringKey("db.mongodb.collection");
+
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, CommandStartedEvent event) {
     String collectionName = collectionName(event);
     if (collectionName != null) {
-      attributes.put(DB_MONGODB_COLLECTION, collectionName);
+      if (emitStableDatabaseSemconv()) {
+        attributes.put(DB_COLLECTION_NAME, collectionName);
+      }
+      if (emitOldDatabaseSemconv()) {
+        attributes.put(DB_MONGODB_COLLECTION, collectionName);
+      }
     }
   }
 

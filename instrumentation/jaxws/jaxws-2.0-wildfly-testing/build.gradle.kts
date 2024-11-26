@@ -12,11 +12,16 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jaxws:jaxws-2.0:javaagent"))
-  testInstrumentation(project(":instrumentation:jaxws:jaxws-2.0-cxf-3.0:javaagent"))
+  testInstrumentation(project(":instrumentation:jaxws:jaxws-cxf-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jaxws:jaxws-jws-api-1.1:javaagent"))
 
   // wildfly version used to run tests
   testServer("org.wildfly:wildfly-dist:18.0.0.Final@zip")
+}
+
+otelJava {
+  // due to security manager deprecation this test does not work on jdk 23 with default configuration
+  maxJavaVersionForTests.set(JavaVersion.VERSION_22)
 }
 
 tasks {

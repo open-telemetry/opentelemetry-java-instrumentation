@@ -6,10 +6,85 @@
   ],
   "properties": [
     {
+      "name": "otel.attribute.count.limit",
+      "type": "java.lang.Integer",
+      "description": "The maximum number of attributes. Applies to spans, span events, span links, and logs.",
+      "defaultValue": 128
+    },
+    {
+      "name": "otel.attribute.value.length.limit",
+      "type": "java.lang.String",
+      "description": "The maximum length of attribute values. Applies to spans and logs. By default, there is no limit."
+    },
+    {
+      "name": "otel.blrp.export.timeout",
+      "type": "java.lang.String",
+      "description": "The maximum allowed time, in milliseconds, to export OTLP log batch data.<br/>Durations can be of the form <code>{number}{unit}</code>, where unit is one of:<ul><li>ms<li>s<li>m<li>h<li>d</ul><p>If no unit is specified, milliseconds is the assumed duration unit.",
+      "defaultValue": 30000
+    },
+    {
+      "name": "otel.blrp.max.export.batch.size",
+      "type": "java.lang.Integer",
+      "description": "The maximum OTLP log batch size.",
+      "defaultValue": 512
+    },
+    {
+      "name": "otel.blrp.max.queue.size",
+      "type": "java.lang.Integer",
+      "description": "The maximum OTLP log batch queue size.",
+      "defaultValue": 2048
+    },
+    {
+      "name": "otel.blrp.schedule.delay",
+      "type": "java.lang.String",
+      "description": "The interval, in milliseconds, between two consecutive OTLP log batch exports.<br/>Durations can be of the form <code>{number}{unit}</code>, where unit is one of:<ul><li>ms<li>s<li>m<li>h<li>d</ul><p>If no unit is specified, milliseconds is the assumed duration unit.",
+      "defaultValue": 1000
+    },
+    {
+      "name": "otel.bsp.schedule.delay",
+      "type": "java.lang.String",
+      "description": "The interval, in milliseconds, between two consecutive OTLP span batch exports.<br/>Durations can be of the form <code>{number}{unit}</code>, where unit is one of:<ul><li>ms<li>s<li>m<li>h<li>d</ul><p>If no unit is specified, milliseconds is the assumed duration unit.",
+      "defaultValue": 5000
+    },
+    {
+      "name": "otel.bsp.export.timeout",
+      "type": "java.lang.String",
+      "description": "The maximum allowed time, in milliseconds, to export OTLP span batch data.<br/>Durations can be of the form <code>{number}{unit}</code>, where unit is one of:<ul><li>ms<li>s<li>m<li>h<li>d</ul><p>If no unit is specified, milliseconds is the assumed duration unit.",
+      "defaultValue": 30000
+    },
+    {
+      "name": "otel.bsp.max.export.batch.size",
+      "type": "java.lang.Integer",
+      "description": "The maximum OTLP span batch size.",
+      "defaultValue": 512
+    },
+    {
+      "name": "otel.bsp.max.queue.size",
+      "type": "java.lang.Integer",
+      "description": "The maximum OTLP span batch queue size.",
+      "defaultValue": 2048
+    },
+    {
       "name": "otel.experimental.exporter.otlp.retry.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable experimental retry support. See https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/autoconfigure/README.md#otlp-exporter-retry.",
       "defaultValue": false
+    },
+    {
+      "name": "otel.experimental.metrics.cardinality.limit",
+      "type": "java.lang.Integer",
+      "description": "If set, configure experimental cardinality limit. The value dictates the maximum number of distinct points per metric.",
+      "defaultValue": 2000
+    },
+    {
+      "name": "otel.experimental.metrics.view.config",
+      "type": "java.util.List<java.lang.String>",
+      "description": "View file configuration See https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/incubator/README.md#view-file-configuration."
+    },
+    {
+      "name": "otel.experimental.resource.disabled.keys",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Filter out resource entries with these keys."
     },
     {
       "name": "otel.exporter.otlp.certificate",
@@ -198,6 +273,115 @@
       "defaultValue": "http://localhost:9411/api/v2/spans"
     },
     {
+      "name": "otel.instrumentation.annotations.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the <code>@WithSpan</code> annotation.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.common.db-statement-sanitizer.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables the DB statement sanitization.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.common.default-enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables all instrumentations. Set to <code>false</code> to disable all instrumentations and then enable specific modules individually, e.g. <code>otel.instrumentation.jdbc.enabled=true</code>.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.common.peer-service-mapping",
+      "type": "java.util.Map<java.lang.String, java.lang.String>",
+      "description": "Used to specify a mapping from host names or IP addresses to peer services, as a comma-separated list of <code>host_or_ip=user_assigned_name</code> pairs. The peer service is added as an attribute to a span whose host or IP address match the mapping. See https://opentelemetry.io/docs/zero-code/java/agent/configuration/#peer-service-name."
+    },
+    {
+      "name": "otel.instrumentation.http.client.capture-request-headers",
+      "type": "java.util.List<java.lang.String>",
+      "description": "List of HTTP request headers to capture in HTTP clients."
+    },
+    {
+      "name": "otel.instrumentation.http.client.capture-response-headers",
+      "type": "java.util.List<java.lang.String>",
+      "description": "List of HTTP response headers to capture in HTTP clients."
+    },
+    {
+      "name": "otel.instrumentation.http.client.emit-experimental-telemetry",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of experimental HTTP client telemetry. Add the <code>http.request.body.size</code> and <code>http.response.body.size> attributes to spans, and record the <code>http.client.request.size</code> and <code>http.client.response.size</code> metrics.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.http.known-methods",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as <code>_OTHER</code>.",
+      "defaultValue": "CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE"
+    },
+    {
+      "name": "otel.instrumentation.http.server.capture-request-headers",
+      "type": "java.util.List<java.lang.String>",
+      "description": "List of HTTP request headers to capture in HTTP servers."
+    },
+    {
+      "name": "otel.instrumentation.http.server.capture-response-headers",
+      "type": "java.util.List<java.lang.String>",
+      "description": "List of HTTP response headers to capture in HTTP servers."
+    },
+    {
+      "name": "otel.instrumentation.http.server.emit-experimental-telemetry",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of experimental HTTP server telemetry. Add the <code>http.request.body.size</code> and <code>http.response.body.size</code> attributes to spans, and record the <code>http.server.request.body.size</code> and <code>http.server.response.body.size</code> metrics.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.jdbc.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the JDBC instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.jdbc.statement-sanitizer.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables the DB statement sanitization.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.kafka.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the Kafka instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.kafka.experimental-span-attributes",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of experimental Kafka span attributes.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.mongo.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the Mongo client instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.mongo.statement-sanitizer.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables the DB statement sanitization.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.log4j-appender.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the Log4J2 appender instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.logback-appender.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the Logback appender instrumentation.",
+      "defaultValue": true
+    },
+    {
       "name": "otel.instrumentation.logback-appender.experimental.capture-code-attributes",
       "type": "java.lang.Boolean",
       "description": "Enable the capture of source code attributes. Note that capturing source code attributes at logging sites might add a performance overhead.",
@@ -228,14 +412,96 @@
       "defaultValue": false
     },
     {
+      "name": "otel.instrumentation.logback-appender.experimental.capture-logstash-attributes",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of Logstash attributes, supported are those added to logs via `Markers.append()`, `Markers.appendEntries()`, `Markers.appendArray()` and `Markers.appendRaw()` methods.",
+      "defaultValue": false
+    },
+    {
       "name": "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
+      "type": "java.util.List<java.lang.String>",
+      "description": "MDC attributes to capture. Use the wildcard character <code>*</code> to capture all attributes."
+    },
+    {
+      "name": "otel.instrumentation.logback-mdc.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the Logback MDC instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.logback-mdc.add-baggage",
+      "type": "java.lang.Boolean",
+      "description": "Enable exposing baggage attributes through MDC.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.common.logging.trace-id",
       "type": "java.lang.String",
-      "description": "Comma separated list of MDC attributes to capture. Use the wildcard character <code>*</code> to capture all attributes."
+      "description": "Customize MDC key name for the trace id.",
+      "defaultValue": "trace_id"
+    },
+    {
+      "name": "otel.instrumentation.common.logging.span-id",
+      "type": "java.lang.String",
+      "description": "Customize MDC key name for the span id.",
+      "defaultValue": "span_id"
+    },
+    {
+      "name": "otel.instrumentation.common.logging.trace-flags",
+      "type": "java.lang.String",
+      "description": "Customize MDC key name for the trace flags.",
+      "defaultValue": "trace_flags"
+    },
+    {
+      "name": "otel.instrumentation.micrometer.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the Micrometer instrumentation.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.r2dbc.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the R2DBC (reactive JDBC) instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.r2dbc.statement-sanitizer.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables the DB statement sanitization.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.spring-web.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the RestTemplate instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.spring-webflux.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the WebClient instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.spring-webmvc.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the Servlet instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.java.enabled.resource.providers",
+      "type": "java.util.List<java.lang.String>",
+      "description": "Enables one or more <code>ResourceProvider</code> types. If unset, all resource providers are enabled. Each entry is the fully qualified classname of a <code>ResourceProvider</code>."
+    },
+    {
+      "name": "otel.java.disabled.resource.providers",
+      "type": "java.util.List<java.lang.String>",
+      "description": " Disables one or more <code>ResourceProvider</code> types. Each entry is the fully qualified classname of a <code>ResourceProvider</code>."
     },
     {
       "name": "otel.logs.exporter",
-      "type": "java.lang.String",
-      "description": "List of exporters to be used for logs, separated by commas.",
+      "type": "java.util.List<java.lang.String>",
+      "description": "List of exporters to be used for logs.",
       "defaultValue": "otlp"
     },
     {
@@ -245,21 +511,78 @@
       "defaultValue": "60000"
     },
     {
-      "name": "otel.metrics.exporter",
+      "name": "otel.metrics.exemplar.filter",
       "type": "java.lang.String",
-      "description": "List of exporters to be used for metrics, separated by commas.",
+      "description": "The filter for exemplar sampling.",
+      "defaultValue": "TRACE_BASED"
+    },
+    {
+      "name": "otel.metrics.exporter",
+      "type": "java.util.List<java.lang.String>",
+      "description": "List of exporters to be used for metrics.",
       "defaultValue": "otlp"
+    },
+    {
+      "name": "otel.propagators",
+      "type": "java.util.List<java.lang.String>",
+      "description": "List of propagators to be used for context propagation.",
+      "defaultValue": "tracecontext,baggage"
+    },
+    {
+      "name": "otel.resource.attributes",
+      "type": "java.util.Map<java.lang.String, java.lang.String>",
+      "description": "Resource attributes to be added to all spans. In addition to these attributes, the resource will also include attributes discovered from the runtime, such as <code>host.name</code> and <code>process.id</code>."
+    },
+    {
+      "name": "otel.sdk.disabled",
+      "type": "java.lang.Boolean",
+      "description": "Disable the OpenTelemetry Spring Starter.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.service.name",
+      "type": "java.lang.String",
+      "description": "Specify logical service name. Takes precedence over <code>service.name</code> defined with <code>otel.resource.attributes</code>."
+    },
+    {
+      "name": "otel.span.attribute.value.length.limit",
+      "type": "java.lang.Integer",
+      "description": "The maximum length of span attribute values. Takes precedence over <code>otel.attribute.value.length.limit</code>. By default, there is no limit."
+    },
+    {
+      "name": "otel.span.attribute.count.limit",
+      "type": "java.lang.Integer",
+      "description": "The maximum number of attributes per span. Takes precedence over <code>otel.attribute.count.limit<code>.",
+      "defaultValue": 128
+    },
+    {
+      "name": "otel.span.event.count.limit",
+      "type": "java.lang.Integer",
+      "description": "The maximum number of events per span.",
+      "defaultValue": 128
+    },
+    {
+      "name": "otel.span.link.count.limit",
+      "type": "java.lang.Integer",
+      "description": "The maximum number of links per span.",
+      "defaultValue": 128
     },
     {
       "name": "otel.traces.exporter",
-      "type": "java.lang.String",
-      "description": "List of exporters to be used for tracing, separated by commas.",
+      "type": "java.util.List<java.lang.String>",
+      "description": "List of exporters to be used for tracing.",
       "defaultValue": "otlp"
     },
     {
-      "name": "otel.traces.sampler.probability",
+      "name": "otel.traces.sampler",
+      "type": "java.lang.String",
+      "description": "The sampler to use for tracing.",
+      "defaultValue": "parentbased_always_on"
+    },
+    {
+      "name": "otel.traces.sampler.arg",
       "type": "java.lang.Double",
-      "description": "The probability of sampling.<br/>The value should be within [0.0, 1.0]. 1.0 means keep everything, 0.0 means drop all spans.",
+      "description": "An argument to the configured tracer if supported, for example a ratio.",
       "defaultValue": 1.0
     }
   ],
@@ -340,12 +663,33 @@
       "name": "otel.logs.exporter",
       "values": [
         {
+          "value": "console",
+          "description": "The console exporter prints exported logs to stdout. It's mainly used for testing and debugging."
+        },
+        {
           "value": "none",
           "description": "No autoconfigured exporter."
         },
         {
           "value": "otlp",
           "description": "OpenTelemetry Protocol (OTLP) exporter."
+        }
+      ]
+    },
+    {
+      "name": "otel.metrics.exemplar.filter",
+      "values": [
+        {
+          "value": "ALWAYS_ON",
+          "description": "Take all exemplars."
+        },
+        {
+          "value": "ALWAYS_OFF",
+          "description": "Drop all exemplars."
+        },
+        {
+          "value": "TRACE_BASED",
+          "description": "Choose exemplars that correspond to a sampled span."
         }
       ]
     },
@@ -353,8 +697,8 @@
       "name": "otel.metrics.exporter",
       "values": [
         {
-          "value": "logging",
-          "description": "The logging exporter prints exported metrics to stdout. It's mainly used for testing and debugging."
+          "value": "console",
+          "description": "The console exporter prints exported metrics to stdout. It's mainly used for testing and debugging."
         },
         {
           "value": "none",
@@ -367,11 +711,44 @@
       ]
     },
     {
+      "name": "otel.propagators",
+      "values": [
+        {
+          "value": "baggage",
+          "description": "The Baggage propagator propagates baggage using the W3C Baggage format. See https://www.w3.org/TR/baggage/."
+        },
+        {
+          "value": "b3",
+          "description": "The B3 propagator propagates trace context using the B3 single-header format: See https://github.com/openzipkin/b3-propagation#single-header."
+        },
+        {
+          "value": "b3multi",
+          "description": "The B3 propagator propagates trace context using the B3 multi-header format: See https://github.com/openzipkin/b3-propagation#multiple-headers."
+        },
+        {
+          "value": "jaeger",
+          "description": "The Jaeger propagator propagates trace context using the Jaeger format. See https://www.jaegertracing.io/docs/1.21/client-libraries/#propagation-format."
+        },
+        {
+          "value": "ottrace",
+          "description": "The OpenTelemetry Trace Context propagator propagates trace context using the OpenTelemetry format. See https://github.com/opentracing/specification/blob/master/rfc/trace_identifiers.md."
+        },
+        {
+          "value": "tracecontext",
+          "description": "The Trace Context propagator propagates trace context using the W3C Trace Context format (add `baggage` as well to include W3C baggage). See https://www.w3.org/TR/trace-context/."
+        },
+        {
+          "value": "xray",
+          "description": "The AWS X-Ray propagator propagates trace context using the AWS X-Ray format. See https://docs.aws.amazon.com/xray/latest/devguide/xray-concepts.html#xray-concepts-tracingheader."
+        }
+      ]
+    },
+    {
       "name": "otel.traces.exporter",
       "values": [
         {
-          "value": "logging",
-          "description": "The logging exporter prints the name of the span along with its attributes to stdout. It's mainly used for testing and debugging."
+          "value": "console",
+          "description": "The console exporter prints the name of the span along with its attributes to stdout. It's mainly used for testing and debugging."
         },
         {
           "value": "none",
@@ -384,6 +761,35 @@
         {
           "value": "zipkin",
           "description": "Zipkin exporter."
+        }
+      ]
+    },
+    {
+      "name": "otel.traces.sampler",
+      "values": [
+        {
+          "value": "always_on",
+          "description": "Keep all spans."
+        },
+        {
+          "value": "always_off",
+          "description": "Drop all spans."
+        },
+        {
+          "value": "traceidratio",
+          "description": "Keep a ratio of <code>otel.traces.sampler.arg<code> of all spans."
+        },
+        {
+          "value": "parentbased_always_on",
+          "description": "Keep all spans where the parent is also kept. If there is no parent, keep all spans."
+        },
+        {
+          "value": "parentbased_always_off",
+          "description": "Keep all spans where the parent is also kept. If there is no parent, drop all spans."
+        },
+        {
+          "value": "parentbased_traceidratio",
+          "description": "Keep all spans where the parent is also kept. If there is no parent, keep a ratio of <code>otel.traces.sampler.arg<code> of all spans."
         }
       ]
     }

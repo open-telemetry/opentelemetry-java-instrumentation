@@ -4,7 +4,12 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.AwsIncubatingAttributes
+import io.opentelemetry.semconv.ServerAttributes
+import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.NetworkAttributes
+import io.opentelemetry.semconv.UrlAttributes
 import spock.lang.Shared
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
@@ -56,16 +61,17 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "rpc.method" "CreateQueue"
             "aws.queue.name" queueName
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
+            "rpc.method" "CreateQueue"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
@@ -78,16 +84,16 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
+            "aws.bucket.name" bucketName
             "rpc.method" "CreateBucket"
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
-            "aws.bucket.name" bucketName
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "PUT"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "PUT"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
@@ -100,16 +106,17 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "rpc.method" "GetQueueAttributes"
             "aws.queue.url" queueUrl
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
+            "rpc.method" "GetQueueAttributes"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
@@ -122,16 +129,17 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "rpc.method" "SetQueueAttributes"
             "aws.queue.url" queueUrl
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
+            "rpc.method" "SetQueueAttributes"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
@@ -148,12 +156,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "PUT"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "PUT"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
@@ -169,12 +177,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "PUT"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "PUT"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
           }
         }
         span(1) {
@@ -184,20 +192,21 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "rpc.method" "ReceiveMessage"
             "aws.queue.url" queueUrl
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
+            "rpc.method" "ReceiveMessage"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
-            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "s3ToSqsTestQueue"
-            "$SemanticAttributes.MESSAGING_OPERATION" "process"
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
+            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS
+            "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "s3ToSqsTestQueue"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
+            "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
           }
         }
         span(2) {
@@ -219,12 +228,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
@@ -240,12 +249,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "DELETE"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 204
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "DELETE"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 204
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
@@ -261,12 +270,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "DELETE"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 204
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "DELETE"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 204
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
@@ -278,16 +287,17 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "rpc.method" "PurgeQueue"
             "aws.queue.url" queueUrl
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
+            "rpc.method" "PurgeQueue"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
@@ -332,16 +342,17 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "rpc.method" "CreateQueue"
             "aws.queue.name" queueName
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
+            "rpc.method" "CreateQueue"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
@@ -353,16 +364,17 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "rpc.method" "GetQueueAttributes"
             "aws.queue.url" queueUrl
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
+            "rpc.method" "GetQueueAttributes"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
@@ -378,12 +390,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "PUT"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "PUT"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
@@ -395,15 +407,16 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
             "rpc.method" "CreateTopic"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSNS"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
@@ -415,16 +428,17 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
             "rpc.method" "Subscribe"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSNS"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topicArn
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
+            "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" topicArn
           }
         }
       }
@@ -436,16 +450,17 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "rpc.method" "SetQueueAttributes"
             "aws.queue.url" queueUrl
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
+            "rpc.method" "SetQueueAttributes"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
@@ -457,16 +472,17 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
             "rpc.method" "SetTopicAttributes"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSNS"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" topicArn
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
+            "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" topicArn
           }
         }
       }
@@ -482,12 +498,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "PUT"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "PUT"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
@@ -503,12 +519,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "PUT"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "PUT"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
@@ -520,20 +536,21 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "rpc.method" "ReceiveMessage"
             "aws.queue.url" queueUrl
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
+            "rpc.method" "ReceiveMessage"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
-            "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
-            "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "s3ToSnsToSqsTestQueue"
-            "$SemanticAttributes.MESSAGING_OPERATION" "process"
-            "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
+            "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS
+            "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "s3ToSnsToSqsTestQueue"
+            "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "process"
+            "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
           }
         }
         span(1) {
@@ -555,12 +572,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
@@ -576,12 +593,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "DELETE"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 204
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "DELETE"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 204
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
@@ -597,12 +614,12 @@ class S3TracingTest extends AgentInstrumentationSpecification {
             "rpc.system" "aws-api"
             "rpc.service" "Amazon S3"
             "aws.bucket.name" bucketName
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "DELETE"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 204
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "DELETE"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 204
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }
@@ -614,16 +631,17 @@ class S3TracingTest extends AgentInstrumentationSpecification {
           attributes {
             "aws.agent" "java-aws-sdk"
             "aws.endpoint" String
-            "rpc.method" "PurgeQueue"
             "aws.queue.url" queueUrl
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" String
+            "rpc.method" "PurgeQueue"
             "rpc.system" "aws-api"
             "rpc.service" "AmazonSQS"
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "POST"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.URL_FULL" { it.startsWith("http://") }
-            "$SemanticAttributes.SERVER_ADDRESS" String
-            "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-            "$SemanticAttributes.SERVER_PORT" { it == null || Number }
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "POST"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$UrlAttributes.URL_FULL" { it.startsWith("http://") }
+            "$ServerAttributes.SERVER_ADDRESS" String
+            "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+            "$ServerAttributes.SERVER_PORT" { it == null || Number }
           }
         }
       }

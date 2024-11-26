@@ -16,6 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContextHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jms.MessageWithDestination;
@@ -59,6 +60,10 @@ public class SpringJmsMessageListenerInstrumentation implements TypeInstrumentat
         @Advice.Local("otelScope") Scope scope) {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
+      Context receiveContext = JmsReceiveContextHolder.getReceiveContext(parentContext);
+      if (receiveContext != null) {
+        parentContext = receiveContext;
+      }
       request = MessageWithDestination.create(JavaxMessageAdapter.create(message), null);
 
       if (!listenerInstrumenter().shouldStart(parentContext, request)) {

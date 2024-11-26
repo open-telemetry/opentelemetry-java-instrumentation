@@ -5,10 +5,11 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ResourceAttributes;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
@@ -20,6 +21,15 @@ import java.util.regex.Pattern;
 
 /** Factory of a {@link Resource} which provides information about the current running process. */
 public final class ProcessResource {
+
+  // copied from ProcessIncubatingAttributes
+  private static final AttributeKey<List<String>> PROCESS_COMMAND_ARGS =
+      AttributeKey.stringArrayKey("process.command_args");
+  private static final AttributeKey<String> PROCESS_COMMAND_LINE =
+      AttributeKey.stringKey("process.command_line");
+  private static final AttributeKey<String> PROCESS_EXECUTABLE_PATH =
+      AttributeKey.stringKey("process.executable.path");
+  private static final AttributeKey<Long> PROCESS_PID = AttributeKey.longKey("process.pid");
 
   // Note: This pattern doesn't support file paths with spaces in them.
   // Important: This is statically used in buildResource, so must be declared/initialized first.
@@ -55,7 +65,7 @@ public final class ProcessResource {
     long pid = ProcessPid.getPid();
 
     if (pid >= 0) {
-      attributes.put(ResourceAttributes.PROCESS_PID, pid);
+      attributes.put(PROCESS_PID, pid);
     }
 
     String javaHome = null;
@@ -77,7 +87,7 @@ public final class ProcessResource {
         executablePath.append(".exe");
       }
 
-      attributes.put(ResourceAttributes.PROCESS_EXECUTABLE_PATH, executablePath.toString());
+      attributes.put(PROCESS_EXECUTABLE_PATH, executablePath.toString());
 
       String[] args = ProcessArguments.getProcessArguments();
       // This will only work with Java 9+ but provides everything except the executablePath.
@@ -85,7 +95,7 @@ public final class ProcessResource {
         List<String> commandArgs = new ArrayList<>(args.length + 1);
         commandArgs.add(executablePath.toString());
         commandArgs.addAll(Arrays.asList(args));
-        attributes.put(ResourceAttributes.PROCESS_COMMAND_ARGS, commandArgs);
+        attributes.put(PROCESS_COMMAND_ARGS, commandArgs);
       } else { // Java 8
         StringBuilder commandLine = new StringBuilder(executablePath);
         for (String arg : runtime.getInputArguments()) {
@@ -101,11 +111,11 @@ public final class ProcessResource {
           }
           commandLine.append(' ').append(javaCommand);
         }
-        attributes.put(ResourceAttributes.PROCESS_COMMAND_LINE, commandLine.toString());
+        attributes.put(PROCESS_COMMAND_LINE, commandLine.toString());
       }
     }
 
-    return Resource.create(attributes.build(), ResourceAttributes.SCHEMA_URL);
+    return Resource.create(attributes.build(), SchemaUrls.V1_24_0);
   }
 
   private ProcessResource() {}

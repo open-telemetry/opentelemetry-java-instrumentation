@@ -33,7 +33,7 @@ testing {
         implementation("org.testcontainers:testcontainers")
         if (latestDepTest) {
           implementation("org.hibernate.reactive:hibernate-reactive-core:1.+")
-          implementation("io.vertx:vertx-pg-client:+")
+          implementation("io.vertx:vertx-pg-client:4.+")
         } else {
           implementation("org.hibernate.reactive:hibernate-reactive-core:1.0.0.Final")
           implementation("io.vertx:vertx-pg-client:4.1.5")
@@ -46,8 +46,8 @@ testing {
       dependencies {
         implementation("org.testcontainers:testcontainers")
         if (latestDepTest) {
-          implementation("org.hibernate.reactive:hibernate-reactive-core:2.+")
-          implementation("io.vertx:vertx-pg-client:+")
+          implementation("org.hibernate.reactive:hibernate-reactive-core:latest.release")
+          implementation("io.vertx:vertx-pg-client:latest.release")
         } else {
           implementation("org.hibernate.reactive:hibernate-reactive-core:2.0.0.Final")
           implementation("io.vertx:vertx-pg-client:4.4.2")
@@ -79,7 +79,19 @@ tasks {
     }
   }
 
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
   check {
     dependsOn(testing.suites)
+    dependsOn(testStableSemconv)
+  }
+}
+
+if (!latestDepTest) {
+  // https://bugs.openjdk.org/browse/JDK-8320431
+  otelJava {
+    maxJavaVersionForTests.set(JavaVersion.VERSION_21)
   }
 }

@@ -8,11 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_32.metric
 import application.io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_15.metrics.ApplicationMeter115;
 
-class ApplicationMeter132 extends ApplicationMeter115 {
+public class ApplicationMeter132 extends ApplicationMeter115 {
 
   private final io.opentelemetry.api.metrics.Meter agentMeter;
 
-  ApplicationMeter132(io.opentelemetry.api.metrics.Meter agentMeter) {
+  public ApplicationMeter132(io.opentelemetry.api.metrics.Meter agentMeter) {
     super(agentMeter);
     this.agentMeter = agentMeter;
   }

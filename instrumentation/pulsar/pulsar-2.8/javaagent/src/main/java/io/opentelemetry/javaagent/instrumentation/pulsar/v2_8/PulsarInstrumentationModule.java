@@ -20,9 +20,12 @@ public class PulsarInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return Arrays.asList(
+        new ConsumerBaseInstrumentation(),
         new ConsumerImplInstrumentation(),
         new ProducerImplInstrumentation(),
         new MessageInstrumentation(),
-        new MessageListenerInstrumentation());
+        new MessageListenerInstrumentation(),
+        new SendCallbackInstrumentation(),
+        new TransactionImplInstrumentation());
   }
 }

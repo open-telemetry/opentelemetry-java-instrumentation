@@ -8,19 +8,23 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil;
-import io.opentelemetry.semconv.SemanticAttributes;
 import javax.annotation.Nullable;
 
 public class SnsAttributesExtractor implements AttributesExtractor<Request<?>, Response<?>> {
+
+  // copied from MessagingIncubatingAttributes
+  private static final AttributeKey<String> MESSAGING_DESTINATION_NAME =
+      AttributeKey.stringKey("messaging.destination.name");
+
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, Request<?> request) {
     String destination = findMessageDestination(request.getOriginalRequest());
-    AttributesExtractorUtil.internalSet(
-        attributes, SemanticAttributes.MESSAGING_DESTINATION_NAME, destination);
+    AttributesExtractorUtil.internalSet(attributes, MESSAGING_DESTINATION_NAME, destination);
   }
 
   /*

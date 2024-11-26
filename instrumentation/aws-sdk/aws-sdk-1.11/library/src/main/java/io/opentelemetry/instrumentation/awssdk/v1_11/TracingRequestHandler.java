@@ -49,7 +49,6 @@ final class TracingRequestHandler extends RequestHandler2 {
   }
 
   @Override
-  @SuppressWarnings("deprecation") // deprecated class to be updated once published in new location
   public void beforeRequest(Request<?> request) {
     // GeneratePresignedUrlRequest doesn't result in actual request, beforeRequest is the only
     // method called for it. Span created here would never be ended and scope would be leaked when

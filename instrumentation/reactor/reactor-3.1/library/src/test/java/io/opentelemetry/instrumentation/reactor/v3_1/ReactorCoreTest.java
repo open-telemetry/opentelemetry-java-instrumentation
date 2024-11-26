@@ -160,13 +160,18 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
 
   @Test
   void nestedNonBlocking() {
+    boolean testLatestDeps = Boolean.getBoolean("testLatestDeps");
     int result =
         testing.runWithSpan(
             "parent",
             () ->
                 Mono.defer(
                         () -> {
-                          Span.current().setAttribute("middle", "foo");
+                          // earliest tested and latest version behave differently
+                          // in latest dep test current span is "parent" not "middle"
+                          if (!testLatestDeps) {
+                            Span.current().setAttribute("middle", "foo");
+                          }
                           return Mono.fromCallable(
                                   () -> {
                                     Span.current().setAttribute("inner", "bar");
@@ -183,10 +188,12 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent(),
-                span ->
-                    span.hasName("middle")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributes(attributeEntry("middle", "foo")),
+                span -> {
+                  span.hasName("middle").hasParent(trace.getSpan(0));
+                  if (!testLatestDeps) {
+                    span.hasAttributes(attributeEntry("middle", "foo"));
+                  }
+                },
                 span ->
                     span.hasName("inner")
                         .hasParent(trace.getSpan(1))

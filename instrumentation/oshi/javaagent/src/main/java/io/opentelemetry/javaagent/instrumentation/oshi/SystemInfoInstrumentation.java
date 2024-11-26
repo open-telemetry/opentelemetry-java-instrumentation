@@ -9,6 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -28,7 +29,7 @@ public class SystemInfoInstrumentation implements TypeInstrumentation {
         isMethod()
             .and(isPublic())
             .and(isStatic())
-            .and(named("getCurrentPlatformEnum").or(named("getCurrentPlatform"))),
+            .and(namedOneOf("getCurrentPlatformEnum", "getCurrentPlatform")),
         this.getClass().getName() + "$GetCurrentPlatformEnumAdvice");
   }
 

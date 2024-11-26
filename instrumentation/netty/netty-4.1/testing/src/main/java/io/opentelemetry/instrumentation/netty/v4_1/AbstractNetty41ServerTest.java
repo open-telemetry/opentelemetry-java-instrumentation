@@ -18,6 +18,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 
 import com.google.common.collect.Sets;
 import io.netty.bootstrap.ServerBootstrap;
@@ -44,7 +45,6 @@ import io.netty.util.CharsetUtil;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
 import java.util.Collections;
 
@@ -59,9 +59,7 @@ public abstract class AbstractNetty41ServerTest extends AbstractHttpServerTest<E
   protected void configure(HttpServerTestOptions options) {
     options.setTestException(false);
     options.setHttpAttributes(
-        unused ->
-            Sets.difference(
-                DEFAULT_HTTP_ATTRIBUTES, Collections.singleton(SemanticAttributes.HTTP_ROUTE)));
+        unused -> Sets.difference(DEFAULT_HTTP_ATTRIBUTES, Collections.singleton(HTTP_ROUTE)));
   }
 
   @Override

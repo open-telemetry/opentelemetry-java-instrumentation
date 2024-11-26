@@ -13,10 +13,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.ktor.client.HttpClientConfig;
 import io.ktor.client.engine.HttpClientEngineConfig;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.ktor.internal.KtorBuilderUtil;
 import io.opentelemetry.instrumentation.ktor.v2_0.client.KtorClientTracing;
 import io.opentelemetry.instrumentation.ktor.v2_0.client.KtorClientTracingBuilder;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import kotlin.Unit;
@@ -54,12 +54,8 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
 
     @Override
     public Unit invoke(KtorClientTracingBuilder builder) {
-      OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
-      builder.setOpenTelemetry(openTelemetry);
-      builder.setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders());
-      builder.setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders());
-      builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods());
-
+      builder.setOpenTelemetry(GlobalOpenTelemetry.get());
+      KtorBuilderUtil.clientBuilderExtractor.invoke(builder).configure(AgentCommonConfig.get());
       return kotlin.Unit.INSTANCE;
     }
   }

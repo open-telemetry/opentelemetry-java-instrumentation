@@ -13,7 +13,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,6 +29,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class MessagingAttributesExtractorTest {
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
   @MethodSource("destinations")
   void shouldExtractAllAvailableAttributes(
@@ -70,22 +71,27 @@ class MessagingAttributesExtractorTest {
 
     // then
     List<MapEntry<AttributeKey<?>, Object>> expectedEntries = new ArrayList<>();
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_SYSTEM, "myQueue"));
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION_NAME, expectedDestination));
+    expectedEntries.add(entry(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "myQueue"));
+    expectedEntries.add(
+        entry(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, expectedDestination));
     if (temporary) {
-      expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY, true));
+      expectedEntries.add(
+          entry(MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY, true));
     } else {
       expectedEntries.add(
-          entry(SemanticAttributes.MESSAGING_DESTINATION_TEMPLATE, expectedDestination));
+          entry(MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPLATE, expectedDestination));
     }
     if (anonymous) {
-      expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION_ANONYMOUS, true));
+      expectedEntries.add(
+          entry(MessagingIncubatingAttributes.MESSAGING_DESTINATION_ANONYMOUS, true));
     }
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_MESSAGE_CONVERSATION_ID, "42"));
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE, 100L));
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_MESSAGE_ENVELOPE_SIZE, 120L));
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_CLIENT_ID, "43"));
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_OPERATION, operation.operationName()));
+    expectedEntries.add(
+        entry(MessagingIncubatingAttributes.MESSAGING_MESSAGE_CONVERSATION_ID, "42"));
+    expectedEntries.add(entry(MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE, 100L));
+    expectedEntries.add(entry(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ENVELOPE_SIZE, 120L));
+    expectedEntries.add(entry(AttributeKey.stringKey("messaging.client_id"), "43"));
+    expectedEntries.add(
+        entry(MessagingIncubatingAttributes.MESSAGING_OPERATION, operation.operationName()));
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     MapEntry<? extends AttributeKey<?>, ?>[] expectedEntriesArr =
@@ -94,8 +100,8 @@ class MessagingAttributesExtractorTest {
 
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.MESSAGING_MESSAGE_ID, "42"),
-            entry(SemanticAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 2L));
+            entry(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, "42"),
+            entry(MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 2L));
   }
 
   static Stream<Arguments> destinations() {

@@ -50,6 +50,10 @@ class AdviceTransformer {
       return cw.toByteArray();
     }
 
+    // Advices already using Advice.AssignReturned are assumed to be already compatible
+    // Those won't be transformed except for setting inline to false
+    boolean justDelegateAdvice = usesAssignReturned(classNode);
+
     // sort enter advice method before exit advice
     classNode.methods.sort(
         Comparator.comparingInt(
@@ -63,6 +67,9 @@ class AdviceTransformer {
             }));
 
     TransformationContext context = new TransformationContext();
+    if (justDelegateAdvice) {
+      context.disableReturnTypeChange();
+    }
     ClassVisitor cv =
         new ClassVisitor(AsmApi.VERSION, cw) {
 
@@ -74,8 +81,12 @@ class AdviceTransformer {
               @Override
               public void visitEnd() {
                 super.visitEnd();
-
-                instrument(context, this, classVisitor);
+                if (justDelegateAdvice) {
+                  applyAdviceDelegation(
+                      context, this, classVisitor, exceptions.toArray(new String[0]));
+                } else {
+                  instrument(context, this, classVisitor);
+                }
               }
             };
           }
@@ -225,13 +236,37 @@ class AdviceTransformer {
     return result;
   }
 
-  private static final Type ADVICE_ON_METHOD_ENTER = Type.getType(Advice.OnMethodEnter.class);
+  static final Type ADVICE_ON_METHOD_ENTER = Type.getType(Advice.OnMethodEnter.class);
+  private static final Type ADVICE_ASSIGN_RETURNED_TO_RETURNED =
+      Type.getType(Advice.AssignReturned.ToReturned.class);
+  private static final Type ADVICE_ASSIGN_RETURNED_TO_ARGUMENTS =
+      Type.getType(Advice.AssignReturned.ToArguments.class);
+  private static final Type ADVICE_ASSIGN_RETURNED_TO_FIELDS =
+      Type.getType(Advice.AssignReturned.ToFields.class);
+  private static final Type ADVICE_ASSIGN_RETURNED_TO_ALL_ARGUMENTS =
+      Type.getType(Advice.AssignReturned.ToAllArguments.class);
+
+  private static boolean usesAssignReturned(MethodNode source) {
+    return hasAnnotation(source, ADVICE_ASSIGN_RETURNED_TO_RETURNED)
+        || hasAnnotation(source, ADVICE_ASSIGN_RETURNED_TO_ARGUMENTS)
+        || hasAnnotation(source, ADVICE_ASSIGN_RETURNED_TO_FIELDS)
+        || hasAnnotation(source, ADVICE_ASSIGN_RETURNED_TO_ALL_ARGUMENTS);
+  }
+
+  private static boolean usesAssignReturned(ClassNode classNode) {
+    for (MethodNode mn : classNode.methods) {
+      if (usesAssignReturned(mn)) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   private static boolean isEnterAdvice(MethodNode source) {
     return hasAnnotation(source, ADVICE_ON_METHOD_ENTER);
   }
 
-  private static final Type ADVICE_ON_METHOD_EXIT = Type.getType(Advice.OnMethodExit.class);
+  static final Type ADVICE_ON_METHOD_EXIT = Type.getType(Advice.OnMethodExit.class);
 
   private static boolean isExitAdvice(MethodNode source) {
     return hasAnnotation(source, ADVICE_ON_METHOD_EXIT);
@@ -250,7 +285,7 @@ class AdviceTransformer {
     return null;
   }
 
-  private static boolean hasAnnotation(MethodNode source, Type type) {
+  static boolean hasAnnotation(MethodNode source, Type type) {
     return getAnnotationNode(source, type) != null;
   }
 
@@ -656,6 +691,14 @@ class AdviceTransformer {
       }
     }
 
+    applyAdviceDelegation(context, methodNode, classVisitor, exceptionsArray);
+  }
+
+  private static void applyAdviceDelegation(
+      TransformationContext context,
+      MethodNode methodNode,
+      ClassVisitor classVisitor,
+      String[] exceptionsArray) {
     MethodVisitor mv =
         classVisitor.visitMethod(
             methodNode.access,

@@ -13,7 +13,8 @@ import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.UrlAttributes
 import ratpack.exec.Blocking
 import ratpack.registry.Registry
 import ratpack.test.embed.EmbeddedApp
@@ -55,10 +56,10 @@ class RatpackServerTest extends Specification {
         def attributes = spanData.attributes.asMap()
 
         spanData.kind == SpanKind.SERVER
-        attributes[SemanticAttributes.HTTP_ROUTE] == "/foo"
-        attributes[SemanticAttributes.URL_PATH] == "/foo"
-        attributes[SemanticAttributes.HTTP_REQUEST_METHOD] == "GET"
-        attributes[SemanticAttributes.HTTP_RESPONSE_STATUS_CODE] == 200L
+        attributes[HttpAttributes.HTTP_ROUTE] == "/foo"
+        attributes[UrlAttributes.URL_PATH] == "/foo"
+        attributes[HttpAttributes.HTTP_REQUEST_METHOD] == "GET"
+        attributes[HttpAttributes.HTTP_RESPONSE_STATUS_CODE] == 200L
       }
     }
   }
@@ -94,10 +95,10 @@ class RatpackServerTest extends Specification {
         spanDataChild.events.any { it.name == "an-event" }
 
         def attributes = spanData.attributes.asMap()
-        attributes[SemanticAttributes.HTTP_ROUTE] == "/foo"
-        attributes[SemanticAttributes.URL_PATH] == "/foo"
-        attributes[SemanticAttributes.HTTP_REQUEST_METHOD] == "GET"
-        attributes[SemanticAttributes.HTTP_RESPONSE_STATUS_CODE] == 200L
+        attributes[HttpAttributes.HTTP_ROUTE] == "/foo"
+        attributes[UrlAttributes.URL_PATH] == "/foo"
+        attributes[HttpAttributes.HTTP_REQUEST_METHOD] == "GET"
+        attributes[HttpAttributes.HTTP_RESPONSE_STATUS_CODE] == 200L
       }
     }
   }
@@ -152,10 +153,10 @@ class RatpackServerTest extends Specification {
         spanDataChild2.events.any { it.name == "an-event" }
 
         def attributes = spanData.attributes.asMap()
-        attributes[SemanticAttributes.HTTP_ROUTE] == "/foo"
-        attributes[SemanticAttributes.URL_PATH] == "/foo"
-        attributes[SemanticAttributes.HTTP_REQUEST_METHOD] == "GET"
-        attributes[SemanticAttributes.HTTP_RESPONSE_STATUS_CODE] == 200L
+        attributes[HttpAttributes.HTTP_ROUTE] == "/foo"
+        attributes[UrlAttributes.URL_PATH] == "/foo"
+        attributes[HttpAttributes.HTTP_REQUEST_METHOD] == "GET"
+        attributes[HttpAttributes.HTTP_RESPONSE_STATUS_CODE] == 200L
       }
     }
   }

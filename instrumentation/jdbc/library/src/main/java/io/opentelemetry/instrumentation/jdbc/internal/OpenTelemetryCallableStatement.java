@@ -49,8 +49,12 @@ public class OpenTelemetryCallableStatement<S extends CallableStatement>
     extends OpenTelemetryPreparedStatement<S> implements CallableStatement {
 
   public OpenTelemetryCallableStatement(
-      S delegate, DbInfo dbInfo, String query, Instrumenter<DbRequest, Void> instrumenter) {
-    super(delegate, dbInfo, query, instrumenter);
+      S delegate,
+      OpenTelemetryConnection connection,
+      DbInfo dbInfo,
+      String query,
+      Instrumenter<DbRequest, Void> instrumenter) {
+    super(delegate, connection, dbInfo, query, instrumenter);
   }
 
   @Override

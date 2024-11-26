@@ -7,14 +7,14 @@ package io.opentelemetry.instrumentation.jetty.httpclient.v9_2;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
-import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientInstrumenterFactory;
-import java.util.ArrayList;
+import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyHttpClientInstrumenterBuilderFactory;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Consumer;
+import java.util.function.Function;
 import org.eclipse.jetty.client.HttpClientTransport;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
@@ -23,19 +23,12 @@ import org.eclipse.jetty.util.ssl.SslContextFactory;
 /** A builder of {@link JettyClientTelemetry}. */
 public final class JettyClientTelemetryBuilder {
 
-  private final OpenTelemetry openTelemetry;
-  private final List<AttributesExtractor<? super Request, ? super Response>> additionalExtractors =
-      new ArrayList<>();
-  private Consumer<HttpClientAttributesExtractorBuilder<Request, Response>> extractorConfigurer =
-      builder -> {};
-  private Consumer<HttpSpanNameExtractorBuilder<Request>> spanNameExtractorConfigurer =
-      builder -> {};
-  private boolean emitExperimentalHttpClientMetrics = false;
+  private final DefaultHttpClientInstrumenterBuilder<Request, Response> builder;
   private HttpClientTransport httpClientTransport;
   private SslContextFactory sslContextFactory;
 
   JettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {
-    this.openTelemetry = openTelemetry;
+    builder = JettyHttpClientInstrumenterBuilderFactory.create(openTelemetry);
   }
 
   @CanIgnoreReturnValue
@@ -58,7 +51,7 @@ public final class JettyClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super Request, ? super Response> attributesExtractor) {
-    additionalExtractors.add(attributesExtractor);
+    builder.addAttributeExtractor(attributesExtractor);
     return this;
   }
 
@@ -69,8 +62,7 @@ public final class JettyClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
-    extractorConfigurer =
-        extractorConfigurer.andThen(builder -> builder.setCapturedRequestHeaders(requestHeaders));
+    builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
 
@@ -81,8 +73,7 @@ public final class JettyClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
-    extractorConfigurer =
-        extractorConfigurer.andThen(builder -> builder.setCapturedResponseHeaders(responseHeaders));
+    builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
@@ -101,10 +92,7 @@ public final class JettyClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
-    extractorConfigurer =
-        extractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
-    spanNameExtractorConfigurer =
-        spanNameExtractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
+    builder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -117,7 +105,16 @@ public final class JettyClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {
-    this.emitExperimentalHttpClientMetrics = emitExperimentalHttpClientMetrics;
+    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
+    return this;
+  }
+
+  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public JettyClientTelemetryBuilder setSpanNameExtractor(
+      Function<SpanNameExtractor<? super Request>, ? extends SpanNameExtractor<? super Request>>
+          spanNameExtractorTransformer) {
+    builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
   }
 
@@ -127,15 +124,7 @@ public final class JettyClientTelemetryBuilder {
    */
   public JettyClientTelemetry build() {
     TracingHttpClient tracingHttpClient =
-        TracingHttpClient.buildNew(
-            JettyClientInstrumenterFactory.create(
-                openTelemetry,
-                extractorConfigurer,
-                spanNameExtractorConfigurer,
-                additionalExtractors,
-                emitExperimentalHttpClientMetrics),
-            sslContextFactory,
-            httpClientTransport);
+        TracingHttpClient.buildNew(builder.build(), sslContextFactory, httpClientTransport);
 
     return new JettyClientTelemetry(tracingHttpClient);
   }

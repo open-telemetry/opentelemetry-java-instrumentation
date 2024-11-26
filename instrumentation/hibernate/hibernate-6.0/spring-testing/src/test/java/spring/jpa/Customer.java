@@ -9,6 +9,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import java.util.Locale;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
@@ -55,7 +56,8 @@ public class Customer {
 
   @Override
   public String toString() {
-    return String.format("Customer[id=%d, firstName='%s', lastName='%s']", id, firstName, lastName);
+    return String.format(
+        Locale.ROOT, "Customer[id=%d, firstName='%s', lastName='%s']", id, firstName, lastName);
   }
 
   @Override

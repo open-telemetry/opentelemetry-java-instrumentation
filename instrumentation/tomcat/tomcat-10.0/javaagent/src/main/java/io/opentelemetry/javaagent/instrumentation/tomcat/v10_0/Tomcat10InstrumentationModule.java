@@ -25,7 +25,13 @@ public class Tomcat10InstrumentationModule extends InstrumentationModule {
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // only matches tomcat 10.0+
-    return hasClassesNamed("jakarta.servlet.ReadListener");
+    return hasClassesNamed("jakarta.servlet.http.HttpServletRequest")
+        .and(
+            // tomcat 10 has at least one of these two classes. Cache$EvictionOrder is present in
+            // 10.0.0, but is removed before 10.1.0. GenericUser is added before Cache$EvictionOrder
+            // is removed
+            hasClassesNamed("org.apache.catalina.users.GenericUser")
+                .or(hasClassesNamed("org.apache.catalina.webresources.Cache$EvictionOrder")));
   }
 
   @Override

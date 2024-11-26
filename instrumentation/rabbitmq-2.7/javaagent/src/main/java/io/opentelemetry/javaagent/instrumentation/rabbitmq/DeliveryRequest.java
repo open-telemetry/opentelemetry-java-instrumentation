@@ -37,7 +37,8 @@ abstract class DeliveryRequest {
     String queue = getQueue();
     if (queue == null || queue.isEmpty()) {
       return "<default> process";
-    } else if (queue.startsWith("amq.gen-")) {
+    } else if (queue.startsWith("amq.gen-") || queue.startsWith("spring.gen-")) {
+      // The spring.gen-<random uid> name comes from AnonymousQueue in the Spring AMQP library
       return "<generated> process";
     } else {
       return queue + " process";

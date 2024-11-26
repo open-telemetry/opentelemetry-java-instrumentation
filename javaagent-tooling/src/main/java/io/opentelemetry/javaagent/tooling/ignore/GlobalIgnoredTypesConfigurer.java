@@ -76,6 +76,7 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         // java.lang.ClassCircularityError: java/lang/ClassLoader$1
         // when SecurityManager is enabled. ClassLoader$1 is used in ClassLoader.checkPackageAccess
         .ignoreClass("java.lang.ClassLoader$")
+        .allowClass("java.lang.VirtualThread")
         .allowClass("java.lang.invoke.InnerClassLambdaMetafactory")
         // Concurrent instrumentation modifies the structure of
         // Cleaner class incompatibly with java9+ modules.
@@ -124,6 +125,7 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         .ignoreClassLoader("org.openjdk.nashorn.internal.runtime.ScriptLoader")
         .ignoreClassLoader("org.codehaus.janino.ByteArrayClassLoader")
         .ignoreClassLoader("org.eclipse.persistence.internal.jaxb.JaxbClassLoader")
+        .ignoreClassLoader("com.alibaba.fastjson.util.ASMClassLoader")
         .ignoreClassLoader(AgentClassLoader.class.getName())
         .ignoreClassLoader(ExtensionClassLoader.class.getName())
         .ignoreClassLoader(InstrumentationModuleClassLoader.class.getName());

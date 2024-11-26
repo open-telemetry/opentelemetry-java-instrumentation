@@ -4,8 +4,35 @@
     "config:base"
   ],
   "ignorePaths": ["instrumentation/**"],
-  "baseBranches": ["main", "release/v1.32.x"],
+  // needed in order to get patch-only updates in package rules below
+  // unfortunately you can't combine updateTypes and separateMinorPatch in the same package rule
+  // so we have to apply it globally here, see
+  // https://github.com/renovatebot/renovate/discussions/8399#discussioncomment-305798
+  "separateMinorPatch": true,
   "packageRules": [
+    {
+      // this is to reduce the number of renovate PRs by consolidating them into a weekly batch
+      "matchManagers": ["github-actions"],
+      "extends": ["schedule:weekly"],
+      "groupName": "github actions",
+      "separateMinorPatch": false // overrides separateMinorPatch specified above
+    },
+    {
+      "matchPackageNames": [
+        "io.opentelemetry.contrib:opentelemetry-aws-resources",
+        "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator",
+        "io.opentelemetry.contrib:opentelemetry-gcp-resources",
+        "io.opentelemetry.contrib:opentelemetry-baggage-processor",
+        "io.opentelemetry.proto:opentelemetry-proto",
+        "io.opentelemetry.semconv:opentelemetry-semconv"
+      ],
+      // Renovate's default behavior is only to update from unstable -> unstable if it's for the
+      // major.minor.patch, under the assumption that you would want to update to the stable version
+      // of that release instead of the unstable version for a future release
+      // (TODO remove once the artifacts above release stable versions)
+      "ignoreUnstable": false,
+      "allowedVersions": "!/\\-SNAPSHOT$/"
+    },
     {
       "matchPackagePrefixes": ["ch.qos.logback:"],
       "groupName": "logback packages"
@@ -19,8 +46,8 @@
       "groupName": "quarkus packages"
     },
     {
-      "matchPackagePrefixes": ["com.gradle.enterprise"],
-      "groupName": "gradle enterprise packages"
+      "matchPackagePrefixes": ["com.gradle.develocity"],
+      "groupName": "gradle develocity packages"
     },
     {
       "matchPackagePrefixes": ["org.eclipse.jetty:"],
@@ -41,6 +68,10 @@
     {
       "matchPackagePrefixes": ["com.fasterxml.jackson"],
       "groupName": "jackson packages"
+    },
+    {
+      "matchPackagePrefixes": ["com.gradleup.shadow"],
+      "groupName": "gradle shadow packages"
     },
     {
       // prevent update to 2.4-groovy-4.0-SNAPSHOT
@@ -77,9 +108,31 @@
     },
     {
       // intentionally using Spring Boot 2 in this smoke tests
-      "matchFileNames": ["smoke-tests/images/spring-boot/build.gradle.kts"],
-      "matchPackageNames": ["org.springframework.boot", "org.springframework.boot:spring-boot-dependencies"],
-      "matchUpdateTypes": ["major"],
+      // new versions of Spring Boot 3 are tested with
+      // https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/dc4330e0a3060bd7d8c4090ad0b8fc4727e68113/settings.gradle.kts#L43-L45
+      "matchFileNames": [
+        "smoke-tests/images/spring-boot/build.gradle.kts",
+        "smoke-tests-otel-starter/spring-boot-2/build.gradle.kts",
+        "smoke-tests-otel-starter/spring-boot-common/build.gradle.kts",
+        "smoke-tests-otel-starter/spring-boot-reactive-2/build.gradle.kts",
+        "smoke-tests-otel-starter/spring-boot-reactive-common/build.gradle.kts",
+        "smoke-tests-otel-starter/spring-smoke-testing/build.gradle.kts"
+      ],
+      "matchPackageNames": [
+        "org.slf4j:slf4j-api",
+        "org.springframework.boot:org.springframework.boot.gradle.plugin", // this is for plugin id "org.springframework.boot"
+        "org.springframework.boot:spring-boot-dependencies"],
+      "matchUpdateTypes": ["major", "minor"],
+      "enabled": false,
+    },
+    {
+      // intentionally using Spring Boot 2 in this smoke tests
+      "matchFileNames": [
+        "smoke-tests-otel-starter/spring-boot-2/build.gradle.kts",
+        "smoke-tests-otel-starter/spring-boot-reactive-2/build.gradle.kts"
+      ],
+      "matchPackageNames": ["ch.qos.logback:logback-classic"],
+      "matchUpdateTypes": ["minor"],
       "enabled": false,
     },
     {
@@ -97,6 +150,14 @@
       "enabled": false
     },
     {
+      // intentionally pinning specifically to guice 5 in the play smoke test
+      // until we are able to test against the latest version of play
+      "matchFileNames": ["smoke-tests/images/play/build.gradle.kts"],
+      "matchPackagePrefixes": ["com.google.inject:", "com.google.inject.extensions:"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
       // intentionally aligning both netty 4.0 and 4.1 version in this convention
       "matchFileNames": ["conventions/src/main/kotlin/otel.java-conventions.gradle.kts"],
       "matchPackageNames": ["io.netty:netty-bom"],
@@ -106,7 +167,7 @@
     {
       // intentionally using scala 2.11 in otel.scala-conventions.gradle.kts
       "matchFileNames": ["conventions/src/main/kotlin/otel.scala-conventions.gradle.kts"],
-      "matchPackagePrefixes": ["org.scala-lang:scala-library"],
+      "matchPackageNames": ["org.scala-lang:scala-library"],
       "matchUpdateTypes": ["major", "minor"],
       "enabled": false
     },

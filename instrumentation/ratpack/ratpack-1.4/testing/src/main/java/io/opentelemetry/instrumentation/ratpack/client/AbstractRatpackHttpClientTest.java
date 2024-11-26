@@ -148,9 +148,10 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
     optionsBuilder.setHttpAttributes(this::computeHttpAttributes);
 
     optionsBuilder.disableTestRedirects();
-
     // these tests will pass, but they don't really test anything since REQUEST is Void
     optionsBuilder.disableTestReusedRequest();
+
+    optionsBuilder.spanEndsAfterBody();
   }
 
   protected Set<AttributeKey<?>> computeHttpAttributes(URI uri) {

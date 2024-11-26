@@ -1,4 +1,5 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
   id("otel.library-instrumentation")
@@ -22,19 +23,14 @@ dependencies {
   latestDepTestLibrary("io.ktor:ktor-server-netty:1.+") // see ktor-2.0 module
 }
 
-tasks {
-  withType(KotlinCompile::class).configureEach {
-    kotlinOptions {
-      jvmTarget = "1.8"
-    }
-  }
-
-  compileKotlin {
-    kotlinOptions {
-      languageVersion = "1.4"
-    }
+kotlin {
+  compilerOptions {
+    jvmTarget.set(JvmTarget.JVM_1_8)
+    @Suppress("deprecation")
+    languageVersion.set(KotlinVersion.KOTLIN_1_4)
   }
 }
+
 tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

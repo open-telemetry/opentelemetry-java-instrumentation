@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -26,7 +25,8 @@ public class Tomcat7InstrumentationModule extends InstrumentationModule {
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // does not match tomcat 10.0+
-    return not(hasClassesNamed("jakarta.servlet.ReadListener"));
+    return hasClassesNamed(
+        "javax.servlet.http.HttpServletRequest", "org.apache.catalina.loader.Constants");
   }
 
   @Override

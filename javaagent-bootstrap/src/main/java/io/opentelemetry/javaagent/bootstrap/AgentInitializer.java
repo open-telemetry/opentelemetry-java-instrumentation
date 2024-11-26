@@ -26,6 +26,7 @@ public final class AgentInitializer {
   @Nullable private static ClassLoader agentClassLoader = null;
   @Nullable private static AgentStarter agentStarter = null;
   private static boolean isSecurityManagerSupportEnabled = false;
+  private static volatile boolean agentStarted = false;
 
   public static void initialize(Instrumentation inst, File javaagentFile, boolean fromPremain)
       throws Exception {
@@ -51,6 +52,7 @@ public final class AgentInitializer {
             agentStarter = createAgentStarter(agentClassLoader, inst, javaagentFile);
             if (!fromPremain || !delayAgentStart()) {
               agentStarter.start();
+              agentStarted = true;
             }
             return null;
           }
@@ -58,7 +60,11 @@ public final class AgentInitializer {
   }
 
   private static void execute(PrivilegedExceptionAction<Void> action) throws Exception {
-    if (isSecurityManagerSupportEnabled && System.getSecurityManager() != null) {
+    // When security manager support is enabled we use doPrivileged even if security manager is not
+    // present because security manager could be installed later. ByteBuddy initialization captures
+    // the access control context used during transformation. If we don't use doPrivileged here then
+    // that context will not have the privileges if security manager is installed later.
+    if (isSecurityManagerSupportEnabled) {
       doPrivilegedExceptionAction(action);
     } else {
       action.run();
@@ -145,9 +151,25 @@ public final class AgentInitializer {
           @Override
           public Void run() {
             agentStarter.start();
+            agentStarted = true;
             return null;
           }
         });
+  }
+
+  /**
+   * Check whether agent has started or not along with VM.
+   *
+   * <p>This method is used by
+   * io.opentelemetry.javaagent.tooling.AgentStarterImpl#InetAddressClassFileTransformer internally
+   * to check whether agent has started.
+   *
+   * @param vmStarted flag about whether VM has started or not.
+   * @return {@code true} if agent has started or not along with VM, {@code false} otherwise.
+   */
+  @SuppressWarnings("unused")
+  public static boolean isAgentStarted(boolean vmStarted) {
+    return vmStarted && agentStarted;
   }
 
   public static ClassLoader getExtensionsClassLoader() {

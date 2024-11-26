@@ -20,12 +20,19 @@ dependencies {
 
   compileOnly("javax.ws.rs:jsr311-api:1.1.1")
 
-  // Jackson, used by the test, dropped support for jax 1.x in 2.13+
-  testImplementation(enforcedPlatform("com.fasterxml.jackson:jackson-bom:2.12.6"))
-  testImplementation("io.dropwizard:dropwizard-testing:0.7.1")
-  testImplementation("javax.xml.bind:jaxb-api:2.2.3")
+  testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
+
+  testImplementation("org.eclipse.jetty:jetty-webapp:9.4.6.v20170531")
+  testImplementation("com.sun.jersey:jersey-servlet:1.19.4")
+  testImplementation("javax.xml.bind:jaxb-api:2.2.11")
+  testImplementation("com.sun.xml.bind:jaxb-core:2.2.11")
+  testImplementation("com.sun.xml.bind:jaxb-impl:2.2.11")
+  testImplementation("javax.activation:activation:1.1.1")
 }
 
 tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 }

@@ -74,6 +74,7 @@ class RestClientWrapper {
                       response = (Response) method.invoke(target, args);
                     } catch (Throwable exception) {
                       throwable = exception;
+                      throw throwable;
                     } finally {
                       instrumenter.end(context, otelRequest, response, throwable);
                     }
@@ -102,6 +103,7 @@ class RestClientWrapper {
                       return method.invoke(target, args);
                     } catch (Throwable exception) {
                       throwable = exception;
+                      throw throwable;
                     } finally {
                       if (throwable != null) {
                         instrumenter.end(context, otelRequest, null, throwable);

@@ -12,7 +12,7 @@ import io.opentelemetry.api.trace.SpanId
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.api.trace.StatusCode
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ExceptionAttributes
 
 import java.util.regex.Pattern
 
@@ -147,11 +147,11 @@ class SpanAssert {
 
   def errorEventWithAnyMessage(Class<Throwable> expectedClass) {
     event(0) {
-      eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+      eventName("exception")
       attributes {
-        "$SemanticAttributes.EXCEPTION_TYPE" expectedClass.canonicalName
-        "$SemanticAttributes.EXCEPTION_STACKTRACE" String
-        "$SemanticAttributes.EXCEPTION_MESSAGE" { it != null }
+        "$ExceptionAttributes.EXCEPTION_TYPE" expectedClass.canonicalName
+        "$ExceptionAttributes.EXCEPTION_STACKTRACE" String
+        "$ExceptionAttributes.EXCEPTION_MESSAGE" { it != null }
       }
     }
   }
@@ -162,12 +162,12 @@ class SpanAssert {
 
   def errorEvent(Class<Throwable> errorClass, expectedMessage, int index) {
     event(index) {
-      eventName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+      eventName("exception")
       attributes {
-        "$SemanticAttributes.EXCEPTION_TYPE" errorClass.canonicalName
-        "$SemanticAttributes.EXCEPTION_STACKTRACE" String
+        "$ExceptionAttributes.EXCEPTION_TYPE" errorClass.canonicalName
+        "$ExceptionAttributes.EXCEPTION_STACKTRACE" String
         if (expectedMessage != null) {
-          "$SemanticAttributes.EXCEPTION_MESSAGE" expectedMessage
+          "$ExceptionAttributes.EXCEPTION_MESSAGE" expectedMessage
         }
       }
     }

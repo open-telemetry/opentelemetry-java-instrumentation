@@ -21,25 +21,25 @@ import jdk.jfr.consumer.RecordedEvent;
  */
 public final class ClassesLoadedHandler implements RecordedEventHandler {
   /**
-   * process.runtime.jvm.classes.loaded is the total number of classes loaded since JVM start. See:
+   * jvm.class.loaded is the total number of classes loaded since JVM start. See:
    * https://github.com/open-telemetry/semantic-conventions/blob/main/docs/runtime/jvm-metrics.md
    */
-  private static final String METRIC_NAME_LOADED = "process.runtime.jvm.classes.loaded";
+  private static final String METRIC_NAME_LOADED = "jvm.class.loaded";
 
-  private static final String METRIC_NAME_UNLOADED = "process.runtime.jvm.classes.unloaded";
+  private static final String METRIC_NAME_UNLOADED = "jvm.class.unloaded";
 
   /**
-   * process.runtime.jvm.classes.current_loaded is the number of classes loaded at the time of
-   * jdk.ClassLoadingStatistics event emission.
+   * jvm.class.count is the number of classes loaded at the time of jdk.ClassLoadingStatistics event
+   * emission.
    */
-  private static final String METRIC_NAME_CURRENT = "process.runtime.jvm.classes.current_loaded";
+  private static final String METRIC_NAME_CURRENT = "jvm.class.count";
 
   private static final String EVENT_NAME = "jdk.ClassLoadingStatistics";
-  private static final String METRIC_DESCRIPTION_CURRENT = "Number of classes currently loaded";
+  private static final String METRIC_DESCRIPTION_CURRENT = "Number of classes currently loaded.";
   private static final String METRIC_DESCRIPTION_LOADED =
-      "Number of classes loaded since JVM start";
+      "Number of classes loaded since JVM start.";
   private static final String METRIC_DESCRIPTION_UNLOADED =
-      "Number of classes unloaded since JVM start";
+      "Number of classes unloaded since JVM start.";
 
   private final List<AutoCloseable> observables = new ArrayList<>();
 

@@ -30,9 +30,10 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.HttpAttributes;
+import io.opentelemetry.semconv.UrlAttributes;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Set;
@@ -44,7 +45,8 @@ class HttpSpanDecorator extends BaseSpanDecorator {
 
   private static final String POST_METHOD = "POST";
   private static final String GET_METHOD = "GET";
-  private static final Set<String> knownMethods = CommonConfig.get().getKnownHttpRequestMethods();
+  private static final Set<String> knownMethods =
+      AgentCommonConfig.get().getKnownHttpRequestMethods();
 
   protected String getProtocol() {
     return "http";
@@ -95,14 +97,14 @@ class HttpSpanDecorator extends BaseSpanDecorator {
       CamelDirection camelDirection) {
     super.pre(attributes, exchange, endpoint, camelDirection);
 
-    internalSet(attributes, SemanticAttributes.URL_FULL, getHttpUrl(exchange, endpoint));
+    internalSet(attributes, UrlAttributes.URL_FULL, getHttpUrl(exchange, endpoint));
 
     String method = getHttpMethod(exchange, endpoint);
     if (method == null || knownMethods.contains(method)) {
-      internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, method);
+      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
     } else {
-      internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, _OTHER);
-      internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
+      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
+      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
     }
   }
 
@@ -165,7 +167,7 @@ class HttpSpanDecorator extends BaseSpanDecorator {
     if (exchange.hasOut()) {
       Object responseCode = exchange.getOut().getHeader(Exchange.HTTP_RESPONSE_CODE);
       if (responseCode instanceof Integer) {
-        attributes.put(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, (Integer) responseCode);
+        attributes.put(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, (Integer) responseCode);
       }
     }
   }

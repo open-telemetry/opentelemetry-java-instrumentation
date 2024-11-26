@@ -13,9 +13,16 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import javax.servlet.AsyncContext;
+import javax.servlet.AsyncEvent;
+import javax.servlet.AsyncListener;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.core.Ordered;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -53,9 +60,11 @@ final class WebMvcTelemetryProducingFilter extends OncePerRequestFilter implemen
     }
 
     Context context = instrumenter.start(parentContext, request);
+    AsyncAwareHttpServletRequest asyncAwareRequest =
+        new AsyncAwareHttpServletRequest(request, response, context);
     Throwable error = null;
     try (Scope ignored = context.makeCurrent()) {
-      filterChain.doFilter(request, response);
+      filterChain.doFilter(asyncAwareRequest, response);
     } catch (Throwable t) {
       error = t;
       throw t;
@@ -63,7 +72,9 @@ final class WebMvcTelemetryProducingFilter extends OncePerRequestFilter implemen
       if (httpRouteSupport.hasMappings()) {
         HttpServerRoute.update(context, CONTROLLER, httpRouteSupport::getHttpRoute, request);
       }
-      instrumenter.end(context, request, response, error);
+      if (error != null || asyncAwareRequest.isNotAsync()) {
+        instrumenter.end(context, request, response, error);
+      }
     }
   }
 
@@ -74,5 +85,89 @@ final class WebMvcTelemetryProducingFilter extends OncePerRequestFilter implemen
   public int getOrder() {
     // Run after all HIGHEST_PRECEDENCE items
     return Ordered.HIGHEST_PRECEDENCE + 1;
+  }
+
+  private class AsyncAwareHttpServletRequest extends HttpServletRequestWrapper {
+    private final HttpServletRequest request;
+    private final HttpServletResponse response;
+    private final Context context;
+    private final AtomicBoolean listenerAttached = new AtomicBoolean();
+
+    AsyncAwareHttpServletRequest(
+        HttpServletRequest request, HttpServletResponse response, Context context) {
+      super(request);
+      this.request = request;
+      this.response = response;
+      this.context = context;
+    }
+
+    @Override
+    public AsyncContext startAsync() {
+      AsyncContext asyncContext = super.startAsync();
+      attachListener(asyncContext);
+      return asyncContext;
+    }
+
+    @Override
+    public AsyncContext startAsync(ServletRequest servletRequest, ServletResponse servletResponse) {
+      AsyncContext asyncContext = super.startAsync(servletRequest, servletResponse);
+      attachListener(asyncContext);
+      return asyncContext;
+    }
+
+    private void attachListener(AsyncContext asyncContext) {
+      if (!listenerAttached.compareAndSet(false, true)) {
+        return;
+      }
+
+      asyncContext.addListener(
+          new AsyncRequestCompletionListener(request, response, context), request, response);
+    }
+
+    boolean isNotAsync() {
+      return !listenerAttached.get();
+    }
+  }
+
+  private class AsyncRequestCompletionListener implements AsyncListener {
+    private final HttpServletRequest request;
+    private final HttpServletResponse response;
+    private final Context context;
+    private final AtomicBoolean responseHandled = new AtomicBoolean();
+
+    AsyncRequestCompletionListener(
+        HttpServletRequest request, HttpServletResponse response, Context context) {
+      this.request = request;
+      this.response = response;
+      this.context = context;
+    }
+
+    @Override
+    public void onComplete(AsyncEvent asyncEvent) {
+      if (responseHandled.compareAndSet(false, true)) {
+        instrumenter.end(context, request, response, null);
+      }
+    }
+
+    @Override
+    public void onTimeout(AsyncEvent asyncEvent) {
+      if (responseHandled.compareAndSet(false, true)) {
+        instrumenter.end(context, request, response, null);
+      }
+    }
+
+    @Override
+    public void onError(AsyncEvent asyncEvent) {
+      if (responseHandled.compareAndSet(false, true)) {
+        instrumenter.end(context, request, response, asyncEvent.getThrowable());
+      }
+    }
+
+    @Override
+    public void onStartAsync(AsyncEvent asyncEvent) {
+      asyncEvent
+          .getAsyncContext()
+          .addListener(this, asyncEvent.getSuppliedRequest(), asyncEvent.getSuppliedResponse());
+    }
   }
 }

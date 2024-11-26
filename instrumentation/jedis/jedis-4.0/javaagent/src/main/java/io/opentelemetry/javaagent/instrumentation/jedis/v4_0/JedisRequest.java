@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
@@ -22,7 +22,7 @@ import redis.clients.jedis.commands.ProtocolCommand;
 public abstract class JedisRequest {
 
   private static final RedisCommandSanitizer sanitizer =
-      RedisCommandSanitizer.create(CommonConfig.get().isStatementSanitizationEnabled());
+      RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
   public static JedisRequest create(ProtocolCommand command, List<byte[]> args) {
     return new AutoValue_JedisRequest(command, args);

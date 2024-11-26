@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentracing.contrib.dropwizard.Trace;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -31,8 +31,9 @@ class TracedMethodsExclusionTest {
                 span ->
                     span.hasName("TestClass.annotated")
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.CODE_NAMESPACE, TestClass.class.getName()),
-                            equalTo(SemanticAttributes.CODE_FUNCTION, "annotated"))));
+                            equalTo(
+                                CodeIncubatingAttributes.CODE_NAMESPACE, TestClass.class.getName()),
+                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "annotated"))));
   }
 
   @Test

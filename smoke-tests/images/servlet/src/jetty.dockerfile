@@ -15,6 +15,7 @@ RUN mkdir $JETTY_BASE && \
   cd $JETTY_BASE && \
   # depending on Jetty version one of the following commands should succeed
   java -jar /server/start.jar --add-module=ext,server,jsp,resources,deploy,jstl,websocket,http || \
+  java -jar /server/start.jar --add-module=ext,server,ee10-jsp,resources,ee10-deploy,ee10-jstl,http || \
   java -jar /server/start.jar --add-to-start=ext,server,jsp,resources,deploy,jstl,websocket,http
 
 WORKDIR $JETTY_BASE

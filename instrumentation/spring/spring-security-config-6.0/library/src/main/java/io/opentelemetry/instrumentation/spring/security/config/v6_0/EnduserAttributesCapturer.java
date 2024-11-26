@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.spring.security.config.v6_0;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.Objects;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -20,6 +20,11 @@ import org.springframework.security.core.GrantedAuthority;
  * the appropriate {@code setEnduser*Enabled(true)} method.
  */
 public final class EnduserAttributesCapturer {
+
+  // copied from EnduserIncubatingAttributes
+  private static final AttributeKey<String> ENDUSER_ID = AttributeKey.stringKey("enduser.id");
+  private static final AttributeKey<String> ENDUSER_ROLE = AttributeKey.stringKey("enduser.role");
+  private static final AttributeKey<String> ENDUSER_SCOPE = AttributeKey.stringKey("enduser.scope");
 
   private static final String DEFAULT_ROLE_PREFIX = "ROLE_";
   private static final String DEFAULT_SCOPE_PREFIX = "SCOPE_";
@@ -67,7 +72,7 @@ public final class EnduserAttributesCapturer {
       Span localRootSpan = LocalRootSpan.fromContext(otelContext);
 
       if (enduserIdEnabled && authentication.getName() != null) {
-        localRootSpan.setAttribute(SemanticAttributes.ENDUSER_ID, authentication.getName());
+        localRootSpan.setAttribute(ENDUSER_ID, authentication.getName());
       }
 
       StringBuilder roleBuilder = null;
@@ -84,10 +89,10 @@ public final class EnduserAttributesCapturer {
         }
       }
       if (roleBuilder != null) {
-        localRootSpan.setAttribute(SemanticAttributes.ENDUSER_ROLE, roleBuilder.toString());
+        localRootSpan.setAttribute(ENDUSER_ROLE, roleBuilder.toString());
       }
       if (scopeBuilder != null) {
-        localRootSpan.setAttribute(SemanticAttributes.ENDUSER_SCOPE, scopeBuilder.toString());
+        localRootSpan.setAttribute(ENDUSER_SCOPE, scopeBuilder.toString());
       }
     }
   }

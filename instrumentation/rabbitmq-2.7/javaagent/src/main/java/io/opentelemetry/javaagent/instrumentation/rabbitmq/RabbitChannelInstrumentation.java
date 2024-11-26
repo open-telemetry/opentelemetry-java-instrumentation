@@ -37,7 +37,7 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -128,6 +128,9 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
+      if (scope == null) {
+        return;
+      }
 
       scope.close();
 
@@ -151,7 +154,8 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
       if (span.getSpanContext().isValid()) {
         helper().onPublish(span, exchange, routingKey);
         if (body != null) {
-          span.setAttribute(SemanticAttributes.MESSAGING_MESSAGE_BODY_SIZE, (long) body.length);
+          span.setAttribute(
+              MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE, (long) body.length);
         }
 
         // This is the internal behavior when props are null.  We're just doing it earlier now.

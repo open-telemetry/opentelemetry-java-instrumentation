@@ -106,9 +106,9 @@ public class ContextPropagationOperatorInstrumentation implements TypeInstrument
   @SuppressWarnings("unused")
   public static class RunWithAdvice {
     @Advice.OnMethodEnter
-    public static void methodEnter(
-        @Advice.FieldValue(value = "enabled", readOnly = false) boolean enabled) {
-      enabled = true;
+    @Advice.AssignReturned.ToFields(@Advice.AssignReturned.ToFields.ToField("enabled"))
+    public static boolean methodEnter() {
+      return true;
     }
   }
 }

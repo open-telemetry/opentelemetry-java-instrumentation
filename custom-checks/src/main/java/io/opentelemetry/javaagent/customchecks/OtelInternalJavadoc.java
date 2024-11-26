@@ -42,7 +42,7 @@ public class OtelInternalJavadoc extends BugChecker implements BugChecker.ClassT
 
   @Override
   public Description matchClass(ClassTree tree, VisitorState state) {
-    if (!isPublic(tree) || !isInternal(state)) {
+    if (!isPublic(tree) || !isInternal(state) || tree.getSimpleName().toString().endsWith("Test")) {
       return Description.NO_MATCH;
     }
     String javadoc = getJavadoc(state);

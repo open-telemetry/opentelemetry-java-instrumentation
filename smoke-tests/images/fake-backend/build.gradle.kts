@@ -5,14 +5,13 @@ import java.time.format.DateTimeFormatter
 
 plugins {
   id("otel.java-conventions")
-
   id("com.bmuschko.docker-remote-api")
-  id("com.github.johnrengelman.shadow")
+  id("com.gradleup.shadow")
   id("com.google.cloud.tools.jib")
 }
 
 dependencies {
-  implementation("com.linecorp.armeria:armeria-grpc:1.27.1")
+  implementation("com.linecorp.armeria:armeria-grpc:1.31.0")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
   runtimeOnly("org.slf4j:slf4j-simple")
 }

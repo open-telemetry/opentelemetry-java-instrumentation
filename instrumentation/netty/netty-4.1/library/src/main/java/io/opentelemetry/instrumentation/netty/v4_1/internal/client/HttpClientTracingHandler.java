@@ -17,6 +17,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -27,9 +28,11 @@ public class HttpClientTracingHandler
         HttpClientResponseTracingHandler, HttpClientRequestTracingHandler> {
   private final Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter;
 
-  public HttpClientTracingHandler(Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter) {
+  public HttpClientTracingHandler(
+      Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter,
+      ProtocolEventHandler protocolEventHandler) {
     super(
-        new HttpClientResponseTracingHandler(instrumenter),
+        new HttpClientResponseTracingHandler(instrumenter, protocolEventHandler),
         new HttpClientRequestTracingHandler(instrumenter));
     this.instrumenter = instrumenter;
   }

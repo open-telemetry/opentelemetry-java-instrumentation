@@ -11,6 +11,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPort;
 import java.util.List;
@@ -39,7 +40,7 @@ class ForwardedHostAddressAndPortExtractorTest {
   @ArgumentsSource(ForwardedArgs.class)
   void shouldParseForwarded(
       List<String> headers, @Nullable String expectedAddress, @Nullable Integer expectedPort) {
-    doReturn(headers).when(getter).getHttpRequestHeader(REQUEST, "forwarded");
+    when(getter.getHttpRequestHeader(REQUEST, "forwarded")).thenReturn(headers);
 
     AddressAndPort sink = new AddressAndPort();
     underTest.extract(sink, REQUEST);
@@ -82,6 +83,7 @@ class ForwardedHostAddressAndPortExtractorTest {
 
   @ParameterizedTest
   @ArgumentsSource(HostArgs.class)
+  @SuppressWarnings("MockitoDoSetup")
   void shouldParseForwardedHost(
       List<String> headers, @Nullable String expectedAddress, @Nullable Integer expectedPort) {
     doReturn(emptyList()).when(getter).getHttpRequestHeader(REQUEST, "forwarded");
@@ -96,6 +98,7 @@ class ForwardedHostAddressAndPortExtractorTest {
 
   @ParameterizedTest
   @ArgumentsSource(HostArgs.class)
+  @SuppressWarnings("MockitoDoSetup")
   void shouldParsePseudoAuthority(
       List<String> headers, @Nullable String expectedAddress, @Nullable Integer expectedPort) {
     doReturn(emptyList()).when(getter).getHttpRequestHeader(REQUEST, "forwarded");
@@ -111,6 +114,7 @@ class ForwardedHostAddressAndPortExtractorTest {
 
   @ParameterizedTest
   @ArgumentsSource(HostArgs.class)
+  @SuppressWarnings("MockitoDoSetup")
   void shouldParseHost(
       List<String> headers, @Nullable String expectedAddress, @Nullable Integer expectedPort) {
     doReturn(emptyList()).when(getter).getHttpRequestHeader(REQUEST, "forwarded");

@@ -46,7 +46,10 @@ abstract class AbstractLettuceClientTest {
 
   protected static StatefulRedisConnection<String, String> connection;
 
+  protected static String ip;
+
   protected static String host;
+
   protected static int port;
 
   protected static String embeddedDbUri;

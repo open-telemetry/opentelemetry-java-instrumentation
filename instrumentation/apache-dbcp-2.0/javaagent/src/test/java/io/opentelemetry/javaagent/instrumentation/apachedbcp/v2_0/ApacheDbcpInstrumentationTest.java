@@ -13,7 +13,7 @@ import javax.management.ObjectName;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTest {
+class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

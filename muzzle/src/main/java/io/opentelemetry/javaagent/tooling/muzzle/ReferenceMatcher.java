@@ -294,13 +294,19 @@ public final class ReferenceMatcher {
       return null;
     }
 
+    TypeDescription superType = null;
     if (typeOnClasspath.getSuperClass() != null) {
-      MethodDescription.InDefinedShape methodOnSupertype =
-          findMethod(methodRef, typeOnClasspath.getSuperClass().asErasure());
+      superType = typeOnClasspath.getSuperClass().asErasure();
+    } else if (!"java.lang.Object".equals(typeOnClasspath.getName())) {
+      superType = TypeDescription.ForLoadedType.of(Object.class);
+    }
+    if (superType != null) {
+      MethodDescription.InDefinedShape methodOnSupertype = findMethod(methodRef, superType);
       if (methodOnSupertype != null) {
         return methodOnSupertype;
       }
     }
+
     for (TypeDescription.Generic interfaceType : typeOnClasspath.getInterfaces()) {
       MethodDescription.InDefinedShape methodOnSupertype =
           findMethod(methodRef, interfaceType.asErasure());

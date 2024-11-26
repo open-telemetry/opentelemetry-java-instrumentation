@@ -344,23 +344,172 @@ compile time for it to work.
 Use of `VirtualField` requires the `muzzle-generation` gradle plugin. Failing to use the plugin will result in
 ClassNotFoundException when trying to access the field.
 
-### Why we don't use ByteBuddy @Advice.Origin Method
+### Avoid using @Advice.Origin Method
 
-Instead of
+You shouldn't use ByteBuddy's @Advice.Origin Method method, as it
+inserts a call to `Class.getMethod(...)` in a transformed method.
 
-```
-@Advice.Origin Method method
-```
+Instead, get the declaring class and method name, as loading
+constants from a constant pool is a much simpler operation.
 
-we prefer to use
+For example:
 
 ```
 @Advice.Origin("#t") Class<?> declaringClass,
 @Advice.Origin("#m") String methodName
 ```
 
-because the former inserts a call to `Class.getMethod(...)` in transformed method. In contrast,
-getting the declaring class and method name is just loading constants from constant pool, which is
-a much simpler operation.
-
 [suppress]: https://opentelemetry.io/docs/instrumentation/java/automatic/agent-config/#suppressing-specific-auto-instrumentation
+
+## Use non-inlined advice code with `invokedynamic`
+
+Using non-inlined advice code is possible thanks to the `invokedynamic` instruction, this strategy
+is referred as "indy" in reference to this. By extension "indy modules" are the instrumentation
+modules using this instrumentation strategy.
+
+The most common way to instrument code with ByteBuddy relies on inlining, this strategy will be
+referred as "inlined" strategy as opposed to "indy".
+
+For inlined advices, the advice code is directly copied into the instrumented method.
+In addition, all helper classes are injected into the classloader of the instrumented classes.
+
+For indy, advice classes are not inlined. Instead, they are loaded alongside all helper classes
+into a special `InstrumentationModuleClassloader`, which sees the classes from both the instrumented
+application classloader and the agent classloader.
+The instrumented classes call the advice classes residing in the `InstrumentationModuleClassloader` via
+invokedynamic bytecode instructions.
+
+Using indy instrumentation has these advantages:
+
+- allows instrumentations to have breakpoints set in them and be debugged using standard debugging techniques
+- provides clean isolation of instrumentation advice from the application and other instrumentations
+- allows advice classes to contain static fields and methods which can be accessed from the advice entry points - in fact generally good development practices are enabled (whereas inlined advices are [restricted in how they can be implemented](#use-advice-classes-to-write-code-that-will-get-injected-to-the-instrumented-library-classes))
+
+### Indy modules and transition
+
+Making an instrumentation "indy" compatible (or native "indy") is not as straightforward as making it "inlined".
+However, ByteBuddy provides a set of tools and APIs that are mentioned below to make the process as smooth as possible.
+
+Due to the changes needed on most of the instrumentation modules the migration can't be achieved in a single step,
+we thus have to implement it in two steps:
+
+- `InstrumentationModule#isIndyModule` implementation return `true` (and changes needed to make it indy compatible)
+- set `inlined = false` on advice methods annotated with `@Advice.OnMethodEnter` or `@Advice.OnMethodExit`
+
+The `otel.javaagent.experimental.indy` (default `false`) configuration option allows to opt-in for
+using "indy". When set to `true`, the `io.opentelemetry.javaagent.tooling.instrumentation.indy.AdviceTransformer`
+will transform advices automatically to make them "indy native". Using this option is temporary and will
+be removed once all the instrumentations are "indy native".
+
+This configuration is automatically enabled in CI with `testIndy*` checks or when the `-PtestIndy=true` parameter is added to gradle.
+
+In order to preserve compatibility with both instrumentation strategies, we have to omit the `inlined = false`
+from the advice method annotations.
+
+We have three sets of instrumentation modules:
+- "inlined only": only compatible with "inlined", `isIndyModule` returns `false`.
+- "indy compatible": compatible with both "indy" and "inlined", do not override `isIndyModule`, advices are modified with `AdviceTransformer` to be made "indy native" or "inlined" at runtime.
+- "indy native": only compatible with "indy" `isIndyModule` returns `true`.
+
+The first step of the migration is to move all the "inlined only" to the "indy compatible" category
+by refactoring them with the limitations described below.
+
+Once everything is "indy compatible", we can evaluate changing the default value of `otel.javaagent.experimental.indy`
+to `true` and make it non-experimental.
+
+### Shared classes and common classloader
+
+By default, all the advices of an instrumentation module will be loaded into isolated classloaders,
+one per instrumentation module. Some instrumentations require to use a common classloader in order
+to preserve the semantics of `static` fields and to share classes.
+
+In order to load multiple `InstrumentationModule` implementations in the same classloader, you need to
+override the `ExperimentalInstrumentationModule#getModuleGroup` to return an identical value.
+
+### Classes injected in application classloader
+
+Injecting classes in the application classloader is possible by implementing the
+`ExperimentalInstrumentationModule#injectedClassNames` method. All the class names listed by the
+returned value will be loaded in the application classloader instead of the agent or instrumentation
+module classloader.
+
+This allows for example to access package-private methods that would not be accessible otherwise.
+
+### Advice local variables
+
+With inlined advices, declaring an advice method argument with `@Advice.Local` allows defining
+a variable that is local to the advice execution for communication between the enter and exit advices.
+
+When advices are not inlined, usage of `@Advice.Local` is not possible. It is however possible to
+return a value from the enter advice and get the value in the exit advice with a parameter annotated
+with `@Advice.Enter`, for example:
+
+```java
+@Advice.OnMethodEnter(suppress = Throwable.class, inlined = false)
+public static Object onEnter(@Advice.Argument(1) Object request) {
+  return "enterValue";
+}
+
+@Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inlined = false)
+public static void onExit(@Advice.Argument(1) Object request,
+                          @Advice.Enter Object enterValue) {
+  // do something with enterValue
+}
+```
+
+### Modifying method arguments
+
+With inlined advices, using the `@Advice.Argument` annotation on method parameter with `readOnly = false`
+allows modifying instrumented method arguments.
+
+When using non-inlined advices, reading the argument values is still done with `@Advice.Argument`
+annotated parameters, however modifying the values is done through the advice method return value
+and `@Advice.AssignReturned.ToArguments` annotation:
+
+```java
+@Advice.OnMethodEnter(suppress = Throwable.class, inlined = false)
+@Advice.AssignReturned.ToArguments(@ToArgument(1))
+public static Object onEnter(@Advice.Argument(1) Object request) {
+  return "hello";
+}
+```
+
+It is possible to modify multiple arguments at once by using an array, see usages of
+`@Advice.AssignReturned.ToArguments` for detailed examples.
+
+### Modifying method return value
+
+With inlined advices, using the `@Advice.Return` annotation on method parameter with `readOnly = false`
+allows modifying instrumented method return value on exit advice.
+
+When using non-inlined advices, reading the original return value is still done with the `@Advice.Return`
+annotated parameter, however modifying the value is done through the advice method return value
+and `@Advice.AssignReturned.ToReturned`.
+
+```java
+@Advice.OnMethodExit(suppress = Throwable.class, inlined = false)
+@Advice.AssignReturned.ToReturned
+public static Object onExit(@Advice.Return Object returnValue) {
+  return "hello";
+}
+```
+
+### Writing to internal class fields
+
+With inlined advices, using the `@Advice.FieldValue(value = "fieldName", readOnly = false)` annotation
+on advice method parameters allows modifying the `fieldName` field of the instrumented class.
+
+When using non-inlined advices, reading the original field value is still done with the `@Advice.FieldValue`
+annotated parameter, however modifying the value is done through the advice method return value
+and `@Advice.AssignReturned.ToFields` annotation.
+
+```java
+@Advice.OnMethodEnter(suppress = Throwable.class, inlined = false)
+@Advice.AssignReturned.ToFields(@ToField("fieldName"))
+public static Object onEnter(@Advice.FieldValue("fieldName") Object originalFieldValue) {
+  return "newFieldValue";
+}
+```
+
+It is possible to modify multiple fields at once by using an array, see usages of
+`@Advice.AssignReturned.ToFields` for detailed examples.

@@ -12,7 +12,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -59,8 +59,8 @@ class CodeAttributesExtractorTest {
     // then
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.CODE_NAMESPACE, TestClass.class.getName()),
-            entry(SemanticAttributes.CODE_FUNCTION, "doSomething"));
+            entry(CodeIncubatingAttributes.CODE_NAMESPACE, TestClass.class.getName()),
+            entry(CodeIncubatingAttributes.CODE_FUNCTION, "doSomething"));
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }

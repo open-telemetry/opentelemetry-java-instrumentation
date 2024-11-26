@@ -3,13 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes
 import io.opentelemetry.instrumentation.test.AgentTestTrait
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
 import io.opentelemetry.instrumentation.test.base.HttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import io.opentelemetry.sdk.trace.data.SpanData
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
+import io.opentelemetry.semconv.ServerAttributes
+import io.opentelemetry.semconv.ClientAttributes
+import io.opentelemetry.semconv.UserAgentAttributes
+import io.opentelemetry.semconv.ErrorAttributes
+import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.NetworkAttributes
+import io.opentelemetry.semconv.UrlAttributes
 import spock.lang.Unroll
 
 import java.util.concurrent.TimeUnit
@@ -129,7 +135,7 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
     }
 
     when: "barrier is released and resource class sends response"
-    awaitBarrier(1, SECONDS)
+    awaitBarrier(10, SECONDS)
     def response = futureResponse.join()
 
     then:
@@ -172,7 +178,7 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
     }
 
     when: "barrier is released and resource class sends response"
-    awaitBarrier(1, SECONDS)
+    awaitBarrier(10, SECONDS)
     def response = futureResponse.join()
 
     then:
@@ -279,26 +285,26 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
         spanId spanID
       }
       attributes {
-        "$SemanticAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
-        "$SemanticAttributes.SERVER_ADDRESS" fullUrl.host
-        "$SemanticAttributes.SERVER_PORT" fullUrl.port
+        "$NetworkAttributes.NETWORK_PROTOCOL_VERSION" "1.1"
+        "$ServerAttributes.SERVER_ADDRESS" fullUrl.host
+        "$ServerAttributes.SERVER_PORT" fullUrl.port
         "$NetworkAttributes.NETWORK_PEER_ADDRESS" "127.0.0.1"
         "$NetworkAttributes.NETWORK_PEER_PORT" Long
-        "$SemanticAttributes.URL_SCHEME" fullUrl.getScheme()
-        "$SemanticAttributes.URL_PATH" fullUrl.getPath()
-        "$SemanticAttributes.URL_QUERY" fullUrl.getQuery()
-        "$SemanticAttributes.HTTP_REQUEST_METHOD" method
-        "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" statusCode
-        "$SemanticAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
-        "$SemanticAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
+        "$UrlAttributes.URL_SCHEME" fullUrl.getScheme()
+        "$UrlAttributes.URL_PATH" fullUrl.getPath()
+        "$UrlAttributes.URL_QUERY" fullUrl.getQuery()
+        "$HttpAttributes.HTTP_REQUEST_METHOD" method
+        "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" statusCode
+        "$UserAgentAttributes.USER_AGENT_ORIGINAL" TEST_USER_AGENT
+        "$ClientAttributes.CLIENT_ADDRESS" TEST_CLIENT_IP
         // Optional
-        "$SemanticAttributes.HTTP_ROUTE" path
+        "$HttpAttributes.HTTP_ROUTE" path
         if (fullUrl.getPath().endsWith(ServerEndpoint.CAPTURE_HEADERS.getPath())) {
           "http.request.header.x-test-request" { it == ["test"] }
           "http.response.header.x-test-response" { it == ["test"] }
         }
         if (statusCode >= 500) {
-          "$SemanticAttributes.ERROR_TYPE" "$statusCode"
+          "$ErrorAttributes.ERROR_TYPE" "$statusCode"
         }
       }
     }
@@ -333,8 +339,8 @@ abstract class AbstractJaxRsHttpServerTest<S> extends HttpServerTest<S> implemen
       }
       childOf((SpanData) parent)
       attributes {
-        "$SemanticAttributes.CODE_NAMESPACE" "test.JaxRsTestResource"
-        "$SemanticAttributes.CODE_FUNCTION" methodName
+        "$CodeIncubatingAttributes.CODE_NAMESPACE" "test.JaxRsTestResource"
+        "$CodeIncubatingAttributes.CODE_FUNCTION" methodName
         if (isCancelled) {
           "jaxrs.canceled" true
         }

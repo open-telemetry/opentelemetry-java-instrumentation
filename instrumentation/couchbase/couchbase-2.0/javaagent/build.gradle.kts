@@ -26,13 +26,24 @@ dependencies {
 
   testImplementation(project(":instrumentation:couchbase:couchbase-common:testing"))
 
-  latestDepTestLibrary("org.springframework.data:spring-data-couchbase:3.+")
-  latestDepTestLibrary("com.couchbase.client:java-client:2.+")
+  // later versions are tested with couchbase-2.6 instrumentation
+  latestDepTestLibrary("org.springframework.data:spring-data-couchbase:2.+")
+  latestDepTestLibrary("com.couchbase.client:java-client:2.5.+")
 }
 
-tasks.withType<Test>().configureEach {
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+tasks {
+  withType<Test>().configureEach {
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
 }

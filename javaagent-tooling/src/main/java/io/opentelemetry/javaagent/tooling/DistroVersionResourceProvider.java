@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static io.opentelemetry.semconv.ResourceAttributes.TELEMETRY_DISTRO_NAME;
-import static io.opentelemetry.semconv.ResourceAttributes.TELEMETRY_DISTRO_VERSION;
+import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME;
+import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.common.Attributes;

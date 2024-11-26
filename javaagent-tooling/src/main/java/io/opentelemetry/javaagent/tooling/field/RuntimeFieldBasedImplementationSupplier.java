@@ -11,12 +11,22 @@ import io.opentelemetry.instrumentation.api.internal.RuntimeVirtualFieldSupplier
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.security.PrivilegedAction;
 
 final class RuntimeFieldBasedImplementationSupplier
     implements RuntimeVirtualFieldSupplier.VirtualFieldSupplier {
 
   @Override
   public <U extends T, V extends F, T, F> VirtualField<U, V> find(
+      Class<T> type, Class<F> fieldType) {
+    if (System.getSecurityManager() == null) {
+      return findInternal(type, fieldType);
+    }
+    return java.security.AccessController.doPrivileged(
+        (PrivilegedAction<VirtualField<U, V>>) () -> findInternal(type, fieldType));
+  }
+
+  private static <U extends T, V extends F, T, F> VirtualField<U, V> findInternal(
       Class<T> type, Class<F> fieldType) {
     try {
       String virtualFieldImplClassName =

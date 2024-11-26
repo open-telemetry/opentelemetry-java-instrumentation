@@ -10,16 +10,12 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponse;
-import io.netty.util.Attribute;
-import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
-import java.util.ArrayDeque;
-import java.util.Deque;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContexts;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -37,7 +33,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
     Channel channel = ctx.channel();
-    Deque<ServerContext> serverContexts = getOrCreate(channel, AttributeKeys.SERVER_CONTEXT);
+    ServerContexts serverContexts = ServerContexts.getOrCreate(channel);
 
     if (!(msg instanceof HttpRequest)) {
       ServerContext serverContext = serverContexts.peekLast();
@@ -66,8 +62,10 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
       // the span is ended normally in HttpServerResponseTracingHandler
     } catch (Throwable throwable) {
       // make sure to remove the server context on end() call
-      ServerContext serverContext = serverContexts.removeLast();
-      instrumenter.end(serverContext.context(), serverContext.request(), null, throwable);
+      ServerContext serverContext = serverContexts.pollLast();
+      if (serverContext != null) {
+        instrumenter.end(serverContext.context(), serverContext.request(), null, throwable);
+      }
       throw throwable;
     }
   }
@@ -75,8 +73,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
   @Override
   public void channelInactive(ChannelHandlerContext ctx) throws Exception {
     // connection was closed, close all remaining requests
-    Attribute<Deque<ServerContext>> contextAttr = ctx.channel().attr(AttributeKeys.SERVER_CONTEXT);
-    Deque<ServerContext> serverContexts = contextAttr.get();
+    ServerContexts serverContexts = ServerContexts.get(ctx.channel());
 
     if (serverContexts == null) {
       super.channelInactive(ctx);
@@ -88,15 +85,5 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
       instrumenter.end(serverContext.context(), serverContext.request(), null, null);
     }
     super.channelInactive(ctx);
-  }
-
-  private static <T> Deque<T> getOrCreate(Channel channel, AttributeKey<Deque<T>> key) {
-    Attribute<Deque<T>> attribute = channel.attr(key);
-    Deque<T> deque = attribute.get();
-    if (deque == null) {
-      deque = new ArrayDeque<>();
-      attribute.set(deque);
-    }
-    return deque;
   }
 }

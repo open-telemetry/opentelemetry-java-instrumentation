@@ -4,7 +4,7 @@
  */
 
 plugins {
-  id("com.github.johnrengelman.shadow")
+  id("com.gradleup.shadow")
   id("otel.library-instrumentation")
 }
 
@@ -40,5 +40,13 @@ tasks {
     from(zipTree(shadowJar.get().archiveFile))
     into("build/extracted/shadow-bootstrap")
     include("io/opentelemetry/javaagent/bootstrap/**")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
   }
 }

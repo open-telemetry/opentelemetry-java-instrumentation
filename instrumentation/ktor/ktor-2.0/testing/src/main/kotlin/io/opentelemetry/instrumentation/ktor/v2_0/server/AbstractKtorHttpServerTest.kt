@@ -21,7 +21,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.ServerAttributes
 import kotlinx.coroutines.withContext
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
@@ -57,7 +57,7 @@ abstract class AbstractKtorHttpServerTest : AbstractHttpServerTest<ApplicationEn
 
         get(ServerEndpoint.EXCEPTION.path) {
           controller(ServerEndpoint.EXCEPTION) {
-            throw Exception(ServerEndpoint.EXCEPTION.body)
+            throw IllegalStateException(ServerEndpoint.EXCEPTION.body)
           }
         }
 
@@ -122,7 +122,7 @@ abstract class AbstractKtorHttpServerTest : AbstractHttpServerTest<ApplicationEn
     options.setTestPathParam(true)
 
     options.setHttpAttributes {
-      HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES - SemanticAttributes.SERVER_PORT
+      HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES - ServerAttributes.SERVER_PORT
     }
 
     options.setExpectedHttpRoute { endpoint, method ->

@@ -5,8 +5,12 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2
 
-
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.AwsIncubatingAttributes
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
+import io.opentelemetry.semconv.ServerAttributes
+import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.UrlAttributes
 import io.opentelemetry.testing.internal.armeria.common.HttpData
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus
@@ -118,34 +122,34 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
               // the bucket name is a valid DNS label, even in the case that we are using an endpoint override.
               // Previously the sdk was only doing that if endpoint had "s3" as label in the FQDN.
               // Our test assert both cases so that we don't need to know what version is being tested.
-              "$SemanticAttributes.SERVER_ADDRESS" { it == "somebucket.localhost" || it == "localhost" }
-              "$SemanticAttributes.URL_FULL" { it.startsWith("http://somebucket.localhost:${server.httpPort()}") || it.startsWith("http://localhost:${server.httpPort()}/somebucket") }
+              "$ServerAttributes.SERVER_ADDRESS" { it == "somebucket.localhost" || it == "localhost" }
+              "$UrlAttributes.URL_FULL" { it.startsWith("http://somebucket.localhost:${server.httpPort()}") || it.startsWith("http://localhost:${server.httpPort()}/somebucket") }
             } else {
-              "$SemanticAttributes.SERVER_ADDRESS" "localhost"
-              "$SemanticAttributes.URL_FULL" { it.startsWith("http://localhost:${server.httpPort()}") }
+              "$ServerAttributes.SERVER_ADDRESS" "localhost"
+              "$UrlAttributes.URL_FULL" { it.startsWith("http://localhost:${server.httpPort()}") }
             }
-            "$SemanticAttributes.SERVER_PORT" server.httpPort()
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
-            "$SemanticAttributes.RPC_SERVICE" "$service"
-            "$SemanticAttributes.RPC_METHOD" "${operation}"
+            "$ServerAttributes.SERVER_PORT" server.httpPort()
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "$method"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "aws-api"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "$service"
+            "$RpcIncubatingAttributes.RPC_METHOD" "${operation}"
             "aws.agent" "java-aws-sdk"
-            "aws.requestId" "$requestId"
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" "$requestId"
             if (service == "S3") {
               "aws.bucket.name" "somebucket"
             } else if (service == "Sqs" && operation == "CreateQueue") {
               "aws.queue.name" "somequeue"
             } else if (service == "Sqs" && operation == "SendMessage") {
               "aws.queue.url" QUEUE_URL
-              "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "somequeue"
-              "$SemanticAttributes.MESSAGING_OPERATION" "publish"
-              "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-              "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+              "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "somequeue"
+              "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
+              "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
+              "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS
             } else if (service == "Kinesis") {
               "aws.stream.name" "somestream"
             } else if (service == "Sns") {
-              "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "somearn"
+              "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "somearn"
             }
           }
         }
@@ -278,34 +282,34 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
               // the bucket name is a valid DNS label, even in the case that we are using an endpoint override.
               // Previously the sdk was only doing that if endpoint had "s3" as label in the FQDN.
               // Our test assert both cases so that we don't need to know what version is being tested.
-              "$SemanticAttributes.SERVER_ADDRESS" { it == "somebucket.localhost" || it == "localhost" }
-              "$SemanticAttributes.URL_FULL" { it.startsWith("http://somebucket.localhost:${server.httpPort()}") || it.startsWith("http://localhost:${server.httpPort()}") }
+              "$ServerAttributes.SERVER_ADDRESS" { it == "somebucket.localhost" || it == "localhost" }
+              "$UrlAttributes.URL_FULL" { it.startsWith("http://somebucket.localhost:${server.httpPort()}") || it.startsWith("http://localhost:${server.httpPort()}") }
             } else {
-              "$SemanticAttributes.SERVER_ADDRESS" "localhost"
-              "$SemanticAttributes.URL_FULL" { it == "http://localhost:${server.httpPort()}" || it == "http://localhost:${server.httpPort()}/" }
+              "$ServerAttributes.SERVER_ADDRESS" "localhost"
+              "$UrlAttributes.URL_FULL" { it == "http://localhost:${server.httpPort()}" || it == "http://localhost:${server.httpPort()}/" }
             }
-            "$SemanticAttributes.SERVER_PORT" server.httpPort()
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "$method"
-            "$SemanticAttributes.HTTP_RESPONSE_STATUS_CODE" 200
-            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
-            "$SemanticAttributes.RPC_SERVICE" "$service"
-            "$SemanticAttributes.RPC_METHOD" "${operation}"
+            "$ServerAttributes.SERVER_PORT" server.httpPort()
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "$method"
+            "$HttpAttributes.HTTP_RESPONSE_STATUS_CODE" 200
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "aws-api"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "$service"
+            "$RpcIncubatingAttributes.RPC_METHOD" "${operation}"
             "aws.agent" "java-aws-sdk"
-            "aws.requestId" "$requestId"
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" "$requestId"
             if (service == "S3") {
               "aws.bucket.name" "somebucket"
             } else if (service == "Sqs" && operation == "CreateQueue") {
               "aws.queue.name" "somequeue"
             } else if (service == "Sqs" && operation == "SendMessage") {
               "aws.queue.url" QUEUE_URL
-              "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "somequeue"
-              "$SemanticAttributes.MESSAGING_OPERATION" "publish"
-              "$SemanticAttributes.MESSAGING_MESSAGE_ID" String
-              "$SemanticAttributes.MESSAGING_SYSTEM" "AmazonSQS"
+              "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "somequeue"
+              "$MessagingIncubatingAttributes.MESSAGING_OPERATION" "publish"
+              "$MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID" String
+              "$MessagingIncubatingAttributes.MESSAGING_SYSTEM" MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS
             } else if (service == "Kinesis") {
               "aws.stream.name" "somestream"
             } else if (service == "Sns") {
-              "$SemanticAttributes.MESSAGING_DESTINATION_NAME" "somearn"
+              "$MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME" "somearn"
             }
           }
         }
@@ -446,13 +450,13 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
             // the bucket name is a valid DNS label, even in the case that we are using an endpoint override.
             // Previously the sdk was only doing that if endpoint had "s3" as label in the FQDN.
             // Our test assert both cases so that we don't need to know what version is being tested.
-            "$SemanticAttributes.SERVER_ADDRESS" { it == "somebucket.localhost" || it == "localhost" }
-            "$SemanticAttributes.URL_FULL" { it == "http://somebucket.localhost:${server.httpPort()}/somekey" || it == "http://localhost:${server.httpPort()}/somebucket/somekey" }
-            "$SemanticAttributes.SERVER_PORT" server.httpPort()
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.RPC_SYSTEM" "aws-api"
-            "$SemanticAttributes.RPC_SERVICE" "S3"
-            "$SemanticAttributes.RPC_METHOD" "GetObject"
+            "$ServerAttributes.SERVER_ADDRESS" { it == "somebucket.localhost" || it == "localhost" }
+            "$UrlAttributes.URL_FULL" { it == "http://somebucket.localhost:${server.httpPort()}/somekey" || it == "http://localhost:${server.httpPort()}/somebucket/somekey" }
+            "$ServerAttributes.SERVER_PORT" server.httpPort()
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$RpcIncubatingAttributes.RPC_SYSTEM" "aws-api"
+            "$RpcIncubatingAttributes.RPC_SERVICE" "S3"
+            "$RpcIncubatingAttributes.RPC_METHOD" "GetObject"
             "aws.agent" "java-aws-sdk"
             "aws.bucket.name" "somebucket"
           }

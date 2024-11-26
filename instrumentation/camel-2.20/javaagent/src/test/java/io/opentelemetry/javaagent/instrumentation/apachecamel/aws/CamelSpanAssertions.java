@@ -11,7 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 
 class CamelSpanAssertions {
 
@@ -31,7 +31,7 @@ class CamelSpanAssertions {
             equalTo(
                 stringKey("camel.uri"),
                 "aws-sqs://" + queueName + "?amazonSQSClient=%23sqsClient&delay=1000"),
-            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, queueName));
+            equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, queueName));
   }
 
   static SpanDataAssert sqsConsume(SpanDataAssert span, String queueName) {
@@ -45,9 +45,9 @@ class CamelSpanAssertions {
             equalTo(
                 stringKey("camel.uri"),
                 "aws-sqs://" + queueName + "?amazonSQSClient=%23sqsClient&delay=" + delay),
-            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, queueName),
+            equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, queueName),
             satisfies(
-                SemanticAttributes.MESSAGING_MESSAGE_ID,
+                MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
                 stringAssert -> stringAssert.isInstanceOf(String.class)));
   }
 
@@ -57,7 +57,7 @@ class CamelSpanAssertions {
         .hasAttributesSatisfying(
             equalTo(
                 stringKey("camel.uri"), "aws-sns://" + topicName + "?amazonSNSClient=%23snsClient"),
-            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, topicName));
+            equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, topicName));
   }
 
   static SpanDataAssert s3(SpanDataAssert span, String bucketName) {

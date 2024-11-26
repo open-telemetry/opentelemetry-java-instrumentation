@@ -10,7 +10,8 @@ dependencies {
 
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common:library"))
 
-  compileOnly("org.springframework.kafka:spring-kafka:2.7.0")
+  // compiling against 2.8.0 to use methods that are not present in 2.7
+  compileOnly("org.springframework.kafka:spring-kafka:2.8.0")
 
   testImplementation(project(":instrumentation:spring:spring-kafka-2.7:testing"))
   testImplementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))
@@ -24,6 +25,7 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
   usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean

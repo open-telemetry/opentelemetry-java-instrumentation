@@ -13,7 +13,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -53,11 +53,11 @@ class AddingSpanAttributesInstrumentationTest {
                                         assertThat(attributes)
                                             .containsOnly(
                                                 entry(
-                                                    SemanticAttributes.CODE_NAMESPACE,
+                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
                                                     ExtractAttributesUsingAddingSpanAttributes.class
                                                         .getName()),
                                                 entry(
-                                                    SemanticAttributes.CODE_FUNCTION,
+                                                    CodeIncubatingAttributes.CODE_FUNCTION,
                                                     "withSpanTakesPrecedence"),
                                                 entry(
                                                     AttributeKey.stringKey("implicitName"), "foo"),
@@ -101,7 +101,7 @@ class AddingSpanAttributesInstrumentationTest {
 
     new ExtractAttributesUsingAddingSpanAttributes().withSpanAttributes("foo", "bar", null, "baz");
 
-    assertThat(testing.waitForTraces(0));
+    assertThat(testing.waitForTraces(0)).isEmpty();
   }
 
   @Test

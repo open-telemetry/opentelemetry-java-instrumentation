@@ -5,17 +5,16 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java8;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 
 import com.sun.management.GarbageCollectionNotificationInfo;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
+import io.opentelemetry.semconv.JvmAttributes;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
@@ -54,9 +53,6 @@ public final class GarbageCollector {
 
   private static final double MILLIS_PER_S = TimeUnit.SECONDS.toMillis(1);
 
-  // TODO: use the opentelemetry-semconv classes once we have metrics attributes there
-  private static final AttributeKey<String> JVM_GC_NAME = stringKey("jvm.gc.name");
-  private static final AttributeKey<String> JVM_GC_ACTION = stringKey("jvm.gc.action");
   static final List<Double> GC_DURATION_BUCKETS = unmodifiableList(asList(0.01, 0.1, 1., 10.));
 
   private static final NotificationFilter GC_FILTER =
@@ -131,7 +127,9 @@ public final class GarbageCollector {
       String gcAction = notificationInfo.getGcAction();
       double duration = notificationInfo.getGcInfo().getDuration() / MILLIS_PER_S;
 
-      gcDuration.record(duration, Attributes.of(JVM_GC_NAME, gcName, JVM_GC_ACTION, gcAction));
+      gcDuration.record(
+          duration,
+          Attributes.of(JvmAttributes.JVM_GC_NAME, gcName, JvmAttributes.JVM_GC_ACTION, gcAction));
     }
   }
 

@@ -19,7 +19,7 @@ public class AkkaRouteHolder implements ImplicitContextKeyed {
   private static final ContextKey<AkkaRouteHolder> KEY = named("opentelemetry-akka-route");
 
   private String route = "";
-  private boolean newSegment;
+  private boolean newSegment = true;
   private boolean endMatched;
   private final Deque<String> stack = new ArrayDeque<>();
 
@@ -66,6 +66,15 @@ public class AkkaRouteHolder implements ImplicitContextKeyed {
     AkkaRouteHolder holder = Context.current().get(KEY);
     if (holder != null) {
       holder.route = holder.stack.pop();
+      holder.newSegment = true;
+    }
+  }
+
+  // reset the state to when save was called
+  public static void reset() {
+    AkkaRouteHolder holder = Context.current().get(KEY);
+    if (holder != null) {
+      holder.route = holder.stack.peek();
       holder.newSegment = true;
     }
   }

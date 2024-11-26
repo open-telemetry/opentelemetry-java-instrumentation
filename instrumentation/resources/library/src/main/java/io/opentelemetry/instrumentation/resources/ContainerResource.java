@@ -5,15 +5,16 @@
 
 package io.opentelemetry.instrumentation.resources;
 
-import static io.opentelemetry.semconv.ResourceAttributes.CONTAINER_ID;
-
 import com.google.errorprone.annotations.MustBeClosed;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -21,6 +22,9 @@ import java.util.stream.Stream;
  * v2 runtimes.
  */
 public final class ContainerResource {
+
+  // copied from ContainerIncubatingAttributes
+  private static final AttributeKey<String> CONTAINER_ID = AttributeKey.stringKey("container.id");
 
   static final Filesystem FILESYSTEM_INSTANCE = new Filesystem();
   private static final Resource INSTANCE = buildSingleton();
@@ -74,6 +78,12 @@ public final class ContainerResource {
     @MustBeClosed
     Stream<String> lines(Path path) throws IOException {
       return Files.lines(path);
+    }
+
+    List<String> lineList(Path path) throws IOException {
+      try (Stream<String> lines = lines(path)) {
+        return lines.collect(Collectors.toList());
+      }
     }
   }
 }

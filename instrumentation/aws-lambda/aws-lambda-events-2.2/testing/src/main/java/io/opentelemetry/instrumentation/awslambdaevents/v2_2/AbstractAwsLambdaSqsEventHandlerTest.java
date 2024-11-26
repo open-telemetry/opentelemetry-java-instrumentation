@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -14,7 +16,8 @@ import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,6 +28,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 @ExtendWith(MockitoExtension.class)
 public abstract class AbstractAwsLambdaSqsEventHandlerTest {
 
@@ -73,14 +77,17 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                         span.hasName("my_function")
                             .hasKind(SpanKind.SERVER)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333")),
+                                equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333")),
                     span ->
                         span.hasName("queue1 process")
                             .hasKind(SpanKind.CONSUMER)
                             .hasParentSpanId(trace.getSpan(0).getSpanId())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
-                                equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"))
+                                equalTo(
+                                    MESSAGING_SYSTEM,
+                                    MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                        .AWS_SQS),
+                                equalTo(MESSAGING_OPERATION, "process"))
                             .hasLinksSatisfying(
                                 links ->
                                     assertThat(links)
@@ -119,14 +126,17 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
                         span.hasName("my_function")
                             .hasKind(SpanKind.SERVER)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333")),
+                                equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333")),
                     span ->
                         span.hasName("multiple_sources process")
                             .hasKind(SpanKind.CONSUMER)
                             .hasParentSpanId(trace.getSpan(0).getSpanId())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
-                                equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"))
+                                equalTo(
+                                    MESSAGING_SYSTEM,
+                                    MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                        .AWS_SQS),
+                                equalTo(MESSAGING_OPERATION, "process"))
                             .hasLinksSatisfying(
                                 links ->
                                     assertThat(links)

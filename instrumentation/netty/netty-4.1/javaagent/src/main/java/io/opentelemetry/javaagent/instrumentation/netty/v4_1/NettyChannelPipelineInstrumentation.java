@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.clientHandlerFactory;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.sslInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyServerSingletons.serverTelemetry;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -22,12 +24,6 @@ import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettySslInstrumentationHandler;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientRequestTracingHandler;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientResponseTracingHandler;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerRequestTracingHandler;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerResponseTracingHandler;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerTracingHandler;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.netty.v4.common.AbstractNettyChannelPipelineInstrumentation;
@@ -56,9 +52,7 @@ public class NettyChannelPipelineInstrumentation
   public static class ChannelPipelineAddAdvice {
 
     @Advice.OnMethodEnter
-    public static void trackCallDepth(
-        @Advice.Argument(2) ChannelHandler handler,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+    public static CallDepth trackCallDepth(@Advice.Argument(2) ChannelHandler handler) {
       // Previously we used one unique call depth tracker for all handlers, using
       // ChannelPipeline.class as a key.
       // The problem with this approach is that it does not work with netty's
@@ -68,8 +62,9 @@ public class NettyChannelPipelineInstrumentation
       // Using the specific handler key instead of the generic ChannelPipeline.class will help us
       // both to handle such cases and avoid adding our additional handlers in case of internal
       // calls of `addLast` to other method overloads with a compatible signature.
-      callDepth = CallDepth.forClass(handler.getClass());
+      CallDepth callDepth = CallDepth.forClass(handler.getClass());
       callDepth.getAndIncrement();
+      return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -77,7 +72,8 @@ public class NettyChannelPipelineInstrumentation
         @Advice.This ChannelPipeline pipeline,
         @Advice.Argument(1) String handlerName,
         @Advice.Argument(2) ChannelHandler handler,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.Enter CallDepth callDepth) {
+
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
@@ -105,23 +101,21 @@ public class NettyChannelPipelineInstrumentation
       // Server pipeline handlers
       if (handler instanceof HttpServerCodec) {
         ourHandler =
-            new HttpServerTracingHandler(
-                NettyServerSingletons.instrumenter(),
-                NettyHttpServerResponseBeforeCommitHandler.INSTANCE);
+            serverTelemetry()
+                .createCombinedHandler(NettyHttpServerResponseBeforeCommitHandler.INSTANCE);
       } else if (handler instanceof HttpRequestDecoder) {
-        ourHandler = new HttpServerRequestTracingHandler(NettyServerSingletons.instrumenter());
+        ourHandler = serverTelemetry().createRequestHandler();
       } else if (handler instanceof HttpResponseEncoder) {
         ourHandler =
-            new HttpServerResponseTracingHandler(
-                NettyServerSingletons.instrumenter(),
-                NettyHttpServerResponseBeforeCommitHandler.INSTANCE);
+            serverTelemetry()
+                .createCombinedHandler(NettyHttpServerResponseBeforeCommitHandler.INSTANCE);
         // Client pipeline handlers
       } else if (handler instanceof HttpClientCodec) {
-        ourHandler = new HttpClientTracingHandler(NettyClientSingletons.instrumenter());
+        ourHandler = clientHandlerFactory().createCombinedHandler();
       } else if (handler instanceof HttpRequestEncoder) {
-        ourHandler = new HttpClientRequestTracingHandler(NettyClientSingletons.instrumenter());
+        ourHandler = clientHandlerFactory().createRequestHandler();
       } else if (handler instanceof HttpResponseDecoder) {
-        ourHandler = new HttpClientResponseTracingHandler(NettyClientSingletons.instrumenter());
+        ourHandler = clientHandlerFactory().createResponseHandler();
         // the SslHandler lives in the netty-handler module, using class name comparison to avoid
         // adding a dependency
       } else if (handler.getClass().getName().equals("io.netty.handler.ssl.SslHandler")) {

@@ -12,10 +12,11 @@ import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ExceptionAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Marker;
@@ -29,6 +30,16 @@ import org.apache.logging.log4j.message.Message;
  */
 public final class LogEventMapper<T> {
 
+  // copied from CodeIncubatingAttributes
+  private static final AttributeKey<String> CODE_FILEPATH = AttributeKey.stringKey("code.filepath");
+  private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function");
+  private static final AttributeKey<Long> CODE_LINENO = AttributeKey.longKey("code.lineno");
+  private static final AttributeKey<String> CODE_NAMESPACE =
+      AttributeKey.stringKey("code.namespace");
+  // copied from ThreadIncubatingAttributes
+  private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
+  private static final AttributeKey<String> THREAD_NAME = AttributeKey.stringKey("thread.name");
+
   private static final String SPECIAL_MAP_MESSAGE_ATTRIBUTE = "message";
 
   private static final Cache<String, AttributeKey<String>> contextDataAttributeKeyCache =
@@ -41,6 +52,7 @@ public final class LogEventMapper<T> {
   private final ContextDataAccessor<T> contextDataAccessor;
 
   private final boolean captureExperimentalAttributes;
+  private final boolean captureCodeAttributes;
   private final boolean captureMapMessageAttributes;
   private final boolean captureMarkerAttribute;
   private final List<String> captureContextDataAttributes;
@@ -49,11 +61,13 @@ public final class LogEventMapper<T> {
   public LogEventMapper(
       ContextDataAccessor<T> contextDataAccessor,
       boolean captureExperimentalAttributes,
+      boolean captureCodeAttributes,
       boolean captureMapMessageAttributes,
       boolean captureMarkerAttribute,
       List<String> captureContextDataAttributes) {
 
     this.contextDataAccessor = contextDataAccessor;
+    this.captureCodeAttributes = captureCodeAttributes;
     this.captureExperimentalAttributes = captureExperimentalAttributes;
     this.captureMapMessageAttributes = captureMapMessageAttributes;
     this.captureMarkerAttribute = captureMarkerAttribute;
@@ -67,13 +81,11 @@ public final class LogEventMapper<T> {
    *
    * <ul>
    *   <li>Fully qualified class name - {@link LogEvent#getLoggerFqcn()}
-   *   <li>Thread name - {@link LogEvent#getThreadName()}
-   *   <li>Thread id - {@link LogEvent#getThreadId()}
    *   <li>Thread priority - {@link LogEvent#getThreadPriority()}
-   *   <li>Marker - {@link LogEvent#getMarker()}
    *   <li>Nested diagnostic context - {@link LogEvent#getContextStack()}
    * </ul>
    */
+  @SuppressWarnings("TooManyParameters")
   public void mapLogEvent(
       LogRecordBuilder builder,
       Message message,
@@ -82,7 +94,9 @@ public final class LogEventMapper<T> {
       @Nullable Throwable throwable,
       T contextData,
       String threadName,
-      long threadId) {
+      long threadId,
+      Supplier<StackTraceElement> sourceSupplier,
+      Context context) {
 
     AttributesBuilder attributes = Attributes.builder();
 
@@ -107,13 +121,28 @@ public final class LogEventMapper<T> {
     captureContextDataAttributes(attributes, contextData);
 
     if (captureExperimentalAttributes) {
-      attributes.put(SemanticAttributes.THREAD_NAME, threadName);
-      attributes.put(SemanticAttributes.THREAD_ID, threadId);
+      attributes.put(THREAD_NAME, threadName);
+      attributes.put(THREAD_ID, threadId);
+    }
+
+    if (captureCodeAttributes) {
+      StackTraceElement source = sourceSupplier.get();
+      if (source != null) {
+        String fileName = source.getFileName();
+        if (fileName != null) {
+          attributes.put(CODE_FILEPATH, fileName);
+        }
+        attributes.put(CODE_NAMESPACE, source.getClassName());
+        attributes.put(CODE_FUNCTION, source.getMethodName());
+        int lineNumber = source.getLineNumber();
+        if (lineNumber > 0) {
+          attributes.put(CODE_LINENO, lineNumber);
+        }
+      }
     }
 
     builder.setAllAttributes(attributes.build());
-
-    builder.setContext(Context.current());
+    builder.setContext(context);
   }
 
   // visible for testing
@@ -161,16 +190,16 @@ public final class LogEventMapper<T> {
           contextData,
           (key, value) -> {
             if (value != null) {
-              attributes.put(getContextDataAttributeKey(key), value.toString());
+              attributes.put(getContextDataAttributeKey(key), value);
             }
           });
       return;
     }
 
     for (String key : captureContextDataAttributes) {
-      Object value = contextDataAccessor.getValue(contextData, key);
+      String value = contextDataAccessor.getValue(contextData, key);
       if (value != null) {
-        attributes.put(getContextDataAttributeKey(key), value.toString());
+        attributes.put(getContextDataAttributeKey(key), value);
       }
     }
   }
@@ -187,11 +216,11 @@ public final class LogEventMapper<T> {
   private static void setThrowable(AttributesBuilder attributes, Throwable throwable) {
     // TODO (trask) extract method for recording exception into
     // io.opentelemetry:opentelemetry-api
-    attributes.put(SemanticAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
-    attributes.put(SemanticAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
+    attributes.put(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
+    attributes.put(ExceptionAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
     StringWriter writer = new StringWriter();
     throwable.printStackTrace(new PrintWriter(writer));
-    attributes.put(SemanticAttributes.EXCEPTION_STACKTRACE, writer.toString());
+    attributes.put(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
   }
 
   private static Severity levelToSeverity(Level level) {

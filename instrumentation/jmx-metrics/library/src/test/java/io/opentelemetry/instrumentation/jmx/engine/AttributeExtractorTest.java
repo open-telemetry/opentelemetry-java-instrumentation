@@ -34,6 +34,10 @@ class AttributeExtractorTest {
     double getDoubleAttribute();
 
     String getStringAttribute();
+
+    boolean getBooleanAttribute();
+
+    Enum<?> getEnumAttribute();
   }
 
   private static class Test1 implements Test1MBean {
@@ -71,6 +75,20 @@ class AttributeExtractorTest {
     public String getStringAttribute() {
       return "";
     }
+
+    @Override
+    public boolean getBooleanAttribute() {
+      return true;
+    }
+
+    @Override
+    public Enum<?> getEnumAttribute() {
+      return DummyEnum.ENUM_VALUE;
+    }
+
+    private enum DummyEnum {
+      ENUM_VALUE
+    }
   }
 
   private static final String DOMAIN = "otel.jmx.test";
@@ -93,113 +111,127 @@ class AttributeExtractorTest {
   }
 
   @Test
-  void testSetup() throws Exception {
+  void testSetup() {
     Set<ObjectName> set = theServer.queryNames(objectName, null);
-    assertThat(set == null).isFalse();
-    assertThat(set.size() == 1).isTrue();
-    assertThat(set.contains(objectName)).isTrue();
+    assertThat(set).isNotNull().hasSize(1).contains(objectName);
   }
 
   @Test
-  void testByteAttribute() throws Exception {
+  void testByteAttribute() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("ByteAttribute");
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
-    assertThat(info == null).isFalse();
+    assertThat(info).isNotNull();
     assertThat(info.usesDoubleValues()).isFalse();
   }
 
   @Test
-  void testByteAttributeValue() throws Exception {
+  void testByteAttributeValue() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("ByteAttribute");
     Number number = extractor.extractNumericalAttribute(theServer, objectName);
-    assertThat(number == null).isFalse();
-    assertThat(number.longValue() == 10).isTrue();
+    assertThat(number).isNotNull();
+    assertThat(number.longValue()).isEqualTo(10);
   }
 
   @Test
-  void testShortAttribute() throws Exception {
+  void testShortAttribute() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("ShortAttribute");
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
-    assertThat(info == null).isFalse();
+    assertThat(info).isNotNull();
     assertThat(info.usesDoubleValues()).isFalse();
   }
 
   @Test
-  void testShortAttributeValue() throws Exception {
+  void testShortAttributeValue() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("ShortAttribute");
     Number number = extractor.extractNumericalAttribute(theServer, objectName);
-    assertThat(number == null).isFalse();
-    assertThat(number.longValue() == 11).isTrue();
+    assertThat(number).isNotNull();
+    assertThat(number.longValue()).isEqualTo(11);
   }
 
   @Test
-  void testIntAttribute() throws Exception {
+  void testIntAttribute() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("IntAttribute");
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
-    assertThat(info == null).isFalse();
+    assertThat(info).isNotNull();
     assertThat(info.usesDoubleValues()).isFalse();
   }
 
   @Test
-  void testIntAttributeValue() throws Exception {
+  void testIntAttributeValue() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("IntAttribute");
     Number number = extractor.extractNumericalAttribute(theServer, objectName);
-    assertThat(number == null).isFalse();
-    assertThat(number.longValue() == 12).isTrue();
+    assertThat(number).isNotNull();
+    assertThat(number.longValue()).isEqualTo(12);
   }
 
   @Test
-  void testLongAttribute() throws Exception {
+  void testLongAttribute() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("LongAttribute");
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
-    assertThat(info == null).isFalse();
+    assertThat(info).isNotNull();
     assertThat(info.usesDoubleValues()).isFalse();
   }
 
   @Test
-  void testLongAttributeValue() throws Exception {
+  void testLongAttributeValue() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("LongAttribute");
     Number number = extractor.extractNumericalAttribute(theServer, objectName);
-    assertThat(number == null).isFalse();
-    assertThat(number.longValue() == 13).isTrue();
+    assertThat(number).isNotNull();
+    assertThat(number.longValue()).isEqualTo(13);
   }
 
   @Test
-  void testFloatAttribute() throws Exception {
+  void testFloatAttribute() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("FloatAttribute");
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
-    assertThat(info == null).isFalse();
+    assertThat(info).isNotNull();
     assertThat(info.usesDoubleValues()).isTrue();
   }
 
   @Test
-  void testFloatAttributeValue() throws Exception {
+  void testFloatAttributeValue() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("FloatAttribute");
     Number number = extractor.extractNumericalAttribute(theServer, objectName);
-    assertThat(number == null).isFalse();
-    assertThat(number.doubleValue() == 14.0).isTrue(); // accurate representation
+    assertThat(number).isNotNull();
+    assertThat(number.doubleValue()).isEqualTo(14.0); // accurate representation
   }
 
   @Test
-  void testDoubleAttribute() throws Exception {
+  void testDoubleAttribute() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("DoubleAttribute");
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
-    assertThat(info == null).isFalse();
+    assertThat(info).isNotNull();
     assertThat(info.usesDoubleValues()).isTrue();
   }
 
   @Test
-  void testDoubleAttributeValue() throws Exception {
+  void testDoubleAttributeValue() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("DoubleAttribute");
     Number number = extractor.extractNumericalAttribute(theServer, objectName);
-    assertThat(number == null).isFalse();
-    assertThat(number.doubleValue() == 15.0).isTrue(); // accurate representation
+    assertThat(number).isNotNull();
+    assertThat(number.doubleValue()).isEqualTo(15.0); // accurate representation
   }
 
   @Test
-  void testStringAttribute() throws Exception {
+  void testStringAttribute() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("StringAttribute");
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
-    assertThat(info == null).isTrue();
+    assertThat(info).isNull();
+  }
+
+  @Test
+  void testBooleanAttribute() throws Exception {
+    BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("BooleanAttribute");
+    AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
+    assertThat(info).isNull();
+    assertThat(extractor.extractValue(theServer, objectName)).isEqualTo("true");
+  }
+
+  @Test
+  void testEnumAttribute() throws Exception {
+    BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("EnumAttribute");
+    AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
+    assertThat(info).isNull();
+    assertThat(extractor.extractValue(theServer, objectName)).isEqualTo("ENUM_VALUE");
   }
 }

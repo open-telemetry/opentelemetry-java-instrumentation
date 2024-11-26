@@ -17,13 +17,36 @@ import javax.annotation.Nullable;
  */
 public final class ExecutorAdviceHelper {
 
+  private static final ThreadLocal<Boolean> propagationDisabled = new ThreadLocal<>();
+
+  /**
+   * Temporarily disable context propagation for current thread. Call {@link #enablePropagation()}
+   * to re-enable the propagation.
+   */
+  public static void disablePropagation() {
+    propagationDisabled.set(Boolean.TRUE);
+  }
+
+  /**
+   * Enable context propagation for current thread after it was disabled by calling {@link
+   * #disablePropagation()}.
+   */
+  public static void enablePropagation() {
+    propagationDisabled.remove();
+  }
+
+  // visible for testing
+  public static boolean isPropagationDisabled() {
+    return propagationDisabled.get() != null;
+  }
+
   /**
    * Check if {@code context} should be propagated to the passed {@code task}. This method must be
    * called before each {@link #attachContextToTask(Context, VirtualField, Object)} call to ensure
    * that unwanted tasks are not instrumented.
    */
   public static boolean shouldPropagateContext(Context context, @Nullable Object task) {
-    if (task == null) {
+    if (task == null || isPropagationDisabled()) {
       return false;
     }
 
@@ -71,8 +94,11 @@ public final class ExecutorAdviceHelper {
    * Clean up {@code propagatedContext} in case of any submission errors. Call this method after the
    * submission method has exited.
    */
-  public static void cleanUpAfterSubmit(
-      @Nullable PropagatedContext propagatedContext, @Nullable Throwable throwable) {
+  public static <T> void cleanUpAfterSubmit(
+      @Nullable PropagatedContext propagatedContext,
+      @Nullable Throwable throwable,
+      VirtualField<T, PropagatedContext> virtualField,
+      T task) {
     if (propagatedContext != null && throwable != null) {
       /*
       Note: this may potentially clear somebody else's parent span if we didn't set it
@@ -83,15 +109,23 @@ public final class ExecutorAdviceHelper {
       exceptions.
        */
       propagatedContext.clear();
+      // setting the field to null removes it from the fallback map
+      virtualField.set(task, null);
     }
   }
 
   /** Clean context attached to the given task. */
   public static <T> void cleanPropagatedContext(
       VirtualField<T, PropagatedContext> virtualField, T task) {
+    if (isPropagationDisabled()) {
+      return;
+    }
+
     PropagatedContext propagatedContext = virtualField.get(task);
     if (propagatedContext != null) {
       propagatedContext.clear();
+      // setting the field to null removes it from the fallback map
+      virtualField.set(task, null);
     }
   }
 

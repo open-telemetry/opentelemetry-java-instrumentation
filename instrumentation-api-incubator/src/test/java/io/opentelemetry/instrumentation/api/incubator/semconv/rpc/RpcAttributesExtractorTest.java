@@ -12,7 +12,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -59,14 +59,14 @@ class RpcAttributesExtractorTest {
     extractor.onStart(attributes, context, request);
     assertThat(attributes.build())
         .containsOnly(
-            entry(SemanticAttributes.RPC_SYSTEM, "test"),
-            entry(SemanticAttributes.RPC_SERVICE, "my.Service"),
-            entry(SemanticAttributes.RPC_METHOD, "Method"));
+            entry(RpcIncubatingAttributes.RPC_SYSTEM, "test"),
+            entry(RpcIncubatingAttributes.RPC_SERVICE, "my.Service"),
+            entry(RpcIncubatingAttributes.RPC_METHOD, "Method"));
     extractor.onEnd(attributes, context, request, null, null);
     assertThat(attributes.build())
         .containsOnly(
-            entry(SemanticAttributes.RPC_SYSTEM, "test"),
-            entry(SemanticAttributes.RPC_SERVICE, "my.Service"),
-            entry(SemanticAttributes.RPC_METHOD, "Method"));
+            entry(RpcIncubatingAttributes.RPC_SYSTEM, "test"),
+            entry(RpcIncubatingAttributes.RPC_SERVICE, "my.Service"),
+            entry(RpcIncubatingAttributes.RPC_METHOD, "Method"));
   }
 }

@@ -17,6 +17,7 @@ import io.lettuce.core.tracing.TraceContextProvider;
 import io.lettuce.core.tracing.Tracer;
 import io.lettuce.core.tracing.TracerProvider;
 import io.lettuce.core.tracing.Tracing;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
@@ -26,10 +27,9 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
-import io.opentelemetry.semconv.SemanticAttributes.DbSystemValues;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.time.Instant;
@@ -38,6 +38,15 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 final class OpenTelemetryTracing implements Tracing {
+
+  // copied from DbIncubatingAttributes
+  private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
+  private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
+  private static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.query.text");
+  private static final AttributeKey<Long> DB_REDIS_DATABASE_INDEX =
+      AttributeKey.longKey("db.redis.database_index");
+  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
+  private static final String REDIS = "redis";
 
   private static final AttributesExtractor<OpenTelemetryEndpoint, Void> serverAttributesExtractor =
       ServerAttributesExtractor.create(new LettuceServerAttributesGetter());
@@ -155,7 +164,7 @@ final class OpenTelemetryTracing implements Tracing {
               .spanBuilder("redis")
               .setSpanKind(SpanKind.CLIENT)
               .setParent(context)
-              .setAttribute(SemanticAttributes.DB_SYSTEM, DbSystemValues.REDIS);
+              .setAttribute(DB_SYSTEM, REDIS);
       return new OpenTelemetrySpan(context, spanBuilder, sanitizer);
     }
   }
@@ -227,7 +236,7 @@ final class OpenTelemetryTracing implements Tracing {
       if (span == null) {
         throw new IllegalStateException("Span started but null, this is a programming error.");
       }
-      span.updateName(command.getType().name());
+      span.updateName(command.getType().toString());
 
       if (command.getArgs() != null) {
         argsList = OtelCommandArgsUtil.getCommandArgs(command.getArgs());
@@ -299,8 +308,21 @@ final class OpenTelemetryTracing implements Tracing {
     @Override
     @CanIgnoreReturnValue
     public synchronized Tracer.Span tag(String key, String value) {
+      if (value == null || value.isEmpty()) {
+        return this;
+      }
       if (key.equals("redis.args")) {
         argsString = value;
+        return this;
+      }
+      if (key.equals("db.namespace") && SemconvStability.emitOldDatabaseSemconv()) {
+        // map backwards into db.redis.database.index
+        long val = Long.parseLong(value);
+        if (span != null) {
+          span.setAttribute(DB_REDIS_DATABASE_INDEX, val);
+        } else {
+          spanBuilder.setAttribute(DB_REDIS_DATABASE_INDEX, val);
+        }
         return this;
       }
       if (span != null) {
@@ -333,7 +355,12 @@ final class OpenTelemetryTracing implements Tracing {
       if (name != null) {
         String statement =
             sanitizer.sanitize(name, argsList != null ? argsList : splitArgs(argsString));
-        span.setAttribute(SemanticAttributes.DB_STATEMENT, statement);
+        if (SemconvStability.emitStableDatabaseSemconv()) {
+          span.setAttribute(DB_QUERY_TEXT, statement);
+        }
+        if (SemconvStability.emitOldDatabaseSemconv()) {
+          span.setAttribute(DB_STATEMENT, statement);
+        }
       }
       span.end();
     }

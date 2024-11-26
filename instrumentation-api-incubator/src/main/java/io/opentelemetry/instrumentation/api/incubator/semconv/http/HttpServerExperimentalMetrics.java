@@ -19,17 +19,18 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
+import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
 import java.util.logging.Logger;
 
 /**
  * {@link OperationListener} which keeps track of <a
- * href="https://github.com/open-telemetry/semantic-conventions/blob/main/specification/metrics/semantic_conventions/http-metrics.md#http-server">non-stable
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#http-server">non-stable
  * HTTP server metrics</a>: <a
  * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#metric-httpserveractive_requests">the
  * number of in-flight request</a>, <a
- * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#metric-httpserverrequestsize">the
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#metric-httpserverrequestbodysize">the
  * request size</a> and <a
- * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#metric-httpserverresponsesize">the
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#metric-httpserverresponsebodysize">the
  * response size</a>.
  */
 public final class HttpServerExperimentalMetrics implements OperationListener {
@@ -46,7 +47,8 @@ public final class HttpServerExperimentalMetrics implements OperationListener {
    * io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder}.
    */
   public static OperationMetrics get() {
-    return HttpServerExperimentalMetrics::new;
+    return OperationMetricsUtil.create(
+        "experimental http server", HttpServerExperimentalMetrics::new);
   }
 
   private final LongUpDownCounter activeRequests;
@@ -63,7 +65,7 @@ public final class HttpServerExperimentalMetrics implements OperationListener {
     activeRequests = activeRequestsBuilder.build();
     LongHistogramBuilder requestSizeBuilder =
         meter
-            .histogramBuilder("http.server.request.size")
+            .histogramBuilder("http.server.request.body.size")
             .setUnit("By")
             .setDescription("Size of HTTP server request bodies.")
             .ofLongs();
@@ -71,7 +73,7 @@ public final class HttpServerExperimentalMetrics implements OperationListener {
     requestSize = requestSizeBuilder.build();
     LongHistogramBuilder responseSizeBuilder =
         meter
-            .histogramBuilder("http.server.response.size")
+            .histogramBuilder("http.server.response.body.size")
             .setUnit("By")
             .setDescription("Size of HTTP server response bodies.")
             .ofLongs();

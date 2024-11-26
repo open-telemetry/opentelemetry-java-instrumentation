@@ -25,6 +25,7 @@ tasks {
   test {
     filter {
       excludeTestsMatching("Log4j27BaggageTest")
+      excludeTestsMatching("Log4j27LoggingKeysTest")
     }
     jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
   }
@@ -36,7 +37,17 @@ tasks {
     jvmArgs("-Dotel.instrumentation.log4j-context-data.add-baggage=true")
   }
 
+  val testLoggingKeys by registering(Test::class) {
+    filter {
+      includeTestsMatching("Log4j27LoggingKeysTest")
+    }
+    jvmArgs("-Dotel.instrumentation.common.logging.trace-id=trace_id_test")
+    jvmArgs("-Dotel.instrumentation.common.logging.span-id=span_id_test")
+    jvmArgs("-Dotel.instrumentation.common.logging.trace-flags=trace_flags_test")
+  }
+
   named("check") {
     dependsOn(testAddBaggage)
+    dependsOn(testLoggingKeys)
   }
 }

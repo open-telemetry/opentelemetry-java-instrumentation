@@ -60,6 +60,17 @@ public class SqlStatementSanitizerTest {
     assertThat(result).isEqualTo(expected);
   }
 
+  @ParameterizedTest
+  @ArgumentsSource(DdlArgs.class)
+  void checkDdlOperationStatementsAreOk(
+      String actual, Function<String, SqlStatementInfo> expectFunc) {
+    SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(actual);
+    SqlStatementInfo expected = expectFunc.apply(actual);
+    assertThat(result.getFullStatement()).isEqualTo(expected.getFullStatement());
+    assertThat(result.getOperation()).isEqualTo(expected.getOperation());
+    assertThat(result.getMainIdentifier()).isEqualTo(expected.getMainIdentifier());
+  }
+
   @Test
   void lotsOfTicksDontCauseStackOverflowOrLongRuntimes() {
     String s = "'";
@@ -113,10 +124,23 @@ public class SqlStatementSanitizerTest {
     }
   }
 
+  @Test
+  public void longInStatementDoesntCauseStackOverflow() {
+    StringBuilder s = new StringBuilder("select col from table where col in (");
+    for (int i = 0; i < 10000; i++) {
+      s.append("?,");
+    }
+    s.append("?)");
+
+    String sanitized = SqlStatementSanitizer.create(true).sanitize(s.toString()).getFullStatement();
+
+    assertThat(sanitized).isEqualTo("select col from table where col in (?)");
+  }
+
   static class SqlArgs implements ArgumentsProvider {
 
     @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(
           Arguments.of("SELECT * FROM TABLE WHERE FIELD=1234", "SELECT * FROM TABLE WHERE FIELD=?"),
           Arguments.of(
@@ -190,6 +214,10 @@ public class SqlStatementSanitizerTest {
           Arguments.of(
               "SELECT * FROM TABLE WHERE FIELD = $$\\\\$$", "SELECT * FROM TABLE WHERE FIELD = ?"),
 
+          // PostgreSQL native parameter marker, we want to keep $1 instead of replacing it with ?
+          Arguments.of(
+              "SELECT * FROM TABLE WHERE FIELD = $1", "SELECT * FROM TABLE WHERE FIELD = $1"),
+
           // Unicode, including a unicode identifier with a trailing number
           Arguments.of(
               "SELECT * FROM TABLEओ7 WHERE FIELD = 'ɣ'", "SELECT * FROM TABLEओ7 WHERE FIELD = ?"),
@@ -207,7 +235,7 @@ public class SqlStatementSanitizerTest {
   static class CouchbaseArgs implements ArgumentsProvider {
 
     @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(
           // Some databases support/encourage " instead of ' with same escape rules
           Arguments.of(
@@ -244,7 +272,7 @@ public class SqlStatementSanitizerTest {
     }
 
     @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(
           // Select
           Arguments.of("SELECT x, y, z FROM schema.table", expect("SELECT", "schema.table")),
@@ -271,7 +299,11 @@ public class SqlStatementSanitizerTest {
           Arguments.of("select col from table1 as t1, table2 as t2", expect("SELECT", null)),
           Arguments.of(
               "select col from table where col in (1, 2, 3)",
-              expect("select col from table where col in (?, ?, ?)", "SELECT", "table")),
+              expect("select col from table where col in (?)", "SELECT", "table")),
+          Arguments.of(
+              "select 'a' IN(x, 'b') from table where col in (1) and z IN( '3', '4' )",
+              expect(
+                  "select ? IN(x, ?) from table where col in (?) and z IN(?)", "SELECT", "table")),
           Arguments.of("select col from table order by col, col2", expect("SELECT", "table")),
           Arguments.of("select ąś∂ń© from źćļńĶ order by col, col2", expect("SELECT", "źćļńĶ")),
           Arguments.of("select 12345678", expect("select ?", "SELECT", null)),
@@ -298,6 +330,9 @@ public class SqlStatementSanitizerTest {
               "delete from `my table` where something something", expect("DELETE", "my table")),
           Arguments.of(
               "delete from \"my table\" where something something", expect("DELETE", "my table")),
+          Arguments.of(
+              "delete from foo where x IN (1,2,3)",
+              expect("delete from foo where x IN (?)", "DELETE", "foo")),
           Arguments.of("delete from 12345678", expect("delete from ?", "DELETE", null)),
           Arguments.of("delete   (((", expect("delete (((", "DELETE", null)),
 
@@ -307,6 +342,12 @@ public class SqlStatementSanitizerTest {
           Arguments.of(
               "update `my table` set answer=42",
               expect("update `my table` set answer=?", "UPDATE", "my table")),
+          Arguments.of(
+              "update `my table` set answer=42 where x IN('a', 'b') AND y In ('a',  'b')",
+              expect(
+                  "update `my table` set answer=? where x IN(?) AND y In (?)",
+                  "UPDATE",
+                  "my table")),
           Arguments.of(
               "update \"my table\" set answer=42",
               expect("update \"my table\" set answer=?", "UPDATE", "my table")),
@@ -329,6 +370,36 @@ public class SqlStatementSanitizerTest {
           Arguments.of("and now for something completely different", expect(null, null)),
           Arguments.of("", expect(null, null)),
           Arguments.of(null, expect(null, null)));
+    }
+  }
+
+  static class DdlArgs implements ArgumentsProvider {
+
+    static Function<String, SqlStatementInfo> expect(String operation, String identifier) {
+      return sql -> SqlStatementInfo.create(sql, operation, identifier);
+    }
+
+    static Function<String, SqlStatementInfo> expect(
+        String sql, String operation, String identifier) {
+      return ignored -> SqlStatementInfo.create(sql, operation, identifier);
+    }
+
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+      return Stream.of(
+          Arguments.of("CREATE TABLE `table`", expect("CREATE TABLE", "table")),
+          Arguments.of("CREATE TABLE IF NOT EXISTS table", expect("CREATE TABLE", "table")),
+          Arguments.of("DROP TABLE `if`", expect("DROP TABLE", "if")),
+          Arguments.of(
+              "ALTER TABLE table ADD CONSTRAINT c FOREIGN KEY (foreign_id) REFERENCES ref (id)",
+              expect("ALTER TABLE", "table")),
+          Arguments.of("CREATE INDEX types_name ON types (name)", expect("CREATE INDEX", null)),
+          Arguments.of("DROP INDEX types_name ON types (name)", expect("DROP INDEX", null)),
+          Arguments.of(
+              "CREATE VIEW tmp AS SELECT type FROM table WHERE id = ?",
+              expect("CREATE VIEW", null)),
+          Arguments.of(
+              "CREATE PROCEDURE p AS SELECT * FROM table GO", expect("CREATE PROCEDURE", null)));
     }
   }
 }

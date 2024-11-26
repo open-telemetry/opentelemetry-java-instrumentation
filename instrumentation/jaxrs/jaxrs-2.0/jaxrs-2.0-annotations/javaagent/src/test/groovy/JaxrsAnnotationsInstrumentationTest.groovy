@@ -4,7 +4,9 @@
  */
 
 import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
+import io.opentelemetry.semconv.ErrorAttributes
+import io.opentelemetry.semconv.HttpAttributes
 import spock.lang.Unroll
 
 import javax.ws.rs.DELETE
@@ -35,17 +37,17 @@ class JaxrsAnnotationsInstrumentationTest extends AgentInstrumentationSpecificat
           kind SERVER
           hasNoParent()
           attributes {
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.HTTP_ROUTE" paramName
-            "$SemanticAttributes.ERROR_TYPE" "_OTHER"
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$HttpAttributes.HTTP_ROUTE" paramName
+            "$ErrorAttributes.ERROR_TYPE" "_OTHER"
           }
         }
         span(1) {
           name "${className}.call"
           childOf span(0)
           attributes {
-            "$SemanticAttributes.CODE_NAMESPACE" obj.getClass().getName()
-            "$SemanticAttributes.CODE_FUNCTION" "call"
+            "$CodeIncubatingAttributes.CODE_NAMESPACE" obj.getClass().getName()
+            "$CodeIncubatingAttributes.CODE_FUNCTION" "call"
           }
         }
       }
@@ -125,8 +127,8 @@ class JaxrsAnnotationsInstrumentationTest extends AgentInstrumentationSpecificat
           name "GET"
           kind SERVER
           attributes {
-            "$SemanticAttributes.HTTP_REQUEST_METHOD" "GET"
-            "$SemanticAttributes.ERROR_TYPE" "_OTHER"
+            "$HttpAttributes.HTTP_REQUEST_METHOD" "GET"
+            "$ErrorAttributes.ERROR_TYPE" "_OTHER"
           }
         }
       }
