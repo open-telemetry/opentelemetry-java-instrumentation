@@ -7,8 +7,13 @@ plugins {
   id("otel.jmh-conventions")
 }
 
+otelJava {
+  // Spring Boot 3 requires java 17
+  minJavaVersionSupported.set(JavaVersion.VERSION_17)
+}
+
 dependencies {
-  jmhImplementation("org.springframework.boot:spring-boot-starter-web:3.3.5")
+  jmhImplementation("org.springframework.boot:spring-boot-starter-web:3.4.0")
 }
 
 tasks {

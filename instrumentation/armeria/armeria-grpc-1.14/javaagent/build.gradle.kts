@@ -27,7 +27,7 @@ dependencies {
 val latestDepTest = findProperty("testLatestDeps") as Boolean
 protobuf {
   protoc {
-    val protocVersion = if (latestDepTest) "4.28.2" else "3.19.2"
+    val protocVersion = if (latestDepTest) "3.25.5" else "3.19.2"
     artifact = "com.google.protobuf:protoc:$protocVersion"
   }
   plugins {

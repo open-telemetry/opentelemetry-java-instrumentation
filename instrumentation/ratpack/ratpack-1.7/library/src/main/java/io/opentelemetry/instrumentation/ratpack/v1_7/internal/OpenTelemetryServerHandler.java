@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ratpack.v1_7;
+package io.opentelemetry.instrumentation.ratpack.v1_7.internal;
 
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
 
@@ -16,11 +16,15 @@ import ratpack.handling.Handler;
 import ratpack.http.Request;
 import ratpack.http.Response;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class OpenTelemetryServerHandler implements Handler {
 
   private final Instrumenter<Request, Response> instrumenter;
 
-  OpenTelemetryServerHandler(Instrumenter<Request, Response> instrumenter) {
+  public OpenTelemetryServerHandler(Instrumenter<Request, Response> instrumenter) {
     this.instrumenter = instrumenter;
   }
 

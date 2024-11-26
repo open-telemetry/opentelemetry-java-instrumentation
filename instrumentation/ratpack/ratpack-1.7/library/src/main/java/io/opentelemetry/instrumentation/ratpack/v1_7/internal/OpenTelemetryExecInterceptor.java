@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ratpack.v1_7;
+package io.opentelemetry.instrumentation.ratpack.v1_7.internal;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -11,9 +11,13 @@ import ratpack.exec.ExecInterceptor;
 import ratpack.exec.Execution;
 import ratpack.func.Block;
 
-final class OpenTelemetryExecInterceptor implements ExecInterceptor {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class OpenTelemetryExecInterceptor implements ExecInterceptor {
 
-  static final ExecInterceptor INSTANCE = new OpenTelemetryExecInterceptor();
+  public static final ExecInterceptor INSTANCE = new OpenTelemetryExecInterceptor();
 
   @Override
   public void intercept(Execution execution, ExecType type, Block continuation) throws Exception {
