@@ -5,15 +5,16 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.MultiQuerySqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
+import java.util.Collection;
 import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest> {
+public final class JdbcAttributesGetter implements MultiQuerySqlClientAttributesGetter<DbRequest> {
 
   @Nullable
   @Override
@@ -45,6 +46,16 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Nullable
   @Override
   public String getRawQueryText(DbRequest request) {
-    return request.getQueryText();
+    return request.getQueryTexts().iterator().next();
+  }
+
+  @Override
+  public Collection<String> getRawQueryTexts(DbRequest request) {
+    return request.getQueryTexts();
+  }
+
+  @Override
+  public Long getBatchSize(DbRequest request) {
+    return request.getBatchSize();
   }
 }

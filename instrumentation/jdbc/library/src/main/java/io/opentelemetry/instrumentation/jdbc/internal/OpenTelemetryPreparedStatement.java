@@ -234,6 +234,7 @@ public class OpenTelemetryPreparedStatement<S extends PreparedStatement>
   @Override
   public void addBatch() throws SQLException {
     delegate.addBatch();
+    batchSize++;
   }
 
   @SuppressWarnings("UngroupedOverloads")

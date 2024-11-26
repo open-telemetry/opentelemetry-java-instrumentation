@@ -11,6 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -490,7 +491,7 @@ class JdbcInstrumentationTest {
                     span.hasName(spanName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, system),
                             equalTo(maybeStable(DB_NAME), dbNameLower),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
@@ -527,7 +528,7 @@ class JdbcInstrumentationTest {
                     span.hasName(spanName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, system),
                             equalTo(maybeStable(DB_NAME), dbNameLower),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
@@ -564,7 +565,7 @@ class JdbcInstrumentationTest {
                     span.hasName(spanName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, system),
                             equalTo(maybeStable(DB_NAME), dbNameLower),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
@@ -700,7 +701,7 @@ class JdbcInstrumentationTest {
                     span.hasName(spanName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, system),
                             equalTo(maybeStable(DB_NAME), dbNameLower),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
@@ -802,7 +803,7 @@ class JdbcInstrumentationTest {
                     span.hasName(spanName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, system),
                             equalTo(maybeStable(DB_NAME), dbNameLower),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
@@ -909,7 +910,7 @@ class JdbcInstrumentationTest {
                     span.hasName(spanName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, system),
                             equalTo(maybeStable(DB_NAME), dbNameLower),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
@@ -975,7 +976,7 @@ class JdbcInstrumentationTest {
                               .hasName(datasource.getClass().getSimpleName() + ".getConnection")
                               .hasKind(SpanKind.INTERNAL)
                               .hasParent(trace.getSpan(0))
-                              .hasAttributesSatisfying(
+                              .hasAttributesSatisfyingExactly(
                                   equalTo(
                                       CodeIncubatingAttributes.CODE_NAMESPACE,
                                       datasource.getClass().getName()),
@@ -992,7 +993,7 @@ class JdbcInstrumentationTest {
                     span.hasName(datasource.getClass().getSimpleName() + ".getConnection")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(
                                 CodeIncubatingAttributes.CODE_NAMESPACE,
                                 datasource.getClass().getName()),
@@ -1034,7 +1035,7 @@ class JdbcInstrumentationTest {
                     span.hasName("DB Query")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "other_sql"),
                             equalTo(maybeStable(DB_STATEMENT), "testing ?"),
                             equalTo(
@@ -1117,7 +1118,7 @@ class JdbcInstrumentationTest {
                     span.hasName(spanName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "other_sql"),
                             equalTo(maybeStable(DB_NAME), databaseName),
                             equalTo(
@@ -1167,7 +1168,7 @@ class JdbcInstrumentationTest {
                 span ->
                     span.hasName("SELECT INFORMATION_SCHEMA.SYSTEM_USERS")
                         .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "hsqldb"),
                             equalTo(maybeStable(DB_NAME), dbNameLower),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "SA"),
@@ -1241,7 +1242,7 @@ class JdbcInstrumentationTest {
                     span.hasName("SELECT table")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "other_sql"),
                             equalTo(
                                 DB_CONNECTION_STRING,
@@ -1301,5 +1302,217 @@ class JdbcInstrumentationTest {
                     span.hasName("SELECT " + dbNameLower)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))));
+  }
+
+  static Stream<Arguments> batchStream() throws SQLException {
+    return Stream.of(
+        Arguments.of("h2", new org.h2.Driver().connect(jdbcUrls.get("h2"), null), null, "h2:mem:"),
+        Arguments.of(
+            "derby",
+            new EmbeddedDriver().connect(jdbcUrls.get("derby"), null),
+            "APP",
+            "derby:memory:"),
+        Arguments.of(
+            "hsqldb", new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null), "SA", "hsqldb:mem:"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("batchStream")
+  void testBatch(String system, Connection connection, String username, String url)
+      throws SQLException {
+    String tableName = "simple_batch_test";
+    Statement createTable = connection.createStatement();
+    createTable.execute("CREATE TABLE " + tableName + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
+    cleanup.deferCleanup(createTable);
+
+    testing.waitForTraces(1);
+    testing.clearData();
+
+    Statement statement = connection.createStatement();
+    cleanup.deferCleanup(statement);
+    statement.addBatch("INSERT INTO non_existent_table VALUES(1)");
+    statement.clearBatch();
+    statement.addBatch("INSERT INTO " + tableName + " VALUES(1)");
+    statement.addBatch("INSERT INTO " + tableName + " VALUES(2)");
+    testing.runWithSpan(
+        "parent", () -> assertThat(statement.executeBatch()).isEqualTo(new int[] {1, 1}));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "BATCH INSERT jdbcunittest." + tableName
+                                : "jdbcunittest")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM, system),
+                            equalTo(maybeStable(DB_NAME), dbNameLower),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
+                            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                emitStableDatabaseSemconv()
+                                    ? "INSERT INTO " + tableName + " VALUES(?)"
+                                    : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? "BATCH INSERT" : null),
+                            equalTo(
+                                maybeStable(DB_SQL_TABLE),
+                                emitStableDatabaseSemconv() ? tableName : null),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? 2L : null))));
+  }
+
+  @ParameterizedTest
+  @MethodSource("batchStream")
+  void testMultiBatch(String system, Connection connection, String username, String url)
+      throws SQLException {
+    String tableName1 = "multi_batch_test_1";
+    String tableName2 = "multi_batch_test_2";
+    Statement createTable1 = connection.createStatement();
+    createTable1.execute(
+        "CREATE TABLE " + tableName1 + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
+    cleanup.deferCleanup(createTable1);
+    Statement createTable2 = connection.createStatement();
+    createTable2.execute(
+        "CREATE TABLE " + tableName2 + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
+    cleanup.deferCleanup(createTable1);
+
+    testing.waitForTraces(2);
+    testing.clearData();
+
+    Statement statement = connection.createStatement();
+    cleanup.deferCleanup(statement);
+    statement.addBatch("INSERT INTO " + tableName1 + " VALUES(1)");
+    statement.addBatch("INSERT INTO " + tableName2 + " VALUES(2)");
+    testing.runWithSpan(
+        "parent", () -> assertThat(statement.executeBatch()).isEqualTo(new int[] {1, 1}));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "BATCH INSERT jdbcunittest"
+                                : "jdbcunittest")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM, system),
+                            equalTo(maybeStable(DB_NAME), dbNameLower),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
+                            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                emitStableDatabaseSemconv()
+                                    ? "INSERT INTO "
+                                        + tableName1
+                                        + " VALUES(?);INSERT INTO multi_batch_test_2 VALUES(?)"
+                                    : null),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? "BATCH INSERT" : null),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? 2L : null))));
+  }
+
+  @ParameterizedTest
+  @MethodSource("batchStream")
+  void testSingleItemBatch(String system, Connection connection, String username, String url)
+      throws SQLException {
+    String tableName = "single_item_batch_test";
+    Statement createTable = connection.createStatement();
+    createTable.execute("CREATE TABLE " + tableName + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
+    cleanup.deferCleanup(createTable);
+
+    testing.waitForTraces(1);
+    testing.clearData();
+
+    Statement statement = connection.createStatement();
+    cleanup.deferCleanup(statement);
+    statement.addBatch("INSERT INTO " + tableName + " VALUES(1)");
+    testing.runWithSpan(
+        "parent", () -> assertThat(statement.executeBatch()).isEqualTo(new int[] {1}));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("INSERT jdbcunittest." + tableName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM, system),
+                            equalTo(maybeStable(DB_NAME), dbNameLower),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
+                            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                "INSERT INTO " + tableName + " VALUES(?)"),
+                            equalTo(maybeStable(DB_OPERATION), "INSERT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), tableName))));
+  }
+
+  @ParameterizedTest
+  @MethodSource("batchStream")
+  void testPreparedBatch(String system, Connection connection, String username, String url)
+      throws SQLException {
+    String tableName = "prepared_batch_test";
+    Statement createTable = connection.createStatement();
+    createTable.execute("CREATE TABLE " + tableName + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
+    cleanup.deferCleanup(createTable);
+
+    testing.waitForTraces(1);
+    testing.clearData();
+
+    PreparedStatement statement =
+        connection.prepareStatement("INSERT INTO " + tableName + " VALUES(?)");
+    cleanup.deferCleanup(statement);
+    statement.setInt(1, 1);
+    statement.addBatch();
+    statement.clearBatch();
+    statement.setInt(1, 1);
+    statement.addBatch();
+    statement.setInt(1, 2);
+    statement.addBatch();
+    testing.runWithSpan(
+        "parent", () -> assertThat(statement.executeBatch()).isEqualTo(new int[] {1, 1}));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "BATCH INSERT jdbcunittest." + tableName
+                                : "INSERT jdbcunittest." + tableName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM, system),
+                            equalTo(maybeStable(DB_NAME), dbNameLower),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
+                            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                "INSERT INTO " + tableName + " VALUES(?)"),
+                            equalTo(
+                                maybeStable(DB_OPERATION),
+                                emitStableDatabaseSemconv() ? "BATCH INSERT" : "INSERT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), tableName),
+                            equalTo(
+                                DB_OPERATION_BATCH_SIZE,
+                                emitStableDatabaseSemconv() ? 2L : null))));
   }
 }
