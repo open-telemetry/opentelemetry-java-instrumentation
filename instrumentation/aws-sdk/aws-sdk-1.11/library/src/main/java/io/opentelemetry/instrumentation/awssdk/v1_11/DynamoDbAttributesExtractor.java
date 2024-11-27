@@ -18,6 +18,7 @@ import javax.annotation.Nullable;
 
 public class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Response<?>> {
 
+  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
   private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
   private static final AttributeKey<List<String>> AWS_DYNAMODB_TABLE_NAMES =
       AttributeKey.stringArrayKey("aws.dynamodb.table_names");

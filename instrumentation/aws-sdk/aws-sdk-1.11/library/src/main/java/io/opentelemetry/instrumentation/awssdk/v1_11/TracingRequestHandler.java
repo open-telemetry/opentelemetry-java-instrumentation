@@ -31,9 +31,9 @@ final class TracingRequestHandler extends RequestHandler2 {
       ContextKey.named(TracingRequestHandler.class.getName() + ".Timer");
   private static final ContextKey<Boolean> REQUEST_SPAN_SUPPRESSED_KEY =
       ContextKey.named(TracingRequestHandler.class.getName() + ".RequestSpanSuppressed");
-  private static final String SEND_MESSAGE_REQUEST =
+  private static final String SEND_MESSAGE_REQUEST_CLASS =
       "com.amazonaws.services.sqs.model.SendMessageRequest";
-  private static final String DYNAMODBV2 = "com.amazonaws.services.dynamodbv2.model.";
+  private static final String DYNAMODBV2_CLASS_PREFIX = "com.amazonaws.services.dynamodbv2.model.";
 
   private final Instrumenter<Request<?>, Response<?>> requestInstrumenter;
   private final Instrumenter<SqsReceiveRequest, Response<?>> consumerReceiveInstrumenter;
@@ -162,10 +162,10 @@ final class TracingRequestHandler extends RequestHandler2 {
 
   private Instrumenter<Request<?>, Response<?>> getInstrumenter(Request<?> request) {
     String className = request.getOriginalRequest().getClass().getName();
-    if (className.startsWith(DYNAMODBV2)) {
+    if (className.startsWith(DYNAMODBV2_CLASS_PREFIX)) {
       return dynamoDbInstrumenter;
     }
-    if (className.equals(SEND_MESSAGE_REQUEST)) {
+    if (className.equals(SEND_MESSAGE_REQUEST_CLASS)) {
       return producerInstrumenter;
     }
     return requestInstrumenter;
