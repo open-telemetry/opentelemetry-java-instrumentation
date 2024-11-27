@@ -14,12 +14,7 @@ muzzle {
 val latestDepTest = findProperty("testLatestDeps") as Boolean
 
 dependencies {
-  if (latestDepTest) {
-    library("com.aerospike:aerospike-client:+")
-  } else {
-    library("com.aerospike:aerospike-client:7.1.0")
-  }
-
+  library("com.aerospike:aerospike-client:7.1.0")
   implementation("io.opentelemetry:opentelemetry-api-incubator")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
