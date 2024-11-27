@@ -6,7 +6,7 @@
 import static org.assertj.core.api.Assertions.assertThat;
 
 import instrumentation.TestHelperClass;
-import io.opentelemetry.javaagent.bootstrap.IndyProxy;
+import io.opentelemetry.javaagent.bootstrap.InstrumentationProxy;
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldAccessorMarker;
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker;
 import java.io.ObjectStreamClass;
@@ -57,7 +57,7 @@ public class ReflectionTest {
         .isNotNull();
 
     Object instance = helperType.getConstructor().newInstance();
-    if (IndyProxy.class.isAssignableFrom(helperType)) {
+    if (InstrumentationProxy.class.isAssignableFrom(helperType)) {
       // indy advice: must be an indy proxy
 
       for (Method method : helperType.getMethods()) {
@@ -69,18 +69,20 @@ public class ReflectionTest {
       for (Class<?> interfaceType : helperType.getInterfaces()) {
         assertThat(interfaceType)
             .describedAs("indy proxy interface must be hidden from reflection")
-            .isNotEqualTo(IndyProxy.class);
+            .isNotEqualTo(InstrumentationProxy.class);
       }
 
-      assertThat(instance).isInstanceOf(IndyProxy.class);
+      assertThat(instance).isInstanceOf(InstrumentationProxy.class);
 
-      Object proxyDelegate = ((IndyProxy) instance).__getIndyProxyDelegate();
-      assertThat(proxyDelegate).isNotInstanceOf(IndyProxy.class);
+      Object proxyDelegate = ((InstrumentationProxy) instance).__getIndyProxyDelegate();
+      assertThat(proxyDelegate).isNotInstanceOf(InstrumentationProxy.class);
 
     } else {
       // inline advice: must be of the expected type
       assertThat(helperType).isEqualTo(TestHelperClass.class);
-      assertThat(instance).isInstanceOf(TestHelperClass.class).isNotInstanceOf(IndyProxy.class);
+      assertThat(instance)
+          .isInstanceOf(TestHelperClass.class)
+          .isNotInstanceOf(InstrumentationProxy.class);
     }
   }
 }

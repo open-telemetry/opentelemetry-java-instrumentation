@@ -15,7 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.IndyProxyHelper;
+import io.opentelemetry.javaagent.bootstrap.InstrumentationProxyHelper;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
@@ -68,7 +68,7 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
       }
       Object bean = springCtx.getBean("otelAutoDispatcherFilter");
       OpenTelemetryHandlerMappingFilter filter =
-          IndyProxyHelper.unwrapIfNeeded(bean, OpenTelemetryHandlerMappingFilter.class);
+          InstrumentationProxyHelper.unwrapIfNeeded(bean, OpenTelemetryHandlerMappingFilter.class);
       filter.setHandlerMappings(handlerMappings);
     }
   }

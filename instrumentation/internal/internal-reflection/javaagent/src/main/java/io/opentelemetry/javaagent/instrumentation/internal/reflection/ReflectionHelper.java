@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.reflection;
 
-import io.opentelemetry.javaagent.bootstrap.IndyProxy;
+import io.opentelemetry.javaagent.bootstrap.InstrumentationProxy;
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldAccessorMarker;
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldDetector;
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker;
@@ -71,7 +71,7 @@ public final class ReflectionHelper {
       // filter out virtual field marker and accessor interfaces
       if (interfaceClass == VirtualFieldInstalledMarker.class) {
         continue;
-      } else if (interfaceClass == IndyProxy.class) {
+      } else if (interfaceClass == InstrumentationProxy.class) {
         continue;
       } else if (VirtualFieldAccessorMarker.class.isAssignableFrom(interfaceClass)
           && interfaceClass.isSynthetic()
@@ -89,6 +89,6 @@ public final class ReflectionHelper {
 
   private static boolean noInterfaceToHide(Class<?> containingClass) {
     return !VirtualFieldInstalledMarker.class.isAssignableFrom(containingClass)
-        && !IndyProxy.class.isAssignableFrom(containingClass);
+        && !InstrumentationProxy.class.isAssignableFrom(containingClass);
   }
 }

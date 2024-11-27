@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
-public class IndyProxyHelper {
+public class InstrumentationProxyHelper {
 
-  private IndyProxyHelper() {}
+  private InstrumentationProxyHelper() {}
 
   /**
    * Unwraps and casts an indy proxy, or just casts if it's not an indy proxy.
@@ -21,8 +21,8 @@ public class IndyProxyHelper {
    *     expected type
    */
   public static <T> T unwrapIfNeeded(Object o, Class<T> type) {
-    if (o instanceof IndyProxy) {
-      Object delegate = ((IndyProxy) o).__getIndyProxyDelegate();
+    if (o instanceof InstrumentationProxy) {
+      Object delegate = ((InstrumentationProxy) o).__getIndyProxyDelegate();
       if (type.isAssignableFrom(delegate.getClass())) {
         return type.cast(delegate);
       }

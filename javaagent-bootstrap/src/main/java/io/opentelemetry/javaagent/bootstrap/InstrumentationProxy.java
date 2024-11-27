@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.bootstrap;
 
 /** Interface added to indy proxies to allow unwrapping the proxy object */
-public interface IndyProxy {
+public interface InstrumentationProxy {
 
   /**
    * Unwraps the proxy delegate instance

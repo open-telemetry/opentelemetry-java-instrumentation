@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
-import io.opentelemetry.javaagent.bootstrap.IndyProxy;
+import io.opentelemetry.javaagent.bootstrap.InstrumentationProxy;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -96,7 +96,7 @@ public class IndyProxyFactory {
       TypeDescription classToProxy, String proxyClassName) {
     TypeDescription.Generic superClass = classToProxy.getSuperClass();
     List<TypeDefinition> interfaces = new ArrayList<>(classToProxy.getInterfaces());
-    interfaces.add(TypeDescription.ForLoadedType.of(IndyProxy.class));
+    interfaces.add(TypeDescription.ForLoadedType.of(InstrumentationProxy.class));
     DynamicType.Builder<?> builder =
         new ByteBuddy()
             .subclass(superClass, ConstructorStrategy.Default.NO_CONSTRUCTORS)

@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.javaagent.bootstrap.IndyProxy;
+import io.opentelemetry.javaagent.bootstrap.InstrumentationProxy;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.dummies.DummyAnnotation;
 import java.lang.invoke.CallSite;
 import java.lang.invoke.ConstantCallSite;
@@ -329,14 +329,16 @@ public class IndyProxyFactoryTest {
   @Test
   void verifyProxyClass() throws Exception {
     Class<?> proxyType = generateProxy(ProxyUnwrapTest.class);
-    assertThat(proxyType).isNotInstanceOf(IndyProxy.class).isNotInstanceOf(ProxyUnwrapTest.class);
+    assertThat(proxyType)
+        .isNotInstanceOf(InstrumentationProxy.class)
+        .isNotInstanceOf(ProxyUnwrapTest.class);
 
-    assertThat(IndyProxy.class.isAssignableFrom(proxyType))
+    assertThat(InstrumentationProxy.class.isAssignableFrom(proxyType))
         .describedAs("proxy class can be cast to IndyProxy")
         .isTrue();
 
     Object proxyInstance = proxyType.getConstructor().newInstance();
-    Object proxyDelegate = ((IndyProxy) proxyInstance).__getIndyProxyDelegate();
+    Object proxyDelegate = ((InstrumentationProxy) proxyInstance).__getIndyProxyDelegate();
     assertThat(proxyDelegate).isInstanceOf(ProxyUnwrapTest.class);
   }
 
