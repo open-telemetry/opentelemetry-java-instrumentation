@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.internal;
+package io.opentelemetry.javaagent.instrumentation.aerospike.internal;
 
-import static io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.AersopikeSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.aerospike.AerospikeSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 

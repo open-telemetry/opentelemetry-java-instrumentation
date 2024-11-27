@@ -6,17 +6,30 @@ muzzle {
   pass {
     group.set("com.aerospike")
     module.set("aerospike-client")
-    versions.set("[4.0.0,)")
+    versions.set("[7.1.0,)")
     assertInverse.set(true)
   }
 }
 
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
 dependencies {
-  library("com.aerospike:aerospike-client:8.0.0")
+  if (latestDepTest) {
+    library("com.aerospike:aerospike-client:+")
+  } else {
+    library("com.aerospike:aerospike-client:7.1.0")
+  }
+
   implementation("io.opentelemetry:opentelemetry-api-incubator")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
+}
+
+if (latestDepTest) {
+  otelJava {
+    minJavaVersionSupported.set(JavaVersion.VERSION_21)
+  }
 }
 
 tasks {

@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.metrics;
+package io.opentelemetry.javaagent.instrumentation.aerospike.metrics;
 
-import static io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.internal.AerospikeSemanticAttributes.AEROSPIKE_NODE_NAME;
-import static io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.internal.AerospikeSemanticAttributes.AEROSPIKE_SET_NAME;
-import static io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.internal.AerospikeSemanticAttributes.AEROSPIKE_STATUS;
+import static io.opentelemetry.javaagent.instrumentation.aerospike.internal.AerospikeSemanticAttributes.AEROSPIKE_NODE_NAME;
+import static io.opentelemetry.javaagent.instrumentation.aerospike.internal.AerospikeSemanticAttributes.AEROSPIKE_SET_NAME;
+import static io.opentelemetry.javaagent.instrumentation.aerospike.internal.AerospikeSemanticAttributes.AEROSPIKE_STATUS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;

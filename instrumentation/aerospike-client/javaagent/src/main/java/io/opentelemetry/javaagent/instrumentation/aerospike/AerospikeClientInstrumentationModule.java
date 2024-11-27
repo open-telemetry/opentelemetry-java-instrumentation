@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.aerospike.v7_0;
+package io.opentelemetry.javaagent.instrumentation.aerospike;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
@@ -23,12 +23,7 @@ public class AerospikeClientInstrumentationModule extends InstrumentationModule 
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("com.aerospike.client.IAerospikeClient")
-        .and(hasClassesNamed("com.aerospike.client.command.Command"))
-        .and(hasClassesNamed("com.aerospike.client.command.SyncCommand"))
-        .and(hasClassesNamed("com.aerospike.client.async.AsyncCommand"))
-        .and(hasClassesNamed("com.aerospike.client.async.EventLoop"))
-        .and(hasClassesNamed("com.aerospike.client.Key"));
+    return hasClassesNamed("com.aerospike.client.metrics.LatencyType");
   }
 
   @Override

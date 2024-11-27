@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.aerospike.v7_0;
+package io.opentelemetry.javaagent.instrumentation.aerospike;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperClass;
@@ -13,7 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.aerospike.client.cluster.Node;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.internal.AerospikeRequestContext;
+import io.opentelemetry.javaagent.instrumentation.aerospike.internal.AerospikeRequestContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;

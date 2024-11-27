@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.aerospike.v7_0;
+package io.opentelemetry.javaagent.instrumentation.aerospike;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.AersopikeSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.internal.CustomElementMatcher.iterableHasAtLeastOne;
+import static io.opentelemetry.javaagent.instrumentation.aerospike.AerospikeSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.aerospike.internal.CustomElementMatcher.iterableHasAtLeastOne;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -18,8 +18,8 @@ import com.aerospike.client.Key;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.internal.AerospikeRequest;
-import io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.internal.AerospikeRequestContext;
+import io.opentelemetry.javaagent.instrumentation.aerospike.internal.AerospikeRequest;
+import io.opentelemetry.javaagent.instrumentation.aerospike.internal.AerospikeRequestContext;
 import java.util.Locale;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;

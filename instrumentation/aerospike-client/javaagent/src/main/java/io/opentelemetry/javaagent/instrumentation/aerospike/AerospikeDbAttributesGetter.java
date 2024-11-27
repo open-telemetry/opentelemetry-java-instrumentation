@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.aerospike.v7_0;
+package io.opentelemetry.javaagent.instrumentation.aerospike;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.internal.AerospikeRequest;
-import io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.internal.AerospikeSemanticAttributes;
+import io.opentelemetry.javaagent.instrumentation.aerospike.internal.AerospikeRequest;
+import io.opentelemetry.javaagent.instrumentation.aerospike.internal.AerospikeSemanticAttributes;
 import javax.annotation.Nullable;
 
 final class AerospikeDbAttributesGetter implements DbClientAttributesGetter<AerospikeRequest> {

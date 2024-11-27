@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.aerospike.v7_0;
+package io.opentelemetry.javaagent.instrumentation.aerospike;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
@@ -15,10 +15,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
-import io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.internal.AerospikeRequest;
-import io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.metrics.AerospikeMetrics;
+import io.opentelemetry.javaagent.instrumentation.aerospike.internal.AerospikeRequest;
+import io.opentelemetry.javaagent.instrumentation.aerospike.metrics.AerospikeMetrics;
 
-public final class AersopikeSingletons {
+public final class AerospikeSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aerospike-client";
 
   private static final Instrumenter<AerospikeRequest, Void> INSTRUMENTER;
@@ -52,5 +52,5 @@ public final class AersopikeSingletons {
     return INSTRUMENTER;
   }
 
-  private AersopikeSingletons() {}
+  private AerospikeSingletons() {}
 }

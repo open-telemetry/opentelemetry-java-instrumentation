@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.aerospike.v7_0;
+package io.opentelemetry.javaagent.instrumentation.aerospike;
 
 import com.aerospike.client.cluster.Node;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
-import io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.internal.AerospikeRequest;
+import io.opentelemetry.javaagent.instrumentation.aerospike.internal.AerospikeRequest;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 

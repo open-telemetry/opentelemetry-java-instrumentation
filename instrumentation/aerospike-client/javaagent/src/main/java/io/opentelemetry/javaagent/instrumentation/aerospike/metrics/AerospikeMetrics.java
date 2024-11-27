@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.metrics;
+package io.opentelemetry.javaagent.instrumentation.aerospike.metrics;
 
 import static java.util.logging.Level.FINE;
 

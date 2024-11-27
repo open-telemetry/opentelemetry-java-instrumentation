@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.aerospike.v7_0;
+package io.opentelemetry.javaagent.instrumentation.aerospike;
 
 import com.aerospike.client.AerospikeException;
 import com.aerospike.client.ResultCode;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.internal.AerospikeRequest;
-import io.opentelemetry.javaagent.instrumentation.aerospike.v7_0.internal.AerospikeSemanticAttributes;
+import io.opentelemetry.javaagent.instrumentation.aerospike.internal.AerospikeRequest;
+import io.opentelemetry.javaagent.instrumentation.aerospike.internal.AerospikeSemanticAttributes;
 import javax.annotation.Nullable;
 
 final class AerospikeClientAttributeExtractor
