@@ -111,7 +111,6 @@ class DbClientMetricsTest {
                                                     .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
                                                     .hasSpanId("090a0b0c0d0e0f00"))
                                         .hasBucketBoundaries(DURATION_BUCKETS))));
-
   }
 
   private static long nanos(int millis) {
