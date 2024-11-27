@@ -39,12 +39,18 @@ class BeanFinder {
   void discoverBeans(MetricConfiguration conf) {
     this.conf = conf;
 
-    if (!conf.isEmpty()) {
-      // Issue 9336: Corner case: PlatformMBeanServer will remain unitialized until a direct
-      // reference to it is made. This call makes sure that the PlatformMBeanServer will be in
-      // the set of MBeanServers reported by MBeanServerFactory.
-      ManagementFactory.getPlatformMBeanServer();
-    }
+    exec.schedule(
+        () -> {
+          // Issue 9336: Corner case: PlatformMBeanServer will remain unitialized until a direct
+          // reference to it is made. This call makes sure that the PlatformMBeanServer will be in
+          // the set of MBeanServers reported by MBeanServerFactory.
+          // Issue 11143: This call initializes java.util.logging.LogManager. We should not call it
+          // before application has had a chance to configure custom log manager. This is needed for
+          // wildfly.
+          ManagementFactory.getPlatformMBeanServer();
+        },
+        discoveryDelay,
+        TimeUnit.MILLISECONDS);
 
     exec.schedule(
         new Runnable() {
