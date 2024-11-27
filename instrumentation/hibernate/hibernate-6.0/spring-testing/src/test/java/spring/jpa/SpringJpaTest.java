@@ -19,9 +19,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -90,7 +88,8 @@ class SpringJpaTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(
+                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(
                                 DbIncubatingAttributes.DB_USER,
@@ -122,7 +121,7 @@ class SpringJpaTest {
     testing.runWithSpan("parent", () -> repo.save(customer));
     Long savedId = customer.getId();
 
-    assertThat(customer.getId()).isNull();
+    assertThat(customer.getId()).isNotNull();
     testing.waitAndAssertTraces(
         trace -> {
           List<Consumer<SpanDataAssert>> consumers =
@@ -149,14 +148,15 @@ class SpringJpaTest {
                             .hasKind(CLIENT)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(DB_SYSTEM, "hsqldb"),
+                                equalTo(
+                                    DB_SYSTEM,
+                                    DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
                                 equalTo(maybeStable(DB_NAME), "test"),
                                 equalTo(
                                     DbIncubatingAttributes.DB_USER,
                                     emitStableDatabaseSemconv() ? null : "sa"),
                                 equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    "call next value for Customer_SEQ"),
+                                    maybeStable(DB_STATEMENT), "call next value for Customer_SEQ"),
                                 equalTo(
                                     DbIncubatingAttributes.DB_CONNECTION_STRING,
                                     emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
@@ -177,7 +177,9 @@ class SpringJpaTest {
                             .hasKind(CLIENT)
                             .hasParent(trace.getSpan(3))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(DB_SYSTEM, "hsqldb"),
+                                equalTo(
+                                    DB_SYSTEM,
+                                    DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
                                 equalTo(maybeStable(DB_NAME), "test"),
                                 equalTo(
                                     DbIncubatingAttributes.DB_USER,
@@ -191,9 +193,7 @@ class SpringJpaTest {
                                         val.matches(
                                             "insert into Customer \\(.*\\) values \\(.*\\)")),
                                 equalTo(maybeStable(DB_OPERATION), "INSERT"),
-                                equalTo(
-                                    maybeStable(DB_SQL_TABLE),
-                                    "Customer"))));
+                                equalTo(maybeStable(DB_SQL_TABLE), "Customer"))));
 
           } else {
             consumers.addAll(
@@ -203,7 +203,9 @@ class SpringJpaTest {
                             .hasKind(CLIENT)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(DB_SYSTEM, "hsqldb"),
+                                equalTo(
+                                    DB_SYSTEM,
+                                    DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
                                 equalTo(maybeStable(DB_NAME), "test"),
                                 equalTo(
                                     DbIncubatingAttributes.DB_USER,
@@ -217,8 +219,7 @@ class SpringJpaTest {
                                         val.matches(
                                             "insert into Customer \\(.*\\) values \\(.*\\)")),
                                 equalTo(maybeStable(DB_OPERATION), "INSERT"),
-                                equalTo(
-                                    maybeStable(DB_SQL_TABLE), "Customer")),
+                                equalTo(maybeStable(DB_SQL_TABLE), "Customer")),
                     span ->
                         span.hasName("Transaction.commit")
                             .hasKind(INTERNAL)
@@ -260,7 +261,8 @@ class SpringJpaTest {
                     span.hasName("SELECT test.Customer")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(
+                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(
                                 DbIncubatingAttributes.DB_USER,
@@ -290,7 +292,8 @@ class SpringJpaTest {
                     span.hasName("UPDATE test.Customer")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(
+                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(
                                 DbIncubatingAttributes.DB_USER,
@@ -304,8 +307,7 @@ class SpringJpaTest {
                                     val.matches(
                                         "update Customer set firstName=\\?,(.*)lastName=\\? where id=\\?")),
                             equalTo(maybeStable(DB_OPERATION), "UPDATE"),
-                            equalTo(
-                                maybeStable(DB_SQL_TABLE), "Customer"))));
+                            equalTo(maybeStable(DB_SQL_TABLE), "Customer"))));
     testing.clearData();
     Customer anonymousCustomer =
         testing.runWithSpan("parent", () -> repo.findByLastName("Anonymous").get(0));
@@ -336,7 +338,8 @@ class SpringJpaTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(
+                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(
                                 DbIncubatingAttributes.DB_USER,
@@ -350,8 +353,7 @@ class SpringJpaTest {
                                     val.matches(
                                         "select ([^.]+)\\.id([^,]*),([^.]+)\\.firstName([^,]*),([^.]+)\\.lastName (.*)from Customer (.*)(where ([^.]+)\\.lastName( ?)=( ?)\\?|)")),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(
-                                maybeStable(DB_SQL_TABLE), "Customer"))));
+                            equalTo(maybeStable(DB_SQL_TABLE), "Customer"))));
     testing.clearData();
 
     testing.runWithSpan("parent", () -> repo.delete(anonymousCustomer));
@@ -386,7 +388,8 @@ class SpringJpaTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(
+                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(
                                 DbIncubatingAttributes.DB_USER,
@@ -418,7 +421,8 @@ class SpringJpaTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(
+                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(
                                 DbIncubatingAttributes.DB_USER,
@@ -457,7 +461,8 @@ class SpringJpaTest {
                   span.hasName("DELETE test.Customer")
                       .hasKind(CLIENT)
                       .hasAttributesSatisfyingExactly(
-                          equalTo(DB_SYSTEM, "hsqldb"),
+                          equalTo(
+                              DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
                           equalTo(maybeStable(DB_NAME), "test"),
                           equalTo(
                               DbIncubatingAttributes.DB_USER,
@@ -465,9 +470,7 @@ class SpringJpaTest {
                           equalTo(
                               DbIncubatingAttributes.DB_CONNECTION_STRING,
                               emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
-                          equalTo(
-                              maybeStable(DB_STATEMENT),
-                              "delete from Customer where id=?"),
+                          equalTo(maybeStable(DB_STATEMENT), "delete from Customer where id=?"),
                           equalTo(maybeStable(DB_OPERATION), "DELETE"),
                           equalTo(maybeStable(DB_SQL_TABLE), "Customer")));
           trace.hasSpansSatisfyingExactly(consumers);
