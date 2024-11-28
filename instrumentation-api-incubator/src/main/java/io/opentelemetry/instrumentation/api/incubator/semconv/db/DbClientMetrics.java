@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -44,7 +45,10 @@ public final class DbClientMetrics implements OperationListener {
    * @see InstrumenterBuilder#addOperationMetrics(OperationMetrics)
    */
   public static OperationMetrics get() {
-    return OperationMetricsUtil.create("database client", DbClientMetrics::new);
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      return OperationMetricsUtil.create("database client", DbClientMetrics::new);
+    }
+    return meter -> OperationMetricsUtil.NOOP_OPERATION_LISTENER;
   }
 
   private final DoubleHistogram duration;
