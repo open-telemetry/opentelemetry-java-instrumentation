@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import javax.annotation.Nullable;
 
 /**
@@ -18,7 +20,43 @@ import javax.annotation.Nullable;
  * from the attribute methods, but implement as many as possible for best compliance with the
  * OpenTelemetry specification.
  */
-public interface DbClientAttributesGetter<REQUEST> extends DbClientCommonAttributesGetter<REQUEST> {
+public interface DbClientAttributesGetter<REQUEST, RESPONSE>
+    extends NetworkAttributesGetter<REQUEST, RESPONSE>, ServerAttributesGetter<REQUEST> {
+
+  @Deprecated
+  @Nullable
+  default String getSystem(REQUEST request) {
+    return null;
+  }
+
+  // TODO: make this required to implement
+  @Nullable
+  default String getDbSystem(REQUEST request) {
+    return getSystem(request);
+  }
+
+  @Deprecated
+  @Nullable
+  String getUser(REQUEST request);
+
+  /**
+   * @deprecated Use {@link #getDbNamespace(Object)} instead.
+   */
+  @Deprecated
+  @Nullable
+  default String getName(REQUEST request) {
+    return null;
+  }
+
+  // TODO: make this required to implement
+  @Nullable
+  default String getDbNamespace(REQUEST request) {
+    return getName(request);
+  }
+
+  @Deprecated
+  @Nullable
+  String getConnectionString(REQUEST request);
 
   /**
    * @deprecated Use {@link #getDbQueryText(REQUEST)} instead.

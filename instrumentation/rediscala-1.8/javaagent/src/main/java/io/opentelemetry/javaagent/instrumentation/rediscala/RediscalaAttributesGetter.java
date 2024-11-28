@@ -11,7 +11,8 @@ import java.util.Locale;
 import javax.annotation.Nullable;
 import redis.RedisCommand;
 
-final class RediscalaAttributesGetter implements DbClientAttributesGetter<RedisCommand<?, ?>> {
+final class RediscalaAttributesGetter
+    implements DbClientAttributesGetter<RedisCommand<?, ?>, Void> {
 
   @Override
   public String getDbSystem(RedisCommand<?, ?> redisCommand) {

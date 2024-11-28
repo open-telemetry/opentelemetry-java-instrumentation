@@ -13,7 +13,7 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest> {
+public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest, Void> {
 
   @Nullable
   @Override
@@ -46,5 +46,17 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Override
   public String getRawQueryText(DbRequest request) {
     return request.getQueryText();
+  }
+
+  @Nullable
+  @Override
+  public String getServerAddress(DbRequest request) {
+    return request.getDbInfo().getHost();
+  }
+
+  @Nullable
+  @Override
+  public Integer getServerPort(DbRequest request) {
+    return request.getDbInfo().getPort();
   }
 }

@@ -8,9 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.rest;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
+import org.opensearch.client.Response;
 
 final class OpenSearchRestAttributesGetter
-    implements DbClientAttributesGetter<OpenSearchRestRequest> {
+    implements DbClientAttributesGetter<OpenSearchRestRequest, Response> {
 
   @Override
   public String getDbSystem(OpenSearchRestRequest request) {

@@ -13,10 +13,8 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttrib
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesGetter;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcNetworkAttributesGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
@@ -31,7 +29,6 @@ public final class JdbcSingletons {
 
   static {
     JdbcAttributesGetter dbAttributesGetter = new JdbcAttributesGetter();
-    JdbcNetworkAttributesGetter netAttributesGetter = new JdbcNetworkAttributesGetter();
 
     STATEMENT_INSTRUMENTER =
         Instrumenter.<DbRequest, Void>builder(
@@ -46,10 +43,9 @@ public final class JdbcSingletons {
                                 "otel.instrumentation.jdbc.statement-sanitizer.enabled",
                                 AgentCommonConfig.get().isStatementSanitizationEnabled()))
                     .build())
-            .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    netAttributesGetter, AgentCommonConfig.get().getPeerServiceResolver()))
+                    dbAttributesGetter, AgentCommonConfig.get().getPeerServiceResolver()))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

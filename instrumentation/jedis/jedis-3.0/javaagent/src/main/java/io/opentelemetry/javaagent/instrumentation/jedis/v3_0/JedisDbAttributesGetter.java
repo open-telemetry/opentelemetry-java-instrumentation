@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
-final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest> {
+final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
 
   @Override
   public String getDbSystem(JedisRequest request) {

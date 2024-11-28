@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttrib
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
-import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import javax.sql.DataSource;
 
@@ -25,8 +24,6 @@ import javax.sql.DataSource;
 public final class JdbcInstrumenterFactory {
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
   private static final JdbcAttributesGetter dbAttributesGetter = new JdbcAttributesGetter();
-  private static final JdbcNetworkAttributesGetter netAttributesGetter =
-      new JdbcNetworkAttributesGetter();
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter() {
     return createStatementInstrumenter(GlobalOpenTelemetry.get());
@@ -51,7 +48,6 @@ public final class JdbcInstrumenterFactory {
             SqlClientAttributesExtractor.builder(dbAttributesGetter)
                 .setStatementSanitizationEnabled(statementSanitizationEnabled)
                 .build())
-        .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
         .setEnabled(enabled)
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }

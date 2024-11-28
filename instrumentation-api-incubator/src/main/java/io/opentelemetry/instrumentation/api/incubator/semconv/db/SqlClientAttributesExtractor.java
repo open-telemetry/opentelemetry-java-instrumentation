@@ -12,6 +12,9 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
+import javax.annotation.Nullable;
 
 /**
  * Extractor of <a
@@ -24,8 +27,7 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability;
  * parameters are removed.
  */
 public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
-    extends DbClientCommonAttributesExtractor<
-        REQUEST, RESPONSE, SqlClientAttributesGetter<REQUEST>> {
+    implements AttributesExtractor<REQUEST, RESPONSE>, SpanKeyProvider {
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
@@ -38,7 +40,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
 
   /** Creates the SQL client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      SqlClientAttributesGetter<REQUEST> getter) {
+      SqlClientAttributesGetter<REQUEST, RESPONSE> getter) {
     return SqlClientAttributesExtractor.<REQUEST, RESPONSE>builder(getter).build();
   }
 
@@ -47,7 +49,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
    * client attributes extractor.
    */
   public static <REQUEST, RESPONSE> SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
-      SqlClientAttributesGetter<REQUEST> getter) {
+      SqlClientAttributesGetter<REQUEST, RESPONSE> getter) {
     return new SqlClientAttributesExtractorBuilder<>(getter);
   }
 
@@ -58,18 +60,22 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   private final AttributeKey<String> oldSemconvTableAttribute;
   private final boolean statementSanitizationEnabled;
 
+  private final AttributesExtractor<REQUEST, RESPONSE> delegate;
+  private final SqlClientAttributesGetter<REQUEST, RESPONSE> getter;
+
   SqlClientAttributesExtractor(
-      SqlClientAttributesGetter<REQUEST> getter,
+      SqlClientAttributesGetter<REQUEST, RESPONSE> getter,
       AttributeKey<String> oldSemconvTableAttribute,
       boolean statementSanitizationEnabled) {
-    super(getter);
+    this.delegate = DbClientAttributesExtractor.create(getter);
     this.oldSemconvTableAttribute = oldSemconvTableAttribute;
     this.statementSanitizationEnabled = statementSanitizationEnabled;
+    this.getter = getter;
   }
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    super.onStart(attributes, parentContext, request);
+    delegate.onStart(attributes, parentContext, request);
 
     String rawQueryText = getter.getRawQueryText(request);
     SqlStatementInfo sanitizedStatement = sanitizer.sanitize(rawQueryText);
@@ -96,5 +102,24 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         internalSet(attributes, oldSemconvTableAttribute, sanitizedStatement.getMainIdentifier());
       }
     }
+  }
+
+  @Override
+  public void onEnd(
+      AttributesBuilder attributes,
+      Context context,
+      REQUEST request,
+      @Nullable RESPONSE response,
+      @Nullable Throwable error) {
+    delegate.onEnd(attributes, context, request, response, error);
+  }
+
+  /**
+   * This method is internal and is hence not for public use. Its API is unstable and can change at
+   * any time.
+   */
+  @Override
+  public SpanKey internalGetSpanKey() {
+    return SpanKey.DB_CLIENT;
   }
 }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.cassandra.v4.common;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -104,10 +105,15 @@ public abstract class AbstractCassandraTest {
                             .hasAttributesSatisfyingExactly(
                                 satisfies(
                                     NETWORK_TYPE,
-                                    val ->
+                                    val -> {
+                                      if (emitStableDatabaseSemconv()) {
+                                        val.isNull();
+                                      } else {
                                         val.satisfiesAnyOf(
                                             v -> assertThat(v).isEqualTo("ipv4"),
-                                            v -> assertThat(v).isEqualTo("ipv6"))),
+                                            v -> assertThat(v).isEqualTo("ipv6"));
+                                      }
+                                    }),
                                 equalTo(SERVER_ADDRESS, cassandraHost),
                                 equalTo(SERVER_PORT, cassandraPort),
                                 equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
@@ -158,10 +164,15 @@ public abstract class AbstractCassandraTest {
                             .hasAttributesSatisfyingExactly(
                                 satisfies(
                                     NETWORK_TYPE,
-                                    val ->
+                                    val -> {
+                                      if (emitStableDatabaseSemconv()) {
+                                        val.isNull();
+                                      } else {
                                         val.satisfiesAnyOf(
                                             v -> assertThat(v).isEqualTo("ipv4"),
-                                            v -> assertThat(v).isEqualTo("ipv6"))),
+                                            v -> assertThat(v).isEqualTo("ipv6"));
+                                      }
+                                    }),
                                 equalTo(SERVER_ADDRESS, cassandraHost),
                                 equalTo(SERVER_PORT, cassandraPort),
                                 equalTo(NETWORK_PEER_ADDRESS, cassandraIp),

@@ -10,20 +10,17 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 
 public final class RedissonInstrumenterFactory {
 
   public static Instrumenter<RedissonRequest, Void> createInstrumenter(String instrumentationName) {
     RedissonDbAttributesGetter dbAttributesGetter = new RedissonDbAttributesGetter();
-    RedissonNetAttributesGetter netAttributesGetter = new RedissonNetAttributesGetter();
 
     return Instrumenter.<RedissonRequest, Void>builder(
             GlobalOpenTelemetry.get(),
             instrumentationName,
             DbClientSpanNameExtractor.create(dbAttributesGetter))
         .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-        .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributesGetter))
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

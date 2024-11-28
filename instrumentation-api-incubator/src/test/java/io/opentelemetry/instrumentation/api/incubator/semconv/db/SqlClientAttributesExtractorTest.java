@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 class SqlClientAttributesExtractorTest {
 
   static final class TestAttributesGetter
-      implements SqlClientAttributesGetter<Map<String, String>> {
+      implements SqlClientAttributesGetter<Map<String, String>, Void> {
 
     @Override
     public String getRawQueryText(Map<String, String> map) {

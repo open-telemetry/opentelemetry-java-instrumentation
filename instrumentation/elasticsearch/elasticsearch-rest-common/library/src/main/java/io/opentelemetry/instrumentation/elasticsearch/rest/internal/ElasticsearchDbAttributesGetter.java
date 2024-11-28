@@ -16,13 +16,14 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.apache.http.HttpEntity;
+import org.elasticsearch.client.Response;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
 final class ElasticsearchDbAttributesGetter
-    implements DbClientAttributesGetter<ElasticsearchRestRequest> {
+    implements DbClientAttributesGetter<ElasticsearchRestRequest, Response> {
 
   private static final Logger logger =
       Logger.getLogger(ElasticsearchDbAttributesGetter.class.getName());
