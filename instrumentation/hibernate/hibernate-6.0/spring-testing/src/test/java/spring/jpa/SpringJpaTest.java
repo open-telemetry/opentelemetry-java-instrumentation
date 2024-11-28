@@ -26,12 +26,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
-import org.hibernate.Version;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -61,7 +56,6 @@ class SpringJpaTest {
   @SuppressWarnings("deprecation") // DbIncubatingAttributes.DB_NAME has been deprecated
   @Test
   void testCurd() {
-    boolean isHibernate4 = Version.getVersionString().startsWith("4.");
     Customer customer = new Customer("Bob", "Anonymous");
 
     assertNull(customer.getId());
@@ -123,117 +117,68 @@ class SpringJpaTest {
 
     assertThat(customer.getId()).isNotNull();
     testing.waitAndAssertTraces(
-        trace -> {
-          List<Consumer<SpanDataAssert>> consumers =
-              new ArrayList<>(
-                  asList(
-                      span ->
-                          span.hasName("parent")
-                              .hasKind(INTERNAL)
-                              .hasNoParent()
-                              .hasAttributes(Attributes.empty()),
-                      span ->
-                          span.hasName("Session.persist spring.jpa.Customer")
-                              .hasKind(INTERNAL)
-                              .hasParent(trace.getSpan(0))
-                              .hasAttributesSatisfyingExactly(
-                                  satisfies(
-                                      AttributeKey.stringKey("hibernate.session_id"),
-                                      val -> val.isInstanceOf(String.class)))));
-          if (!isHibernate4) {
-            consumers.addAll(
-                asList(
-                    span ->
-                        span.hasName("CALL test")
-                            .hasKind(CLIENT)
-                            .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    DB_SYSTEM,
-                                    DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
-                                equalTo(maybeStable(DB_NAME), "test"),
-                                equalTo(
-                                    DbIncubatingAttributes.DB_USER,
-                                    emitStableDatabaseSemconv() ? null : "sa"),
-                                equalTo(
-                                    maybeStable(DB_STATEMENT), "call next value for Customer_SEQ"),
-                                equalTo(
-                                    DbIncubatingAttributes.DB_CONNECTION_STRING,
-                                    emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
-                                equalTo(maybeStable(DB_OPERATION), "CALL")),
-                    span ->
-                        span.hasName("Transaction.commit")
-                            .hasKind(INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    AttributeKey.stringKey("hibernate.session_id"),
-                                    trace
-                                        .getSpan(1)
-                                        .getAttributes()
-                                        .get(stringKey("hibernate.session_id")))),
-                    span ->
-                        span.hasName("INSERT test.Customer")
-                            .hasKind(CLIENT)
-                            .hasParent(trace.getSpan(3))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    DB_SYSTEM,
-                                    DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
-                                equalTo(maybeStable(DB_NAME), "test"),
-                                equalTo(
-                                    DbIncubatingAttributes.DB_USER,
-                                    emitStableDatabaseSemconv() ? null : "sa"),
-                                equalTo(
-                                    DbIncubatingAttributes.DB_CONNECTION_STRING,
-                                    emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
-                                satisfies(
-                                    maybeStable(DB_STATEMENT),
-                                    val ->
-                                        val.matches(
-                                            "insert into Customer \\(.*\\) values \\(.*\\)")),
-                                equalTo(maybeStable(DB_OPERATION), "INSERT"),
-                                equalTo(maybeStable(DB_SQL_TABLE), "Customer"))));
-
-          } else {
-            consumers.addAll(
-                asList(
-                    span ->
-                        span.hasName("INSERT test.Customer")
-                            .hasKind(CLIENT)
-                            .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    DB_SYSTEM,
-                                    DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
-                                equalTo(maybeStable(DB_NAME), "test"),
-                                equalTo(
-                                    DbIncubatingAttributes.DB_USER,
-                                    emitStableDatabaseSemconv() ? null : "sa"),
-                                equalTo(
-                                    DbIncubatingAttributes.DB_CONNECTION_STRING,
-                                    emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
-                                satisfies(
-                                    maybeStable(DB_STATEMENT),
-                                    val ->
-                                        val.matches(
-                                            "insert into Customer \\(.*\\) values \\(.*\\)")),
-                                equalTo(maybeStable(DB_OPERATION), "INSERT"),
-                                equalTo(maybeStable(DB_SQL_TABLE), "Customer")),
-                    span ->
-                        span.hasName("Transaction.commit")
-                            .hasKind(INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    AttributeKey.stringKey("hibernate.session_id"),
-                                    trace
-                                        .getSpan(1)
-                                        .getAttributes()
-                                        .get(stringKey("hibernate.session_id"))))));
-          }
-          trace.hasSpansSatisfyingExactly(consumers);
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("parent")
+                        .hasKind(INTERNAL)
+                        .hasNoParent()
+                        .hasAttributes(Attributes.empty()),
+                span ->
+                    span.hasName("Session.persist spring.jpa.Customer")
+                        .hasKind(INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                val -> val.isInstanceOf(String.class))),
+                span ->
+                    span.hasName("CALL test")
+                        .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
+                            equalTo(maybeStable(DB_NAME), "test"),
+                            equalTo(
+                                DbIncubatingAttributes.DB_USER,
+                                emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(maybeStable(DB_STATEMENT), "call next value for Customer_SEQ"),
+                            equalTo(
+                                DbIncubatingAttributes.DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
+                            equalTo(maybeStable(DB_OPERATION), "CALL")),
+                span ->
+                    span.hasName("Transaction.commit")
+                        .hasKind(INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                trace
+                                    .getSpan(1)
+                                    .getAttributes()
+                                    .get(stringKey("hibernate.session_id")))),
+                span ->
+                    span.hasName("INSERT test.Customer")
+                        .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(3))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
+                            equalTo(maybeStable(DB_NAME), "test"),
+                            equalTo(
+                                DbIncubatingAttributes.DB_USER,
+                                emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(
+                                DbIncubatingAttributes.DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
+                            satisfies(
+                                maybeStable(DB_STATEMENT),
+                                val ->
+                                    val.matches("insert into Customer \\(.*\\) values \\(.*\\)")),
+                            equalTo(maybeStable(DB_OPERATION), "INSERT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Customer"))));
 
     testing.clearData();
 
@@ -359,17 +304,13 @@ class SpringJpaTest {
     testing.runWithSpan("parent", () -> repo.delete(anonymousCustomer));
 
     testing.waitAndAssertTraces(
-        trace -> {
-          List<Consumer<SpanDataAssert>> consumers =
-              new ArrayList<>(
-                  asList(
-                      span ->
-                          span.hasName("parent")
-                              .hasKind(INTERNAL)
-                              .hasNoParent()
-                              .hasAttributes(Attributes.empty())));
-          if (!isHibernate4) {
-            consumers.add(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("parent")
+                        .hasKind(INTERNAL)
+                        .hasNoParent()
+                        .hasAttributes(Attributes.empty()),
                 span ->
                     span.satisfies(
                             val ->
@@ -380,9 +321,7 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             satisfies(
                                 AttributeKey.stringKey("hibernate.session_id"),
-                                val -> val.isInstanceOf(String.class))));
-
-            consumers.add(
+                                val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("SELECT test.Customer")
                         .hasKind(CLIENT)
@@ -403,23 +342,34 @@ class SpringJpaTest {
                                     val.matches(
                                         "select ([^.]+)\\.id([^,]*),([^.]+)\\.firstName([^,]*),([^.]+)\\.lastName (.*)from Customer (.*)(where ([^.]+)\\.lastName( ?)=( ?)\\?|)")),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Customer")));
-          }
-          consumers.add(
-              span ->
-                  span.hasName("Session.merge spring.jpa.Customer")
-                      .hasKind(INTERNAL)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          satisfies(
-                              AttributeKey.stringKey("hibernate.session_id"),
-                              val -> val.isInstanceOf(String.class))));
-          if (isHibernate4) {
-            consumers.add(
+                            equalTo(maybeStable(DB_SQL_TABLE), "Customer")),
                 span ->
-                    span.hasName("SELECT test.Customer")
+                    span.hasName("Session.merge spring.jpa.Customer")
+                        .hasKind(INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                val -> val.isInstanceOf(String.class))),
+                span ->
+                    span.hasName("Session.delete spring.jpa.Customer")
+                        .hasKind(INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                val -> val.isInstanceOf(String.class))),
+                span ->
+                    span.hasName("Transaction.commit")
+                        .hasKind(INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                AttributeKey.stringKey("hibernate.session_id"),
+                                val -> val.isInstanceOf(String.class))),
+                span ->
+                    span.hasName("DELETE test.Customer")
                         .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
@@ -430,50 +380,8 @@ class SpringJpaTest {
                             equalTo(
                                 DbIncubatingAttributes.DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
-                            satisfies(
-                                maybeStable(DB_STATEMENT),
-                                val ->
-                                    val.matches(
-                                        "select ([^.]+)\\.id([^,]*),([^.]+)\\.firstName([^,]*),([^.]+)\\.lastName (.*)from Customer (.*)where ([^.]+)\\.id( ?)=( ?)\\?")),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Customer")));
-          }
-          consumers.add(
-              span ->
-                  span.hasName("Session.delete spring.jpa.Customer")
-                      .hasKind(INTERNAL)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          satisfies(
-                              AttributeKey.stringKey("hibernate.session_id"),
-                              val -> val.isInstanceOf(String.class))));
-          consumers.add(
-              span ->
-                  span.hasName("Transaction.commit")
-                      .hasKind(INTERNAL)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          satisfies(
-                              AttributeKey.stringKey("hibernate.session_id"),
-                              val -> val.isInstanceOf(String.class))));
-          consumers.add(
-              span ->
-                  span.hasName("DELETE test.Customer")
-                      .hasKind(CLIENT)
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(
-                              DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
-                          equalTo(maybeStable(DB_NAME), "test"),
-                          equalTo(
-                              DbIncubatingAttributes.DB_USER,
-                              emitStableDatabaseSemconv() ? null : "sa"),
-                          equalTo(
-                              DbIncubatingAttributes.DB_CONNECTION_STRING,
-                              emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
-                          equalTo(maybeStable(DB_STATEMENT), "delete from Customer where id=?"),
-                          equalTo(maybeStable(DB_OPERATION), "DELETE"),
-                          equalTo(maybeStable(DB_SQL_TABLE), "Customer")));
-          trace.hasSpansSatisfyingExactly(consumers);
-        });
+                            equalTo(maybeStable(DB_STATEMENT), "delete from Customer where id=?"),
+                            equalTo(maybeStable(DB_OPERATION), "DELETE"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Customer"))));
   }
 }
