@@ -5,9 +5,11 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
-import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_TABLE_NAMES;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.DYNAMODB;
 import static java.util.Collections.singletonList;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
@@ -44,8 +46,8 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
     List<AttributeAssertion> additionalAttributes =
         Arrays.asList(
             equalTo(stringKey("aws.table.name"), "sometable"),
-            equalTo(stringKey("db.system"), "dynamodb"),
-            equalTo(stringArrayKey("aws.dynamodb.table_names"), singletonList("sometable")));
+            equalTo(DB_SYSTEM, DYNAMODB),
+            equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")));
 
     Object response = client.createTable(new CreateTableRequest("sometable", null));
     assertRequestWithMockedResponse(
