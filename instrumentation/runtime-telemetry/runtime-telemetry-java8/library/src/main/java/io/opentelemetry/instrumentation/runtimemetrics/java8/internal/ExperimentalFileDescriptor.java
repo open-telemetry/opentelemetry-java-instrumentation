@@ -12,10 +12,10 @@ import java.util.List;
 import java.util.function.Supplier;
 
 /**
- * Registers measurements that generate experimental metrics about file descriptor. This metrics are
+ * Registers measurements that generate experimental metrics about file descriptor. These metrics are
  * experimental, see <a
  * href="https://github.com/open-telemetry/semantic-conventions/issues/1275">File Descriptor metrics
- * semantic conventions</a>
+ * semantic conventions</a>.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
@@ -46,7 +46,7 @@ public class ExperimentalFileDescriptor {
               .buildWithCallback(
                   observableMeasurement -> {
                     Long openCount = openFileDescriptorCount.get();
-                    if (openCount != null && openCount >= 0) {
+                    if (openCount != null && openCount > 0) {
                       observableMeasurement.record(openCount);
                     }
                   }));
@@ -61,7 +61,7 @@ public class ExperimentalFileDescriptor {
               .buildWithCallback(
                   observableMeasurement -> {
                     Long maxCount = maxFileDescriptorCount.get();
-                    if (maxCount != null && maxCount >= 0) {
+                    if (maxCount != null && maxCount > 0) {
                       observableMeasurement.record(maxCount);
                     }
                   }));
