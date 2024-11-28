@@ -73,7 +73,7 @@ public final class DbClientMetrics implements OperationListener {
     if (state == null) {
       logger.log(
           FINE,
-          "No state present when ending context {0}. Cannot record database request metrics.",
+          "No state present when ending context {0}. Cannot record database operation metrics.",
           context);
       return;
     }
