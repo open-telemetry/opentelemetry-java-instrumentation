@@ -36,7 +36,7 @@ class DbClientMetricsTest {
 
     OperationListener listener = DbClientMetrics.get().create(meterProvider.get("test"));
 
-    Attributes requestAttributes =
+    Attributes operationAttributes =
         Attributes.builder()
             .put(DbClientCommonAttributesExtractor.DB_SYSTEM, "myDb")
             .put(SqlClientAttributesExtractor.DB_COLLECTION_NAME, "table")
@@ -64,7 +64,7 @@ class DbClientMetricsTest {
                         TraceFlags.getSampled(),
                         TraceState.getDefault())));
 
-    Context context1 = listener.onStart(parent, requestAttributes, nanos(100));
+    Context context1 = listener.onStart(parent, operationAttributes, nanos(100));
 
     assertThat(metricReader.collectAllMetrics()).isEmpty();
 

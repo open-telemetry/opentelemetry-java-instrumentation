@@ -32,7 +32,7 @@ public final class DbClientMetrics implements OperationListener {
 
   private static final double NANOS_PER_S = TimeUnit.SECONDS.toNanos(1);
 
-  private static final ContextKey<State> DB_CLIENT_REQUEST_METRICS_STATE =
+  private static final ContextKey<State> DB_CLIENT_OPERATION_METRICS_STATE =
       ContextKey.named("db-client-metrics-state");
 
   private static final Logger logger = Logger.getLogger(DbClientMetrics.class.getName());
@@ -63,13 +63,13 @@ public final class DbClientMetrics implements OperationListener {
   @Override
   public Context onStart(Context context, Attributes startAttributes, long startNanos) {
     return context.with(
-        DB_CLIENT_REQUEST_METRICS_STATE,
+        DB_CLIENT_OPERATION_METRICS_STATE,
         new AutoValue_DbClientMetrics_State(startAttributes, startNanos));
   }
 
   @Override
   public void onEnd(Context context, Attributes endAttributes, long endNanos) {
-    State state = context.get(DB_CLIENT_REQUEST_METRICS_STATE);
+    State state = context.get(DB_CLIENT_OPERATION_METRICS_STATE);
     if (state == null) {
       logger.log(
           FINE,
