@@ -61,7 +61,7 @@ public class ExperimentalFileDescriptor {
               .buildWithCallback(
                   observableMeasurement -> {
                     Long maxCount = maxFileDescriptorCount.get();
-                    if (maxCount != null && maxCount > 0) {
+                    if (maxCount != null && maxCount >= 0) {
                       observableMeasurement.record(maxCount);
                     }
                   }));
