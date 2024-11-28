@@ -29,7 +29,7 @@ dependencies {
   implementation("io.opentelemetry.proto:opentelemetry-proto")
   implementation("org.testcontainers:testcontainers")
   implementation("com.fasterxml.jackson.core:jackson-databind")
-  implementation("com.google.protobuf:protobuf-java-util:4.28.3")
+  implementation("com.google.protobuf:protobuf-java-util:4.29.0")
   implementation("io.grpc:grpc-netty-shaded")
   implementation("io.grpc:grpc-protobuf")
   implementation("io.grpc:grpc-stub")
