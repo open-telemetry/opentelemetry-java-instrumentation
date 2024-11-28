@@ -28,10 +28,10 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
   private static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.query.text");
-
-  private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
-  private static final AttributeKey<String> DB_OPERATION_NAME =
-      AttributeKey.stringKey("db.operation.name");
+  static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
+  static final AttributeKey<String> DB_OPERATION_NAME = AttributeKey.stringKey("db.operation.name");
+  static final AttributeKey<Long> DB_RESPONSE_STATUS_CODE =
+      AttributeKey.longKey("db.response.status_code");
 
   /** Creates the database client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(

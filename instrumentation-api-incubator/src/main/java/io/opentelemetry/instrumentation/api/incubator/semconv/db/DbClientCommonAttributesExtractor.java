@@ -22,8 +22,8 @@ abstract class DbClientCommonAttributesExtractor<
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_NAME = AttributeKey.stringKey("db.name");
-  private static final AttributeKey<String> DB_NAMESPACE = AttributeKey.stringKey("db.namespace");
-  private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
+  static final AttributeKey<String> DB_NAMESPACE = AttributeKey.stringKey("db.namespace");
+  static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
   private static final AttributeKey<String> DB_USER = AttributeKey.stringKey("db.user");
   private static final AttributeKey<String> DB_CONNECTION_STRING =
       AttributeKey.stringKey("db.connection_string");
