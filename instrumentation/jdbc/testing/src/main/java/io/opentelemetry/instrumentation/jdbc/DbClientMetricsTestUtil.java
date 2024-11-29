@@ -32,10 +32,6 @@ public class DbClientMetricsTestUtil {
                                     point ->
                                         point.hasAttributesSatisfying(
                                             attributes ->
-                                                //
-                                                // assertThat(attributes.asMap().keySet())
-                                                //
-                                                //  .isEmpty())))));
                                                 assertThat(attributes.asMap())
                                                     .containsOnlyKeys(expectedKeys)))));
   }
