@@ -13,6 +13,7 @@ otel:
         emit-experimental-telemetry: true
       server:
         emit-experimental-telemetry: true
+        capture-request-headers: [key]
   propagators:
     - b3
   resource:

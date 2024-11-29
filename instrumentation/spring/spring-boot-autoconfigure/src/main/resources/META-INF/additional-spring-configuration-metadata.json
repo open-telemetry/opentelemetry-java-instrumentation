@@ -425,8 +425,8 @@
     },
     {
       "name": "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
-      "type": "java.util.List<java.lang.String>",
-      "description": "MDC attributes to capture. Use the wildcard character <code>*</code> to capture all attributes."
+      "type": "java.lang.String",
+      "description": "MDC attributes to capture. Use the wildcard character <code>*</code> to capture all attributes. This is a comma-separated list of attribute names.",
     },
     {
       "name": "otel.instrumentation.logback-mdc.enabled",
