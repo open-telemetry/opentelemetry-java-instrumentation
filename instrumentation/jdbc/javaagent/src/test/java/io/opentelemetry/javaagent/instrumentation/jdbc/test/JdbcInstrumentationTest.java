@@ -384,13 +384,18 @@ class JdbcInstrumentationTest {
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), table))));
 
-    assertDurationMetric(
-        testing,
-        "io.opentelemetry.jdbc",
-        DB_SYSTEM,
-        DB_COLLECTION_NAME,
-        DB_NAMESPACE,
-        DB_OPERATION_NAME);
+    if (table != null) {
+      assertDurationMetric(
+          testing,
+          "io.opentelemetry.jdbc",
+          DB_SYSTEM,
+          DB_COLLECTION_NAME,
+          DB_NAMESPACE,
+          DB_OPERATION_NAME);
+    } else {
+      assertDurationMetric(
+          testing, "io.opentelemetry.jdbc", DB_SYSTEM, DB_OPERATION_NAME, DB_NAMESPACE);
+    }
   }
 
   static Stream<Arguments> preparedStatementStream() throws SQLException {
