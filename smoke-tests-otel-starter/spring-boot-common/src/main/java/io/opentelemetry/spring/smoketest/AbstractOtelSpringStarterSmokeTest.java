@@ -28,6 +28,7 @@ import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
+import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import org.assertj.core.api.AbstractCharSequenceAssert;
@@ -46,6 +47,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.RequestEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.client.RestTemplate;
 
@@ -142,7 +146,13 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
   @Test
   @org.junit.jupiter.api.Order(1)
   void shouldSendTelemetry() {
-    testRestTemplate.getForObject(OtelSpringStarterSmokeTestController.PING, String.class);
+    HttpHeaders headers = new HttpHeaders();
+    headers.add("key", "value");
+
+    testRestTemplate.exchange(
+        new RequestEntity<>(
+            null, headers, HttpMethod.GET, URI.create(OtelSpringStarterSmokeTestController.PING)),
+        String.class);
 
     // Span
     testing.waitAndAssertTraces(
@@ -186,6 +196,9 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                             equalTo(HttpAttributes.HTTP_ROUTE, "/ping"),
                             equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                             equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
+                            equalTo(
+                                AttributeKey.stringArrayKey("http.request.header.key"),
+                                Collections.singletonList("value")),
                             satisfies(
                                 ServerAttributes.SERVER_PORT,
                                 integerAssert -> integerAssert.isNotZero())),
