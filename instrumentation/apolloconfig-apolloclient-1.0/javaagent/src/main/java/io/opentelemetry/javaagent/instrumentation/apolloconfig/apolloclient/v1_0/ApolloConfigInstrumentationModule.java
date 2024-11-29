@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
@@ -21,5 +22,10 @@ public class ApolloConfigInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ApolloRepositoryChangeInstrumentation());
+  }
+
+  @Override
+  public boolean defaultEnabled(ConfigProperties config) {
+    return false;
   }
 }

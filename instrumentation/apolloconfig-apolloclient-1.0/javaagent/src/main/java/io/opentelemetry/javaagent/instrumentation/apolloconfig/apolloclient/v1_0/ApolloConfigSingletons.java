@@ -63,7 +63,7 @@ public final class ApolloConfigSingletons {
                   }
                 })
             .addAttributesExtractor(attributesExtractor)
-            .buildInstrumenter(SpanKindExtractor.alwaysClient());
+            .buildInstrumenter(SpanKindExtractor.alwaysInternal());
   }
 
   public static Instrumenter<String, Void> instrumenter() {

@@ -33,15 +33,11 @@ class ApolloRepositoryChangeTest {
     testConfigRepository.addChangeListener(new TestRepositoryChangeListener());
     testConfigRepository.sync();
 
-    checkRepositoryChange(namespace);
-  }
-
-  private static void checkRepositoryChange(String namespace) {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasKind(SpanKind.CLIENT)
+                    span.hasKind(SpanKind.INTERNAL)
                         .hasName("Apollo Config Repository Change")
                         .hasAttributesSatisfyingExactly(
                             singletonList(
