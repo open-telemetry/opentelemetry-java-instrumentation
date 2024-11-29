@@ -35,9 +35,9 @@ public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServer
     }
   }
 
-  protected abstract TestResponse makeRequest(String url);
+  protected abstract TestResponse makeRequest(String url) throws Exception;
 
-  private TestResponse runRequest(String resource) {
+  private TestResponse runRequest(String resource) throws Exception {
     if (runsOnServer()) {
       return makeRequest(resource);
     }
@@ -106,7 +106,8 @@ public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServer
       boolean abortPrematch,
       String route,
       String controllerName,
-      String expectedResponse) {
+      String expectedResponse)
+      throws Exception {
     Assumptions.assumeTrue(!abortPrematch || testAbortPrematch());
 
     setAbortStatus(abortNormal, abortPrematch);
@@ -153,7 +154,7 @@ public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServer
   }
 
   @Test
-  void nestedCall() {
+  void nestedCall() throws Exception {
     setAbortStatus(false, false);
 
     TestResponse response = runRequest("/test3/nested");

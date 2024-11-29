@@ -10,8 +10,6 @@ import io.opentelemetry.instrumentation.jaxrs.v3_0.test.Resource;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import jakarta.ws.rs.core.MediaType;
-import java.io.UnsupportedEncodingException;
-import java.net.URISyntaxException;
 import org.jboss.resteasy.mock.MockDispatcherFactory;
 import org.jboss.resteasy.mock.MockHttpRequest;
 import org.jboss.resteasy.mock.MockHttpResponse;
@@ -60,26 +58,15 @@ class ResteasyFilterTest extends JaxRsFilterTest<Void> {
   }
 
   @Override
-  protected TestResponse makeRequest(String url) {
-    MockHttpRequest request;
-    try {
-      request = MockHttpRequest.post(url);
-    } catch (URISyntaxException exception) {
-      throw new IllegalStateException(exception);
-    }
+  protected TestResponse makeRequest(String url) throws Exception {
+    MockHttpRequest request = MockHttpRequest.post(url);
+    ;
     request.contentType(MediaType.TEXT_PLAIN_TYPE);
     request.content(new byte[0]);
 
     MockHttpResponse response = new MockHttpResponse();
     dispatcher.invoke(request, response);
 
-    String responseText;
-    try {
-      responseText = response.getContentAsString();
-    } catch (UnsupportedEncodingException exception) {
-      throw new IllegalStateException(exception);
-    }
-
-    return new TestResponse(responseText, response.getStatus());
+    return new TestResponse(response.getContentAsString(), response.getStatus());
   }
 }

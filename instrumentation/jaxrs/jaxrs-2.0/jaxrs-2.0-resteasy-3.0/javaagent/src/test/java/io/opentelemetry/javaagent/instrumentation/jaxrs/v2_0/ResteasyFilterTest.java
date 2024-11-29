@@ -9,7 +9,6 @@ import io.opentelemetry.instrumentation.jaxrs.v2_0.JaxRsFilterTest;
 import io.opentelemetry.instrumentation.jaxrs.v2_0.test.Resource;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
-import java.net.URISyntaxException;
 import javax.ws.rs.core.MediaType;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.mock.MockDispatcherFactory;
@@ -59,13 +58,8 @@ class ResteasyFilterTest extends JaxRsFilterTest<Void> {
   }
 
   @Override
-  protected TestResponse makeRequest(String url) {
-    MockHttpRequest request;
-    try {
-      request = MockHttpRequest.post(url);
-    } catch (URISyntaxException exception) {
-      throw new IllegalStateException(exception);
-    }
+  protected TestResponse makeRequest(String url) throws Exception {
+    MockHttpRequest request = MockHttpRequest.post(url);
     request.contentType(MediaType.TEXT_PLAIN_TYPE);
     request.content(new byte[0]);
 

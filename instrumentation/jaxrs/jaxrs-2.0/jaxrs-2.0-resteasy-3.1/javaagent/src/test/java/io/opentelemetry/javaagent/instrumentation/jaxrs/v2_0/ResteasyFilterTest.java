@@ -9,9 +9,8 @@ import io.opentelemetry.instrumentation.jaxrs.v2_0.JaxRsFilterTest;
 import io.opentelemetry.instrumentation.jaxrs.v2_0.test.Resource;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
-import java.net.URISyntaxException;
 import javax.ws.rs.core.MediaType;
-import org.jboss.resteasy.core.Dispatcher;
+import org.jboss.resteasy.core.SynchronousDispatcher;
 import org.jboss.resteasy.mock.MockDispatcherFactory;
 import org.jboss.resteasy.mock.MockHttpRequest;
 import org.jboss.resteasy.mock.MockHttpResponse;
@@ -24,7 +23,7 @@ class ResteasyFilterTest extends JaxRsFilterTest<Void> {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
-  private Dispatcher dispatcher;
+  private SynchronousDispatcher dispatcher;
 
   @BeforeAll
   void setUp() {
@@ -38,7 +37,9 @@ class ResteasyFilterTest extends JaxRsFilterTest<Void> {
 
   @Override
   protected Void setupServer() {
-    dispatcher = MockDispatcherFactory.createDispatcher();
+    // using implementation class SynchronousDispatcher instead of the Dispatcher interface because
+    // the interface moves to a different package for the latest dep tests
+    dispatcher = (SynchronousDispatcher) MockDispatcherFactory.createDispatcher();
     Registry registry = dispatcher.getRegistry();
     registry.addSingletonResource(new Resource.Test1());
     registry.addSingletonResource(new Resource.Test2());
@@ -59,13 +60,8 @@ class ResteasyFilterTest extends JaxRsFilterTest<Void> {
   }
 
   @Override
-  protected TestResponse makeRequest(String url) {
-    MockHttpRequest request;
-    try {
-      request = MockHttpRequest.post(url);
-    } catch (URISyntaxException exception) {
-      throw new IllegalStateException(exception);
-    }
+  protected TestResponse makeRequest(String url) throws Exception {
+    MockHttpRequest request = MockHttpRequest.post(url);
     request.contentType(MediaType.TEXT_PLAIN_TYPE);
     request.content(new byte[0]);
 
