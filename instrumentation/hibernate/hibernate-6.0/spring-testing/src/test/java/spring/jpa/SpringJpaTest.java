@@ -17,12 +17,10 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -55,11 +53,11 @@ class SpringJpaTest {
 
   @SuppressWarnings("deprecation") // DbIncubatingAttributes.DB_NAME has been deprecated
   @Test
-  void testCurd() {
+  void testCrud() {
     Customer customer = new Customer("Bob", "Anonymous");
 
-    assertNull(customer.getId());
-    assertFalse(testing.runWithSpan("parent", () -> repo.findAll().iterator().hasNext()));
+    assertThat(customer.getId()).isNull();
+    assertThat(testing.runWithSpan("parent", () -> repo.findAll().iterator().hasNext())).isFalse();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -75,15 +73,14 @@ class SpringJpaTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             satisfies(
-                                AttributeKey.stringKey("hibernate.session_id"),
+                                stringKey("hibernate.session_id"),
                                 val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("SELECT test.Customer")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
+                            equalTo(DB_SYSTEM, HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(
                                 DbIncubatingAttributes.DB_USER,
@@ -104,7 +101,7 @@ class SpringJpaTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                AttributeKey.stringKey("hibernate.session_id"),
+                                stringKey("hibernate.session_id"),
                                 trace
                                     .getSpan(1)
                                     .getAttributes()
@@ -130,15 +127,14 @@ class SpringJpaTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             satisfies(
-                                AttributeKey.stringKey("hibernate.session_id"),
+                                stringKey("hibernate.session_id"),
                                 val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("CALL test")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
+                            equalTo(DB_SYSTEM, HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(
                                 DbIncubatingAttributes.DB_USER,
@@ -154,7 +150,7 @@ class SpringJpaTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                AttributeKey.stringKey("hibernate.session_id"),
+                                stringKey("hibernate.session_id"),
                                 trace
                                     .getSpan(1)
                                     .getAttributes()
@@ -164,8 +160,7 @@ class SpringJpaTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(3))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
+                            equalTo(DB_SYSTEM, HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(
                                 DbIncubatingAttributes.DB_USER,
@@ -200,14 +195,13 @@ class SpringJpaTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             satisfies(
-                                AttributeKey.stringKey("hibernate.session_id"),
+                                stringKey("hibernate.session_id"),
                                 val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("SELECT test.Customer")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
+                            equalTo(DB_SYSTEM, HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(
                                 DbIncubatingAttributes.DB_USER,
@@ -228,7 +222,7 @@ class SpringJpaTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                AttributeKey.stringKey("hibernate.session_id"),
+                                stringKey("hibernate.session_id"),
                                 trace
                                     .getSpan(1)
                                     .getAttributes()
@@ -237,8 +231,7 @@ class SpringJpaTest {
                     span.hasName("UPDATE test.Customer")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
+                            equalTo(DB_SYSTEM, HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(
                                 DbIncubatingAttributes.DB_USER,
@@ -276,15 +269,14 @@ class SpringJpaTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             satisfies(
-                                AttributeKey.stringKey("hibernate.session_id"),
+                                stringKey("hibernate.session_id"),
                                 val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("SELECT test.Customer")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
+                            equalTo(DB_SYSTEM, HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(
                                 DbIncubatingAttributes.DB_USER,
@@ -320,15 +312,14 @@ class SpringJpaTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             satisfies(
-                                AttributeKey.stringKey("hibernate.session_id"),
+                                stringKey("hibernate.session_id"),
                                 val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("SELECT test.Customer")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
+                            equalTo(DB_SYSTEM, HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(
                                 DbIncubatingAttributes.DB_USER,
@@ -349,7 +340,7 @@ class SpringJpaTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             satisfies(
-                                AttributeKey.stringKey("hibernate.session_id"),
+                                stringKey("hibernate.session_id"),
                                 val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("Session.delete spring.jpa.Customer")
@@ -357,7 +348,7 @@ class SpringJpaTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             satisfies(
-                                AttributeKey.stringKey("hibernate.session_id"),
+                                stringKey("hibernate.session_id"),
                                 val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("Transaction.commit")
@@ -365,14 +356,13 @@ class SpringJpaTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             satisfies(
-                                AttributeKey.stringKey("hibernate.session_id"),
+                                stringKey("hibernate.session_id"),
                                 val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("DELETE test.Customer")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
+                            equalTo(DB_SYSTEM, HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(
                                 DbIncubatingAttributes.DB_USER,
