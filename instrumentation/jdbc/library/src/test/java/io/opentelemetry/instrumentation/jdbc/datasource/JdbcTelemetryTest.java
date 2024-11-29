@@ -52,7 +52,13 @@ class JdbcTelemetryTest {
                         .hasAttribute(equalTo(maybeStable(DB_STATEMENT), "SELECT ?;"))));
 
     assertDurationMetric(
-        testing, "io.opentelemetry.jdbc", DB_NAMESPACE, DB_OPERATION_NAME, DB_SYSTEM, SERVER_ADDRESS, SERVER_PORT);
+        testing,
+        "io.opentelemetry.jdbc",
+        DB_NAMESPACE,
+        DB_OPERATION_NAME,
+        DB_SYSTEM,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   @Test

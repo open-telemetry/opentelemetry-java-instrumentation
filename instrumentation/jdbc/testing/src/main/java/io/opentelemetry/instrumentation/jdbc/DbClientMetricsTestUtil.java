@@ -16,23 +16,26 @@ public class DbClientMetricsTestUtil {
   private DbClientMetricsTestUtil() {}
 
   public static void assertDurationMetric(
-      InstrumentationExtension testing, String instrumentationName,  AttributeKey<?>... expectedKeys) {
+      InstrumentationExtension testing,
+      String instrumentationName,
+      AttributeKey<?>... expectedKeys) {
     if (!emitStableDatabaseSemconv()) {
       return;
     }
     testing.waitAndAssertMetrics(
         instrumentationName,
         metrics ->
-            metrics.hasName("db.client.operation.duration")
-                        .hasUnit("s")
-                        .hasDescription("Duration of database client operations.")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point.hasAttributesSatisfying(
-                                            attributes ->
-                                                assertThat(attributes.asMap())
-                                                    .containsOnlyKeys(expectedKeys)))));
+            metrics
+                .hasName("db.client.operation.duration")
+                .hasUnit("s")
+                .hasDescription("Duration of database client operations.")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point.hasAttributesSatisfying(
+                                    attributes ->
+                                        assertThat(attributes.asMap())
+                                            .containsOnlyKeys(expectedKeys)))));
   }
 }
