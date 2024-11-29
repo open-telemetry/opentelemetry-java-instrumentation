@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apolloconfig.apolloclient.v1_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Collections.singletonList;
 
 import com.ctrip.framework.apollo.enums.ConfigSourceType;
 import com.ctrip.framework.apollo.internals.AbstractConfigRepository;
@@ -15,9 +16,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Properties;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -28,7 +26,7 @@ class ApolloRepositoryChangeTest {
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
-  void test() {
+  void fireRepositoryChangeTest() {
     String namespace = "application";
 
     TestConfigRepository testConfigRepository = new TestConfigRepository(namespace);
@@ -39,17 +37,15 @@ class ApolloRepositoryChangeTest {
   }
 
   private static void checkRepositoryChange(String namespace) {
-    String spanName = "Apollo Config Repository Change";
-    List<AttributeAssertion> attributeAssertions = new ArrayList<>();
-    attributeAssertions.add(equalTo(AttributeKey.stringKey("config.namespace"), namespace));
-
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasKind(SpanKind.CLIENT)
-                        .hasName(spanName)
-                        .hasAttributesSatisfyingExactly(attributeAssertions)));
+                        .hasName("Apollo Config Repository Change")
+                        .hasAttributesSatisfyingExactly(
+                            singletonList(
+                                equalTo(AttributeKey.stringKey("config.namespace"), namespace)))));
   }
 
   static class TestConfigRepository extends AbstractConfigRepository {

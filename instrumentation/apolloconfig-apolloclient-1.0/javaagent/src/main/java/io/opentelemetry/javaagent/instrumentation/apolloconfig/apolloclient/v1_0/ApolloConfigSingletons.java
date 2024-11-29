@@ -16,12 +16,12 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import javax.annotation.Nullable;
 
 public final class ApolloConfigSingletons {
 
-  private static final String NAME = "io.opentelemetry.apolloconfig-apolloclient-1.0";
+  private static final String INSTRUMENTATION_NAME =
+      "io.opentelemetry.apolloconfig-apolloclient-1.0";
   private static final Instrumenter<String, Void> INSTRUMENTER;
 
   private static final AttributeKey<String> CONFIG_NS_ATTRIBUTE_KEY = stringKey("config.namespace");
@@ -51,17 +51,17 @@ public final class ApolloConfigSingletons {
               @Nullable Throwable error) {}
         };
 
-    SpanStatusExtractor<String, Void> spanStatusExtractor =
-        (spanStatusBuilder, request, unused, error) -> {
-          if (error != null) {
-            spanStatusBuilder.setStatus(StatusCode.ERROR);
-          }
-        };
-
     INSTRUMENTER =
         Instrumenter.<String, Void>builder(
-                GlobalOpenTelemetry.get(), NAME, (event) -> "Apollo Config Repository Change")
-            .setSpanStatusExtractor(spanStatusExtractor)
+                GlobalOpenTelemetry.get(),
+                INSTRUMENTATION_NAME,
+                (event) -> "Apollo Config Repository Change")
+            .setSpanStatusExtractor(
+                (spanStatusBuilder, request, unused, error) -> {
+                  if (error != null) {
+                    spanStatusBuilder.setStatus(StatusCode.ERROR);
+                  }
+                })
             .addAttributesExtractor(attributesExtractor)
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
