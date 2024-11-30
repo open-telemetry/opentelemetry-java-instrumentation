@@ -195,7 +195,11 @@ public final class OtelSpringProperties {
     }
   }
 
-  public static final class Logs {
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
+  public static final class HasExporters {
     private List<String> exporters = Collections.emptyList();
 
     public List<String> getExporters() {
@@ -207,33 +211,21 @@ public final class OtelSpringProperties {
     }
   }
 
-  public static final class Metrics {
-    private List<String> exporters = Collections.emptyList();
-
-    public List<String> getExporters() {
-      return exporters;
-    }
-
-    public void setExporters(List<String> exporters) {
-      this.exporters = exporters;
-    }
-  }
-
-  public static final class Traces {
-    private List<String> exporters = Collections.emptyList();
-
-    public List<String> getExporters() {
-      return exporters;
-    }
-
-    public void setExporters(List<String> exporters) {
-      this.exporters = exporters;
-    }
-  }
-
-  private static final class Instrumentation {
-    private static final class Http {
-      private static final class Client {
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
+  public static final class Instrumentation {
+    /**
+     * This class is internal and is hence not for public use. Its APIs are unstable and can change
+     * at any time.
+     */
+    public static final class Http {
+      /**
+       * This class is internal and is hence not for public use. Its APIs are unstable and can
+       * change at any time.
+       */
+      public static final class Client {
         private List<String> captureRequestHeaders = Collections.emptyList();
         private List<String> captureResponseHeaders = Collections.emptyList();
 
@@ -254,7 +246,11 @@ public final class OtelSpringProperties {
         }
       }
 
-      private static final class Server {
+      /**
+       * This class is internal and is hence not for public use. Its APIs are unstable and can
+       * change at any time.
+       */
+      public static final class Server {
         private List<String> captureRequestHeaders = Collections.emptyList();
         private List<String> captureResponseHeaders = Collections.emptyList();
 
@@ -323,11 +319,11 @@ public final class OtelSpringProperties {
 
   private Experimental experimental = new Experimental();
 
-  private Logs logs = new Logs();
+  private HasExporters logs = new HasExporters();
 
-  private Metrics metrics = new Metrics();
+  private HasExporters metrics = new HasExporters();
 
-  private Traces traces = new Traces();
+  private HasExporters traces = new HasExporters();
 
   private Instrumentation instrumentation = new Instrumentation();
 
@@ -355,27 +351,27 @@ public final class OtelSpringProperties {
     this.experimental = experimental;
   }
 
-  public Logs getLogs() {
+  public HasExporters getLogs() {
     return logs;
   }
 
-  public void setLogs(Logs logs) {
+  public void setLogs(HasExporters logs) {
     this.logs = logs;
   }
 
-  public Metrics getMetrics() {
+  public HasExporters getMetrics() {
     return metrics;
   }
 
-  public void setMetrics(Metrics metrics) {
+  public void setMetrics(HasExporters metrics) {
     this.metrics = metrics;
   }
 
-  public Traces getTraces() {
+  public HasExporters getTraces() {
     return traces;
   }
 
-  public void setTraces(Traces traces) {
+  public void setTraces(HasExporters traces) {
     this.traces = traces;
   }
 
