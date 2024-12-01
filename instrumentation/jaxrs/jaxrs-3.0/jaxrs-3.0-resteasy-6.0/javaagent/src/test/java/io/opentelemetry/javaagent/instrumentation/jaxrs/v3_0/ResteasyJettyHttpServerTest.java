@@ -21,10 +21,4 @@ class ResteasyJettyHttpServerTest extends JaxRsJettyHttpServerTest {
 
     options.setResponseCodeOnNonStandardHttpMethod(500);
   }
-
-  // resteasy 3.0.x does not support JAX-RS 2.1
-  @Override
-  protected boolean shouldTestCompletableStageAsync() {
-    return false;
-  }
 }
