@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jaxrs.v3_0.test;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.controller;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -15,7 +16,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.Path;
@@ -39,19 +39,19 @@ public class JaxRsTestResource {
   @Path("/success")
   @GET
   public String success() {
-    return AbstractHttpServerTest.controller(SUCCESS, SUCCESS::getBody);
+    return controller(SUCCESS, SUCCESS::getBody);
   }
 
   @Path("query")
   @GET
   public String query_param(@QueryParam("some") String param) {
-    return AbstractHttpServerTest.controller(QUERY_PARAM, () -> "some=" + param);
+    return controller(QUERY_PARAM, () -> "some=" + param);
   }
 
   @Path("redirect")
   @GET
   public Response redirect(@Context UriInfo uriInfo) throws URISyntaxException {
-    return AbstractHttpServerTest.controller(
+    return controller(
         SUCCESS,
         () ->
             Response.status(Response.Status.FOUND)
@@ -62,14 +62,14 @@ public class JaxRsTestResource {
   @Path("error-status")
   @GET
   public Response error() {
-    return AbstractHttpServerTest.controller(
+    return controller(
         SUCCESS, () -> Response.status(ERROR.getStatus()).entity(ERROR.getBody()).build());
   }
 
   @Path("exception")
   @GET
   public Object exception() {
-    return AbstractHttpServerTest.controller(
+    return controller(
         SUCCESS,
         () -> {
           throw new IllegalStateException(EXCEPTION.getBody());
@@ -79,13 +79,13 @@ public class JaxRsTestResource {
   @Path("path/{id}/param")
   @GET
   public String path_param(@PathParam("id") int id) {
-    return AbstractHttpServerTest.controller(PATH_PARAM, () -> String.valueOf(id));
+    return controller(PATH_PARAM, () -> String.valueOf(id));
   }
 
   @GET
   @Path("captureHeaders")
   public Response capture_headers(@HeaderParam("X-Test-Request") String header) {
-    return AbstractHttpServerTest.controller(
+    return controller(
         CAPTURE_HEADERS,
         () ->
             Response.status(CAPTURE_HEADERS.getStatus())
@@ -101,7 +101,7 @@ public class JaxRsTestResource {
 
     CompletableFuture.runAsync(
         () ->
-            AbstractHttpServerTest.controller(
+            controller(
                 INDEXED_CHILD,
                 () -> {
                   INDEXED_CHILD.collectSpanAttributes(parameters::getFirst);

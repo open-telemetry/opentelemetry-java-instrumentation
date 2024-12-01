@@ -7,15 +7,17 @@ package io.opentelemetry.instrumentation.jaxrs;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.ErrorAttributes;
-import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
@@ -140,15 +142,13 @@ public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServer
                       if (abortPrematch) {
                         span.hasAttributesSatisfyingExactly(
                             satisfies(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
+                                CODE_NAMESPACE,
                                 name -> name.endsWith("JaxRsFilterTest$PrematchRequestFilter")),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "filter"));
+                            equalTo(CODE_FUNCTION, "filter"));
                       } else {
                         span.hasAttributesSatisfyingExactly(
-                            satisfies(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                name -> name.contains("Resource$Test")),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "hello"));
+                            satisfies(CODE_NAMESPACE, name -> name.contains("Resource$Test")),
+                            equalTo(CODE_FUNCTION, "hello"));
                       }
                     }));
   }
@@ -173,9 +173,9 @@ public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServer
                           .hasNoParent();
                       if (!runsOnServer()) {
                         span.hasAttributesSatisfyingExactly(
-                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, method),
-                            equalTo(HttpAttributes.HTTP_ROUTE, "/test3/nested"),
-                            equalTo(ErrorAttributes.ERROR_TYPE, HttpConstants._OTHER));
+                            equalTo(HTTP_REQUEST_METHOD, method),
+                            equalTo(HTTP_ROUTE, "/test3/nested"),
+                            equalTo(ERROR_TYPE, HttpConstants._OTHER));
                       }
                     },
                     span ->
@@ -183,9 +183,7 @@ public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServer
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                    name -> name.contains("Resource$Test")),
-                                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "nested"))));
+                                satisfies(CODE_NAMESPACE, name -> name.contains("Resource$Test")),
+                                equalTo(CODE_FUNCTION, "nested"))));
   }
 }

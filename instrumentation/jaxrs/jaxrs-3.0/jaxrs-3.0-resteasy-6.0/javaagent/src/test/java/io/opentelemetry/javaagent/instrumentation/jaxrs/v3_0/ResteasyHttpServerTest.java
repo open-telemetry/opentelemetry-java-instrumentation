@@ -47,10 +47,4 @@ class ResteasyHttpServerTest extends JaxRsHttpServerTest<UndertowJaxrsServer> {
           return expectedHttpRoute(endpoint, method);
         });
   }
-
-  // resteasy 3.0.x does not support JAX-RS 2.1
-  @Override
-  protected boolean shouldTestCompletableStageAsync() {
-    return false;
-  }
 }

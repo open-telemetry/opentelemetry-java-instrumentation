@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0;
 
+import static java.util.Arrays.asList;
+
 import io.opentelemetry.instrumentation.jaxrs.v2_0.JaxRsFilterTest;
 import io.opentelemetry.instrumentation.jaxrs.v2_0.test.Resource;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
-import java.util.Arrays;
 import org.apache.cxf.endpoint.Server;
 import org.apache.cxf.jaxrs.JAXRSServerFactoryBean;
 import org.junit.jupiter.api.AfterAll;
@@ -34,9 +35,9 @@ class CxfFilterTest extends JaxRsFilterTest<Server> {
   @Override
   protected Server setupServer() {
     JAXRSServerFactoryBean serverFactory = new JAXRSServerFactoryBean();
-    serverFactory.setProviders(Arrays.asList(simpleRequestFilter, prematchRequestFilter));
+    serverFactory.setProviders(asList(simpleRequestFilter, prematchRequestFilter));
     serverFactory.setResourceClasses(
-        Arrays.asList(Resource.Test1.class, Resource.Test2.class, Resource.Test3.class));
+        asList(Resource.Test1.class, Resource.Test2.class, Resource.Test3.class));
     serverFactory.setAddress(buildAddress().toString());
 
     Server server = serverFactory.create();

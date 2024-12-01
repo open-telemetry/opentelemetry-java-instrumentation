@@ -5,15 +5,15 @@
 
 package io.opentelemetry.instrumentation.jaxrs.v2_0.test;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.controller;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
-import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import javax.ws.rs.Path;
 
 @Path("test-sub-resource-locator")
 public class JaxRsSubResourceLocatorTestResource {
   @Path("call")
   public Object call() {
-    return AbstractHttpServerTest.controller(SUCCESS, SubResource::new);
+    return controller(SUCCESS, SubResource::new);
   }
 }

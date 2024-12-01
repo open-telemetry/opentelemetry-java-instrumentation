@@ -5,12 +5,11 @@
 
 package io.opentelemetry.instrumentation.jaxrs.v2_0.test;
 
+import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.controller;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
-
-import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 
 public class JaxRsInterfaceClassTestResourceSuper {
   public Object call() {
-    return AbstractHttpServerTest.controller(SUCCESS, SUCCESS::getBody);
+    return controller(SUCCESS, SUCCESS::getBody);
   }
 }
