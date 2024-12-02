@@ -247,6 +247,7 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
                       subscription.request(1);
                     }
 
+                    @SuppressWarnings("SystemOut")
                     @Override
                     public void onError(Throwable throwable) {
                       // prints the assertion error from onNext
