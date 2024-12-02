@@ -205,7 +205,9 @@ public class SpringConfigProperties implements ConfigProperties {
       if (!c.isEmpty()) {
         return c;
       }
-      return list;
+      if (!list.isEmpty()) {
+        return list;
+      }
     }
 
     return or(environment.getProperty(normalizedName, List.class), otelSdkProperties.getList(name));

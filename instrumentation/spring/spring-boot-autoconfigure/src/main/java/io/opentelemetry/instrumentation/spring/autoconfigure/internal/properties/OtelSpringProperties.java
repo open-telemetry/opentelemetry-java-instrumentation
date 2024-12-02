@@ -200,14 +200,14 @@ public final class OtelSpringProperties {
    * any time.
    */
   public static final class HasExporters {
-    private List<String> exporters = Collections.emptyList();
+    private List<String> exporter = Collections.emptyList();
 
-    public List<String> getExporters() {
-      return exporters;
+    public List<String> getExporter() {
+      return exporter;
     }
 
-    public void setExporters(List<String> exporters) {
-      this.exporters = exporters;
+    public void setExporter(List<String> exporter) {
+      this.exporter = exporter;
     }
   }
 
@@ -400,15 +400,15 @@ public final class OtelSpringProperties {
   }
 
   public List<String> getLogsExporter() {
-    return logs.getExporters();
+    return logs.getExporter();
   }
 
   public List<String> getMetricsExporter() {
-    return metrics.getExporters();
+    return metrics.getExporter();
   }
 
   public List<String> getTracesExporter() {
-    return traces.getExporters();
+    return traces.getExporter();
   }
 
   public List<String> getHttpClientCaptureRequestHeaders() {
