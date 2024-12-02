@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.jdbc.datasource;
 
-import static io.opentelemetry.instrumentation.jdbc.DbClientMetricsTestUtil.assertDurationMetric;
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;

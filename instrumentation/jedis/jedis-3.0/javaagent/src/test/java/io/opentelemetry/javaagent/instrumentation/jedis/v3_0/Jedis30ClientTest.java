@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
-import static io.opentelemetry.instrumentation.jdbc.DbClientMetricsTestUtil.assertDurationMetric;
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;

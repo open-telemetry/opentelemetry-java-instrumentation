@@ -19,7 +19,6 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 
   implementation(project(":instrumentation:jedis:jedis-common:javaagent"))
-  testImplementation(project(":instrumentation:jdbc:testing"))
 
   // ensures jedis-1.4 instrumentation does not load with jedis 3.0+ by failing
   // the tests in the event it does. The tests will end up with double spans

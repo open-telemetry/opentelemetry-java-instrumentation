@@ -9,5 +9,4 @@ plugins {
 
 dependencies {
   implementation("org.apache.groovy:groovy")
-  implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
 }
