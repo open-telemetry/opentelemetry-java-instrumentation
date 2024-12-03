@@ -3,14 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package server
+package server;
 
-import io.vertx.core.AbstractVerticle
+import io.vertx.core.AbstractVerticle;
 
 class VertxHttpServerTest extends AbstractVertxHttpServerTest {
-
   @Override
   protected Class<? extends AbstractVerticle> verticle() {
-    return VertxWebServer
+    return VertxWebServer.class;
   }
 }
