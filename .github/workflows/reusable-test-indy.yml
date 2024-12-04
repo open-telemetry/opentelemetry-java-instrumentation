@@ -9,9 +9,6 @@ on:
       no-build-cache:
         type: boolean
         required: false
-    secrets:
-      GRADLE_ENTERPRISE_ACCESS_KEY:
-        required: false
 
 permissions:
   contents: read
@@ -65,8 +62,6 @@ jobs:
           gradle-home-cache-excludes: caches/build-cache-1
 
       - name: List tests
-        env:
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
         run: >
           ./gradlew
           check -x spotlessCheck
@@ -78,8 +73,6 @@ jobs:
           echo "test-tasks=$(cat test-tasks.txt | xargs echo | sed 's/\n/ /g')" >> $GITHUB_ENV
 
       - name: Test
-        env:
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
         run: >
           ./gradlew
           ${{ env.test-tasks }}

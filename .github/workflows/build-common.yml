@@ -15,9 +15,6 @@ on:
       skip-windows-smoke-tests:
         type: boolean
         required: false
-    secrets:
-      GRADLE_ENTERPRISE_ACCESS_KEY:
-        required: false
 
 permissions:
   contents: read
@@ -45,8 +42,6 @@ jobs:
           gradle-home-cache-excludes: caches/build-cache-1
 
       - name: Spotless
-        env:
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
         run: ./gradlew spotlessCheck ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
 
   gradle-wrapper-validation:
@@ -78,8 +73,6 @@ jobs:
           gradle-home-cache-excludes: caches/build-cache-1
 
       - name: Generate license report
-        env:
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
         run: ./gradlew generateLicenseReport ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
 
       - name: Check licenses
@@ -149,8 +142,6 @@ jobs:
           gradle-home-cache-excludes: caches/build-cache-1
 
       - name: Build
-        env:
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
         # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
         run: ./gradlew check spdxSbom -x javadoc -x spotlessCheck -PskipTests=true ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
 
@@ -253,8 +244,6 @@ jobs:
           gradle-home-cache-excludes: caches/build-cache-1
 
       - name: List tests
-        env:
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
         # "check" is needed to activate all tests for listing purposes
         # listTestsInPartition writes test tasks that apply to the given partition to a file named
         # "test-tasks.txt" and then disables all tasks (including tests) after it runs
@@ -269,8 +258,6 @@ jobs:
           echo "test-tasks=$(cat test-tasks.txt | xargs echo | sed 's/\n/ /g')" >> $GITHUB_ENV
 
       - name: Test
-        env:
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
         # spotless is checked separately since it's a common source of failure
         run: >
           ./gradlew
@@ -352,14 +339,10 @@ jobs:
           gradle-home-cache-excludes: caches/build-cache-1
 
       - name: Build
-        env:
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
         # running suite "none" compiles everything needed by smoke tests without executing any tests
         run: ./gradlew :smoke-tests:test -PsmokeTestSuite=none --no-daemon ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Test
-        env:
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
         run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Upload jvm crash dump files if any
