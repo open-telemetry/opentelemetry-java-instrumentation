@@ -3,9 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package server;
-
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+package io.opentelemetry.javaagent.instrumentation.vertx;
 
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -32,23 +30,21 @@ abstract class AbstractVertxHttpServerTest extends AbstractHttpServerTest<Vertx>
 
   @Override
   protected void configure(HttpServerTestOptions options) {
+    super.configure(options);
     options.setTestPathParam(true);
     // server spans are ended inside of the controller spans
     options.setVerifyServerSpanEndTime(false);
     options.setContextPath("/vertx-app");
-    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
-    super.configure(options);
-  }
-
-  @Override
-  public String expectedHttpRoute(ServerEndpoint endpoint, String method) {
-    if (Objects.equals(method, HttpConstants._OTHER)) {
-      return getContextPath() + endpoint.getPath();
-    }
-    if (Objects.equals(endpoint, ServerEndpoint.NOT_FOUND)) {
-      return getContextPath();
-    }
-    return super.expectedHttpRoute(endpoint, method);
+    options.setExpectedHttpRoute(
+        (endpoint, method) -> {
+          if (Objects.equals(method, HttpConstants._OTHER)) {
+            return getContextPath() + endpoint.getPath();
+          }
+          if (Objects.equals(endpoint, ServerEndpoint.NOT_FOUND)) {
+            return getContextPath();
+          }
+          return super.expectedHttpRoute(endpoint, method);
+        });
   }
 
   @Override
