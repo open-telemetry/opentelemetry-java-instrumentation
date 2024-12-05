@@ -4,18 +4,18 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.4.4"
     id("com.gradle.plugin-publish") version "1.3.0"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.0.21"
+    id("org.jetbrains.kotlin.jvm") version "2.1.0"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("org.unbroken-dome.xjc") version "2.0.0"
     // See https://github.com/graalvm/native-build-tools/issues/626
-    id("org.graalvm.buildtools.native") version "0.10.2"
+    id("org.graalvm.buildtools.native") version "0.10.4"
   }
 }
 
 plugins {
   id("com.gradle.develocity") version "3.18.2"
   id("com.gradle.common-custom-user-data-gradle-plugin") version "2.0.2"
-  id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
+  id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
   // in particular, these commands are failing (reproducible locally):

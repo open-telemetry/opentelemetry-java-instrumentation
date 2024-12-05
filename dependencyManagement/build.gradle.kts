@@ -27,7 +27,7 @@ val groovyVersion = "4.0.24"
 // configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"
 
 val DEPENDENCY_BOMS = listOf(
-  "com.fasterxml.jackson:jackson-bom:2.18.1",
+  "com.fasterxml.jackson:jackson-bom:2.18.2",
   "com.squareup.okio:okio-bom:3.9.1", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
   "com.google.guava:guava-bom:33.3.1-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",

@@ -41,6 +41,6 @@ public abstract class AbstractEc2ClientTest extends AbstractBaseAwsClientTest {
 
     Object response = client.allocateAddress();
     assertRequestWithMockedResponse(
-        response, client, "EC2", "AllocateAddress", "POST", Collections.emptyMap());
+        response, client, "EC2", "AllocateAddress", "POST", Collections.emptyList());
   }
 }

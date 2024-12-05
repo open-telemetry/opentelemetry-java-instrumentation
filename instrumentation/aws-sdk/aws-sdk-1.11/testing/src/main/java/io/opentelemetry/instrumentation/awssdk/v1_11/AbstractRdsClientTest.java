@@ -42,6 +42,6 @@ public abstract class AbstractRdsClientTest extends AbstractBaseAwsClientTest {
 
     Object response = client.deleteOptionGroup(new DeleteOptionGroupRequest());
     assertRequestWithMockedResponse(
-        response, client, "RDS", "DeleteOptionGroup", "POST", Collections.emptyMap());
+        response, client, "RDS", "DeleteOptionGroup", "POST", Collections.emptyList());
   }
 }

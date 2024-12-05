@@ -5,13 +5,19 @@
 
 package io.opentelemetry.instrumentation.jdbc.datasource;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_BATCH_SIZE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
@@ -49,6 +55,15 @@ class JdbcTelemetryTest {
                 span ->
                     span.hasName("SELECT dbname")
                         .hasAttribute(equalTo(maybeStable(DB_STATEMENT), "SELECT ?;"))));
+
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.jdbc",
+        DB_NAMESPACE,
+        DB_OPERATION_NAME,
+        DB_SYSTEM,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   @Test

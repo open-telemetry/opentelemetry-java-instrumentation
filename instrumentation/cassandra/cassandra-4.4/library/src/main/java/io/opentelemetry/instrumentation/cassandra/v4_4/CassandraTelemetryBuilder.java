@@ -9,6 +9,7 @@ import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -65,6 +66,7 @@ public class CassandraTelemetryBuilder {
         .addAttributesExtractor(
             NetworkAttributesExtractor.create(new CassandraNetworkAttributesGetter()))
         .addAttributesExtractor(new CassandraAttributesExtractor())
+        .addOperationMetrics(DbClientMetrics.get())
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 }
