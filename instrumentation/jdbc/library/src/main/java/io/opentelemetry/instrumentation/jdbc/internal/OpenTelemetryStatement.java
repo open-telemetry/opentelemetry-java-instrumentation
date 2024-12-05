@@ -25,7 +25,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
@@ -300,7 +299,7 @@ public class OpenTelemetryStatement<S extends Statement> implements Statement {
     return wrapCall(request, callable);
   }
 
-  private <T, E extends Exception> T wrapCall(DbRequest request, ThrowingSupplier<T, E> callable)
+  protected <T, E extends Exception> T wrapCall(DbRequest request, ThrowingSupplier<T, E> callable)
       throws E {
     Context parentContext = Context.current();
 
@@ -320,11 +319,8 @@ public class OpenTelemetryStatement<S extends Statement> implements Statement {
     return result;
   }
 
-  protected <T, E extends Exception> T wrapBatchCall(ThrowingSupplier<T, E> callable) throws E {
-    DbRequest request =
-        this instanceof PreparedStatement
-            ? DbRequest.create(dbInfo, query, batchSize)
-            : DbRequest.create(dbInfo, batchCommands, batchSize);
+  private <T, E extends Exception> T wrapBatchCall(ThrowingSupplier<T, E> callable) throws E {
+    DbRequest request = DbRequest.create(dbInfo, batchCommands, batchSize);
     return wrapCall(request, callable);
   }
 }
