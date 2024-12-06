@@ -10,7 +10,7 @@ on:
         type: boolean
         required: false
       max-test-retries:
-        type: int
+        type: string
         required: false
 
 permissions:
