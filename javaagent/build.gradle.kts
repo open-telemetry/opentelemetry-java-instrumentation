@@ -165,6 +165,9 @@ tasks {
     configurations = listOf(javaagentLibs)
 
     excludeBootstrapClasses()
+    // remove MPL licensed content
+    exclude("okhttp3/internal/publicsuffix/NOTICE")
+    exclude("okhttp3/internal/publicsuffix/publicsuffixes.gz")
 
     duplicatesStrategy = DuplicatesStrategy.FAIL
 
