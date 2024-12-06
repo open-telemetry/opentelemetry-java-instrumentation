@@ -270,7 +270,7 @@ jobs:
           -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }}
           -Porg.gradle.java.installations.auto-download=false
           ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
-          ${{ inputs.max-test-retries && ' -PmaxTestRetries=' + inputs.max-test-retries || '' }}
+          ${{ inputs.max-test-retries && ' -PmaxTestRetries=${inputs.max-test-retries}' || '' }}
 
       - name: Build scan
         if: ${{ !cancelled() && hashFiles('build-scan.txt') != '' }}
