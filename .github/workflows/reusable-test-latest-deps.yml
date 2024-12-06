@@ -9,6 +9,9 @@ on:
       no-build-cache:
         type: boolean
         required: false
+      max-test-retries:
+        type: int
+        required: false
 
 permissions:
   contents: read
@@ -76,6 +79,7 @@ jobs:
           ${{ env.test-tasks }}
           -PtestLatestDeps=true
           ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+          ${{ inputs.max-test-retries && ' -PmaxTestRetries=' + inputs.max-test-retries || '' }}
 
       - name: Build scan
         if: ${{ !cancelled() && hashFiles('build-scan.txt') != '' }}
