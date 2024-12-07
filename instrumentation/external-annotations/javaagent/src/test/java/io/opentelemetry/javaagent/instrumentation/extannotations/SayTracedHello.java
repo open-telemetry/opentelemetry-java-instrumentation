@@ -24,7 +24,6 @@ public class SayTracedHello {
     return "hello!";
   }
 
-  // End of life -- never use this annotation in new development
   @com.signalfx.tracing.api.Trace
   public String signalfx() {
     Span.current().setAttribute("providerAttr", "SignalFx");
