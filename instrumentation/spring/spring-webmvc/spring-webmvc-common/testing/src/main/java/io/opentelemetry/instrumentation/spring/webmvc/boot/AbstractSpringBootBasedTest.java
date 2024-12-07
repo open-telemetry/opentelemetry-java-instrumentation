@@ -24,7 +24,6 @@ import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
@@ -46,6 +45,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.security.web.util.OnCommittedResponseWrapper;
+import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 import org.springframework.web.servlet.view.RedirectView;
 
 public abstract class AbstractSpringBootBasedTest
@@ -149,7 +149,9 @@ public abstract class AbstractSpringBootBasedTest
         span ->
             span.hasName("BasicErrorController.error")
                 .hasKind(SpanKind.INTERNAL)
-                .hasAttributes(Attributes.empty()));
+                .hasAttributesSatisfyingExactly(
+                    satisfies(CODE_NAMESPACE, v -> v.endsWith(".BasicErrorController")),
+                    equalTo(CODE_FUNCTION, "error")));
     return spanAssertions;
   }
 
@@ -196,10 +198,16 @@ public abstract class AbstractSpringBootBasedTest
   protected SpanDataAssert assertHandlerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
     String handlerSpanName = getHandlerSpanName(endpoint);
+    String codeNamespace = TestController.class.getName();
     if (endpoint == NOT_FOUND) {
       handlerSpanName = "ResourceHttpRequestHandler.handleRequest";
+      codeNamespace = ResourceHttpRequestHandler.class.getName();
     }
-    span.hasName(handlerSpanName).hasKind(SpanKind.INTERNAL);
+    String codeFunction = handlerSpanName.substring(handlerSpanName.indexOf('.') + 1);
+    span.hasName(handlerSpanName)
+        .hasKind(SpanKind.INTERNAL)
+        .hasAttributesSatisfyingExactly(
+            equalTo(CODE_NAMESPACE, codeNamespace), equalTo(CODE_FUNCTION, codeFunction));
     if (endpoint == EXCEPTION) {
       span.hasStatus(StatusData.error());
       span.hasEventsSatisfyingExactly(
