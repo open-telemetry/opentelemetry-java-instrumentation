@@ -358,6 +358,12 @@
       "defaultValue": false
     },
     {
+      "name": "otel.instrumentation.kafka.autoconfigure-interceptor",
+      "type": "java.lang.Boolean",
+      "description": "Enable automatic configuration of tracing interceptors on <code>ConcurrentKafkaListenerContainerFactory</code> using a <code>BeanPostProcessor</code>. You may disable this if you wish to manually configure these interceptors.",
+      "defaultValue": true
+    },
+    {
       "name": "otel.instrumentation.mongo.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable the Mongo client instrumentation.",
