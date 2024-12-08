@@ -7,7 +7,8 @@ package io.opentelemetry.instrumentation.armeria.v1_3.internal;
 
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaTelemetryBuilder;
+import io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaClientTelemetryBuilder;
+import io.opentelemetry.instrumentation.armeria.v1_3.ArmeriaServerTelemetryBuilder;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.logging.Logger;
@@ -27,12 +28,14 @@ public class Experimental {
   private static final Method emitExperimentalHttpClientMetricsMethod =
       getEmitExperimentalHttpClientMetricsMethod();
 
+  @Nullable private static final Method emitClientPeerServiceMethod = getClientPeerServiceMethod();
+
   @Nullable
   private static final Method emitExperimentalHttpServerMetricsMethod =
       getEmitExperimentalHttpServerMetricsMethod();
 
   public void setEmitExperimentalHttpClientMetrics(
-      ArmeriaTelemetryBuilder builder, boolean emitExperimentalHttpClientMetrics) {
+      ArmeriaClientTelemetryBuilder builder, boolean emitExperimentalHttpClientMetrics) {
 
     if (emitExperimentalHttpClientMetricsMethod != null) {
       try {
@@ -44,7 +47,7 @@ public class Experimental {
   }
 
   public void setEmitExperimentalHttpServerMetrics(
-      ArmeriaTelemetryBuilder builder, boolean emitExperimentalHttpServerMetrics) {
+      ArmeriaServerTelemetryBuilder builder, boolean emitExperimentalHttpServerMetrics) {
 
     if (emitExperimentalHttpServerMetricsMethod != null) {
       try {
@@ -55,11 +58,32 @@ public class Experimental {
     }
   }
 
+  public void setClientPeerService(ArmeriaClientTelemetryBuilder builder, String peerService) {
+
+    if (emitClientPeerServiceMethod != null) {
+      try {
+        emitClientPeerServiceMethod.invoke(builder, peerService);
+      } catch (IllegalAccessException | InvocationTargetException e) {
+        logger.log(FINE, e.getMessage(), e);
+      }
+    }
+  }
+
   @Nullable
   private static Method getEmitExperimentalHttpClientMetricsMethod() {
     try {
-      return ArmeriaTelemetryBuilder.class.getMethod(
+      return ArmeriaClientTelemetryBuilder.class.getMethod(
           "setEmitExperimentalHttpClientMetrics", boolean.class);
+    } catch (NoSuchMethodException e) {
+      logger.log(FINE, e.getMessage(), e);
+      return null;
+    }
+  }
+
+  @Nullable
+  private static Method getClientPeerServiceMethod() {
+    try {
+      return ArmeriaClientTelemetryBuilder.class.getMethod("setPeerService", String.class);
     } catch (NoSuchMethodException e) {
       logger.log(FINE, e.getMessage(), e);
       return null;
@@ -69,7 +93,7 @@ public class Experimental {
   @Nullable
   private static Method getEmitExperimentalHttpServerMetricsMethod() {
     try {
-      return ArmeriaTelemetryBuilder.class.getMethod(
+      return ArmeriaServerTelemetryBuilder.class.getMethod(
           "setEmitExperimentalHttpServerMetrics", boolean.class);
     } catch (NoSuchMethodException e) {
       logger.log(FINE, e.getMessage(), e);
