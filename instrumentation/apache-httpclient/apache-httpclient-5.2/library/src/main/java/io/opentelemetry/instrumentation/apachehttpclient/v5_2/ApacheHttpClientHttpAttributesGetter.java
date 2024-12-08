@@ -15,36 +15,35 @@ import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.MessageHeaders;
 import org.apache.hc.core5.http.ProtocolVersion;
 
-@Deprecated
-enum ApacheHttpClient5HttpAttributesGetter
-    implements HttpClientAttributesGetter<ApacheHttpClient5Request, HttpResponse> {
+enum ApacheHttpClientHttpAttributesGetter
+    implements HttpClientAttributesGetter<ApacheHttpClientRequest, HttpResponse> {
   INSTANCE;
 
   @Override
-  public String getHttpRequestMethod(ApacheHttpClient5Request request) {
+  public String getHttpRequestMethod(ApacheHttpClientRequest request) {
     return request.getMethod();
   }
 
   @Override
   @Nullable
-  public String getUrlFull(ApacheHttpClient5Request request) {
+  public String getUrlFull(ApacheHttpClientRequest request) {
     return request.getUrl();
   }
 
   @Override
-  public List<String> getHttpRequestHeader(ApacheHttpClient5Request request, String name) {
+  public List<String> getHttpRequestHeader(ApacheHttpClientRequest request, String name) {
     return getHeader(request, name);
   }
 
   @Override
   public Integer getHttpResponseStatusCode(
-      ApacheHttpClient5Request request, HttpResponse response, @Nullable Throwable error) {
+      ApacheHttpClientRequest request, HttpResponse response, @Nullable Throwable error) {
     return response.getCode();
   }
 
   @Override
   public List<String> getHttpResponseHeader(
-      ApacheHttpClient5Request request, HttpResponse response, String name) {
+      ApacheHttpClientRequest request, HttpResponse response, String name) {
     return getHeader(response, name);
   }
 
@@ -52,7 +51,7 @@ enum ApacheHttpClient5HttpAttributesGetter
     return headersToList(messageHeaders.getHeaders(name));
   }
 
-  private static List<String> getHeader(ApacheHttpClient5Request messageHeaders, String name) {
+  private static List<String> getHeader(ApacheHttpClientRequest messageHeaders, String name) {
     return headersToList(messageHeaders.getDelegate().getHeaders(name));
   }
 
@@ -71,7 +70,7 @@ enum ApacheHttpClient5HttpAttributesGetter
   @Nullable
   @Override
   public String getNetworkProtocolName(
-      ApacheHttpClient5Request request, @Nullable HttpResponse response) {
+      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     ProtocolVersion protocolVersion = getVersion(request, response);
     if (protocolVersion == null) {
       return null;
@@ -82,7 +81,7 @@ enum ApacheHttpClient5HttpAttributesGetter
   @Nullable
   @Override
   public String getNetworkProtocolVersion(
-      ApacheHttpClient5Request request, @Nullable HttpResponse response) {
+      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     ProtocolVersion protocolVersion = getVersion(request, response);
     if (protocolVersion == null) {
       return null;
@@ -95,17 +94,17 @@ enum ApacheHttpClient5HttpAttributesGetter
 
   @Override
   @Nullable
-  public String getServerAddress(ApacheHttpClient5Request request) {
+  public String getServerAddress(ApacheHttpClientRequest request) {
     return request.getDelegate().getAuthority().getHostName();
   }
 
   @Override
-  public Integer getServerPort(ApacheHttpClient5Request request) {
+  public Integer getServerPort(ApacheHttpClientRequest request) {
     return request.getDelegate().getAuthority().getPort();
   }
 
   private static ProtocolVersion getVersion(
-      ApacheHttpClient5Request request, @Nullable HttpResponse response) {
+      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     ProtocolVersion protocolVersion = request.getDelegate().getVersion();
     if (protocolVersion == null && response != null) {
       protocolVersion = response.getVersion();

@@ -3,30 +3,31 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.httpclient;
+package io.opentelemetry.instrumentation.apachehttpclient.v5_2;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.apachehttpclient.v5_2.internal.Experimental;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.httpclient.internal.Experimental;
-import io.opentelemetry.instrumentation.httpclient.internal.HttpHeadersSetter;
-import io.opentelemetry.instrumentation.httpclient.internal.JavaHttpClientInstrumenterBuilderFactory;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
+import org.apache.hc.core5.http.HttpResponse;
 
-public final class JavaHttpClientTelemetryBuilder {
+/** A builder for {@link ApacheHttpClientTelemetry}. */
+public final class ApacheHttpClientTelemetryBuilder {
 
-  private final DefaultHttpClientInstrumenterBuilder<HttpRequest, HttpResponse<?>> builder;
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-5.2";
+  private final DefaultHttpClientInstrumenterBuilder<ApacheHttpClientRequest, HttpResponse> builder;
   private final OpenTelemetry openTelemetry;
 
-  JavaHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
-    builder = JavaHttpClientInstrumenterBuilderFactory.create(openTelemetry);
+  ApacheHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
+    builder =
+        DefaultHttpClientInstrumenterBuilder.create(
+            INSTRUMENTATION_NAME, openTelemetry, ApacheHttpClientHttpAttributesGetter.INSTANCE);
     this.openTelemetry = openTelemetry;
   }
 
@@ -35,8 +36,9 @@ public final class JavaHttpClientTelemetryBuilder {
    * items. The {@link AttributesExtractor} will be executed after all default extractors.
    */
   @CanIgnoreReturnValue
-  public JavaHttpClientTelemetryBuilder addAttributeExtractor(
-      AttributesExtractor<? super HttpRequest, ? super HttpResponse<?>> attributesExtractor) {
+  public ApacheHttpClientTelemetryBuilder addAttributeExtractor(
+      AttributesExtractor<? super ApacheHttpClientRequest, ? super HttpResponse>
+          attributesExtractor) {
     builder.addAttributeExtractor(attributesExtractor);
     return this;
   }
@@ -47,7 +49,7 @@ public final class JavaHttpClientTelemetryBuilder {
    * @param requestHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public JavaHttpClientTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
+  public ApacheHttpClientTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
@@ -58,7 +60,7 @@ public final class JavaHttpClientTelemetryBuilder {
    * @param responseHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public JavaHttpClientTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
+  public ApacheHttpClientTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
@@ -77,7 +79,7 @@ public final class JavaHttpClientTelemetryBuilder {
    * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
    */
   @CanIgnoreReturnValue
-  public JavaHttpClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+  public ApacheHttpClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
   }
@@ -88,12 +90,12 @@ public final class JavaHttpClientTelemetryBuilder {
    * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
    *     are to be emitted.
    * @deprecated Use {@link
-   *     Experimental#setEmitExperimentalHttpClientMetrics(JavaHttpClientTelemetryBuilder, boolean)}
-   *     instead.
+   *     Experimental#setEmitExperimentalHttpClientMetrics(ApacheHttpClientTelemetryBuilder,
+   *     boolean)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
-  public JavaHttpClientTelemetryBuilder setEmitExperimentalHttpClientMetrics(
+  public ApacheHttpClientTelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {
     builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
     return this;
@@ -101,17 +103,20 @@ public final class JavaHttpClientTelemetryBuilder {
 
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
-  public JavaHttpClientTelemetryBuilder setSpanNameExtractor(
+  public ApacheHttpClientTelemetryBuilder setSpanNameExtractor(
       Function<
-              SpanNameExtractor<? super HttpRequest>,
-              ? extends SpanNameExtractor<? super HttpRequest>>
+              SpanNameExtractor<? super ApacheHttpClientRequest>,
+              ? extends SpanNameExtractor<? super ApacheHttpClientRequest>>
           spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
   }
 
-  public JavaHttpClientTelemetry build() {
-    return new JavaHttpClientTelemetry(
-        builder.build(), new HttpHeadersSetter(openTelemetry.getPropagators()));
+  /**
+   * Returns a new {@link ApacheHttpClientTelemetry} configured with this {@link
+   * ApacheHttpClientTelemetryBuilder}.
+   */
+  public ApacheHttpClientTelemetry build() {
+    return new ApacheHttpClientTelemetry(builder.build(), openTelemetry.getPropagators());
   }
 }

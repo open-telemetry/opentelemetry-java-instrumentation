@@ -166,6 +166,7 @@ abstract class AbstractKtorClientTracingBuilder(
     }
   }
 
+  @Deprecated("Please use method `Experimental.emitExperimentalHttpClientMetrics`")
   fun emitExperimentalHttpClientMetrics() {
     clientBuilder.setEmitExperimentalHttpClientMetrics(true)
   }
