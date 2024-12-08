@@ -14,18 +14,14 @@ import javax.annotation.Nullable;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpRequest;
 
-/**
- * @deprecated Use {@link ApacheHttpClientRequest} instead.
- */
-@Deprecated
-public final class ApacheHttpClient5Request {
+public final class ApacheHttpClientRequest {
 
-  private static final Logger logger = Logger.getLogger(ApacheHttpClient5Request.class.getName());
+  private static final Logger logger = Logger.getLogger(ApacheHttpClientRequest.class.getName());
 
   @Nullable private final URI uri;
   private final HttpRequest delegate;
 
-  ApacheHttpClient5Request(@Nullable HttpHost httpHost, HttpRequest httpRequest) {
+  ApacheHttpClientRequest(@Nullable HttpHost httpHost, HttpRequest httpRequest) {
     URI calculatedUri = getUri(httpRequest);
     if (calculatedUri != null && httpHost != null) {
       uri = getCalculatedUri(httpHost, calculatedUri);
