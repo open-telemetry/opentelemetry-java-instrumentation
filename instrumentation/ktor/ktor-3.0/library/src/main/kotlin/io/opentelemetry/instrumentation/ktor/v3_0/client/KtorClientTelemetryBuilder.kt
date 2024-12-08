@@ -5,13 +5,12 @@
 
 package io.opentelemetry.instrumentation.ktor.v3_0.client
 
-import io.opentelemetry.instrumentation.ktor.client.AbstractKtorClientTracingBuilder
+import io.opentelemetry.instrumentation.ktor.client.AbstractKtorClientTelemetryBuilder
 import io.opentelemetry.instrumentation.ktor.v3_0.InstrumentationProperties.INSTRUMENTATION_NAME
 
-@Deprecated("Use KtorClientTelemetryBuilder instead", ReplaceWith("KtorClientTelemetryBuilder"))
-class KtorClientTracingBuilder : AbstractKtorClientTracingBuilder(INSTRUMENTATION_NAME) {
+class KtorClientTelemetryBuilder : AbstractKtorClientTelemetryBuilder(INSTRUMENTATION_NAME) {
 
-  internal fun build(): KtorClientTracing = KtorClientTracing(
+  internal fun build(): KtorClientTelemetry = KtorClientTelemetry(
     instrumenter = clientBuilder.build(),
     propagators = getOpenTelemetry().propagators,
   )

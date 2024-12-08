@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 import io.opentelemetry.instrumentation.ktor.client.AbstractKtorClientTracing
 import io.opentelemetry.instrumentation.ktor.internal.KtorClientTracingUtil
 
+@Deprecated("Use KtorClientTelemetry instead", ReplaceWith("KtorClientTelemetry"))
 class KtorClientTracing internal constructor(
   instrumenter: Instrumenter<HttpRequestData, HttpResponse>,
   propagators: ContextPropagators

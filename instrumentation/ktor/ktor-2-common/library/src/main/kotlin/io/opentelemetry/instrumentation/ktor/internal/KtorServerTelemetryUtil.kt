@@ -15,7 +15,7 @@ import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil
-import io.opentelemetry.instrumentation.ktor.server.AbstractKtorServerTracingBuilder
+import io.opentelemetry.instrumentation.ktor.server.AbstractKtorServerTelemetryBuilder
 import io.opentelemetry.instrumentation.ktor.server.ApplicationRequestGetter
 import kotlinx.coroutines.withContext
 
@@ -23,10 +23,9 @@ import kotlinx.coroutines.withContext
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-@Deprecated("Use KtorServerTelemetryUtil instead", ReplaceWith("KtorServerTelemetryUtil"))
-object KtorServerTracingUtil {
+object KtorServerTelemetryUtil {
 
-  fun configureTracing(builder: AbstractKtorServerTracingBuilder, application: Application) {
+  fun configureTelemetry(builder: AbstractKtorServerTelemetryBuilder, application: Application) {
     val contextKey = AttributeKey<Context>("OpenTelemetry")
     val errorKey = AttributeKey<Throwable>("OpenTelemetryException")
 
@@ -74,7 +73,7 @@ object KtorServerTracingUtil {
     }
   }
 
-  private fun instrumenter(builder: AbstractKtorServerTracingBuilder): Instrumenter<ApplicationRequest, ApplicationResponse> {
+  private fun instrumenter(builder: AbstractKtorServerTelemetryBuilder): Instrumenter<ApplicationRequest, ApplicationResponse> {
     return InstrumenterUtil.buildUpstreamInstrumenter(
       builder.serverBuilder.instrumenterBuilder(),
       ApplicationRequestGetter,

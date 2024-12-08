@@ -13,15 +13,14 @@ import io.opentelemetry.api.common.AttributesBuilder
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
-import io.opentelemetry.instrumentation.ktor.internal.KtorBuilderUtilOld
+import io.opentelemetry.instrumentation.ktor.internal.KtorBuilderUtil
 
-@Deprecated("Use AbstractKtorClientTelemetryBuilder instead", ReplaceWith("AbstractKtorClientTelemetryBuilder"))
-abstract class AbstractKtorClientTracingBuilder(
+abstract class AbstractKtorClientTelemetryBuilder(
   private val instrumentationName: String
 ) {
   companion object {
     init {
-      KtorBuilderUtilOld.clientBuilderExtractor = { it.clientBuilder }
+      KtorBuilderUtil.clientBuilderExtractor = { it.clientBuilder }
     }
   }
 

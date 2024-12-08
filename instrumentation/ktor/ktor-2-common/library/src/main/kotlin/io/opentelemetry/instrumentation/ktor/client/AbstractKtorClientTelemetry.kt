@@ -12,8 +12,7 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 
-@Deprecated("Use AbstractKtorClientTelemetry instead", ReplaceWith("AbstractKtorClientTelemetry"))
-abstract class AbstractKtorClientTracing(
+abstract class AbstractKtorClientTelemetry(
   private val instrumenter: Instrumenter<HttpRequestData, HttpResponse>,
   private val propagators: ContextPropagators,
 ) {
