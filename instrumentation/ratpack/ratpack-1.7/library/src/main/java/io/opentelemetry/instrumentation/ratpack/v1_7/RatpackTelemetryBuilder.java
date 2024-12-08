@@ -144,7 +144,11 @@ public final class RatpackTelemetryBuilder {
    *
    * @param emitExperimentalHttpServerMetrics {@code true} if the experimental HTTP server metrics
    *     are to be emitted.
+   * @deprecated Use {@link
+   *     Experimental#setEmitExperimentalHttpServerMetrics(RatpackTelemetryBuilder, boolean)}
+   *     instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setEmitExperimentalHttpServerMetrics(
       boolean emitExperimentalHttpServerMetrics) {

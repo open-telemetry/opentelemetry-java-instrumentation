@@ -27,6 +27,10 @@ public class Experimental {
   private static final Method emitExperimentalHttpClientMetricsMethod =
       getEmitExperimentalHttpClientMetricsMethod();
 
+  @Nullable
+  private static final Method emitExperimentalHttpServerMetricsMethod =
+      getEmitExperimentalHttpServerMetricsMethod();
+
   public void setEmitExperimentalHttpClientMetrics(
       RatpackTelemetryBuilder builder, boolean emitExperimentalHttpClientMetrics) {
 
@@ -39,11 +43,34 @@ public class Experimental {
     }
   }
 
+  public void setEmitExperimentalHttpServerMetrics(
+      RatpackTelemetryBuilder builder, boolean emitExperimentalHttpServerMetrics) {
+
+    if (emitExperimentalHttpServerMetricsMethod != null) {
+      try {
+        emitExperimentalHttpServerMetricsMethod.invoke(builder, emitExperimentalHttpServerMetrics);
+      } catch (IllegalAccessException | InvocationTargetException e) {
+        logger.log(FINE, e.getMessage(), e);
+      }
+    }
+  }
+
   @Nullable
   private static Method getEmitExperimentalHttpClientMetricsMethod() {
     try {
       return RatpackTelemetryBuilder.class.getMethod(
           "setEmitExperimentalHttpClientMetrics", boolean.class);
+    } catch (NoSuchMethodException e) {
+      logger.log(FINE, e.getMessage(), e);
+      return null;
+    }
+  }
+
+  @Nullable
+  private static Method getEmitExperimentalHttpServerMetricsMethod() {
+    try {
+      return RatpackTelemetryBuilder.class.getMethod(
+          "setEmitExperimentalHttpServerMetrics", boolean.class);
     } catch (NoSuchMethodException e) {
       logger.log(FINE, e.getMessage(), e);
       return null;

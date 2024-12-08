@@ -219,7 +219,11 @@ public final class ArmeriaTelemetryBuilder {
    *
    * @param emitExperimentalHttpServerMetrics {@code true} if the experimental HTTP server metrics
    *     are to be emitted.
+   * @deprecated Use {@link
+   *     Experimental#setEmitExperimentalHttpServerMetrics(ArmeriaTelemetryBuilder, boolean)}
+   *     instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setEmitExperimentalHttpServerMetrics(
       boolean emitExperimentalHttpServerMetrics) {

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.netty.v4_1.internal;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.netty.v4_1.NettyClientTelemetryBuilder;
+import io.opentelemetry.instrumentation.netty.v4_1.NettyServerTelemetryBuilder;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.logging.Logger;
@@ -28,6 +29,10 @@ public class Experimental {
       getEmitExperimentalHttpClientMetricsMethod();
 
   @Nullable
+  private static final Method emitExperimentalHttpServerMetricsMethod =
+      getEmitExperimentalHttpServerMetricsMethod();
+
+  @Nullable
   private static final Method emitExperimentalHttpClientEventsMethod =
       getEmitExperimentalHttpClientEventsMethod();
 
@@ -37,6 +42,18 @@ public class Experimental {
     if (emitExperimentalHttpClientMetricsMethod != null) {
       try {
         emitExperimentalHttpClientMetricsMethod.invoke(builder, emitExperimentalHttpClientMetrics);
+      } catch (IllegalAccessException | InvocationTargetException e) {
+        logger.log(FINE, e.getMessage(), e);
+      }
+    }
+  }
+
+  public void setEmitExperimentalHttpServerMetrics(
+      NettyServerTelemetryBuilder builder, boolean emitExperimentalHttpServerMetrics) {
+
+    if (emitExperimentalHttpServerMetricsMethod != null) {
+      try {
+        emitExperimentalHttpServerMetricsMethod.invoke(builder, emitExperimentalHttpServerMetrics);
       } catch (IllegalAccessException | InvocationTargetException e) {
         logger.log(FINE, e.getMessage(), e);
       }
@@ -60,6 +77,17 @@ public class Experimental {
     try {
       return NettyClientTelemetryBuilder.class.getMethod(
           "setEmitExperimentalHttpClientMetrics", boolean.class);
+    } catch (NoSuchMethodException e) {
+      logger.log(FINE, e.getMessage(), e);
+      return null;
+    }
+  }
+
+  @Nullable
+  private static Method getEmitExperimentalHttpServerMetricsMethod() {
+    try {
+      return NettyServerTelemetryBuilder.class.getMethod(
+          "setEmitExperimentalHttpServerMetrics", boolean.class);
     } catch (NoSuchMethodException e) {
       logger.log(FINE, e.getMessage(), e);
       return null;
