@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.nacos.client.v2_0_3.instrumentations;
 
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -26,8 +31,6 @@ public class RpcClientInstrumentation implements TypeInstrumentation {
             .and(isProtected())
             .and(namedOneOf("handleServerRequest"))
             .and(returns(Response.class)),
-        RpcClientHandleServerRequestAdvice.class.getName()
-    );
+        RpcClientHandleServerRequestAdvice.class.getName());
   }
-
 }

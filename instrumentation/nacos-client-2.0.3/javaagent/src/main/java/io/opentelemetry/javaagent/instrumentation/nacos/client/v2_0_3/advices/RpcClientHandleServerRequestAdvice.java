@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.nacos.client.v2_0_3.advices;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
@@ -20,8 +25,8 @@ public class RpcClientHandleServerRequestAdvice {
       @Advice.Local("otelContext") Context context,
       @Advice.Local("otelScope") Scope scope) {
     Context parentContext = currentContext();
-    nacosClientRequest = NacosClientRequest.createRequest("handleServerRequest",
-        thisObject.getClass(), request);
+    nacosClientRequest =
+        NacosClientRequest.createRequest("handleServerRequest", thisObject.getClass(), request);
     if (!instrumenter().shouldStart(parentContext, nacosClientRequest)) {
       return;
     }

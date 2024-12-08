@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.nacos.client.v2_0_3.extractors;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;

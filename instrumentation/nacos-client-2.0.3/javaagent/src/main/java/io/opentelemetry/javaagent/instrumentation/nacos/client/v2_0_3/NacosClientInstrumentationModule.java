@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.nacos.client.v2_0_3;
 
 import com.google.auto.service.AutoService;
@@ -10,17 +15,14 @@ import java.util.Arrays;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class NacosClientInstrumentationModule extends InstrumentationModule implements
-    ExperimentalInstrumentationModule {
+public class NacosClientInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public NacosClientInstrumentationModule() {
     super("nacos-client", "nacos-client-2.0.3");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Arrays.asList(
-        new GrpcConnectionInstrumentation(),
-        new RpcClientInstrumentation()
-    );
+    return Arrays.asList(new GrpcConnectionInstrumentation(), new RpcClientInstrumentation());
   }
 }

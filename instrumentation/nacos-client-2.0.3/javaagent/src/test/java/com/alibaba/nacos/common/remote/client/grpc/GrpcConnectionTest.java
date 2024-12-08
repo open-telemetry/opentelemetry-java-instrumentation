@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package com.alibaba.nacos.common.remote.client.grpc;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -40,20 +45,16 @@ public class GrpcConnectionTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
-  @Mock
-  private Executor executor;
 
-  @Mock
-  private ManagedChannel channel;
+  @Mock private Executor executor;
 
-  @Mock
-  private StreamObserver<Payload> payloadStreamObserver;
-  
-  @Mock
-  RequestGrpc.RequestFutureStub grpcFutureServiceStub;
+  @Mock private ManagedChannel channel;
 
-  @Mock
-  ListenableFuture<Payload> future;
+  @Mock private StreamObserver<Payload> payloadStreamObserver;
+
+  @Mock RequestGrpc.RequestFutureStub grpcFutureServiceStub;
+
+  @Mock ListenableFuture<Payload> future;
 
   Payload responsePayload;
 
@@ -132,5 +133,4 @@ public class GrpcConnectionTest {
       testing.clearData();
     }
   }
-
 }

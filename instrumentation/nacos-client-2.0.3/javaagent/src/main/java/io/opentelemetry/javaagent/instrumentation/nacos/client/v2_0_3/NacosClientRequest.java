@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.nacos.client.v2_0_3;
 
 import com.alibaba.nacos.api.remote.request.Request;
@@ -10,8 +15,8 @@ public final class NacosClientRequest {
   private final String spanName;
   private final Attributes attributes;
 
-  public NacosClientRequest(String methodName, Class<?> declaringClass, String spanName,
-      Attributes attributes) {
+  public NacosClientRequest(
+      String methodName, Class<?> declaringClass, String spanName, Attributes attributes) {
     this.methodName = methodName;
     this.declaringClass = declaringClass;
     this.spanName = spanName;
@@ -19,8 +24,8 @@ public final class NacosClientRequest {
   }
 
   @Nonnull
-  public static NacosClientRequest createRequest(@Nonnull String methodName,
-      @Nonnull Class<?> declaringClass, @Nonnull Request request) {
+  public static NacosClientRequest createRequest(
+      @Nonnull String methodName, @Nonnull Class<?> declaringClass, @Nonnull Request request) {
     NacosClientRequestOperator operator = NacosClientHelper.getOperator(request);
     String spanName = operator.getName(request);
     Attributes attributes = operator.getAttributes(request);
@@ -42,5 +47,4 @@ public final class NacosClientRequest {
   public Attributes getAttributes() {
     return attributes;
   }
-
 }

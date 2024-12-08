@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.nacos.client.v2_0_3;
 
 import com.alibaba.nacos.api.remote.request.Request;
@@ -18,7 +23,8 @@ public class NacosClientRequestOperator {
   }
 
   public String getName(Request request) {
-    return spanNameHandler == null ? "<unknown>"
+    return spanNameHandler == null
+        ? "<unknown>"
         : NacosClientConstants.NACOS_PREFIX + spanNameHandler.apply(request);
   }
 
@@ -29,5 +35,4 @@ public class NacosClientRequestOperator {
     }
     return builder.build();
   }
-
 }

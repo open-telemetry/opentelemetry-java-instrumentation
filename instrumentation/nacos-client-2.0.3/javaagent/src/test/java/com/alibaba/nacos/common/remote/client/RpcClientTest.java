@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package com.alibaba.nacos.common.remote.client;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -27,40 +32,40 @@ import org.mockito.junit.jupiter.MockitoExtension;
 public class RpcClientTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
   private RpcClient rpcClient;
 
-  @Mock
-  private ServerRequestHandler serverRequestHandler;
+  @Mock private ServerRequestHandler serverRequestHandler;
 
   private List<Request> nacosClientRequestList;
 
   @BeforeEach
   public void setUp() {
     nacosClientRequestList = NacosClientTestHelper.REQUEST_LIST;
-    rpcClient = new RpcClient("testRpcClient") {
-      @Override
-      public ConnectionType getConnectionType() {
-        return ConnectionType.GRPC;
-      }
+    rpcClient =
+        new RpcClient("testRpcClient") {
+          @Override
+          public ConnectionType getConnectionType() {
+            return ConnectionType.GRPC;
+          }
 
-      @Override
-      public int rpcPortOffset() {
-        return 0;
-      }
+          @Override
+          public int rpcPortOffset() {
+            return 0;
+          }
 
-      @Override
-      public Connection connectToServer(ServerInfo serverInfo) throws Exception {
-        return null;
-      }
-    };
+          @Override
+          public Connection connectToServer(ServerInfo serverInfo) throws Exception {
+            return null;
+          }
+        };
     rpcClient.serverRequestHandlers = Collections.singletonList(serverRequestHandler);
   }
 
-
   @Test
   public void handleServerRequestSuccessResponse() {
-    when(serverRequestHandler.requestReply(any(Request.class))).thenReturn(
-        NacosClientTestHelper.SUCCESS_RESPONSE);
+    when(serverRequestHandler.requestReply(any(Request.class)))
+        .thenReturn(NacosClientTestHelper.SUCCESS_RESPONSE);
     for (Request request : nacosClientRequestList) {
       Response response = rpcClient.handleServerRequest(request);
       assertNotNull(response);
@@ -83,8 +88,8 @@ public class RpcClientTest {
 
   @Test
   public void handleServerRequestErrorResponse() {
-    when(serverRequestHandler.requestReply(any(Request.class))).thenReturn(
-        NacosClientTestHelper.ERROR_RESPONSE);
+    when(serverRequestHandler.requestReply(any(Request.class)))
+        .thenReturn(NacosClientTestHelper.ERROR_RESPONSE);
     for (Request request : nacosClientRequestList) {
       Response response = rpcClient.handleServerRequest(request);
       assertNotNull(response);
@@ -105,4 +110,3 @@ public class RpcClientTest {
     }
   }
 }
-

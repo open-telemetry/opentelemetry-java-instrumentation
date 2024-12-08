@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.nacos.client.v2_0_3.instrumentations;
 
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -22,12 +27,7 @@ public class GrpcConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(isPublic())
-            .and(namedOneOf("request"))
-            .and(returns(Response.class)),
-        GrpcConnectionRequestAdvice.class.getName()
-    );
+        isMethod().and(isPublic()).and(namedOneOf("request")).and(returns(Response.class)),
+        GrpcConnectionRequestAdvice.class.getName());
   }
-
 }

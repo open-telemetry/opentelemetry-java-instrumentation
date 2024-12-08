@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.nacos.client.v2_0_3;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -29,7 +34,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class NacosClientTestHelper {
-  public static final List<Request> RPC_CLIENT_HANDLE_SERVER_REQUEST_REQUEST_LIST = new ArrayList<>();
+  public static final List<Request> RPC_CLIENT_HANDLE_SERVER_REQUEST_REQUEST_LIST =
+      new ArrayList<>();
   public static final List<Request> GRPC_CONNECTION_REQUEST_LIST = new ArrayList<>();
   public static final List<Request> REQUEST_LIST = new ArrayList<>();
   public static final Map<String, Request> NACOS_CLIENT_REQUEST_MAP = new HashMap<>();
@@ -77,21 +83,22 @@ public class NacosClientTestHelper {
 
   public static final String NOTIFY_CONFIG_CHANGE = "notifyConfigChange";
 
-  public static final AttributeKey<String> NACOS_NAME_SPACE_ATTR = AttributeKey.stringKey(
-      "nacos.namespace");
+  public static final AttributeKey<String> NACOS_NAME_SPACE_ATTR =
+      AttributeKey.stringKey("nacos.namespace");
 
-  public static final AttributeKey<String> NACOS_GROUP_NAME_ATTR = AttributeKey.stringKey("nacos.group.name");
+  public static final AttributeKey<String> NACOS_GROUP_NAME_ATTR =
+      AttributeKey.stringKey("nacos.group.name");
 
-  public static final AttributeKey<String> NACOS_SERVICE_NAME_ATTR = AttributeKey.stringKey(
-      "nacos.service.name");
+  public static final AttributeKey<String> NACOS_SERVICE_NAME_ATTR =
+      AttributeKey.stringKey("nacos.service.name");
 
-  public static final AttributeKey<String> NACOS_DATA_ID_ATTR = AttributeKey.stringKey(
-      "nacos.data.id");
+  public static final AttributeKey<String> NACOS_DATA_ID_ATTR =
+      AttributeKey.stringKey("nacos.data.id");
 
   public static final AttributeKey<String> NACOS_GROUP_ATTR = AttributeKey.stringKey("nacos.group");
 
-  public static final AttributeKey<String> NACOS_TENANT_ATTR = AttributeKey.stringKey(
-      "nacos.tenant");
+  public static final AttributeKey<String> NACOS_TENANT_ATTR =
+      AttributeKey.stringKey("nacos.tenant");
 
   private NacosClientTestHelper() {}
 
@@ -155,35 +162,16 @@ public class NacosClientTestHelper {
     when(CONFIG_CHANGE_NOTIFY_REQUEST.getGroup()).thenReturn(GROUP);
     when(CONFIG_CHANGE_NOTIFY_REQUEST.getTenant()).thenReturn(TENANT);
 
-    NACOS_CLIENT_REQUEST_MAP.put(
-        NACOS_PREFIX + NOTIFY_CONFIG_CHANGE,
-        CONFIG_CHANGE_NOTIFY_REQUEST);
-    NACOS_CLIENT_REQUEST_MAP.put(
-        NACOS_PREFIX + PUBLISH_CONFIG,
-        CONFIG_PUBLISH_REQUEST);
-    NACOS_CLIENT_REQUEST_MAP.put(
-        NACOS_PREFIX + QUERY_CONFIG,
-        CONFIG_QUERY_REQUEST);
-    NACOS_CLIENT_REQUEST_MAP.put(
-        NACOS_PREFIX + REMOVE_CONFIG,
-        CONFIG_REMOVE_REQUEST);
-    NACOS_CLIENT_REQUEST_MAP.put(NACOS_PREFIX + INSTANCE_REQUEST_TYPE,
-        INSTANCE_REQUEST);
-    NACOS_CLIENT_REQUEST_MAP.put(
-        NACOS_PREFIX + NOTIFY_SUBSCRIBE_CHANGE,
-        NOTIFY_SUBSCRIBER_REQUEST);
-    NACOS_CLIENT_REQUEST_MAP.put(
-        NACOS_PREFIX + GET_SERVICE_LIST,
-        SERVICE_LIST_REQUEST);
-    NACOS_CLIENT_REQUEST_MAP.put(
-        NACOS_PREFIX + QUERY_SERVICE,
-        SERVICE_QUERY_REQUEST);
-    NACOS_CLIENT_REQUEST_MAP.put(
-        NACOS_PREFIX + SUBSCRIBE_SERVICE,
-        SUBSCRIBE_SERVICE_REQUEST);
-    NACOS_CLIENT_REQUEST_MAP.put(
-        NACOS_PREFIX + UNSUBSCRIBE_SERVICE,
-        UN_SUBSCRIBE_SERVICE_REQUEST);
+    NACOS_CLIENT_REQUEST_MAP.put(NACOS_PREFIX + NOTIFY_CONFIG_CHANGE, CONFIG_CHANGE_NOTIFY_REQUEST);
+    NACOS_CLIENT_REQUEST_MAP.put(NACOS_PREFIX + PUBLISH_CONFIG, CONFIG_PUBLISH_REQUEST);
+    NACOS_CLIENT_REQUEST_MAP.put(NACOS_PREFIX + QUERY_CONFIG, CONFIG_QUERY_REQUEST);
+    NACOS_CLIENT_REQUEST_MAP.put(NACOS_PREFIX + REMOVE_CONFIG, CONFIG_REMOVE_REQUEST);
+    NACOS_CLIENT_REQUEST_MAP.put(NACOS_PREFIX + INSTANCE_REQUEST_TYPE, INSTANCE_REQUEST);
+    NACOS_CLIENT_REQUEST_MAP.put(NACOS_PREFIX + NOTIFY_SUBSCRIBE_CHANGE, NOTIFY_SUBSCRIBER_REQUEST);
+    NACOS_CLIENT_REQUEST_MAP.put(NACOS_PREFIX + GET_SERVICE_LIST, SERVICE_LIST_REQUEST);
+    NACOS_CLIENT_REQUEST_MAP.put(NACOS_PREFIX + QUERY_SERVICE, SERVICE_QUERY_REQUEST);
+    NACOS_CLIENT_REQUEST_MAP.put(NACOS_PREFIX + SUBSCRIBE_SERVICE, SUBSCRIBE_SERVICE_REQUEST);
+    NACOS_CLIENT_REQUEST_MAP.put(NACOS_PREFIX + UNSUBSCRIBE_SERVICE, UN_SUBSCRIBE_SERVICE_REQUEST);
 
     for (Request value : NACOS_CLIENT_REQUEST_MAP.values()) {
       REQUEST_LIST.add(value);
@@ -193,17 +181,13 @@ public class NacosClientTestHelper {
         GRPC_CONNECTION_REQUEST_LIST.add(value);
       }
     }
-    NACOS_CLIENT_REQUEST_NAME_MAP.putAll(NACOS_CLIENT_REQUEST_MAP.entrySet().stream()
-        .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey)));
+    NACOS_CLIENT_REQUEST_NAME_MAP.putAll(
+        NACOS_CLIENT_REQUEST_MAP.entrySet().stream()
+            .collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey)));
   }
 
   private static final String[] methodNames = {
-      "getNamespace",
-      "getGroupName",
-      "getServiceName",
-      "getDataId",
-      "getGroup",
-      "getTenant"
+    "getNamespace", "getGroupName", "getServiceName", "getDataId", "getGroup", "getTenant"
   };
 
   private static final Map<String, AttributeKey<String>> methodToAttributeMap = new HashMap<>();
@@ -217,15 +201,14 @@ public class NacosClientTestHelper {
     methodToAttributeMap.put("getTenant", NACOS_TENANT_ATTR);
   }
 
-
-  public static List<AttributeAssertion> requestAttributeAssertions (
+  public static List<AttributeAssertion> requestAttributeAssertions(
       String codeNamespace, String codeFunction, Request request) {
     List<AttributeAssertion> attributeAssertions =
-        new ArrayList<>(asList(
-            equalTo(AttributeKey.stringKey("code.namespace"), codeNamespace),
-            equalTo(AttributeKey.stringKey("code.function"), codeFunction),
-            equalTo(AttributeKey.stringKey("service.discovery.system"), "nacos"))
-        );
+        new ArrayList<>(
+            asList(
+                equalTo(AttributeKey.stringKey("code.namespace"), codeNamespace),
+                equalTo(AttributeKey.stringKey("code.function"), codeFunction),
+                equalTo(AttributeKey.stringKey("service.discovery.system"), "nacos")));
 
     for (String methodName : methodNames) {
       Method method = null;

@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.nacos.client.v2_0_3;
 
 import com.alibaba.nacos.api.remote.response.Response;
@@ -24,17 +29,18 @@ public final class NacosClientSingletons {
   }
 
   private static Instrumenter<NacosClientRequest, Response> create() {
-    CodeAttributesGetter<NacosClientRequest> codeAttributesGetter = new NacosClientCodeAttributesGetter();
+    CodeAttributesGetter<NacosClientRequest> codeAttributesGetter =
+        new NacosClientCodeAttributesGetter();
     SpanNameExtractor<NacosClientRequest> spanNameExtractor = new NacosClientSpanNameExtractor();
-    SpanStatusExtractor<NacosClientRequest, Response> spanStatusExtractor = new NacosClientSpanStatusExtractor();
+    SpanStatusExtractor<NacosClientRequest, Response> spanStatusExtractor =
+        new NacosClientSpanStatusExtractor();
     InstrumenterBuilder<NacosClientRequest, Response> builder =
         Instrumenter.<NacosClientRequest, Response>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
             .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
             .setSpanStatusExtractor(spanStatusExtractor);
     builder.addAttributesExtractor(
-        AttributesExtractor.constant(AttributeKey.stringKey("service.discovery.system"), "nacos")
-    );
+        AttributesExtractor.constant(AttributeKey.stringKey("service.discovery.system"), "nacos"));
     builder.addAttributesExtractor(new NacosClientExperimentalAttributeExtractor());
     return builder.buildInstrumenter();
   }

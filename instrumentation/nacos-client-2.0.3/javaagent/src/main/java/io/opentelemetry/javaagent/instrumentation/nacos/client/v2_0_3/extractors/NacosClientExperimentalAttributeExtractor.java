@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.nacos.client.v2_0_3.extractors;
 
 import com.alibaba.nacos.api.remote.response.Response;
@@ -10,15 +15,16 @@ import javax.annotation.Nullable;
 public class NacosClientExperimentalAttributeExtractor
     implements AttributesExtractor<NacosClientRequest, Response> {
   @Override
-  public void onStart(AttributesBuilder attributes, Context parentContext,
-      NacosClientRequest nacosClientRequest) {
+  public void onStart(
+      AttributesBuilder attributes, Context parentContext, NacosClientRequest nacosClientRequest) {
     attributes.putAll(nacosClientRequest.getAttributes());
   }
 
   @Override
-  public void onEnd(AttributesBuilder attributes, Context context,
-      NacosClientRequest nacosClientRequest, @Nullable Response response,
-      @Nullable Throwable error) {
-
-  }
+  public void onEnd(
+      AttributesBuilder attributes,
+      Context context,
+      NacosClientRequest nacosClientRequest,
+      @Nullable Response response,
+      @Nullable Throwable error) {}
 }

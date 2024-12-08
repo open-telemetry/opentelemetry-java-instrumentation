@@ -1,10 +1,14 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.nacos.client.v2_0_3;
 
 import io.opentelemetry.api.common.AttributeKey;
 
 public class NacosClientConstants {
-  private NacosClientConstants() {
-  }
+  private NacosClientConstants() {}
 
   public static final String NACOS_PREFIX = "Nacos/";
 
@@ -28,20 +32,20 @@ public class NacosClientConstants {
 
   public static final String NOTIFY_CONFIG_CHANGE = "notifyConfigChange";
 
-  public static final AttributeKey<String> NACOS_NAME_SPACE_ATTR = AttributeKey.stringKey(
-      "nacos.namespace");
+  public static final AttributeKey<String> NACOS_NAME_SPACE_ATTR =
+      AttributeKey.stringKey("nacos.namespace");
 
-  public static final AttributeKey<String> NACOS_GROUP_NAME_ATTR = AttributeKey.stringKey("nacos.group.name");
+  public static final AttributeKey<String> NACOS_GROUP_NAME_ATTR =
+      AttributeKey.stringKey("nacos.group.name");
 
-  public static final AttributeKey<String> NACOS_SERVICE_NAME_ATTR = AttributeKey.stringKey(
-      "nacos.service.name");
+  public static final AttributeKey<String> NACOS_SERVICE_NAME_ATTR =
+      AttributeKey.stringKey("nacos.service.name");
 
-  public static final AttributeKey<String> NACOS_DATA_ID_ATTR = AttributeKey.stringKey(
-      "nacos.data.id");
+  public static final AttributeKey<String> NACOS_DATA_ID_ATTR =
+      AttributeKey.stringKey("nacos.data.id");
 
   public static final AttributeKey<String> NACOS_GROUP_ATTR = AttributeKey.stringKey("nacos.group");
 
-  public static final AttributeKey<String> NACOS_TENANT_ATTR = AttributeKey.stringKey(
-      "nacos.tenant");
-
+  public static final AttributeKey<String> NACOS_TENANT_ATTR =
+      AttributeKey.stringKey("nacos.tenant");
 }
