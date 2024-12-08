@@ -7,7 +7,8 @@ package io.opentelemetry.instrumentation.ratpack.v1_7.internal;
 
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackTelemetryBuilder;
+import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackClientTelemetryBuilder;
+import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackServerTelemetryBuilder;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.logging.Logger;
@@ -32,7 +33,7 @@ public class Experimental {
       getEmitExperimentalHttpServerMetricsMethod();
 
   public void setEmitExperimentalHttpClientMetrics(
-      RatpackTelemetryBuilder builder, boolean emitExperimentalHttpClientMetrics) {
+      RatpackClientTelemetryBuilder builder, boolean emitExperimentalHttpClientMetrics) {
 
     if (emitExperimentalHttpClientMetricsMethod != null) {
       try {
@@ -44,7 +45,7 @@ public class Experimental {
   }
 
   public void setEmitExperimentalHttpServerMetrics(
-      RatpackTelemetryBuilder builder, boolean emitExperimentalHttpServerMetrics) {
+      RatpackServerTelemetryBuilder builder, boolean emitExperimentalHttpServerMetrics) {
 
     if (emitExperimentalHttpServerMetricsMethod != null) {
       try {
@@ -58,7 +59,7 @@ public class Experimental {
   @Nullable
   private static Method getEmitExperimentalHttpClientMetricsMethod() {
     try {
-      return RatpackTelemetryBuilder.class.getMethod(
+      return RatpackClientTelemetryBuilder.class.getMethod(
           "setEmitExperimentalHttpClientMetrics", boolean.class);
     } catch (NoSuchMethodException e) {
       logger.log(FINE, e.getMessage(), e);
@@ -69,7 +70,7 @@ public class Experimental {
   @Nullable
   private static Method getEmitExperimentalHttpServerMetricsMethod() {
     try {
-      return RatpackTelemetryBuilder.class.getMethod(
+      return RatpackServerTelemetryBuilder.class.getMethod(
           "setEmitExperimentalHttpServerMetrics", boolean.class);
     } catch (NoSuchMethodException e) {
       logger.log(FINE, e.getMessage(), e);

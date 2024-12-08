@@ -24,7 +24,13 @@ import ratpack.http.Response;
 import ratpack.http.client.HttpResponse;
 import ratpack.http.client.RequestSpec;
 
-/** A builder for {@link RatpackTelemetry}. */
+/**
+ * A builder for {@link RatpackTelemetry}.
+ *
+ * @deprecated Use {@link RatpackClientTelemetryBuilder} and {@link RatpackServerTelemetryBuilder}
+ *     instead.
+ */
+@Deprecated
 public final class RatpackTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.ratpack-1.7";
@@ -42,7 +48,11 @@ public final class RatpackTelemetryBuilder {
   /**
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items. The {@link AttributesExtractor} will be executed after all default extractors.
+   *
+   * @deprecated Use {@link
+   *     RatpackServerTelemetryBuilder#addAttributeExtractor(AttributesExtractor)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super Request, ? super Response> attributesExtractor) {
@@ -50,6 +60,11 @@ public final class RatpackTelemetryBuilder {
     return this;
   }
 
+  /**
+   * @deprecated Use {@link
+   *     RatpackClientTelemetryBuilder#addAttributeExtractor(AttributesExtractor)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder addClientAttributeExtractor(
       AttributesExtractor<? super RequestSpec, ? super HttpResponse> attributesExtractor) {
@@ -61,7 +76,9 @@ public final class RatpackTelemetryBuilder {
    * Configures the HTTP server request headers that will be captured as span attributes.
    *
    * @param requestHeaders A list of HTTP header names.
+   * @deprecated Use {@link RatpackServerTelemetryBuilder#setCapturedRequestHeaders(List)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setCapturedServerRequestHeaders(List<String> requestHeaders) {
     serverBuilder.setCapturedRequestHeaders(requestHeaders);
@@ -72,7 +89,9 @@ public final class RatpackTelemetryBuilder {
    * Configures the HTTP server response headers that will be captured as span attributes.
    *
    * @param responseHeaders A list of HTTP header names.
+   * @deprecated Use {@link RatpackServerTelemetryBuilder#setCapturedResponseHeaders(List)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setCapturedServerResponseHeaders(List<String> responseHeaders) {
     serverBuilder.setCapturedResponseHeaders(responseHeaders);
@@ -83,7 +102,9 @@ public final class RatpackTelemetryBuilder {
    * Configures the HTTP client request headers that will be captured as span attributes.
    *
    * @param requestHeaders A list of HTTP header names.
+   * @deprecated Use {@link RatpackClientTelemetryBuilder#setCapturedRequestHeaders(List)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setCapturedClientRequestHeaders(List<String> requestHeaders) {
     clientBuilder.setCapturedRequestHeaders(requestHeaders);
@@ -94,7 +115,9 @@ public final class RatpackTelemetryBuilder {
    * Configures the HTTP client response headers that will be captured as span attributes.
    *
    * @param responseHeaders A list of HTTP header names.
+   * @deprecated Use {@link RatpackClientTelemetryBuilder#setCapturedResponseHeaders(List)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setCapturedClientResponseHeaders(List<String> responseHeaders) {
     clientBuilder.setCapturedResponseHeaders(responseHeaders);
@@ -114,7 +137,10 @@ public final class RatpackTelemetryBuilder {
    * @param knownMethods A set of recognized HTTP request methods.
    * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
    * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Set)
+   * @deprecated Use {@link RatpackServerTelemetryBuilder#setKnownMethods(Set)} and {@link
+   *     RatpackClientTelemetryBuilder#setKnownMethods(Set)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     clientBuilder.setKnownMethods(knownMethods);
@@ -128,7 +154,7 @@ public final class RatpackTelemetryBuilder {
    * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
    *     are to be emitted.
    * @deprecated Use {@link
-   *     Experimental#setEmitExperimentalHttpClientMetrics(RatpackTelemetryBuilder, boolean)}
+   *     Experimental#setEmitExperimentalHttpClientMetrics(RatpackClientTelemetryBuilder, boolean)}
    *     instead.
    */
   @Deprecated
@@ -145,7 +171,7 @@ public final class RatpackTelemetryBuilder {
    * @param emitExperimentalHttpServerMetrics {@code true} if the experimental HTTP server metrics
    *     are to be emitted.
    * @deprecated Use {@link
-   *     Experimental#setEmitExperimentalHttpServerMetrics(RatpackTelemetryBuilder, boolean)}
+   *     Experimental#setEmitExperimentalHttpServerMetrics(RatpackServerTelemetryBuilder, boolean)}
    *     instead.
    */
   @Deprecated
@@ -156,7 +182,12 @@ public final class RatpackTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom client {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom client {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link RatpackClientTelemetryBuilder#setSpanNameExtractor(Function)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setClientSpanNameExtractor(
       Function<
@@ -167,7 +198,12 @@ public final class RatpackTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom server {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link RatpackServerTelemetryBuilder#setSpanNameExtractor(Function)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setServerSpanNameExtractor(
       Function<SpanNameExtractor<? super Request>, ? extends SpanNameExtractor<? super Request>>
@@ -176,7 +212,13 @@ public final class RatpackTelemetryBuilder {
     return this;
   }
 
-  /** Returns a new {@link RatpackTelemetry} with the configuration of this builder. */
+  /**
+   * Returns a new {@link RatpackTelemetry} with the configuration of this builder.
+   *
+   * @deprecated Use {@link RatpackClientTelemetryBuilder#build()} and {@link
+   *     RatpackServerTelemetryBuilder#build()} instead.
+   */
+  @Deprecated
   public RatpackTelemetry build() {
     return new RatpackTelemetry(serverBuilder.build(), clientBuilder.build());
   }
