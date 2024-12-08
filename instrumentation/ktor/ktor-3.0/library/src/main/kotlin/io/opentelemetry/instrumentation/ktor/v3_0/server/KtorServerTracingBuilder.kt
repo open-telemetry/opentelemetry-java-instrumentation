@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.ktor.internal.KtorServerTracingUtil
 import io.opentelemetry.instrumentation.ktor.server.AbstractKtorServerTracingBuilder
 import io.opentelemetry.instrumentation.ktor.v3_0.InstrumentationProperties.INSTRUMENTATION_NAME
 
+@Deprecated("Use KtorServerTelemetryBuilder instead", ReplaceWith("KtorServerTelemetryBuilder"))
 class KtorServerTracingBuilder internal constructor(
   instrumentationName: String
 ) : AbstractKtorServerTracingBuilder(instrumentationName)

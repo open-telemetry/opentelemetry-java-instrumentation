@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.ratpack.v1_7.internal.Experimental;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackClientInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackServerInstrumenterBuilderFactory;
 import java.util.List;
@@ -126,7 +127,11 @@ public final class RatpackTelemetryBuilder {
    *
    * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
    *     are to be emitted.
+   * @deprecated Use {@link
+   *     Experimental#setEmitExperimentalHttpClientMetrics(RatpackTelemetryBuilder, boolean)}
+   *     instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {
@@ -139,7 +144,11 @@ public final class RatpackTelemetryBuilder {
    *
    * @param emitExperimentalHttpServerMetrics {@code true} if the experimental HTTP server metrics
    *     are to be emitted.
+   * @deprecated Use {@link
+   *     Experimental#setEmitExperimentalHttpServerMetrics(RatpackTelemetryBuilder, boolean)}
+   *     instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder setEmitExperimentalHttpServerMetrics(
       boolean emitExperimentalHttpServerMetrics) {

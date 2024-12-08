@@ -13,14 +13,15 @@ import io.opentelemetry.api.common.AttributesBuilder
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
-import io.opentelemetry.instrumentation.ktor.internal.KtorBuilderUtil
+import io.opentelemetry.instrumentation.ktor.internal.KtorBuilderUtilOld
 
+@Deprecated("Use AbstractKtorClientTelemetryBuilder instead", ReplaceWith("AbstractKtorClientTelemetryBuilder"))
 abstract class AbstractKtorClientTracingBuilder(
   private val instrumentationName: String
 ) {
   companion object {
     init {
-      KtorBuilderUtil.clientBuilderExtractor = { it.clientBuilder }
+      KtorBuilderUtilOld.clientBuilderExtractor = { it.clientBuilder }
     }
   }
 
@@ -166,6 +167,7 @@ abstract class AbstractKtorClientTracingBuilder(
     }
   }
 
+  @Deprecated("Please use method `Experimental.emitExperimentalHttpClientMetrics`")
   fun emitExperimentalHttpClientMetrics() {
     clientBuilder.setEmitExperimentalHttpClientMetrics(true)
   }

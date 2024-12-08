@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.ktor.server
 
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.opentelemetry.api.OpenTelemetry
@@ -20,6 +19,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor
 import io.opentelemetry.instrumentation.ktor.internal.KtorBuilderUtil
 
+@Deprecated("Use AbstractKtorServerTelemetryBuilder instead", ReplaceWith("AbstractKtorServerTelemetryBuilder"))
 abstract class AbstractKtorServerTracingBuilder(private val instrumentationName: String) {
   companion object {
     init {
