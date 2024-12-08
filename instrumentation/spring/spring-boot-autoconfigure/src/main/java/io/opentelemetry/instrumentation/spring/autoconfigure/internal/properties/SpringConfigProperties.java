@@ -32,7 +32,7 @@ public class SpringConfigProperties implements ConfigProperties {
   private final OtelResourceProperties resourceProperties;
   private final ConfigProperties otelSdkProperties;
   private final ConfigProperties customizedListProperties;
-  private final Map<String, List<String>> listPropertyValues = new HashMap<>();
+  private final Map<String, List<String>> listPropertyValues;
 
   static final String DISABLED_KEY = "otel.java.disabled.resource.providers";
   static final String ENABLED_KEY = "otel.java.enabled.resource.providers";
@@ -52,15 +52,46 @@ public class SpringConfigProperties implements ConfigProperties {
     this.customizedListProperties =
         createCustomizedListProperties(otelSdkProperties, otelSpringProperties);
 
-    listPropertyValues.put(ENABLED_KEY, otelSpringProperties.getJavaEnabledResourceProviders());
-    listPropertyValues.put(DISABLED_KEY, otelSpringProperties.getJavaDisabledResourceProviders());
-    listPropertyValues.put(
+    listPropertyValues = createListPropertyValues(otelSpringProperties);
+  }
+
+  private static Map<String, List<String>> createListPropertyValues(
+      OtelSpringProperties otelSpringProperties) {
+    Map<String, List<String>> values = new HashMap<>();
+
+    // SDK
+    values.put(ENABLED_KEY, otelSpringProperties.getJavaEnabledResourceProviders());
+    values.put(DISABLED_KEY, otelSpringProperties.getJavaDisabledResourceProviders());
+    values.put(
         "otel.experimental.metrics.view.config",
         otelSpringProperties.getExperimentalMetricsViewConfig());
-    listPropertyValues.put(
+    values.put(
         "otel.experimental.resource.disabled.keys",
         otelSpringProperties.getExperimentalResourceDisabledKeys());
-    listPropertyValues.put("otel.propagators", otelSpringProperties.getPropagators());
+    values.put("otel.propagators", otelSpringProperties.getPropagators());
+
+    // exporters
+    values.put("otel.logs.exporter", otelSpringProperties.getLogsExporter());
+    values.put("otel.metrics.exporter", otelSpringProperties.getMetricsExporter());
+    values.put("otel.traces.exporter", otelSpringProperties.getTracesExporter());
+
+    // instrumentations
+    values.put(
+        "otel.instrumentation.http.client.capture-request-headers",
+        otelSpringProperties.getHttpClientCaptureRequestHeaders());
+    values.put(
+        "otel.instrumentation.http.client.capture-response-headers",
+        otelSpringProperties.getHttpClientCaptureResponseHeaders());
+    values.put(
+        "otel.instrumentation.http.server.capture-request-headers",
+        otelSpringProperties.getHttpServerCaptureRequestHeaders());
+    values.put(
+        "otel.instrumentation.http.server.capture-response-headers",
+        otelSpringProperties.getHttpServerCaptureResponseHeaders());
+    values.put(
+        "otel.instrumentation.http.known-methods", otelSpringProperties.getHttpKnownMethods());
+
+    return values;
   }
 
   private static Map<String, String> createMapForListProperty(
@@ -174,7 +205,9 @@ public class SpringConfigProperties implements ConfigProperties {
       if (!c.isEmpty()) {
         return c;
       }
-      return list;
+      if (!list.isEmpty()) {
+        return list;
+      }
     }
 
     return or(environment.getProperty(normalizedName, List.class), otelSdkProperties.getList(name));

@@ -195,11 +195,137 @@ public final class OtelSpringProperties {
     }
   }
 
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
+  public static final class HasExporters {
+    private List<String> exporter = Collections.emptyList();
+
+    public List<String> getExporter() {
+      return exporter;
+    }
+
+    public void setExporter(List<String> exporter) {
+      this.exporter = exporter;
+    }
+  }
+
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
+  public static final class Instrumentation {
+    /**
+     * This class is internal and is hence not for public use. Its APIs are unstable and can change
+     * at any time.
+     */
+    public static final class Http {
+      /**
+       * This class is internal and is hence not for public use. Its APIs are unstable and can
+       * change at any time.
+       */
+      public static final class Client {
+        private List<String> captureRequestHeaders = Collections.emptyList();
+        private List<String> captureResponseHeaders = Collections.emptyList();
+
+        public List<String> getCaptureRequestHeaders() {
+          return captureRequestHeaders;
+        }
+
+        public void setCaptureRequestHeaders(List<String> captureRequestHeaders) {
+          this.captureRequestHeaders = captureRequestHeaders;
+        }
+
+        public List<String> getCaptureResponseHeaders() {
+          return captureResponseHeaders;
+        }
+
+        public void setCaptureResponseHeaders(List<String> captureResponseHeaders) {
+          this.captureResponseHeaders = captureResponseHeaders;
+        }
+      }
+
+      /**
+       * This class is internal and is hence not for public use. Its APIs are unstable and can
+       * change at any time.
+       */
+      public static final class Server {
+        private List<String> captureRequestHeaders = Collections.emptyList();
+        private List<String> captureResponseHeaders = Collections.emptyList();
+
+        public List<String> getCaptureRequestHeaders() {
+          return captureRequestHeaders;
+        }
+
+        public void setCaptureRequestHeaders(List<String> captureRequestHeaders) {
+          this.captureRequestHeaders = captureRequestHeaders;
+        }
+
+        public List<String> getCaptureResponseHeaders() {
+          return captureResponseHeaders;
+        }
+
+        public void setCaptureResponseHeaders(List<String> captureResponseHeaders) {
+          this.captureResponseHeaders = captureResponseHeaders;
+        }
+      }
+
+      private Client client = new Client();
+
+      private Server server = new Server();
+
+      private List<String> knownMethods = Collections.emptyList();
+
+      public Client getClient() {
+        return client;
+      }
+
+      public void setClient(Client client) {
+        this.client = client;
+      }
+
+      public Server getServer() {
+        return server;
+      }
+
+      public void setServer(Server server) {
+        this.server = server;
+      }
+
+      public List<String> getKnownMethods() {
+        return knownMethods;
+      }
+
+      public void setKnownMethods(List<String> knownMethods) {
+        this.knownMethods = knownMethods;
+      }
+    }
+
+    private Http http = new Http();
+
+    public Http getHttp() {
+      return http;
+    }
+
+    public void setHttp(Http http) {
+      this.http = http;
+    }
+  }
+
   private List<String> propagators = Collections.emptyList();
 
   private Java java = new Java();
 
   private Experimental experimental = new Experimental();
+
+  private HasExporters logs = new HasExporters();
+
+  private HasExporters metrics = new HasExporters();
+
+  private HasExporters traces = new HasExporters();
+
+  private Instrumentation instrumentation = new Instrumentation();
 
   public List<String> getPropagators() {
     return propagators;
@@ -225,6 +351,38 @@ public final class OtelSpringProperties {
     this.experimental = experimental;
   }
 
+  public HasExporters getLogs() {
+    return logs;
+  }
+
+  public void setLogs(HasExporters logs) {
+    this.logs = logs;
+  }
+
+  public HasExporters getMetrics() {
+    return metrics;
+  }
+
+  public void setMetrics(HasExporters metrics) {
+    this.metrics = metrics;
+  }
+
+  public HasExporters getTraces() {
+    return traces;
+  }
+
+  public void setTraces(HasExporters traces) {
+    this.traces = traces;
+  }
+
+  public Instrumentation getInstrumentation() {
+    return instrumentation;
+  }
+
+  public void setInstrumentation(Instrumentation instrumentation) {
+    this.instrumentation = instrumentation;
+  }
+
   public List<String> getJavaEnabledResourceProviders() {
     return java.getEnabled().getResource().getProviders();
   }
@@ -239,5 +397,37 @@ public final class OtelSpringProperties {
 
   public List<String> getExperimentalResourceDisabledKeys() {
     return experimental.getResource().getDisabled().getKeys();
+  }
+
+  public List<String> getLogsExporter() {
+    return logs.getExporter();
+  }
+
+  public List<String> getMetricsExporter() {
+    return metrics.getExporter();
+  }
+
+  public List<String> getTracesExporter() {
+    return traces.getExporter();
+  }
+
+  public List<String> getHttpClientCaptureRequestHeaders() {
+    return instrumentation.getHttp().getClient().getCaptureRequestHeaders();
+  }
+
+  public List<String> getHttpClientCaptureResponseHeaders() {
+    return instrumentation.getHttp().getClient().getCaptureResponseHeaders();
+  }
+
+  public List<String> getHttpServerCaptureRequestHeaders() {
+    return instrumentation.getHttp().getServer().getCaptureRequestHeaders();
+  }
+
+  public List<String> getHttpServerCaptureResponseHeaders() {
+    return instrumentation.getHttp().getServer().getCaptureResponseHeaders();
+  }
+
+  public List<String> getHttpKnownMethods() {
+    return instrumentation.getHttp().getKnownMethods();
   }
 }
