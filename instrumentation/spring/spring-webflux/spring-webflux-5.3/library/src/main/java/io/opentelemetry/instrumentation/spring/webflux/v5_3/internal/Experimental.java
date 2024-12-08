@@ -7,7 +7,8 @@ package io.opentelemetry.instrumentation.spring.webflux.v5_3.internal;
 
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxTelemetryBuilder;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxClientTelemetryBuilder;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxServerTelemetryBuilder;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.logging.Logger;
@@ -24,11 +25,27 @@ public class Experimental {
   private static final Logger logger = Logger.getLogger(Experimental.class.getName());
 
   @Nullable
+  private static final Method emitExperimentalHttpClientMetricsMethod =
+      getEmitExperimentalHttpClientMetricsMethod();
+
+  @Nullable
   private static final Method emitExperimentalHttpServerMetricsMethod =
       getEmitExperimentalHttpServerMetricsMethod();
 
+  public void setEmitExperimentalHttpClientMetrics(
+      SpringWebfluxClientTelemetryBuilder builder, boolean emitExperimentalHttpClientMetrics) {
+
+    if (emitExperimentalHttpClientMetricsMethod != null) {
+      try {
+        emitExperimentalHttpClientMetricsMethod.invoke(builder, emitExperimentalHttpClientMetrics);
+      } catch (IllegalAccessException | InvocationTargetException e) {
+        logger.log(FINE, e.getMessage(), e);
+      }
+    }
+  }
+
   public void setEmitExperimentalHttpServerMetrics(
-      SpringWebfluxTelemetryBuilder builder, boolean emitExperimentalHttpServerMetrics) {
+      SpringWebfluxServerTelemetryBuilder builder, boolean emitExperimentalHttpServerMetrics) {
 
     if (emitExperimentalHttpServerMetricsMethod != null) {
       try {
@@ -40,9 +57,20 @@ public class Experimental {
   }
 
   @Nullable
+  private static Method getEmitExperimentalHttpClientMetricsMethod() {
+    try {
+      return SpringWebfluxClientTelemetryBuilder.class.getMethod(
+          "setEmitExperimentalHttpClientTelemetry", boolean.class);
+    } catch (NoSuchMethodException e) {
+      logger.log(FINE, e.getMessage(), e);
+      return null;
+    }
+  }
+
+  @Nullable
   private static Method getEmitExperimentalHttpServerMetricsMethod() {
     try {
-      return SpringWebfluxTelemetryBuilder.class.getMethod(
+      return SpringWebfluxServerTelemetryBuilder.class.getMethod(
           "setEmitExperimentalHttpServerTelemetry", boolean.class);
     } catch (NoSuchMethodException e) {
       logger.log(FINE, e.getMessage(), e);
