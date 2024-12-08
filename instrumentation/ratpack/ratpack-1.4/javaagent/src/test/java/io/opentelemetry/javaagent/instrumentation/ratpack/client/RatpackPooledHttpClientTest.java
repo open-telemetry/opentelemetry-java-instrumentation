@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.ratpack;
+package io.opentelemetry.javaagent.instrumentation.ratpack.client;
 
-import io.opentelemetry.instrumentation.ratpack.client.AbstractRatpackForkedHttpClientTest;
+import io.opentelemetry.instrumentation.ratpack.client.AbstractRatpackPooledHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class RatpackForkedHttpClientTest extends AbstractRatpackForkedHttpClientTest {
+class RatpackPooledHttpClientTest extends AbstractRatpackPooledHttpClientTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
