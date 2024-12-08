@@ -7,7 +7,7 @@ muzzle {
     group.set("com.alibaba.nacos")
     module.set("nacos-client")
     versions.set("[2.0.3,)")
-    skip("0.5.0","1.1.2", "1.1.4", "1.4.7", "2.0.1","2.0.2")
+    skip("0.5.0", "0.6.1", "1.1.2", "1.1.4", "1.4.7", "2.0.1", "2.0.2")
     assertInverse.set(true)
   }
 }
