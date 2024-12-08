@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.Experimental;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.SpringWebfluxBuilderUtil;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientHttpAttributesGetter;
 import java.util.List;
@@ -162,7 +163,11 @@ public final class SpringWebfluxTelemetryBuilder {
    *
    * @param emitExperimentalHttpServerTelemetry {@code true} if the experimental HTTP server metrics
    *     are to be emitted.
+   * @deprecated Use {@link
+   *     Experimental#setEmitExperimentalHttpServerMetrics(SpringWebfluxTelemetryBuilder, boolean)}
+   *     instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public SpringWebfluxTelemetryBuilder setEmitExperimentalHttpServerTelemetry(
       boolean emitExperimentalHttpServerTelemetry) {

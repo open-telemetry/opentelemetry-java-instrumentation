@@ -14,7 +14,12 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.function.Function;
 
-/** Entrypoint for instrumenting Armeria services or clients. */
+/**
+ * Entrypoint for instrumenting Armeria services or clients.
+ *
+ * @deprecated Use {@link ArmeriaClientTelemetry} and {@link ArmeriaServerTelemetry} instead.
+ */
+@Deprecated
 public final class ArmeriaTelemetry {
 
   /** Returns a new {@link ArmeriaTelemetry} configured with the given {@link OpenTelemetry}. */
@@ -39,7 +44,10 @@ public final class ArmeriaTelemetry {
   /**
    * Returns a new {@link HttpClient} decorator for use with methods like {@link
    * com.linecorp.armeria.client.ClientBuilder#decorator(Function)}.
+   *
+   * @deprecated Use {@link ArmeriaClientTelemetry#newDecorator()} instead.
    */
+  @Deprecated
   public Function<? super HttpClient, ? extends HttpClient> newClientDecorator() {
     return client -> new OpenTelemetryClient(client, clientInstrumenter);
   }
@@ -47,7 +55,10 @@ public final class ArmeriaTelemetry {
   /**
    * Returns a new {@link HttpService} decorator for use with methods like {@link
    * HttpService#decorate(Function)}.
+   *
+   * @deprecated Use {@link ArmeriaServerTelemetry#newDecorator()} instead.
    */
+  @Deprecated
   public Function<? super HttpService, ? extends HttpService> newServiceDecorator() {
     return service -> new OpenTelemetryService(service, serverInstrumenter);
   }
