@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.apachehttpclient.v5_2.internal;
 
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.instrumentation.apachehttpclient.v5_2.ApacheHttpClient5TelemetryBuilder;
+import io.opentelemetry.instrumentation.apachehttpclient.v5_2.ApacheHttpClientTelemetryBuilder;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.logging.Logger;
@@ -28,7 +28,7 @@ public class Experimental {
       getEmitExperimentalHttpClientMetricsMethod();
 
   public void setEmitExperimentalHttpClientMetrics(
-      ApacheHttpClient5TelemetryBuilder builder, boolean emitExperimentalHttpClientMetrics) {
+      ApacheHttpClientTelemetryBuilder builder, boolean emitExperimentalHttpClientMetrics) {
 
     if (emitExperimentalHttpClientMetricsMethod != null) {
       try {
@@ -42,7 +42,7 @@ public class Experimental {
   @Nullable
   private static Method getEmitExperimentalHttpClientMetricsMethod() {
     try {
-      return ApacheHttpClient5TelemetryBuilder.class.getMethod(
+      return ApacheHttpClientTelemetryBuilder.class.getMethod(
           "setEmitExperimentalHttpClientMetrics", boolean.class);
     } catch (NoSuchMethodException e) {
       logger.log(FINE, e.getMessage(), e);

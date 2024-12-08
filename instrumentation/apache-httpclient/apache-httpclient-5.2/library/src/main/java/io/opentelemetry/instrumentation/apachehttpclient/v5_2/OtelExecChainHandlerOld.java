@@ -19,16 +19,17 @@ import org.apache.hc.core5.http.HttpException;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpResponse;
 
-class OtelExecChainHandler implements ExecChainHandler {
+@Deprecated
+class OtelExecChainHandlerOld implements ExecChainHandler {
 
   private static final String REQUEST_PARENT_CONTEXT_ATTRIBUTE_ID =
-      OtelExecChainHandler.class.getName() + ".context";
+      OtelExecChainHandlerOld.class.getName() + ".context";
 
-  private final Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter;
+  private final Instrumenter<ApacheHttpClient5Request, HttpResponse> instrumenter;
   private final ContextPropagators propagators;
 
-  public OtelExecChainHandler(
-      Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter,
+  public OtelExecChainHandlerOld(
+      Instrumenter<ApacheHttpClient5Request, HttpResponse> instrumenter,
       ContextPropagators propagators) {
     this.instrumenter = instrumenter;
     this.propagators = propagators;
@@ -45,7 +46,7 @@ class OtelExecChainHandler implements ExecChainHandler {
       scope.clientContext.setAttribute(REQUEST_PARENT_CONTEXT_ATTRIBUTE_ID, parentContext);
     }
 
-    ApacheHttpClientRequest instrumenterRequest = getApacheHttpClientRequest(request, scope);
+    ApacheHttpClient5Request instrumenterRequest = getApacheHttpClient5Request(request, scope);
 
     if (!instrumenter.shouldStart(parentContext, instrumenterRequest)) {
       return chain.proceed(request, scope);
@@ -59,7 +60,7 @@ class OtelExecChainHandler implements ExecChainHandler {
 
   private ClassicHttpResponse execute(
       ClassicHttpRequest request,
-      ApacheHttpClientRequest instrumenterRequest,
+      ApacheHttpClient5Request instrumenterRequest,
       ExecChain chain,
       Scope scope,
       Context context)
@@ -77,7 +78,7 @@ class OtelExecChainHandler implements ExecChainHandler {
     }
   }
 
-  private static ApacheHttpClientRequest getApacheHttpClientRequest(
+  private static ApacheHttpClient5Request getApacheHttpClient5Request(
       ClassicHttpRequest request, Scope scope) {
     HttpHost host = null;
     if (scope.route.getTargetHost() != null) {
@@ -94,6 +95,6 @@ class OtelExecChainHandler implements ExecChainHandler {
       host = new HttpHost(host.getSchemeName(), host.getHostName(), -1);
     }
 
-    return new ApacheHttpClientRequest(host, request);
+    return new ApacheHttpClient5Request(host, request);
   }
 }

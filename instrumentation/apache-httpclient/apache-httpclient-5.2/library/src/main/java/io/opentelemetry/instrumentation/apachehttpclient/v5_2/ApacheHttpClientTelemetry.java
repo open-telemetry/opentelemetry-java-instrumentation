@@ -13,35 +13,30 @@ import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
 import org.apache.hc.core5.http.HttpResponse;
 
-/**
- * Entrypoint for instrumenting Apache HTTP Client.
- *
- * @deprecated Use {@link ApacheHttpClientTelemetry} instead.
- */
-@Deprecated
-public final class ApacheHttpClient5Telemetry {
+/** Entrypoint for instrumenting Apache HTTP Client. */
+public final class ApacheHttpClientTelemetry {
 
   /**
-   * Returns a new {@link ApacheHttpClient5Telemetry} configured with the given {@link
+   * Returns a new {@link ApacheHttpClientTelemetry} configured with the given {@link
    * OpenTelemetry}.
    */
-  public static ApacheHttpClient5Telemetry create(OpenTelemetry openTelemetry) {
+  public static ApacheHttpClientTelemetry create(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).build();
   }
 
   /**
-   * Returns a new {@link ApacheHttpClient5TelemetryBuilder} configured with the given {@link
+   * Returns a new {@link ApacheHttpClientTelemetryBuilder} configured with the given {@link
    * OpenTelemetry}.
    */
-  public static ApacheHttpClient5TelemetryBuilder builder(OpenTelemetry openTelemetry) {
-    return new ApacheHttpClient5TelemetryBuilder(openTelemetry);
+  public static ApacheHttpClientTelemetryBuilder builder(OpenTelemetry openTelemetry) {
+    return new ApacheHttpClientTelemetryBuilder(openTelemetry);
   }
 
-  private final Instrumenter<ApacheHttpClient5Request, HttpResponse> instrumenter;
+  private final Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter;
   private final ContextPropagators propagators;
 
-  ApacheHttpClient5Telemetry(
-      Instrumenter<ApacheHttpClient5Request, HttpResponse> instrumenter,
+  ApacheHttpClientTelemetry(
+      Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter,
       ContextPropagators propagators) {
     this.instrumenter = instrumenter;
     this.propagators = propagators;
@@ -58,6 +53,6 @@ public final class ApacheHttpClient5Telemetry {
         .addExecInterceptorAfter(
             ChainElement.PROTOCOL.name(),
             "OtelExecChainHandler",
-            new OtelExecChainHandlerOld(instrumenter, propagators));
+            new OtelExecChainHandler(instrumenter, propagators));
   }
 }
