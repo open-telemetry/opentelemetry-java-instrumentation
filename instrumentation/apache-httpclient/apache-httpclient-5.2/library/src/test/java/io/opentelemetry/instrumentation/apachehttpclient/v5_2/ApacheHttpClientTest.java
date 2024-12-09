@@ -18,7 +18,7 @@ import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuil
 import org.apache.hc.core5.util.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class ApacheHttpClient5Test extends AbstractApacheHttpClient5Test {
+class ApacheHttpClientTest extends AbstractApacheHttpClientTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forLibrary();
@@ -31,7 +31,7 @@ class ApacheHttpClient5Test extends AbstractApacheHttpClient5Test {
   @Override
   protected CloseableHttpClient createClient(boolean readTimeout) {
     HttpClientBuilder builder =
-        ApacheHttpClient5Telemetry.builder(testing.getOpenTelemetry())
+        ApacheHttpClientTelemetry.builder(testing.getOpenTelemetry())
             .setCapturedRequestHeaders(
                 Collections.singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
             .setCapturedResponseHeaders(

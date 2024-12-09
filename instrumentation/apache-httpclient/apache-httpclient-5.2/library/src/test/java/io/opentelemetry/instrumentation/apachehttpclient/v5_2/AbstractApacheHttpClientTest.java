@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.TestInstance;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-abstract class AbstractApacheHttpClient5Test {
+abstract class AbstractApacheHttpClientTest {
 
   protected abstract InstrumentationExtension testing();
 
