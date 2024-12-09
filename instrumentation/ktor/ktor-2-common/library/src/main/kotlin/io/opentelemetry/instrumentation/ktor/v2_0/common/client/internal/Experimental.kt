@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ktor.client.internal
+package io.opentelemetry.instrumentation.ktor.v2_0.common.client.internal
 
-import io.opentelemetry.instrumentation.ktor.client.AbstractKtorClientTelemetryBuilder
+import io.opentelemetry.instrumentation.ktor.v2_0.common.client.AbstractKtorClientTelemetryBuilder
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.util.logging.Level

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ktor.client
+package io.opentelemetry.instrumentation.ktor.v2_0.common.client
 
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -13,14 +13,15 @@ import io.opentelemetry.api.common.AttributesBuilder
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
-import io.opentelemetry.instrumentation.ktor.internal.KtorBuilderUtil
+import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorBuilderUtilOld
 
-abstract class AbstractKtorClientTelemetryBuilder(
+@Deprecated("Use AbstractKtorClientTelemetryBuilder instead", ReplaceWith("AbstractKtorClientTelemetryBuilder"))
+abstract class AbstractKtorClientTracingBuilder(
   private val instrumentationName: String
 ) {
   companion object {
     init {
-      KtorBuilderUtil.clientBuilderExtractor = { it.clientBuilder }
+      KtorBuilderUtilOld.clientBuilderExtractor = { it.clientBuilder }
     }
   }
 
@@ -40,17 +41,47 @@ abstract class AbstractKtorClientTelemetryBuilder(
     return openTelemetry
   }
 
+  @Deprecated(
+    "Please use method `capturedRequestHeaders`",
+    ReplaceWith("capturedRequestHeaders(headers.asIterable())")
+  )
+  fun setCapturedRequestHeaders(vararg headers: String) = capturedRequestHeaders(headers.asIterable())
+
+  @Deprecated(
+    "Please use method `capturedRequestHeaders`",
+    ReplaceWith("capturedRequestHeaders(headers)")
+  )
+  fun setCapturedRequestHeaders(headers: List<String>) = capturedRequestHeaders(headers)
+
   fun capturedRequestHeaders(vararg headers: String) = capturedRequestHeaders(headers.asIterable())
 
   fun capturedRequestHeaders(headers: Iterable<String>) {
     clientBuilder.setCapturedRequestHeaders(headers.toList())
   }
 
+  @Deprecated(
+    "Please use method `capturedResponseHeaders`",
+    ReplaceWith("capturedResponseHeaders(headers.asIterable())")
+  )
+  fun setCapturedResponseHeaders(vararg headers: String) = capturedResponseHeaders(headers.asIterable())
+
+  @Deprecated(
+    "Please use method `capturedResponseHeaders`",
+    ReplaceWith("capturedResponseHeaders(headers)")
+  )
+  fun setCapturedResponseHeaders(headers: List<String>) = capturedResponseHeaders(headers)
+
   fun capturedResponseHeaders(vararg headers: String) = capturedResponseHeaders(headers.asIterable())
 
   fun capturedResponseHeaders(headers: Iterable<String>) {
     clientBuilder.setCapturedResponseHeaders(headers.toList())
   }
+
+  @Deprecated(
+    "Please use method `knownMethods`",
+    ReplaceWith("knownMethods(knownMethods)")
+  )
+  fun setKnownMethods(knownMethods: Set<String>) = knownMethods(knownMethods)
 
   fun knownMethods(vararg methods: String) = knownMethods(methods.asIterable())
 
@@ -61,6 +92,19 @@ abstract class AbstractKtorClientTelemetryBuilder(
 
   fun knownMethods(methods: Iterable<String>) {
     clientBuilder.setKnownMethods(methods.toSet())
+  }
+
+  @Deprecated("Please use method `attributeExtractor`")
+  fun addAttributesExtractors(vararg extractors: AttributesExtractor<in HttpRequestData, in HttpResponse>) = addAttributesExtractors(extractors.asList())
+
+  @Deprecated("Please use method `attributeExtractor`")
+  fun addAttributesExtractors(extractors: Iterable<AttributesExtractor<in HttpRequestData, in HttpResponse>>) {
+    extractors.forEach {
+      attributeExtractor {
+        onStart { it.onStart(attributes, parentContext, request) }
+        onEnd { it.onEnd(attributes, parentContext, request, response, error) }
+      }
+    }
   }
 
   fun attributeExtractor(extractorBuilder: ExtractorBuilder.() -> Unit = {}) {
@@ -112,10 +156,19 @@ abstract class AbstractKtorClientTelemetryBuilder(
   )
 
   /**
-   * Can be used via the unstable method {@link
-   * Experimental#setEmitExperimentalHttpClientMetrics(AbstractKtorClientTelemetryBuilder, boolean)}.
+   * Configures the instrumentation to emit experimental HTTP client metrics.
+   *
+   * @param emitExperimentalHttpClientMetrics `true` if the experimental HTTP client metrics are to be emitted.
    */
-  internal fun emitExperimentalHttpClientMetrics() {
+  @Deprecated("Please use method `Experimental.emitExperimentalHttpClientMetrics`")
+  fun setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics: Boolean) {
+    if (emitExperimentalHttpClientMetrics) {
+      emitExperimentalHttpClientMetrics()
+    }
+  }
+
+  @Deprecated("Please use method `Experimental.emitExperimentalHttpClientMetrics`")
+  fun emitExperimentalHttpClientMetrics() {
     clientBuilder.setEmitExperimentalHttpClientMetrics(true)
   }
 }

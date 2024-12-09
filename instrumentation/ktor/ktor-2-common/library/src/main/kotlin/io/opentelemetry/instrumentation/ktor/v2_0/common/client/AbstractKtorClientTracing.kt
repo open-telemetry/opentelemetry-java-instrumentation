@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ktor.client
+package io.opentelemetry.instrumentation.ktor.v2_0.common.client
 
 import io.ktor.client.call.*
 import io.ktor.client.request.*
