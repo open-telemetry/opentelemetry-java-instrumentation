@@ -14,11 +14,10 @@ import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
+ * This class is internal and experimental. Its APIs are unstable and can change at any time. Its
+ * APIs (or a version of them) may be promoted to the public stable API in the future, but no
+ * guarantees are made.
  */
-// TODO (trask) update the above javadoc similar to
-//  https://github.com/open-telemetry/opentelemetry-java/pull/6886
 public class Experimental {
 
   private static final Logger logger = Logger.getLogger(Experimental.class.getName());
