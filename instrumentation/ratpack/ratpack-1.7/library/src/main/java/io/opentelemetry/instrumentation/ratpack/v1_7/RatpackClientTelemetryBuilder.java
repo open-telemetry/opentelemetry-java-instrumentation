@@ -32,8 +32,8 @@ public final class RatpackClientTelemetryBuilder {
 
   @CanIgnoreReturnValue
   public RatpackClientTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<? super RequestSpec, ? super HttpResponse> attributesExtractor) {
-    builder.addAttributeExtractor(attributesExtractor);
+      AttributesExtractor<RequestSpec, HttpResponse> attributesExtractor) {
+    builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 
@@ -81,9 +81,7 @@ public final class RatpackClientTelemetryBuilder {
   /** Sets custom client {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public RatpackClientTelemetryBuilder setSpanNameExtractor(
-      Function<
-              SpanNameExtractor<? super RequestSpec>,
-              ? extends SpanNameExtractor<? super RequestSpec>>
+      Function<SpanNameExtractor<RequestSpec>, SpanNameExtractor<RequestSpec>>
           clientSpanNameExtractor) {
     builder.setSpanNameExtractor(clientSpanNameExtractor);
     return this;

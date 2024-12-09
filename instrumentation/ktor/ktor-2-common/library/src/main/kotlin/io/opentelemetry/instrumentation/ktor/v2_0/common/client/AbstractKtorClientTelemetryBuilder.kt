@@ -65,7 +65,7 @@ abstract class AbstractKtorClientTelemetryBuilder(
 
   fun attributesExtractor(extractorBuilder: ExtractorBuilder.() -> Unit = {}) {
     val builder = ExtractorBuilder().apply(extractorBuilder).build()
-    this.builder.addAttributeExtractor(
+    this.builder.addAttributesExtractor(
       object : AttributesExtractor<HttpRequestData, HttpResponse> {
         override fun onStart(attributes: AttributesBuilder, parentContext: Context, request: HttpRequestData) {
           builder.onStart(OnStartData(attributes, parentContext, request))

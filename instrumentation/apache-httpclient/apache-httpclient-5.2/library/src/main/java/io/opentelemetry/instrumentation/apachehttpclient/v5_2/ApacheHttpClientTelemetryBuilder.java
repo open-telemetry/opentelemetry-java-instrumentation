@@ -36,10 +36,9 @@ public final class ApacheHttpClientTelemetryBuilder {
    * items. The {@link AttributesExtractor} will be executed after all default extractors.
    */
   @CanIgnoreReturnValue
-  public ApacheHttpClientTelemetryBuilder addAttributeExtractor(
-      AttributesExtractor<? super ApacheHttpClientRequest, ? super HttpResponse>
-          attributesExtractor) {
-    builder.addAttributeExtractor(attributesExtractor);
+  public ApacheHttpClientTelemetryBuilder addAttributesExtractor(
+      AttributesExtractor<ApacheHttpClientRequest, HttpResponse> attributesExtractor) {
+    builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 
@@ -88,8 +87,8 @@ public final class ApacheHttpClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public ApacheHttpClientTelemetryBuilder setSpanNameExtractor(
       Function<
-              SpanNameExtractor<? super ApacheHttpClientRequest>,
-              ? extends SpanNameExtractor<? super ApacheHttpClientRequest>>
+              SpanNameExtractor<ApacheHttpClientRequest>,
+              SpanNameExtractor<ApacheHttpClientRequest>>
           spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;

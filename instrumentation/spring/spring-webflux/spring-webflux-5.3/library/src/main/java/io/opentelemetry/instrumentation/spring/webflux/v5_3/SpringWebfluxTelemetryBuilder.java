@@ -209,9 +209,7 @@ public final class SpringWebfluxTelemetryBuilder {
   @Deprecated
   @CanIgnoreReturnValue
   public SpringWebfluxTelemetryBuilder setClientSpanNameExtractor(
-      Function<
-              SpanNameExtractor<? super ClientRequest>,
-              ? extends SpanNameExtractor<? super ClientRequest>>
+      Function<SpanNameExtractor<ClientRequest>, SpanNameExtractor<ClientRequest>>
           clientSpanNameExtractor) {
     clientBuilder.setSpanNameExtractor(clientSpanNameExtractor);
     return this;
@@ -226,9 +224,7 @@ public final class SpringWebfluxTelemetryBuilder {
   @Deprecated
   @CanIgnoreReturnValue
   public SpringWebfluxTelemetryBuilder setServerSpanNameExtractor(
-      Function<
-              SpanNameExtractor<? super ServerWebExchange>,
-              ? extends SpanNameExtractor<? super ServerWebExchange>>
+      Function<SpanNameExtractor<ServerWebExchange>, SpanNameExtractor<ServerWebExchange>>
           serverSpanNameExtractor) {
     serverBuilder.setSpanNameExtractor(serverSpanNameExtractor);
     return this;
