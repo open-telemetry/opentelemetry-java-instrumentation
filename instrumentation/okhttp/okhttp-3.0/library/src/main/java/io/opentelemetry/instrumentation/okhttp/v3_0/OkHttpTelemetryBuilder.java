@@ -32,11 +32,25 @@ public final class OkHttpTelemetryBuilder {
   /**
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items.
+   *
+   * @deprecated Use {@link #addAttributesExtractor(AttributesExtractor)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super Interceptor.Chain, ? super Response> attributesExtractor) {
-    builder.addAttributeExtractor(attributesExtractor);
+    builder.addAttributesExtractor(attributesExtractor);
+    return this;
+  }
+
+  /**
+   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
+   * items.
+   */
+  @CanIgnoreReturnValue
+  public OkHttpTelemetryBuilder addAttributesExtractor(
+      AttributesExtractor<? super Interceptor.Chain, ? super Response> attributesExtractor) {
+    builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 

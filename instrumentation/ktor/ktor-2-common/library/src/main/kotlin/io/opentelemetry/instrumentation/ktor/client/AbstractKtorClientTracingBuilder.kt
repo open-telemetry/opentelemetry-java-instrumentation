@@ -108,7 +108,7 @@ abstract class AbstractKtorClientTracingBuilder(
 
   fun attributeExtractor(extractorBuilder: ExtractorBuilder.() -> Unit = {}) {
     val builder = ExtractorBuilder().apply(extractorBuilder).build()
-    this.clientBuilder.addAttributeExtractor(
+    this.clientBuilder.addAttributesExtractor(
       object : AttributesExtractor<HttpRequestData, HttpResponse> {
         override fun onStart(attributes: AttributesBuilder, parentContext: Context, request: HttpRequestData) {
           builder.onStart(OnStartData(attributes, parentContext, request))

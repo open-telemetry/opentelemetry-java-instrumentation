@@ -103,7 +103,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
    * items. The {@link AttributesExtractor} will be executed after all default extractors.
    */
   @CanIgnoreReturnValue
-  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> addAttributeExtractor(
+  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> addAttributesExtractor(
       AttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
     additionalExtractors.add(attributesExtractor);
     return this;
@@ -190,7 +190,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setPeerServiceResolver(
       PeerServiceResolver peerServiceResolver) {
-    return addAttributeExtractor(
+    return addAttributesExtractor(
         HttpClientPeerServiceAttributesExtractor.create(attributesGetter, peerServiceResolver));
   }
 
@@ -198,7 +198,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setPeerService(
       String peerService) {
-    return addAttributeExtractor(AttributesExtractor.constant(PEER_SERVICE, peerService));
+    return addAttributesExtractor(AttributesExtractor.constant(PEER_SERVICE, peerService));
   }
 
   @CanIgnoreReturnValue
