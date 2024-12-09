@@ -40,7 +40,7 @@ public class ExperimentalFileDescriptor {
     if (openFileDescriptorCount != null) {
       observables.add(
           meter
-              .upDownCounterBuilder("process.open_file_descriptor.count")
+              .upDownCounterBuilder("jvm.open_file_descriptor.count")
               .setDescription("Number of file descriptors in use by the process.")
               .setUnit("{count}")
               .buildWithCallback(
@@ -55,7 +55,7 @@ public class ExperimentalFileDescriptor {
     if (maxFileDescriptorCount != null) {
       observables.add(
           meter
-              .upDownCounterBuilder("process.open_file_descriptor.limit")
+              .upDownCounterBuilder("jvm.open_file_descriptor.limit")
               .setDescription("Measure of max file descriptors.")
               .setUnit("{count}")
               .buildWithCallback(

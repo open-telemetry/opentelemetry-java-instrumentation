@@ -28,7 +28,7 @@ class ExperimentalFileDescriptorTest {
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
-        "process.open_file_descriptor.count",
+        "jvm.open_file_descriptor.count",
         metrics ->
             metrics.anySatisfy(
                 metricData ->
@@ -40,7 +40,7 @@ class ExperimentalFileDescriptorTest {
                             sum -> sum.hasPointsSatisfying(point -> point.hasValue(10L)))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
-        "process.open_file_descriptor.limit",
+        "jvm.open_file_descriptor.limit",
         metrics ->
             metrics.anySatisfy(
                 metricData ->
