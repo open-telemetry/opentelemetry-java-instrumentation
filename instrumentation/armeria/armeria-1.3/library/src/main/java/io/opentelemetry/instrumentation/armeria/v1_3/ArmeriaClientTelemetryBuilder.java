@@ -41,8 +41,8 @@ public final class ArmeriaClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public ArmeriaClientTelemetryBuilder setStatusExtractor(
       Function<
-              SpanStatusExtractor<? super ClientRequestContext, ? super RequestLog>,
-              ? extends SpanStatusExtractor<? super ClientRequestContext, ? super RequestLog>>
+              SpanStatusExtractor<ClientRequestContext, RequestLog>,
+              SpanStatusExtractor<ClientRequestContext, RequestLog>>
           statusExtractor) {
     builder.setStatusExtractor(statusExtractor);
     return this;
@@ -54,7 +54,7 @@ public final class ArmeriaClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public ArmeriaClientTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<? super ClientRequestContext, ? super RequestLog> attributesExtractor) {
+      AttributesExtractor<ClientRequestContext, RequestLog> attributesExtractor) {
     builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
@@ -103,9 +103,7 @@ public final class ArmeriaClientTelemetryBuilder {
   /** Sets custom client {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public ArmeriaClientTelemetryBuilder setSpanNameExtractor(
-      Function<
-              SpanNameExtractor<? super ClientRequestContext>,
-              ? extends SpanNameExtractor<? super ClientRequestContext>>
+      Function<SpanNameExtractor<ClientRequestContext>, SpanNameExtractor<ClientRequestContext>>
           clientSpanNameExtractor) {
     builder.setSpanNameExtractor(clientSpanNameExtractor);
     return this;
