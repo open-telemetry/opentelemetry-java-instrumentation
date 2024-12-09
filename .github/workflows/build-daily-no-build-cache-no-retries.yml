@@ -1,0 +1,29 @@
+name: Build (daily no cache no retries)
+
+on:
+  schedule:
+    # daily at 16:48 UTC
+    - cron: "48 16 * * *"
+  workflow_dispatch:
+
+jobs:
+  common:
+    uses: ./.github/workflows/build-common.yml
+    with:
+      max-test-retries: 0
+      no-build-cache: true
+
+  test-latest-deps:
+    uses: ./.github/workflows/reusable-test-latest-deps.yml
+    with:
+      max-test-retries: 0
+      no-build-cache: true
+
+  test-indy:
+    uses: ./.github/workflows/reusable-test-indy.yml
+    with:
+      max-test-retries: 0
+      no-build-cache: true
+
+# intentionally not using the notification workflow because currently this build fails
+# every day due to the lack of retries and so being notified every day is just noise
