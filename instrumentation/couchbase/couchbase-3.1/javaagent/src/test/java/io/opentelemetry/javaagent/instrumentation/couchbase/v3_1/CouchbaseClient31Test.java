@@ -5,8 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_1;
 
+import static org.awaitility.Awaitility.await;
+
 import com.couchbase.client.core.env.TimeoutConfig;
 import com.couchbase.client.core.error.DocumentNotFoundException;
+import com.couchbase.client.core.error.UnambiguousTimeoutException;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.ClusterOptions;
@@ -62,11 +65,18 @@ class CouchbaseClient31Test {
             ClusterOptions.clusterOptions(couchbase.getUsername(), couchbase.getPassword())
                 .environment(environment));
 
-    Bucket bucket = cluster.bucket("test");
-    collection = bucket.defaultCollection();
+    // wait and retry in the hope that it will help against test flakiness
+    await()
+        .atMost(Duration.ofMinutes(2))
+        .ignoreException(UnambiguousTimeoutException.class)
+        .until(
+            () -> {
+              Bucket bucket = cluster.bucket("test");
+              collection = bucket.defaultCollection();
 
-    // Wait 1 minute due to slow startup contributing to flakiness
-    bucket.waitUntilReady(Duration.ofMinutes(1));
+              bucket.waitUntilReady(Duration.ofSeconds(30));
+              return true;
+            });
   }
 
   @AfterAll

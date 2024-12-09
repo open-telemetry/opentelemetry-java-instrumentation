@@ -26,7 +26,7 @@ public final class SpringWebMvcTelemetryBuilder {
       builder;
 
   static {
-    SpringMvcBuilderUtil.setBuilderExtractor(SpringWebMvcTelemetryBuilder::getBuilder);
+    SpringMvcBuilderUtil.setBuilderExtractor(builder -> builder.builder);
   }
 
   SpringWebMvcTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -120,10 +120,5 @@ public final class SpringWebMvcTelemetryBuilder {
    */
   public SpringWebMvcTelemetry build() {
     return new SpringWebMvcTelemetry(builder.build());
-  }
-
-  public DefaultHttpServerInstrumenterBuilder<HttpServletRequest, HttpServletResponse>
-      getBuilder() {
-    return builder;
   }
 }
