@@ -366,11 +366,12 @@ tasks.withType<Test>().configureEach {
   // This value is quite big because with lower values (3 mins) we were experiencing large number of false positives
   timeout.set(Duration.ofMinutes(15))
 
+  val defaultMaxRetries = if (System.getenv().containsKey("CI")) 5 else 0
+  val maxTestRetries = gradle.startParameter.projectProperties["maxTestRetries"]?.toInt() ?: defaultMaxRetries
+
   develocity.testRetry {
     // You can see tests that were retried by this mechanism in the collected test reports and build scans.
-    if (System.getenv().containsKey("CI") || rootProject.hasProperty("retryTests")) {
-      maxRetries.set(5)
-    }
+    maxRetries.set(maxTestRetries);
   }
 
   reports {

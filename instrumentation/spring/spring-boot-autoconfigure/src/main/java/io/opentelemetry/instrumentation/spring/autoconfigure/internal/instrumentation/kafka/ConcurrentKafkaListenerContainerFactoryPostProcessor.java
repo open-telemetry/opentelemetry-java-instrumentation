@@ -5,43 +5,55 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.kafka;
 
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import org.springframework.beans.factory.ObjectProvider;
+import java.lang.reflect.Field;
+import java.util.function.Supplier;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.kafka.config.AbstractKafkaListenerContainerFactory;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.listener.BatchInterceptor;
+import org.springframework.kafka.listener.RecordInterceptor;
 
 class ConcurrentKafkaListenerContainerFactoryPostProcessor implements BeanPostProcessor {
 
-  private final ObjectProvider<OpenTelemetry> openTelemetryProvider;
-  private final ObjectProvider<ConfigProperties> configPropertiesProvider;
+  private final Supplier<SpringKafkaTelemetry> springKafkaTelemetry;
 
   ConcurrentKafkaListenerContainerFactoryPostProcessor(
-      ObjectProvider<OpenTelemetry> openTelemetryProvider,
-      ObjectProvider<ConfigProperties> configPropertiesProvider) {
-    this.openTelemetryProvider = openTelemetryProvider;
-    this.configPropertiesProvider = configPropertiesProvider;
+      Supplier<SpringKafkaTelemetry> springKafkaTelemetry) {
+    this.springKafkaTelemetry = springKafkaTelemetry;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public Object postProcessAfterInitialization(Object bean, String beanName) {
     if (!(bean instanceof ConcurrentKafkaListenerContainerFactory)) {
       return bean;
     }
 
-    ConcurrentKafkaListenerContainerFactory<?, ?> listenerContainerFactory =
-        (ConcurrentKafkaListenerContainerFactory<?, ?>) bean;
-    SpringKafkaTelemetry springKafkaTelemetry =
-        SpringKafkaTelemetry.builder(openTelemetryProvider.getObject())
-            .setCaptureExperimentalSpanAttributes(
-                configPropertiesProvider
-                    .getObject()
-                    .getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
-            .build();
-    listenerContainerFactory.setBatchInterceptor(springKafkaTelemetry.createBatchInterceptor());
-    listenerContainerFactory.setRecordInterceptor(springKafkaTelemetry.createRecordInterceptor());
+    ConcurrentKafkaListenerContainerFactory<Object, Object> listenerContainerFactory =
+        (ConcurrentKafkaListenerContainerFactory<Object, Object>) bean;
+    SpringKafkaTelemetry springKafkaTelemetry = this.springKafkaTelemetry.get();
+
+    // use reflection to read existing values to avoid overwriting user configured interceptors
+    BatchInterceptor<Object, Object> batchInterceptor =
+        readField(listenerContainerFactory, "batchInterceptor", BatchInterceptor.class);
+    RecordInterceptor<Object, Object> recordInterceptor =
+        readField(listenerContainerFactory, "recordInterceptor", RecordInterceptor.class);
+    listenerContainerFactory.setBatchInterceptor(
+        springKafkaTelemetry.createBatchInterceptor(batchInterceptor));
+    listenerContainerFactory.setRecordInterceptor(
+        springKafkaTelemetry.createRecordInterceptor(recordInterceptor));
 
     return listenerContainerFactory;
+  }
+
+  private static <T> T readField(Object container, String filedName, Class<T> fieldType) {
+    try {
+      Field field = AbstractKafkaListenerContainerFactory.class.getDeclaredField(filedName);
+      field.setAccessible(true);
+      return fieldType.cast(field.get(container));
+    } catch (Exception exception) {
+      return null;
+    }
   }
 }

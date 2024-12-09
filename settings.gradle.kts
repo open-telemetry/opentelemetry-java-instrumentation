@@ -13,7 +13,6 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.develocity") version "3.18.2"
   id("com.gradle.common-custom-user-data-gradle-plugin") version "2.0.2"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
   // this can't live in pluginManagement currently due to
@@ -22,6 +21,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "9.4.0" apply false
+  id("com.gradle.develocity") version "3.18.2"
 }
 
 dependencyResolutionManagement {
@@ -48,63 +48,18 @@ dependencyResolutionManagement {
   }
 }
 
-val gradleEnterpriseServer = "https://ge.opentelemetry.io"
-val isCI = System.getenv("CI") != null
-val geAccessKey = System.getenv("GRADLE_ENTERPRISE_ACCESS_KEY") ?: ""
+develocity {
+  buildScan {
+    publishing.onlyIf { System.getenv("CI") != null }
+    termsOfUseUrl.set("https://gradle.com/help/legal-terms-of-use")
+    termsOfUseAgree.set("yes")
 
-// if GE access key is not given and we are in CI, then we publish to scans.gradle.com
-val useScansGradleCom = isCI && geAccessKey.isEmpty()
-
-if (useScansGradleCom) {
-  develocity {
-    buildScan {
-      termsOfUseUrl = "https://gradle.com/help/legal-terms-of-use"
-      termsOfUseAgree = "yes"
-      uploadInBackground = !isCI
-
-      capture {
-        fileFingerprints = true
-      }
-
-      if (!gradle.startParameter.taskNames.contains("listTestsInPartition")) {
-        buildScanPublished {
-          File("build-scan.txt").printWriter().use { writer ->
-            writer.println(buildScanUri)
-          }
+    if (!gradle.startParameter.taskNames.contains("listTestsInPartition")) {
+      buildScanPublished {
+        File("build-scan.txt").printWriter().use { writer ->
+          writer.println(buildScanUri)
         }
       }
-    }
-  }
-} else {
-  develocity {
-    server = gradleEnterpriseServer
-    buildScan {
-      uploadInBackground = !isCI
-      publishing.onlyIf { it.isAuthenticated }
-
-      capture {
-        fileFingerprints = true
-      }
-
-      gradle.startParameter.projectProperties["testJavaVersion"]?.let { tag(it) }
-      gradle.startParameter.projectProperties["testJavaVM"]?.let { tag(it) }
-      gradle.startParameter.projectProperties["smokeTestSuite"]?.let {
-        value("Smoke test suite", it)
-      }
-
-      if (!gradle.startParameter.taskNames.contains("listTestsInPartition")) {
-        buildScanPublished {
-          File("build-scan.txt").printWriter().use { writer ->
-            writer.println(buildScanUri)
-          }
-        }
-      }
-    }
-  }
-
-  buildCache {
-    remote(develocity.buildCache) {
-      isPush = isCI && geAccessKey.isNotEmpty()
     }
   }
 }

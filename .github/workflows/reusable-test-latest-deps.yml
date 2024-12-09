@@ -9,8 +9,8 @@ on:
       no-build-cache:
         type: boolean
         required: false
-    secrets:
-      GRADLE_ENTERPRISE_ACCESS_KEY:
+      max-test-retries:
+        type: string
         required: false
 
 permissions:
@@ -46,7 +46,7 @@ jobs:
 
       # vaadin tests use pnpm
       - name: Cache pnpm modules
-        uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
         with:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-test-latest-cache-pnpm-modules
@@ -62,8 +62,6 @@ jobs:
           gradle-home-cache-excludes: caches/build-cache-1
 
       - name: List tests
-        env:
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
         run: >
           ./gradlew
           check -x spotlessCheck
@@ -76,13 +74,12 @@ jobs:
           echo "test-tasks=$(cat test-tasks.txt | xargs echo | sed 's/\n/ /g')" >> $GITHUB_ENV
 
       - name: Test
-        env:
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
         run: >
           ./gradlew
           ${{ env.test-tasks }}
           -PtestLatestDeps=true
           ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+          ${{ inputs.max-test-retries && format(' -PmaxTestRetries={0}', inputs.max-test-retries) || '' }}
 
       - name: Build scan
         if: ${{ !cancelled() && hashFiles('build-scan.txt') != '' }}
