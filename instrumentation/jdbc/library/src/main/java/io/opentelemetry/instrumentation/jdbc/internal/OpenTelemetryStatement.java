@@ -29,8 +29,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
-import java.util.Collection;
-import java.util.LinkedHashSet;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -44,7 +44,7 @@ public class OpenTelemetryStatement<S extends Statement> implements Statement {
   protected final String query;
   protected final Instrumenter<DbRequest, Void> instrumenter;
 
-  private final Collection<String> batchCommands = new LinkedHashSet<>();
+  private final List<String> batchCommands = new ArrayList<>();
   protected long batchSize;
 
   OpenTelemetryStatement(

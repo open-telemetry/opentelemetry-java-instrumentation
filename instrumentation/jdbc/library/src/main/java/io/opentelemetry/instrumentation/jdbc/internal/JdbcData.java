@@ -11,8 +11,9 @@ import java.lang.ref.WeakReference;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
@@ -99,12 +100,10 @@ public final class JdbcData {
    * any time.
    */
   public static final class StatementBatchInfo {
-    private final Collection<String> statements = new LinkedHashSet<>();
-    private long batchSize;
+    private final List<String> statements = new ArrayList<>();
 
     void add(String sql) {
       statements.add(sql);
-      batchSize++;
     }
 
     public Collection<String> getStatements() {
@@ -112,7 +111,7 @@ public final class JdbcData {
     }
 
     public long getBatchSize() {
-      return batchSize;
+      return statements.size();
     }
   }
 
