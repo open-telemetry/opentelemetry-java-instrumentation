@@ -27,8 +27,7 @@ public final class RatpackServerTelemetryBuilder {
   private final DefaultHttpServerInstrumenterBuilder<Request, Response> builder;
 
   RatpackServerTelemetryBuilder(OpenTelemetry openTelemetry) {
-    builder =
-        RatpackServerInstrumenterBuilderFactory.create(INSTRUMENTATION_NAME, openTelemetry);
+    builder = RatpackServerInstrumenterBuilderFactory.create(INSTRUMENTATION_NAME, openTelemetry);
   }
 
   /**

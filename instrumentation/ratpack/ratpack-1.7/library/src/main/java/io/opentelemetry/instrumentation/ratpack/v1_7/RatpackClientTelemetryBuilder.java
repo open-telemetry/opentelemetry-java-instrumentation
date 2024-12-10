@@ -27,8 +27,7 @@ public final class RatpackClientTelemetryBuilder {
   private final DefaultHttpClientInstrumenterBuilder<RequestSpec, HttpResponse> builder;
 
   RatpackClientTelemetryBuilder(OpenTelemetry openTelemetry) {
-    builder =
-        RatpackClientInstrumenterBuilderFactory.create(INSTRUMENTATION_NAME, openTelemetry);
+    builder = RatpackClientInstrumenterBuilderFactory.create(INSTRUMENTATION_NAME, openTelemetry);
   }
 
   @CanIgnoreReturnValue
