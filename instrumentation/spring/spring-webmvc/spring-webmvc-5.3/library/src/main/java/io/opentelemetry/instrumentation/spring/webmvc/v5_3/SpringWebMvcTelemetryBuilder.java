@@ -10,7 +10,9 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerTelemetryBuilder;
 import io.opentelemetry.instrumentation.spring.webmvc.v5_3.internal.Experimental;
 import io.opentelemetry.instrumentation.spring.webmvc.v5_3.internal.SpringMvcBuilderUtil;
 import java.util.List;
@@ -20,7 +22,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /** A builder of {@link SpringWebMvcTelemetry}. */
-public final class SpringWebMvcTelemetryBuilder {
+public final class SpringWebMvcTelemetryBuilder
+    implements HttpServerTelemetryBuilder<HttpServletRequest, HttpServletResponse> {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webmvc-5.3";
 
@@ -44,6 +47,7 @@ public final class SpringWebMvcTelemetryBuilder {
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items.
    */
+  @Override
   @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<HttpServletRequest, HttpServletResponse> attributesExtractor) {
@@ -56,6 +60,7 @@ public final class SpringWebMvcTelemetryBuilder {
    *
    * @param requestHeaders A list of HTTP header names.
    */
+  @Override
   @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
@@ -67,6 +72,7 @@ public final class SpringWebMvcTelemetryBuilder {
    *
    * @param responseHeaders A list of HTTP header names.
    */
+  @Override
   @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
@@ -74,11 +80,22 @@ public final class SpringWebMvcTelemetryBuilder {
   }
 
   /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @Override
   @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setSpanNameExtractor(
       Function<SpanNameExtractor<HttpServletRequest>, SpanNameExtractor<HttpServletRequest>>
           spanNameExtractor) {
     builder.setSpanNameExtractor(spanNameExtractor);
+    return this;
+  }
+
+  @Override
+  public SpringWebMvcTelemetryBuilder setStatusExtractor(
+      Function<
+              SpanStatusExtractor<HttpServletRequest, HttpServletResponse>,
+              SpanStatusExtractor<HttpServletRequest, HttpServletResponse>>
+          statusExtractorTransformer) {
+    builder.setStatusExtractor(statusExtractorTransformer);
     return this;
   }
 
@@ -95,6 +112,7 @@ public final class SpringWebMvcTelemetryBuilder {
    * @param knownMethods A set of recognized HTTP request methods.
    * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Set)
    */
+  @Override
   @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
@@ -121,6 +139,7 @@ public final class SpringWebMvcTelemetryBuilder {
    * Returns a new {@link SpringWebMvcTelemetry} with the settings of this {@link
    * SpringWebMvcTelemetryBuilder}.
    */
+  @Override
   public SpringWebMvcTelemetry build() {
     return new SpringWebMvcTelemetry(builder.build());
   }

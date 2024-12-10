@@ -10,7 +10,9 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientTelemetryBuilder;
 import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.Experimental;
 import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.JettyHttpClientInstrumenterBuilderFactory;
 import java.util.List;
@@ -21,7 +23,8 @@ import org.eclipse.jetty.client.Request;
 import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 
-public final class JettyClientTelemetryBuilder {
+public final class JettyClientTelemetryBuilder
+    implements HttpClientTelemetryBuilder<Request, Response> {
 
   private final DefaultHttpClientInstrumenterBuilder<Request, Response> builder;
   private HttpClientTransport httpClientTransport;
@@ -63,6 +66,7 @@ public final class JettyClientTelemetryBuilder {
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items.
    */
+  @Override
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<Request, Response> attributesExtractor) {
@@ -75,6 +79,7 @@ public final class JettyClientTelemetryBuilder {
    *
    * @param requestHeaders A list of HTTP header names.
    */
+  @Override
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
@@ -86,6 +91,7 @@ public final class JettyClientTelemetryBuilder {
    *
    * @param responseHeaders A list of HTTP header names.
    */
+  @Override
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
@@ -105,6 +111,7 @@ public final class JettyClientTelemetryBuilder {
    * @param knownMethods A set of recognized HTTP request methods.
    * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
    */
+  @Override
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
@@ -128,6 +135,7 @@ public final class JettyClientTelemetryBuilder {
   }
 
   /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @Override
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setSpanNameExtractor(
       Function<SpanNameExtractor<Request>, SpanNameExtractor<Request>>
@@ -136,10 +144,19 @@ public final class JettyClientTelemetryBuilder {
     return this;
   }
 
+  @Override
+  public JettyClientTelemetryBuilder setStatusExtractor(
+      Function<SpanStatusExtractor<Request, Response>, SpanStatusExtractor<Request, Response>>
+          statusExtractorTransformer) {
+    builder.setStatusExtractor(statusExtractorTransformer);
+    return this;
+  }
+
   /**
    * Returns a new {@link JettyClientTelemetry} with the settings of this {@link
    * JettyClientTelemetryBuilder}.
    */
+  @Override
   public JettyClientTelemetry build() {
     TracingHttpClient tracingHttpClient =
         TracingHttpClient.buildNew(builder.build(), sslContextFactory, httpClientTransport);

@@ -10,7 +10,9 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientTelemetryBuilder;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.Experimental;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackClientInstrumenterBuilderFactory;
 import java.util.List;
@@ -20,7 +22,8 @@ import ratpack.http.client.HttpResponse;
 import ratpack.http.client.RequestSpec;
 
 /** A builder for {@link RatpackClientTelemetry}. */
-public final class RatpackClientTelemetryBuilder {
+public final class RatpackClientTelemetryBuilder
+    implements HttpClientTelemetryBuilder<RequestSpec, HttpResponse> {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.ratpack-1.7";
 
@@ -30,6 +33,7 @@ public final class RatpackClientTelemetryBuilder {
     builder = RatpackClientInstrumenterBuilderFactory.create(INSTRUMENTATION_NAME, openTelemetry);
   }
 
+  @Override
   @CanIgnoreReturnValue
   public RatpackClientTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<RequestSpec, HttpResponse> attributesExtractor) {
@@ -42,6 +46,7 @@ public final class RatpackClientTelemetryBuilder {
    *
    * @param requestHeaders A list of HTTP header names.
    */
+  @Override
   @CanIgnoreReturnValue
   public RatpackClientTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
@@ -53,6 +58,7 @@ public final class RatpackClientTelemetryBuilder {
    *
    * @param responseHeaders A list of HTTP header names.
    */
+  @Override
   @CanIgnoreReturnValue
   public RatpackClientTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
@@ -72,6 +78,7 @@ public final class RatpackClientTelemetryBuilder {
    * @param knownMethods A set of recognized HTTP request methods.
    * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
    */
+  @Override
   @CanIgnoreReturnValue
   public RatpackClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
@@ -79,11 +86,22 @@ public final class RatpackClientTelemetryBuilder {
   }
 
   /** Sets custom client {@link SpanNameExtractor} via transform function. */
+  @Override
   @CanIgnoreReturnValue
   public RatpackClientTelemetryBuilder setSpanNameExtractor(
       Function<SpanNameExtractor<RequestSpec>, SpanNameExtractor<RequestSpec>>
           clientSpanNameExtractor) {
     builder.setSpanNameExtractor(clientSpanNameExtractor);
+    return this;
+  }
+
+  @Override
+  public RatpackClientTelemetryBuilder setStatusExtractor(
+      Function<
+              SpanStatusExtractor<RequestSpec, HttpResponse>,
+              SpanStatusExtractor<RequestSpec, HttpResponse>>
+          statusExtractorTransformer) {
+    builder.setStatusExtractor(statusExtractorTransformer);
     return this;
   }
 
@@ -96,6 +114,7 @@ public final class RatpackClientTelemetryBuilder {
   }
 
   /** Returns a new {@link RatpackClientTelemetry} with the configuration of this builder. */
+  @Override
   public RatpackClientTelemetry build() {
     return new RatpackClientTelemetry(builder.build());
   }

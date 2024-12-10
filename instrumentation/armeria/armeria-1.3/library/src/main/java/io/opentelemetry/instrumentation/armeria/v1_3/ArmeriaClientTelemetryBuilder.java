@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientTelemetryBuilder;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaInstrumenterBuilderUtil;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.Experimental;
@@ -21,7 +22,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
-public final class ArmeriaClientTelemetryBuilder {
+public final class ArmeriaClientTelemetryBuilder
+    implements HttpClientTelemetryBuilder<ClientRequestContext, RequestLog> {
 
   private final DefaultHttpClientInstrumenterBuilder<ClientRequestContext, RequestLog> builder;
 
@@ -34,6 +36,7 @@ public final class ArmeriaClientTelemetryBuilder {
   }
 
   /** Sets the status extractor for client spans. */
+  @Override
   @CanIgnoreReturnValue
   public ArmeriaClientTelemetryBuilder setStatusExtractor(
       Function<
@@ -48,6 +51,7 @@ public final class ArmeriaClientTelemetryBuilder {
    * Adds an extra {@link AttributesExtractor} to invoke to set attributes to instrumented items.
    * The {@link AttributesExtractor} will be executed after all default extractors.
    */
+  @Override
   @CanIgnoreReturnValue
   public ArmeriaClientTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<ClientRequestContext, RequestLog> attributesExtractor) {
@@ -60,6 +64,7 @@ public final class ArmeriaClientTelemetryBuilder {
    *
    * @param requestHeaders A list of HTTP header names.
    */
+  @Override
   @CanIgnoreReturnValue
   public ArmeriaClientTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
@@ -71,6 +76,7 @@ public final class ArmeriaClientTelemetryBuilder {
    *
    * @param responseHeaders A list of HTTP header names.
    */
+  @Override
   @CanIgnoreReturnValue
   public ArmeriaClientTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
@@ -90,6 +96,7 @@ public final class ArmeriaClientTelemetryBuilder {
    * @param knownMethods A set of recognized HTTP request methods.
    * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
    */
+  @Override
   @CanIgnoreReturnValue
   public ArmeriaClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
@@ -97,6 +104,7 @@ public final class ArmeriaClientTelemetryBuilder {
   }
 
   /** Sets custom client {@link SpanNameExtractor} via transform function. */
+  @Override
   @CanIgnoreReturnValue
   public ArmeriaClientTelemetryBuilder setSpanNameExtractor(
       Function<SpanNameExtractor<ClientRequestContext>, SpanNameExtractor<ClientRequestContext>>
@@ -121,6 +129,7 @@ public final class ArmeriaClientTelemetryBuilder {
     builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
   }
 
+  @Override
   public ArmeriaClientTelemetry build() {
     return new ArmeriaClientTelemetry(builder.build());
   }

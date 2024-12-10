@@ -10,7 +10,9 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerTelemetryBuilder;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.Experimental;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.SpringWebfluxBuilderUtil;
 import java.util.List;
@@ -19,7 +21,9 @@ import java.util.function.Function;
 import org.springframework.web.server.ServerWebExchange;
 
 /** A builder of {@link SpringWebfluxServerTelemetry}. */
-public final class SpringWebfluxServerTelemetryBuilder {
+public final class SpringWebfluxServerTelemetryBuilder
+    implements HttpServerTelemetryBuilder<ServerWebExchange, ServerWebExchange> {
+
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webflux-5.3";
 
   private final DefaultHttpServerInstrumenterBuilder<ServerWebExchange, ServerWebExchange> builder;
@@ -41,6 +45,7 @@ public final class SpringWebfluxServerTelemetryBuilder {
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items.
    */
+  @Override
   @CanIgnoreReturnValue
   public SpringWebfluxServerTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<ServerWebExchange, ServerWebExchange> attributesExtractor) {
@@ -54,6 +59,7 @@ public final class SpringWebfluxServerTelemetryBuilder {
    *
    * @param requestHeaders A list of HTTP header names.
    */
+  @Override
   @CanIgnoreReturnValue
   public SpringWebfluxServerTelemetryBuilder setCapturedRequestHeaders(
       List<String> requestHeaders) {
@@ -67,6 +73,7 @@ public final class SpringWebfluxServerTelemetryBuilder {
    *
    * @param responseHeaders A list of HTTP header names.
    */
+  @Override
   @CanIgnoreReturnValue
   public SpringWebfluxServerTelemetryBuilder setCapturedResponseHeaders(
       List<String> responseHeaders) {
@@ -87,6 +94,7 @@ public final class SpringWebfluxServerTelemetryBuilder {
    * @param knownMethods A set of recognized HTTP request methods.
    * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Set)
    */
+  @Override
   @CanIgnoreReturnValue
   public SpringWebfluxServerTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
@@ -94,11 +102,22 @@ public final class SpringWebfluxServerTelemetryBuilder {
   }
 
   /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  @Override
   @CanIgnoreReturnValue
   public SpringWebfluxServerTelemetryBuilder setSpanNameExtractor(
       Function<SpanNameExtractor<ServerWebExchange>, SpanNameExtractor<ServerWebExchange>>
           serverSpanNameExtractor) {
     builder.setSpanNameExtractor(serverSpanNameExtractor);
+    return this;
+  }
+
+  @Override
+  public SpringWebfluxServerTelemetryBuilder setStatusExtractor(
+      Function<
+              SpanStatusExtractor<ServerWebExchange, ServerWebExchange>,
+              SpanStatusExtractor<ServerWebExchange, ServerWebExchange>>
+          statusExtractorTransformer) {
+    builder.setStatusExtractor(statusExtractorTransformer);
     return this;
   }
 
@@ -114,6 +133,7 @@ public final class SpringWebfluxServerTelemetryBuilder {
    * Returns a new {@link SpringWebfluxTelemetry} with the settings of this {@link
    * SpringWebfluxServerTelemetryBuilder}.
    */
+  @Override
   public SpringWebfluxServerTelemetry build() {
     return new SpringWebfluxServerTelemetry(builder.build());
   }

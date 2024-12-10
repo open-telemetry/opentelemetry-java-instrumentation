@@ -10,7 +10,9 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientTelemetryBuilder;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.Experimental;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpClientInstrumenterBuilderFactory;
 import java.util.List;
@@ -20,7 +22,8 @@ import okhttp3.Interceptor;
 import okhttp3.Response;
 
 /** A builder of {@link OkHttpTelemetry}. */
-public final class OkHttpTelemetryBuilder {
+public final class OkHttpTelemetryBuilder
+    implements HttpClientTelemetryBuilder<Interceptor.Chain, Response> {
 
   private final DefaultHttpClientInstrumenterBuilder<Interceptor.Chain, Response> builder;
   private final OpenTelemetry openTelemetry;
@@ -48,6 +51,7 @@ public final class OkHttpTelemetryBuilder {
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items.
    */
+  @Override
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<Interceptor.Chain, Response> attributesExtractor) {
@@ -60,6 +64,7 @@ public final class OkHttpTelemetryBuilder {
    *
    * @param requestHeaders A list of HTTP header names.
    */
+  @Override
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
@@ -71,6 +76,7 @@ public final class OkHttpTelemetryBuilder {
    *
    * @param responseHeaders A list of HTTP header names.
    */
+  @Override
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
@@ -90,6 +96,7 @@ public final class OkHttpTelemetryBuilder {
    * @param knownMethods A set of recognized HTTP request methods.
    * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
    */
+  @Override
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
@@ -113,6 +120,7 @@ public final class OkHttpTelemetryBuilder {
   }
 
   /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @Override
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder setSpanNameExtractor(
       Function<SpanNameExtractor<Interceptor.Chain>, SpanNameExtractor<Interceptor.Chain>>
@@ -121,9 +129,20 @@ public final class OkHttpTelemetryBuilder {
     return this;
   }
 
+  @Override
+  public OkHttpTelemetryBuilder setStatusExtractor(
+      Function<
+              SpanStatusExtractor<Interceptor.Chain, Response>,
+              SpanStatusExtractor<Interceptor.Chain, Response>>
+          statusExtractorTransformer) {
+    builder.setStatusExtractor(statusExtractorTransformer);
+    return this;
+  }
+
   /**
    * Returns a new {@link OkHttpTelemetry} with the settings of this {@link OkHttpTelemetryBuilder}.
    */
+  @Override
   public OkHttpTelemetry build() {
     return new OkHttpTelemetry(builder.build(), openTelemetry.getPropagators());
   }

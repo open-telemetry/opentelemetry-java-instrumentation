@@ -10,7 +10,9 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientTelemetryBuilder;
 import io.opentelemetry.instrumentation.httpclient.internal.Experimental;
 import io.opentelemetry.instrumentation.httpclient.internal.HttpHeadersSetter;
 import io.opentelemetry.instrumentation.httpclient.internal.JavaHttpClientInstrumenterBuilderFactory;
@@ -20,7 +22,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
-public final class JavaHttpClientTelemetryBuilder {
+public final class JavaHttpClientTelemetryBuilder
+    implements HttpClientTelemetryBuilder<HttpRequest, HttpResponse<?>> {
 
   private final DefaultHttpClientInstrumenterBuilder<HttpRequest, HttpResponse<?>> builder;
   private final OpenTelemetry openTelemetry;
@@ -48,6 +51,7 @@ public final class JavaHttpClientTelemetryBuilder {
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items. The {@link AttributesExtractor} will be executed after all default extractors.
    */
+  @Override
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<HttpRequest, HttpResponse<?>> attributesExtractor) {
@@ -60,6 +64,7 @@ public final class JavaHttpClientTelemetryBuilder {
    *
    * @param requestHeaders A list of HTTP header names.
    */
+  @Override
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
@@ -71,6 +76,7 @@ public final class JavaHttpClientTelemetryBuilder {
    *
    * @param responseHeaders A list of HTTP header names.
    */
+  @Override
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
@@ -90,6 +96,7 @@ public final class JavaHttpClientTelemetryBuilder {
    * @param knownMethods A set of recognized HTTP request methods.
    * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
    */
+  @Override
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
@@ -114,6 +121,7 @@ public final class JavaHttpClientTelemetryBuilder {
   }
 
   /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @Override
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setSpanNameExtractor(
       Function<SpanNameExtractor<HttpRequest>, SpanNameExtractor<HttpRequest>>
@@ -122,6 +130,17 @@ public final class JavaHttpClientTelemetryBuilder {
     return this;
   }
 
+  @Override
+  public JavaHttpClientTelemetryBuilder setStatusExtractor(
+      Function<
+              SpanStatusExtractor<HttpRequest, HttpResponse<?>>,
+              SpanStatusExtractor<HttpRequest, HttpResponse<?>>>
+          statusExtractorTransformer) {
+    builder.setStatusExtractor(statusExtractorTransformer);
+    return this;
+  }
+
+  @Override
   public JavaHttpClientTelemetry build() {
     return new JavaHttpClientTelemetry(
         builder.build(), new HttpHeadersSetter(openTelemetry.getPropagators()));

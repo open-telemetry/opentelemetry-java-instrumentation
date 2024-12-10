@@ -11,7 +11,9 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientTelemetryBuilder;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterFactory;
@@ -22,7 +24,8 @@ import java.util.Set;
 import java.util.function.Function;
 
 /** A builder of {@link NettyClientTelemetry}. */
-public final class NettyClientTelemetryBuilder {
+public final class NettyClientTelemetryBuilder
+    implements HttpClientTelemetryBuilder<HttpRequestAndChannel, HttpResponse> {
 
   private final DefaultHttpClientInstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder;
   private boolean emitExperimentalTelemetry = false;
@@ -49,6 +52,7 @@ public final class NettyClientTelemetryBuilder {
    *
    * @param capturedRequestHeaders A list of HTTP header names.
    */
+  @Override
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setCapturedRequestHeaders(
       List<String> capturedRequestHeaders) {
@@ -61,6 +65,7 @@ public final class NettyClientTelemetryBuilder {
    *
    * @param capturedResponseHeaders A list of HTTP header names.
    */
+  @Override
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setCapturedResponseHeaders(
       List<String> capturedResponseHeaders) {
@@ -72,6 +77,7 @@ public final class NettyClientTelemetryBuilder {
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items.
    */
+  @Override
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<HttpRequestAndChannel, HttpResponse> attributesExtractor) {
@@ -92,6 +98,7 @@ public final class NettyClientTelemetryBuilder {
    * @param knownMethods A set of recognized HTTP request methods.
    * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
    */
+  @Override
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
@@ -116,6 +123,7 @@ public final class NettyClientTelemetryBuilder {
   }
 
   /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @Override
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setSpanNameExtractor(
       Function<SpanNameExtractor<HttpRequestAndChannel>, SpanNameExtractor<HttpRequestAndChannel>>
@@ -124,7 +132,18 @@ public final class NettyClientTelemetryBuilder {
     return this;
   }
 
+  @Override
+  public NettyClientTelemetryBuilder setStatusExtractor(
+      Function<
+              SpanStatusExtractor<HttpRequestAndChannel, HttpResponse>,
+              SpanStatusExtractor<HttpRequestAndChannel, HttpResponse>>
+          statusExtractorTransformer) {
+    builder.setStatusExtractor(statusExtractorTransformer);
+    return this;
+  }
+
   /** Returns a new {@link NettyClientTelemetry} with the given configuration. */
+  @Override
   public NettyClientTelemetry build() {
     return new NettyClientTelemetry(
         new NettyClientInstrumenterFactory(
