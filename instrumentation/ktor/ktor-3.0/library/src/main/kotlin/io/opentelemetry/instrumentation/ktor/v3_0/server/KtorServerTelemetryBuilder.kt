@@ -10,8 +10,8 @@ import io.ktor.server.routing.*
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource
-import io.opentelemetry.instrumentation.ktor.internal.KtorServerTelemetryUtil
-import io.opentelemetry.instrumentation.ktor.server.AbstractKtorServerTelemetryBuilder
+import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorServerTelemetryUtil
+import io.opentelemetry.instrumentation.ktor.v2_0.common.server.AbstractKtorServerTelemetryBuilder
 import io.opentelemetry.instrumentation.ktor.v3_0.InstrumentationProperties.INSTRUMENTATION_NAME
 
 class KtorServerTelemetryBuilder internal constructor(

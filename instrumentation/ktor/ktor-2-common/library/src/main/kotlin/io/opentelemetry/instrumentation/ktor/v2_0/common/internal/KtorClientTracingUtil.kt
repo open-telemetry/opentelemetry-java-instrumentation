@@ -13,7 +13,7 @@ import io.ktor.util.pipeline.*
 import io.opentelemetry.context.Context
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientRequestResendCount
-import io.opentelemetry.instrumentation.ktor.client.AbstractKtorClientTracing
+import io.opentelemetry.instrumentation.ktor.v2_0.common.client.AbstractKtorClientTracing
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
