@@ -63,7 +63,7 @@ abstract class AbstractKtorClientTelemetryBuilder(
     builder.setKnownMethods(methods.toSet())
   }
 
-  fun attributeExtractor(extractorBuilder: ExtractorBuilder.() -> Unit = {}) {
+  fun attributesExtractor(extractorBuilder: ExtractorBuilder.() -> Unit = {}) {
     val builder = ExtractorBuilder().apply(extractorBuilder).build()
     this.builder.addAttributeExtractor(
       object : AttributesExtractor<HttpRequestData, HttpResponse> {
