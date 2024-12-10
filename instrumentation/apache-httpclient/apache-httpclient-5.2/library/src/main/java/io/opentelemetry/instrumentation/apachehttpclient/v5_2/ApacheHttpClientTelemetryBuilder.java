@@ -17,23 +17,17 @@ import java.util.Set;
 import java.util.function.Function;
 import org.apache.hc.core5.http.HttpResponse;
 
-/**
- * A builder for {@link ApacheHttpClient5Telemetry}.
- *
- * @deprecated Use {@link ApacheHttpClientTelemetryBuilder} instead.
- */
-@Deprecated
-public final class ApacheHttpClient5TelemetryBuilder {
+/** A builder for {@link ApacheHttpClientTelemetry}. */
+public final class ApacheHttpClientTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-httpclient-5.2";
-  private final DefaultHttpClientInstrumenterBuilder<ApacheHttpClient5Request, HttpResponse>
-      builder;
+  private final DefaultHttpClientInstrumenterBuilder<ApacheHttpClientRequest, HttpResponse> builder;
   private final OpenTelemetry openTelemetry;
 
-  ApacheHttpClient5TelemetryBuilder(OpenTelemetry openTelemetry) {
+  ApacheHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder =
         DefaultHttpClientInstrumenterBuilder.create(
-            INSTRUMENTATION_NAME, openTelemetry, ApacheHttpClient5HttpAttributesGetter.INSTANCE);
+            INSTRUMENTATION_NAME, openTelemetry, ApacheHttpClientHttpAttributesGetter.INSTANCE);
     this.openTelemetry = openTelemetry;
   }
 
@@ -42,8 +36,8 @@ public final class ApacheHttpClient5TelemetryBuilder {
    * items. The {@link AttributesExtractor} will be executed after all default extractors.
    */
   @CanIgnoreReturnValue
-  public ApacheHttpClient5TelemetryBuilder addAttributeExtractor(
-      AttributesExtractor<? super ApacheHttpClient5Request, ? super HttpResponse>
+  public ApacheHttpClientTelemetryBuilder addAttributeExtractor(
+      AttributesExtractor<? super ApacheHttpClientRequest, ? super HttpResponse>
           attributesExtractor) {
     builder.addAttributeExtractor(attributesExtractor);
     return this;
@@ -55,7 +49,7 @@ public final class ApacheHttpClient5TelemetryBuilder {
    * @param requestHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public ApacheHttpClient5TelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
+  public ApacheHttpClientTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
@@ -66,8 +60,7 @@ public final class ApacheHttpClient5TelemetryBuilder {
    * @param responseHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public ApacheHttpClient5TelemetryBuilder setCapturedResponseHeaders(
-      List<String> responseHeaders) {
+  public ApacheHttpClientTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
@@ -86,44 +79,35 @@ public final class ApacheHttpClient5TelemetryBuilder {
    * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
    */
   @CanIgnoreReturnValue
-  public ApacheHttpClient5TelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+  public ApacheHttpClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
-    return this;
-  }
-
-  /**
-   * Configures the instrumentation to emit experimental HTTP client metrics.
-   *
-   * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
-   *     are to be emitted.
-   * @deprecated Use {@link
-   *     Experimental#setEmitExperimentalTelemetry(ApacheHttpClientTelemetryBuilder, boolean)}
-   *     instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public ApacheHttpClient5TelemetryBuilder setEmitExperimentalHttpClientMetrics(
-      boolean emitExperimentalHttpClientMetrics) {
-    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
     return this;
   }
 
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
-  public ApacheHttpClient5TelemetryBuilder setSpanNameExtractor(
+  public ApacheHttpClientTelemetryBuilder setSpanNameExtractor(
       Function<
-              SpanNameExtractor<? super ApacheHttpClient5Request>,
-              ? extends SpanNameExtractor<? super ApacheHttpClient5Request>>
+              SpanNameExtractor<? super ApacheHttpClientRequest>,
+              ? extends SpanNameExtractor<? super ApacheHttpClientRequest>>
           spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
   }
 
   /**
-   * Returns a new {@link ApacheHttpClient5Telemetry} configured with this {@link
-   * ApacheHttpClient5TelemetryBuilder}.
+   * Can be used via the unstable method {@link
+   * Experimental#setEmitExperimentalTelemetry(ApacheHttpClientTelemetryBuilder, boolean)}.
    */
-  public ApacheHttpClient5Telemetry build() {
-    return new ApacheHttpClient5Telemetry(builder.build(), openTelemetry.getPropagators());
+  void setEmitExperimentalHttpClientMetrics(boolean emitExperimentalHttpClientMetrics) {
+    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
+  }
+
+  /**
+   * Returns a new {@link ApacheHttpClientTelemetry} configured with this {@link
+   * ApacheHttpClientTelemetryBuilder}.
+   */
+  public ApacheHttpClientTelemetry build() {
+    return new ApacheHttpClientTelemetry(builder.build(), openTelemetry.getPropagators());
   }
 }
