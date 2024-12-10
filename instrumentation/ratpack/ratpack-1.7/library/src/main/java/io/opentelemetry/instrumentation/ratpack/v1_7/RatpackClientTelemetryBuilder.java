@@ -24,17 +24,17 @@ public final class RatpackClientTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.ratpack-1.7";
 
-  private final DefaultHttpClientInstrumenterBuilder<RequestSpec, HttpResponse> clientBuilder;
+  private final DefaultHttpClientInstrumenterBuilder<RequestSpec, HttpResponse> builder;
 
   RatpackClientTelemetryBuilder(OpenTelemetry openTelemetry) {
-    clientBuilder =
+    builder =
         RatpackClientInstrumenterBuilderFactory.create(INSTRUMENTATION_NAME, openTelemetry);
   }
 
   @CanIgnoreReturnValue
   public RatpackClientTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<? super RequestSpec, ? super HttpResponse> attributesExtractor) {
-    clientBuilder.addAttributeExtractor(attributesExtractor);
+    builder.addAttributeExtractor(attributesExtractor);
     return this;
   }
 
@@ -45,7 +45,7 @@ public final class RatpackClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public RatpackClientTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
-    clientBuilder.setCapturedRequestHeaders(requestHeaders);
+    builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
 
@@ -56,7 +56,7 @@ public final class RatpackClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public RatpackClientTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
-    clientBuilder.setCapturedResponseHeaders(responseHeaders);
+    builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
@@ -75,7 +75,7 @@ public final class RatpackClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public RatpackClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
-    clientBuilder.setKnownMethods(knownMethods);
+    builder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -86,7 +86,7 @@ public final class RatpackClientTelemetryBuilder {
               SpanNameExtractor<? super RequestSpec>,
               ? extends SpanNameExtractor<? super RequestSpec>>
           clientSpanNameExtractor) {
-    clientBuilder.setSpanNameExtractor(clientSpanNameExtractor);
+    builder.setSpanNameExtractor(clientSpanNameExtractor);
     return this;
   }
 
@@ -95,11 +95,11 @@ public final class RatpackClientTelemetryBuilder {
    * Experimental#setEmitExperimentalTelemetry(RatpackClientTelemetryBuilder, boolean)}.
    */
   void setEmitExperimentalHttpClientMetrics(boolean emitExperimentalHttpClientMetrics) {
-    clientBuilder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
+    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
   }
 
   /** Returns a new {@link RatpackClientTelemetry} with the configuration of this builder. */
   public RatpackClientTelemetry build() {
-    return new RatpackClientTelemetry(clientBuilder.build());
+    return new RatpackClientTelemetry(builder.build());
   }
 }

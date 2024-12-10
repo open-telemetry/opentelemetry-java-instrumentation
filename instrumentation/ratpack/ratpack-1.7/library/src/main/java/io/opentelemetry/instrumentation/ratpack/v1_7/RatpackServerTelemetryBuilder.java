@@ -24,10 +24,10 @@ public final class RatpackServerTelemetryBuilder {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.ratpack-1.7";
 
-  private final DefaultHttpServerInstrumenterBuilder<Request, Response> serverBuilder;
+  private final DefaultHttpServerInstrumenterBuilder<Request, Response> builder;
 
   RatpackServerTelemetryBuilder(OpenTelemetry openTelemetry) {
-    serverBuilder =
+    builder =
         RatpackServerInstrumenterBuilderFactory.create(INSTRUMENTATION_NAME, openTelemetry);
   }
 
@@ -38,7 +38,7 @@ public final class RatpackServerTelemetryBuilder {
   @CanIgnoreReturnValue
   public RatpackServerTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<? super Request, ? super Response> attributesExtractor) {
-    serverBuilder.addAttributesExtractor(attributesExtractor);
+    builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 
@@ -49,7 +49,7 @@ public final class RatpackServerTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public RatpackServerTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
-    serverBuilder.setCapturedRequestHeaders(requestHeaders);
+    builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
 
@@ -60,7 +60,7 @@ public final class RatpackServerTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public RatpackServerTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
-    serverBuilder.setCapturedResponseHeaders(responseHeaders);
+    builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
 
@@ -79,7 +79,7 @@ public final class RatpackServerTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public RatpackServerTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
-    serverBuilder.setKnownMethods(knownMethods);
+    builder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -88,7 +88,7 @@ public final class RatpackServerTelemetryBuilder {
   public RatpackServerTelemetryBuilder setSpanNameExtractor(
       Function<SpanNameExtractor<? super Request>, ? extends SpanNameExtractor<? super Request>>
           serverSpanNameExtractor) {
-    serverBuilder.setSpanNameExtractor(serverSpanNameExtractor);
+    builder.setSpanNameExtractor(serverSpanNameExtractor);
     return this;
   }
 
@@ -97,11 +97,11 @@ public final class RatpackServerTelemetryBuilder {
    * Experimental#setEmitExperimentalTelemetry(RatpackServerTelemetryBuilder, boolean)}.
    */
   void setEmitExperimentalHttpServerMetrics(boolean emitExperimentalHttpServerMetrics) {
-    serverBuilder.setEmitExperimentalHttpServerMetrics(emitExperimentalHttpServerMetrics);
+    builder.setEmitExperimentalHttpServerMetrics(emitExperimentalHttpServerMetrics);
   }
 
   /** Returns a new {@link RatpackServerTelemetry} with the configuration of this builder. */
   public RatpackServerTelemetry build() {
-    return new RatpackServerTelemetry(serverBuilder.build());
+    return new RatpackServerTelemetry(builder.build());
   }
 }
