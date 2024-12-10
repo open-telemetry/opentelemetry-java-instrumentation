@@ -22,17 +22,17 @@ import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorBuilderUti
 abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationName: String) {
   companion object {
     init {
-      KtorBuilderUtil.serverBuilderExtractor = { it.serverBuilder }
+      KtorBuilderUtil.serverBuilderExtractor = { it.builder }
     }
   }
 
-  internal lateinit var serverBuilder: DefaultHttpServerInstrumenterBuilder<ApplicationRequest, ApplicationResponse>
+  internal lateinit var builder: DefaultHttpServerInstrumenterBuilder<ApplicationRequest, ApplicationResponse>
 
   internal var spanKindExtractor:
     (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest> = { a -> a }
 
   fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
-    this.serverBuilder =
+    this.builder =
       DefaultHttpServerInstrumenterBuilder.create(
         instrumentationName,
         openTelemetry,
@@ -50,7 +50,7 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
   }
 
   fun spanStatusExtractor(extract: SpanStatusData.(SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>) -> Unit) {
-    serverBuilder.setStatusExtractor { prevExtractor ->
+    builder.setStatusExtractor { prevExtractor ->
       SpanStatusExtractor { spanStatusBuilder: SpanStatusBuilder,
                             request: ApplicationRequest,
                             response: ApplicationResponse?,
@@ -99,7 +99,7 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
 
   fun attributeExtractor(extractorBuilder: ExtractorBuilder.() -> Unit = {}) {
     val builder = ExtractorBuilder().apply(extractorBuilder).build()
-    serverBuilder.addAttributesExtractor(
+    this.builder.addAttributesExtractor(
       object : AttributesExtractor<ApplicationRequest, ApplicationResponse> {
         override fun onStart(attributes: AttributesBuilder, parentContext: Context, request: ApplicationRequest) {
           builder.onStart(OnStartData(attributes, parentContext, request))
@@ -154,7 +154,7 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
   fun capturedRequestHeaders(vararg headers: String) = capturedRequestHeaders(headers.asIterable())
 
   fun capturedRequestHeaders(headers: Iterable<String>) {
-    serverBuilder.setCapturedRequestHeaders(headers.toList())
+    builder.setCapturedRequestHeaders(headers.toList())
   }
 
   @Deprecated(
@@ -166,7 +166,7 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
   fun capturedResponseHeaders(vararg headers: String) = capturedResponseHeaders(headers.asIterable())
 
   fun capturedResponseHeaders(headers: Iterable<String>) {
-    serverBuilder.setCapturedResponseHeaders(headers.toList())
+    builder.setCapturedResponseHeaders(headers.toList())
   }
 
   @Deprecated(
@@ -184,12 +184,12 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
 
   fun knownMethods(methods: Iterable<String>) {
     methods.toSet().apply {
-      serverBuilder.setKnownMethods(this)
+      builder.setKnownMethods(this)
     }
   }
 
   /**
    * {@link #setOpenTelemetry(OpenTelemetry)} sets the serverBuilder to a non-null value.
    */
-  fun isOpenTelemetryInitialized(): Boolean = this::serverBuilder.isInitialized
+  fun isOpenTelemetryInitialized(): Boolean = this::builder.isInitialized
 }

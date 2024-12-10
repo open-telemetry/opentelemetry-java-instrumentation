@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.ktor.v2_0.common.client.AbstractKtorClie
 class KtorClientTelemetryBuilder : AbstractKtorClientTelemetryBuilder(INSTRUMENTATION_NAME) {
 
   internal fun build(): KtorClientTelemetry = KtorClientTelemetry(
-    instrumenter = clientBuilder.build(),
+    instrumenter = builder.build(),
     propagators = getOpenTelemetry().propagators,
   )
 }

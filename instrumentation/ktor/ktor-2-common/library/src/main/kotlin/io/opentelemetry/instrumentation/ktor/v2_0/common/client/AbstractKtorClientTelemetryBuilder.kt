@@ -20,16 +20,16 @@ abstract class AbstractKtorClientTelemetryBuilder(
 ) {
   companion object {
     init {
-      KtorBuilderUtil.clientBuilderExtractor = { it.clientBuilder }
+      KtorBuilderUtil.clientBuilderExtractor = { it.builder }
     }
   }
 
   internal lateinit var openTelemetry: OpenTelemetry
-  protected lateinit var clientBuilder: DefaultHttpClientInstrumenterBuilder<HttpRequestData, HttpResponse>
+  protected lateinit var builder: DefaultHttpClientInstrumenterBuilder<HttpRequestData, HttpResponse>
 
   fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
     this.openTelemetry = openTelemetry
-    this.clientBuilder = DefaultHttpClientInstrumenterBuilder.create(
+    this.builder = DefaultHttpClientInstrumenterBuilder.create(
       instrumentationName,
       openTelemetry,
       KtorHttpClientAttributesGetter
@@ -43,13 +43,13 @@ abstract class AbstractKtorClientTelemetryBuilder(
   fun capturedRequestHeaders(vararg headers: String) = capturedRequestHeaders(headers.asIterable())
 
   fun capturedRequestHeaders(headers: Iterable<String>) {
-    clientBuilder.setCapturedRequestHeaders(headers.toList())
+    builder.setCapturedRequestHeaders(headers.toList())
   }
 
   fun capturedResponseHeaders(vararg headers: String) = capturedResponseHeaders(headers.asIterable())
 
   fun capturedResponseHeaders(headers: Iterable<String>) {
-    clientBuilder.setCapturedResponseHeaders(headers.toList())
+    builder.setCapturedResponseHeaders(headers.toList())
   }
 
   fun knownMethods(vararg methods: String) = knownMethods(methods.asIterable())
@@ -60,12 +60,12 @@ abstract class AbstractKtorClientTelemetryBuilder(
   fun knownMethods(methods: Iterable<HttpMethod>) = knownMethods(methods.map { it.value })
 
   fun knownMethods(methods: Iterable<String>) {
-    clientBuilder.setKnownMethods(methods.toSet())
+    builder.setKnownMethods(methods.toSet())
   }
 
   fun attributeExtractor(extractorBuilder: ExtractorBuilder.() -> Unit = {}) {
     val builder = ExtractorBuilder().apply(extractorBuilder).build()
-    this.clientBuilder.addAttributeExtractor(
+    this.builder.addAttributeExtractor(
       object : AttributesExtractor<HttpRequestData, HttpResponse> {
         override fun onStart(attributes: AttributesBuilder, parentContext: Context, request: HttpRequestData) {
           builder.onStart(OnStartData(attributes, parentContext, request))
@@ -116,6 +116,6 @@ abstract class AbstractKtorClientTelemetryBuilder(
    * Experimental#setEmitExperimentalHttpClientMetrics(AbstractKtorClientTelemetryBuilder, boolean)}.
    */
   internal fun emitExperimentalHttpClientMetrics() {
-    clientBuilder.setEmitExperimentalHttpClientMetrics(true)
+    builder.setEmitExperimentalHttpClientMetrics(true)
   }
 }
