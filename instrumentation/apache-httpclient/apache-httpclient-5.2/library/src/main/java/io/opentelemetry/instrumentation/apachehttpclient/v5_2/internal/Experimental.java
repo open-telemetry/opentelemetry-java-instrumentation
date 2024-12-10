@@ -5,12 +5,8 @@
 
 package io.opentelemetry.instrumentation.apachehttpclient.v5_2.internal;
 
-import static java.util.logging.Level.FINE;
-
 import io.opentelemetry.instrumentation.apachehttpclient.v5_2.ApacheHttpClientTelemetryBuilder;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.logging.Logger;
+import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
 
 /**
@@ -20,33 +16,18 @@ import javax.annotation.Nullable;
  */
 public class Experimental {
 
-  private static final Logger logger = Logger.getLogger(Experimental.class.getName());
-
-  @Nullable private static final Method emitExperimentalTelemetry = getEmitExperimentalTelemetry();
+  @Nullable
+  private static BiConsumer<ApacheHttpClientTelemetryBuilder, Boolean> setEmitExperimentalTelemetry;
 
   public void setEmitExperimentalTelemetry(
       ApacheHttpClientTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
-
-    if (Experimental.emitExperimentalTelemetry != null) {
-      try {
-        Experimental.emitExperimentalTelemetry.invoke(builder, emitExperimentalTelemetry);
-      } catch (IllegalAccessException | InvocationTargetException e) {
-        logger.log(FINE, e.getMessage(), e);
-      }
+    if (setEmitExperimentalTelemetry != null) {
+      setEmitExperimentalTelemetry.accept(builder, emitExperimentalTelemetry);
     }
   }
 
-  @Nullable
-  private static Method getEmitExperimentalTelemetry() {
-    try {
-      Method method =
-          ApacheHttpClientTelemetryBuilder.class.getDeclaredMethod(
-              "setEmitExperimentalHttpClientMetrics", boolean.class);
-      method.setAccessible(true);
-      return method;
-    } catch (NoSuchMethodException e) {
-      logger.log(FINE, e.getMessage(), e);
-      return null;
-    }
+  public static void setSetEmitExperimentalTelemetry(
+      BiConsumer<ApacheHttpClientTelemetryBuilder, Boolean> setEmitExperimentalTelemetry) {
+    Experimental.setEmitExperimentalTelemetry = setEmitExperimentalTelemetry;
   }
 }

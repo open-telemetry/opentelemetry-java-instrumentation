@@ -24,6 +24,11 @@ public final class ApacheHttpClientTelemetryBuilder {
   private final DefaultHttpClientInstrumenterBuilder<ApacheHttpClientRequest, HttpResponse> builder;
   private final OpenTelemetry openTelemetry;
 
+  static {
+    Experimental.setSetEmitExperimentalTelemetry(
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
+  }
+
   ApacheHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder =
         DefaultHttpClientInstrumenterBuilder.create(
@@ -93,14 +98,6 @@ public final class ApacheHttpClientTelemetryBuilder {
           spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
-  }
-
-  /**
-   * Can be used via the unstable method {@link
-   * Experimental#setEmitExperimentalTelemetry(ApacheHttpClientTelemetryBuilder, boolean)}.
-   */
-  void setEmitExperimentalHttpClientMetrics(boolean emitExperimentalHttpClientMetrics) {
-    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
   }
 
   /**
