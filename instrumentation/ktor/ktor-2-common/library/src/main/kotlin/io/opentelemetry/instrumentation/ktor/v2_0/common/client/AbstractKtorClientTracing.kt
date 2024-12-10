@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ktor.client
+package io.opentelemetry.instrumentation.ktor.v2_0.common.client
 
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -12,6 +12,7 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 
+@Deprecated("Use AbstractKtorClientTelemetry instead", ReplaceWith("AbstractKtorClientTelemetry"))
 abstract class AbstractKtorClientTracing(
   private val instrumenter: Instrumenter<HttpRequestData, HttpResponse>,
   private val propagators: ContextPropagators,

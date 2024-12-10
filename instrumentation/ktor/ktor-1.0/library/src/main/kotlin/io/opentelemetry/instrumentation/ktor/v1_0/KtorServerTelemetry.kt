@@ -25,8 +25,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource
 import kotlinx.coroutines.withContext
 
-@Deprecated("Use KtorServerTelemetry instead", ReplaceWith("KtorServerTelemetry"))
-class KtorServerTracing private constructor(
+class KtorServerTelemetry private constructor(
   private val instrumenter: Instrumenter<ApplicationRequest, ApplicationResponse>,
 ) {
 
@@ -94,15 +93,15 @@ class KtorServerTracing private constructor(
     instrumenter.end(context, call.request, call.response, error)
   }
 
-  companion object Feature : ApplicationFeature<Application, Configuration, KtorServerTracing> {
+  companion object Feature : ApplicationFeature<Application, Configuration, KtorServerTelemetry> {
     private const val INSTRUMENTATION_NAME = "io.opentelemetry.ktor-1.0"
 
     private val contextKey = AttributeKey<Context>("OpenTelemetry")
     private val errorKey = AttributeKey<Throwable>("OpenTelemetryException")
 
-    override val key: AttributeKey<KtorServerTracing> = AttributeKey("OpenTelemetry")
+    override val key: AttributeKey<KtorServerTelemetry> = AttributeKey("OpenTelemetry")
 
-    override fun install(pipeline: Application, configure: Configuration.() -> Unit): KtorServerTracing {
+    override fun install(pipeline: Application, configure: Configuration.() -> Unit): KtorServerTelemetry {
       val configuration = Configuration().apply(configure)
 
       if (!configuration.isOpenTelemetryInitialized()) {
@@ -115,7 +114,7 @@ class KtorServerTracing private constructor(
         configuration.spanKindExtractor(SpanKindExtractor.alwaysServer())
       )
 
-      val feature = KtorServerTracing(instrumenter)
+      val feature = KtorServerTelemetry(instrumenter)
 
       val startPhase = PipelinePhase("OpenTelemetry")
       pipeline.insertPhaseBefore(ApplicationCallPipeline.Monitoring, startPhase)
