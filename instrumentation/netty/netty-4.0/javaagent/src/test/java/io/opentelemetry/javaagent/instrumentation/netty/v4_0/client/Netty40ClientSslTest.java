@@ -32,6 +32,7 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.ssl.SslHandler;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
@@ -44,7 +45,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicReference;
 import javax.net.ssl.SSLContext;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
@@ -56,6 +56,8 @@ class Netty40ClientSslTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static HttpClientTestServer server;
   private static EventLoopGroup eventLoopGroup;
@@ -116,25 +118,19 @@ class Netty40ClientSslTest {
 
   private static Throwable getThrowable(
       Bootstrap bootstrap, URI uri, DefaultFullHttpRequest request) {
-    AtomicReference<Channel> channel = new AtomicReference<>();
     Throwable thrown =
         catchThrowable(
             () ->
                 testing.runWithSpan(
                     "parent",
                     () -> {
-                      try {
-                        channel.set(
-                            bootstrap.connect(uri.getHost(), uri.getPort()).sync().channel());
-                        CompletableFuture<Integer> result = new CompletableFuture<>();
-                        channel.get().pipeline().addLast(new ClientHandler(result));
-                        channel.get().writeAndFlush(request).get(10, TimeUnit.SECONDS);
-                        result.get(10, TimeUnit.SECONDS);
-                      } finally {
-                        if (channel.get() != null) {
-                          channel.get().close();
-                        }
-                      }
+                      Channel channel =
+                          bootstrap.connect(uri.getHost(), uri.getPort()).sync().channel();
+                      cleanup.deferCleanup(() -> channel.close().sync());
+                      CompletableFuture<Integer> result = new CompletableFuture<>();
+                      channel.pipeline().addLast(new ClientHandler(result));
+                      channel.writeAndFlush(request).get(10, TimeUnit.SECONDS);
+                      result.get(10, TimeUnit.SECONDS);
                     }));
 
     // Then
@@ -160,22 +156,16 @@ class Netty40ClientSslTest {
             HttpVersion.HTTP_1_1, HttpMethod.GET, uri.getPath(), Unpooled.EMPTY_BUFFER);
     HttpHeaders.setHost(request, uri.getHost() + ":" + uri.getPort());
 
-    AtomicReference<Channel> channel = new AtomicReference<>();
     // when
     testing.runWithSpan(
         "parent",
         () -> {
-          try {
-            channel.set(bootstrap.connect(uri.getHost(), uri.getPort()).sync().channel());
-            CompletableFuture<Integer> result = new CompletableFuture<>();
-            channel.get().pipeline().addLast(new ClientHandler(result));
-            channel.get().writeAndFlush(request).get(10, TimeUnit.SECONDS);
-            result.get(10, TimeUnit.SECONDS);
-          } finally {
-            if (channel.get() != null) {
-              channel.get().close();
-            }
-          }
+          Channel channel = bootstrap.connect(uri.getHost(), uri.getPort()).sync().channel();
+          cleanup.deferCleanup(() -> channel.close().sync());
+          CompletableFuture<Integer> result = new CompletableFuture<>();
+          channel.pipeline().addLast(new ClientHandler(result));
+          channel.writeAndFlush(request).get(10, TimeUnit.SECONDS);
+          result.get(10, TimeUnit.SECONDS);
         });
 
     // then
@@ -207,10 +197,6 @@ class Netty40ClientSslTest {
                 span -> {
                   span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(3));
                 }));
-
-    if (channel.get() != null) {
-      channel.get().close().sync();
-    }
   }
 
   // list of default ciphers copied from netty's JdkSslContext
