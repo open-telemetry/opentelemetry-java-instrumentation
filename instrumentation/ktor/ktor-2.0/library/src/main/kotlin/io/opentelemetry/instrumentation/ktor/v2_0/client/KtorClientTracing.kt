@@ -12,8 +12,8 @@ import io.ktor.client.statement.*
 import io.ktor.util.*
 import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
-import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorClientTracingUtil
 import io.opentelemetry.instrumentation.ktor.v2_0.common.client.AbstractKtorClientTracing
+import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorClientTracingUtil
 
 @Deprecated("Use KtorClientTelemetry instead", ReplaceWith("KtorClientTelemetry"))
 class KtorClientTracing internal constructor(
