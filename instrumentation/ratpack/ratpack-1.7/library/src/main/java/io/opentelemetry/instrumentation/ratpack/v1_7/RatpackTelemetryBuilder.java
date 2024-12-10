@@ -50,7 +50,7 @@ public final class RatpackTelemetryBuilder {
    * items. The {@link AttributesExtractor} will be executed after all default extractors.
    *
    * @deprecated Use {@link
-   *     RatpackServerTelemetryBuilder#addAttributeExtractor(AttributesExtractor)} instead.
+   *     RatpackServerTelemetryBuilder#addAttributesExtractor(AttributesExtractor)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
@@ -62,7 +62,7 @@ public final class RatpackTelemetryBuilder {
 
   /**
    * @deprecated Use {@link
-   *     RatpackClientTelemetryBuilder#addAttributeExtractor(AttributesExtractor)} instead.
+   *     RatpackClientTelemetryBuilder#addAttributesExtractor(AttributesExtractor)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue

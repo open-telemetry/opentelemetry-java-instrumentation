@@ -36,7 +36,7 @@ public final class RatpackServerTelemetryBuilder {
    * items. The {@link AttributesExtractor} will be executed after all default extractors.
    */
   @CanIgnoreReturnValue
-  public RatpackServerTelemetryBuilder addAttributeExtractor(
+  public RatpackServerTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<? super Request, ? super Response> attributesExtractor) {
     serverBuilder.addAttributesExtractor(attributesExtractor);
     return this;
