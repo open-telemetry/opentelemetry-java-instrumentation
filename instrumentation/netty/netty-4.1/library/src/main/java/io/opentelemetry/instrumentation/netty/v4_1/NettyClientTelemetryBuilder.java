@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumentationFlag;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.Experimental;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -24,17 +25,22 @@ import java.util.function.Function;
 public final class NettyClientTelemetryBuilder {
 
   private final DefaultHttpClientInstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder;
-  private boolean emitExperimentalHttpClientEvents = false;
+  private boolean emitExperimentalTelemetry = false;
 
   NettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder =
         NettyClientInstrumenterBuilderFactory.create("io.opentelemetry.netty-4.1", openTelemetry);
   }
 
+  /**
+   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(NettyClientTelemetryBuilder,
+   *     boolean)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setEmitExperimentalHttpClientEvents(
-      boolean emitExperimentalHttpClientEvents) {
-    this.emitExperimentalHttpClientEvents = emitExperimentalHttpClientEvents;
+      boolean emitExperimentalTelemetry) {
+    this.emitExperimentalTelemetry = emitExperimentalTelemetry;
     return this;
   }
 
@@ -69,7 +75,7 @@ public final class NettyClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<HttpRequestAndChannel, HttpResponse> attributesExtractor) {
-    builder.addAttributeExtractor(attributesExtractor);
+    builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 
@@ -95,22 +101,24 @@ public final class NettyClientTelemetryBuilder {
   /**
    * Configures the instrumentation to emit experimental HTTP client metrics.
    *
-   * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
-   *     are to be emitted.
+   * @param emitExperimentalTelemetry {@code true} if the experimental HTTP client metrics are to be
+   *     emitted.
+   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(NettyClientTelemetryBuilder,
+   *     boolean)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setEmitExperimentalHttpClientMetrics(
-      boolean emitExperimentalHttpClientMetrics) {
-    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
+      boolean emitExperimentalTelemetry) {
+    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalTelemetry);
+    this.emitExperimentalTelemetry = emitExperimentalTelemetry;
     return this;
   }
 
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setSpanNameExtractor(
-      Function<
-              SpanNameExtractor<? super HttpRequestAndChannel>,
-              ? extends SpanNameExtractor<? super HttpRequestAndChannel>>
+      Function<SpanNameExtractor<HttpRequestAndChannel>, SpanNameExtractor<HttpRequestAndChannel>>
           spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
@@ -124,6 +132,6 @@ public final class NettyClientTelemetryBuilder {
                 NettyConnectionInstrumentationFlag.DISABLED,
                 NettyConnectionInstrumentationFlag.DISABLED)
             .instrumenter(),
-        emitExperimentalHttpClientEvents);
+        emitExperimentalTelemetry);
   }
 }

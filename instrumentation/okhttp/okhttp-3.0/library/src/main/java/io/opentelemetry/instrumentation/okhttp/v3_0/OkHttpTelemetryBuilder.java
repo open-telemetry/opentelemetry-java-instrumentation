@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHt
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.okhttp.v3_0.internal.Experimental;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpClientInstrumenterBuilderFactory;
 import java.util.List;
 import java.util.Set;
@@ -32,11 +33,25 @@ public final class OkHttpTelemetryBuilder {
   /**
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items.
+   *
+   * @deprecated Use {@link #addAttributesExtractor(AttributesExtractor)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super Interceptor.Chain, ? super Response> attributesExtractor) {
-    builder.addAttributeExtractor(attributesExtractor);
+    builder.addAttributesExtractor(attributesExtractor);
+    return this;
+  }
+
+  /**
+   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
+   * items.
+   */
+  @CanIgnoreReturnValue
+  public OkHttpTelemetryBuilder addAttributesExtractor(
+      AttributesExtractor<Interceptor.Chain, Response> attributesExtractor) {
+    builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 
@@ -86,7 +101,10 @@ public final class OkHttpTelemetryBuilder {
    *
    * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
    *     are to be emitted.
+   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(OkHttpTelemetryBuilder,
+   *     boolean)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {
@@ -97,9 +115,7 @@ public final class OkHttpTelemetryBuilder {
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder setSpanNameExtractor(
-      Function<
-              SpanNameExtractor<? super Interceptor.Chain>,
-              ? extends SpanNameExtractor<? super Interceptor.Chain>>
+      Function<SpanNameExtractor<Interceptor.Chain>, SpanNameExtractor<Interceptor.Chain>>
           spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
