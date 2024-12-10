@@ -20,7 +20,7 @@ public class AwsSdkInstrumentationModule extends InstrumentationModule {
 
   @Override
   public boolean isHelperClass(String className) {
-    return className.startsWith("io.opentelemetry.contrib.awsxray.");
+    return className.startsWith("io.opentelemetry.contrib.awsxray.") || className.startsWith("com.fasterxml.jackson");
   }
 
   @Override
