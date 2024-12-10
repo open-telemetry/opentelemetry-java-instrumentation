@@ -45,7 +45,7 @@ public final class ApacheHttpClient5TelemetryBuilder {
   public ApacheHttpClient5TelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super ApacheHttpClient5Request, ? super HttpResponse>
           attributesExtractor) {
-    builder.addAttributeExtractor(attributesExtractor);
+    builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 

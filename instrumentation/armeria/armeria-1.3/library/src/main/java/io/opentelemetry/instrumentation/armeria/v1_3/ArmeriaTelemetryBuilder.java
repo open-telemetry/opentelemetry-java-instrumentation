@@ -104,7 +104,7 @@ public final class ArmeriaTelemetryBuilder {
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super RequestContext, ? super RequestLog> attributesExtractor) {
-    clientBuilder.addAttributeExtractor(attributesExtractor);
+    clientBuilder.addAttributesExtractor(attributesExtractor);
     serverBuilder.addAttributesExtractor(attributesExtractor);
     return this;
   }
@@ -121,7 +121,7 @@ public final class ArmeriaTelemetryBuilder {
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder addClientAttributeExtractor(
       AttributesExtractor<? super ClientRequestContext, ? super RequestLog> attributesExtractor) {
-    clientBuilder.addAttributeExtractor(attributesExtractor);
+    clientBuilder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 
