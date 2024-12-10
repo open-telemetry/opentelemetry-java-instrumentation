@@ -61,7 +61,7 @@ class KtorServerTelemetry private constructor(
       this.spanKindExtractor = extractor
     }
 
-    fun addAttributeExtractor(extractor: AttributesExtractor<in ApplicationRequest, in ApplicationResponse>) {
+    fun addAttributesExtractor(extractor: AttributesExtractor<in ApplicationRequest, in ApplicationResponse>) {
       builder.addAttributesExtractor(extractor)
     }
 

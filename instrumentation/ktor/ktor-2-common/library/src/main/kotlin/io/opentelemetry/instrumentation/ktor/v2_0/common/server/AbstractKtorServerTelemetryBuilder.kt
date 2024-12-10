@@ -40,15 +40,6 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
       )
   }
 
-  @Deprecated("Please use method `spanStatusExtractor`")
-  fun setStatusExtractor(
-    extractor: (SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>
-  ) {
-    spanStatusExtractor { prevStatusExtractor ->
-      extractor(prevStatusExtractor).extract(spanStatusBuilder, request, response, error)
-    }
-  }
-
   fun spanStatusExtractor(extract: SpanStatusData.(SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>) -> Unit) {
     builder.setStatusExtractor { prevExtractor ->
       SpanStatusExtractor { spanStatusBuilder: SpanStatusBuilder,
@@ -70,13 +61,6 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
     val error: Throwable?
   )
 
-  @Deprecated("Please use method `spanKindExtractor`")
-  fun setSpanKindExtractor(extractor: (SpanKindExtractor<ApplicationRequest>) -> SpanKindExtractor<ApplicationRequest>) {
-    spanKindExtractor { prevSpanKindExtractor ->
-      extractor(prevSpanKindExtractor).extract(this)
-    }
-  }
-
   fun spanKindExtractor(extract: ApplicationRequest.(SpanKindExtractor<ApplicationRequest>) -> SpanKind) {
     spanKindExtractor = { prevExtractor ->
       SpanKindExtractor<ApplicationRequest> { request: ApplicationRequest ->
@@ -85,19 +69,7 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
     }
   }
 
-  @Deprecated("Please use method `attributeExtractor`")
-  fun addAttributeExtractor(extractor: AttributesExtractor<in ApplicationRequest, in ApplicationResponse>) {
-    attributeExtractor {
-      onStart {
-        extractor.onStart(attributes, parentContext, request)
-      }
-      onEnd {
-        extractor.onEnd(attributes, parentContext, request, response, error)
-      }
-    }
-  }
-
-  fun attributeExtractor(extractorBuilder: ExtractorBuilder.() -> Unit = {}) {
+  fun attributesExtractor(extractorBuilder: ExtractorBuilder.() -> Unit = {}) {
     val builder = ExtractorBuilder().apply(extractorBuilder).build()
     this.builder.addAttributesExtractor(
       object : AttributesExtractor<ApplicationRequest, ApplicationResponse> {
@@ -145,35 +117,17 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
     val error: Throwable?
   )
 
-  @Deprecated(
-    "Please use method `capturedRequestHeaders`",
-    ReplaceWith("capturedRequestHeaders(headers)")
-  )
-  fun setCapturedRequestHeaders(headers: List<String>) = capturedRequestHeaders(headers)
-
   fun capturedRequestHeaders(vararg headers: String) = capturedRequestHeaders(headers.asIterable())
 
   fun capturedRequestHeaders(headers: Iterable<String>) {
     builder.setCapturedRequestHeaders(headers.toList())
   }
 
-  @Deprecated(
-    "Please use method `capturedResponseHeaders`",
-    ReplaceWith("capturedResponseHeaders(headers)")
-  )
-  fun setCapturedResponseHeaders(headers: List<String>) = capturedResponseHeaders(headers)
-
   fun capturedResponseHeaders(vararg headers: String) = capturedResponseHeaders(headers.asIterable())
 
   fun capturedResponseHeaders(headers: Iterable<String>) {
     builder.setCapturedResponseHeaders(headers.toList())
   }
-
-  @Deprecated(
-    "Please use method `knownMethods`",
-    ReplaceWith("knownMethods(knownMethods)")
-  )
-  fun setKnownMethods(knownMethods: Set<String>) = knownMethods(knownMethods)
 
   fun knownMethods(vararg methods: String) = knownMethods(methods.asIterable())
 
