@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ktor.client
+package io.opentelemetry.instrumentation.ktor.v2_0.common.client
 
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
@@ -13,14 +13,15 @@ import io.opentelemetry.api.common.AttributesBuilder
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
-import io.opentelemetry.instrumentation.ktor.internal.KtorBuilderUtil
+import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorBuilderUtilOld
 
+@Deprecated("Use AbstractKtorClientTelemetryBuilder instead", ReplaceWith("AbstractKtorClientTelemetryBuilder"))
 abstract class AbstractKtorClientTracingBuilder(
   private val instrumentationName: String
 ) {
   companion object {
     init {
-      KtorBuilderUtil.clientBuilderExtractor = { it.clientBuilder }
+      KtorBuilderUtilOld.clientBuilderExtractor = { it.clientBuilder }
     }
   }
 
@@ -159,13 +160,14 @@ abstract class AbstractKtorClientTracingBuilder(
    *
    * @param emitExperimentalHttpClientMetrics `true` if the experimental HTTP client metrics are to be emitted.
    */
-  @Deprecated("Please use method `emitExperimentalHttpClientMetrics`")
+  @Deprecated("Please use method `Experimental.emitExperimentalHttpClientMetrics`")
   fun setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics: Boolean) {
     if (emitExperimentalHttpClientMetrics) {
       emitExperimentalHttpClientMetrics()
     }
   }
 
+  @Deprecated("Please use method `Experimental.emitExperimentalHttpClientMetrics`")
   fun emitExperimentalHttpClientMetrics() {
     clientBuilder.setEmitExperimentalHttpClientMetrics(true)
   }
