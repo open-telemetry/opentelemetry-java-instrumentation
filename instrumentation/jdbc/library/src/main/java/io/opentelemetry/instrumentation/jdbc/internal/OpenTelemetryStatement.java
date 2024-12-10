@@ -30,6 +30,7 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -43,7 +44,8 @@ public class OpenTelemetryStatement<S extends Statement> implements Statement {
   protected final String query;
   protected final Instrumenter<DbRequest, Void> instrumenter;
 
-  private final ArrayList<String> batchCommands = new ArrayList<>();
+  private final List<String> batchCommands = new ArrayList<>();
+  protected long batchSize;
 
   OpenTelemetryStatement(
       S delegate,
@@ -113,7 +115,7 @@ public class OpenTelemetryStatement<S extends Statement> implements Statement {
 
   @Override
   public int[] executeBatch() throws SQLException {
-    return wrapCall(buildSqlForBatch(), delegate::executeBatch);
+    return wrapBatchCall(delegate::executeBatch);
   }
 
   @Override
@@ -231,12 +233,14 @@ public class OpenTelemetryStatement<S extends Statement> implements Statement {
   public void addBatch(String sql) throws SQLException {
     delegate.addBatch(sql);
     batchCommands.add(sql);
+    batchSize++;
   }
 
   @Override
   public void clearBatch() throws SQLException {
     delegate.clearBatch();
     batchCommands.clear();
+    batchSize = 0;
   }
 
   @Override
@@ -291,8 +295,13 @@ public class OpenTelemetryStatement<S extends Statement> implements Statement {
 
   protected <T, E extends Exception> T wrapCall(String sql, ThrowingSupplier<T, E> callable)
       throws E {
-    Context parentContext = Context.current();
     DbRequest request = DbRequest.create(dbInfo, sql);
+    return wrapCall(request, callable);
+  }
+
+  protected <T, E extends Exception> T wrapCall(DbRequest request, ThrowingSupplier<T, E> callable)
+      throws E {
+    Context parentContext = Context.current();
 
     if (!this.instrumenter.shouldStart(parentContext, request)) {
       return callable.call();
@@ -310,16 +319,8 @@ public class OpenTelemetryStatement<S extends Statement> implements Statement {
     return result;
   }
 
-  private String buildSqlForBatch() {
-    StringBuilder sqlBuilder = new StringBuilder();
-    if (query != null) {
-      sqlBuilder.append(query);
-    }
-
-    for (String batchCommand : batchCommands) {
-      sqlBuilder.append(batchCommand);
-    }
-
-    return sqlBuilder.toString();
+  private <T, E extends Exception> T wrapBatchCall(ThrowingSupplier<T, E> callable) throws E {
+    DbRequest request = DbRequest.create(dbInfo, batchCommands, batchSize);
+    return wrapCall(request, callable);
   }
 }

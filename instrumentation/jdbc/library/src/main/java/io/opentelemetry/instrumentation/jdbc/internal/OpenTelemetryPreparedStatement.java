@@ -234,6 +234,7 @@ public class OpenTelemetryPreparedStatement<S extends PreparedStatement>
   @Override
   public void addBatch() throws SQLException {
     delegate.addBatch();
+    batchSize++;
   }
 
   @SuppressWarnings("UngroupedOverloads")
@@ -362,5 +363,15 @@ public class OpenTelemetryPreparedStatement<S extends PreparedStatement>
   @Override
   public void clearParameters() throws SQLException {
     delegate.clearParameters();
+  }
+
+  @Override
+  public int[] executeBatch() throws SQLException {
+    return wrapBatchCall(delegate::executeBatch);
+  }
+
+  private <T, E extends Exception> T wrapBatchCall(ThrowingSupplier<T, E> callable) throws E {
+    DbRequest request = DbRequest.create(dbInfo, query, batchSize);
+    return wrapCall(request, callable);
   }
 }
