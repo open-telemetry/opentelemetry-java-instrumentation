@@ -26,6 +26,11 @@ public final class RatpackClientTelemetryBuilder {
 
   private final DefaultHttpClientInstrumenterBuilder<RequestSpec, HttpResponse> builder;
 
+  static {
+    Experimental.setSetEmitExperimentalClientTelemetry(
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
+  }
+
   RatpackClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder = RatpackClientInstrumenterBuilderFactory.create(INSTRUMENTATION_NAME, openTelemetry);
   }
@@ -33,7 +38,7 @@ public final class RatpackClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public RatpackClientTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<? super RequestSpec, ? super HttpResponse> attributesExtractor) {
-    builder.addAttributeExtractor(attributesExtractor);
+    builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 

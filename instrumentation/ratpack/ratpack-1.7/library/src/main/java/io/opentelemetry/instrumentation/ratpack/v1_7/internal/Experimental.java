@@ -5,13 +5,9 @@
 
 package io.opentelemetry.instrumentation.ratpack.v1_7.internal;
 
-import static java.util.logging.Level.FINE;
-
 import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackClientTelemetryBuilder;
 import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackServerTelemetryBuilder;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.logging.Logger;
+import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
 
 /**
@@ -21,65 +17,35 @@ import javax.annotation.Nullable;
  */
 public class Experimental {
 
-  private static final Logger logger = Logger.getLogger(Experimental.class.getName());
+  @Nullable
+  private static BiConsumer<RatpackClientTelemetryBuilder, Boolean>
+      setEmitExperimentalClientTelemetry;
 
   @Nullable
-  private static final Method emitExperimentalClientTelemetryMethod =
-      getEmitExperimentalClientTelemetryMethod();
-
-  @Nullable
-  private static final Method emitExperimentalServerTelemetryMethod =
-      getEmitExperimentalServerTelemetryMethod();
+  private static BiConsumer<RatpackServerTelemetryBuilder, Boolean>
+      setEmitExperimentalServerTelemetry;
 
   public void setEmitExperimentalTelemetry(
       RatpackClientTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
-
-    if (emitExperimentalClientTelemetryMethod != null) {
-      try {
-        emitExperimentalClientTelemetryMethod.invoke(builder, emitExperimentalTelemetry);
-      } catch (IllegalAccessException | InvocationTargetException e) {
-        logger.log(FINE, e.getMessage(), e);
-      }
+    if (setEmitExperimentalClientTelemetry != null) {
+      setEmitExperimentalClientTelemetry.accept(builder, emitExperimentalTelemetry);
     }
   }
 
   public void setEmitExperimentalTelemetry(
       RatpackServerTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
-
-    if (emitExperimentalServerTelemetryMethod != null) {
-      try {
-        emitExperimentalServerTelemetryMethod.invoke(builder, emitExperimentalTelemetry);
-      } catch (IllegalAccessException | InvocationTargetException e) {
-        logger.log(FINE, e.getMessage(), e);
-      }
+    if (setEmitExperimentalServerTelemetry != null) {
+      setEmitExperimentalServerTelemetry.accept(builder, emitExperimentalTelemetry);
     }
   }
 
-  @Nullable
-  private static Method getEmitExperimentalClientTelemetryMethod() {
-    try {
-      Method method =
-          RatpackClientTelemetryBuilder.class.getDeclaredMethod(
-              "setEmitExperimentalHttpClientMetrics", boolean.class);
-      method.setAccessible(true);
-      return method;
-    } catch (NoSuchMethodException e) {
-      logger.log(FINE, e.getMessage(), e);
-      return null;
-    }
+  public static void setSetEmitExperimentalClientTelemetry(
+      BiConsumer<RatpackClientTelemetryBuilder, Boolean> setEmitExperimentalClientTelemetry) {
+    Experimental.setEmitExperimentalClientTelemetry = setEmitExperimentalClientTelemetry;
   }
 
-  @Nullable
-  private static Method getEmitExperimentalServerTelemetryMethod() {
-    try {
-      Method method =
-          RatpackServerTelemetryBuilder.class.getDeclaredMethod(
-              "setEmitExperimentalHttpServerMetrics", boolean.class);
-      method.setAccessible(true);
-      return method;
-    } catch (NoSuchMethodException e) {
-      logger.log(FINE, e.getMessage(), e);
-      return null;
-    }
+  public static void setSetEmitExperimentalServerTelemetry(
+      BiConsumer<RatpackServerTelemetryBuilder, Boolean> setEmitExperimentalServerTelemetry) {
+    Experimental.setEmitExperimentalServerTelemetry = setEmitExperimentalServerTelemetry;
   }
 }
