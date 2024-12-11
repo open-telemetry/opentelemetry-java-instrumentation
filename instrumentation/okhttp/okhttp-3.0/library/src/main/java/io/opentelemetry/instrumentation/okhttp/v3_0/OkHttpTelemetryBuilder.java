@@ -25,6 +25,11 @@ public final class OkHttpTelemetryBuilder {
   private final DefaultHttpClientInstrumenterBuilder<Interceptor.Chain, Response> builder;
   private final OpenTelemetry openTelemetry;
 
+  static {
+    Experimental.setSetEmitExperimentalTelemetry(
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
+  }
+
   OkHttpTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder = OkHttpClientInstrumenterBuilderFactory.create(openTelemetry);
     this.openTelemetry = openTelemetry;

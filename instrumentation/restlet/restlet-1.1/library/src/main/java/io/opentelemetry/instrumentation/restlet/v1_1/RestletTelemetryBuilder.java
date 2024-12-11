@@ -24,6 +24,11 @@ public final class RestletTelemetryBuilder {
 
   private final DefaultHttpServerInstrumenterBuilder<Request, Response> builder;
 
+  static {
+    Experimental.setSetEmitExperimentalTelemetry(
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpServerMetrics(emit));
+  }
+
   RestletTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder = RestletTelemetryBuilderFactory.create(openTelemetry);
   }

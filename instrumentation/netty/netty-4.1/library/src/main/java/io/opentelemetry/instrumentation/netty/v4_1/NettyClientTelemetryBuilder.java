@@ -25,7 +25,15 @@ import java.util.function.Function;
 public final class NettyClientTelemetryBuilder {
 
   private final DefaultHttpClientInstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder;
-  private boolean emitExperimentalTelemetry = false;
+  private boolean emitExperimentalHttpClientEvents = false;
+
+  static {
+    Experimental.setSetEmitExperimentalClientTelemetry(
+        (builder, emit) -> {
+          builder.builder.setEmitExperimentalHttpClientMetrics(emit);
+          builder.emitExperimentalHttpClientEvents = emit;
+        });
+  }
 
   NettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder =
@@ -39,8 +47,8 @@ public final class NettyClientTelemetryBuilder {
   @Deprecated
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setEmitExperimentalHttpClientEvents(
-      boolean emitExperimentalTelemetry) {
-    this.emitExperimentalTelemetry = emitExperimentalTelemetry;
+      boolean emitExperimentalHttpClientEvents) {
+    this.emitExperimentalHttpClientEvents = emitExperimentalHttpClientEvents;
     return this;
   }
 
@@ -101,17 +109,16 @@ public final class NettyClientTelemetryBuilder {
   /**
    * Configures the instrumentation to emit experimental HTTP client metrics.
    *
-   * @param emitExperimentalTelemetry {@code true} if the experimental HTTP client metrics are to be
-   *     emitted.
+   * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
+   *     are to be emitted.
    * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(NettyClientTelemetryBuilder,
    *     boolean)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setEmitExperimentalHttpClientMetrics(
-      boolean emitExperimentalTelemetry) {
-    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalTelemetry);
-    this.emitExperimentalTelemetry = emitExperimentalTelemetry;
+      boolean emitExperimentalHttpClientMetrics) {
+    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
     return this;
   }
 
@@ -134,6 +141,6 @@ public final class NettyClientTelemetryBuilder {
                 NettyConnectionInstrumentationFlag.DISABLED,
                 NettyConnectionInstrumentationFlag.DISABLED)
             .instrumenter(),
-        emitExperimentalTelemetry);
+        emitExperimentalHttpClientEvents);
   }
 }

@@ -29,6 +29,8 @@ public final class SpringWebMvcTelemetryBuilder {
 
   static {
     SpringMvcBuilderUtil.setBuilderExtractor(builder -> builder.builder);
+    Experimental.setSetEmitExperimentalTelemetry(
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpServerMetrics(emit));
   }
 
   SpringWebMvcTelemetryBuilder(OpenTelemetry openTelemetry) {

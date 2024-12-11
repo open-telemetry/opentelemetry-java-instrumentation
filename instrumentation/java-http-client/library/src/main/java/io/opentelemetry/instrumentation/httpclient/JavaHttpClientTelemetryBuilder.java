@@ -25,6 +25,11 @@ public final class JavaHttpClientTelemetryBuilder {
   private final DefaultHttpClientInstrumenterBuilder<HttpRequest, HttpResponse<?>> builder;
   private final OpenTelemetry openTelemetry;
 
+  static {
+    Experimental.setSetEmitExperimentalTelemetry(
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
+  }
+
   JavaHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder = JavaHttpClientInstrumenterBuilderFactory.create(openTelemetry);
     this.openTelemetry = openTelemetry;

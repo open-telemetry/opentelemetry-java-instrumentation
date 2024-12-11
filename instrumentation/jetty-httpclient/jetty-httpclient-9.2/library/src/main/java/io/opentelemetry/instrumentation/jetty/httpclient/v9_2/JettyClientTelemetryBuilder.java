@@ -28,6 +28,11 @@ public final class JettyClientTelemetryBuilder {
   private HttpClientTransport httpClientTransport;
   private SslContextFactory sslContextFactory;
 
+  static {
+    Experimental.setSetEmitExperimentalTelemetry(
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
+  }
+
   JettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder = JettyHttpClientInstrumenterBuilderFactory.create(openTelemetry);
   }
