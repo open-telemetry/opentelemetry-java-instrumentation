@@ -27,6 +27,8 @@ public final class ArmeriaClientTelemetryBuilder {
 
   static {
     ArmeriaInstrumenterBuilderUtil.setClientBuilderExtractor(builder -> builder.builder);
+    Experimental.setSetEmitExperimentalClientTelemetry(
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
   }
 
   ArmeriaClientTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -51,7 +53,7 @@ public final class ArmeriaClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public ArmeriaClientTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<? super ClientRequestContext, ? super RequestLog> attributesExtractor) {
-    builder.addAttributeExtractor(attributesExtractor);
+    builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 
