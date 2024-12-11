@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumentationFlag;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.Experimental;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -26,11 +27,24 @@ public final class NettyClientTelemetryBuilder {
   private final DefaultHttpClientInstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder;
   private boolean emitExperimentalHttpClientEvents = false;
 
+  static {
+    Experimental.setSetEmitExperimentalClientTelemetry(
+        (builder, emit) -> {
+          builder.builder.setEmitExperimentalHttpClientMetrics(emit);
+          builder.emitExperimentalHttpClientEvents = emit;
+        });
+  }
+
   NettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder =
         NettyClientInstrumenterBuilderFactory.create("io.opentelemetry.netty-4.1", openTelemetry);
   }
 
+  /**
+   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(NettyClientTelemetryBuilder,
+   *     boolean)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setEmitExperimentalHttpClientEvents(
       boolean emitExperimentalHttpClientEvents) {
@@ -97,7 +111,10 @@ public final class NettyClientTelemetryBuilder {
    *
    * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
    *     are to be emitted.
+   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(NettyClientTelemetryBuilder,
+   *     boolean)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {
@@ -108,9 +125,7 @@ public final class NettyClientTelemetryBuilder {
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setSpanNameExtractor(
-      Function<
-              SpanNameExtractor<? super HttpRequestAndChannel>,
-              ? extends SpanNameExtractor<? super HttpRequestAndChannel>>
+      Function<SpanNameExtractor<HttpRequestAndChannel>, SpanNameExtractor<HttpRequestAndChannel>>
           spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;

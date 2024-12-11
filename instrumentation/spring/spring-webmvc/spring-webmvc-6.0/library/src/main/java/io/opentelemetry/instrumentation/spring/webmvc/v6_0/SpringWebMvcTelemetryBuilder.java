@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHt
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.spring.webmvc.v6_0.internal.Experimental;
 import io.opentelemetry.instrumentation.spring.webmvc.v6_0.internal.SpringMvcBuilderUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -27,6 +28,8 @@ public final class SpringWebMvcTelemetryBuilder {
 
   static {
     SpringMvcBuilderUtil.setBuilderExtractor(builder -> builder.builder);
+    Experimental.setSetEmitExperimentalTelemetry(
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpServerMetrics(emit));
   }
 
   SpringWebMvcTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -74,9 +77,7 @@ public final class SpringWebMvcTelemetryBuilder {
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setSpanNameExtractor(
-      Function<
-              SpanNameExtractor<? super HttpServletRequest>,
-              ? extends SpanNameExtractor<? super HttpServletRequest>>
+      Function<SpanNameExtractor<HttpServletRequest>, SpanNameExtractor<HttpServletRequest>>
           spanNameExtractor) {
     builder.setSpanNameExtractor(spanNameExtractor);
     return this;
@@ -106,7 +107,10 @@ public final class SpringWebMvcTelemetryBuilder {
    *
    * @param emitExperimentalHttpServerMetrics {@code true} if the experimental HTTP server metrics
    *     are to be emitted.
+   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(SpringWebMvcTelemetryBuilder,
+   *     boolean)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setEmitExperimentalHttpServerMetrics(
       boolean emitExperimentalHttpServerMetrics) {
