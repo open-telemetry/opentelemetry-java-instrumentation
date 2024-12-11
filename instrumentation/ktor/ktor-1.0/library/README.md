@@ -1,7 +1,7 @@
 # Library Instrumentation for Ktor version 1.x
 
-This package contains libraries to help instrument Ktor. Currently, only server instrumentation is
-supported.
+This package contains libraries to help instrument Ktor.
+Currently, only server instrumentation is supported.
 
 ## Quickstart
 
@@ -13,7 +13,6 @@ release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20
 For Maven, add to your `pom.xml` dependencies:
 
 ```xml
-
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
@@ -31,9 +30,8 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-1.0:OPENTELE
 
 ## Usage
 
-Initialize instrumentation by installing the `KtorServerTelemetry` feature. You must set the
-`OpenTelemetry` to use with
-the feature.
+Initialize instrumentation by installing the `KtorServerTelemetry` feature.
+You must set the `OpenTelemetry` to use with the feature.
 
 ```kotlin
 OpenTelemetry openTelemetry = ...
