@@ -3,12 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ktor.v3_0.server
+package io.opentelemetry.instrumentation.ktor.v2_0
 
 import io.ktor.server.application.*
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import org.junit.jupiter.api.extension.RegisterExtension
 
 class KtorHttpServerTest : AbstractKtorHttpServerTest() {
@@ -16,7 +15,7 @@ class KtorHttpServerTest : AbstractKtorHttpServerTest() {
   companion object {
     @JvmStatic
     @RegisterExtension
-    val TESTING: InstrumentationExtension = HttpServerInstrumentationExtension.forAgent()
+    val TESTING: InstrumentationExtension = HttpServerInstrumentationExtension.forLibrary()
   }
 
   override fun getTesting(): InstrumentationExtension {
@@ -24,10 +23,6 @@ class KtorHttpServerTest : AbstractKtorHttpServerTest() {
   }
 
   override fun installOpenTelemetry(application: Application) {
-  }
-
-  override fun configure(options: HttpServerTestOptions) {
-    super.configure(options)
-    options.setTestException(false)
+      KtorTestUtil.installOpenTelemetry(application, TESTING.openTelemetry)
   }
 }

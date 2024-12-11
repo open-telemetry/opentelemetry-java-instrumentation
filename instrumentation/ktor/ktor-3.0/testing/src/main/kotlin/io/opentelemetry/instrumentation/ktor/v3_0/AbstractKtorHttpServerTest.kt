@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ktor.v2_0.server
+package io.opentelemetry.instrumentation.ktor.v3_0
 
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -26,13 +26,13 @@ import kotlinx.coroutines.withContext
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 
-abstract class AbstractKtorHttpServerTest : AbstractHttpServerTest<ApplicationEngine>() {
+abstract class AbstractKtorHttpServerTest : AbstractHttpServerTest<EmbeddedServer<*, *>>() {
 
   abstract fun getTesting(): InstrumentationExtension
 
   abstract fun installOpenTelemetry(application: Application)
 
-  override fun setupServer(): ApplicationEngine {
+  override fun setupServer(): EmbeddedServer<*, *> {
     return embeddedServer(Netty, port = port) {
       installOpenTelemetry(this)
 
@@ -94,7 +94,7 @@ abstract class AbstractKtorHttpServerTest : AbstractHttpServerTest<ApplicationEn
     }.start()
   }
 
-  override fun stopServer(server: ApplicationEngine) {
+  override fun stopServer(server: EmbeddedServer<*, *>) {
     server.stop(0, 10, TimeUnit.SECONDS)
   }
 
