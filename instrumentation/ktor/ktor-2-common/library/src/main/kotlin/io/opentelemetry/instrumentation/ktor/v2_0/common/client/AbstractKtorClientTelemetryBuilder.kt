@@ -13,7 +13,6 @@ import io.opentelemetry.api.common.AttributesBuilder
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
-import io.opentelemetry.instrumentation.ktor.v2_0.common.client.internal.Experimental
 import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorBuilderUtil
 
 abstract class AbstractKtorClientTelemetryBuilder(
@@ -22,12 +21,11 @@ abstract class AbstractKtorClientTelemetryBuilder(
   companion object {
     init {
       KtorBuilderUtil.clientBuilderExtractor = { it.builder }
-      Experimental.setSetEmitExperimentalTelemetry { builder, emit -> builder.builder.setEmitExperimentalHttpClientMetrics(emit) }
     }
   }
 
   internal lateinit var openTelemetry: OpenTelemetry
-  protected lateinit var builder: DefaultHttpClientInstrumenterBuilder<HttpRequestData, HttpResponse>
+  internal lateinit var builder: DefaultHttpClientInstrumenterBuilder<HttpRequestData, HttpResponse>
 
   fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
     this.openTelemetry = openTelemetry
@@ -67,7 +65,7 @@ abstract class AbstractKtorClientTelemetryBuilder(
 
   fun attributesExtractor(extractorBuilder: ExtractorBuilder.() -> Unit = {}) {
     val builder = ExtractorBuilder().apply(extractorBuilder).build()
-    this.builder.addAttributeExtractor(
+    this.builder.addAttributesExtractor(
       object : AttributesExtractor<HttpRequestData, HttpResponse> {
         override fun onStart(attributes: AttributesBuilder, parentContext: Context, request: HttpRequestData) {
           builder.onStart(OnStartData(attributes, parentContext, request))
