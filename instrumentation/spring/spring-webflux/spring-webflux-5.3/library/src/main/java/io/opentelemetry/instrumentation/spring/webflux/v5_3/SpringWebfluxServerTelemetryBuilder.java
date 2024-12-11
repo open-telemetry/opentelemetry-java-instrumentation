@@ -107,14 +107,6 @@ public final class SpringWebfluxServerTelemetryBuilder {
   }
 
   /**
-   * Can be used via the unstable method {@link
-   * Experimental#setEmitExperimentalTelemetry(SpringWebfluxServerTelemetryBuilder, boolean)}.
-   */
-  void setEmitExperimentalHttpServerTelemetry(boolean emitExperimentalHttpServerTelemetry) {
-    builder.setEmitExperimentalHttpServerMetrics(emitExperimentalHttpServerTelemetry);
-  }
-
-  /**
    * Returns a new {@link SpringWebfluxTelemetry} with the settings of this {@link
    * SpringWebfluxServerTelemetryBuilder}.
    */
