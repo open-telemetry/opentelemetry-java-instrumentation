@@ -39,12 +39,27 @@ public final class ApacheHttpClientTelemetryBuilder {
   /**
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items. The {@link AttributesExtractor} will be executed after all default extractors.
+   *
+   * @deprecated Use {@link #addAttributesExtractor(AttributesExtractor)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public ApacheHttpClientTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super ApacheHttpClientRequest, ? super HttpResponse>
           attributesExtractor) {
-    builder.addAttributeExtractor(attributesExtractor);
+    builder.addAttributesExtractor(attributesExtractor);
+    return this;
+  }
+
+  /**
+   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
+   * items. The {@link AttributesExtractor} will be executed after all default extractors.
+   */
+  @CanIgnoreReturnValue
+  public ApacheHttpClientTelemetryBuilder addAttributesExtractor(
+      AttributesExtractor<? super ApacheHttpClientRequest, ? super HttpResponse>
+          attributesExtractor) {
+    builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 

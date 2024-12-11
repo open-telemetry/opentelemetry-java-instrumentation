@@ -46,11 +46,25 @@ public final class SpringWebTelemetryBuilder {
   /**
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items.
+   *
+   * @deprecated Use {@link #addAttributesExtractor(AttributesExtractor)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public SpringWebTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super HttpRequest, ? super ClientHttpResponse> attributesExtractor) {
-    builder.addAttributeExtractor(attributesExtractor);
+    builder.addAttributesExtractor(attributesExtractor);
+    return this;
+  }
+
+  /**
+   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
+   * items.
+   */
+  @CanIgnoreReturnValue
+  public SpringWebTelemetryBuilder addAttributesExtractor(
+      AttributesExtractor<? super HttpRequest, ? super ClientHttpResponse> attributesExtractor) {
+    builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 
