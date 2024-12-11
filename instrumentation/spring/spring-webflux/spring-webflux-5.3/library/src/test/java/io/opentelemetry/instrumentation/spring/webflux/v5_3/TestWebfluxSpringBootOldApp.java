@@ -37,24 +37,26 @@ import org.springframework.web.server.WebFilter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@SuppressWarnings("deprecation")
 @SpringBootApplication
-class TestWebfluxSpringBootApp {
+class TestWebfluxSpringBootOldApp {
 
   static ConfigurableApplicationContext start(int port, String contextPath) {
     Properties props = new Properties();
     props.put("server.port", port);
     props.put("spring.webflux.base-path", contextPath);
 
-    SpringApplication app = new SpringApplication(TestWebfluxSpringBootApp.class);
+    SpringApplication app = new SpringApplication(TestWebfluxSpringBootOldApp.class);
     app.setDefaultProperties(props);
     return app.run();
   }
 
   @Bean
   WebFilter telemetryFilter() {
-    return SpringWebfluxServerTelemetry.builder(GlobalOpenTelemetry.get())
-        .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-        .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
+    return SpringWebfluxTelemetry.builder(GlobalOpenTelemetry.get())
+        .setCapturedClientRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
+        .setCapturedClientResponseHeaders(
+            singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
         .build()
         .createWebFilterAndRegisterReactorHook();
   }

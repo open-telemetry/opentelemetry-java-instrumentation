@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.ConfigurableApplicationContext;
 
-public final class SpringWebfluxServerInstrumentationTest
+public final class SpringWebfluxServerInstrumentationOldTest
     extends AbstractHttpServerTest<ConfigurableApplicationContext> {
 
   private static final String CONTEXT_PATH = "/test";
@@ -29,7 +29,7 @@ public final class SpringWebfluxServerInstrumentationTest
 
   @Override
   protected ConfigurableApplicationContext setupServer() {
-    return TestWebfluxSpringBootApp.start(port, CONTEXT_PATH);
+    return TestWebfluxSpringBootOldApp.start(port, CONTEXT_PATH);
   }
 
   @Override

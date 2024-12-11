@@ -13,7 +13,8 @@ import java.util.Collections;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.web.reactive.function.client.WebClient;
 
-class SpringWebfluxClientInstrumentationTest
+@SuppressWarnings("deprecation")
+class SpringWebfluxClientInstrumentationOldTest
     extends AbstractSpringWebfluxClientInstrumentationTest {
 
   @RegisterExtension
@@ -21,13 +22,13 @@ class SpringWebfluxClientInstrumentationTest
 
   @Override
   protected WebClient.Builder instrument(WebClient.Builder builder) {
-    SpringWebfluxClientTelemetry instrumentation =
-        SpringWebfluxClientTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(
+    SpringWebfluxTelemetry instrumentation =
+        SpringWebfluxTelemetry.builder(testing.getOpenTelemetry())
+            .setCapturedClientRequestHeaders(
                 Collections.singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
-            .setCapturedResponseHeaders(
+            .setCapturedClientResponseHeaders(
                 Collections.singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
             .build();
-    return builder.filters(instrumentation::addTracingFilter);
+    return builder.filters(instrumentation::addClientTracingFilter);
   }
 }
