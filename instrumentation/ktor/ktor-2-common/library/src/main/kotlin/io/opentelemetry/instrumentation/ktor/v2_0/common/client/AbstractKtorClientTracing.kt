@@ -11,6 +11,7 @@ import io.ktor.client.statement.*
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
+import io.opentelemetry.instrumentation.ktor.v2_0.common.KtorHttpHeadersSetter
 
 @Deprecated("Use AbstractKtorClientTelemetry instead", ReplaceWith("AbstractKtorClientTelemetry"))
 abstract class AbstractKtorClientTracing(

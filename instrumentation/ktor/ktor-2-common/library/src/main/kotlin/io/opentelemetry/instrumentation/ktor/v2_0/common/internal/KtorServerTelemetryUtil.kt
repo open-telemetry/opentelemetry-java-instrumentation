@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil
 import io.opentelemetry.instrumentation.ktor.v2_0.common.AbstractKtorServerTelemetryBuilder
-import io.opentelemetry.instrumentation.ktor.v2_0.common.server.ApplicationRequestGetter
+import io.opentelemetry.instrumentation.ktor.v2_0.common.ApplicationRequestGetter
 import kotlinx.coroutines.withContext
 
 /**

@@ -13,7 +13,6 @@ import io.opentelemetry.api.common.AttributesBuilder
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
-import io.opentelemetry.instrumentation.ktor.v2_0.common.client.KtorHttpClientAttributesGetter
 import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorBuilderUtil
 
 abstract class AbstractKtorClientTelemetryBuilder(

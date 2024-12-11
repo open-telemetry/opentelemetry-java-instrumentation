@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ktor.v2_0.common.client
+package io.opentelemetry.instrumentation.ktor.v2_0.common
 
-import io.ktor.client.request.HttpRequestBuilder
+import io.ktor.client.request.*
 import io.opentelemetry.context.propagation.TextMapSetter
 
 internal object KtorHttpHeadersSetter : TextMapSetter<HttpRequestBuilder> {

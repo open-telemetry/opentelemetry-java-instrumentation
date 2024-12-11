@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor
+import io.opentelemetry.instrumentation.ktor.v2_0.common.KtorHttpServerAttributesGetter
 import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorBuilderUtilOld
 
 @Deprecated("Use AbstractKtorServerTelemetryBuilder instead", ReplaceWith("AbstractKtorServerTelemetryBuilder"))

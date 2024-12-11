@@ -11,7 +11,6 @@ import io.ktor.client.statement.*
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
-import io.opentelemetry.instrumentation.ktor.v2_0.common.client.KtorHttpHeadersSetter
 
 abstract class AbstractKtorClientTelemetry(
   private val instrumenter: Instrumenter<HttpRequestData, HttpResponse>,
