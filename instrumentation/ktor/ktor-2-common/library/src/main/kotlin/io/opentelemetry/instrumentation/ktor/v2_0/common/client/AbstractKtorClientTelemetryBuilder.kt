@@ -25,15 +25,17 @@ abstract class AbstractKtorClientTelemetryBuilder(
   }
 
   internal lateinit var openTelemetry: OpenTelemetry
-  internal lateinit var builder: DefaultHttpClientInstrumenterBuilder<HttpRequestData, HttpResponse>
+  internal lateinit var internalBuilder: DefaultHttpClientInstrumenterBuilder<HttpRequestData, HttpResponse>
+  protected lateinit var builder: DefaultHttpClientInstrumenterBuilder<HttpRequestData, HttpResponse>
 
   fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
     this.openTelemetry = openTelemetry
-    this.builder = DefaultHttpClientInstrumenterBuilder.create(
+    this.internalBuilder = DefaultHttpClientInstrumenterBuilder.create(
       instrumentationName,
       openTelemetry,
       KtorHttpClientAttributesGetter
     )
+    this.builder = internalBuilder
   }
 
   protected fun getOpenTelemetry(): OpenTelemetry {
@@ -65,17 +67,15 @@ abstract class AbstractKtorClientTelemetryBuilder(
 
   fun attributesExtractor(extractorBuilder: ExtractorBuilder.() -> Unit = {}) {
     val builder = ExtractorBuilder().apply(extractorBuilder).build()
-    this.builder.addAttributesExtractor(
-      object : AttributesExtractor<HttpRequestData, HttpResponse> {
-        override fun onStart(attributes: AttributesBuilder, parentContext: Context, request: HttpRequestData) {
-          builder.onStart(OnStartData(attributes, parentContext, request))
-        }
-
-        override fun onEnd(attributes: AttributesBuilder, context: Context, request: HttpRequestData, response: HttpResponse?, error: Throwable?) {
-          builder.onEnd(OnEndData(attributes, context, request, response, error))
-        }
+    this.builder.addAttributesExtractor(object : AttributesExtractor<HttpRequestData, HttpResponse> {
+      override fun onStart(attributes: AttributesBuilder, parentContext: Context, request: HttpRequestData) {
+        builder.onStart(OnStartData(attributes, parentContext, request))
       }
-    )
+
+      override fun onEnd(attributes: AttributesBuilder, context: Context, request: HttpRequestData, response: HttpResponse?, error: Throwable?) {
+        builder.onEnd(OnEndData(attributes, context, request, response, error))
+      }
+    })
   }
 
   class ExtractorBuilder {
