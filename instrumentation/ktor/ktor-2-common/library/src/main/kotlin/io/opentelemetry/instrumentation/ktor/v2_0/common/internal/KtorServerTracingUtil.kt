@@ -15,8 +15,8 @@ import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil
-import io.opentelemetry.instrumentation.ktor.v2_0.common.server.AbstractKtorServerTracingBuilder
 import io.opentelemetry.instrumentation.ktor.v2_0.common.ApplicationRequestGetter
+import io.opentelemetry.instrumentation.ktor.v2_0.common.server.AbstractKtorServerTracingBuilder
 import kotlinx.coroutines.withContext
 
 /**
