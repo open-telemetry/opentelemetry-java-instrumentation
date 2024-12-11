@@ -44,6 +44,18 @@ class CouchbaseClient31Test {
 
   @BeforeAll
   static void setup() {
+    // wait and retry in the hope that it will help against test flakiness
+    await()
+        .atMost(Duration.ofMinutes(5))
+        .ignoreException(UnambiguousTimeoutException.class)
+        .until(
+            () -> {
+              startCouchbase();
+              return true;
+            });
+  }
+
+  private static void startCouchbase() {
     couchbase =
         new CouchbaseContainer("couchbase/server:7.6.0")
             .withExposedPorts(8091)
@@ -65,18 +77,11 @@ class CouchbaseClient31Test {
             ClusterOptions.clusterOptions(couchbase.getUsername(), couchbase.getPassword())
                 .environment(environment));
 
-    // wait and retry in the hope that it will help against test flakiness
-    await()
-        .atMost(Duration.ofMinutes(2))
-        .ignoreException(UnambiguousTimeoutException.class)
-        .until(
-            () -> {
-              Bucket bucket = cluster.bucket("test");
-              collection = bucket.defaultCollection();
+    Bucket bucket = cluster.bucket("test");
+    collection = bucket.defaultCollection();
 
-              bucket.waitUntilReady(Duration.ofSeconds(30));
-              return true;
-            });
+    // Wait 1 minute due to slow startup contributing to flakiness
+    bucket.waitUntilReady(Duration.ofMinutes(1));
   }
 
   @AfterAll

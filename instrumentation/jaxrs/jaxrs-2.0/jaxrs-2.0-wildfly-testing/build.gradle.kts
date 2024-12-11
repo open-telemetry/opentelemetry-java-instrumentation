@@ -62,7 +62,7 @@ tasks {
       // needed for java 11 to avoid org.jboss.modules.ModuleNotFoundException: java.se
       jvmArgs("--add-modules=java.se")
       // add offset to default port values
-      jvmArgs("-Djboss.socket.binding.port-offset=200")
+      jvmArgs("-Djboss.socket.binding.port-offset=400")
 
       // remove logback-classic from classpath
       classpath = classpath.filter {
