@@ -5,21 +5,22 @@ import java.util.function.BiConsumer
 
 class Experimental private constructor() {
 
-    companion object {
-        private var setEmitExperimentalTelemetry: BiConsumer<AbstractKtorClientTelemetryBuilder, Boolean>? = null
+  companion object {
+    @Volatile
+    private var setEmitExperimentalTelemetry: BiConsumer<AbstractKtorClientTelemetryBuilder, Boolean>? = null
 
-        fun emitExperimentalTelemetry(
-            builder: AbstractKtorClientTelemetryBuilder
-        ) {
-            if (setEmitExperimentalTelemetry != null) {
-                setEmitExperimentalTelemetry!!.accept(builder, true)
-            }
-        }
-
-        fun setSetEmitExperimentalTelemetry(
-            setEmitExperimentalTelemetry: BiConsumer<AbstractKtorClientTelemetryBuilder, Boolean>?
-        ) {
-            Companion.setEmitExperimentalTelemetry = setEmitExperimentalTelemetry
-        }
+    fun emitExperimentalTelemetry(
+      builder: AbstractKtorClientTelemetryBuilder
+    ) {
+      if (setEmitExperimentalTelemetry != null) {
+        setEmitExperimentalTelemetry!!.accept(builder, true)
+      }
     }
+
+    fun setSetEmitExperimentalTelemetry(
+      setEmitExperimentalTelemetry: BiConsumer<AbstractKtorClientTelemetryBuilder, Boolean>?
+    ) {
+      Companion.setEmitExperimentalTelemetry = setEmitExperimentalTelemetry
+    }
+  }
 }
