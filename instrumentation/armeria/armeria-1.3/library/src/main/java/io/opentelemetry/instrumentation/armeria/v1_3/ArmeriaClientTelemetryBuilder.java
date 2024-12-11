@@ -111,14 +111,6 @@ public final class ArmeriaClientTelemetryBuilder {
     return this;
   }
 
-  /**
-   * Can be used via the unstable method {@link
-   * Experimental#setEmitExperimentalTelemetry(ArmeriaClientTelemetryBuilder, boolean)}.
-   */
-  void setEmitExperimentalHttpClientMetrics(boolean emitExperimentalHttpClientMetrics) {
-    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
-  }
-
   public ArmeriaClientTelemetry build() {
     return new ArmeriaClientTelemetry(builder.build());
   }

@@ -109,14 +109,6 @@ public final class ArmeriaServerTelemetryBuilder {
     return this;
   }
 
-  /**
-   * Can be used via the unstable method {@link
-   * Experimental#setEmitExperimentalTelemetry(ArmeriaServerTelemetryBuilder, boolean)}.
-   */
-  void setEmitExperimentalHttpServerMetrics(boolean emitExperimentalHttpServerMetrics) {
-    builder.setEmitExperimentalHttpServerMetrics(emitExperimentalHttpServerMetrics);
-  }
-
   public ArmeriaServerTelemetry build() {
     return new ArmeriaServerTelemetry(builder.build());
   }
