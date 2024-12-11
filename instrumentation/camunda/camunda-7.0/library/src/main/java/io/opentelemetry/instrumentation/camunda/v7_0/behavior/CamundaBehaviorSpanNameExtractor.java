@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.camunda.v7_0.behavior;
 
-import io.opentelemetry.instrumentation.camunda.v7_0.common.CamundaCommonRequest;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.camunda.v7_0.common.CamundaCommonRequest;
 import java.util.Arrays;
 
 public class CamundaBehaviorSpanNameExtractor implements SpanNameExtractor<CamundaCommonRequest> {
