@@ -26,6 +26,8 @@ public final class SpringWebfluxServerTelemetryBuilder {
 
   static {
     SpringWebfluxBuilderUtil.setServerBuilderExtractor(builder -> builder.builder);
+    Experimental.setSetEmitExperimentalServerTelemetry(
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpServerMetrics(emit));
   }
 
   SpringWebfluxServerTelemetryBuilder(OpenTelemetry openTelemetry) {

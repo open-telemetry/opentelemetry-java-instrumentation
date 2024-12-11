@@ -29,6 +29,8 @@ public final class SpringWebfluxClientTelemetryBuilder {
 
   static {
     SpringWebfluxBuilderUtil.setClientBuilderExtractor(builder -> builder.builder);
+    Experimental.setSetEmitExperimentalClientTelemetry(
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
   }
 
   SpringWebfluxClientTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -45,7 +47,7 @@ public final class SpringWebfluxClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public SpringWebfluxClientTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<ClientRequest, ClientResponse> attributesExtractor) {
-    builder.addAttributeExtractor(attributesExtractor);
+    builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 
