@@ -18,11 +18,11 @@ import javax.annotation.Nullable;
 public class Experimental {
 
   @Nullable
-  private static BiConsumer<SpringWebfluxClientTelemetryBuilder, Boolean>
+  private static volatile BiConsumer<SpringWebfluxClientTelemetryBuilder, Boolean>
       setEmitExperimentalClientTelemetry;
 
   @Nullable
-  private static BiConsumer<SpringWebfluxServerTelemetryBuilder, Boolean>
+  private static volatile BiConsumer<SpringWebfluxServerTelemetryBuilder, Boolean>
       setEmitExperimentalServerTelemetry;
 
   public void setEmitExperimentalTelemetry(
