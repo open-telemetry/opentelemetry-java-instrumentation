@@ -65,7 +65,7 @@ public final class SpringWebfluxTelemetry {
   }
 
   /**
-   * @deprecated Use {@link SpringWebfluxClientTelemetry#addTracingFilter(List)} instead.
+   * @deprecated Use {@link SpringWebfluxClientTelemetry#addFilter(List)} instead.
    */
   @Deprecated
   public void addClientTracingFilter(List<ExchangeFilterFunction> exchangeFilterFunctions) {

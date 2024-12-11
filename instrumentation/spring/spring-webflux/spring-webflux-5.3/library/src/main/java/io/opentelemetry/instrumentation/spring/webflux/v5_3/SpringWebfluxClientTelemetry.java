@@ -43,7 +43,7 @@ public final class SpringWebfluxClientTelemetry {
     this.propagators = propagators;
   }
 
-  public void addTracingFilter(List<ExchangeFilterFunction> exchangeFilterFunctions) {
+  public void addFilter(List<ExchangeFilterFunction> exchangeFilterFunctions) {
     for (ExchangeFilterFunction filterFunction : exchangeFilterFunctions) {
       if (filterFunction instanceof WebClientTracingFilter) {
         return;

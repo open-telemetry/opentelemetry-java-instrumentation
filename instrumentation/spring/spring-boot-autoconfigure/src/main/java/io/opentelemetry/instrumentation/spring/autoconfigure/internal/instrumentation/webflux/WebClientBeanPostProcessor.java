@@ -66,6 +66,6 @@ final class WebClientBeanPostProcessor implements BeanPostProcessor {
     SpringWebfluxClientTelemetry instrumentation =
         getWebfluxClientTelemetry(
             openTelemetryProvider.getObject(), configPropertiesProvider.getObject());
-    return webClientBuilder.filters(instrumentation::addTracingFilter);
+    return webClientBuilder.filters(instrumentation::addFilter);
   }
 }
