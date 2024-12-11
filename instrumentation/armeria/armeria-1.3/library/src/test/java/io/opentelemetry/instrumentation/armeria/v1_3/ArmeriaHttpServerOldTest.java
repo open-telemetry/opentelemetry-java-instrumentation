@@ -13,7 +13,8 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import java.util.Collections;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
+@SuppressWarnings("deprecation") // testing deprecated API
+class ArmeriaHttpServerOldTest extends AbstractArmeriaHttpServerTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forLibrary();
@@ -21,13 +22,13 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
   @Override
   protected ServerBuilder configureServer(ServerBuilder sb) {
     return sb.decorator(
-        ArmeriaServerTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedRequestHeaders(
+        ArmeriaTelemetry.builder(testing.getOpenTelemetry())
+            .setCapturedServerRequestHeaders(
                 Collections.singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-            .setCapturedResponseHeaders(
+            .setCapturedServerResponseHeaders(
                 Collections.singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
             .build()
-            .newDecorator());
+            .newServiceDecorator());
   }
 
   @Override
