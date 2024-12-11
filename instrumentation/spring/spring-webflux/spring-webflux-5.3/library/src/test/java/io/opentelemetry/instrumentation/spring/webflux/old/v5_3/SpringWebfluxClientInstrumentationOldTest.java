@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webflux.v5_3;
+package io.opentelemetry.instrumentation.spring.webflux.old.v5_3;
 
 import io.opentelemetry.instrumentation.spring.webflux.client.AbstractSpringWebfluxClientInstrumentationTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -22,8 +22,9 @@ class SpringWebfluxClientInstrumentationOldTest
 
   @Override
   protected WebClient.Builder instrument(WebClient.Builder builder) {
-    SpringWebfluxTelemetry instrumentation =
-        SpringWebfluxTelemetry.builder(testing.getOpenTelemetry())
+    io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxTelemetry instrumentation =
+        io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxTelemetry.builder(
+                testing.getOpenTelemetry())
             .setCapturedClientRequestHeaders(
                 Collections.singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
             .setCapturedClientResponseHeaders(

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webflux.v5_3;
+package io.opentelemetry.instrumentation.spring.webflux.old.v5_3;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.controller;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
@@ -53,7 +53,8 @@ class TestWebfluxSpringBootOldApp {
 
   @Bean
   WebFilter telemetryFilter() {
-    return SpringWebfluxTelemetry.builder(GlobalOpenTelemetry.get())
+    return io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxTelemetry.builder(
+            GlobalOpenTelemetry.get())
         .setCapturedClientRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
         .setCapturedClientResponseHeaders(
             singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
