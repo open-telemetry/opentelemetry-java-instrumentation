@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.ConfigurableApplicationContext;
 
+@SuppressWarnings("deprecation") // testing deprecated API
 public final class SpringWebfluxServerInstrumentationOldTest
     extends AbstractHttpServerTest<ConfigurableApplicationContext> {
 

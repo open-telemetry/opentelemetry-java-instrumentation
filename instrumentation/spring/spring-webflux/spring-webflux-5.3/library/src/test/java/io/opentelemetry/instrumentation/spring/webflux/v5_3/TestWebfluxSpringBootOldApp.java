@@ -37,7 +37,7 @@ import org.springframework.web.server.WebFilter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-@SuppressWarnings("deprecation")
+@Deprecated
 @SpringBootApplication
 class TestWebfluxSpringBootOldApp {
 

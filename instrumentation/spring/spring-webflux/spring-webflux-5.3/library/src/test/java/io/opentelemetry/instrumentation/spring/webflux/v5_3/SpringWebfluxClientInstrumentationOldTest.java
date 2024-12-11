@@ -13,7 +13,7 @@ import java.util.Collections;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.web.reactive.function.client.WebClient;
 
-@SuppressWarnings("deprecation")
+@SuppressWarnings("deprecation") // testing deprecated API
 class SpringWebfluxClientInstrumentationOldTest
     extends AbstractSpringWebfluxClientInstrumentationTest {
 
