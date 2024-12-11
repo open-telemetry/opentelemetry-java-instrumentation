@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
  * APIs (or a version of them) may be promoted to the public stable API in the future, but no
  * guarantees are made.
  */
-public class Experimental {
+public final class Experimental {
 
   @Nullable
   private static volatile BiConsumer<ArmeriaClientTelemetryBuilder, Boolean>
@@ -25,17 +25,27 @@ public class Experimental {
   private static volatile BiConsumer<ArmeriaServerTelemetryBuilder, Boolean>
       setEmitExperimentalServerTelemetry;
 
-  public void setEmitExperimentalTelemetry(
+  @Nullable
+  private static volatile BiConsumer<ArmeriaClientTelemetryBuilder, String> setClientPeerService;
+
+  public static void setEmitExperimentalTelemetry(
       ArmeriaClientTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
     if (setEmitExperimentalClientTelemetry != null) {
       setEmitExperimentalClientTelemetry.accept(builder, emitExperimentalTelemetry);
     }
   }
 
-  public void setEmitExperimentalTelemetry(
+  public static void setEmitExperimentalTelemetry(
       ArmeriaServerTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
     if (setEmitExperimentalServerTelemetry != null) {
       setEmitExperimentalServerTelemetry.accept(builder, emitExperimentalTelemetry);
+    }
+  }
+
+  public static void setClientPeerService(
+      ArmeriaClientTelemetryBuilder builder, String peerService) {
+    if (setClientPeerService != null) {
+      setClientPeerService.accept(builder, peerService);
     }
   }
 
@@ -48,4 +58,11 @@ public class Experimental {
       BiConsumer<ArmeriaServerTelemetryBuilder, Boolean> setEmitExperimentalServerTelemetry) {
     Experimental.setEmitExperimentalServerTelemetry = setEmitExperimentalServerTelemetry;
   }
+
+  public static void setSetClientPeerService(
+      BiConsumer<ArmeriaClientTelemetryBuilder, String> setClientPeerService) {
+    Experimental.setClientPeerService = setClientPeerService;
+  }
+
+  private Experimental() {}
 }

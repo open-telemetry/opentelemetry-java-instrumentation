@@ -29,6 +29,8 @@ public final class ArmeriaClientTelemetryBuilder {
     ArmeriaInstrumenterBuilderUtil.setClientBuilderExtractor(builder -> builder.builder);
     Experimental.setSetEmitExperimentalClientTelemetry(
         (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
+    Experimental.setSetClientPeerService(
+        (builder, peerService) -> builder.builder.setPeerService(peerService));
   }
 
   ArmeriaClientTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -107,14 +109,6 @@ public final class ArmeriaClientTelemetryBuilder {
           clientSpanNameExtractor) {
     builder.setSpanNameExtractor(clientSpanNameExtractor);
     return this;
-  }
-
-  /**
-   * Can be used via the unstable method {@link
-   * Experimental#setClientPeerService(ArmeriaClientTelemetryBuilder, String)}.
-   */
-  void setPeerService(String peerService) {
-    builder.setPeerService(peerService);
   }
 
   /**
