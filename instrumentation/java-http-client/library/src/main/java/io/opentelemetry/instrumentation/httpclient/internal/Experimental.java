@@ -17,7 +17,8 @@ import javax.annotation.Nullable;
 public final class Experimental {
 
   @Nullable
-  private static BiConsumer<JavaHttpClientTelemetryBuilder, Boolean> setEmitExperimentalTelemetry;
+  private static volatile BiConsumer<JavaHttpClientTelemetryBuilder, Boolean>
+      setEmitExperimentalTelemetry;
 
   public void setEmitExperimentalTelemetry(
       JavaHttpClientTelemetryBuilder builder, boolean emitExperimentalTelemetry) {

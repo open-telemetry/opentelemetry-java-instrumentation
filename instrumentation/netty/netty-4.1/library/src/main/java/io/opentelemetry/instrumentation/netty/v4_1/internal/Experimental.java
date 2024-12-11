@@ -18,11 +18,11 @@ import javax.annotation.Nullable;
 public final class Experimental {
 
   @Nullable
-  private static BiConsumer<NettyClientTelemetryBuilder, Boolean>
+  private static volatile BiConsumer<NettyClientTelemetryBuilder, Boolean>
       setEmitExperimentalClientTelemetry;
 
   @Nullable
-  private static BiConsumer<NettyServerTelemetryBuilder, Boolean>
+  private static volatile BiConsumer<NettyServerTelemetryBuilder, Boolean>
       setEmitExperimentalServerTelemetry;
 
   public void setEmitExperimentalTelemetry(

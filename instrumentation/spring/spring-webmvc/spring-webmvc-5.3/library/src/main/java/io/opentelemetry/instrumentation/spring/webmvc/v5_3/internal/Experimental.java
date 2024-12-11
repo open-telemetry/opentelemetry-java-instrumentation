@@ -17,7 +17,8 @@ import javax.annotation.Nullable;
 public final class Experimental {
 
   @Nullable
-  private static BiConsumer<SpringWebMvcTelemetryBuilder, Boolean> setEmitExperimentalTelemetry;
+  private static volatile BiConsumer<SpringWebMvcTelemetryBuilder, Boolean>
+      setEmitExperimentalTelemetry;
 
   public void setEmitExperimentalTelemetry(
       SpringWebMvcTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
