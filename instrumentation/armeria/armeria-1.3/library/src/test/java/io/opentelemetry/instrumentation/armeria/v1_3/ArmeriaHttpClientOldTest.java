@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import java.util.Collections;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation")
+@SuppressWarnings("deprecation") // testing deprecated API
 class ArmeriaHttpClientOldTest extends AbstractArmeriaHttpClientTest {
 
   @RegisterExtension
