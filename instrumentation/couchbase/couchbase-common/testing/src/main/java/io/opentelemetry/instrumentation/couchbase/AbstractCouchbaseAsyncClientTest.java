@@ -31,6 +31,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -47,28 +49,51 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
+  private CouchbaseEnvironment environmentCouchbase;
+  private CouchbaseEnvironment environmentMemcache;
+  private CouchbaseAsyncCluster clusterCouchbase;
+  private CouchbaseAsyncCluster clusterMemcache;
+
   private static Stream<Arguments> bucketSettings() {
     return Stream.of(
         Arguments.of(named(bucketCouchbase.type().name(), bucketCouchbase)),
         Arguments.of(named(bucketMemcache.type().name(), bucketMemcache)));
   }
 
-  private CouchbaseAsyncCluster prepareCluster(BucketSettings bucketSettings) {
-    CouchbaseEnvironment environment = envBuilder(bucketSettings).build();
-    CouchbaseAsyncCluster cluster =
-        CouchbaseAsyncCluster.create(environment, Collections.singletonList("127.0.0.1"));
-    cleanup.deferCleanup(
-        () -> cluster.disconnect().timeout(10, TimeUnit.SECONDS).toBlocking().single());
-    cleanup.deferCleanup(environment::shutdown);
+  @BeforeAll
+  void setUpClusters() {
+    environmentCouchbase = envBuilder(bucketCouchbase).build();
+    clusterCouchbase =
+        CouchbaseAsyncCluster.create(environmentCouchbase, Collections.singletonList("127.0.0.1"));
 
-    return cluster;
+    environmentMemcache = envBuilder(bucketMemcache).build();
+    clusterMemcache =
+        CouchbaseAsyncCluster.create(environmentMemcache, Collections.singletonList("127.0.0.1"));
+  }
+
+  @AfterAll
+  void cleanUpClusters() {
+    clusterCouchbase.disconnect().timeout(10, TimeUnit.SECONDS).toBlocking().single();
+    environmentCouchbase.shutdown();
+
+    clusterMemcache.disconnect().timeout(10, TimeUnit.SECONDS).toBlocking().single();
+    environmentMemcache.shutdown();
+  }
+
+  private CouchbaseAsyncCluster getCluster(BucketSettings bucketSettings) {
+    if (bucketSettings == bucketCouchbase) {
+      return clusterCouchbase;
+    } else if (bucketSettings == bucketMemcache) {
+      return clusterMemcache;
+    }
+    throw new IllegalArgumentException("unknown setting " + bucketSettings.name());
   }
 
   @ParameterizedTest
   @MethodSource("bucketSettings")
   void hasBucket(BucketSettings bucketSettings)
       throws ExecutionException, InterruptedException, TimeoutException {
-    CouchbaseAsyncCluster cluster = prepareCluster(bucketSettings);
+    CouchbaseAsyncCluster cluster = getCluster(bucketSettings);
     AsyncClusterManager manager = cluster.clusterManager(USERNAME, PASSWORD).toBlocking().single();
 
     testing.waitForTraces(1);
@@ -103,7 +128,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
   @MethodSource("bucketSettings")
   void upsert(BucketSettings bucketSettings)
       throws ExecutionException, InterruptedException, TimeoutException {
-    CouchbaseAsyncCluster cluster = prepareCluster(bucketSettings);
+    CouchbaseAsyncCluster cluster = getCluster(bucketSettings);
 
     JsonObject content = JsonObject.create().put("hello", "world");
     CompletableFuture<JsonDocument> inserted = new CompletableFuture<>();
@@ -144,7 +169,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
   @MethodSource("bucketSettings")
   void upsertAndGet(BucketSettings bucketSettings)
       throws ExecutionException, InterruptedException, TimeoutException {
-    CouchbaseAsyncCluster cluster = prepareCluster(bucketSettings);
+    CouchbaseAsyncCluster cluster = getCluster(bucketSettings);
 
     JsonObject content = JsonObject.create().put("hello", "world");
     CompletableFuture<JsonDocument> inserted = new CompletableFuture<>();
@@ -194,7 +219,7 @@ public abstract class AbstractCouchbaseAsyncClientTest extends AbstractCouchbase
   @Test
   void query() throws ExecutionException, InterruptedException, TimeoutException {
     // Only couchbase buckets support queries.
-    CouchbaseAsyncCluster cluster = prepareCluster(bucketCouchbase);
+    CouchbaseAsyncCluster cluster = getCluster(bucketCouchbase);
 
     CompletableFuture<JsonObject> queryResult = new CompletableFuture<>();
     // Mock expects this specific query.
