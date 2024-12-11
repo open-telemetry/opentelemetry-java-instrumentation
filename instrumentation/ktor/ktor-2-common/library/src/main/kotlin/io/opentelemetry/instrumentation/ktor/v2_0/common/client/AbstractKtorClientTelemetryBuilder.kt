@@ -13,6 +13,7 @@ import io.opentelemetry.api.common.AttributesBuilder
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
+import io.opentelemetry.instrumentation.ktor.v2_0.common.client.internal.Experimental
 import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorBuilderUtil
 
 abstract class AbstractKtorClientTelemetryBuilder(
@@ -21,6 +22,7 @@ abstract class AbstractKtorClientTelemetryBuilder(
   companion object {
     init {
       KtorBuilderUtil.clientBuilderExtractor = { it.builder }
+      Experimental.setSetEmitExperimentalTelemetry { builder, emit -> builder.builder.setEmitExperimentalHttpClientMetrics(emit) }
     }
   }
 

@@ -160,14 +160,14 @@ abstract class AbstractKtorClientTracingBuilder(
    *
    * @param emitExperimentalHttpClientMetrics `true` if the experimental HTTP client metrics are to be emitted.
    */
-  @Deprecated("Please use method `Experimental.emitExperimentalHttpClientMetrics`")
+  @Deprecated("Please use method `Experimental.emitExperimentalTelemetry`")
   fun setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics: Boolean) {
     if (emitExperimentalHttpClientMetrics) {
       emitExperimentalHttpClientMetrics()
     }
   }
 
-  @Deprecated("Please use method `Experimental.emitExperimentalHttpClientMetrics`")
+  @Deprecated("Please use method `Experimental.emitExperimentalTelemetry`")
   fun emitExperimentalHttpClientMetrics() {
     clientBuilder.setEmitExperimentalHttpClientMetrics(true)
   }
