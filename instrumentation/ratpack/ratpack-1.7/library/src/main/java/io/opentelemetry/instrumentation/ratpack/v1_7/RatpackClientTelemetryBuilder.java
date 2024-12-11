@@ -94,14 +94,6 @@ public final class RatpackClientTelemetryBuilder {
     return this;
   }
 
-  /**
-   * Can be used via the unstable method {@link
-   * Experimental#setEmitExperimentalTelemetry(RatpackClientTelemetryBuilder, boolean)}.
-   */
-  void setEmitExperimentalHttpClientMetrics(boolean emitExperimentalHttpClientMetrics) {
-    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
-  }
-
   /** Returns a new {@link RatpackClientTelemetry} with the configuration of this builder. */
   public RatpackClientTelemetry build() {
     return new RatpackClientTelemetry(builder.build());
