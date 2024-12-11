@@ -12,7 +12,7 @@ import io.ktor.client.statement.*
 import io.ktor.util.*
 import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
-import io.opentelemetry.instrumentation.ktor.v2_0.common.client.AbstractKtorClientTelemetry
+import io.opentelemetry.instrumentation.ktor.v2_0.common.AbstractKtorClientTelemetry
 import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorClientTelemetryUtil
 
 class KtorClientTelemetry internal constructor(

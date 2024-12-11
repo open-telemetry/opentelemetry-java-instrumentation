@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.ktor.v2_0.common.client.internal
 
-import io.opentelemetry.instrumentation.ktor.v2_0.common.client.AbstractKtorClientTelemetryBuilder
+import io.opentelemetry.instrumentation.ktor.v2_0.common.AbstractKtorClientTelemetryBuilder
 
 class Experimental private constructor() {
 

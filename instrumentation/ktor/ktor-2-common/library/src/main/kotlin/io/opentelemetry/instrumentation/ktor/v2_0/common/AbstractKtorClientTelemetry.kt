@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ktor.v2_0.common.client
+package io.opentelemetry.instrumentation.ktor.v2_0.common
 
 import io.ktor.client.call.*
 import io.ktor.client.request.*
@@ -11,6 +11,7 @@ import io.ktor.client.statement.*
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.ContextPropagators
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
+import io.opentelemetry.instrumentation.ktor.v2_0.common.client.KtorHttpHeadersSetter
 
 abstract class AbstractKtorClientTelemetry(
   private val instrumenter: Instrumenter<HttpRequestData, HttpResponse>,

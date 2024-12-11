@@ -3,15 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.ktor.v3_0.server
+package io.opentelemetry.instrumentation.ktor.v3_0
 
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource
+import io.opentelemetry.instrumentation.ktor.v2_0.common.AbstractKtorServerTelemetryBuilder
 import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorServerTelemetryUtil
-import io.opentelemetry.instrumentation.ktor.v2_0.common.server.AbstractKtorServerTelemetryBuilder
 import io.opentelemetry.instrumentation.ktor.v3_0.InstrumentationProperties.INSTRUMENTATION_NAME
 
 class KtorServerTelemetryBuilder internal constructor(
