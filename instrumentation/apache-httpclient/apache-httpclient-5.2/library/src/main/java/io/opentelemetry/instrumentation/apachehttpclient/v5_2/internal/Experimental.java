@@ -14,13 +14,13 @@ import javax.annotation.Nullable;
  * APIs (or a version of them) may be promoted to the public stable API in the future, but no
  * guarantees are made.
  */
-public class Experimental {
+public final class Experimental {
 
   @Nullable
   private static volatile BiConsumer<ApacheHttpClientTelemetryBuilder, Boolean>
       setEmitExperimentalTelemetry;
 
-  public void setEmitExperimentalTelemetry(
+  public static void setEmitExperimentalTelemetry(
       ApacheHttpClientTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
     if (setEmitExperimentalTelemetry != null) {
       setEmitExperimentalTelemetry.accept(builder, emitExperimentalTelemetry);
@@ -31,4 +31,6 @@ public class Experimental {
       BiConsumer<ApacheHttpClientTelemetryBuilder, Boolean> setEmitExperimentalTelemetry) {
     Experimental.setEmitExperimentalTelemetry = setEmitExperimentalTelemetry;
   }
+
+  private Experimental() {}
 }
