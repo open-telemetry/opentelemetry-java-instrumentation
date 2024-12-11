@@ -18,11 +18,11 @@ import javax.annotation.Nullable;
 public class Experimental {
 
   @Nullable
-  private static BiConsumer<ArmeriaClientTelemetryBuilder, Boolean>
+  private static volatile BiConsumer<ArmeriaClientTelemetryBuilder, Boolean>
       setEmitExperimentalClientTelemetry;
 
   @Nullable
-  private static BiConsumer<ArmeriaServerTelemetryBuilder, Boolean>
+  private static volatile BiConsumer<ArmeriaServerTelemetryBuilder, Boolean>
       setEmitExperimentalServerTelemetry;
 
   public void setEmitExperimentalTelemetry(
