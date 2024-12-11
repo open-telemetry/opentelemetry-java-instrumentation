@@ -23,6 +23,6 @@ class KtorHttpServerTest : AbstractKtorHttpServerTest() {
   }
 
   override fun installOpenTelemetry(application: Application) {
-      KtorTestUtil.installOpenTelemetry(application, TESTING.openTelemetry)
+    KtorTestUtil.installOpenTelemetry(application, TESTING.openTelemetry)
   }
 }
