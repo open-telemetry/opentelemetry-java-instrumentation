@@ -41,10 +41,10 @@ public final class ApacheHttpClientTelemetryBuilder {
    * items. The {@link AttributesExtractor} will be executed after all default extractors.
    */
   @CanIgnoreReturnValue
-  public ApacheHttpClientTelemetryBuilder addAttributeExtractor(
+  public ApacheHttpClientTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<? super ApacheHttpClientRequest, ? super HttpResponse>
           attributesExtractor) {
-    builder.addAttributeExtractor(attributesExtractor);
+    builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 
