@@ -20,7 +20,7 @@ public final class Experimental {
   private static volatile BiConsumer<SpringWebTelemetryBuilder, Boolean>
       setEmitExperimentalTelemetry;
 
-  public void setEmitExperimentalTelemetry(
+  public static void setEmitExperimentalTelemetry(
       SpringWebTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
     if (setEmitExperimentalTelemetry != null) {
       setEmitExperimentalTelemetry.accept(builder, emitExperimentalTelemetry);

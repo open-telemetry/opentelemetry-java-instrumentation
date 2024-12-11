@@ -25,14 +25,14 @@ public final class Experimental {
   private static volatile BiConsumer<NettyServerTelemetryBuilder, Boolean>
       setEmitExperimentalServerTelemetry;
 
-  public void setEmitExperimentalTelemetry(
+  public static void setEmitExperimentalTelemetry(
       NettyClientTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
     if (setEmitExperimentalClientTelemetry != null) {
       setEmitExperimentalClientTelemetry.accept(builder, emitExperimentalTelemetry);
     }
   }
 
-  public void setEmitExperimentalTelemetry(
+  public static void setEmitExperimentalTelemetry(
       NettyServerTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
     if (setEmitExperimentalServerTelemetry != null) {
       setEmitExperimentalServerTelemetry.accept(builder, emitExperimentalTelemetry);

@@ -19,7 +19,7 @@ public final class Experimental {
   @Nullable
   private static volatile BiConsumer<OkHttpTelemetryBuilder, Boolean> setEmitExperimentalTelemetry;
 
-  public void setEmitExperimentalTelemetry(
+  public static void setEmitExperimentalTelemetry(
       OkHttpTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
     if (setEmitExperimentalTelemetry != null) {
       setEmitExperimentalTelemetry.accept(builder, emitExperimentalTelemetry);

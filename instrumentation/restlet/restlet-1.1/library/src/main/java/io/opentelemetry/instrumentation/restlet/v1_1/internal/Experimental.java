@@ -19,7 +19,7 @@ public final class Experimental {
   @Nullable
   private static volatile BiConsumer<RestletTelemetryBuilder, Boolean> setEmitExperimentalTelemetry;
 
-  public void setEmitExperimentalTelemetry(
+  public static void setEmitExperimentalTelemetry(
       RestletTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
     if (setEmitExperimentalTelemetry != null) {
       setEmitExperimentalTelemetry.accept(builder, emitExperimentalTelemetry);
