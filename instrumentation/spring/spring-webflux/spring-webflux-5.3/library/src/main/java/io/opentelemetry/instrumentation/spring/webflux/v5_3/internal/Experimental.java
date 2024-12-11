@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
  * APIs (or a version of them) may be promoted to the public stable API in the future, but no
  * guarantees are made.
  */
-public class Experimental {
+public final class Experimental {
 
   @Nullable
   private static volatile BiConsumer<SpringWebfluxClientTelemetryBuilder, Boolean>
@@ -25,14 +25,14 @@ public class Experimental {
   private static volatile BiConsumer<SpringWebfluxServerTelemetryBuilder, Boolean>
       setEmitExperimentalServerTelemetry;
 
-  public void setEmitExperimentalTelemetry(
+  public static void setEmitExperimentalTelemetry(
       SpringWebfluxClientTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
     if (setEmitExperimentalClientTelemetry != null) {
       setEmitExperimentalClientTelemetry.accept(builder, emitExperimentalTelemetry);
     }
   }
 
-  public void setEmitExperimentalTelemetry(
+  public static void setEmitExperimentalTelemetry(
       SpringWebfluxServerTelemetryBuilder builder, boolean emitExperimentalTelemetry) {
     if (setEmitExperimentalServerTelemetry != null) {
       setEmitExperimentalServerTelemetry.accept(builder, emitExperimentalTelemetry);
@@ -48,4 +48,6 @@ public class Experimental {
       BiConsumer<SpringWebfluxServerTelemetryBuilder, Boolean> setEmitExperimentalServerTelemetry) {
     Experimental.setEmitExperimentalServerTelemetry = setEmitExperimentalServerTelemetry;
   }
+
+  private Experimental() {}
 }
