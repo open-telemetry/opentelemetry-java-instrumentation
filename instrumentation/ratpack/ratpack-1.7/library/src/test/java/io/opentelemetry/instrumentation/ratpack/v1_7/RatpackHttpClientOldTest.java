@@ -14,7 +14,7 @@ import ratpack.func.Action;
 import ratpack.http.client.HttpClient;
 import ratpack.http.client.HttpClientSpec;
 
-@SuppressWarnings("deprecation")
+@SuppressWarnings("deprecation") // testing deprecated API
 class RatpackHttpClientOldTest extends AbstractRatpackHttpClientTest {
 
   @RegisterExtension

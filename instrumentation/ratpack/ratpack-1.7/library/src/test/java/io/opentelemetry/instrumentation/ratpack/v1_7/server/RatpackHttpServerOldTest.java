@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import org.junit.jupiter.api.extension.RegisterExtension;
 import ratpack.server.RatpackServerSpec;
 
-@SuppressWarnings("deprecation")
+@SuppressWarnings("deprecation") // testing deprecated API
 class RatpackHttpServerOldTest extends AbstractRatpackHttpServerTest {
 
   @RegisterExtension
