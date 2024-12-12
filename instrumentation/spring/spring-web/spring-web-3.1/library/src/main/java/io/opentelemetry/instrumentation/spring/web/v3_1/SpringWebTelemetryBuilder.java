@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHt
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.spring.web.v3_1.internal.Experimental;
 import io.opentelemetry.instrumentation.spring.web.v3_1.internal.WebTelemetryUtil;
 import java.util.List;
 import java.util.Set;
@@ -25,6 +26,8 @@ public final class SpringWebTelemetryBuilder {
 
   static {
     WebTelemetryUtil.setBuilderExtractor(SpringWebTelemetryBuilder::getBuilder);
+    Experimental.setSetEmitExperimentalTelemetry(
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
   }
 
   SpringWebTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -122,7 +125,10 @@ public final class SpringWebTelemetryBuilder {
    *
    * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
    *     are to be emitted.
+   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(SpringWebTelemetryBuilder,
+   *     boolean)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public SpringWebTelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {

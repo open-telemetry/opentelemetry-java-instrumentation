@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHt
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.Experimental;
 import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.JettyHttpClientInstrumenterBuilderFactory;
 import java.util.List;
 import java.util.Set;
@@ -25,6 +26,11 @@ public final class JettyClientTelemetryBuilder {
   private final DefaultHttpClientInstrumenterBuilder<Request, Response> builder;
   private HttpClientTransport httpClientTransport;
   private SslContextFactory.Client sslContextFactory;
+
+  static {
+    Experimental.setSetEmitExperimentalTelemetry(
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
+  }
 
   JettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder = JettyHttpClientInstrumenterBuilderFactory.create(openTelemetry);
@@ -115,7 +121,10 @@ public final class JettyClientTelemetryBuilder {
    *
    * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
    *     are to be emitted.
+   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(JettyClientTelemetryBuilder,
+   *     boolean)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {

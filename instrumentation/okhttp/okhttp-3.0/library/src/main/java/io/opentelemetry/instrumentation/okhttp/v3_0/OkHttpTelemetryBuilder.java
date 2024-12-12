@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHt
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.okhttp.v3_0.internal.Experimental;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpClientInstrumenterBuilderFactory;
 import java.util.List;
 import java.util.Set;
@@ -23,6 +24,11 @@ public final class OkHttpTelemetryBuilder {
 
   private final DefaultHttpClientInstrumenterBuilder<Interceptor.Chain, Response> builder;
   private final OpenTelemetry openTelemetry;
+
+  static {
+    Experimental.setSetEmitExperimentalTelemetry(
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
+  }
 
   OkHttpTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder = OkHttpClientInstrumenterBuilderFactory.create(openTelemetry);
@@ -100,7 +106,10 @@ public final class OkHttpTelemetryBuilder {
    *
    * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
    *     are to be emitted.
+   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(OkHttpTelemetryBuilder,
+   *     boolean)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {
