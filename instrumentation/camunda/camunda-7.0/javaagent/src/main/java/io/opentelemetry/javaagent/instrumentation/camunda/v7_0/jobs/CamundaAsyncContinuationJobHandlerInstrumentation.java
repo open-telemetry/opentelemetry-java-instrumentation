@@ -92,9 +92,6 @@ public class CamundaAsyncContinuationJobHandlerInstrumentation implements TypeIn
       if (getInstumenter().shouldStart(Java8BytecodeBridge.currentContext(), request)) {
         context = getInstumenter().start(Java8BytecodeBridge.currentContext(), request);
         scope = context.makeCurrent();
-
-      } else {
-        System.out.println("Unable to start telemetry for process " + processInstanceId);
       }
     }
 

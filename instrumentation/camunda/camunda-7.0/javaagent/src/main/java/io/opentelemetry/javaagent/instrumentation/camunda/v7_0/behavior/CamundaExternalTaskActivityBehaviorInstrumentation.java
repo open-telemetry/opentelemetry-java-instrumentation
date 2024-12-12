@@ -55,6 +55,7 @@ public class CamundaExternalTaskActivityBehaviorInstrumentation implements TypeI
     public static void addTracingEnter(
         @Advice.Argument(0) ActivityExecution execution,
         @Advice.Local("request") CamundaCommonRequest request,
+        @Advice.Local("otelParentScope") Scope parentScope,
         @Advice.Local("otelParentContext") Context parentContext,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
