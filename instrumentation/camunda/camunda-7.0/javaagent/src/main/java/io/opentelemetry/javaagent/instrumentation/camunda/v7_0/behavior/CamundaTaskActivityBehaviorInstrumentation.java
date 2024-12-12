@@ -64,8 +64,6 @@ public class CamundaTaskActivityBehaviorInstrumentation implements TypeInstrumen
       request.setActivityId(Optional.ofNullable(execution.getCurrentActivityId()));
       request.setActivityName(Optional.ofNullable(execution.getCurrentActivityName()));
 
-      String processInstanceId = execution.getProcessInstanceId();
-
       if (Java8BytecodeBridge.currentContext() == Java8BytecodeBridge.rootContext()) {}
 
       Context parentContext =

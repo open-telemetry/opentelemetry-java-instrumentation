@@ -50,19 +50,11 @@ public class CamundaExternalTaskActivityBehaviorInstrumentation implements TypeI
     /**
      * Sets parent context to process instance. Creates new context and span. propagates current
      * context to variable set for topic to retrieve.
-     *
-     * @param execution
-     * @param request
-     * @param parentScope
-     * @param parentContext
-     * @param context
-     * @param scope
      */
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addTracingEnter(
         @Advice.Argument(0) ActivityExecution execution,
         @Advice.Local("request") CamundaCommonRequest request,
-        @Advice.Local("otelParentScope") Scope parentScope,
         @Advice.Local("otelParentContext") Context parentContext,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
@@ -76,8 +68,6 @@ public class CamundaExternalTaskActivityBehaviorInstrumentation implements TypeI
       request.setProcessInstanceId(Optional.ofNullable(execution.getProcessInstanceId()));
       request.setActivityId(Optional.ofNullable(execution.getCurrentActivityId()));
       request.setActivityName(Optional.ofNullable(execution.getCurrentActivityName()));
-
-      String processInstanceId = execution.getProcessInstanceId();
 
       if (Java8BytecodeBridge.currentContext() == Java8BytecodeBridge.rootContext()) {}
 

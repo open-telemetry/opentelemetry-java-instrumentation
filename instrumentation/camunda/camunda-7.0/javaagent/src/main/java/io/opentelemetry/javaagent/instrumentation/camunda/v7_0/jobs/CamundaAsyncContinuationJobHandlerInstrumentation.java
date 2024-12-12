@@ -74,10 +74,8 @@ public class CamundaAsyncContinuationJobHandlerInstrumentation implements TypeIn
         request.setActivityName(Optional.ofNullable(executionEntity.getActivity().getName()));
       }
 
-      String processInstanceId = executionEntity.getProcessInstanceId();
-
       if (Java8BytecodeBridge.currentContext() == Java8BytecodeBridge.rootContext()) {
-        System.out.println("No initial span context for process instance " + processInstanceId);
+        // log
       }
 
       Context parentContext =

@@ -93,8 +93,6 @@ public class CamundaEndEventActivityBehaviorInstrumentation implements TypeInstr
         }
       }
 
-      String processInstanceId = execution.getProcessInstanceId();
-
       Context parentContext =
           getOpentelemetry()
               .getPropagators()
