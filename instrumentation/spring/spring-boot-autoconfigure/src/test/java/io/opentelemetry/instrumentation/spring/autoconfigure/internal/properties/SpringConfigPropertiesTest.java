@@ -90,36 +90,29 @@ class SpringConfigPropertiesTest {
   }
 
   public static Stream<Arguments> listProperties() {
-    return Arrays.stream(
-            new String[] {
-              "otel.experimental.metrics.view.config",
-              "otel.experimental.resource.disabled.keys",
-              "otel.propagators",
-              "otel.logs.exporter",
-              "otel.metrics.exporter",
-              "otel.traces.exporter",
-              "otel.instrumentation.http.client.capture-request-headers",
-              "otel.instrumentation.http.client.capture-response-headers",
-              "otel.instrumentation.http.server.capture-request-headers",
-              "otel.instrumentation.http.server.capture-response-headers",
-              "otel.instrumentation.http.known-methods",
-            })
-        .map(Arguments::of);
+    return Stream.of(
+        Arguments.of("otel.experimental.metrics.view.config", Arrays.asList("a", "b")),
+        Arguments.of("otel.experimental.resource.disabled.keys", Arrays.asList("a", "b")),
+        Arguments.of("otel.propagators", Arrays.asList("baggage", "b3")),
+        Arguments.of("otel.logs.exporter", Collections.singletonList("console")),
+        Arguments.of("otel.metrics.exporter", Collections.singletonList("console")),
+        Arguments.of("otel.traces.exporter", Collections.singletonList("console")),
+        Arguments.of(
+            "otel.instrumentation.http.client.capture-request-headers", Arrays.asList("a", "b")),
+        Arguments.of(
+            "otel.instrumentation.http.client.capture-response-headers", Arrays.asList("a", "b")),
+        Arguments.of(
+            "otel.instrumentation.http.server.capture-request-headers", Arrays.asList("a", "b")),
+        Arguments.of(
+            "otel.instrumentation.http.server.capture-response-headers", Arrays.asList("a", "b")),
+        Arguments.of("otel.instrumentation.http.known-methods", Arrays.asList("a", "b")));
   }
 
   @ParameterizedTest
   @MethodSource("listProperties")
   @DisplayName("should map list from application.yaml list")
-  void listsShouldWorkWithYaml(String key) {
-    List<String> expected;
-    if (key.equals("otel.propagators")) {
-      expected = Arrays.asList("baggage", "b3");
-    } else if (key.endsWith(".exporter")) {
-      expected = Collections.singletonList("console");
-    } else {
-      expected = Arrays.asList("a", "b");
-    }
-
+  // See the application.yaml file
+  void listsShouldWorkWithYaml(String key, List<String> expected) {
     new ApplicationContextRunner()
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
         .withInitializer(new ConfigDataApplicationContextInitializer())
