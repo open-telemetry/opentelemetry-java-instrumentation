@@ -17,6 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import jdk.jfr.EventSettings;
+import jdk.jfr.FlightRecorder;
 import jdk.jfr.consumer.RecordingStream;
 
 /** The entry point class for runtime metrics support using JFR and JMX. */
@@ -107,7 +108,7 @@ public final class RuntimeMetrics implements Closeable {
 
     static JfrRuntimeMetrics build(
         OpenTelemetry openTelemetry, Predicate<JfrFeature> featurePredicate) {
-      if (!hasJfrRecordingStream()) {
+      if (!isJfrAvailable()) {
         return null;
       }
       return new JfrRuntimeMetrics(openTelemetry, featurePredicate);
@@ -134,13 +135,14 @@ public final class RuntimeMetrics implements Closeable {
       return startUpLatch;
     }
 
-    private static boolean hasJfrRecordingStream() {
+    private static boolean isJfrAvailable() {
       try {
-        Class.forName("jdk.jfr.consumer.RecordingStream");
-        return true;
+        Class.forName("jdk.jfr.FlightRecorder");
       } catch (ClassNotFoundException e) {
         return false;
       }
+
+      return FlightRecorder.isAvailable();
     }
   }
 }

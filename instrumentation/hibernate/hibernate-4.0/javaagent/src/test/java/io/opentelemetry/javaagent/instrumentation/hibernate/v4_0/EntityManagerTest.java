@@ -19,9 +19,13 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -29,6 +33,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.LockModeType;
+import javax.persistence.NoResultException;
 import javax.persistence.Persistence;
 import javax.persistence.Query;
 import org.hibernate.Version;
@@ -322,6 +327,29 @@ class EntityManagerTest extends AbstractHibernateTest {
                                     .getSpan(1)
                                     .getAttributes()
                                     .get(stringKey("hibernate.session_id"))))));
+  }
+
+  @Test
+  void testNoResultExceptionIgnored() {
+    EntityManager entityManager = entityManagerFactory.createEntityManager();
+    Query query = entityManager.createQuery("from Value where id = :id");
+    query.setParameter("id", 1000L);
+    assertThatThrownBy(query::getSingleResult).isInstanceOf(NoResultException.class);
+    entityManager.close();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SELECT Value")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasStatus(StatusData.unset())
+                        .hasEvents(emptyList()),
+                span ->
+                    span.hasName("SELECT db1.Value")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))));
   }
 
   private static Stream<Arguments> provideArgumentsAttachesState() {

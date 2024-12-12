@@ -35,6 +35,7 @@ public abstract class RedissonRequest {
     return new AutoValue_RedissonRequest(address, command);
   }
 
+  @Nullable
   public abstract InetSocketAddress getAddress();
 
   public abstract Object getCommand();
