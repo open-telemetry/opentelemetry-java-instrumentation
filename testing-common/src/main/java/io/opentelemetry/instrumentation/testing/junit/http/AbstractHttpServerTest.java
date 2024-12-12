@@ -879,6 +879,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     return options.httpAttributes.apply(endpoint).contains(HttpAttributes.HTTP_ROUTE);
   }
 
+  public final boolean hasHandlerSpan(ServerEndpoint endpoint) {
+    return options.hasHandlerSpan.test(endpoint);
+  }
+
   public String expectedHttpRoute(ServerEndpoint endpoint, String method) {
     // no need to compute route if we're not expecting it
     if (!hasHttpRouteAttribute(endpoint)) {
