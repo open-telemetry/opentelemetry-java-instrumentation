@@ -116,12 +116,4 @@ abstract class AbstractKtorClientTelemetryBuilder(
     val response: HttpResponse?,
     val error: Throwable?
   )
-
-  /**
-   * Can be used via the unstable method {@link
-   * Experimental#setEmitExperimentalHttpClientMetrics(AbstractKtorClientTelemetryBuilder, boolean)}.
-   */
-  internal fun emitExperimentalHttpClientMetrics() {
-    builder.setEmitExperimentalHttpClientMetrics(true)
-  }
 }
