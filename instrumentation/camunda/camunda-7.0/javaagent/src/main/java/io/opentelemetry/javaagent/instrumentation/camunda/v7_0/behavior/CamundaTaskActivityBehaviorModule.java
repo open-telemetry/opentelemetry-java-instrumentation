@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -21,11 +20,6 @@ public class CamundaTaskActivityBehaviorModule extends InstrumentationModule {
 
   public CamundaTaskActivityBehaviorModule() {
     super("camunda", "camunda-behavior", "camunda-behavior-7_18");
-  }
-
-  @Override
-  public boolean defaultEnabled(ConfigProperties config) {
-    return config.getBoolean("otel.instrumentation.common.default-enabled", true);
   }
 
   @Override

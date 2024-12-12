@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.camunda.v7_0.task;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentationn.camunda.v7_0.task.CamundaTaskSingletons.getInstumenter;
-import static io.opentelemetry.javaagent.instrumentationn.camunda.v7_0.task.CamundaTaskSingletons.getOpentelemetry;
+import static io.opentelemetry.javaagent.instrumentation.camunda.v7_0.task.CamundaTaskSingletons.getInstumenter;
+import static io.opentelemetry.javaagent.instrumentation.camunda.v7_0.task.CamundaTaskSingletons.getOpentelemetry;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;

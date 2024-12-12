@@ -19,8 +19,6 @@ public class CamundaProcessSingletons {
 
   private static final OpenTelemetry opentelemetry;
 
-  private static final boolean propagationEnabled;
-
   static {
     opentelemetry = GlobalOpenTelemetry.get();
 
