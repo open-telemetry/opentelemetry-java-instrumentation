@@ -75,7 +75,7 @@ public abstract class AbstractApacheDbcpInstrumentationTest {
     Set<String> metricNames =
         new HashSet<>(
             Arrays.asList(
-                "db.client.connections.usage",
+                "db.client.connection.count",
                 "db.client.connections.idle.min",
                 "db.client.connections.idle.max",
                 "db.client.connections.max"));

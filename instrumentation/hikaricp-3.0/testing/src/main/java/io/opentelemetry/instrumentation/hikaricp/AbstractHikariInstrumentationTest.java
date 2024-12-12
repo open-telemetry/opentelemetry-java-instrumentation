@@ -81,7 +81,7 @@ public abstract class AbstractHikariInstrumentationTest {
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.hikaricp-3.0",
-            "db.client.connections.usage",
+            "db.client.connection.count",
             AbstractIterableAssert::isEmpty);
     testing()
         .waitAndAssertMetrics(

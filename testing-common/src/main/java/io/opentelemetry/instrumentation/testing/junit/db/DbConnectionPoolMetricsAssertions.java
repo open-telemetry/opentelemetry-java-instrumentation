@@ -126,7 +126,7 @@ public final class DbConnectionPoolMetricsAssertions {
   private void verifyConnectionUsage() {
     testing.waitAndAssertMetrics(
         instrumentationName,
-        "db.client.connections.usage",
+        "db.client.connection.count",
         metrics -> metrics.anySatisfy(this::verifyUsageMetric));
   }
 

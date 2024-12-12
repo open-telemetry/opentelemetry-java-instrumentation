@@ -77,7 +77,7 @@ class TomcatJdbcInstrumentationTest {
   private static void assertNoConnectionPoolMetrics() {
     testing.waitAndAssertMetrics(
         "io.opentelemetry.tomcat-jdbc",
-        "db.client.connections.usage",
+        "db.client.connection.count",
         AbstractIterableAssert::isEmpty);
     testing.waitAndAssertMetrics(
         "io.opentelemetry.tomcat-jdbc",

@@ -117,7 +117,7 @@ public abstract class AbstractOracleUcpInstrumentationTest {
     Set<String> metricNames =
         new HashSet<>(
             Arrays.asList(
-                "db.client.connections.usage",
+                "db.client.connection.count",
                 "db.client.connections.max",
                 "db.client.connections.pending_requests"));
     assertThat(testing().metrics())

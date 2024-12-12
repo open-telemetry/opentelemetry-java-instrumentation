@@ -74,7 +74,7 @@ public abstract class AbstractViburInstrumentationTest {
     // then
     testing()
         .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME, "db.client.connections.usage", AbstractIterableAssert::isEmpty);
+            INSTRUMENTATION_NAME, "db.client.connection.count", AbstractIterableAssert::isEmpty);
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME, "db.client.connections.max", AbstractIterableAssert::isEmpty);

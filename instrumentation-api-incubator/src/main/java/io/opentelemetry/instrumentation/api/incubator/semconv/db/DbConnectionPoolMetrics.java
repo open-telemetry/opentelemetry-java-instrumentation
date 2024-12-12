@@ -57,7 +57,7 @@ public final class DbConnectionPoolMetrics {
 
   public ObservableLongMeasurement connections() {
     return meter
-        .upDownCounterBuilder("db.client.connections.usage")
+        .upDownCounterBuilder("db.client.connection.count")
         .setUnit("{connections}")
         .setDescription(
             "The number of connections that are currently in state described by the state attribute.")
