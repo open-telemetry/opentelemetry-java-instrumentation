@@ -13,8 +13,10 @@ import io.opentelemetry.api.common.AttributesBuilder
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor
 import io.opentelemetry.instrumentation.ktor.v2_0.common.KtorHttpClientAttributesGetter
 import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorBuilderUtilOld
+import java.util.function.Function
 
 @Deprecated("Use AbstractKtorClientTelemetryBuilder instead", ReplaceWith("AbstractKtorClientTelemetryBuilder"))
 abstract class AbstractKtorClientTracingBuilder(
@@ -171,5 +173,9 @@ abstract class AbstractKtorClientTracingBuilder(
   @Deprecated("Please use method `Experimental.emitExperimentalTelemetry`")
   fun emitExperimentalHttpClientMetrics() {
     clientBuilder.setEmitExperimentalHttpClientMetrics(true)
+  }
+
+  fun spanNameExtractor(spanNameExtractorTransformer: Function<SpanNameExtractor<in HttpRequestData>, out SpanNameExtractor<in HttpRequestData>>) {
+    clientBuilder.setSpanNameExtractor(spanNameExtractorTransformer)
   }
 }

@@ -15,10 +15,12 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor
 import io.opentelemetry.instrumentation.ktor.v2_0.common.KtorHttpServerAttributesGetter
 import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorBuilderUtilOld
+import java.util.function.Function
 
 @Deprecated("Use AbstractKtorServerTelemetryBuilder instead", ReplaceWith("AbstractKtorServerTelemetryBuilder"))
 abstract class AbstractKtorServerTracingBuilder(private val instrumentationName: String) {
@@ -85,6 +87,10 @@ abstract class AbstractKtorServerTracingBuilder(private val instrumentationName:
         extract(request, prevExtractor)
       }
     }
+  }
+
+  fun spanNameExtractor(spanNameExtractorTransformer: Function<SpanNameExtractor<in ApplicationRequest>, out SpanNameExtractor<in ApplicationRequest>>) {
+    serverBuilder.setSpanNameExtractor(spanNameExtractorTransformer)
   }
 
   @Deprecated("Please use method `attributeExtractor`")

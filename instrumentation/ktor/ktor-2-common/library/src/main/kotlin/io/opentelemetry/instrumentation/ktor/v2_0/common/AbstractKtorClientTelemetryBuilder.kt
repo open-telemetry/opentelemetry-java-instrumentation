@@ -13,7 +13,9 @@ import io.opentelemetry.api.common.AttributesBuilder
 import io.opentelemetry.context.Context
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor
 import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorBuilderUtil
+import java.util.function.Function
 
 abstract class AbstractKtorClientTelemetryBuilder(
   private val instrumentationName: String
@@ -76,6 +78,10 @@ abstract class AbstractKtorClientTelemetryBuilder(
         builder.onEnd(OnEndData(attributes, context, request, response, error))
       }
     })
+  }
+
+  fun spanNameExtractor(spanNameExtractorTransformer: Function<SpanNameExtractor<in HttpRequestData>, out SpanNameExtractor<in HttpRequestData>>) {
+    builder.setSpanNameExtractor(spanNameExtractorTransformer)
   }
 
   class ExtractorBuilder {
