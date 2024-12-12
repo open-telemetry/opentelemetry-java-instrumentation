@@ -16,16 +16,20 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.Persistence;
 import jakarta.persistence.Query;
 import java.util.Arrays;
@@ -33,6 +37,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -164,6 +169,29 @@ public class EntityManagerTest extends AbstractHibernateTest {
                             .getSpan(1)
                             .getAttributes()
                             .get(AttributeKey.stringKey("hibernate.session_id")))));
+  }
+
+  @Test
+  void testNoResultExceptionIgnored() {
+    EntityManager entityManager = entityManagerFactory.createEntityManager();
+    Query query = entityManager.createQuery("from Value where id = :id");
+    query.setParameter("id", 1000);
+    assertThatThrownBy(query::getSingleResult).isInstanceOf(NoResultException.class);
+    entityManager.close();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SELECT " + Value.class.getName())
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasStatus(StatusData.unset())
+                        .hasEvents(emptyList()),
+                span ->
+                    span.hasName("SELECT db1.Value")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))));
   }
 
   private static Stream<Arguments> provideHibernateActionParameters() {
