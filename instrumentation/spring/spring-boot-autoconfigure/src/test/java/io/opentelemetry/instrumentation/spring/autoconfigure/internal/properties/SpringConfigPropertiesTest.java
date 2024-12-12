@@ -13,6 +13,8 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,7 +27,12 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.core.env.Environment;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
-class OtlpExporterPropertiesTest {
+class SpringConfigPropertiesTest {
+  private final ApplicationContextRunner contextRunner =
+      new ApplicationContextRunner()
+          .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
+          .withPropertyValues(
+              "otel.traces.exporter=none", "otel.metrics.exporter=none", "otel.logs.exporter=none");
 
   private static final String[] HEADER_KEYS = {
     "otel.exporter.otlp.traces.headers",
@@ -33,12 +40,6 @@ class OtlpExporterPropertiesTest {
     "otel.exporter.otlp.logs.headers",
     "otel.exporter.otlp.headers",
   };
-
-  private final ApplicationContextRunner contextRunner =
-      new ApplicationContextRunner()
-          .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
-          .withPropertyValues(
-              "otel.traces.exporter=none", "otel.metrics.exporter=none", "otel.logs.exporter=none");
 
   public static Stream<Arguments> headerKeys() {
     return Arrays.stream(HEADER_KEYS).map(Arguments::of);
@@ -86,13 +87,45 @@ class OtlpExporterPropertiesTest {
                     .containsExactly(entry("a", "1"), entry("b", "2")));
   }
 
+  @Test
+  @DisplayName("when map is set in properties in a row it should be available in config")
+  void shouldInitializeAttributesByMapInARow() {
+    this.contextRunner
+        .withPropertyValues(
+            "otel.resource.attributes.environment=dev",
+            "otel.resource.attributes.xyz=foo",
+            "otel.resource.attributes.service.instance.id=id-example")
+        .run(
+            context -> {
+              Map<String, String> fallback = new HashMap<>();
+              fallback.put("fallback", "fallbackVal");
+              fallback.put("otel.resource.attributes", "foo=fallback");
+
+              SpringConfigProperties config = getConfig(context, fallback);
+
+              assertThat(config.getMap("otel.resource.attributes"))
+                  .contains(
+                      entry("environment", "dev"),
+                      entry("xyz", "foo"),
+                      entry("service.instance.id", "id-example"),
+                      entry("foo", "fallback"));
+
+              assertThat(config.getString("fallback")).isEqualTo("fallbackVal");
+            });
+  }
+
   private static ConfigProperties getConfig(AssertableApplicationContext context) {
+    return getConfig(context, Collections.emptyMap());
+  }
+
+  private static SpringConfigProperties getConfig(
+      AssertableApplicationContext context, Map<String, String> fallback) {
     return new SpringConfigProperties(
         context.getBean("environment", Environment.class),
         new SpelExpressionParser(),
         context.getBean(OtlpExporterProperties.class),
-        new OtelResourceProperties(),
-        new OtelSpringProperties(),
-        DefaultConfigProperties.createFromMap(Collections.emptyMap()));
+        context.getBean(OtelResourceProperties.class),
+        context.getBean(OtelSpringProperties.class),
+        DefaultConfigProperties.createFromMap(fallback));
   }
 }
