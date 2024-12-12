@@ -39,4 +39,6 @@ public class CamundaBehaviorSingletons {
   public static Instrumenter<CamundaCommonRequest, String> getInstumenter() {
     return instrumenter;
   }
+
+  private CamundaBehaviorSingletons() {}
 }

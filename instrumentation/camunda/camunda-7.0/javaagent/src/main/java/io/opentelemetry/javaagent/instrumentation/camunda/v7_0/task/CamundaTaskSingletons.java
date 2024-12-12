@@ -37,4 +37,6 @@ public class CamundaTaskSingletons {
   public static Instrumenter<CamundaCommonRequest, String> getInstumenter() {
     return instrumenter;
   }
+
+  private CamundaTaskSingletons() {}
 }
