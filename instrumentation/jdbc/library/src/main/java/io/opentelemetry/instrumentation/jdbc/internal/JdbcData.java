@@ -10,6 +10,10 @@ import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.lang.ref.WeakReference;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
@@ -26,6 +30,11 @@ public final class JdbcData {
       VirtualField.find(Connection.class, DbInfo.class);
   public static final VirtualField<PreparedStatement, String> preparedStatement =
       VirtualField.find(PreparedStatement.class, String.class);
+  private static final VirtualField<Statement, StatementBatchInfo> statementBatch =
+      VirtualField.find(Statement.class, StatementBatchInfo.class);
+  private static final VirtualField<PreparedStatement, PreparedStatementBatchInfo>
+      preparedStatementBatch =
+          VirtualField.find(PreparedStatement.class, PreparedStatementBatchInfo.class);
 
   private JdbcData() {}
 
@@ -48,6 +57,73 @@ public final class JdbcData {
       }
       dbInfos.put(dbInfo, new WeakReference<>(dbInfo));
       return dbInfo;
+    }
+  }
+
+  public static void addStatementBatch(Statement statement, String sql) {
+    StatementBatchInfo batchInfo = statementBatch.get(statement);
+    if (batchInfo == null) {
+      batchInfo = new StatementBatchInfo();
+      statementBatch.set(statement, batchInfo);
+    }
+    batchInfo.add(sql);
+  }
+
+  public static void addPreparedStatementBatch(PreparedStatement statement) {
+    PreparedStatementBatchInfo batchInfo = preparedStatementBatch.get(statement);
+    if (batchInfo == null) {
+      batchInfo = new PreparedStatementBatchInfo();
+      preparedStatementBatch.set(statement, batchInfo);
+    }
+    batchInfo.add();
+  }
+
+  public static void clearBatch(Statement statement) {
+    if (statement instanceof PreparedStatement) {
+      preparedStatementBatch.set((PreparedStatement) statement, null);
+    } else {
+      statementBatch.set(statement, null);
+    }
+  }
+
+  public static StatementBatchInfo getStatementBatchInfo(Statement statement) {
+    return statementBatch.get(statement);
+  }
+
+  public static Long getPreparedStatementBatchSize(PreparedStatement statement) {
+    PreparedStatementBatchInfo batchInfo = preparedStatementBatch.get(statement);
+    return batchInfo != null ? batchInfo.getBatchSize() : null;
+  }
+
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
+  public static final class StatementBatchInfo {
+    private final List<String> statements = new ArrayList<>();
+
+    void add(String sql) {
+      statements.add(sql);
+    }
+
+    public Collection<String> getStatements() {
+      return statements;
+    }
+
+    public long getBatchSize() {
+      return statements.size();
+    }
+  }
+
+  private static final class PreparedStatementBatchInfo {
+    private long batchSize;
+
+    void add() {
+      batchSize++;
+    }
+
+    long getBatchSize() {
+      return batchSize;
     }
   }
 }
