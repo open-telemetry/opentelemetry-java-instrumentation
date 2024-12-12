@@ -127,7 +127,7 @@ tasks {
 
 // Mockito inline mocking uses byte-buddy but agent tooling currently uses byte-buddy-dep, which cannot be on the same
 // classpath. Disable inline mocking to prevent conflicts.
-// TODO(anuraaga): Find a better solution
+// TODO: Find a better solution
 configurations {
   testRuntimeClasspath {
     dependencies {
