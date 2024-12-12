@@ -7,19 +7,17 @@ package io.opentelemetry.javaagent.instrumentation.camunda.v7_0.behavior;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.camunda.v7_0.behavior.CamundaBehaviorSpanNameExtractor;
-import io.opentelemetry.camunda.v7_0.common.CamundaCommonRequest;
-import io.opentelemetry.camunda.v7_0.common.CamundaVariableAttributeExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.camunda.v7_0.behavior.CamundaBehaviorSpanNameExtractor;
+import io.opentelemetry.instrumentation.camunda.v7_0.common.CamundaCommonRequest;
+import io.opentelemetry.instrumentation.camunda.v7_0.common.CamundaVariableAttributeExtractor;
 
 public class CamundaBehaviorSingletons {
 
   private static final Instrumenter<CamundaCommonRequest, String> instrumenter;
 
   private static final OpenTelemetry opentelemetry;
-
-  private static final boolean propagationEnabled;
 
   static {
     opentelemetry = GlobalOpenTelemetry.get();

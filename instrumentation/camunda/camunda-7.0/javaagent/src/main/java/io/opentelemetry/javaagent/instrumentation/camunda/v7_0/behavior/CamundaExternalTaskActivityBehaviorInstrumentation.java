@@ -10,11 +10,11 @@ import static io.opentelemetry.javaagent.instrumentation.camunda.v7_0.behavior.C
 import static io.opentelemetry.javaagent.instrumentation.camunda.v7_0.behavior.CamundaBehaviorSingletons.getOpentelemetry;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.camunda.v7_0.behavior.CamundaActivityExecutionGetter;
-import io.opentelemetry.camunda.v7_0.behavior.CamundaActivityExecutionLocalSetter;
-import io.opentelemetry.camunda.v7_0.common.CamundaCommonRequest;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.camunda.v7_0.behavior.CamundaActivityExecutionGetter;
+import io.opentelemetry.instrumentation.camunda.v7_0.behavior.CamundaActivityExecutionLocalSetter;
+import io.opentelemetry.instrumentation.camunda.v7_0.common.CamundaCommonRequest;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
