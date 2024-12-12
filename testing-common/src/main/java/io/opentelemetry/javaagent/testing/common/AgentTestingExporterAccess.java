@@ -350,7 +350,7 @@ public final class AgentTestingExporterAccess {
               metric.getName(),
               metric.getDescription(),
               metric.getUnit(),
-              // TODO(anuraaga): Remove usages of internal types.
+              // TODO: Remove usages of internal types.
               ImmutableGaugeData.create(
                   getDoublePointDatas(metric.getGauge().getDataPointsList())));
         } else {

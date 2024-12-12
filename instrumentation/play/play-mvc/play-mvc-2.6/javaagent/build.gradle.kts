@@ -35,8 +35,7 @@ otelJava {
 }
 
 dependencies {
-  // TODO(anuraaga): Something about library configuration doesn't work well with scala compilation
-  // here.
+  // TODO: Something about library configuration doesn't work well with scala compilation here.
   compileOnly("com.typesafe.play:play_$scalaVersion:$playVersion")
 
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
