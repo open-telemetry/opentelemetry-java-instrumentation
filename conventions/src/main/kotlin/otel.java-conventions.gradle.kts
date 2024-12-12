@@ -342,7 +342,7 @@ tasks.withType<Test>().configureEach {
   // There's no real harm in setting this for all tests even if any happen to not be using context
   // propagation.
   jvmArgs("-Dio.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: true}")
-  // TODO(anuraaga): Have agent map unshaded to shaded.
+  // TODO: Have agent map unshaded to shaded.
   if (project.findProperty("disableShadowRelocate") != "true") {
     jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: true}")
   } else {

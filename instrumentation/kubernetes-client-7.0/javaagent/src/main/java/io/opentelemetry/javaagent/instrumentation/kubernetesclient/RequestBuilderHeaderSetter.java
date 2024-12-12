@@ -10,7 +10,7 @@ import javax.annotation.Nullable;
 import okhttp3.Request;
 
 /** Helper class to inject span context into request headers. */
-// TODO(anuraaga): Figure out a way to avoid copying this from okhttp instrumentation.
+// TODO: Figure out a way to avoid copying this from okhttp instrumentation.
 enum RequestBuilderHeaderSetter implements TextMapSetter<Request.Builder> {
   INSTANCE;
 

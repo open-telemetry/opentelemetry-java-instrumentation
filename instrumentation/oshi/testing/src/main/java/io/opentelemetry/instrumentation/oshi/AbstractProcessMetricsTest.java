@@ -31,7 +31,7 @@ public abstract class AbstractProcessMetricsTest {
                     metric ->
                         assertThat(metric)
                             .hasUnit("By")
-                            // TODO(anuraaga): Provide fuzzy value matching
+                            // TODO: Provide fuzzy value matching
                             .hasLongSumSatisfying(
                                 sum ->
                                     assertThat(metric.getLongSumData().getPoints())
@@ -46,7 +46,7 @@ public abstract class AbstractProcessMetricsTest {
                     metric ->
                         assertThat(metric)
                             .hasUnit("ms")
-                            // TODO(anuraaga): Provide fuzzy value matching
+                            // TODO: Provide fuzzy value matching
                             .hasLongGaugeSatisfying(
                                 gauge ->
                                     assertThat(metric.getLongGaugeData().getPoints())
