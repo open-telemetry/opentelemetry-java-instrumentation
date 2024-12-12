@@ -1,0 +1,25 @@
+otel:
+  experimental:
+    metrics:
+      view:
+        config: [ a,b ]
+    resource:
+      disabled:
+        keys: [ a,b ]
+  propagators: [ baggage, b3 ]
+  logs:
+    exporter: [ console ]
+  metrics:
+    exporter: [ console ]
+  traces:
+    exporter: [ console ]
+
+  instrumentation:
+    http:
+      known-methods: [ a,b ]
+      client:
+        capture-request-headers: [ a,b ]
+        capture-response-headers: [ a,b ]
+      server:
+        capture-request-headers: [ a,b ]
+        capture-response-headers: [ a,b ]

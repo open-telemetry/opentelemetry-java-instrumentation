@@ -14,6 +14,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
@@ -22,6 +23,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.core.env.Environment;
@@ -34,15 +36,15 @@ class SpringConfigPropertiesTest {
           .withPropertyValues(
               "otel.traces.exporter=none", "otel.metrics.exporter=none", "otel.logs.exporter=none");
 
-  private static final String[] HEADER_KEYS = {
-    "otel.exporter.otlp.traces.headers",
-    "otel.exporter.otlp.metrics.headers",
-    "otel.exporter.otlp.logs.headers",
-    "otel.exporter.otlp.headers",
-  };
-
   public static Stream<Arguments> headerKeys() {
-    return Arrays.stream(HEADER_KEYS).map(Arguments::of);
+    return Arrays.stream(
+            new String[] {
+              "otel.exporter.otlp.traces.headers",
+              "otel.exporter.otlp.metrics.headers",
+              "otel.exporter.otlp.logs.headers",
+              "otel.exporter.otlp.headers",
+            })
+        .map(Arguments::of);
   }
 
   @Test
@@ -87,9 +89,49 @@ class SpringConfigPropertiesTest {
                     .containsExactly(entry("a", "1"), entry("b", "2")));
   }
 
+  public static Stream<Arguments> listProperties() {
+    return Arrays.stream(
+            new String[] {
+              "otel.experimental.metrics.view.config",
+              "otel.experimental.resource.disabled.keys",
+              "otel.propagators",
+              "otel.logs.exporter",
+              "otel.metrics.exporter",
+              "otel.traces.exporter",
+              "otel.instrumentation.http.client.capture-request-headers",
+              "otel.instrumentation.http.client.capture-response-headers",
+              "otel.instrumentation.http.server.capture-request-headers",
+              "otel.instrumentation.http.server.capture-response-headers",
+              "otel.instrumentation.http.known-methods",
+            })
+        .map(Arguments::of);
+  }
+
+  @ParameterizedTest
+  @MethodSource("listProperties")
+  @DisplayName("should map list from application.yaml list")
+  void listsShouldWorkWithYaml(String key) {
+    List<String> expected;
+    if (key.equals("otel.propagators")) {
+      expected = Arrays.asList("baggage", "b3");
+    } else if (key.endsWith(".exporter")) {
+      expected = Collections.singletonList("console");
+    } else {
+      expected = Arrays.asList("a", "b");
+    }
+
+    new ApplicationContextRunner()
+        .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
+        .withInitializer(new ConfigDataApplicationContextInitializer())
+        .run(
+            context ->
+                assertThat(getConfig(context).getList(key))
+                    .containsExactlyInAnyOrderElementsOf(expected));
+  }
+
   @Test
   @DisplayName("when map is set in properties in a row it should be available in config")
-  void shouldInitializeAttributesByMapInARow() {
+  void shouldInitializeAttributesByMap() {
     this.contextRunner
         .withPropertyValues(
             "otel.resource.attributes.environment=dev",
