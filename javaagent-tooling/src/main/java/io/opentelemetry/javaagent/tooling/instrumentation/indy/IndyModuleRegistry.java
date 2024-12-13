@@ -5,9 +5,12 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
+import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import io.opentelemetry.javaagent.tooling.ModuleOpener;
 import io.opentelemetry.javaagent.tooling.util.ClassLoaderValue;
+import java.lang.instrument.Instrumentation;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -65,6 +68,40 @@ public class IndyModuleRegistry {
               + " yet");
     }
 
+    if (module instanceof ExperimentalInstrumentationModule) {
+      ExperimentalInstrumentationModule experimentalModule =
+          (ExperimentalInstrumentationModule) module;
+
+      // Opening JPMS modules requires to use a 'witness class' in the target module to get a
+      // reference to the module, which means we have to eagerly load the class.
+      //
+      // However, this code here triggered when the advice is being executed for the first time so
+      // this only creates a very small eager loading that is unlikely to have impact on the
+      // application.
+      //
+      // Also, using a class that is already loaded like the one that is being instrumented or a
+      // related one would increase the likeliness of not having an effect on application class
+      // loading.
+
+      Instrumentation instrumentation = InstrumentationHolder.getInstrumentation();
+      if (instrumentation == null) {
+        throw new IllegalStateException("global instrumentation not available");
+      }
+
+      experimentalModule
+          .jpmsModulesToOpen()
+          .forEach(
+              (className, packages) -> {
+                Class<?> type;
+                try {
+                  type = Class.forName(className, false, instrumentedClassLoader);
+                } catch (ClassNotFoundException e) {
+                  throw new IllegalStateException("missing witness class " + className, e);
+                }
+
+                ModuleOpener.open(instrumentation, type, loader, packages);
+              });
+    }
     return loader;
   }
 

@@ -11,6 +11,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -60,5 +61,19 @@ public interface ExperimentalInstrumentationModule {
    */
   default List<String> agentPackagesToHide() {
     return Collections.emptyList();
+  }
+
+  /**
+   * Some instrumentation need to access JPMS modules that are not accessible by default, this
+   * method provides a way to access those classes like the "--add-opens" JVM command. <br>
+   * Map key is the name of a "witness class" belonging to the module that will be loaded and used
+   * to get a reference to the module. <br>
+   * Map value is a list of packages to open in the module
+   *
+   * @return map of "witness class" name as key, list of packages as value.
+   */
+  // TODO: copy the javadoc of the original implementation
+  default Map<String, List<String>> jpmsModulesToOpen() {
+    return Collections.emptyMap();
   }
 }
