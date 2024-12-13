@@ -76,5 +76,6 @@ public final class RatpackServerTelemetry {
   public void configureRegistry(RegistrySpec registry) {
     registry.add(HandlerDecorator.prepend(serverHandler));
     registry.add(OpenTelemetryExecInterceptor.INSTANCE);
+    registry.add(OpenTelemetryExecInitializer.INSTANCE);
   }
 }

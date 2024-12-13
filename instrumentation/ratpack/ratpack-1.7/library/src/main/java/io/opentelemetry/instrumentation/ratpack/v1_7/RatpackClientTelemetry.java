@@ -7,12 +7,10 @@ package io.opentelemetry.instrumentation.ratpack.v1_7;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.ratpack.v1_7.internal.OpenTelemetryExecInitializer;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.OpenTelemetryHttpClient;
 import ratpack.http.client.HttpClient;
 import ratpack.http.client.HttpResponse;
 import ratpack.http.client.RequestSpec;
-import ratpack.registry.RegistrySpec;
 
 /**
  * Entrypoint for instrumenting Ratpack http client.
@@ -53,10 +51,5 @@ public final class RatpackClientTelemetry {
   /** Returns instrumented instance of {@link HttpClient} with OpenTelemetry. */
   public HttpClient instrument(HttpClient httpClient) throws Exception {
     return httpClientInstrumenter.instrument(httpClient);
-  }
-
-  /** Configures the {@link RegistrySpec} with OpenTelemetry. */
-  public void configureRegistry(RegistrySpec registry) {
-    registry.add(OpenTelemetryExecInitializer.INSTANCE);
   }
 }
