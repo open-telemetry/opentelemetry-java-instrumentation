@@ -54,6 +54,7 @@ public class CamundaEndEventActivityBehaviorInstrumentation implements TypeInstr
         this.getClass().getName() + "$CamundaEndEventActivityBehaviorAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class CamundaEndEventActivityBehaviorAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

@@ -50,6 +50,7 @@ public class CamundaTopicSubscriptionMangerInstrumentation implements TypeInstru
 
   public static class CamundaTopicSubscriptionMangerAdvice {
 
+    @SuppressWarnings("unused")
     @SuppressWarnings("rawtypes")
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addTracingEnter(

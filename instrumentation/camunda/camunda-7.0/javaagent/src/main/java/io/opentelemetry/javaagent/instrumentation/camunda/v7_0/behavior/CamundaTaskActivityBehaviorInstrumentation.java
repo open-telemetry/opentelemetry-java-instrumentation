@@ -44,6 +44,7 @@ public class CamundaTaskActivityBehaviorInstrumentation implements TypeInstrumen
         this.getClass().getName() + "$CamundaTaskActivityBehaviorAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class CamundaTaskActivityBehaviorAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

@@ -49,6 +49,7 @@ public class CamundaCallableElementActivityBehaviorInstrumentation implements Ty
         this.getClass().getName() + "$CamundaCallableElementActivityBehaviorAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class CamundaCallableElementActivityBehaviorAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

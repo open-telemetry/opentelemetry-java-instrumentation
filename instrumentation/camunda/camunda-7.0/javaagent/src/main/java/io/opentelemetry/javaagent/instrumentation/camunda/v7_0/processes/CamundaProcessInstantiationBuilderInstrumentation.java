@@ -50,6 +50,7 @@ public class CamundaProcessInstantiationBuilderInstrumentation implements TypeIn
             + "$CamundaProcessInstantiationBuilderExecuteWithVariablesAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class CamundaProcessInstantiationBuilderExecuteWithVariablesAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

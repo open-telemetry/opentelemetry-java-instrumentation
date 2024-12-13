@@ -49,6 +49,7 @@ public class CamundaAsyncContinuationJobHandlerInstrumentation implements TypeIn
         this.getClass().getName() + "$CamundaAsyncContinuationJobHandlerAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class CamundaAsyncContinuationJobHandlerAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addTracingEnter(
