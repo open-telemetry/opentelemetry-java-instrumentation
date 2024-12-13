@@ -180,10 +180,6 @@ configurations.configureEach {
 }
 
 tasks {
-  check {
-    dependsOn(testing.suites)
-  }
-
   compileTestJava {
     options.compilerArgs.add("-parameters")
   }
@@ -212,7 +208,20 @@ tasks {
     isEnabled = testSpring3
   }
 
-  withType(Jar::class) {
+  named<Jar>("jar") {
     from(sourceSets["javaSpring3"].output)
+  }
+
+  named<Jar>("sourcesJar") {
+    from(sourceSets["javaSpring3"].java)
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testing.suites)
+    dependsOn(testStableSemconv)
   }
 }

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.apiclient;
 
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -94,7 +95,7 @@ class ElasticsearchClientTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "elasticsearch"),
-                            equalTo(DB_OPERATION, "info"),
+                            equalTo(maybeStable(DB_OPERATION), "info"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(URL_FULL, httpHost.toURI() + "/"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
@@ -130,7 +131,7 @@ class ElasticsearchClientTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "elasticsearch"),
-                            equalTo(DB_OPERATION, "index"),
+                            equalTo(maybeStable(DB_OPERATION), "index"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "PUT"),
@@ -191,7 +192,7 @@ class ElasticsearchClientTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "elasticsearch"),
-                            equalTo(DB_OPERATION, "info"),
+                            equalTo(maybeStable(DB_OPERATION), "info"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),

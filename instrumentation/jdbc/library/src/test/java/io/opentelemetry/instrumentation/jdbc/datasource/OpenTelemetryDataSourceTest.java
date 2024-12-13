@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.jdbc.datasource;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -58,8 +60,12 @@ class OpenTelemetryDataSourceTest {
                                 TestDataSource.class.getName()),
                             equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "getConnection"),
                             equalTo(DB_SYSTEM, "postgresql"),
-                            equalTo(DB_NAME, "dbname"),
-                            equalTo(DB_CONNECTION_STRING, "postgresql://127.0.0.1:5432"))));
+                            equalTo(maybeStable(DB_NAME), "dbname"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv()
+                                    ? null
+                                    : "postgresql://127.0.0.1:5432"))));
 
     assertThat(connection).isExactlyInstanceOf(OpenTelemetryConnection.class);
     DbInfo dbInfo = ((OpenTelemetryConnection) connection).getDbInfo();

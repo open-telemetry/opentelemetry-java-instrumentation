@@ -408,7 +408,7 @@ abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
       """
   }
 
-  // TODO(anuraaga): Without AOP instrumentation of the HTTP client, we cannot model retries as
+  // TODO: Without AOP instrumentation of the HTTP client, we cannot model retries as
   // spans because of https://github.com/aws/aws-sdk-java-v2/issues/1741. We should at least tweak
   // the instrumentation to add Events for retries instead.
   def "timeout and retry errors not captured"() {

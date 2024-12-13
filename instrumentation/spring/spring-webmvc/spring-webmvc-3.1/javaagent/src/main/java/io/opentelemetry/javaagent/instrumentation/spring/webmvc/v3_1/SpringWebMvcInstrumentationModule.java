@@ -11,11 +11,15 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class SpringWebMvcInstrumentationModule extends InstrumentationModule {
+public class SpringWebMvcInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public SpringWebMvcInstrumentationModule() {
     super("spring-webmvc", "spring-webmvc-3.1");
@@ -28,13 +32,21 @@ public class SpringWebMvcInstrumentationModule extends InstrumentationModule {
 
   @Override
   public boolean isHelperClass(String className) {
+    // filter on prefix due to inner classes
     return className.startsWith(
         "org.springframework.web.servlet.v3_1.OpenTelemetryHandlerMappingFilter");
   }
 
   @Override
-  public boolean isIndyModule() {
-    return false;
+  public void injectClasses(ClassInjector injector) {
+    injector
+        .proxyBuilder("org.springframework.web.servlet.v3_1.OpenTelemetryHandlerMappingFilter")
+        .inject(InjectionMode.CLASS_AND_RESOURCE);
+  }
+
+  @Override
+  public String getModuleGroup() {
+    return "servlet";
   }
 
   @Override

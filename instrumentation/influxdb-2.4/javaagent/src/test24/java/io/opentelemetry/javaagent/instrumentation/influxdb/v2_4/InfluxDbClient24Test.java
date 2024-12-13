@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -152,12 +153,12 @@ class InfluxDbClient24Test {
     result.addAll(
         asList(
             equalTo(DB_SYSTEM, "influxdb"),
-            equalTo(DB_NAME, databaseName),
+            equalTo(maybeStable(DB_NAME), databaseName),
             equalTo(SERVER_ADDRESS, host),
             equalTo(SERVER_PORT, port),
-            equalTo(DB_OPERATION, operation)));
+            equalTo(maybeStable(DB_OPERATION), operation)));
     if (statement != null) {
-      result.add(equalTo(DB_STATEMENT, statement));
+      result.add(equalTo(maybeStable(DB_STATEMENT), statement));
     }
     return result;
   }

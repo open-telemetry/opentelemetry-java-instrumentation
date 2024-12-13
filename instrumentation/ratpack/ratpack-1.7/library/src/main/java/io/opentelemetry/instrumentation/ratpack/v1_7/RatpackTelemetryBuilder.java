@@ -13,6 +13,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackClientInstrumenterBuilderFactory;
+import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackServerInstrumenterBuilderFactory;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -31,17 +33,9 @@ public final class RatpackTelemetryBuilder {
 
   RatpackTelemetryBuilder(OpenTelemetry openTelemetry) {
     clientBuilder =
-        DefaultHttpClientInstrumenterBuilder.create(
-            INSTRUMENTATION_NAME,
-            openTelemetry,
-            RatpackHttpClientAttributesGetter.INSTANCE,
-            RequestHeaderSetter.INSTANCE);
+        RatpackClientInstrumenterBuilderFactory.create(INSTRUMENTATION_NAME, openTelemetry);
     serverBuilder =
-        DefaultHttpServerInstrumenterBuilder.create(
-            INSTRUMENTATION_NAME,
-            openTelemetry,
-            RatpackHttpAttributesGetter.INSTANCE,
-            RatpackGetter.INSTANCE);
+        RatpackServerInstrumenterBuilderFactory.create(INSTRUMENTATION_NAME, openTelemetry);
   }
 
   /**
@@ -58,7 +52,7 @@ public final class RatpackTelemetryBuilder {
   @CanIgnoreReturnValue
   public RatpackTelemetryBuilder addClientAttributeExtractor(
       AttributesExtractor<? super RequestSpec, ? super HttpResponse> attributesExtractor) {
-    clientBuilder.addAttributeExtractor(attributesExtractor);
+    clientBuilder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 

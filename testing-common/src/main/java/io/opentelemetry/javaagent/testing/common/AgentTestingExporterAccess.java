@@ -12,7 +12,6 @@ import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static java.util.stream.Collectors.toList;
 
-import com.google.protobuf.InvalidProtocolBufferException;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.common.Value;
@@ -23,30 +22,6 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.api.trace.TraceStateBuilder;
-import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceRequest;
-import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
-import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
-import io.opentelemetry.proto.common.v1.AnyValue;
-import io.opentelemetry.proto.common.v1.ArrayValue;
-import io.opentelemetry.proto.common.v1.InstrumentationScope;
-import io.opentelemetry.proto.common.v1.KeyValue;
-import io.opentelemetry.proto.common.v1.KeyValueList;
-import io.opentelemetry.proto.logs.v1.LogRecord;
-import io.opentelemetry.proto.logs.v1.ResourceLogs;
-import io.opentelemetry.proto.logs.v1.ScopeLogs;
-import io.opentelemetry.proto.logs.v1.SeverityNumber;
-import io.opentelemetry.proto.metrics.v1.HistogramDataPoint;
-import io.opentelemetry.proto.metrics.v1.Metric;
-import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
-import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
-import io.opentelemetry.proto.metrics.v1.ScopeMetrics;
-import io.opentelemetry.proto.metrics.v1.Sum;
-import io.opentelemetry.proto.metrics.v1.SummaryDataPoint;
-import io.opentelemetry.proto.resource.v1.Resource;
-import io.opentelemetry.proto.trace.v1.ResourceSpans;
-import io.opentelemetry.proto.trace.v1.ScopeSpans;
-import io.opentelemetry.proto.trace.v1.Span;
-import io.opentelemetry.proto.trace.v1.Status;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
@@ -72,6 +47,31 @@ import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.testing.internal.proto.collector.logs.v1.ExportLogsServiceRequest;
+import io.opentelemetry.testing.internal.proto.collector.metrics.v1.ExportMetricsServiceRequest;
+import io.opentelemetry.testing.internal.proto.collector.trace.v1.ExportTraceServiceRequest;
+import io.opentelemetry.testing.internal.proto.common.v1.AnyValue;
+import io.opentelemetry.testing.internal.proto.common.v1.ArrayValue;
+import io.opentelemetry.testing.internal.proto.common.v1.InstrumentationScope;
+import io.opentelemetry.testing.internal.proto.common.v1.KeyValue;
+import io.opentelemetry.testing.internal.proto.common.v1.KeyValueList;
+import io.opentelemetry.testing.internal.proto.logs.v1.LogRecord;
+import io.opentelemetry.testing.internal.proto.logs.v1.ResourceLogs;
+import io.opentelemetry.testing.internal.proto.logs.v1.ScopeLogs;
+import io.opentelemetry.testing.internal.proto.logs.v1.SeverityNumber;
+import io.opentelemetry.testing.internal.proto.metrics.v1.HistogramDataPoint;
+import io.opentelemetry.testing.internal.proto.metrics.v1.Metric;
+import io.opentelemetry.testing.internal.proto.metrics.v1.NumberDataPoint;
+import io.opentelemetry.testing.internal.proto.metrics.v1.ResourceMetrics;
+import io.opentelemetry.testing.internal.proto.metrics.v1.ScopeMetrics;
+import io.opentelemetry.testing.internal.proto.metrics.v1.Sum;
+import io.opentelemetry.testing.internal.proto.metrics.v1.SummaryDataPoint;
+import io.opentelemetry.testing.internal.proto.resource.v1.Resource;
+import io.opentelemetry.testing.internal.proto.trace.v1.ResourceSpans;
+import io.opentelemetry.testing.internal.proto.trace.v1.ScopeSpans;
+import io.opentelemetry.testing.internal.proto.trace.v1.Span;
+import io.opentelemetry.testing.internal.proto.trace.v1.Status;
+import io.opentelemetry.testing.internal.protobuf.InvalidProtocolBufferException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -350,7 +350,7 @@ public final class AgentTestingExporterAccess {
               metric.getName(),
               metric.getDescription(),
               metric.getUnit(),
-              // TODO(anuraaga): Remove usages of internal types.
+              // TODO: Remove usages of internal types.
               ImmutableGaugeData.create(
                   getDoublePointDatas(metric.getGauge().getDataPointsList())));
         } else {
@@ -568,7 +568,8 @@ public final class AgentTestingExporterAccess {
   }
 
   private static AggregationTemporality getTemporality(
-      io.opentelemetry.proto.metrics.v1.AggregationTemporality aggregationTemporality) {
+      io.opentelemetry.testing.internal.proto.metrics.v1.AggregationTemporality
+          aggregationTemporality) {
     switch (aggregationTemporality) {
       case AGGREGATION_TEMPORALITY_CUMULATIVE:
         return AggregationTemporality.CUMULATIVE;

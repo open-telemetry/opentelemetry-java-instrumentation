@@ -25,6 +25,7 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
@@ -126,11 +127,21 @@ class DbSpanDecorator extends BaseSpanDecorator {
     attributes.put(DbIncubatingAttributes.DB_SYSTEM, system);
     String statement = getStatement(exchange, endpoint);
     if (statement != null) {
-      attributes.put(DbIncubatingAttributes.DB_STATEMENT, statement);
+      if (SemconvStability.emitStableDatabaseSemconv()) {
+        attributes.put(DbIncubatingAttributes.DB_QUERY_TEXT, statement);
+      }
+      if (SemconvStability.emitOldDatabaseSemconv()) {
+        attributes.put(DbIncubatingAttributes.DB_STATEMENT, statement);
+      }
     }
     String dbName = getDbName(endpoint);
     if (dbName != null) {
-      attributes.put(DbIncubatingAttributes.DB_NAME, dbName);
+      if (SemconvStability.emitStableDatabaseSemconv()) {
+        attributes.put(DbIncubatingAttributes.DB_NAMESPACE, dbName);
+      }
+      if (SemconvStability.emitOldDatabaseSemconv()) {
+        attributes.put(DbIncubatingAttributes.DB_NAME, dbName);
+      }
     }
   }
 }

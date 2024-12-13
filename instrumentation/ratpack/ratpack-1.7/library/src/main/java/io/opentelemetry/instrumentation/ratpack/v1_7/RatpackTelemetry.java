@@ -7,6 +7,10 @@ package io.opentelemetry.instrumentation.ratpack.v1_7;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.ratpack.v1_7.internal.OpenTelemetryExecInitializer;
+import io.opentelemetry.instrumentation.ratpack.v1_7.internal.OpenTelemetryExecInterceptor;
+import io.opentelemetry.instrumentation.ratpack.v1_7.internal.OpenTelemetryHttpClient;
+import io.opentelemetry.instrumentation.ratpack.v1_7.internal.OpenTelemetryServerHandler;
 import ratpack.exec.ExecInitializer;
 import ratpack.exec.ExecInterceptor;
 import ratpack.handling.HandlerDecorator;

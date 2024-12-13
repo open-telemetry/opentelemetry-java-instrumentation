@@ -186,6 +186,18 @@ final class AwsSdkInstrumenterFactory {
         true);
   }
 
+  Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter() {
+    DynamoDbAttributesExtractor dynamoDbAttributesExtractor = new DynamoDbAttributesExtractor();
+
+    return createInstrumenter(
+        openTelemetry,
+        spanName,
+        SpanKindExtractor.alwaysClient(),
+        attributesExtractors(),
+        singletonList(dynamoDbAttributesExtractor),
+        true);
+  }
+
   private static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> createInstrumenter(
       OpenTelemetry openTelemetry,
       SpanNameExtractor<REQUEST> spanNameExtractor,

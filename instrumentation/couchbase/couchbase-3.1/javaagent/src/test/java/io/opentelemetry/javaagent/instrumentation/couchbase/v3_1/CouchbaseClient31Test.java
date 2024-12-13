@@ -5,8 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_1;
 
+import static org.awaitility.Awaitility.await;
+
 import com.couchbase.client.core.env.TimeoutConfig;
 import com.couchbase.client.core.error.DocumentNotFoundException;
+import com.couchbase.client.core.error.UnambiguousTimeoutException;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.ClusterOptions;
@@ -41,6 +44,18 @@ class CouchbaseClient31Test {
 
   @BeforeAll
   static void setup() {
+    // wait and retry in the hope that it will help against test flakiness
+    await()
+        .atMost(Duration.ofMinutes(5))
+        .ignoreException(UnambiguousTimeoutException.class)
+        .until(
+            () -> {
+              startCouchbase();
+              return true;
+            });
+  }
+
+  private static void startCouchbase() {
     couchbase =
         new CouchbaseContainer("couchbase/server:7.6.0")
             .withExposedPorts(8091)

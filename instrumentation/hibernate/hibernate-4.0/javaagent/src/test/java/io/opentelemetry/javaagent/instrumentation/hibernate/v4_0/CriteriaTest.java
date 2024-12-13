@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -73,13 +75,16 @@ class CriteriaTest extends AbstractHibernateTest {
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "h2"),
-                            equalTo(DB_NAME, "db1"),
-                            equalTo(DB_USER, "sa"),
-                            equalTo(DB_CONNECTION_STRING, "h2:mem:"),
+                            equalTo(maybeStable(DB_NAME), "db1"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "h2:mem:"),
                             satisfies(
-                                DB_STATEMENT, stringAssert -> stringAssert.startsWith("select")),
-                            equalTo(DB_OPERATION, "SELECT"),
-                            equalTo(DB_SQL_TABLE, "Value")),
+                                maybeStable(DB_STATEMENT),
+                                stringAssert -> stringAssert.startsWith("select")),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Value")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -95,8 +96,8 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(DB_STATEMENT, "SET TESTSETKEY ?"),
-                            equalTo(DB_OPERATION, "SET")),
+                            equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET")),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -126,8 +127,8 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(DB_STATEMENT, "GET TESTKEY"),
-                            equalTo(DB_OPERATION, "GET"))));
+                            equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY"),
+                            equalTo(maybeStable(DB_OPERATION), "GET"))));
   }
 
   // to make sure instrumentation's chained completion stages won't interfere with user's, while
@@ -165,8 +166,8 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(DB_STATEMENT, "GET NON_EXISTENT_KEY"),
-                            equalTo(DB_OPERATION, "GET")),
+                            equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY"),
+                            equalTo(maybeStable(DB_OPERATION), "GET")),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -195,8 +196,8 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(DB_STATEMENT, "RANDOMKEY"),
-                            equalTo(DB_OPERATION, "RANDOMKEY"))));
+                            equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
+                            equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"))));
   }
 
   @Test
@@ -211,8 +212,8 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(DB_STATEMENT, "COMMAND"),
-                            equalTo(DB_OPERATION, "COMMAND"),
+                            equalTo(maybeStable(DB_STATEMENT), "COMMAND"),
+                            equalTo(maybeStable(DB_OPERATION), "COMMAND"),
                             satisfies(
                                 AttributeKey.longKey("lettuce.command.results.count"),
                                 val -> val.isGreaterThan(100)))));
@@ -230,8 +231,8 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(DB_STATEMENT, "COMMAND"),
-                            equalTo(DB_OPERATION, "COMMAND"),
+                            equalTo(maybeStable(DB_STATEMENT), "COMMAND"),
+                            equalTo(maybeStable(DB_OPERATION), "COMMAND"),
                             satisfies(
                                 AttributeKey.booleanKey("lettuce.command.cancelled"),
                                 AbstractBooleanAssert::isTrue),
@@ -264,8 +265,8 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(DB_STATEMENT, "DEBUG SEGFAULT"),
-                            equalTo(DB_OPERATION, "DEBUG"))));
+                            equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT"),
+                            equalTo(maybeStable(DB_OPERATION), "DEBUG"))));
   }
 
   @Test
@@ -284,8 +285,8 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(DB_STATEMENT, "SHUTDOWN NOSAVE"),
-                            equalTo(DB_OPERATION, "SHUTDOWN"))));
+                            equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE"),
+                            equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"))));
   }
 
   @Test
@@ -304,16 +305,16 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(DB_STATEMENT, "SET a ?"),
-                            equalTo(DB_OPERATION, "SET")),
+                            equalTo(maybeStable(DB_STATEMENT), "SET a ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(DB_STATEMENT, "GET a"),
-                            equalTo(DB_OPERATION, "GET"))));
+                            equalTo(maybeStable(DB_STATEMENT), "GET a"),
+                            equalTo(maybeStable(DB_OPERATION), "GET"))));
   }
 
   @Test
@@ -332,16 +333,16 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(DB_STATEMENT, "SET a ?"),
-                            equalTo(DB_OPERATION, "SET")),
+                            equalTo(maybeStable(DB_STATEMENT), "SET a ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(DB_STATEMENT, "GET a"),
-                            equalTo(DB_OPERATION, "GET"))));
+                            equalTo(maybeStable(DB_STATEMENT), "GET a"),
+                            equalTo(maybeStable(DB_OPERATION), "GET"))));
   }
 
   @Test
@@ -365,15 +366,15 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(DB_STATEMENT, "SET a ?"),
-                            equalTo(DB_OPERATION, "SET")),
+                            equalTo(maybeStable(DB_STATEMENT), "SET a ?"),
+                            equalTo(maybeStable(DB_OPERATION), "SET")),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, "redis"),
-                            equalTo(DB_STATEMENT, "GET a"),
-                            equalTo(DB_OPERATION, "GET"))));
+                            equalTo(maybeStable(DB_STATEMENT), "GET a"),
+                            equalTo(maybeStable(DB_OPERATION), "GET"))));
   }
 }

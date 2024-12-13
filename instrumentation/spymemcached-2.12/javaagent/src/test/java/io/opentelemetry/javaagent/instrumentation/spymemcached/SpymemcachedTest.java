@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -148,7 +149,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "get"),
+                            equalTo(maybeStable(DB_OPERATION), "get"),
                             equalTo(stringKey("spymemcached.result"), "hit"))));
   }
 
@@ -170,7 +171,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "get"),
+                            equalTo(maybeStable(DB_OPERATION), "get"),
                             equalTo(stringKey("spymemcached.result"), "miss"))));
   }
 
@@ -205,7 +206,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "get"),
+                            equalTo(maybeStable(DB_OPERATION), "get"),
                             equalTo(booleanKey("spymemcached.command.cancelled"), true))));
   }
 
@@ -260,7 +261,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "get"))));
+                            equalTo(maybeStable(DB_OPERATION), "get"))));
   }
 
   @Test
@@ -288,7 +289,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "getBulk"))));
+                            equalTo(maybeStable(DB_OPERATION), "getBulk"))));
   }
 
   @Test
@@ -312,7 +313,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "set"))));
+                            equalTo(maybeStable(DB_OPERATION), "set"))));
   }
 
   @Test
@@ -348,7 +349,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "set"),
+                            equalTo(maybeStable(DB_OPERATION), "set"),
                             equalTo(booleanKey("spymemcached.command.cancelled"), true))));
   }
 
@@ -374,7 +375,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "add")),
+                            equalTo(maybeStable(DB_OPERATION), "add")),
                 span ->
                     span.hasName("get")
                         .hasKind(SpanKind.CLIENT)
@@ -383,7 +384,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "get"),
+                            equalTo(maybeStable(DB_OPERATION), "get"),
                             equalTo(stringKey("spymemcached.result"), "hit"))));
   }
 
@@ -410,7 +411,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "add")),
+                            equalTo(maybeStable(DB_OPERATION), "add")),
                 span ->
                     span.hasName("add")
                         .hasKind(SpanKind.CLIENT)
@@ -419,7 +420,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "add"))));
+                            equalTo(maybeStable(DB_OPERATION), "add"))));
   }
 
   @Test
@@ -444,7 +445,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "delete")),
+                            equalTo(maybeStable(DB_OPERATION), "delete")),
                 span ->
                     span.hasName("get")
                         .hasKind(SpanKind.CLIENT)
@@ -453,7 +454,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "get"),
+                            equalTo(maybeStable(DB_OPERATION), "get"),
                             equalTo(stringKey("spymemcached.result"), "miss"))));
   }
 
@@ -478,7 +479,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "delete"))));
+                            equalTo(maybeStable(DB_OPERATION), "delete"))));
   }
 
   @Test
@@ -504,7 +505,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "replace")),
+                            equalTo(maybeStable(DB_OPERATION), "replace")),
                 span ->
                     span.hasName("get")
                         .hasKind(SpanKind.CLIENT)
@@ -513,7 +514,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "get"),
+                            equalTo(maybeStable(DB_OPERATION), "get"),
                             equalTo(stringKey("spymemcached.result"), "hit"))));
   }
 
@@ -542,7 +543,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "replace"))));
+                            equalTo(maybeStable(DB_OPERATION), "replace"))));
   }
 
   @Test
@@ -569,7 +570,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "gets")),
+                            equalTo(maybeStable(DB_OPERATION), "gets")),
                 span ->
                     span.hasName("append")
                         .hasKind(SpanKind.CLIENT)
@@ -578,7 +579,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "append")),
+                            equalTo(maybeStable(DB_OPERATION), "append")),
                 span ->
                     span.hasName("get")
                         .hasKind(SpanKind.CLIENT)
@@ -587,7 +588,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "get"),
+                            equalTo(maybeStable(DB_OPERATION), "get"),
                             equalTo(stringKey("spymemcached.result"), "hit"))));
   }
 
@@ -615,7 +616,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "gets")),
+                            equalTo(maybeStable(DB_OPERATION), "gets")),
                 span ->
                     span.hasName("prepend")
                         .hasKind(SpanKind.CLIENT)
@@ -624,7 +625,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "prepend")),
+                            equalTo(maybeStable(DB_OPERATION), "prepend")),
                 span ->
                     span.hasName("get")
                         .hasKind(SpanKind.CLIENT)
@@ -633,7 +634,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "get"),
+                            equalTo(maybeStable(DB_OPERATION), "get"),
                             equalTo(stringKey("spymemcached.result"), "hit"))));
   }
 
@@ -661,7 +662,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "gets")),
+                            equalTo(maybeStable(DB_OPERATION), "gets")),
                 span ->
                     span.hasName("cas")
                         .hasKind(SpanKind.CLIENT)
@@ -670,7 +671,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "cas"))));
+                            equalTo(maybeStable(DB_OPERATION), "cas"))));
   }
 
   @Test
@@ -696,7 +697,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "cas"))));
+                            equalTo(maybeStable(DB_OPERATION), "cas"))));
   }
 
   @Test
@@ -720,7 +721,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "touch"))));
+                            equalTo(maybeStable(DB_OPERATION), "touch"))));
   }
 
   @Test
@@ -745,7 +746,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "touch"))));
+                            equalTo(maybeStable(DB_OPERATION), "touch"))));
   }
 
   @Test
@@ -770,7 +771,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "getAndTouch"))));
+                            equalTo(maybeStable(DB_OPERATION), "getAndTouch"))));
   }
 
   @Test
@@ -795,7 +796,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "getAndTouch"))));
+                            equalTo(maybeStable(DB_OPERATION), "getAndTouch"))));
   }
 
   @Test
@@ -824,7 +825,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "decr")),
+                            equalTo(maybeStable(DB_OPERATION), "decr")),
                 span ->
                     span.hasName("get")
                         .hasKind(SpanKind.CLIENT)
@@ -833,7 +834,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "get"),
+                            equalTo(maybeStable(DB_OPERATION), "get"),
                             equalTo(stringKey("spymemcached.result"), "hit"))));
   }
 
@@ -858,7 +859,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "decr"))));
+                            equalTo(maybeStable(DB_OPERATION), "decr"))));
   }
 
   @Test
@@ -881,7 +882,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "decr"))));
+                            equalTo(maybeStable(DB_OPERATION), "decr"))));
   }
 
   @Test
@@ -910,7 +911,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "incr")),
+                            equalTo(maybeStable(DB_OPERATION), "incr")),
                 span ->
                     span.hasName("get")
                         .hasKind(SpanKind.CLIENT)
@@ -919,7 +920,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "get"),
+                            equalTo(maybeStable(DB_OPERATION), "get"),
                             equalTo(stringKey("spymemcached.result"), "hit"))));
   }
 
@@ -944,7 +945,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "incr"))));
+                            equalTo(maybeStable(DB_OPERATION), "incr"))));
   }
 
   @Test
@@ -967,7 +968,7 @@ class SpymemcachedTest {
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(DB_OPERATION, "incr"))));
+                            equalTo(maybeStable(DB_OPERATION), "incr"))));
   }
 
   private static String key(String k) {

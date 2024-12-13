@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -87,7 +88,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                                 equalTo(
                                     DB_SYSTEM,
                                     DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                                equalTo(DB_OPERATION, "ClusterHealthAction"),
+                                equalTo(maybeStable(DB_OPERATION), "ClusterHealthAction"),
                                 equalTo(ELASTICSEARCH_ACTION, "ClusterHealthAction"),
                                 equalTo(ELASTICSEARCH_REQUEST, "ClusterHealthRequest"))),
                 span ->
@@ -143,7 +144,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(DB_OPERATION, "GetAction"),
+                            equalTo(maybeStable(DB_OPERATION), "GetAction"),
                             equalTo(ELASTICSEARCH_ACTION, "GetAction"),
                             equalTo(ELASTICSEARCH_REQUEST, "GetRequest"),
                             equalTo(ELASTICSEARCH_REQUEST_INDICES, "invalid-index")),
@@ -204,7 +205,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                                 equalTo(
                                     DB_SYSTEM,
                                     DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                                equalTo(DB_OPERATION, "CreateIndexAction"),
+                                equalTo(maybeStable(DB_OPERATION), "CreateIndexAction"),
                                 equalTo(ELASTICSEARCH_ACTION, "CreateIndexAction"),
                                 equalTo(ELASTICSEARCH_REQUEST, "CreateIndexRequest"),
                                 equalTo(ELASTICSEARCH_REQUEST_INDICES, indexName)))),
@@ -218,7 +219,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                             equalTo(
                                 DB_SYSTEM,
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(DB_OPERATION, getPutMappingActionName()),
+                            equalTo(maybeStable(DB_OPERATION), getPutMappingActionName()),
                             equalTo(ELASTICSEARCH_ACTION, getPutMappingActionName()),
                             equalTo(ELASTICSEARCH_REQUEST, "PutMappingRequest"))),
         trace ->
@@ -234,7 +235,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                                 equalTo(
                                     DB_SYSTEM,
                                     DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                                equalTo(DB_OPERATION, "IndexAction"),
+                                equalTo(maybeStable(DB_OPERATION), "IndexAction"),
                                 equalTo(ELASTICSEARCH_ACTION, "IndexAction"),
                                 equalTo(ELASTICSEARCH_REQUEST, "IndexRequest"),
                                 equalTo(ELASTICSEARCH_REQUEST_INDICES, indexName),
@@ -257,7 +258,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                                 equalTo(
                                     DB_SYSTEM,
                                     DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                                equalTo(DB_OPERATION, "GetAction"),
+                                equalTo(maybeStable(DB_OPERATION), "GetAction"),
                                 equalTo(ELASTICSEARCH_ACTION, "GetAction"),
                                 equalTo(ELASTICSEARCH_REQUEST, "GetRequest"),
                                 equalTo(ELASTICSEARCH_REQUEST_INDICES, indexName),
@@ -277,7 +278,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                                 equalTo(
                                     DB_SYSTEM,
                                     DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                                equalTo(DB_OPERATION, "GetAction"),
+                                equalTo(maybeStable(DB_OPERATION), "GetAction"),
                                 equalTo(ELASTICSEARCH_ACTION, "GetAction"),
                                 equalTo(ELASTICSEARCH_REQUEST, "GetRequest"),
                                 equalTo(ELASTICSEARCH_REQUEST_INDICES, indexName),
