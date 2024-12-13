@@ -70,9 +70,8 @@ public interface ExperimentalInstrumentationModule {
    * to get a reference to the module. <br>
    * Map value is a list of packages to open in the module
    *
-   * @return map of "witness class" name as key, list of packages as value.
+   * @return map of "witness class" FQN as key, list of packages as value.
    */
-  // TODO: copy the javadoc of the original implementation
   default Map<String, List<String>> jpmsModulesToOpen() {
     return Collections.emptyMap();
   }
