@@ -266,7 +266,7 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
         });
   }
 
-  // TODO(anuraaga): The default Ratpack error handler also returns a 500 which is all we test, so
+  // TODO: The default Ratpack error handler also returns a 500 which is all we test, so
   // we don't actually have test coverage ensuring our instrumentation correctly delegates to this
   // user registered handler.
   private static class TestErrorHandler implements ServerErrorHandler {
