@@ -45,6 +45,7 @@ public class CamundaExternalTaskActivityBehaviorInstrumentation implements TypeI
         this.getClass().getName() + "$CamundaExternalTaskActivityBehaviorAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class CamundaExternalTaskActivityBehaviorAdvice {
 
     /**
