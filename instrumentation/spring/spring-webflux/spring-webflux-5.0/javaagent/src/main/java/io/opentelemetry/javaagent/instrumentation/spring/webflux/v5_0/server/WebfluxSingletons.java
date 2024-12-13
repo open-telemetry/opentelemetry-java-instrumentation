@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
@@ -32,6 +33,8 @@ public final class WebfluxSingletons {
     INSTRUMENTER =
         builder
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
+            .addAttributesExtractor(
+                CodeAttributesExtractor.create(new HandlerCodeAttributesGetter()))
             .buildInstrumenter();
   }
 
