@@ -1,6 +1,18 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
 import org.apache.pekko.http.scaladsl.Http;
 import org.elasticmq.rest.sqs.SQSRestServer;
 import org.elasticmq.rest.sqs.SQSRestServerBuilder;
@@ -21,12 +33,6 @@ import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public abstract class AbstractAws2SqsBaseTest {
 
@@ -54,7 +60,7 @@ public abstract class AbstractAws2SqsBaseTest {
     return map;
   }
 
-  private final String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
+  protected final String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
 
   ReceiveMessageRequest receiveMessageRequest =
       ReceiveMessageRequest.builder().queueUrl(queueUrl).build();
@@ -103,6 +109,12 @@ public abstract class AbstractAws2SqsBaseTest {
     builder.region(Region.AP_NORTHEAST_1).credentialsProvider(CREDENTIALS_PROVIDER);
   }
 
+  boolean isSqsAttributeInjectionEnabled() {
+    // See io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecutionInterceptor
+    return ConfigPropertiesUtil.getBoolean(
+        "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", false);
+  }
+
   protected abstract void assertSqsTraces(Boolean withParent, Boolean captureHeaders);
 
   @BeforeAll
@@ -126,7 +138,6 @@ public abstract class AbstractAws2SqsBaseTest {
     SqsClient client = configureSqsClient(builder.build());
 
     client.createQueue(createQueueRequest);
-
     client.sendMessage(sendMessageRequest);
 
     ReceiveMessageResponse response = client.receiveMessage(receiveMessageRequest);
@@ -172,5 +183,4 @@ public abstract class AbstractAws2SqsBaseTest {
     response.messages().forEach(message -> getTesting().runWithSpan("process child", () -> {}));
     assertSqsTraces(false, false);
   }
-
 }

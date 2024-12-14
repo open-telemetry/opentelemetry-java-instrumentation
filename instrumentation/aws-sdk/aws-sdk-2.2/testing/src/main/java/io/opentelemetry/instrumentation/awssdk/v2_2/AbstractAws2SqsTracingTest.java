@@ -29,7 +29,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -52,12 +51,6 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest {
 
-  boolean isSqsAttributeInjectionEnabled() {
-    // See io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecutionInterceptor
-    return ConfigPropertiesUtil.getBoolean(
-        "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", false);
-  }
-
   @Override
   protected void assertSqsTraces(Boolean withParent, Boolean captureHeaders) {
     int offset = withParent ? 2 : 0;
@@ -77,12 +70,8 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                 satisfies(
                                     AWS_REQUEST_ID,
                                     val ->
-                                        val.satisfiesAnyOf(
-                                            v ->
-                                                assertThat(v)
-                                                    .isEqualTo(
-                                                        "00000000-0000-0000-0000-000000000000"),
-                                            v -> assertThat(v).isEqualTo("UNKNOWN"))),
+                                        val.matches(
+                                            "\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "Sqs"),
                                 equalTo(RPC_METHOD, "CreateQueue"),
@@ -106,12 +95,8 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                   satisfies(
                                       AWS_REQUEST_ID,
                                       val ->
-                                          val.satisfiesAnyOf(
-                                              v ->
-                                                  assertThat(v)
-                                                      .isEqualTo(
-                                                          "00000000-0000-0000-0000-000000000000"),
-                                              v -> assertThat(v).isEqualTo("UNKNOWN"))),
+                                          val.matches(
+                                              "\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")),
                                   equalTo(RPC_SYSTEM, "aws-api"),
                                   equalTo(RPC_SERVICE, "Sqs"),
                                   equalTo(RPC_METHOD, "SendMessage"),
@@ -163,12 +148,8 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                     satisfies(
                                         AWS_REQUEST_ID,
                                         val ->
-                                            val.satisfiesAnyOf(
-                                                v ->
-                                                    assertThat(v)
-                                                        .isEqualTo(
-                                                            "00000000-0000-0000-0000-000000000000"),
-                                                v -> assertThat(v).isEqualTo("UNKNOWN"))),
+                                            val.matches(
+                                                "\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")),
                                     equalTo(RPC_SYSTEM, "aws-api"),
                                     equalTo(RPC_SERVICE, "Sqs"),
                                     equalTo(RPC_METHOD, "ReceiveMessage"),
@@ -196,9 +177,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                         URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, sqsPort),
-                                    equalTo(
-                                        MESSAGING_SYSTEM,
-                                        AWS_SQS),
+                                    equalTo(MESSAGING_SYSTEM, AWS_SQS),
                                     equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
                                     equalTo(MESSAGING_OPERATION, "receive"),
                                     equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
@@ -332,18 +311,12 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
                               equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                              equalTo(
-                                  stringKey("aws.queue.url"),
-                                  "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
+                              equalTo(stringKey("aws.queue.url"), queueUrl),
                               satisfies(
                                   AWS_REQUEST_ID,
                                   val ->
-                                      val.satisfiesAnyOf(
-                                          v ->
-                                              assertThat(v.trim())
-                                                  .isEqualTo(
-                                                      "00000000-0000-0000-0000-000000000000"),
-                                          v -> assertThat(v.trim()).isEqualTo("UNKNOWN"))),
+                                      val.matches(
+                                          "\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")),
                               equalTo(RPC_SYSTEM, "aws-api"),
                               equalTo(RPC_SERVICE, "Sqs"),
                               equalTo(RPC_METHOD, "SendMessageBatch"),
