@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-class Aws2SqsSuppressReceiveSpansW3CPropagatorTest extends Aws2SqsSuppressReceiveSpansTest {
+class Aws2SqsSuppressReceiveSpansW3cPropagatorTest extends Aws2SqsSuppressReceiveSpansTest {
   @Override
   protected void configure(AwsSdkTelemetryBuilder telemetryBuilder) {
     telemetryBuilder
