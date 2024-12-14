@@ -58,29 +58,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
 
     getTesting()
         .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("Sqs.CreateQueue")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(stringKey("aws.queue.name"), "testSdkSqs"),
-                                satisfies(
-                                    AWS_REQUEST_ID,
-                                    val ->
-                                        val.matches(
-                                            "\\s*00000000-0000-0000-0000-000000000000\\s*|UNKNOWN")),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "Sqs"),
-                                equalTo(RPC_METHOD, "CreateQueue"),
-                                equalTo(HTTP_REQUEST_METHOD, "POST"),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                satisfies(
-                                    URL_FULL, v -> v.startsWith("http://localhost:" + sqsPort)),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, sqsPort))),
+            trace -> trace.hasSpansSatisfyingExactly(span -> createQueueSpan(span)),
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> {
