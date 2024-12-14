@@ -70,7 +70,7 @@ public final class CloudFoundryResource {
 
   private static class CloudFoundryAttributesBuilder {
     private final AttributesBuilder builder = Attributes.builder();
-    private Map<String, Object> parsedData;
+    private final Map<String, Object> parsedData;
 
     @SuppressWarnings("unchecked")
     private CloudFoundryAttributesBuilder(String rawData) {
