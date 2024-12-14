@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.oracleucp;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -117,7 +118,9 @@ public abstract class AbstractOracleUcpInstrumentationTest {
     Set<String> metricNames =
         new HashSet<>(
             Arrays.asList(
-                "db.client.connections.usage",
+                emitStableDatabaseSemconv()
+                    ? "db.client.connection.count"
+                    : "db.client.connections.usage",
                 "db.client.connections.max",
                 "db.client.connections.pending_requests"));
     assertThat(testing().metrics())
