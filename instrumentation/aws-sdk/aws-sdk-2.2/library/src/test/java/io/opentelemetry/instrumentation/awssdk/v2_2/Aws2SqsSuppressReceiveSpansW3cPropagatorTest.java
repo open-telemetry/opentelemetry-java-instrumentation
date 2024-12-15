@@ -21,7 +21,7 @@ class Aws2SqsSuppressReceiveSpansW3cPropagatorTest extends Aws2SqsSuppressReceiv
   }
 
   @Override
-  boolean isXrayInjectionEnabled() {
+  protected boolean isXrayInjectionEnabled() {
     return false;
   }
 }

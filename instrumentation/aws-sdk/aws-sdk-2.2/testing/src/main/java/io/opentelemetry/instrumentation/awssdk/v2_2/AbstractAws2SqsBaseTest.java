@@ -55,7 +55,6 @@ import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 public abstract class AbstractAws2SqsBaseTest {
-
   protected abstract InstrumentationExtension getTesting();
 
   protected abstract SqsClient configureSqsClient(SqsClient sqsClient);
@@ -64,12 +63,16 @@ public abstract class AbstractAws2SqsBaseTest {
 
   protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
 
+  protected abstract void assertSqsTraces(Boolean withParent, Boolean captureHeaders);
+
   protected static final StaticCredentialsProvider CREDENTIALS_PROVIDER =
       StaticCredentialsProvider.create(
           AwsBasicCredentials.create("my-access-key", "my-secret-key"));
 
   protected static int sqsPort;
   protected static SQSRestServer sqs;
+
+  protected final String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
 
   static Map<String, MessageAttributeValue> dummyMessageAttributes(int count) {
     Map<String, MessageAttributeValue> map = new HashMap<>();
@@ -80,12 +83,10 @@ public abstract class AbstractAws2SqsBaseTest {
     return map;
   }
 
-  protected final String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
-
-  ReceiveMessageRequest receiveMessageRequest =
+  protected ReceiveMessageRequest receiveMessageRequest =
       ReceiveMessageRequest.builder().queueUrl(queueUrl).build();
 
-  ReceiveMessageRequest receiveMessageBatchRequest =
+  protected ReceiveMessageRequest receiveMessageBatchRequest =
       ReceiveMessageRequest.builder()
           .queueUrl(queueUrl)
           .maxNumberOfMessages(3)
@@ -93,14 +94,14 @@ public abstract class AbstractAws2SqsBaseTest {
           .waitTimeSeconds(5)
           .build();
 
-  CreateQueueRequest createQueueRequest =
+  protected CreateQueueRequest createQueueRequest =
       CreateQueueRequest.builder().queueName("testSdkSqs").build();
 
-  SendMessageRequest sendMessageRequest =
+  protected SendMessageRequest sendMessageRequest =
       SendMessageRequest.builder().queueUrl(queueUrl).messageBody("{\"type\": \"hello\"}").build();
 
   @SuppressWarnings("unchecked")
-  SendMessageBatchRequest sendMessageBatchRequest =
+  protected SendMessageBatchRequest sendMessageBatchRequest =
       SendMessageBatchRequest.builder()
           .queueUrl(queueUrl)
           .entries(
@@ -111,7 +112,7 @@ public abstract class AbstractAws2SqsBaseTest {
               e -> e.messageBody("e3").id("i3").messageAttributes(dummyMessageAttributes(10)))
           .build();
 
-  boolean isXrayInjectionEnabled() {
+  protected boolean isXrayInjectionEnabled() {
     return true;
   }
 
@@ -122,20 +123,18 @@ public abstract class AbstractAws2SqsBaseTest {
     builder.region(Region.AP_NORTHEAST_1).credentialsProvider(CREDENTIALS_PROVIDER);
   }
 
-  void configureSdkClient(SqsAsyncClientBuilder builder) throws URISyntaxException {
+  protected void configureSdkClient(SqsAsyncClientBuilder builder) throws URISyntaxException {
     builder
         .overrideConfiguration(createOverrideConfigurationBuilder().build())
         .endpointOverride(new URI("http://localhost:" + sqsPort));
     builder.region(Region.AP_NORTHEAST_1).credentialsProvider(CREDENTIALS_PROVIDER);
   }
 
-  boolean isSqsAttributeInjectionEnabled() {
+  protected boolean isSqsAttributeInjectionEnabled() {
     // See io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecutionInterceptor
     return ConfigPropertiesUtil.getBoolean(
         "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", false);
   }
-
-  protected abstract void assertSqsTraces(Boolean withParent, Boolean captureHeaders);
 
   @BeforeAll
   static void setUp() {
