@@ -19,7 +19,7 @@ class Aws2SqsSuppressReceiveSpansW3cPropagatorAndXrayPropagatorTest
   }
 
   @Override
-  boolean isSqsAttributeInjectionEnabled() {
+  protected boolean isSqsAttributeInjectionEnabled() {
     return true;
   }
 }

@@ -20,7 +20,7 @@ class Aws2SqsSuppressReceiveSpansDefaultPropagatorTest extends Aws2SqsSuppressRe
   protected void configure(AwsSdkTelemetryBuilder telemetryBuilder) {}
 
   @Override
-  boolean isSqsAttributeInjectionEnabled() {
+  protected boolean isSqsAttributeInjectionEnabled() {
     return false;
   }
 

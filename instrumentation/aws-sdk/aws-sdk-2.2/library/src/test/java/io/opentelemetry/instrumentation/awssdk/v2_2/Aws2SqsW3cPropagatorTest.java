@@ -17,7 +17,7 @@ class Aws2SqsW3cPropagatorTest extends Aws2SqsTracingTest {
   }
 
   @Override
-  boolean isSqsAttributeInjectionEnabled() {
+  protected boolean isSqsAttributeInjectionEnabled() {
     return true;
   }
 
