@@ -282,7 +282,8 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                     span -> span.hasName("Sqs.CreateQueue").hasKind(SpanKind.CLIENT)),
             trace -> {
               publishSpan.set(trace.getSpan(0));
-              trace.hasSpansSatisfyingExactly(span -> publishSpan(span, queueUrl));
+              trace.hasSpansSatisfyingExactly(
+                  span -> publishSpan(span, queueUrl, "SendMessageBatch"));
             },
             trace -> {
               List<Consumer<SpanDataAssert>> spanAsserts = new ArrayList<>();

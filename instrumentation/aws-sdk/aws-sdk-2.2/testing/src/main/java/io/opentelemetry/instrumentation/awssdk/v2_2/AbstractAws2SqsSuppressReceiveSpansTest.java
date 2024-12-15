@@ -49,7 +49,7 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
                 trace -> trace.hasSpansSatisfyingExactly(span -> createQueueSpan(span)),
                 trace ->
                     trace.hasSpansSatisfyingExactly(
-                        span -> publishSpan(span, queueUrl),
+                        span -> publishSpan(span, queueUrl, "SendMessage"),
                         span -> processSpan(span, trace.getSpan(0)),
                         span ->
                             span.hasName("process child")
@@ -121,7 +121,8 @@ public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAw
                 trace -> trace.hasSpansSatisfyingExactly(span -> createQueueSpan(span)),
                 trace -> {
                   List<Consumer<SpanDataAssert>> spanAsserts =
-                      new ArrayList<>(singletonList(span -> publishSpan(span, queueUrl)));
+                      new ArrayList<>(
+                          singletonList(span -> publishSpan(span, queueUrl, "SendMessageBatch")));
 
                   for (int i = 0; i <= (isXrayInjectionEnabled() ? 2 : 1); i++) {
                     spanAsserts.add(span -> processSpan(span, trace.getSpan(0)));
