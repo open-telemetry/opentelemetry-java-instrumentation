@@ -82,32 +82,31 @@ public class CamundaCommonBehaviorInstrumentation implements TypeInstrumentation
       request.setActivityId(Optional.ofNullable(execution.getCurrentActivityId()));
       request.setBusinessKey(Optional.ofNullable(execution.getProcessBusinessKey()));
 
-      name:
-      {
-        if (execution.getBpmnModelElementInstance() != null) {
-          // TODO lambda does not work due to access modifier
-          if (execution.getBpmnModelElementInstance() instanceof EndEvent) {
-            EndEvent e = (EndEvent) execution.getBpmnModelElementInstance();
+      if (execution.getBpmnModelElementInstance() != null) {
+        // TODO lambda does not work due to access modifier
+        if (execution.getBpmnModelElementInstance() instanceof EndEvent) {
+          EndEvent e = (EndEvent) execution.getBpmnModelElementInstance();
 
-            if (e.getEventDefinitions() == null || e.getEventDefinitions().isEmpty()) {
+          if (e.getEventDefinitions() == null || e.getEventDefinitions().isEmpty()) {
+            request.setActivityName(Optional.of("End"));
+          }
+          for (EventDefinition ed : e.getEventDefinitions()) {
+            if (ed instanceof TerminateEventDefinition) {
+              request.setActivityName(Optional.of("End"));
+            } else if (ed instanceof ErrorEventDefinition) {
+              request.setActivityName(Optional.of("Error End"));
+            } else if (ed instanceof CompensateEventDefinition) {
+              request.setActivityName(Optional.of("Compensation End"));
+            } else {
               request.setActivityName(Optional.of("End"));
             }
-            for (EventDefinition ed : e.getEventDefinitions()) {
-              if (ed instanceof TerminateEventDefinition) {
-                request.setActivityName(Optional.of("End"));
-              } else if (ed instanceof ErrorEventDefinition) {
-                request.setActivityName(Optional.of("Error End"));
-              } else if (ed instanceof CompensateEventDefinition) {
-                request.setActivityName(Optional.of("Compensation End"));
-              } else {
-                request.setActivityName(Optional.of("End"));
-              }
-            }
-            break name;
-          } else if (execution.getBpmnModelElementInstance() instanceof Gateway) {
-            // TODO
           }
+        } else if (execution.getBpmnModelElementInstance() instanceof Gateway) {
+          // TODO
+        } else {
+          request.setActivityName(Optional.ofNullable(execution.getCurrentActivityName()));
         }
+      } else {
         request.setActivityName(Optional.ofNullable(execution.getCurrentActivityName()));
       }
 
