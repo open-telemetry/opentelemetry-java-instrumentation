@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class CamundaCommonBehaviorModule extends InstrumentationModule {
 
-  public CamundaTaskActivityBehaviorModule() {
+  public CamundaCommonBehaviorModule() {
     super("camunda", "camunda-behavior", "camunda-behavior-7_18");
   }
 

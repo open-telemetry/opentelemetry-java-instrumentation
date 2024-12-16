@@ -71,6 +71,7 @@ public class CamundaCallableElementActivityBehaviorInstrumentation implements Ty
       request.setProcessInstanceId(Optional.ofNullable(execution.getProcessInstanceId()));
       request.setActivityId(Optional.ofNullable(execution.getCurrentActivityId()));
       request.setActivityName(Optional.ofNullable(execution.getCurrentActivityName()));
+      request.setBusinessKey(Optional.ofNullable(execution.getProcessBusinessKey()));
 
       if (Java8BytecodeBridge.currentContext() == Java8BytecodeBridge.rootContext()) {
         // log

@@ -12,6 +12,7 @@ public class CamundaCommonRequest {
   private Optional<String> processDefinitionId = Optional.empty();
   private Optional<String> processDefinitionKey = Optional.empty();
   private Optional<String> processInstanceId = Optional.empty();
+  private Optional<String> businessKey = Optional.empty();
   private Optional<String> activityId = Optional.empty();
   private Optional<String> activityName = Optional.empty();
   private Optional<String> topicName = Optional.empty();
@@ -39,6 +40,14 @@ public class CamundaCommonRequest {
 
   public void setProcessInstanceId(Optional<String> processInstanceId) {
     this.processInstanceId = processInstanceId;
+  }
+
+  public Optional<String> getBusinessKey() {
+    return businessKey;
+  }
+
+  public void setBusinessKey(Optional<String> businessKey) {
+    this.businessKey = businessKey;
   }
 
   public Optional<String> getActivityId() {

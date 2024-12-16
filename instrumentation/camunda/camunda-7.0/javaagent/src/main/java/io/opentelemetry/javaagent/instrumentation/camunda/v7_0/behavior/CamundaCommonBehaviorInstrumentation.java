@@ -66,6 +66,7 @@ public class CamundaCommonBehaviorInstrumentation implements TypeInstrumentation
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addTracingEnter(
         @Advice.Argument(0) ActivityExecution execution,
+        @Advice.This Object target,
         @Advice.Local("request") CamundaCommonRequest request,
         @Advice.Local("otelParentScope") Scope parentScope,
         @Advice.Local("otelContext") Context context,
@@ -79,6 +80,7 @@ public class CamundaCommonBehaviorInstrumentation implements TypeInstrumentation
       request.setProcessDefinitionId(Optional.ofNullable(execution.getProcessDefinitionId()));
       request.setProcessInstanceId(Optional.ofNullable(execution.getProcessInstanceId()));
       request.setActivityId(Optional.ofNullable(execution.getCurrentActivityId()));
+      request.setBusinessKey(Optional.ofNullable(execution.getProcessBusinessKey()));
 
       name:
       {
