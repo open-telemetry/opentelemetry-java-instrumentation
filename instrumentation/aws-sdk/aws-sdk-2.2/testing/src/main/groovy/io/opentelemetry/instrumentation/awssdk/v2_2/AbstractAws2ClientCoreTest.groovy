@@ -35,7 +35,7 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable
 
 @Unroll
-abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
+abstract class AbstractAws2ClientCoreTest2 extends InstrumentationSpecification {
   static boolean isSqsAttributeInjectionEnabled() {
     // See io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecutionInterceptor
     return ConfigPropertiesUtil.getBoolean("otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", false)
