@@ -68,7 +68,7 @@ include("instrumentation:yarpc-1.0:library")
 include("instrumentation:yarpc-1.0:testing")
 ```
 
-## Instrumentation Submodules
+### Instrumentation Submodules
 
 When writing instrumentation that requires submodules for different versions, the name of each
 submodule must be prefixed with the name of the parent directory (typically the library or
