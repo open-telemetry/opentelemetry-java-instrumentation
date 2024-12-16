@@ -71,8 +71,6 @@ public class CamundaExternalTaskActivityBehaviorInstrumentation implements TypeI
       request.setActivityId(Optional.ofNullable(execution.getCurrentActivityId()));
       request.setActivityName(Optional.ofNullable(execution.getCurrentActivityName()));
 
-      if (Java8BytecodeBridge.currentContext() == Java8BytecodeBridge.rootContext()) {}
-
       parentContext =
           getOpentelemetry()
               .getPropagators()
