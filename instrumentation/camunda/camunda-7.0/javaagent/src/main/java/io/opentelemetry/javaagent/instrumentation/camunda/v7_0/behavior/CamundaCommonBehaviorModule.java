@@ -29,9 +29,10 @@ public class CamundaCommonBehaviorModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-		return hasClassesNamed("org.camunda.bpm.engine.impl.bpmn.behavior.TaskActivityBehavior",
-				"org.camunda.bpm.engine.impl.bpmn.behavior.NoneEndEventActivityBehavior",
-				"org.camunda.bpm.engine.impl.bpmn.behavior.ErrorEndEventActivityBehavior");
+    return hasClassesNamed(
+        "org.camunda.bpm.engine.impl.bpmn.behavior.TaskActivityBehavior",
+        "org.camunda.bpm.engine.impl.bpmn.behavior.NoneEndEventActivityBehavior",
+        "org.camunda.bpm.engine.impl.bpmn.behavior.ErrorEndEventActivityBehavior");
   }
 
   String[] helperClassnames = {
