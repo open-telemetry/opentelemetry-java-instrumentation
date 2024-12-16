@@ -9,6 +9,7 @@ muzzle {
 
     // have not tested with versions prior to 7.18.0
     versions.set("[7.18.0,)")
+    extraDependency("org.camunda.bpm:camunda-external-task-client:7.18.0")
   }
 }
 
