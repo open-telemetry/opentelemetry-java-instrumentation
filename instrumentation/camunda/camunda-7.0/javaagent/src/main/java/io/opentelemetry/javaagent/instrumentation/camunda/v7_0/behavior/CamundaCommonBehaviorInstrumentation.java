@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.camunda.v7_0.behavior;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.camunda.v7_0.behavior.CamundaBehaviorSingletons.getInstumenter;
 import static io.opentelemetry.javaagent.instrumentation.camunda.v7_0.behavior.CamundaBehaviorSingletons.getOpentelemetry;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -13,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.camunda.v7_0.behavior.CamundaActivityExecutionGetter;
-import io.opentelemetry.instrumentation.camunda.v7_0.behavior.CamundaActivityExecutionLocalSetter;
 import io.opentelemetry.instrumentation.camunda.v7_0.common.CamundaCommonRequest;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -25,39 +25,42 @@ import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
 import org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution;
 
-public class CamundaExternalTaskActivityBehaviorInstrumentation implements TypeInstrumentation {
+public class CamundaCommonBehaviorInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed(
-        "org.camunda.bpm.engine.impl.bpmn.behavior.ExternalTaskActivityBehavior");
+    return hasClassesNamed("org.camunda.bpm.engine.impl.bpmn.behavior.TaskActivityBehavior");
   }
 
-  @Override
-  public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.camunda.bpm.engine.impl.bpmn.behavior.ExternalTaskActivityBehavior");
-  }
+	@Override
+	public ElementMatcher<TypeDescription> typeMatcher() {
+		return hasSuperType(named("org.camunda.bpm.engine.impl.bpmn.behavior.TaskActivityBehavior"))
+				.or(named("org.camunda.bpm.engine.impl.bpmn.behavior.ExternalTaskActivityBehavior"))
+				.or(named("org.camunda.bpm.engine.impl.bpmn.behavior.TerminateEndEventActivityBehavior"))
+				.or(named("org.camunda.bpm.engine.impl.bpmn.behavior.NoneEndEventActivityBehavior"))
+				.or(named("org.camunda.bpm.engine.impl.bpmn.behavior.ErrorEndEventActivityBehavior"));
+		// elements that have been tested with instrumentation, eventually this can be
+		// replaced by the supertype AbstractBpmnActivityBehavior, once all elements
+		// instrumentations have been certified and instrumented, but will need to make
+		// sure its not callable element as the instrumentation should remain separate
+		// due to logic
+	}
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         ElementMatchers.isMethod().and(ElementMatchers.named("execute")),
-        this.getClass().getName() + "$CamundaExternalTaskActivityBehaviorAdvice");
+        this.getClass().getName() + "$CamundaCommonBehaviorAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class CamundaExternalTaskActivityBehaviorAdvice {
+  public static class CamundaCommonBehaviorAdvice {
 
-    /**
-     * Sets parent context to process instance. Creates new context and span. propagates current
-     * context to variable set for topic to retrieve.
-     */
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addTracingEnter(
         @Advice.Argument(0) ActivityExecution execution,
         @Advice.Local("request") CamundaCommonRequest request,
         @Advice.Local("otelParentScope") Scope parentScope,
-        @Advice.Local("otelParentContext") Context parentContext,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
@@ -69,9 +72,37 @@ public class CamundaExternalTaskActivityBehaviorInstrumentation implements TypeI
       request.setProcessDefinitionId(Optional.ofNullable(execution.getProcessDefinitionId()));
       request.setProcessInstanceId(Optional.ofNullable(execution.getProcessInstanceId()));
       request.setActivityId(Optional.ofNullable(execution.getCurrentActivityId()));
-      request.setActivityName(Optional.ofNullable(execution.getCurrentActivityName()));
 
-      parentContext =
+      name: {
+				if (execution.getBpmnModelElementInstance() != null) {
+					// TODO lambda does not work due to access modifier
+					if (execution.getBpmnModelElementInstance() instanceof EndEvent) {
+						getLogger().info("instance of EndEvent");
+						EndEvent e = (EndEvent) execution.getBpmnModelElementInstance();
+
+						if (e.getEventDefinitions() == null || e.getEventDefinitions().isEmpty()) {
+							request.setActivityName(Optional.of("End"));
+						}
+						for (EventDefinition ed : e.getEventDefinitions()) {
+							if (ed instanceof TerminateEventDefinition) {
+								request.setActivityName(Optional.of("End"));
+							} else if (ed instanceof ErrorEventDefinition) {
+								request.setActivityName(Optional.of("Error End"));
+							} else if (ed instanceof CompensateEventDefinition) {
+								request.setActivityName(Optional.of("Compensation End"));
+							} else {
+								request.setActivityName(Optional.of("End"));
+							}
+						}
+						break name;
+					} else if (execution.getBpmnModelElementInstance() instanceof Gateway) {
+						// TODO
+					} 
+				}
+				request.setActivityName(Optional.ofNullable(execution.getCurrentActivityName()));
+			}
+
+      Context parentContext =
           getOpentelemetry()
               .getPropagators()
               .getTextMapPropagator()
@@ -86,18 +117,18 @@ public class CamundaExternalTaskActivityBehaviorInstrumentation implements TypeI
         context = getInstumenter().start(Java8BytecodeBridge.currentContext(), request);
         scope = context.makeCurrent();
 
-        getOpentelemetry()
-            .getPropagators()
-            .getTextMapPropagator()
-            .inject(context, execution, new CamundaActivityExecutionLocalSetter());
+        if (target.getClass() == org.camunda.bpm.engine.impl.bpmn.behavior.ExternalTaskActivityBehavior.class) {
+
+					getOpentelemetry().getPropagators().getTextMapPropagator().inject(context, execution,
+							new CamundaActivityExecutionLocalSetter());
+				}
       }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void closeTrace(
-        @Advice.Local("request") CamundaCommonRequest request,
+        @Advice.Local("request") CamundaCommonRequest request, @Advice.This Object target,
         @Advice.Local("otelParentScope") Scope parentScope,
-        @Advice.Local("otelParentContext") Context parentContext,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Thrown Throwable throwable) {
