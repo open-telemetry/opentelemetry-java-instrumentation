@@ -14,20 +14,21 @@ import ratpack.func.Action;
 import ratpack.http.client.HttpClient;
 import ratpack.http.client.HttpClientSpec;
 
-class RatpackHttpClientTest extends AbstractRatpackHttpClientTest {
+@SuppressWarnings("deprecation") // testing deprecated API
+class RatpackHttpClientOldTest extends AbstractRatpackHttpClientTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forLibrary();
 
   @Override
   protected HttpClient buildHttpClient() throws Exception {
-    return RatpackClientTelemetry.builder(testing.getOpenTelemetry())
-        .setCapturedRequestHeaders(
+    return RatpackTelemetry.builder(testing.getOpenTelemetry())
+        .setCapturedClientRequestHeaders(
             Collections.singletonList(AbstractHttpClientTest.TEST_REQUEST_HEADER))
-        .setCapturedResponseHeaders(
+        .setCapturedClientResponseHeaders(
             Collections.singletonList(AbstractHttpClientTest.TEST_RESPONSE_HEADER))
         .build()
-        .instrument(HttpClient.of(Action.noop()));
+        .instrumentHttpClient(HttpClient.of(Action.noop()));
   }
 
   @Override

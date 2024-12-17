@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webflux.v5_3;
+package io.opentelemetry.instrumentation.spring.webflux.old.v5_3;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.controller;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
@@ -37,24 +37,27 @@ import org.springframework.web.server.WebFilter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@Deprecated
 @SpringBootApplication
-class TestWebfluxSpringBootApp {
+class TestWebfluxSpringBootOldApp {
 
   static ConfigurableApplicationContext start(int port, String contextPath) {
     Properties props = new Properties();
     props.put("server.port", port);
     props.put("spring.webflux.base-path", contextPath);
 
-    SpringApplication app = new SpringApplication(TestWebfluxSpringBootApp.class);
+    SpringApplication app = new SpringApplication(TestWebfluxSpringBootOldApp.class);
     app.setDefaultProperties(props);
     return app.run();
   }
 
   @Bean
   WebFilter telemetryFilter() {
-    return SpringWebfluxServerTelemetry.builder(GlobalOpenTelemetry.get())
-        .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-        .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
+    return io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxTelemetry.builder(
+            GlobalOpenTelemetry.get())
+        .setCapturedServerRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
+        .setCapturedServerResponseHeaders(
+            singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
         .build()
         .createWebFilterAndRegisterReactorHook();
   }
