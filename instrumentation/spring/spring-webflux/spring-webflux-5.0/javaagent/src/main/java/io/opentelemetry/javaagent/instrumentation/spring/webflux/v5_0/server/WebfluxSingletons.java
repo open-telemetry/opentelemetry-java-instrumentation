@@ -11,7 +11,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
-import io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.SpringWebfluxConfig;
 import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.util.pattern.PathPattern;
@@ -25,8 +24,6 @@ public final class WebfluxSingletons {
     InstrumenterBuilder<Object, Void> builder =
         Instrumenter.builder(
             GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, new WebfluxSpanNameExtractor());
-
-    if (SpringWebfluxConfig.captureExperimentalSpanAttributes()) {}
 
     INSTRUMENTER =
         builder
