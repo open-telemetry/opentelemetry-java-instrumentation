@@ -58,6 +58,8 @@ public abstract class HttpClientTestOptions {
 
   abstract HttpClientInstrumentationType getInstrumentationType();
 
+  public abstract boolean getTestCaptureHttpHeaders();
+
   public boolean isLowLevelInstrumentation() {
     return getInstrumentationType() == HttpClientInstrumentationType.LOW_LEVEL;
   }
@@ -131,8 +133,11 @@ public abstract class HttpClientTestOptions {
           .setTestCallbackWithParent(true)
           .setTestErrorWithCallback(true)
           .setTestNonStandardHttpMethod(true)
+          .setTestCaptureHttpHeaders(true)
           .setHttpProtocolVersion(uri -> "1.1");
     }
+
+    Builder setTestCaptureHttpHeaders(boolean value);
 
     Builder setHttpAttributes(Function<URI, Set<AttributeKey<?>>> value);
 
