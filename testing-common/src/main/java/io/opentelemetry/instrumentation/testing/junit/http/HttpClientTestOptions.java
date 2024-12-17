@@ -58,8 +58,6 @@ public abstract class HttpClientTestOptions {
 
   abstract HttpClientInstrumentationType getInstrumentationType();
 
-  public abstract boolean getTestCaptureHttpHeaders();
-
   public boolean isLowLevelInstrumentation() {
     return getInstrumentationType() == HttpClientInstrumentationType.LOW_LEVEL;
   }
@@ -90,6 +88,8 @@ public abstract class HttpClientTestOptions {
   public abstract boolean getTestErrorWithCallback();
 
   public abstract boolean getTestNonStandardHttpMethod();
+
+  public abstract boolean getTestCaptureHttpHeaders();
 
   public abstract Function<URI, String> getHttpProtocolVersion();
 
