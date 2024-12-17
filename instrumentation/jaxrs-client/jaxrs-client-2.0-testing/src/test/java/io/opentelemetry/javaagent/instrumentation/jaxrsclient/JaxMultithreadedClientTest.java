@@ -28,7 +28,7 @@ class JaxMultithreadedClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  public static ServerExtension server =
+  static ServerExtension server =
       new ServerExtension() {
         @Override
         protected void configure(ServerBuilder sb) {

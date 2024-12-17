@@ -20,7 +20,7 @@ import javax.ws.rs.core.Response;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 
-public class ResteasySingleConnection implements SingleConnection {
+class ResteasySingleConnection implements SingleConnection {
   private final ResteasyClient client;
   private final String host;
   private final int port;

@@ -44,10 +44,5 @@ class CxfClientTest extends JaxRsClientTest {
     optionsBuilder.setTestReadTimeout(false);
     optionsBuilder.setTestWithClientParent(!Boolean.getBoolean("testLatestDeps"));
     optionsBuilder.setClientSpanErrorMapper((uri, exception) -> clientSpanError(uri, exception));
-    // CXF JAX-RS client uses HttpURLConnection internally, which does not support pipelining nor
-    // waiting for a connection in the pool to become available. Therefore a high concurrency test
-    // would require manually doing requests one after another which is not meaningful for a high
-    // concurrency test.
-    optionsBuilder.setSingleConnectionFactory((host, port) -> null);
   }
 }

@@ -22,7 +22,6 @@ class ResteasyClientTest extends JaxRsClientTest {
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     super.configure(optionsBuilder);
-    optionsBuilder.setSingleConnectionFactory(
-        (host, port) -> new ResteasySingleConnection(host, port));
+    optionsBuilder.setSingleConnectionFactory(ResteasySingleConnection::new);
   }
 }
