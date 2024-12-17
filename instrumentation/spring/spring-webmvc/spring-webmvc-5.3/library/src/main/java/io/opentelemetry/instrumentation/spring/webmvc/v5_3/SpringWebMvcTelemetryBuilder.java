@@ -70,7 +70,8 @@ public final class SpringWebMvcTelemetryBuilder {
    * @param responseHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public SpringWebMvcTelemetryBuilder setCapturedResponseHeaders(Collection<String> responseHeaders) {
+  public SpringWebMvcTelemetryBuilder setCapturedResponseHeaders(
+      Collection<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
