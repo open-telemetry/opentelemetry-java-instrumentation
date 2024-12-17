@@ -1,4 +1,5 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 import java.time.Duration
 
 plugins {
@@ -60,9 +61,9 @@ tasks {
     }
   }
 
-  withType(KotlinCompile::class).configureEach {
-    kotlinOptions {
-      jvmTarget = "11"
+  withType(KotlinJvmCompile::class).configureEach {
+    compilerOptions {
+      jvmTarget = JvmTarget.JVM_11
     }
   }
 }
