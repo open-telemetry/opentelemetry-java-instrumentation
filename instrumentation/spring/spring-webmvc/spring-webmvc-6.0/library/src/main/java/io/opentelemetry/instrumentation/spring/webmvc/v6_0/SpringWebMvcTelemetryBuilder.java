@@ -16,7 +16,6 @@ import io.opentelemetry.instrumentation.spring.webmvc.v6_0.internal.SpringMvcBui
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Collection;
-import java.util.Set;
 import java.util.function.Function;
 
 /** A builder of {@link SpringWebMvcTelemetry}. */
@@ -97,10 +96,10 @@ public final class SpringWebMvcTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Set)
+   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
-  public SpringWebMvcTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+  public SpringWebMvcTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
   }
