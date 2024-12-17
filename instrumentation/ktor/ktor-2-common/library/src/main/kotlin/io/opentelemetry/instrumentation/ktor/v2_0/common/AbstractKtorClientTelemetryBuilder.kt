@@ -27,17 +27,19 @@ abstract class AbstractKtorClientTelemetryBuilder(
   }
 
   internal lateinit var openTelemetry: OpenTelemetry
-  internal lateinit var internalBuilder: DefaultHttpClientInstrumenterBuilder<HttpRequestData, HttpResponse>
   protected lateinit var builder: DefaultHttpClientInstrumenterBuilder<HttpRequestData, HttpResponse>
+
+  internal fun builder(): DefaultHttpClientInstrumenterBuilder<HttpRequestData, HttpResponse> {
+    return builder
+  }
 
   fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
     this.openTelemetry = openTelemetry
-    this.internalBuilder = DefaultHttpClientInstrumenterBuilder.create(
+    this.builder = DefaultHttpClientInstrumenterBuilder.create(
       instrumentationName,
       openTelemetry,
       KtorHttpClientAttributesGetter
     )
-    this.builder = internalBuilder
   }
 
   protected fun getOpenTelemetry(): OpenTelemetry {
