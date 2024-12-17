@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.spring.webmvc.v5_3.internal.Experimental;
 import io.opentelemetry.instrumentation.spring.webmvc.v5_3.internal.SpringMvcBuilderUtil;
-import java.util.List;
+import java.util.Collection;
 import java.util.Set;
 import java.util.function.Function;
 import javax.servlet.http.HttpServletRequest;
@@ -59,7 +59,7 @@ public final class SpringWebMvcTelemetryBuilder {
    * @param requestHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public SpringWebMvcTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
+  public SpringWebMvcTelemetryBuilder setCapturedRequestHeaders(Collection<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
@@ -70,7 +70,7 @@ public final class SpringWebMvcTelemetryBuilder {
    * @param responseHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public SpringWebMvcTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
+  public SpringWebMvcTelemetryBuilder setCapturedResponseHeaders(Collection<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
