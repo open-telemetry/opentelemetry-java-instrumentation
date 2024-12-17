@@ -92,7 +92,8 @@ public final class JettyClientTelemetryBuilder {
    * @param responseHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public JettyClientTelemetryBuilder setCapturedResponseHeaders(Collection<String> responseHeaders) {
+  public JettyClientTelemetryBuilder setCapturedResponseHeaders(
+      Collection<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }

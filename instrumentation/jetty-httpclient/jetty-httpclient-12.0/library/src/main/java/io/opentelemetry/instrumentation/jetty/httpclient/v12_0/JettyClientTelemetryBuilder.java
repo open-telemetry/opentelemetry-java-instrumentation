@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExt
 import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.Experimental;
 import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.JettyHttpClientInstrumenterBuilderFactory;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 import org.eclipse.jetty.client.HttpClientTransport;

@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExt
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.Experimental;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackServerInstrumenterBuilderFactory;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 import ratpack.http.Request;

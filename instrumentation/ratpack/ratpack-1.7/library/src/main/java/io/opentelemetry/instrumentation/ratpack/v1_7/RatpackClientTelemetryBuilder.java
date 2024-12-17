@@ -48,7 +48,8 @@ public final class RatpackClientTelemetryBuilder {
    * @param requestHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public RatpackClientTelemetryBuilder setCapturedRequestHeaders(Collection<String> requestHeaders) {
+  public RatpackClientTelemetryBuilder setCapturedRequestHeaders(
+      Collection<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
@@ -59,7 +60,8 @@ public final class RatpackClientTelemetryBuilder {
    * @param responseHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public RatpackClientTelemetryBuilder setCapturedResponseHeaders(Collection<String> responseHeaders) {
+  public RatpackClientTelemetryBuilder setCapturedResponseHeaders(
+      Collection<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
