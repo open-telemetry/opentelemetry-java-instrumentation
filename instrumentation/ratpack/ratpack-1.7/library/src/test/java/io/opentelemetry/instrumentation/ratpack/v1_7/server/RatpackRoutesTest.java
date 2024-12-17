@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.ratpack.v1_7.server;
 
 import io.opentelemetry.instrumentation.ratpack.server.AbstractRatpackRoutesTest;
-import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackTelemetry;
+import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackServerTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -24,8 +24,8 @@ class RatpackRoutesTest extends AbstractRatpackRoutesTest {
 
   @Override
   protected void configure(RatpackServerSpec serverSpec) throws Exception {
-    RatpackTelemetry telemetry = RatpackTelemetry.create(testing.getOpenTelemetry());
-    serverSpec.registryOf(telemetry::configureServerRegistry);
+    RatpackServerTelemetry telemetry = RatpackServerTelemetry.create(testing.getOpenTelemetry());
+    serverSpec.registryOf(telemetry::configureRegistry);
   }
 
   @Override

@@ -29,7 +29,7 @@ ext {
     opentelemetryJavaagent     : "2.11.0-SNAPSHOT",
     opentelemetryJavaagentAlpha: "2.11.0-alpha-SNAPSHOT",
 
-    junit                      : "5.11.3"
+    junit                      : "5.11.4"
   ]
 
   deps = [

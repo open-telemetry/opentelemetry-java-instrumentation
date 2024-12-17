@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.restlet.v2_0;
+package io.opentelemetry.instrumentation.ratpack.v1_7;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
@@ -11,57 +11,59 @@ import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHt
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.restlet.v2_0.internal.Experimental;
-import io.opentelemetry.instrumentation.restlet.v2_0.internal.RestletTelemetryBuilderFactory;
+import io.opentelemetry.instrumentation.ratpack.v1_7.internal.Experimental;
+import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackServerInstrumenterBuilderFactory;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
-import org.restlet.Request;
-import org.restlet.Response;
+import ratpack.http.Request;
+import ratpack.http.Response;
 
-/** A builder of {@link RestletTelemetry}. */
-public final class RestletTelemetryBuilder {
+/** A builder for {@link RatpackServerTelemetry}. */
+public final class RatpackServerTelemetryBuilder {
+
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.ratpack-1.7";
 
   private final DefaultHttpServerInstrumenterBuilder<Request, Response> builder;
 
   static {
-    Experimental.setSetEmitExperimentalTelemetry(
+    Experimental.setSetEmitExperimentalServerTelemetry(
         (builder, emit) -> builder.builder.setEmitExperimentalHttpServerMetrics(emit));
   }
 
-  RestletTelemetryBuilder(OpenTelemetry openTelemetry) {
-    builder = RestletTelemetryBuilderFactory.create(openTelemetry);
+  RatpackServerTelemetryBuilder(OpenTelemetry openTelemetry) {
+    builder = RatpackServerInstrumenterBuilderFactory.create(INSTRUMENTATION_NAME, openTelemetry);
   }
 
   /**
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
-   * items.
+   * items. The {@link AttributesExtractor} will be executed after all default extractors.
    */
   @CanIgnoreReturnValue
-  public RestletTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<Request, Response> attributesExtractor) {
+  public RatpackServerTelemetryBuilder addAttributesExtractor(
+      AttributesExtractor<? super Request, ? super Response> attributesExtractor) {
     builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 
   /**
-   * Configures the HTTP request headers that will be captured as span attributes.
+   * Configures the HTTP server request headers that will be captured as span attributes.
    *
    * @param requestHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public RestletTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
+  public RatpackServerTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
 
   /**
-   * Configures the HTTP response headers that will be captured as span attributes.
+   * Configures the HTTP server response headers that will be captured as span attributes.
    *
    * @param responseHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public RestletTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
+  public RatpackServerTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
@@ -80,41 +82,22 @@ public final class RestletTelemetryBuilder {
    * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Set)
    */
   @CanIgnoreReturnValue
-  public RestletTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+  public RatpackServerTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
   }
 
-  /**
-   * Configures the instrumentation to emit experimental HTTP server metrics.
-   *
-   * @param emitExperimentalHttpServerMetrics {@code true} if the experimental HTTP server metrics
-   *     are to be emitted.
-   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(RestletTelemetryBuilder,
-   *     boolean)} instead.
-   */
-  @Deprecated
+  /** Sets custom server {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
-  public RestletTelemetryBuilder setEmitExperimentalHttpServerMetrics(
-      boolean emitExperimentalHttpServerMetrics) {
-    builder.setEmitExperimentalHttpServerMetrics(emitExperimentalHttpServerMetrics);
-    return this;
-  }
-
-  /** Sets custom {@link SpanNameExtractor} via transform function. */
-  @CanIgnoreReturnValue
-  public RestletTelemetryBuilder setSpanNameExtractor(
+  public RatpackServerTelemetryBuilder setSpanNameExtractor(
       Function<SpanNameExtractor<? super Request>, ? extends SpanNameExtractor<? super Request>>
-          spanNameExtractorTransformer) {
-    builder.setSpanNameExtractor(spanNameExtractorTransformer);
+          serverSpanNameExtractor) {
+    builder.setSpanNameExtractor(serverSpanNameExtractor);
     return this;
   }
 
-  /**
-   * Returns a new {@link RestletTelemetry} with the settings of this {@link
-   * RestletTelemetryBuilder}.
-   */
-  public RestletTelemetry build() {
-    return new RestletTelemetry(builder.build());
+  /** Returns a new {@link RatpackServerTelemetry} with the configuration of this builder. */
+  public RatpackServerTelemetry build() {
+    return new RatpackServerTelemetry(builder.build());
   }
 }
