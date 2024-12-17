@@ -13,8 +13,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.Experimental;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpClientInstrumenterBuilderFactory;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 import okhttp3.Interceptor;
 import okhttp3.Response;
@@ -93,10 +93,10 @@ public final class OkHttpTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
-  public OkHttpTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+  public OkHttpTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
   }

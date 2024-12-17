@@ -13,8 +13,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.spring.web.v3_1.internal.Experimental;
 import io.opentelemetry.instrumentation.spring.web.v3_1.internal.WebTelemetryUtil;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpResponse;
@@ -112,10 +112,10 @@ public final class SpringWebTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
-  public SpringWebTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+  public SpringWebTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
   }

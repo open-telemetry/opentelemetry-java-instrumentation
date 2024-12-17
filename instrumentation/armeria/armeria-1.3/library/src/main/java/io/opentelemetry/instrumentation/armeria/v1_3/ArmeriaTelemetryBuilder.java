@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExt
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.Experimental;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -217,10 +218,10 @@ public final class ArmeriaTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
-   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Set)
-   * @deprecated Use {@link ArmeriaClientTelemetryBuilder#setKnownMethods(Set)} and {@link
-   *     ArmeriaServerTelemetryBuilder#setKnownMethods(Set)} instead.
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Collection)
+   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Collection)
+   * @deprecated Use {@link ArmeriaClientTelemetryBuilder#setKnownMethods(Collection)} and {@link
+   *     ArmeriaServerTelemetryBuilder#setKnownMethods(Collection)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
