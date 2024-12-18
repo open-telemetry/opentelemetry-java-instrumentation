@@ -33,7 +33,7 @@ abstract class JaxRsClientTest extends AbstractHttpClientTest<Invocation.Builder
 
   protected static final List<String> BODY_METHODS = asList("POST", "PUT");
   protected static final int CONNECT_TIMEOUT_MS = 5000;
-  protected static final int READ_TIMEOUT_MS = 2000;
+  protected static final int READ_TIMEOUT_MS = 3000;
 
   @Override
   public Invocation.Builder buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -52,6 +52,7 @@ abstract class JaxRsClientTest extends AbstractHttpClientTest<Invocation.Builder
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     super.configure(optionsBuilder);
     optionsBuilder.setTestRedirects(false);
+    optionsBuilder.setTestClientError(true);
     optionsBuilder.setTestNonStandardHttpMethod(false);
   }
 
