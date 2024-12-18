@@ -42,7 +42,7 @@ import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 public abstract class AbstractAws2SqsSuppressReceiveSpansTest extends AbstractAws2SqsBaseTest {
 
   @Override
-  protected void assertSqsTraces(Boolean withParent, Boolean captureHeaders) {
+  protected void assertSqsTraces(boolean withParent, boolean captureHeaders) {
     List<Consumer<TraceAssert>> traceAsserts =
         new ArrayList<>(
             Arrays.asList(

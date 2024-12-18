@@ -63,7 +63,7 @@ public abstract class AbstractAws2SqsBaseTest {
 
   protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
 
-  protected abstract void assertSqsTraces(Boolean withParent, Boolean captureHeaders);
+  protected abstract void assertSqsTraces(boolean withParent, boolean captureHeaders);
 
   protected static final StaticCredentialsProvider CREDENTIALS_PROVIDER =
       StaticCredentialsProvider.create(

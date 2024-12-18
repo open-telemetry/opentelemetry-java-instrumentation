@@ -52,7 +52,7 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest {
 
   @Override
-  protected void assertSqsTraces(Boolean withParent, Boolean captureHeaders) {
+  protected void assertSqsTraces(boolean withParent, boolean captureHeaders) {
     int offset = withParent ? 2 : 0;
     AtomicReference<SpanData> publishSpan = new AtomicReference<>();
 
