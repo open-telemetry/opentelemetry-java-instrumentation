@@ -133,7 +133,7 @@ public abstract class HttpClientTestOptions {
           .setTestCallbackWithParent(true)
           .setTestErrorWithCallback(true)
           .setTestNonStandardHttpMethod(true)
-          .setTestClientError(false)
+          .setTestClientError(true)
           .setHttpProtocolVersion(uri -> "1.1");
     }
 
