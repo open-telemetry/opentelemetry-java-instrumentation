@@ -15,17 +15,10 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 
 public abstract class Aws2SqsSuppressReceiveSpansTest
     extends AbstractAws2SqsSuppressReceiveSpansTest {
+  protected AwsSdkTelemetry telemetry;
+
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
-
-  @BeforeEach
-  void setup() {
-    AwsSdkTelemetryBuilder telemetryBuilder =
-        AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(true);
-    configure(telemetryBuilder);
-    telemetry = telemetryBuilder.build();
-  }
 
   @Override
   protected InstrumentationExtension getTesting() {
@@ -34,7 +27,10 @@ public abstract class Aws2SqsSuppressReceiveSpansTest
 
   protected abstract void configure(AwsSdkTelemetryBuilder telemetryBuilder);
 
-  protected AwsSdkTelemetry telemetry;
+  @Override
+  protected SqsClient configureSqsClient(SqsClient sqsClient) {
+    return telemetry.wrap(sqsClient);
+  }
 
   @Override
   protected ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder() {
@@ -43,12 +39,16 @@ public abstract class Aws2SqsSuppressReceiveSpansTest
   }
 
   @Override
-  protected SqsClient configureSqsClient(SqsClient sqsClient) {
+  protected SqsAsyncClient configureSqsClient(SqsAsyncClient sqsClient) {
     return telemetry.wrap(sqsClient);
   }
 
-  @Override
-  protected SqsAsyncClient configureSqsClient(SqsAsyncClient sqsClient) {
-    return telemetry.wrap(sqsClient);
+  @BeforeEach
+  void setup() {
+    AwsSdkTelemetryBuilder telemetryBuilder =
+        AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
+            .setCaptureExperimentalSpanAttributes(true);
+    configure(telemetryBuilder);
+    telemetry = telemetryBuilder.build();
   }
 }

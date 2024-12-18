@@ -55,33 +55,12 @@ import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequest;
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 
 public abstract class AbstractAws2SqsBaseTest {
-  protected abstract InstrumentationExtension getTesting();
-
-  protected abstract SqsClient configureSqsClient(SqsClient sqsClient);
-
-  protected abstract SqsAsyncClient configureSqsClient(SqsAsyncClient sqsClient);
-
-  protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
-
-  protected abstract void assertSqsTraces(boolean withParent, boolean captureHeaders);
-
   protected static final StaticCredentialsProvider CREDENTIALS_PROVIDER =
       StaticCredentialsProvider.create(
           AwsBasicCredentials.create("my-access-key", "my-secret-key"));
-
   protected static int sqsPort;
   protected static SQSRestServer sqs;
-
   protected final String queueUrl = "http://localhost:" + sqsPort + "/000000000000/testSdkSqs";
-
-  static Map<String, MessageAttributeValue> dummyMessageAttributes(int count) {
-    Map<String, MessageAttributeValue> map = new HashMap<>();
-    for (int i = 0; i < count; i++) {
-      map.put(
-          "a" + i, MessageAttributeValue.builder().stringValue("v" + i).dataType("String").build());
-    }
-    return map;
-  }
 
   protected ReceiveMessageRequest receiveMessageRequest =
       ReceiveMessageRequest.builder().queueUrl(queueUrl).build();
@@ -111,6 +90,25 @@ public abstract class AbstractAws2SqsBaseTest {
               // 10 attributes, injection with custom propagator never possible
               e -> e.messageBody("e3").id("i3").messageAttributes(dummyMessageAttributes(10)))
           .build();
+
+  protected abstract InstrumentationExtension getTesting();
+
+  protected abstract SqsClient configureSqsClient(SqsClient sqsClient);
+
+  protected abstract SqsAsyncClient configureSqsClient(SqsAsyncClient sqsClient);
+
+  protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
+
+  protected abstract void assertSqsTraces(boolean withParent, boolean captureHeaders);
+
+  static Map<String, MessageAttributeValue> dummyMessageAttributes(int count) {
+    Map<String, MessageAttributeValue> map = new HashMap<>();
+    for (int i = 0; i < count; i++) {
+      map.put(
+          "a" + i, MessageAttributeValue.builder().stringValue("v" + i).dataType("String").build());
+    }
+    return map;
+  }
 
   protected boolean isXrayInjectionEnabled() {
     return true;
