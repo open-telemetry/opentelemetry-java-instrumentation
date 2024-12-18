@@ -89,6 +89,8 @@ public abstract class HttpClientTestOptions {
 
   public abstract boolean getTestNonStandardHttpMethod();
 
+  public abstract boolean getTestClientError();
+
   public abstract Function<URI, String> getHttpProtocolVersion();
 
   @Nullable
@@ -131,6 +133,7 @@ public abstract class HttpClientTestOptions {
           .setTestCallbackWithParent(true)
           .setTestErrorWithCallback(true)
           .setTestNonStandardHttpMethod(true)
+          .setTestClientError(false)
           .setHttpProtocolVersion(uri -> "1.1");
     }
 
@@ -173,6 +176,8 @@ public abstract class HttpClientTestOptions {
     Builder setTestErrorWithCallback(boolean value);
 
     Builder setTestNonStandardHttpMethod(boolean value);
+
+    Builder setTestClientError(boolean value);
 
     Builder setHttpProtocolVersion(Function<URI, String> value);
 
