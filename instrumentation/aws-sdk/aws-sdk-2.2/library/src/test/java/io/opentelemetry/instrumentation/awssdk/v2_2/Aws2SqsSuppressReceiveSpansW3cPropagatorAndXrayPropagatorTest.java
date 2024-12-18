@@ -5,9 +5,15 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
-class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
+/**
+ * We want to test the combination of W3C + Xray, as that's what you'll get in prod if you enable
+ * W3C.
+ */
+class Aws2SqsSuppressReceiveSpansW3cPropagatorAndXrayPropagatorTest
+    extends Aws2SqsSuppressReceiveSpansTest {
+
   @Override
-  void configure(AwsSdkTelemetryBuilder telemetryBuilder) {
+  protected void configure(AwsSdkTelemetryBuilder telemetryBuilder) {
     telemetryBuilder.setUseConfiguredPropagatorForMessaging(
         isSqsAttributeInjectionEnabled()); // Difference to main test
   }

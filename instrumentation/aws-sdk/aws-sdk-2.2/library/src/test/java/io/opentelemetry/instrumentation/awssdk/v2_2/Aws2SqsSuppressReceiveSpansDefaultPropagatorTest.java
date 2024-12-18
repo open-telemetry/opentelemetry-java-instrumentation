@@ -14,10 +14,10 @@ import software.amazon.awssdk.services.sqs.SqsClient;
 import software.amazon.awssdk.services.sqs.SqsClientBuilder;
 import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
 
-class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
+class Aws2SqsSuppressReceiveSpansDefaultPropagatorTest extends Aws2SqsSuppressReceiveSpansTest {
 
   @Override
-  void configure(AwsSdkTelemetryBuilder telemetryBuilder) {}
+  protected void configure(AwsSdkTelemetryBuilder telemetryBuilder) {}
 
   @Override
   protected boolean isSqsAttributeInjectionEnabled() {
@@ -33,7 +33,6 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
             .addExecutionInterceptor(telemetry.newExecutionInterceptor())
             .addExecutionInterceptor(telemetry.newExecutionInterceptor())
             .build();
-
     builder.overrideConfiguration(overrideConfiguration);
     SqsClient client = configureSqsClient(builder.build());
 
@@ -43,6 +42,7 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
 
     assertThat(response.messages().size()).isEqualTo(1);
     response.messages().forEach(message -> getTesting().runWithSpan("process child", () -> {}));
+
     assertSqsTraces(false, false);
   }
 }
