@@ -25,10 +25,13 @@ public abstract class Aws2SqsSuppressReceiveSpansTest
     return testing;
   }
 
-  protected abstract void configure(AwsSdkTelemetryBuilder telemetryBuilder);
-
   @Override
   protected SqsClient configureSqsClient(SqsClient sqsClient) {
+    return telemetry.wrap(sqsClient);
+  }
+
+  @Override
+  protected SqsAsyncClient configureSqsClient(SqsAsyncClient sqsClient) {
     return telemetry.wrap(sqsClient);
   }
 
@@ -38,10 +41,7 @@ public abstract class Aws2SqsSuppressReceiveSpansTest
         .addExecutionInterceptor(telemetry.newExecutionInterceptor());
   }
 
-  @Override
-  protected SqsAsyncClient configureSqsClient(SqsAsyncClient sqsClient) {
-    return telemetry.wrap(sqsClient);
-  }
+  protected abstract void configure(AwsSdkTelemetryBuilder telemetryBuilder);
 
   @BeforeEach
   void setup() {
