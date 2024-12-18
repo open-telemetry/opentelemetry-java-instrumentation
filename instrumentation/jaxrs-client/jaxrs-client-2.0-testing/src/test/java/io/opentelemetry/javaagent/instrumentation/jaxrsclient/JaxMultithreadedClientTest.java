@@ -44,7 +44,7 @@ class JaxMultithreadedClientTest {
   }
 
   @AfterAll
-  static void cleanupSpec() {
+  static void cleanUp() {
     server.stop();
   }
 
