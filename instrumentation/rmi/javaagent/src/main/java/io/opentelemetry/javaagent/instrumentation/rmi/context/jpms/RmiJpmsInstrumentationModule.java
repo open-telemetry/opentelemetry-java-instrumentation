@@ -21,6 +21,12 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class RmiJpmsInstrumentationModule extends InstrumentationModule {
 
+  // TODO: this instrumentation is only kept for inlined advices and will be removed once migration
+  // to indy instrumentation is complete.
+  //
+  // For Indy instrumentation, this is replaced with
+  // ExperimentalInstrumentationModule#jpmsModulesToOpen
+
   public RmiJpmsInstrumentationModule() {
     super("rmi", "rmi-jpms");
   }
