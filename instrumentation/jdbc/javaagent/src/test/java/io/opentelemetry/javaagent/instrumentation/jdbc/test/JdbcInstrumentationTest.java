@@ -28,7 +28,6 @@ import com.google.common.collect.Maps;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.jdbc.TestConnection;
 import io.opentelemetry.instrumentation.jdbc.TestDriver;
@@ -79,9 +78,6 @@ class JdbcInstrumentationTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
-
-  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
-  static final AttributeKey<String> DB_CONNECTION_STRING = DB_CONNECTION_STRING;
 
   private static final String dbName = "jdbcUnitTest";
   private static final String dbNameLower = dbName.toLowerCase(Locale.ROOT);
