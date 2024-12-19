@@ -17,6 +17,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 
+/**
+ * Module opener provides ability to open JPMS modules and allows instrumentation classloader to
+ * access module contents without requiring JVM arguments modification. <br>
+ * Usage of this class must be guarded with an {@code net.bytebuddy.utility.JavaModule#isSupported}
+ * check as it's compiled for Java 9+, otherwise an {@link UnsupportedClassVersionError} will be
+ * thrown for java 8.
+ */
 public class ModuleOpener {
 
   private static final Logger logger = Logger.getLogger(ModuleOpener.class.getName());

@@ -14,6 +14,7 @@ import java.lang.instrument.Instrumentation;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.utility.JavaModule;
 
 public class IndyModuleRegistry {
 
@@ -88,19 +89,22 @@ public class IndyModuleRegistry {
         throw new IllegalStateException("global instrumentation not available");
       }
 
-      experimentalModule
-          .jpmsModulesToOpen()
-          .forEach(
-              (className, packages) -> {
-                Class<?> type;
-                try {
-                  type = Class.forName(className, false, instrumentedClassLoader);
-                } catch (ClassNotFoundException e) {
-                  throw new IllegalStateException("missing witness class " + className, e);
-                }
+      if (JavaModule.isSupported()) {
+        // module opener only usable for java 9+
+        experimentalModule
+            .jpmsModulesToOpen()
+            .forEach(
+                (className, packages) -> {
+                  Class<?> type;
+                  try {
+                    type = Class.forName(className, false, instrumentedClassLoader);
+                  } catch (ClassNotFoundException e) {
+                    throw new IllegalStateException("missing witness class " + className, e);
+                  }
 
-                ModuleOpener.open(instrumentation, type, loader, packages);
-              });
+                  ModuleOpener.open(instrumentation, type, loader, packages);
+                });
+      }
     }
     return loader;
   }
