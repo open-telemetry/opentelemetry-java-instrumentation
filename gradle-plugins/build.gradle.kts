@@ -42,7 +42,7 @@ dependencies {
 
   implementation("com.gradleup.shadow:shadow-gradle-plugin:8.3.5")
 
-  testImplementation("org.assertj:assertj-core:3.26.3")
+  testImplementation("org.assertj:assertj-core:3.27.0")
 
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.11.4"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
