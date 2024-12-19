@@ -13,8 +13,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.Experimental;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackClientInstrumenterBuilderFactory;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 import ratpack.http.client.HttpResponse;
 import ratpack.http.client.RequestSpec;
@@ -75,10 +75,10 @@ public final class RatpackClientTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
-  public RatpackClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+  public RatpackClientTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
   }
