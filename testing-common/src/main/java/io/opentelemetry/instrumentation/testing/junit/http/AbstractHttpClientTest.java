@@ -1030,26 +1030,6 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         });
   }
 
-  @Test
-  void requestClientError() throws Exception {
-    assumeTrue(options.getTestClientError());
-
-    URI uri = resolveAddress("/client-error");
-    String method = "GET";
-    int responseCode = doRequest(method, uri);
-
-    assertThat(responseCode).isEqualTo(400);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    assertClientSpan(span, uri, method, 400, null)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error()),
-                span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
-  }
-
   // Visible for spock bridge.
   SpanDataAssert assertClientSpan(
       SpanDataAssert span,
