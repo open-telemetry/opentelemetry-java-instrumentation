@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNet
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.ServerAddressAndPortExtractor;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -57,9 +58,27 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    */
   @CanIgnoreReturnValue
   public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
-      List<String> requestHeaders) {
+      Collection<String> requestHeaders) {
     this.capturedRequestHeaders = new ArrayList<>(requestHeaders);
     return this;
+  }
+
+  /**
+   * Configures the HTTP request headers that will be captured as span attributes as described in <a
+   * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#http-client">HTTP
+   * semantic conventions</a>.
+   *
+   * <p>The HTTP request header values will be captured under the {@code http.request.header.<key>}
+   * attribute key. The {@code <key>} part in the attribute key is the lowercase header name.
+   *
+   * @param requestHeaders A list of HTTP header names.
+   */
+  // don't deprecate this since users will get deprecation warning without a clean way to suppress
+  // it if they're using List
+  @CanIgnoreReturnValue
+  public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedRequestHeaders(
+      List<String> requestHeaders) {
+    return setCapturedRequestHeaders((Collection<String>) requestHeaders);
   }
 
   /**
@@ -76,9 +95,29 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    */
   @CanIgnoreReturnValue
   public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
-      List<String> responseHeaders) {
+      Collection<String> responseHeaders) {
     this.capturedResponseHeaders = new ArrayList<>(responseHeaders);
     return this;
+  }
+
+  /**
+   * Configures the HTTP response headers that will be captured as span attributes as described in
+   * <a
+   * href="https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-spans.md#common-attributes">HTTP
+   * semantic conventions</a>.
+   *
+   * <p>The HTTP response header values will be captured under the {@code
+   * http.response.header.<key>} attribute key. The {@code <key>} part in the attribute key is the
+   * lowercase header name.
+   *
+   * @param responseHeaders A list of HTTP header names.
+   */
+  // don't deprecate this since users will get deprecation warning without a clean way to suppress
+  // it if they're using List
+  @CanIgnoreReturnValue
+  public HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedResponseHeaders(
+      List<String> responseHeaders) {
+    return setCapturedResponseHeaders((Collection<String>) responseHeaders);
   }
 
   /**

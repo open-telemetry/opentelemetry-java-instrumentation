@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExt
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaInstrumenterBuilderUtil;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.Experimental;
-import java.util.List;
+import java.util.Collection;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -65,7 +65,8 @@ public final class ArmeriaClientTelemetryBuilder {
    * @param requestHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public ArmeriaClientTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
+  public ArmeriaClientTelemetryBuilder setCapturedRequestHeaders(
+      Collection<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
@@ -76,7 +77,8 @@ public final class ArmeriaClientTelemetryBuilder {
    * @param responseHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public ArmeriaClientTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
+  public ArmeriaClientTelemetryBuilder setCapturedResponseHeaders(
+      Collection<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }

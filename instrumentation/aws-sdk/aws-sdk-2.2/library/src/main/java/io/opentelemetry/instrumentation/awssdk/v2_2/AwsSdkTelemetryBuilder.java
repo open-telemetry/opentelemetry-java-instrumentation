@@ -9,6 +9,8 @@ import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /** A builder of {@link AwsSdkTelemetry}. */
@@ -33,8 +35,8 @@ public final class AwsSdkTelemetryBuilder {
    * @param capturedHeaders A list of messaging header names.
    */
   @CanIgnoreReturnValue
-  public AwsSdkTelemetryBuilder setCapturedHeaders(List<String> capturedHeaders) {
-    this.capturedHeaders = capturedHeaders;
+  public AwsSdkTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
+    this.capturedHeaders = new ArrayList<>(capturedHeaders);
     return this;
   }
 

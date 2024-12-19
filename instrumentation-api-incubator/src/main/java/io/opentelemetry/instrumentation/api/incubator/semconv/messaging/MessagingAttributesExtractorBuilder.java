@@ -9,6 +9,8 @@ import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /** A builder of {@link MessagingAttributesExtractor}. */
@@ -35,8 +37,8 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
    */
   @CanIgnoreReturnValue
   public MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> setCapturedHeaders(
-      List<String> capturedHeaders) {
-    this.capturedHeaders = capturedHeaders;
+      Collection<String> capturedHeaders) {
+    this.capturedHeaders = new ArrayList<>(capturedHeaders);
     return this;
   }
 

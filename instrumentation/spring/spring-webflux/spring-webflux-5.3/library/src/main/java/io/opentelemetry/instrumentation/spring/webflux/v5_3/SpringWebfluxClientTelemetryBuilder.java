@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExt
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.Experimental;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.SpringWebfluxBuilderUtil;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientHttpAttributesGetter;
-import java.util.List;
+import java.util.Collection;
 import java.util.Set;
 import java.util.function.Function;
 import org.springframework.web.reactive.function.client.ClientRequest;
@@ -58,7 +58,7 @@ public final class SpringWebfluxClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public SpringWebfluxClientTelemetryBuilder setCapturedRequestHeaders(
-      List<String> requestHeaders) {
+      Collection<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
@@ -70,7 +70,7 @@ public final class SpringWebfluxClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public SpringWebfluxClientTelemetryBuilder setCapturedResponseHeaders(
-      List<String> responseHeaders) {
+      Collection<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
