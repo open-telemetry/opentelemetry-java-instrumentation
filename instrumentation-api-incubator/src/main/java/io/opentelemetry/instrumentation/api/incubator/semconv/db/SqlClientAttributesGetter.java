@@ -38,4 +38,9 @@ public interface SqlClientAttributesGetter<REQUEST>
   default String getRawQueryText(REQUEST request) {
     return getRawStatement(request);
   }
+
+  // TODO: make this required to implement
+  default Long getBatchSize(REQUEST request) {
+    return null;
+  }
 }
