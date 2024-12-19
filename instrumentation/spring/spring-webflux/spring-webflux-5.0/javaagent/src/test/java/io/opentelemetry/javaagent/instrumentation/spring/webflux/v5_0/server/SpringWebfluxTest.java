@@ -491,9 +491,7 @@ public class SpringWebfluxTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(CODE_FUNCTION, "handle"),
-                            satisfies(
-                                CODE_NAMESPACE,
-                                val -> val.isEqualTo("server.EchoHandlerFunction"))),
+                            equalTo(CODE_NAMESPACE, "server.EchoHandlerFunction")),
                 span ->
                     span.hasName("echo").hasParent(trace.getSpan(1)).hasTotalAttributeCount(0)));
   }
