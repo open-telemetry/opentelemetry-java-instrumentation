@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -37,7 +38,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.incubating.AwsIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import org.elasticmq.rest.sqs.SQSRestServer;
 import org.elasticmq.rest.sqs.SQSRestServerBuilder;
@@ -107,9 +107,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(stringKey("aws.endpoint"), "http://localhost:" + sqsPort),
                                 equalTo(stringKey("aws.queue.name"), "testSdkSqs"),
-                                satisfies(
-                                    AwsIncubatingAttributes.AWS_REQUEST_ID,
-                                    val -> val.isInstanceOf(String.class)),
+                                satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RPC_METHOD, "CreateQueue"),
@@ -131,9 +129,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(
                                     stringKey("aws.queue.url"),
                                     "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                satisfies(
-                                    AwsIncubatingAttributes.AWS_REQUEST_ID,
-                                    val -> val.isInstanceOf(String.class)),
+                                satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RPC_METHOD, "SendMessage"),
@@ -161,9 +157,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(
                                     stringKey("aws.queue.url"),
                                     "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                satisfies(
-                                    AwsIncubatingAttributes.AWS_REQUEST_ID,
-                                    val -> val.isInstanceOf(String.class)),
+                                satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RPC_METHOD, "ReceiveMessage"),
@@ -219,9 +213,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(stringKey("aws.endpoint"), "http://localhost:" + sqsPort),
                                 equalTo(stringKey("aws.queue.name"), "testSdkSqs"),
-                                satisfies(
-                                    AwsIncubatingAttributes.AWS_REQUEST_ID,
-                                    val -> val.isInstanceOf(String.class)),
+                                satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RPC_METHOD, "CreateQueue"),
@@ -243,9 +235,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(
                                     stringKey("aws.queue.url"),
                                     "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                satisfies(
-                                    AwsIncubatingAttributes.AWS_REQUEST_ID,
-                                    val -> val.isInstanceOf(String.class)),
+                                satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RPC_METHOD, "SendMessage"),
@@ -273,9 +263,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(
                                     stringKey("aws.queue.url"),
                                     "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                satisfies(
-                                    AwsIncubatingAttributes.AWS_REQUEST_ID,
-                                    val -> val.isInstanceOf(String.class)),
+                                satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RPC_METHOD, "ReceiveMessage"),
@@ -314,9 +302,7 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                                 equalTo(
                                     stringKey("aws.queue.url"),
                                     "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
-                                satisfies(
-                                    AwsIncubatingAttributes.AWS_REQUEST_ID,
-                                    val -> val.isInstanceOf(String.class)),
+                                satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "AmazonSQS"),
                                 equalTo(RPC_METHOD, "ReceiveMessage"),
