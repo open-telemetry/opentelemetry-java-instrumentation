@@ -18,5 +18,6 @@ jobs:
           args: >
             --include-fragments
             --exclude "^https://github.com/open-telemetry/opentelemetry-java-instrumentation/(issue|pull)/\\d+$"
+            --exclude "^http://code.google.com/p/concurrentlinkedhashmap$"
             --max-retries 6
             .
