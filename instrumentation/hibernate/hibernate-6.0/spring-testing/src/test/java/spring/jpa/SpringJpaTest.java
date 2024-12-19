@@ -12,11 +12,13 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,7 +26,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -51,7 +52,7 @@ class SpringJpaTest {
     }
   }
 
-  @SuppressWarnings("deprecation") // DbIncubatingAttributes.DB_NAME has been deprecated
+  @SuppressWarnings("deprecation") // DB_NAME has been deprecated
   @Test
   void testCrud() {
     Customer customer = new Customer("Bob", "Anonymous");
@@ -82,11 +83,9 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
-                                DbIncubatingAttributes.DB_USER,
-                                emitStableDatabaseSemconv() ? null : "sa"),
-                            equalTo(
-                                DbIncubatingAttributes.DB_CONNECTION_STRING,
+                                DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                             satisfies(
                                 maybeStable(DB_STATEMENT),
@@ -136,12 +135,10 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
-                            equalTo(
-                                DbIncubatingAttributes.DB_USER,
-                                emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(maybeStable(DB_STATEMENT), "call next value for Customer_SEQ"),
                             equalTo(
-                                DbIncubatingAttributes.DB_CONNECTION_STRING,
+                                DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                             equalTo(maybeStable(DB_OPERATION), "CALL")),
                 span ->
@@ -162,11 +159,9 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
-                                DbIncubatingAttributes.DB_USER,
-                                emitStableDatabaseSemconv() ? null : "sa"),
-                            equalTo(
-                                DbIncubatingAttributes.DB_CONNECTION_STRING,
+                                DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                             satisfies(
                                 maybeStable(DB_STATEMENT),
@@ -203,11 +198,9 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
-                                DbIncubatingAttributes.DB_USER,
-                                emitStableDatabaseSemconv() ? null : "sa"),
-                            equalTo(
-                                DbIncubatingAttributes.DB_CONNECTION_STRING,
+                                DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                             satisfies(
                                 maybeStable(DB_STATEMENT),
@@ -233,11 +226,9 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
-                                DbIncubatingAttributes.DB_USER,
-                                emitStableDatabaseSemconv() ? null : "sa"),
-                            equalTo(
-                                DbIncubatingAttributes.DB_CONNECTION_STRING,
+                                DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                             satisfies(
                                 maybeStable(DB_STATEMENT),
@@ -278,11 +269,9 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
-                                DbIncubatingAttributes.DB_USER,
-                                emitStableDatabaseSemconv() ? null : "sa"),
-                            equalTo(
-                                DbIncubatingAttributes.DB_CONNECTION_STRING,
+                                DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                             satisfies(
                                 maybeStable(DB_STATEMENT),
@@ -321,11 +310,9 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
-                                DbIncubatingAttributes.DB_USER,
-                                emitStableDatabaseSemconv() ? null : "sa"),
-                            equalTo(
-                                DbIncubatingAttributes.DB_CONNECTION_STRING,
+                                DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                             satisfies(
                                 maybeStable(DB_STATEMENT),
@@ -364,11 +351,9 @@ class SpringJpaTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(DB_SYSTEM, HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
-                                DbIncubatingAttributes.DB_USER,
-                                emitStableDatabaseSemconv() ? null : "sa"),
-                            equalTo(
-                                DbIncubatingAttributes.DB_CONNECTION_STRING,
+                                DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                             equalTo(maybeStable(DB_STATEMENT), "delete from Customer where id=?"),
                             equalTo(maybeStable(DB_OPERATION), "DELETE"),

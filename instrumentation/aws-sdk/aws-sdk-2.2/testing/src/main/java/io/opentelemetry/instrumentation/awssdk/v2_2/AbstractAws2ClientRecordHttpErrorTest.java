@@ -13,6 +13,7 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
@@ -22,7 +23,6 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SY
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.incubating.AwsIncubatingAttributes;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
@@ -182,7 +182,7 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
                           equalTo(RPC_SERVICE, service),
                           equalTo(RPC_METHOD, operation),
                           equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                          equalTo(AwsIncubatingAttributes.AWS_REQUEST_ID, requestId),
+                          equalTo(AWS_REQUEST_ID, requestId),
                           equalTo(stringKey("aws.table.name"), "sometable"),
                           equalTo(DB_SYSTEM, "dynamodb"),
                           equalTo(maybeStable(DB_OPERATION), operation));
