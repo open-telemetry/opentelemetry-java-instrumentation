@@ -45,10 +45,8 @@ public class ModuleOpener {
         missingOpens.put(packageName, openToModuleSet);
         logger.log(
             FINE,
-            () ->
-                String.format(
-                    "Exposing package '%s' in module '%s' to module '%s'",
-                    packageName, targetModule, openToModule));
+            "Exposing package '{0}' in module '{1}' to module '{2}'",
+            new Object[] {packageName, targetModule, openToModule});
       }
     }
     if (missingOpens.isEmpty()) {
@@ -56,7 +54,7 @@ public class ModuleOpener {
     }
 
     if (!instrumentation.isModifiableModule(targetModule)) {
-      logger.log(WARNING, "Module '{}' can't be modified", targetModule);
+      logger.log(WARNING, "Module '{0}' can't be modified", targetModule);
       return;
     }
 
