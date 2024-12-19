@@ -52,7 +52,7 @@ class SpringJpaTest {
     }
   }
 
-  @SuppressWarnings("deprecation") // DB_NAME has been deprecated
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testCrud() {
     Customer customer = new Customer("Bob", "Anonymous");
