@@ -21,9 +21,7 @@ final class TracingFilter implements Filter {
   private final Instrumenter<DubboRequest, Result> instrumenter;
   private final boolean isClient;
 
-  TracingFilter(
-      Instrumenter<DubboRequest, Result> instrumenter,
-      boolean isClient) {
+  TracingFilter(Instrumenter<DubboRequest, Result> instrumenter, boolean isClient) {
     this.instrumenter = instrumenter;
     this.isClient = isClient;
   }

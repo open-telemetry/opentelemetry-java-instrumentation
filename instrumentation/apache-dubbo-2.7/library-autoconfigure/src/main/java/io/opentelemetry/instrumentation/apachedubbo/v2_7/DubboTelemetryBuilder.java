@@ -37,10 +37,10 @@ public final class DubboTelemetryBuilder {
   private final List<AttributesExtractor<DubboRequest, Result>> attributesExtractors =
       new ArrayList<>();
   private Function<
-      SpanNameExtractor<DubboRequest>, ? extends SpanNameExtractor<? super DubboRequest>>
+          SpanNameExtractor<DubboRequest>, ? extends SpanNameExtractor<? super DubboRequest>>
       clientSpanNameExtractorTransformer = Function.identity();
   private Function<
-      SpanNameExtractor<DubboRequest>, ? extends SpanNameExtractor<? super DubboRequest>>
+          SpanNameExtractor<DubboRequest>, ? extends SpanNameExtractor<? super DubboRequest>>
       serverSpanNameExtractorTransformer = Function.identity();
 
   DubboTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -82,7 +82,8 @@ public final class DubboTelemetryBuilder {
   }
 
   /**
-   * Returns a new client {@link DubboTelemetry} with the settings of this {@link DubboTelemetryBuilder}.
+   * Returns a new client {@link DubboTelemetry} with the settings of this {@link
+   * DubboTelemetryBuilder}.
    */
   public DubboTelemetry buildClient() {
     DubboRpcAttributesGetter rpcAttributesGetter = DubboRpcAttributesGetter.INSTANCE;
@@ -111,7 +112,8 @@ public final class DubboTelemetryBuilder {
   }
 
   /**
-   * Returns a new server {@link DubboTelemetry} with the settings of this {@link DubboTelemetryBuilder}.
+   * Returns a new server {@link DubboTelemetry} with the settings of this {@link
+   * DubboTelemetryBuilder}.
    */
   public DubboTelemetry buildServer() {
     DubboRpcAttributesGetter rpcAttributesGetter = DubboRpcAttributesGetter.INSTANCE;

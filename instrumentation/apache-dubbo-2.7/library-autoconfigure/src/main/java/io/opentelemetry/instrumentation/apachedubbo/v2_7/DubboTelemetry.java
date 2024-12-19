@@ -13,12 +13,16 @@ import org.apache.dubbo.rpc.Result;
 /** Entrypoint for instrumenting Apache Dubbo servers and clients. */
 public final class DubboTelemetry {
 
-  /** Returns a new client {@link DubboTelemetry} configured with the given {@link OpenTelemetry}. */
+  /**
+   * Returns a new client {@link DubboTelemetry} configured with the given {@link OpenTelemetry}.
+   */
   public static DubboTelemetry createClient(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).buildClient();
   }
 
-  /** Returns a new server {@link DubboTelemetry} configured with the given {@link OpenTelemetry}. */
+  /**
+   * Returns a new server {@link DubboTelemetry} configured with the given {@link OpenTelemetry}.
+   */
   public static DubboTelemetry createServer(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).buildServer();
   }
