@@ -12,13 +12,13 @@ import org.apache.dubbo.rpc.Invocation;
 import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.Result;
 
-@Activate(group = {"consumer", "provider"})
-public final class OpenTelemetryFilter implements Filter {
+@Activate(group = {"consumer"})
+public final class OpenTelemetryClientFilter implements Filter {
 
   private final Filter delegate;
 
-  public OpenTelemetryFilter() {
-    delegate = DubboTelemetry.create(GlobalOpenTelemetry.get()).newFilter();
+  public OpenTelemetryClientFilter() {
+    delegate = DubboTelemetry.createClient(GlobalOpenTelemetry.get()).newFilter();
   }
 
   @Override
