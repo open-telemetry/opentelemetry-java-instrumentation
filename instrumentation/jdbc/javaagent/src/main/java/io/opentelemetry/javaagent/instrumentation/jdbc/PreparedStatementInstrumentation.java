@@ -12,7 +12,9 @@ import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcSingletons.sta
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
+import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -42,8 +44,14 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        nameStartsWith("execute").and(takesArguments(0)).and(isPublic()),
+        nameStartsWith("execute")
+            .and(not(named("executeBatch")))
+            .and(takesArguments(0))
+            .and(isPublic()),
         PreparedStatementInstrumentation.class.getName() + "$PreparedStatementAdvice");
+    transformer.applyAdviceToMethod(
+        named("addBatch").and(takesNoArguments()).and(isPublic()),
+        PreparedStatementInstrumentation.class.getName() + "$AddBatchAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -100,6 +108,15 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
         scope.close();
         statementInstrumenter().end(context, request, null, throwable);
       }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class AddBatchAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void addBatch(@Advice.This PreparedStatement statement) {
+      JdbcData.addPreparedStatementBatch(statement);
     }
   }
 }
