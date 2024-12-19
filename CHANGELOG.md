@@ -729,7 +729,7 @@ too disruptive to adopt right away.
   or `-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true`.
 - ⚠️⚠️ Stable HTTP semantic conventions are now emitted ⚠️⚠️
   - TOO MANY CHANGES TO LIST HERE, be sure to review the full
-    [list of changes](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/migration-guide.md#summary-of-changes).
+    [list of changes](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/non-normative/http-migration.md#summary-of-changes).
 - Stable JVM semantic conventions are now emitted.
   - Memory metrics
     - `process.runtime.jvm.memory.usage` renamed to `jvm.memory.used`
