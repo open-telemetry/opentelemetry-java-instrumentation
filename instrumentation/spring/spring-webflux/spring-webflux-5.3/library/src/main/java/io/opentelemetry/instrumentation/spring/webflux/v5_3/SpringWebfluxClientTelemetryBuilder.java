@@ -14,8 +14,8 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExt
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.Experimental;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.SpringWebfluxBuilderUtil;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientHttpAttributesGetter;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -86,10 +86,10 @@ public final class SpringWebfluxClientTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
-  public SpringWebfluxClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+  public SpringWebfluxClientTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
   }

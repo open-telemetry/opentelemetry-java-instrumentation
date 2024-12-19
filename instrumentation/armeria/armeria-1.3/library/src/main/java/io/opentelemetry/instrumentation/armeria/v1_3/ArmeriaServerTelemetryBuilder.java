@@ -17,8 +17,8 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExt
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaInstrumenterBuilderUtil;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.Experimental;
+import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 
 public final class ArmeriaServerTelemetryBuilder {
@@ -90,10 +90,10 @@ public final class ArmeriaServerTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Set)
+   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
-  public ArmeriaServerTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+  public ArmeriaServerTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
   }

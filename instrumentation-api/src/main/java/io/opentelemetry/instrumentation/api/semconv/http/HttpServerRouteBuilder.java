@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.internal.HttpRouteState;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -44,9 +45,30 @@ public final class HttpServerRouteBuilder<REQUEST> {
    * @param knownMethods A set of recognized HTTP request methods.
    */
   @CanIgnoreReturnValue
-  public HttpServerRouteBuilder<REQUEST> setKnownMethods(Set<String> knownMethods) {
+  public HttpServerRouteBuilder<REQUEST> setKnownMethods(Collection<String> knownMethods) {
     this.knownMethods = new HashSet<>(knownMethods);
     return this;
+  }
+
+  /**
+   * Configures the customizer to recognize an alternative set of HTTP request methods.
+   *
+   * <p>By default, this customizer defines "known" methods as the ones listed in <a
+   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and the PATCH
+   * method defined in <a href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>. If an
+   * unknown method is encountered, the customizer will use the value {@value HttpConstants#_OTHER}
+   * instead.
+   *
+   * <p>Note: calling this method <b>overrides</b> the default known method sets completely; it does
+   * not supplement it.
+   *
+   * @param knownMethods A set of recognized HTTP request methods.
+   */
+  // don't deprecate this since users will get deprecation warning without a clean way to suppress
+  // it if they're using Set
+  @CanIgnoreReturnValue
+  public HttpServerRouteBuilder<REQUEST> setKnownMethods(Set<String> knownMethods) {
+    return setKnownMethods((Collection<String>) knownMethods);
   }
 
   /**
