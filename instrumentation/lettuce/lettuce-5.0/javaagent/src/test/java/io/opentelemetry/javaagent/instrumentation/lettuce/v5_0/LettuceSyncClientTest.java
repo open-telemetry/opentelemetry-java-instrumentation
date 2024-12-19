@@ -74,7 +74,7 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
   @AfterAll
   static void cleanUp() {
     connection.close();
-    redisClient.shutdown();
+    shutdown(redisClient);
     redisServer.stop();
   }
 
