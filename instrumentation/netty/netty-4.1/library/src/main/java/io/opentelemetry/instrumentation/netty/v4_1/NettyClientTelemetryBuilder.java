@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyCli
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumentationFlag;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.Experimental;
-import java.util.List;
+import java.util.Collection;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -59,7 +59,7 @@ public final class NettyClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setCapturedRequestHeaders(
-      List<String> capturedRequestHeaders) {
+      Collection<String> capturedRequestHeaders) {
     builder.setCapturedRequestHeaders(capturedRequestHeaders);
     return this;
   }
@@ -71,7 +71,7 @@ public final class NettyClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setCapturedResponseHeaders(
-      List<String> capturedResponseHeaders) {
+      Collection<String> capturedResponseHeaders) {
     builder.setCapturedResponseHeaders(capturedResponseHeaders);
     return this;
   }
