@@ -11,6 +11,11 @@ muzzle {
   }
 }
 
+// struts 7 requires java 17
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_17)
+}
+
 dependencies {
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
