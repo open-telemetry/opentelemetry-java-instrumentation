@@ -82,27 +82,17 @@ public final class DubboTelemetryBuilder {
   }
 
   /**
-   * Returns a new {@link DubboTelemetry} with the settings of this {@link DubboTelemetryBuilder}.
+   * Returns a new client {@link DubboTelemetry} with the settings of this {@link
+   * DubboTelemetryBuilder}.
    */
-  public DubboTelemetry build() {
+  public DubboTelemetry buildClient() {
     DubboRpcAttributesGetter rpcAttributesGetter = DubboRpcAttributesGetter.INSTANCE;
     SpanNameExtractor<DubboRequest> spanNameExtractor =
         RpcSpanNameExtractor.create(rpcAttributesGetter);
     SpanNameExtractor<? super DubboRequest> clientSpanNameExtractor =
         clientSpanNameExtractorTransformer.apply(spanNameExtractor);
-    SpanNameExtractor<? super DubboRequest> serverSpanNameExtractor =
-        serverSpanNameExtractorTransformer.apply(spanNameExtractor);
     DubboClientNetworkAttributesGetter netClientAttributesGetter =
         new DubboClientNetworkAttributesGetter();
-    DubboNetworkServerAttributesGetter netServerAttributesGetter =
-        new DubboNetworkServerAttributesGetter();
-
-    InstrumenterBuilder<DubboRequest, Result> serverInstrumenterBuilder =
-        Instrumenter.<DubboRequest, Result>builder(
-                openTelemetry, INSTRUMENTATION_NAME, serverSpanNameExtractor)
-            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
-            .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
-            .addAttributesExtractors(attributesExtractors);
 
     InstrumenterBuilder<DubboRequest, Result> clientInstrumenterBuilder =
         Instrumenter.<DubboRequest, Result>builder(
@@ -118,7 +108,30 @@ public final class DubboTelemetryBuilder {
     }
 
     return new DubboTelemetry(
-        serverInstrumenterBuilder.buildServerInstrumenter(DubboHeadersGetter.INSTANCE),
-        clientInstrumenterBuilder.buildClientInstrumenter(DubboHeadersSetter.INSTANCE));
+        clientInstrumenterBuilder.buildClientInstrumenter(DubboHeadersSetter.INSTANCE), true);
+  }
+
+  /**
+   * Returns a new server {@link DubboTelemetry} with the settings of this {@link
+   * DubboTelemetryBuilder}.
+   */
+  public DubboTelemetry buildServer() {
+    DubboRpcAttributesGetter rpcAttributesGetter = DubboRpcAttributesGetter.INSTANCE;
+    SpanNameExtractor<DubboRequest> spanNameExtractor =
+        RpcSpanNameExtractor.create(rpcAttributesGetter);
+    SpanNameExtractor<? super DubboRequest> serverSpanNameExtractor =
+        serverSpanNameExtractorTransformer.apply(spanNameExtractor);
+    DubboNetworkServerAttributesGetter netServerAttributesGetter =
+        new DubboNetworkServerAttributesGetter();
+
+    InstrumenterBuilder<DubboRequest, Result> serverInstrumenterBuilder =
+        Instrumenter.<DubboRequest, Result>builder(
+                openTelemetry, INSTRUMENTATION_NAME, serverSpanNameExtractor)
+            .addAttributesExtractor(RpcServerAttributesExtractor.create(rpcAttributesGetter))
+            .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
+            .addAttributesExtractors(attributesExtractors);
+
+    return new DubboTelemetry(
+        serverInstrumenterBuilder.buildServerInstrumenter(DubboHeadersGetter.INSTANCE), false);
   }
 }

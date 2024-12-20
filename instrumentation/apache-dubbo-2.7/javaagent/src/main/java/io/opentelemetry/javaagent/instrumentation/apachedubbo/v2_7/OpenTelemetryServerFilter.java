@@ -16,19 +16,19 @@ import org.apache.dubbo.rpc.Invocation;
 import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.Result;
 
-@Activate(group = {"consumer", "provider"})
-public class OpenTelemetryFilter implements Filter {
+@Activate(group = {"provider"})
+public class OpenTelemetryServerFilter implements Filter {
 
   private final Filter delegate;
 
-  public OpenTelemetryFilter() {
+  public OpenTelemetryServerFilter() {
     delegate =
         DubboTelemetry.builder(GlobalOpenTelemetry.get())
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     new DubboClientNetworkAttributesGetter(),
                     AgentCommonConfig.get().getPeerServiceResolver()))
-            .build()
+            .buildServer()
             .newFilter();
   }
 
