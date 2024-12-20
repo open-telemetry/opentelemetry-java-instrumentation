@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.struts2.v2_3;
+package io.opentelemetry.javaagent.instrumentation.struts.v2_3;
 
 import com.opensymphony.xwork2.ActionInvocation;
 import io.opentelemetry.api.GlobalOpenTelemetry;

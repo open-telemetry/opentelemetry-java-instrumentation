@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.struts2.v7_0;
+package io.opentelemetry.javaagent.instrumentation.struts.v2_3;
 
+import com.opensymphony.xwork2.ActionInvocation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
-import org.apache.struts2.ActionInvocation;
 
 public class StrutsCodeAttributesGetter implements CodeAttributesGetter<ActionInvocation> {
 

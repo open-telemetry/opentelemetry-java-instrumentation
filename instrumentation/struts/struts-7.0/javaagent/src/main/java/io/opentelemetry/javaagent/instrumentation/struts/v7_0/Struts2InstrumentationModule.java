@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.struts2.v2_3;
+package io.opentelemetry.javaagent.instrumentation.struts.v7_0;
 
 import static java.util.Collections.singletonList;
 
@@ -16,7 +16,7 @@ import java.util.List;
 public class Struts2InstrumentationModule extends InstrumentationModule {
 
   public Struts2InstrumentationModule() {
-    super("struts", "struts-2.3");
+    super("struts", "struts-7.0");
   }
 
   @Override

@@ -3,16 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.struts2.v7_0;
+package io.opentelemetry.javaagent.instrumentation.struts.v2_3;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.controller;
 
+import com.opensymphony.xwork2.ActionSupport;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import org.apache.struts2.ActionSupport;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.apache.struts2.ServletActionContext;
-import org.apache.struts2.interceptor.parameter.StrutsParameter;
 
 public class GreetingAction extends ActionSupport {
 
@@ -81,7 +80,6 @@ public class GreetingAction extends ActionSupport {
     return "greetingServlet";
   }
 
-  @StrutsParameter
   public void setId(String id) {
     responseBody = id;
   }

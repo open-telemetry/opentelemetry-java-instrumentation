@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.struts2.v7_0;
+package io.opentelemetry.javaagent.instrumentation.struts.v2_3;
 
+import com.opensymphony.xwork2.ActionProxy;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
-import org.apache.struts2.ActionProxy;
 
 public class StrutsServerSpanNaming {
 

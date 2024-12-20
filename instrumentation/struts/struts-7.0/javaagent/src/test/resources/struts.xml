@@ -22,29 +22,29 @@
       <exception-mapping exception="java.lang.Exception" result="error"/>
     </global-exception-mappings>
 
-    <action name="success" class="io.opentelemetry.javaagent.instrumentation.struts2.v7_0.GreetingAction"
+    <action name="success" class="io.opentelemetry.javaagent.instrumentation.struts.v7_0.GreetingAction"
             method="success"/>
     <action name="redirect"
-            class="io.opentelemetry.javaagent.instrumentation.struts2.v7_0.GreetingAction"
+            class="io.opentelemetry.javaagent.instrumentation.struts.v7_0.GreetingAction"
             method="redirect"/>
-    <action name="query" class="io.opentelemetry.javaagent.instrumentation.struts2.v7_0.GreetingAction"
+    <action name="query" class="io.opentelemetry.javaagent.instrumentation.struts.v7_0.GreetingAction"
             method="query_param"/>
     <action name="error-status"
-            class="io.opentelemetry.javaagent.instrumentation.struts2.v7_0.GreetingAction"
+            class="io.opentelemetry.javaagent.instrumentation.struts.v7_0.GreetingAction"
             method="error"/>
     <action name="exception"
-            class="io.opentelemetry.javaagent.instrumentation.struts2.v7_0.GreetingAction"
+            class="io.opentelemetry.javaagent.instrumentation.struts.v7_0.GreetingAction"
             method="exception"/>
     <action name="path/{id}/param"
-            class="io.opentelemetry.javaagent.instrumentation.struts2.v7_0.GreetingAction"
+            class="io.opentelemetry.javaagent.instrumentation.struts.v7_0.GreetingAction"
             method="path_param"/>
-    <action name="child" class="io.opentelemetry.javaagent.instrumentation.struts2.v7_0.GreetingAction"
+    <action name="child" class="io.opentelemetry.javaagent.instrumentation.struts.v7_0.GreetingAction"
             method="indexed_child"/>
     <action name="captureHeaders"
-            class="io.opentelemetry.javaagent.instrumentation.struts2.v7_0.GreetingAction"
+            class="io.opentelemetry.javaagent.instrumentation.struts.v7_0.GreetingAction"
             method="capture_headers"/>
     <action name="dispatch"
-            class="io.opentelemetry.javaagent.instrumentation.struts2.v7_0.GreetingAction"
+            class="io.opentelemetry.javaagent.instrumentation.struts.v7_0.GreetingAction"
             method="dispatch_servlet"/>
   </package>
 </struts>
