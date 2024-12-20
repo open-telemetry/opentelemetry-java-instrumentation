@@ -139,7 +139,11 @@ public class SpringWebfluxTest {
                   span.hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
-                          equalTo(CODE_FUNCTION, "handle"),
+                          satisfies(
+                              CODE_FUNCTION,
+                              parameter.annotatedMethod == null
+                                  ? val -> val.isEqualTo("handle")
+                                  : val -> val.isEqualTo(parameter.annotatedMethod)),
                           satisfies(
                               CODE_NAMESPACE,
                               parameter.annotatedMethod == null
@@ -259,7 +263,11 @@ public class SpringWebfluxTest {
                   span.hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
-                          equalTo(CODE_FUNCTION, "handle"),
+                          satisfies(
+                              CODE_FUNCTION,
+                              parameter.annotatedMethod == null
+                                  ? val -> val.isEqualTo("handle")
+                                  : val -> val.isEqualTo(parameter.annotatedMethod)),
                           satisfies(
                               CODE_NAMESPACE,
                               parameter.annotatedMethod == null
@@ -366,7 +374,11 @@ public class SpringWebfluxTest {
                   span.hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
-                          equalTo(CODE_FUNCTION, "handle"),
+                          satisfies(
+                              CODE_FUNCTION,
+                              parameter.annotatedMethod == null
+                                  ? val -> val.isEqualTo("handle")
+                                  : val -> val.isEqualTo(parameter.annotatedMethod)),
                           satisfies(
                               CODE_NAMESPACE,
                               parameter.annotatedMethod == null
@@ -548,7 +560,11 @@ public class SpringWebfluxTest {
                                           EXCEPTION_STACKTRACE,
                                           val -> val.isInstanceOf(String.class))))
                       .hasAttributesSatisfyingExactly(
-                          equalTo(CODE_FUNCTION, "handle"),
+                          satisfies(
+                              CODE_FUNCTION,
+                              parameter.annotatedMethod == null
+                                  ? val -> val.isEqualTo("handle")
+                                  : val -> val.isEqualTo(parameter.annotatedMethod)),
                           satisfies(
                               CODE_NAMESPACE,
                               parameter.annotatedMethod == null
@@ -695,7 +711,11 @@ public class SpringWebfluxTest {
                   span.hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
-                          equalTo(CODE_FUNCTION, "handle"),
+                          satisfies(
+                              CODE_FUNCTION,
+                              parameter.annotatedMethod == null
+                                  ? val -> val.isEqualTo("handle")
+                                  : val -> val.isEqualTo(parameter.annotatedMethod)),
                           satisfies(
                               CODE_NAMESPACE,
                               parameter.annotatedMethod == null
