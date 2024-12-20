@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.struts2;
+package io.opentelemetry.javaagent.instrumentation.struts2.v7_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -26,17 +26,14 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
+import jakarta.servlet.DispatcherType;
+import java.net.InetSocketAddress;
 import java.util.EnumSet;
 import java.util.Locale;
-import javax.servlet.DispatcherType;
-import javax.servlet.Filter;
+import org.apache.struts2.dispatcher.filter.StrutsPrepareAndExecuteFilter;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.session.HashSessionIdManager;
-import org.eclipse.jetty.server.session.HashSessionManager;
-import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.util.resource.FileResource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -47,38 +44,17 @@ class Struts2ActionSpanTest extends AbstractHttpServerTest<Server> {
       HttpServerInstrumentationExtension.forAgent();
 
   @Override
-  @SuppressWarnings("unchecked")
   protected Server setupServer() throws Exception {
-    Server server = new Server(port);
-    ServletContextHandler context = new ServletContextHandler(0);
-    context.setContextPath(getContextPath());
-    FileResource resource = new FileResource(getClass().getResource("/"));
-    context.setBaseResource(resource);
-    server.setHandler(context);
+    Server server = new Server(new InetSocketAddress("localhost", port));
 
-    HashSessionIdManager sessionIdManager = new HashSessionIdManager();
-    server.setSessionIdManager(sessionIdManager);
-    HashSessionManager sessionManager = new HashSessionManager();
-    SessionHandler sessionHandler = new SessionHandler(sessionManager);
-    context.setHandler(sessionHandler);
-
-    // disable adding jsessionid to url, affects redirect test
-    context.setInitParameter("org.eclipse.jetty.servlet.SessionIdPathParameterName", "none");
+    ServletContextHandler context = new ServletContextHandler(null, getContextPath());
 
     context.addServlet(DefaultServlet.class, "/");
     context.addServlet(GreetingServlet.class, "/greetingServlet");
-    Class<?> strutsFilterClass;
-    try {
-      // struts 2.3
-      strutsFilterClass =
-          Class.forName("org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter");
-    } catch (ClassNotFoundException exception) {
-      // struts 2.5
-      strutsFilterClass =
-          Class.forName("org.apache.struts2.dispatcher.filter.StrutsPrepareAndExecuteFilter");
-    }
     context.addFilter(
-        (Class<? extends Filter>) strutsFilterClass, "/*", EnumSet.of(DispatcherType.REQUEST));
+        StrutsPrepareAndExecuteFilter.class, "/*", EnumSet.of(DispatcherType.REQUEST));
+
+    server.setHandler(context);
 
     server.start();
     return server;
@@ -95,6 +71,7 @@ class Struts2ActionSpanTest extends AbstractHttpServerTest<Server> {
     options.setContextPath("/context");
     options.setTestPathParam(true);
     options.setTestErrorBody(false);
+    options.setTestPathParam(false);
     options.setHasHandlerSpan(endpoint -> !endpoint.equals(NOT_FOUND));
     options.setHasResponseSpan(
         endpoint ->

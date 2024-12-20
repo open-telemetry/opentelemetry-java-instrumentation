@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.struts2;
+package io.opentelemetry.javaagent.instrumentation.struts2.v2_3;
 
 import java.io.IOException;
 import javax.servlet.http.HttpServlet;

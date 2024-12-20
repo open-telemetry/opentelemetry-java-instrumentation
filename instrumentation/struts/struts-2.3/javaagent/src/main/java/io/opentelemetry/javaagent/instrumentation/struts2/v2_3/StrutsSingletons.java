@@ -3,17 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.struts2;
+package io.opentelemetry.javaagent.instrumentation.struts2.v2_3;
 
+import com.opensymphony.xwork2.ActionInvocation;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
-import org.apache.struts2.ActionInvocation;
 
 public class StrutsSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.struts-7.0";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.struts-2.3";
 
   private static final Instrumenter<ActionInvocation, Void> INSTRUMENTER;
 

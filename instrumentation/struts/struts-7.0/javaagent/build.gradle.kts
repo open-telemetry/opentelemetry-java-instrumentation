@@ -29,6 +29,7 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
   testInstrumentation(project(":instrumentation:jetty:jetty-11.0:javaagent"))
+  testInstrumentation(project(":instrumentation:struts:struts-2.3:javaagent"))
 }
 
 tasks.withType<Test>().configureEach {
