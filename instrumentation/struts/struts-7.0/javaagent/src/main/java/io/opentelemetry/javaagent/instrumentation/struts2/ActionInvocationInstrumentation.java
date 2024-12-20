@@ -13,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import com.opensymphony.xwork2.ActionInvocation;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
@@ -23,17 +22,18 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.struts2.ActionInvocation;
 
 public class ActionInvocationInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("com.opensymphony.xwork2.ActionInvocation");
+    return hasClassesNamed("org.apache.struts2.ActionInvocation");
   }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("com.opensymphony.xwork2.ActionInvocation"));
+    return implementsInterface(named("org.apache.struts2.ActionInvocation"));
   }
 
   @Override

@@ -6,7 +6,8 @@ muzzle {
   pass {
     group.set("org.apache.struts")
     module.set("struts2-core")
-    versions.set("[2.3.1,)")
+    versions.set("[2.1.0,7)")
+    assertInverse.set(true)
   }
 }
 
