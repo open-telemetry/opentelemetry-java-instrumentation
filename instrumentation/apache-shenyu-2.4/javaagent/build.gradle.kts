@@ -12,7 +12,7 @@ muzzle {
 }
 
 dependencies {
-  compileOnly("org.apache.shenyu:shenyu-web:2.4.0")
+  library("org.apache.shenyu:shenyu-web:2.4.0")
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
