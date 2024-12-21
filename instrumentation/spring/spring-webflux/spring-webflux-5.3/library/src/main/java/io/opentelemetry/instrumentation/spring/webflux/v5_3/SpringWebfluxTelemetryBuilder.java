@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExt
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.Experimental;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientHttpAttributesGetter;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -153,10 +154,10 @@ public final class SpringWebfluxTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
-   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Set)
-   * @deprecated Use {@link SpringWebfluxClientTelemetryBuilder#setKnownMethods(Set)} and {@link
-   *     SpringWebfluxServerTelemetryBuilder#setKnownMethods(Set)} instead.
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Collection)
+   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Collection)
+   * @deprecated Use {@link SpringWebfluxClientTelemetryBuilder#setKnownMethods(Collection)} and
+   *     {@link SpringWebfluxServerTelemetryBuilder#setKnownMethods(Collection)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue

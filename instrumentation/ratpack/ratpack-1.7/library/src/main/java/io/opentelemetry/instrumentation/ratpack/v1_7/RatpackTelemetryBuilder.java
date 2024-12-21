@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExt
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.Experimental;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackClientInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackServerInstrumenterBuilderFactory;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -135,10 +136,10 @@ public final class RatpackTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
-   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Set)
-   * @deprecated Use {@link RatpackServerTelemetryBuilder#setKnownMethods(Set)} and {@link
-   *     RatpackClientTelemetryBuilder#setKnownMethods(Set)} instead.
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Collection)
+   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Collection)
+   * @deprecated Use {@link RatpackServerTelemetryBuilder#setKnownMethods(Collection)} and {@link
+   *     RatpackClientTelemetryBuilder#setKnownMethods(Collection)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
