@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.MultiQuerySqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 
 public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtractor<REQUEST> {
 
@@ -93,10 +95,39 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
     @Override
     public String extract(REQUEST request) {
+      boolean isMultiQuery = false;
+      MultiQuerySqlClientAttributesGetter<REQUEST> multiGetter = null;
+      if (getter instanceof MultiQuerySqlClientAttributesGetter) {
+        multiGetter = (MultiQuerySqlClientAttributesGetter<REQUEST>) getter;
+        isMultiQuery = multiGetter.getRawQueryTexts(request).size() > 1;
+      }
+
+      Long batchSize = getter.getBatchSize(request);
+      boolean isBatch = batchSize != null && batchSize > 1;
+
       String namespace = getter.getDbNamespace(request);
-      SqlStatementInfo sanitizedStatement = sanitizer.sanitize(getter.getRawQueryText(request));
-      return computeSpanName(
-          namespace, sanitizedStatement.getOperation(), sanitizedStatement.getMainIdentifier());
+      if (!isBatch || (!SemconvStability.emitStableDatabaseSemconv() && !isMultiQuery)) {
+        SqlStatementInfo sanitizedStatement = sanitizer.sanitize(getter.getRawQueryText(request));
+        return computeSpanName(
+            namespace, sanitizedStatement.getOperation(), sanitizedStatement.getMainIdentifier());
+      } else if (SemconvStability.emitStableDatabaseSemconv()) {
+        if (!isMultiQuery) { // batch query with single unique query
+          SqlStatementInfo sanitizedStatement = sanitizer.sanitize(getter.getRawQueryText(request));
+          return computeSpanName(
+              namespace,
+              "BATCH " + sanitizedStatement.getOperation(),
+              sanitizedStatement.getMainIdentifier());
+        } else { // batch query with multiple unique queries
+          MultiQuery multiQuery = MultiQuery.analyze(multiGetter.getRawQueryTexts(request), false);
+
+          return computeSpanName(
+              namespace,
+              multiQuery.getOperation() != null ? "BATCH " + multiQuery.getOperation() : "BATCH",
+              multiQuery.getMainIdentifier());
+        }
+      } else {
+        return computeSpanName(namespace, null, null);
+      }
     }
   }
 }
