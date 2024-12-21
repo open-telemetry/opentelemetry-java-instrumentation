@@ -26,6 +26,7 @@ public final class DubboTelemetry {
   }
 
   private final Instrumenter<DubboRequest, Result> serverInstrumenter;
+
   private final Instrumenter<DubboRequest, Result> clientInstrumenter;
 
   DubboTelemetry(
@@ -35,8 +36,13 @@ public final class DubboTelemetry {
     this.clientInstrumenter = clientInstrumenter;
   }
 
-  /** Returns a new Dubbo {@link Filter} that traces Dubbo RPC invocations. */
-  public Filter newFilter() {
-    return new TracingFilter(serverInstrumenter, clientInstrumenter);
+  /** Returns a new Dubbo client {@link Filter} that traces Dubbo RPC invocations. */
+  public Filter newClientFilter() {
+    return new TracingFilter(clientInstrumenter, true);
+  }
+
+  /** Returns a new Dubbo server {@link Filter} that traces Dubbo RPC invocations. */
+  public Filter newServerFilter() {
+    return new TracingFilter(serverInstrumenter, false);
   }
 }
