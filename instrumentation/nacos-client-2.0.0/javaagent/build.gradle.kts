@@ -15,6 +15,8 @@ muzzle {
 dependencies {
   library("com.alibaba.nacos:nacos-client:2.0.0")
   testImplementation("javax.annotation:javax.annotation-api:1.3.2")
+
+  latestDepTestLibrary("com.alibaba.nacos:nacos-client:2.0.4+")
 }
 
 tasks.withType<Test>().configureEach {
