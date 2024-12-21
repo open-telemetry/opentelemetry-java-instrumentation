@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHt
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.httpclient.internal.Experimental;
 import io.opentelemetry.instrumentation.httpclient.internal.HttpHeadersSetter;
 import io.opentelemetry.instrumentation.httpclient.internal.JavaHttpClientInstrumenterBuilderFactory;
 import java.net.http.HttpRequest;
@@ -24,6 +25,11 @@ public final class JavaHttpClientTelemetryBuilder {
   private final DefaultHttpClientInstrumenterBuilder<HttpRequest, HttpResponse<?>> builder;
   private final OpenTelemetry openTelemetry;
 
+  static {
+    Experimental.setSetEmitExperimentalTelemetry(
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
+  }
+
   JavaHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder = JavaHttpClientInstrumenterBuilderFactory.create(openTelemetry);
     this.openTelemetry = openTelemetry;
@@ -32,11 +38,25 @@ public final class JavaHttpClientTelemetryBuilder {
   /**
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items. The {@link AttributesExtractor} will be executed after all default extractors.
+   *
+   * @deprecated Use {@link #addAttributesExtractor(AttributesExtractor)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super HttpRequest, ? super HttpResponse<?>> attributesExtractor) {
-    builder.addAttributeExtractor(attributesExtractor);
+    builder.addAttributesExtractor(attributesExtractor);
+    return this;
+  }
+
+  /**
+   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
+   * items. The {@link AttributesExtractor} will be executed after all default extractors.
+   */
+  @CanIgnoreReturnValue
+  public JavaHttpClientTelemetryBuilder addAttributesExtractor(
+      AttributesExtractor<? super HttpRequest, ? super HttpResponse<?>> attributesExtractor) {
+    builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 
@@ -86,7 +106,11 @@ public final class JavaHttpClientTelemetryBuilder {
    *
    * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
    *     are to be emitted.
+   * @deprecated Use {@link
+   *     Experimental#setEmitExperimentalTelemetry(JavaHttpClientTelemetryBuilder, boolean)}
+   *     instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {

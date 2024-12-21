@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.apachehttpclient.v4_3;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.apachehttpclient.v4_3.internal.Experimental;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -23,6 +24,11 @@ public final class ApacheHttpClientTelemetryBuilder {
   private final DefaultHttpClientInstrumenterBuilder<ApacheHttpClientRequest, HttpResponse> builder;
   private final OpenTelemetry openTelemetry;
 
+  static {
+    Experimental.setSetEmitExperimentalTelemetry(
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
+  }
+
   ApacheHttpClientTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder =
         DefaultHttpClientInstrumenterBuilder.create(
@@ -33,12 +39,27 @@ public final class ApacheHttpClientTelemetryBuilder {
   /**
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items. The {@link AttributesExtractor} will be executed after all default extractors.
+   *
+   * @deprecated Use {@link #addAttributesExtractor(AttributesExtractor)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public ApacheHttpClientTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super ApacheHttpClientRequest, ? super HttpResponse>
           attributesExtractor) {
-    builder.addAttributeExtractor(attributesExtractor);
+    builder.addAttributesExtractor(attributesExtractor);
+    return this;
+  }
+
+  /**
+   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
+   * items. The {@link AttributesExtractor} will be executed after all default extractors.
+   */
+  @CanIgnoreReturnValue
+  public ApacheHttpClientTelemetryBuilder addAttributesExtractor(
+      AttributesExtractor<? super ApacheHttpClientRequest, ? super HttpResponse>
+          attributesExtractor) {
+    builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 
@@ -88,7 +109,11 @@ public final class ApacheHttpClientTelemetryBuilder {
    *
    * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
    *     are to be emitted.
+   * @deprecated Use {@link
+   *     Experimental#setEmitExperimentalTelemetry(ApacheHttpClientTelemetryBuilder, boolean)}
+   *     instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public ApacheHttpClientTelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {

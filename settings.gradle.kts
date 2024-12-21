@@ -21,7 +21,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "9.4.0" apply false
-  id("com.gradle.develocity") version "3.18.2"
+  id("com.gradle.develocity") version "3.19"
 }
 
 dependencyResolutionManagement {
@@ -53,6 +53,14 @@ develocity {
     publishing.onlyIf { System.getenv("CI") != null }
     termsOfUseUrl.set("https://gradle.com/help/legal-terms-of-use")
     termsOfUseAgree.set("yes")
+
+    if (!gradle.startParameter.taskNames.contains("listTestsInPartition")) {
+      buildScanPublished {
+        File("build-scan.txt").printWriter().use { writer ->
+          writer.println(buildScanUri)
+        }
+      }
+    }
   }
 }
 
@@ -564,7 +572,8 @@ include(":instrumentation:spring:spring-ws-2.0:javaagent")
 include(":instrumentation:spring:starters:spring-boot-starter")
 include(":instrumentation:spring:starters:zipkin-spring-boot-starter")
 include(":instrumentation:spymemcached-2.12:javaagent")
-include(":instrumentation:struts-2.3:javaagent")
+include(":instrumentation:struts:struts-2.3:javaagent")
+include(":instrumentation:struts:struts-7.0:javaagent")
 include(":instrumentation:tapestry-5.4:javaagent")
 include(":instrumentation:tomcat:tomcat-7.0:javaagent")
 include(":instrumentation:tomcat:tomcat-10.0:javaagent")

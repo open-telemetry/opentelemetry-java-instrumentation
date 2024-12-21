@@ -55,24 +55,24 @@ dependencies {
 
   // When updating, update above in plugins too
   implementation("com.diffplug.spotless:spotless-plugin-gradle:6.25.0")
-  implementation("com.google.guava:guava:33.3.1-jre")
+  implementation("com.google.guava:guava:33.4.0-jre")
   implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.18")
   implementation("com.gradleup.shadow:shadow-gradle-plugin:8.3.5")
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
-  implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:3.18.2")
+  implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:3.19")
   implementation("org.owasp:dependency-check-gradle:11.1.1")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:1.7.2")
   implementation("org.spdx:spdx-gradle-plugin:0.8.0")
   // When updating, also update dependencyManagement/build.gradle.kts
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.15.10")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.15.11")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.2")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:4.1.0")
   implementation("net.ltgt.gradle:gradle-nullaway-plugin:2.1.0")
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.5")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.11.3"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.11.4"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
-  testImplementation("org.assertj:assertj-core:3.26.3")
+  testImplementation("org.assertj:assertj-core:3.27.0")
 }
