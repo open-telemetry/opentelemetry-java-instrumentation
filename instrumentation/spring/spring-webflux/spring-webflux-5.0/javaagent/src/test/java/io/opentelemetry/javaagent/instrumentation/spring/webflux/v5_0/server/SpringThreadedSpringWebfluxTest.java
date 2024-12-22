@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server;
 
-import io.opentelemetry.instrumentation.spring.webflux.IpcSingleThreadNettyCustomizer;
 import io.opentelemetry.instrumentation.spring.webflux.server.SingleThreadNettyCustomizer;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
