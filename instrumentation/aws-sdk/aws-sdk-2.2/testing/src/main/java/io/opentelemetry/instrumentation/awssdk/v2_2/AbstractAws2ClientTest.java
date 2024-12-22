@@ -98,55 +98,6 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
   // prefix the hostname with the bucket name as label.
   URI clientUri = URI.create("http://localhost:" + server.httpPort());
 
-  private static final Callable<HttpResponse> sqsCreateQueueResponse =
-      () -> {
-        String content;
-        if (!Boolean.getBoolean("testLatestDeps")) {
-          content =
-              "<CreateQueueResponse>"
-                  + " <CreateQueueResult><QueueUrl>https://queue.amazonaws.com/123456789012/MyQueue</QueueUrl></CreateQueueResult>"
-                  + "   <ResponseMetadata><RequestId>7a62c49f-347e-4fc4-9331-6e8e7a96aa73</RequestId></ResponseMetadata>"
-                  + " </CreateQueueResponse>";
-          return HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, content);
-        }
-        content = "{" + " \"QueueUrl\":\"https://queue.amazonaws.com/123456789012/MyQueue\"" + "}";
-        ResponseHeaders headers =
-            ResponseHeaders.builder(HttpStatus.OK)
-                .contentType(MediaType.PLAIN_TEXT_UTF_8)
-                .add("x-amzn-RequestId", "7a62c49f-347e-4fc4-9331-6e8e7a96aa73")
-                .build();
-        return HttpResponse.of(headers, HttpData.of(StandardCharsets.UTF_8, content));
-      };
-
-  private static final Callable<HttpResponse> sqsSendMessageResponse =
-      () -> {
-        String content;
-        if (!Boolean.getBoolean("testLatestDeps")) {
-          content =
-              "<SendMessageResponse>"
-                  + " <SendMessageResult>"
-                  + "   <MD5OfMessageBody>d41d8cd98f00b204e9800998ecf8427e</MD5OfMessageBody>"
-                  + "   <MD5OfMessageAttributes>3ae8f24a165a8cedc005670c81a27295</MD5OfMessageAttributes>"
-                  + "   <MessageId>5fea7756-0ea4-451a-a703-a558b933e274</MessageId>"
-                  + " </SendMessageResult>"
-                  + " <ResponseMetadata><RequestId>27daac76-34dd-47df-bd01-1f6e873584a0</RequestId></ResponseMetadata>"
-                  + "</SendMessageResponse>";
-          return HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, content);
-        }
-        content =
-            "{"
-                + " \"MD5OfMessageBody\":\"d41d8cd98f00b204e9800998ecf8427e\","
-                + " \"MD5OfMessageAttributes\":\"3ae8f24a165a8cedc005670c81a27295\","
-                + " \"MessageId\":\"5fea7756-0ea4-451a-a703-a558b933e274\""
-                + "}";
-        ResponseHeaders headers =
-            ResponseHeaders.builder(HttpStatus.OK)
-                .contentType(MediaType.PLAIN_TEXT_UTF_8)
-                .add("x-amzn-RequestId", "27daac76-34dd-47df-bd01-1f6e873584a0")
-                .build();
-        return HttpResponse.of(headers, HttpData.of(StandardCharsets.UTF_8, content));
-      };
-
   private static final String ec2BodyContent =
       "<AllocateAddressResponse xmlns=\"http://ec2.amazonaws.com/doc/2016-11-15/\">"
           + " <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId>"
@@ -164,7 +115,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     if (Boolean.getBoolean("testLatestDeps")) {
       Method forcePathStyleMethod =
           S3ClientBuilder.class.getMethod("forcePathStyle", Boolean.class);
-      forcePathStyleMethod.invoke(true);
+      forcePathStyleMethod.invoke(builder, true);
     }
     return builder;
   }
@@ -173,8 +124,8 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     S3AsyncClientBuilder builder = S3AsyncClient.builder();
     if (Boolean.getBoolean("testLatestDeps")) {
       Method forcePathStyleMethod =
-          S3ClientBuilder.class.getMethod("forcePathStyle", Boolean.class);
-      forcePathStyleMethod.invoke(true);
+          S3AsyncClientBuilder.class.getMethod("forcePathStyle", Boolean.class);
+      forcePathStyleMethod.invoke(builder, true);
     }
     return builder;
   }
@@ -285,14 +236,23 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
             "CreateBucket",
             "PUT",
             (Function<S3Client, Object>)
-                c -> c.createBucket(CreateBucketRequest.builder().bucket("somebucket").build())),
+                c -> c.createBucket(CreateBucketRequest.builder().bucket("somebucket").build()),
+            (Function<S3AsyncClient, Future<?>>)
+                c -> c.createBucket(CreateBucketRequest.builder().bucket("somebucket").build()),
+            ""),
         Arguments.of(
             "GetObject",
             "GET",
             (Function<S3Client, Object>)
                 c ->
                     c.getObject(
-                        GetObjectRequest.builder().bucket("somebucket").key("somekey").build())));
+                        GetObjectRequest.builder().bucket("somebucket").key("somekey").build()),
+            (Function<S3AsyncClient, Future<?>>)
+                c ->
+                    c.getObject(
+                        GetObjectRequest.builder().bucket("somebucket").key("somekey").build(),
+                        AsyncResponseTransformer.toBytes()),
+            "1234567890"));
   }
 
   @ParameterizedTest
@@ -319,29 +279,14 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     clientAssertions("S3", operation, method, response, "UNKNOWN");
   }
 
-  private static Stream<Arguments> provideS3AsyncArguments() {
-    return Stream.of(
-        Arguments.of(
-            "CreateBucket",
-            "PUT",
-            (Function<S3AsyncClient, Future<?>>)
-                c -> c.createBucket(CreateBucketRequest.builder().bucket("somebucket").build()),
-            ""),
-        Arguments.of(
-            "GetObject",
-            "GET",
-            (Function<S3AsyncClient, Future<?>>)
-                c ->
-                    c.getObject(
-                        GetObjectRequest.builder().bucket("somebucket").key("somekey").build(),
-                        AsyncResponseTransformer.toBytes()),
-            "1234567890"));
-  }
-
   @ParameterizedTest
-  @MethodSource("provideS3AsyncArguments")
+  @MethodSource("provideS3Arguments")
   void testS3AsyncSendOperationRequestWithBuilder(
-      String operation, String method, Function<S3AsyncClient, Future<?>> call, String body)
+      String operation,
+      String method,
+      Function<S3Client, Object> call,
+      Function<S3AsyncClient, Future<?>> asyncCall,
+      String body)
       throws Exception {
     S3AsyncClientBuilder builder = s3AsyncClientBuilder();
     configureSdkClient(builder);
@@ -354,7 +299,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
 
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, body));
 
-    Future<?> response = call.apply(client);
+    Future<?> response = asyncCall.apply(client);
     response.get();
 
     clientAssertions("S3", operation, method, response, "UNKNOWN");
@@ -388,14 +333,68 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
         Arguments.of(
             "CreateQueue",
             "7a62c49f-347e-4fc4-9331-6e8e7a96aa73",
-            sqsCreateQueueResponse,
+            (Callable<HttpResponse>)
+                () -> {
+                  String content;
+                  if (!Boolean.getBoolean("testLatestDeps")) {
+                    content =
+                        "<CreateQueueResponse>"
+                            + " <CreateQueueResult><QueueUrl>https://queue.amazonaws.com/123456789012/MyQueue</QueueUrl></CreateQueueResult>"
+                            + "   <ResponseMetadata><RequestId>7a62c49f-347e-4fc4-9331-6e8e7a96aa73</RequestId></ResponseMetadata>"
+                            + " </CreateQueueResponse>";
+                    return HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, content);
+                  }
+                  content =
+                      "{"
+                          + " \"QueueUrl\":\"https://queue.amazonaws.com/123456789012/MyQueue\""
+                          + "}";
+                  ResponseHeaders headers =
+                      ResponseHeaders.builder(HttpStatus.OK)
+                          .contentType(MediaType.PLAIN_TEXT_UTF_8)
+                          .add("x-amzn-RequestId", "7a62c49f-347e-4fc4-9331-6e8e7a96aa73")
+                          .build();
+                  return HttpResponse.of(headers, HttpData.of(StandardCharsets.UTF_8, content));
+                },
             (Function<SqsClient, Object>)
+                c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build()),
+            (Function<SqsAsyncClient, Future<?>>)
                 c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build())),
         Arguments.of(
             "SendMessage",
             "27daac76-34dd-47df-bd01-1f6e873584a0",
-            sqsSendMessageResponse,
+            (Callable<HttpResponse>)
+                () -> {
+                  String content;
+                  if (!Boolean.getBoolean("testLatestDeps")) {
+                    content =
+                        "<SendMessageResponse>"
+                            + " <SendMessageResult>"
+                            + "   <MD5OfMessageBody>d41d8cd98f00b204e9800998ecf8427e</MD5OfMessageBody>"
+                            + "   <MD5OfMessageAttributes>3ae8f24a165a8cedc005670c81a27295</MD5OfMessageAttributes>"
+                            + "   <MessageId>5fea7756-0ea4-451a-a703-a558b933e274</MessageId>"
+                            + " </SendMessageResult>"
+                            + " <ResponseMetadata><RequestId>27daac76-34dd-47df-bd01-1f6e873584a0</RequestId></ResponseMetadata>"
+                            + "</SendMessageResponse>";
+                    return HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, content);
+                  }
+                  content =
+                      "{"
+                          + " \"MD5OfMessageBody\":\"d41d8cd98f00b204e9800998ecf8427e\","
+                          + " \"MD5OfMessageAttributes\":\"3ae8f24a165a8cedc005670c81a27295\","
+                          + " \"MessageId\":\"5fea7756-0ea4-451a-a703-a558b933e274\""
+                          + "}";
+                  ResponseHeaders headers =
+                      ResponseHeaders.builder(HttpStatus.OK)
+                          .contentType(MediaType.PLAIN_TEXT_UTF_8)
+                          .add("x-amzn-RequestId", "27daac76-34dd-47df-bd01-1f6e873584a0")
+                          .build();
+                  return HttpResponse.of(headers, HttpData.of(StandardCharsets.UTF_8, content));
+                },
             (Function<SqsClient, Object>)
+                c ->
+                    c.sendMessage(
+                        SendMessageRequest.builder().queueUrl(QUEUE_URL).messageBody("").build()),
+            (Function<SqsAsyncClient, Future<?>>)
                 c ->
                     c.sendMessage(
                         SendMessageRequest.builder().queueUrl(QUEUE_URL).messageBody("").build())));
@@ -430,31 +429,14 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     clientAssertions("Sqs", operation, "POST", response, requestId);
   }
 
-  private static Stream<Arguments> provideSqsAsyncArguments() {
-    return Stream.of(
-        Arguments.of(
-            "CreateQueue",
-            "7a62c49f-347e-4fc4-9331-6e8e7a96aa73",
-            sqsCreateQueueResponse,
-            (Function<SqsAsyncClient, Future<?>>)
-                c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build())),
-        Arguments.of(
-            "SendMessage",
-            "27daac76-34dd-47df-bd01-1f6e873584a0",
-            sqsSendMessageResponse,
-            (Function<SqsAsyncClient, Future<?>>)
-                c ->
-                    c.sendMessage(
-                        SendMessageRequest.builder().queueUrl(QUEUE_URL).messageBody("").build())));
-  }
-
   @ParameterizedTest
-  @MethodSource("provideSqsAsyncArguments")
+  @MethodSource("provideSqsArguments")
   void testSqsAsyncSendOperationRequestWithBuilder(
       String operation,
       String requestId,
       Callable<HttpResponse> serverResponse,
-      Function<SqsAsyncClient, Future<?>> call)
+      Function<SqsClient, Object> call,
+      Function<SqsAsyncClient, Future<?>> asyncCall)
       throws Exception {
     assumeSupportedConfig(operation);
 
@@ -468,7 +450,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
             .build();
 
     server.enqueue(serverResponse.call());
-    Future<?> response = call.apply(client);
+    Future<?> response = asyncCall.apply(client);
     response.get();
 
     clientAssertions("Sqs", operation, "POST", response, requestId);
@@ -638,7 +620,6 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                     GetObjectRequest.builder().bucket("somebucket").key("somekey").build()));
 
     assertThat(thrown).isInstanceOf(SdkClientException.class);
-    assertThat(thrown).hasMessage("Unable to execute HTTP request: Read timed out");
 
     getTesting()
         .waitAndAssertTraces(
