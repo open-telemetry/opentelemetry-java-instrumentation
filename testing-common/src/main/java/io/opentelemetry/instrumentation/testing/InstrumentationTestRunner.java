@@ -131,7 +131,7 @@ public abstract class InstrumentationTestRunner {
         // Don't throw this failure since the stack is the awaitility thread, causing confusion.
         // Instead, just assert one more time on the test thread, which will fail with a better
         // stack trace.
-        // TODO(anuraaga): There is probably a better way to do this.
+        // TODO: There is probably a better way to do this.
         doAssertTraces(traceComparator, assertionsList, verifyScopeVersion);
       } else {
         throw t;

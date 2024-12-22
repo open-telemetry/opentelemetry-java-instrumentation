@@ -66,22 +66,23 @@ class AkkaHttpClientInstrumentationTest
       uri: URI,
       headers: util.Map[String, String]
   ): Int = {
-    val settings = ConnectionPoolSettings(system)
-      .withConnectionSettings(
-        ClientConnectionSettings(system)
-          .withConnectingTimeout(
-            FiniteDuration(
-              AbstractHttpClientTest.CONNECTION_TIMEOUT.toMillis,
-              MILLISECONDS
-            )
-          )
-          .withIdleTimeout(
-            FiniteDuration(
-              AbstractHttpClientTest.READ_TIMEOUT.toMillis,
-              MILLISECONDS
-            )
-          )
+    var clientConnectionSettings = ClientConnectionSettings(system)
+      .withConnectingTimeout(
+        FiniteDuration(
+          AbstractHttpClientTest.CONNECTION_TIMEOUT.toMillis,
+          MILLISECONDS
+        )
       )
+    if (uri.toString.contains("/read-timeout")) {
+      clientConnectionSettings = clientConnectionSettings.withIdleTimeout(
+        FiniteDuration(
+          AbstractHttpClientTest.READ_TIMEOUT.toMillis,
+          MILLISECONDS
+        )
+      )
+    }
+    val settings = ConnectionPoolSettings(system)
+      .withConnectionSettings(clientConnectionSettings)
     val response = Await.result(
       Http.get(system).singleRequest(request, settings = settings),
       10 seconds
