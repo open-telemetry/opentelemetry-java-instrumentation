@@ -27,7 +27,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
   testInstrumentation(project(":instrumentation:struts:struts-7.0:javaagent"))
 
-  latestDepTestLibrary("org.apache.struts:struts2-core:6.0.+")
+  latestDepTestLibrary("org.apache.struts:struts2-core:6.+")
 }
 
 tasks.withType<Test>().configureEach {
