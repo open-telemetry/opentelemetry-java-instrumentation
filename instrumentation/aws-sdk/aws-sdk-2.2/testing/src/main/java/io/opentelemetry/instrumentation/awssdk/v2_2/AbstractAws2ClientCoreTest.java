@@ -68,17 +68,17 @@ public abstract class AbstractAws2ClientCoreTest {
 
   protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
 
-  static boolean isSqsAttributeInjectionEnabled() {
+  protected static boolean isSqsAttributeInjectionEnabled() {
     // See io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecutionInterceptor
     return ConfigPropertiesUtil.getBoolean(
         "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", false);
   }
 
-  static final StaticCredentialsProvider CREDENTIALS_PROVIDER =
+  protected static final StaticCredentialsProvider CREDENTIALS_PROVIDER =
       StaticCredentialsProvider.create(
           AwsBasicCredentials.create("my-access-key", "my-secret-key"));
 
-  static MockWebServerExtension server = new MockWebServerExtension();
+  protected static MockWebServerExtension server = new MockWebServerExtension();
 
   @BeforeAll
   static void setup() {
@@ -95,21 +95,21 @@ public abstract class AbstractAws2ClientCoreTest {
     server.beforeTestExecution(null);
   }
 
-  void configureSdkClient(SdkClientBuilder<?, ?> builder) {
+  protected void configureSdkClient(SdkClientBuilder<?, ?> builder) {
     builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
   }
 
-  static ImmutableMap<String, AttributeValue> createTableRequestKey =
+  private static final ImmutableMap<String, AttributeValue> createTableRequestKey =
       ImmutableMap.of(
           "anotherKey", AttributeValue.builder().s("value").build(),
           "key", AttributeValue.builder().s("value").build());
 
-  static ImmutableMap<String, AttributeValue> getItemRequestKey =
+  private static final ImmutableMap<String, AttributeValue> getItemRequestKey =
       ImmutableMap.of(
           "keyOne", AttributeValue.builder().s("value").build(),
           "keyTwo", AttributeValue.builder().s("differentValue").build());
 
-  static ImmutableMap<String, AttributeValue> putItemRequestKey =
+  private static final ImmutableMap<String, AttributeValue> putItemRequestKey =
       ImmutableMap.of(
           "key", AttributeValue.builder().s("value").build(),
           "attributeOne", AttributeValue.builder().s("one").build(),
@@ -144,7 +144,7 @@ public abstract class AbstractAws2ClientCoreTest {
                     }));
   }
 
-  static CreateTableRequest createTableRequest() {
+  private static CreateTableRequest createTableRequest() {
     return CreateTableRequest.builder()
         .tableName("sometable")
         .globalSecondaryIndexes(
@@ -174,7 +174,7 @@ public abstract class AbstractAws2ClientCoreTest {
   }
 
   @SuppressWarnings("deprecation") // uses deprecated semconv
-  static void assertCreateTableRequest(SpanDataAssert span) {
+  private static void assertCreateTableRequest(SpanDataAssert span) {
     span.hasName("DynamoDb.CreateTable")
         .hasKind(SpanKind.CLIENT)
         .hasNoParent()
@@ -200,7 +200,7 @@ public abstract class AbstractAws2ClientCoreTest {
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  static void assertQueryRequest(SpanDataAssert span) {
+  private static void assertQueryRequest(SpanDataAssert span) {
     span.hasName("DynamoDb.Query")
         .hasKind(SpanKind.CLIENT)
         .hasNoParent()
@@ -223,7 +223,7 @@ public abstract class AbstractAws2ClientCoreTest {
   }
 
   @SuppressWarnings("deprecation") // uses deprecated semconv
-  static void assertDynamoDbRequest(SpanDataAssert span, String operation) {
+  private static void assertDynamoDbRequest(SpanDataAssert span, String operation) {
     span.hasName("DynamoDb." + operation)
         .hasKind(SpanKind.CLIENT)
         .hasNoParent()

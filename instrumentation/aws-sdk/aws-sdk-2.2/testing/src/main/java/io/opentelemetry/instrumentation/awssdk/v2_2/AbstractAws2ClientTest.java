@@ -35,6 +35,7 @@ import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import io.opentelemetry.testing.internal.armeria.common.ResponseHeaders;
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.RecordedRequest;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -42,6 +43,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -96,7 +98,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
   // Force localhost instead of relying on mock server because using ip is yet another corner case
   // of the virtual bucket changes introduced by aws sdk v2.18.0. When using IP, there is no way to
   // prefix the hostname with the bucket name as label.
-  URI clientUri = URI.create("http://localhost:" + server.httpPort());
+  private final URI clientUri = URI.create("http://localhost:" + server.httpPort());
 
   private static final String ec2BodyContent =
       "<AllocateAddressResponse xmlns=\"http://ec2.amazonaws.com/doc/2016-11-15/\">"
@@ -109,26 +111,6 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
       "<DeleteOptionGroupResponse xmlns=\"http://rds.amazonaws.com/doc/2014-09-01/\">"
           + " <ResponseMetadata><RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId></ResponseMetadata>"
           + "</DeleteOptionGroupResponse>";
-
-  S3ClientBuilder s3ClientBuilder() throws Exception {
-    S3ClientBuilder builder = S3Client.builder();
-    if (Boolean.getBoolean("testLatestDeps")) {
-      Method forcePathStyleMethod =
-          S3ClientBuilder.class.getMethod("forcePathStyle", Boolean.class);
-      forcePathStyleMethod.invoke(builder, true);
-    }
-    return builder;
-  }
-
-  S3AsyncClientBuilder s3AsyncClientBuilder() throws Exception {
-    S3AsyncClientBuilder builder = S3AsyncClient.builder();
-    if (Boolean.getBoolean("testLatestDeps")) {
-      Method forcePathStyleMethod =
-          S3AsyncClientBuilder.class.getMethod("forcePathStyle", Boolean.class);
-      forcePathStyleMethod.invoke(builder, true);
-    }
-    return builder;
-  }
 
   @SuppressWarnings("deprecation") // uses deprecated semconv
   private void clientAssertions(
@@ -259,7 +241,12 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
   @MethodSource("provideS3Arguments")
   void testS3SendOperationRequestWithBuilder(
       String operation, String method, Function<S3Client, Object> call) throws Exception {
-    S3ClientBuilder builder = s3ClientBuilder();
+    S3ClientBuilder builder = S3Client.builder();
+    if (Boolean.getBoolean("testLatestDeps")) {
+      Method forcePathStyleMethod =
+          S3ClientBuilder.class.getMethod("forcePathStyle", Boolean.class);
+      forcePathStyleMethod.invoke(builder, true);
+    }
     configureSdkClient(builder);
     S3Client client =
         builder
@@ -287,8 +274,17 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
       Function<S3Client, Object> call,
       Function<S3AsyncClient, Future<?>> asyncCall,
       String body)
-      throws Exception {
-    S3AsyncClientBuilder builder = s3AsyncClientBuilder();
+      throws NoSuchMethodException,
+          InvocationTargetException,
+          IllegalAccessException,
+          ExecutionException,
+          InterruptedException {
+    S3AsyncClientBuilder builder = S3AsyncClient.builder();
+    if (Boolean.getBoolean("testLatestDeps")) {
+      Method forcePathStyleMethod =
+          S3AsyncClientBuilder.class.getMethod("forcePathStyle", Boolean.class);
+      forcePathStyleMethod.invoke(builder, true);
+    }
     configureSdkClient(builder);
     S3AsyncClient client =
         builder
@@ -519,14 +515,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
             .credentialsProvider(CREDENTIALS_PROVIDER)
             .build();
 
-    String content =
-        "<AllocateAddressResponse xmlns=\"http://ec2.amazonaws.com/doc/2016-11-15/\">"
-            + " <requestId>59dbff89-35bd-4eac-99ed-be587EXAMPLE</requestId>"
-            + " <publicIp>192.0.2.1</publicIp>"
-            + " <domain>standard</domain>"
-            + "</AllocateAddressResponse>";
-
-    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, content));
+    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, ec2BodyContent));
     Object response = client.allocateAddress();
 
     assertThat(response.getClass().getSimpleName())
