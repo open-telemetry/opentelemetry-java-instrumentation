@@ -181,6 +181,110 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     return builder;
   }
 
+  @SuppressWarnings("deprecation") // uses deprecated semconv
+  private void clientAssertions(
+      String service, String operation, String method, Object response, String requestId) {
+    assertThat(response).isNotNull();
+
+    RecordedRequest request = server.takeRequest();
+    assertThat(request).isNotNull();
+    assertThat(request.request().headers().get("X-Amzn-Trace-Id")).isNotNull();
+    assertThat(request.request().headers().get("traceparent")).isNull();
+
+    List<AttributeAssertion> attributes =
+        new ArrayList<>(
+            asList(
+                // Starting with AWS SDK V2 2.18.0, the s3 sdk will prefix the hostname with the
+                // bucket name
+                // in case the bucket name is a valid DNS label, even in the case that we are using
+                // an
+                // endpoint override. Previously the sdk was only doing that if endpoint had "s3" as
+                // label in
+                // the FQDN. Our test assert both cases so that we don't need to know what version
+                // is being
+                // tested.
+                satisfies(SERVER_ADDRESS, v -> v.matches("somebucket.localhost|localhost")),
+                equalTo(SERVER_PORT, server.httpPort()),
+                equalTo(HTTP_REQUEST_METHOD, method),
+                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                equalTo(RPC_SYSTEM, "aws-api"),
+                equalTo(RPC_SERVICE, service),
+                equalTo(RPC_METHOD, operation),
+                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                equalTo(AWS_REQUEST_ID, requestId)));
+
+    if (service.equals("S3")) {
+      attributes.addAll(
+          new ArrayList<>(
+              asList(
+                  satisfies(
+                      URL_FULL,
+                      val ->
+                          val.satisfiesAnyOf(
+                              v ->
+                                  assertThat(v)
+                                      .startsWith(
+                                          "http://somebucket.localhost:" + server.httpPort()),
+                              v ->
+                                  assertThat(v)
+                                      .startsWith(
+                                          "http://localhost:"
+                                              + server.httpPort()
+                                              + "/somebucket"))),
+                  equalTo(stringKey("aws.bucket.name"), "somebucket"))));
+    } else {
+      attributes.addAll(
+          new ArrayList<>(
+              asList(
+                  equalTo(SERVER_ADDRESS, "localhost"),
+                  satisfies(
+                      URL_FULL, val -> val.startsWith("http://localhost:" + server.httpPort())))));
+    }
+
+    if (service.equals("Kinesis")) {
+      attributes.add(equalTo(stringKey("aws.stream.name"), "somestream"));
+    }
+
+    if (service.equals("Sns")) {
+      attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "somearn"));
+    }
+
+    if (service.equals("Sqs") && operation.equals("CreateQueue")) {
+      attributes.add(equalTo(stringKey("aws.queue.name"), "somequeue"));
+    }
+
+    if (service.equals("Sqs") && operation.equals("SendMessage")) {
+      attributes.addAll(
+          new ArrayList<>(
+              asList(
+                  equalTo(stringKey("aws.queue.url"), QUEUE_URL),
+                  equalTo(MESSAGING_DESTINATION_NAME, "somequeue"),
+                  equalTo(MESSAGING_OPERATION, "publish"),
+                  satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                  equalTo(MESSAGING_SYSTEM, AWS_SQS))));
+    }
+
+    String evaluatedOperation;
+    SpanKind operationKind;
+    if (operation.equals("SendMessage")) {
+      evaluatedOperation = "somequeue publish";
+      operationKind = SpanKind.PRODUCER;
+    } else {
+      operationKind = SpanKind.CLIENT;
+      evaluatedOperation = service + "." + operation;
+    }
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(evaluatedOperation)
+                            .hasKind(operationKind)
+                            .hasNoParent()
+                            .hasAttributesSatisfyingExactly(attributes)));
+  }
+
   private static Stream<Arguments> provideS3Arguments() {
     return Stream.of(
         Arguments.of(
@@ -588,109 +692,5 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                                 equalTo(RPC_METHOD, "GetObject"),
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(stringKey("aws.bucket.name"), "somebucket"))));
-  }
-
-  @SuppressWarnings("deprecation") // uses deprecated semconv
-  private void clientAssertions(
-      String service, String operation, String method, Object response, String requestId) {
-    assertThat(response).isNotNull();
-
-    RecordedRequest request = server.takeRequest();
-    assertThat(request).isNotNull();
-    assertThat(request.request().headers().get("X-Amzn-Trace-Id")).isNotNull();
-    assertThat(request.request().headers().get("traceparent")).isNull();
-
-    List<AttributeAssertion> attributes =
-        new ArrayList<>(
-            asList(
-                // Starting with AWS SDK V2 2.18.0, the s3 sdk will prefix the hostname with the
-                // bucket name
-                // in case the bucket name is a valid DNS label, even in the case that we are using
-                // an
-                // endpoint override. Previously the sdk was only doing that if endpoint had "s3" as
-                // label in
-                // the FQDN. Our test assert both cases so that we don't need to know what version
-                // is being
-                // tested.
-                satisfies(SERVER_ADDRESS, v -> v.matches("somebucket.localhost|localhost")),
-                equalTo(SERVER_PORT, server.httpPort()),
-                equalTo(HTTP_REQUEST_METHOD, method),
-                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                equalTo(RPC_SYSTEM, "aws-api"),
-                equalTo(RPC_SERVICE, service),
-                equalTo(RPC_METHOD, operation),
-                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                equalTo(AWS_REQUEST_ID, requestId)));
-
-    if (service.equals("S3")) {
-      attributes.addAll(
-          new ArrayList<>(
-              asList(
-                  satisfies(
-                      URL_FULL,
-                      val ->
-                          val.satisfiesAnyOf(
-                              v ->
-                                  assertThat(v)
-                                      .startsWith(
-                                          "http://somebucket.localhost:" + server.httpPort()),
-                              v ->
-                                  assertThat(v)
-                                      .startsWith(
-                                          "http://localhost:"
-                                              + server.httpPort()
-                                              + "/somebucket"))),
-                  equalTo(stringKey("aws.bucket.name"), "somebucket"))));
-    } else {
-      attributes.addAll(
-          new ArrayList<>(
-              asList(
-                  equalTo(SERVER_ADDRESS, "localhost"),
-                  satisfies(
-                      URL_FULL, val -> val.startsWith("http://localhost:" + server.httpPort())))));
-    }
-
-    if (service.equals("Kinesis")) {
-      attributes.add(equalTo(stringKey("aws.stream.name"), "somestream"));
-    }
-
-    if (service.equals("Sns")) {
-      attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "somearn"));
-    }
-
-    if (service.equals("Sqs") && operation.equals("CreateQueue")) {
-      attributes.add(equalTo(stringKey("aws.queue.name"), "somequeue"));
-    }
-
-    if (service.equals("Sqs") && operation.equals("SendMessage")) {
-      attributes.addAll(
-          new ArrayList<>(
-              asList(
-                  equalTo(stringKey("aws.queue.url"), QUEUE_URL),
-                  equalTo(MESSAGING_DESTINATION_NAME, "somequeue"),
-                  equalTo(MESSAGING_OPERATION, "publish"),
-                  satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                  equalTo(MESSAGING_SYSTEM, AWS_SQS))));
-    }
-
-    String evaluatedOperation;
-    SpanKind operationKind;
-    if (operation.equals("SendMessage")) {
-      evaluatedOperation = "somequeue publish";
-      operationKind = SpanKind.PRODUCER;
-    } else {
-      operationKind = SpanKind.CLIENT;
-      evaluatedOperation = service + "." + operation;
-    }
-
-    getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(evaluatedOperation)
-                            .hasKind(operationKind)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(attributes)));
   }
 }

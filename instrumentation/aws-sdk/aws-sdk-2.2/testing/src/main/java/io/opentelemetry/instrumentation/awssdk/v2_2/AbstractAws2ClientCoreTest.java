@@ -115,6 +115,134 @@ public abstract class AbstractAws2ClientCoreTest {
           "attributeOne", AttributeValue.builder().s("one").build(),
           "attributeTwo", AttributeValue.builder().s("two").build());
 
+  private void executeCall(String operation, Object response)
+      throws ExecutionException, InterruptedException {
+    if (response instanceof Future) {
+      response = ((Future<?>) response).get();
+    }
+
+    assertThat(response).isNotNull();
+    assertThat(response.getClass().getSimpleName()).startsWith(operation);
+
+    RecordedRequest request = server.takeRequest();
+    assertThat(request).isNotNull();
+    assertThat(request.request().headers().get("X-Amzn-Trace-Id")).isNotNull();
+    assertThat(request.request().headers().get("traceparent")).isNull();
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> {
+                      if (operation.equals("CreateTable")) {
+                        assertCreateTableRequest(span);
+                      } else if (operation.equals("Query")) {
+                        assertQueryRequest(span);
+                      } else {
+                        assertDynamoDbRequest(span, operation);
+                      }
+                    }));
+  }
+
+  static CreateTableRequest createTableRequest() {
+    return CreateTableRequest.builder()
+        .tableName("sometable")
+        .globalSecondaryIndexes(
+            Arrays.asList(
+                GlobalSecondaryIndex.builder()
+                    .indexName("globalIndex")
+                    .keySchema(KeySchemaElement.builder().attributeName("attribute").build())
+                    .provisionedThroughput(
+                        ProvisionedThroughput.builder()
+                            .readCapacityUnits(10L)
+                            .writeCapacityUnits(12L)
+                            .build())
+                    .build(),
+                GlobalSecondaryIndex.builder()
+                    .indexName("globalIndexSecondary")
+                    .keySchema(
+                        KeySchemaElement.builder().attributeName("attributeSecondary").build())
+                    .provisionedThroughput(
+                        ProvisionedThroughput.builder()
+                            .readCapacityUnits(7L)
+                            .writeCapacityUnits(8L)
+                            .build())
+                    .build()))
+        .provisionedThroughput(
+            ProvisionedThroughput.builder().readCapacityUnits(1L).writeCapacityUnits(1L).build())
+        .build();
+  }
+
+  @SuppressWarnings("deprecation") // uses deprecated semconv
+  static void assertCreateTableRequest(SpanDataAssert span) {
+    span.hasName("DynamoDb.CreateTable")
+        .hasKind(SpanKind.CLIENT)
+        .hasNoParent()
+        .hasAttributesSatisfyingExactly(
+            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+            equalTo(SERVER_PORT, server.httpPort()),
+            equalTo(URL_FULL, server.httpUri() + "/"),
+            equalTo(HTTP_REQUEST_METHOD, "POST"),
+            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+            equalTo(RPC_SYSTEM, "aws-api"),
+            equalTo(RPC_SERVICE, "DynamoDb"),
+            equalTo(RPC_METHOD, "CreateTable"),
+            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+            equalTo(AWS_REQUEST_ID, "UNKNOWN"),
+            equalTo(stringKey("aws.table.name"), "sometable"),
+            equalTo(DB_SYSTEM, "dynamodb"),
+            equalTo(maybeStable(DB_OPERATION), "CreateTable"),
+            equalTo(
+                stringKey("aws.dynamodb.global_secondary_indexes"),
+                "[{\"IndexName\":\"globalIndex\",\"KeySchema\":[{\"AttributeName\":\"attribute\"}],\"ProvisionedThroughput\":{\"ReadCapacityUnits\":10,\"WriteCapacityUnits\":12}},{\"IndexName\":\"globalIndexSecondary\",\"KeySchema\":[{\"AttributeName\":\"attributeSecondary\"}],\"ProvisionedThroughput\":{\"ReadCapacityUnits\":7,\"WriteCapacityUnits\":8}}]"),
+            equalTo(stringKey("aws.dynamodb.provisioned_throughput.read_capacity_units"), "1"),
+            equalTo(stringKey("aws.dynamodb.provisioned_throughput.write_capacity_units"), "1"));
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  static void assertQueryRequest(SpanDataAssert span) {
+    span.hasName("DynamoDb.Query")
+        .hasKind(SpanKind.CLIENT)
+        .hasNoParent()
+        .hasAttributesSatisfyingExactly(
+            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+            equalTo(SERVER_PORT, server.httpPort()),
+            equalTo(URL_FULL, server.httpUri() + "/"),
+            equalTo(HTTP_REQUEST_METHOD, "POST"),
+            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+            equalTo(RPC_SYSTEM, "aws-api"),
+            equalTo(RPC_SERVICE, "DynamoDb"),
+            equalTo(RPC_METHOD, "Query"),
+            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+            equalTo(AWS_REQUEST_ID, "UNKNOWN"),
+            equalTo(stringKey("aws.table.name"), "sometable"),
+            equalTo(DB_SYSTEM, "dynamodb"),
+            equalTo(maybeStable(DB_OPERATION), "Query"),
+            equalTo(stringKey("aws.dynamodb.limit"), "10"),
+            equalTo(stringKey("aws.dynamodb.select"), "ALL_ATTRIBUTES"));
+  }
+
+  @SuppressWarnings("deprecation") // uses deprecated semconv
+  static void assertDynamoDbRequest(SpanDataAssert span, String operation) {
+    span.hasName("DynamoDb." + operation)
+        .hasKind(SpanKind.CLIENT)
+        .hasNoParent()
+        .hasAttributesSatisfyingExactly(
+            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+            equalTo(SERVER_PORT, server.httpPort()),
+            equalTo(URL_FULL, server.httpUri() + "/"),
+            equalTo(HTTP_REQUEST_METHOD, "POST"),
+            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+            equalTo(RPC_SYSTEM, "aws-api"),
+            equalTo(RPC_SERVICE, "DynamoDb"),
+            equalTo(RPC_METHOD, operation),
+            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+            equalTo(AWS_REQUEST_ID, "UNKNOWN"),
+            equalTo(stringKey("aws.table.name"), "sometable"),
+            equalTo(DB_SYSTEM, "dynamodb"),
+            equalTo(maybeStable(DB_OPERATION), operation));
+  }
+
   private static Stream<Arguments> provideArguments() {
     return Stream.of(
         Arguments.of(
@@ -287,133 +415,5 @@ public abstract class AbstractAws2ClientCoreTest {
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, ""));
     Object response = call.apply(client);
     executeCall(operation, response);
-  }
-
-  private void executeCall(String operation, Object response)
-      throws ExecutionException, InterruptedException {
-    if (response instanceof Future) {
-      response = ((Future<?>) response).get();
-    }
-
-    assertThat(response).isNotNull();
-    assertThat(response.getClass().getSimpleName()).startsWith(operation);
-
-    RecordedRequest request = server.takeRequest();
-    assertThat(request).isNotNull();
-    assertThat(request.request().headers().get("X-Amzn-Trace-Id")).isNotNull();
-    assertThat(request.request().headers().get("traceparent")).isNull();
-
-    getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      if (operation.equals("CreateTable")) {
-                        assertCreateTableRequest(span);
-                      } else if (operation.equals("Query")) {
-                        assertQueryRequest(span);
-                      } else {
-                        assertDynamoDbRequest(span, operation);
-                      }
-                    }));
-  }
-
-  static CreateTableRequest createTableRequest() {
-    return CreateTableRequest.builder()
-        .tableName("sometable")
-        .globalSecondaryIndexes(
-            Arrays.asList(
-                GlobalSecondaryIndex.builder()
-                    .indexName("globalIndex")
-                    .keySchema(KeySchemaElement.builder().attributeName("attribute").build())
-                    .provisionedThroughput(
-                        ProvisionedThroughput.builder()
-                            .readCapacityUnits(10L)
-                            .writeCapacityUnits(12L)
-                            .build())
-                    .build(),
-                GlobalSecondaryIndex.builder()
-                    .indexName("globalIndexSecondary")
-                    .keySchema(
-                        KeySchemaElement.builder().attributeName("attributeSecondary").build())
-                    .provisionedThroughput(
-                        ProvisionedThroughput.builder()
-                            .readCapacityUnits(7L)
-                            .writeCapacityUnits(8L)
-                            .build())
-                    .build()))
-        .provisionedThroughput(
-            ProvisionedThroughput.builder().readCapacityUnits(1L).writeCapacityUnits(1L).build())
-        .build();
-  }
-
-  @SuppressWarnings("deprecation") // uses deprecated semconv
-  static void assertCreateTableRequest(SpanDataAssert span) {
-    span.hasName("DynamoDb.CreateTable")
-        .hasKind(SpanKind.CLIENT)
-        .hasNoParent()
-        .hasAttributesSatisfyingExactly(
-            equalTo(SERVER_ADDRESS, "127.0.0.1"),
-            equalTo(SERVER_PORT, server.httpPort()),
-            equalTo(URL_FULL, server.httpUri() + "/"),
-            equalTo(HTTP_REQUEST_METHOD, "POST"),
-            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-            equalTo(RPC_SYSTEM, "aws-api"),
-            equalTo(RPC_SERVICE, "DynamoDb"),
-            equalTo(RPC_METHOD, "CreateTable"),
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-            equalTo(AWS_REQUEST_ID, "UNKNOWN"),
-            equalTo(stringKey("aws.table.name"), "sometable"),
-            equalTo(DB_SYSTEM, "dynamodb"),
-            equalTo(maybeStable(DB_OPERATION), "CreateTable"),
-            equalTo(
-                stringKey("aws.dynamodb.global_secondary_indexes"),
-                "[{\"IndexName\":\"globalIndex\",\"KeySchema\":[{\"AttributeName\":\"attribute\"}],\"ProvisionedThroughput\":{\"ReadCapacityUnits\":10,\"WriteCapacityUnits\":12}},{\"IndexName\":\"globalIndexSecondary\",\"KeySchema\":[{\"AttributeName\":\"attributeSecondary\"}],\"ProvisionedThroughput\":{\"ReadCapacityUnits\":7,\"WriteCapacityUnits\":8}}]"),
-            equalTo(stringKey("aws.dynamodb.provisioned_throughput.read_capacity_units"), "1"),
-            equalTo(stringKey("aws.dynamodb.provisioned_throughput.write_capacity_units"), "1"));
-  }
-
-  @SuppressWarnings("deprecation") // using deprecated semconv
-  static void assertQueryRequest(SpanDataAssert span) {
-    span.hasName("DynamoDb.Query")
-        .hasKind(SpanKind.CLIENT)
-        .hasNoParent()
-        .hasAttributesSatisfyingExactly(
-            equalTo(SERVER_ADDRESS, "127.0.0.1"),
-            equalTo(SERVER_PORT, server.httpPort()),
-            equalTo(URL_FULL, server.httpUri() + "/"),
-            equalTo(HTTP_REQUEST_METHOD, "POST"),
-            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-            equalTo(RPC_SYSTEM, "aws-api"),
-            equalTo(RPC_SERVICE, "DynamoDb"),
-            equalTo(RPC_METHOD, "Query"),
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-            equalTo(AWS_REQUEST_ID, "UNKNOWN"),
-            equalTo(stringKey("aws.table.name"), "sometable"),
-            equalTo(DB_SYSTEM, "dynamodb"),
-            equalTo(maybeStable(DB_OPERATION), "Query"),
-            equalTo(stringKey("aws.dynamodb.limit"), "10"),
-            equalTo(stringKey("aws.dynamodb.select"), "ALL_ATTRIBUTES"));
-  }
-
-  @SuppressWarnings("deprecation") // uses deprecated semconv
-  static void assertDynamoDbRequest(SpanDataAssert span, String operation) {
-    span.hasName("DynamoDb." + operation)
-        .hasKind(SpanKind.CLIENT)
-        .hasNoParent()
-        .hasAttributesSatisfyingExactly(
-            equalTo(SERVER_ADDRESS, "127.0.0.1"),
-            equalTo(SERVER_PORT, server.httpPort()),
-            equalTo(URL_FULL, server.httpUri() + "/"),
-            equalTo(HTTP_REQUEST_METHOD, "POST"),
-            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-            equalTo(RPC_SYSTEM, "aws-api"),
-            equalTo(RPC_SERVICE, "DynamoDb"),
-            equalTo(RPC_METHOD, operation),
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-            equalTo(AWS_REQUEST_ID, "UNKNOWN"),
-            equalTo(stringKey("aws.table.name"), "sometable"),
-            equalTo(DB_SYSTEM, "dynamodb"),
-            equalTo(maybeStable(DB_OPERATION), operation));
   }
 }
