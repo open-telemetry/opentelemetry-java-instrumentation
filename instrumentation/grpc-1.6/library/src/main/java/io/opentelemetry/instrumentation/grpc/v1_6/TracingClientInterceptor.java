@@ -58,13 +58,11 @@ final class TracingClientInterceptor implements ClientInterceptor {
     Context context = instrumenter.start(parentContext, request);
     ClientCall<REQUEST, RESPONSE> result;
     try (Scope ignored = context.makeCurrent()) {
-      try {
-        // call other interceptors
-        result = next.newCall(method, callOptions);
-      } catch (Throwable e) {
-        instrumenter.end(context, request, Status.UNKNOWN, e);
-        throw e;
-      }
+      // call other interceptors
+      result = next.newCall(method, callOptions);
+    } catch (Throwable t) {
+      instrumenter.end(context, request, Status.UNKNOWN, t);
+      throw t;
     }
 
     return new TracingClientCall<>(result, parentContext, context, request);

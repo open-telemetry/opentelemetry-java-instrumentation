@@ -60,21 +60,20 @@ final class WebMvcTelemetryProducingFilter extends OncePerRequestFilter implemen
     }
 
     Context context = instrumenter.start(parentContext, request);
+    if (httpRouteSupport.hasMappings()) {
+      HttpServerRoute.update(context, CONTROLLER, httpRouteSupport::getHttpRoute, request);
+    }
     AsyncAwareHttpServletRequest asyncAwareRequest =
         new AsyncAwareHttpServletRequest(request, response, context);
-    Throwable error = null;
+
     try (Scope ignored = context.makeCurrent()) {
       filterChain.doFilter(asyncAwareRequest, response);
     } catch (Throwable t) {
-      error = t;
+      instrumenter.end(context, request, response, t);
       throw t;
-    } finally {
-      if (httpRouteSupport.hasMappings()) {
-        HttpServerRoute.update(context, CONTROLLER, httpRouteSupport::getHttpRoute, request);
-      }
-      if (error != null || asyncAwareRequest.isNotAsync()) {
-        instrumenter.end(context, request, response, error);
-      }
+    }
+    if (asyncAwareRequest.isNotAsync()) {
+      instrumenter.end(context, request, response, null);
     }
   }
 
