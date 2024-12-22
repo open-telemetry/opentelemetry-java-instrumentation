@@ -94,10 +94,8 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
   }
 
   // Force localhost instead of relying on mock server because using ip is yet another corner case
-  // of the virtual
-  // bucket changes introduced by aws sdk v2.18.0. When using IP, there is no way to prefix the
-  // hostname with the
-  // bucket name as label.
+  // of the virtual bucket changes introduced by aws sdk v2.18.0. When using IP, there is no way to
+  // prefix the hostname with the bucket name as label.
   URI clientUri = URI.create("http://localhost:" + server.httpPort());
 
   private static final Callable<HttpResponse> sqsCreateQueueResponse =
@@ -195,14 +193,10 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
         new ArrayList<>(
             asList(
                 // Starting with AWS SDK V2 2.18.0, the s3 sdk will prefix the hostname with the
-                // bucket name
-                // in case the bucket name is a valid DNS label, even in the case that we are using
-                // an
-                // endpoint override. Previously the sdk was only doing that if endpoint had "s3" as
-                // label in
-                // the FQDN. Our test assert both cases so that we don't need to know what version
-                // is being
-                // tested.
+                // bucket name in case the bucket name is a valid DNS label, even in the case that
+                // we are using an endpoint override. Previously the sdk was only doing that if
+                // endpoint had "s3" as label in the FQDN. Our test assert both cases so that we
+                // don't need to know what version is being tested.
                 satisfies(SERVER_ADDRESS, v -> v.matches("somebucket.localhost|localhost")),
                 equalTo(SERVER_PORT, server.httpPort()),
                 equalTo(HTTP_REQUEST_METHOD, method),
@@ -658,14 +652,11 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
                                 // Starting with AWS SDK V2 2.18.0, the s3 sdk will prefix the
-                                // hostname with the bucket name
-                                // in case the bucket name is a valid DNS label, even in the case
-                                // that we are using an
-                                // endpoint override. Previously the sdk was only doing that if
-                                // endpoint had "s3" as label in
-                                // the FQDN. Our test assert both cases so that we don't need to
-                                // know what version is being
-                                // tested.
+                                // hostname with the bucket name in case the bucket name is a valid
+                                // DNS label, even in the case that we are using an endpoint
+                                // override. Previously the sdk was only doing that if endpoint had
+                                // "s3" as label in the FQDN. Our test assert both cases so that we
+                                // don't need to know what version is being tested.
                                 satisfies(
                                     SERVER_ADDRESS,
                                     v -> v.matches("somebucket.localhost|localhost")),
