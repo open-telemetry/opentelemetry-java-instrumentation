@@ -38,6 +38,7 @@ import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.Reco
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -76,6 +77,8 @@ import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
+import software.amazon.awssdk.services.sns.SnsAsyncClient;
+import software.amazon.awssdk.services.sns.SnsAsyncClientBuilder;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.SnsClientBuilder;
 import software.amazon.awssdk.services.sns.model.PublishRequest;
@@ -121,6 +124,23 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     assertThat(request).isNotNull();
     assertThat(request.request().headers().get("X-Amzn-Trace-Id")).isNotNull();
     assertThat(request.request().headers().get("traceparent")).isNull();
+
+    if (service.equals("SNS") && operation.equals("Publish")) {
+      String content = request.request().content(Charset.defaultCharset());
+      boolean containsId =
+          content.contains(
+              getTesting().spans().get(0).getTraceId()
+                  + "-"
+                  + getTesting().spans().get(0).getSpanId());
+      boolean containsTp = content.contains("=traceparent");
+      if (isSqsAttributeInjectionEnabled()) {
+        assertThat(containsId).isTrue();
+        assertThat(containsTp).isTrue();
+      } else {
+        assertThat(containsId).isFalse();
+        assertThat(containsTp).isFalse();
+      }
+    }
 
     List<AttributeAssertion> attributes =
         new ArrayList<>(
@@ -504,6 +524,34 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     clientAssertions("Sns", "Publish", "POST", response, "d74b8436-ae13-5ab4-a9ff-ce54dfea72a0");
   }
 
+  @ParameterizedTest
+  @MethodSource("provideSnsArguments")
+  void testSnsAsyncSendOperationRequestWithBuilder() {
+    SnsAsyncClientBuilder builder = SnsAsyncClient.builder();
+    configureSdkClient(builder);
+    SnsAsyncClient client =
+        builder
+            .endpointOverride(clientUri)
+            .region(Region.AP_NORTHEAST_1)
+            .credentialsProvider(CREDENTIALS_PROVIDER)
+            .build();
+
+    String body =
+        "<PublishResponse xmlns=\"https://sns.amazonaws.com/doc/2010-03-31/\">"
+            + "    <PublishResult>"
+            + "        <MessageId>94f20ce6-13c5-43a0-9a9e-ca52d816e90b</MessageId>"
+            + "    </PublishResult>"
+            + "    <ResponseMetadata>"
+            + "        <RequestId>f187a3c1-376f-11df-8963-01868b7c937a</RequestId>"
+            + "    </ResponseMetadata>"
+            + "</PublishResponse>";
+
+    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, body));
+    Object response = client.publish(r -> r.message("hello").topicArn("somearn"));
+
+    clientAssertions("Sns", "Publish", "POST", response, "f187a3c1-376f-11df-8963-01868b7c937a");
+  }
+
   @Test
   void testEc2SendOperationRequestWithBuilder() throws Exception {
     Ec2ClientBuilder builder = Ec2Client.builder();
@@ -584,6 +632,9 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
         "Rds", "DeleteOptionGroup", "POST", response, "0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99");
   }
 
+  // TODO: Without AOP instrumentation of the HTTP client, we cannot model retries as
+  // spans because of https://github.com/aws/aws-sdk-java-v2/issues/1741. We should at least tweak
+  // the instrumentation to add Events for retries instead.
   @Test
   void testTimeoutAndRetryErrorsAreNotCaptured() throws Exception {
     // One retry so two requests.
