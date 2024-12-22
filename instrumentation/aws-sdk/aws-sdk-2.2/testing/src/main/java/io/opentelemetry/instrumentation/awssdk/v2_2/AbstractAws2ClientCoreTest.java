@@ -115,7 +115,7 @@ public abstract class AbstractAws2ClientCoreTest {
           "attributeOne", AttributeValue.builder().s("one").build(),
           "attributeTwo", AttributeValue.builder().s("two").build());
 
-  private void executeCall(String operation, Object response)
+  private void validateOperationResponse(String operation, Object response)
       throws ExecutionException, InterruptedException {
     if (response instanceof Future) {
       response = ((Future<?>) response).get();
@@ -378,7 +378,7 @@ public abstract class AbstractAws2ClientCoreTest {
             .build();
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, ""));
     Object response = call.apply(client);
-    executeCall(operation, response);
+    validateOperationResponse(operation, response);
   }
 
   @ParameterizedTest
@@ -398,6 +398,6 @@ public abstract class AbstractAws2ClientCoreTest {
             .build();
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, ""));
     Object response = asyncCall.apply(client);
-    executeCall(operation, response);
+    validateOperationResponse(operation, response);
   }
 }
