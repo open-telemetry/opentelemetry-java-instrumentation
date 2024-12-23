@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.couchbase.springdata;
+package io.opentelemetry.instrumentation.couchbase.v2_0.common.springdata;
 
 import static java.util.Objects.requireNonNull;
 
@@ -17,8 +17,9 @@ import org.springframework.data.couchbase.config.AbstractCouchbaseConfiguration;
 import org.springframework.data.couchbase.repository.config.EnableCouchbaseRepositories;
 
 @Configuration
-@EnableCouchbaseRepositories(basePackages = "io.opentelemetry.instrumentation.couchbase.springdata")
-@ComponentScan(basePackages = "io.opentelemetry.instrumentation.couchbase.springdata")
+@EnableCouchbaseRepositories(
+    basePackages = "io.opentelemetry.instrumentation.couchbase.v2_0.common.springdata")
+@ComponentScan(basePackages = "io.opentelemetry.instrumentation.couchbase.v2_0.common.springdata")
 class CouchbaseConfig extends AbstractCouchbaseConfiguration {
 
   // These need to be set before this class can be used by Spring

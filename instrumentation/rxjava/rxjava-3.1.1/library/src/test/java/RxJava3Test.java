@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import io.opentelemetry.instrumentation.rxjava.v3.common.AbstractRxJava3Test;
+import io.opentelemetry.instrumentation.rxjava.v3_0.common.AbstractRxJava3Test;
 import io.opentelemetry.instrumentation.rxjava.v3_1_1.TracingAssembly;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;

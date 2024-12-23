@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.rxjava.v3.common.instrumentationannotation;
+package io.opentelemetry.instrumentation.rxjava.v3_0.common.instrumentationannotation;
 
 import io.opentelemetry.instrumentation.annotations.WithSpan;
-import io.opentelemetry.instrumentation.rxjava.v3.common.AbstractTracedWithSpan;
+import io.opentelemetry.instrumentation.rxjava.v3_0.common.AbstractTracedWithSpan;
 import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Maybe;

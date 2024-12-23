@@ -20,21 +20,21 @@
  * under the License.
  */
 
-package io.opentelemetry.instrumentation.rxjava.v3.common;
+package io.opentelemetry.instrumentation.rxjava.v3_0.common;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.reactivex.rxjava3.core.SingleObserver;
+import io.reactivex.rxjava3.core.CompletableObserver;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.internal.disposables.DisposableHelper;
 
-public class TracingSingleObserver<T> implements SingleObserver<T>, Disposable {
+public class TracingCompletableObserver implements CompletableObserver, Disposable {
 
-  private final SingleObserver<T> actual;
+  private final CompletableObserver actual;
   private final Context context;
   private Disposable disposable;
 
-  public TracingSingleObserver(SingleObserver<T> actual, Context context) {
+  public TracingCompletableObserver(CompletableObserver actual, Context context) {
     this.actual = actual;
     this.context = context;
   }
@@ -44,21 +44,21 @@ public class TracingSingleObserver<T> implements SingleObserver<T>, Disposable {
     if (!DisposableHelper.validate(disposable, d)) {
       return;
     }
-    this.disposable = d;
+    disposable = d;
     actual.onSubscribe(this);
   }
 
   @Override
-  public void onSuccess(T t) {
+  public void onComplete() {
     try (Scope ignored = context.makeCurrent()) {
-      actual.onSuccess(t);
+      actual.onComplete();
     }
   }
 
   @Override
-  public void onError(Throwable throwable) {
+  public void onError(Throwable e) {
     try (Scope ignored = context.makeCurrent()) {
-      actual.onError(throwable);
+      actual.onError(e);
     }
   }
 

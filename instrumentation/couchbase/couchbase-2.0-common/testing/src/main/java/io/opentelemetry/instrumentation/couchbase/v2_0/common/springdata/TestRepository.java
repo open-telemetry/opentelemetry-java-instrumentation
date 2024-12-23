@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.couchbase.springdata;
+package io.opentelemetry.instrumentation.couchbase.v2_0.common.springdata;
 
 import org.springframework.data.couchbase.repository.CouchbaseRepository;
 

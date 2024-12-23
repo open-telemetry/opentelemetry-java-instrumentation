@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_6;
 
 import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
-import io.opentelemetry.instrumentation.couchbase.AbstractCouchbaseClientTest;
+import io.opentelemetry.instrumentation.couchbase.v2_0.common.AbstractCouchbaseClientTest;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.List;
 

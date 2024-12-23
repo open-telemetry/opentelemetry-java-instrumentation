@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_6.springdata;
 
 import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
-import io.opentelemetry.instrumentation.couchbase.springdata.AbstractCouchbaseSpringRepositoryTest;
-import io.opentelemetry.instrumentation.couchbase.springdata.TestDocument;
-import io.opentelemetry.instrumentation.couchbase.springdata.TestRepository;
+import io.opentelemetry.instrumentation.couchbase.v2_0.common.springdata.AbstractCouchbaseSpringRepositoryTest;
+import io.opentelemetry.instrumentation.couchbase.v2_0.common.springdata.TestDocument;
+import io.opentelemetry.instrumentation.couchbase.v2_0.common.springdata.TestRepository;
 import io.opentelemetry.javaagent.instrumentation.couchbase.v2_6.Couchbase26Util;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.List;

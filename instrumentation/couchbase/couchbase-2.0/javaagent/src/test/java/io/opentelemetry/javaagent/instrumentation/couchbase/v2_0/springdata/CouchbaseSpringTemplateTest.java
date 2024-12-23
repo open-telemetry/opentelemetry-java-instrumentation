@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.springdata;
 
 import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
-import io.opentelemetry.instrumentation.couchbase.springdata.AbstractCouchbaseSpringTemplateTest;
+import io.opentelemetry.instrumentation.couchbase.v2_0.common.springdata.AbstractCouchbaseSpringTemplateTest;
 import io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseUtil;
 
 class CouchbaseSpringTemplateTest extends AbstractCouchbaseSpringTemplateTest {
