@@ -70,6 +70,22 @@ public abstract class AbstractAws2ClientCoreTest {
 
   protected static final MockWebServerExtension server = new MockWebServerExtension();
 
+  private static final ImmutableMap<String, AttributeValue> createTableRequestKey =
+      ImmutableMap.of(
+          "anotherKey", AttributeValue.builder().s("value").build(),
+          "key", AttributeValue.builder().s("value").build());
+
+  private static final ImmutableMap<String, AttributeValue> getItemRequestKey =
+      ImmutableMap.of(
+          "keyOne", AttributeValue.builder().s("value").build(),
+          "keyTwo", AttributeValue.builder().s("differentValue").build());
+
+  private static final ImmutableMap<String, AttributeValue> putItemRequestKey =
+      ImmutableMap.of(
+          "key", AttributeValue.builder().s("value").build(),
+          "attributeOne", AttributeValue.builder().s("one").build(),
+          "attributeTwo", AttributeValue.builder().s("two").build());
+
   protected abstract InstrumentationExtension getTesting();
 
   protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
@@ -78,6 +94,10 @@ public abstract class AbstractAws2ClientCoreTest {
     // See io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecutionInterceptor
     return ConfigPropertiesUtil.getBoolean(
         "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", false);
+  }
+
+  protected void configureSdkClient(SdkClientBuilder<?, ?> builder) {
+    builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
   }
 
   @BeforeAll
@@ -94,26 +114,6 @@ public abstract class AbstractAws2ClientCoreTest {
   void prepTest() {
     server.beforeTestExecution(null);
   }
-
-  protected void configureSdkClient(SdkClientBuilder<?, ?> builder) {
-    builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
-  }
-
-  private static final ImmutableMap<String, AttributeValue> createTableRequestKey =
-      ImmutableMap.of(
-          "anotherKey", AttributeValue.builder().s("value").build(),
-          "key", AttributeValue.builder().s("value").build());
-
-  private static final ImmutableMap<String, AttributeValue> getItemRequestKey =
-      ImmutableMap.of(
-          "keyOne", AttributeValue.builder().s("value").build(),
-          "keyTwo", AttributeValue.builder().s("differentValue").build());
-
-  private static final ImmutableMap<String, AttributeValue> putItemRequestKey =
-      ImmutableMap.of(
-          "key", AttributeValue.builder().s("value").build(),
-          "attributeOne", AttributeValue.builder().s("one").build(),
-          "attributeTwo", AttributeValue.builder().s("two").build());
 
   private void validateOperationResponse(String operation, Object response)
       throws ExecutionException, InterruptedException {
