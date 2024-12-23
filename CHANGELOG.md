@@ -26,6 +26,9 @@ In preparation for stabilizing HTTP library instrumentation soon:
 - `*KtorClientTracing*` and `*KtorServerTracing*` have been deprecated and renamed to
   `*KtorClientTelemetry*` and `*KtorServerTelemetry*`
   ([#12855](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12855))
+- Experimental opt-in attribute `spring-webflux.handler.type` was removed in favor of
+  standard `code.*` attributes
+  ([#12887](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12887))
 
 ### 📈 Enhancements
 
@@ -71,6 +74,10 @@ In preparation for stabilizing HTTP library instrumentation soon:
 - Rename "db.client.connections.usage" to "db.client.connection.count"
   (when using experimental database semconv stability opt-in)
   ([#12886](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12886))
+- Support Struts 7.0
+  ([#12935](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12935))
+- Support latest Ktor release
+  ([#12937](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12937))
 
 ### 🛠️ Bug fixes
 
@@ -78,6 +85,8 @@ In preparation for stabilizing HTTP library instrumentation soon:
   ([#12718](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12718))
 - Avoid exception when redisson address is null
   ([#12883](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12883))
+- Add close to fix CWE-404
+  ([#12908](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12908))
 
 ## Version 2.10.0 (2024-11-13)
 
