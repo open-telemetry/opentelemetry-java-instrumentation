@@ -64,6 +64,12 @@ import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
 
 public abstract class AbstractAws2ClientCoreTest {
+  protected static final StaticCredentialsProvider CREDENTIALS_PROVIDER =
+      StaticCredentialsProvider.create(
+          AwsBasicCredentials.create("my-access-key", "my-secret-key"));
+
+  protected static final MockWebServerExtension server = new MockWebServerExtension();
+
   protected abstract InstrumentationExtension getTesting();
 
   protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
@@ -73,12 +79,6 @@ public abstract class AbstractAws2ClientCoreTest {
     return ConfigPropertiesUtil.getBoolean(
         "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", false);
   }
-
-  protected static final StaticCredentialsProvider CREDENTIALS_PROVIDER =
-      StaticCredentialsProvider.create(
-          AwsBasicCredentials.create("my-access-key", "my-secret-key"));
-
-  protected static MockWebServerExtension server = new MockWebServerExtension();
 
   @BeforeAll
   static void setup() {
