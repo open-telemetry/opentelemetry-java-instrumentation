@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.ClientBuilder;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 
-class ResteasyClientTest extends JaxRsClientTest {
+class ResteasyClientTest extends AbstractJaxRsClientTest {
 
   @Override
   ClientBuilder builder() {

@@ -11,7 +11,7 @@ import java.net.URI;
 import javax.ws.rs.client.ClientBuilder;
 import org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl;
 
-class CxfClientTest extends JaxRsClientTest {
+class CxfClientTest extends AbstractJaxRsClientTest {
 
   @Override
   public ClientBuilder builder() {

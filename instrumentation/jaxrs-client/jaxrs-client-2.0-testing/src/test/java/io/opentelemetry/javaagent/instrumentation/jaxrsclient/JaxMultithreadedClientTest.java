@@ -16,6 +16,7 @@ import io.opentelemetry.testing.internal.armeria.server.ServerBuilder;
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.ServerExtension;
 import java.net.URI;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.Client;
 import org.glassfish.jersey.client.JerseyClientBuilder;
 import org.junit.jupiter.api.AfterAll;
