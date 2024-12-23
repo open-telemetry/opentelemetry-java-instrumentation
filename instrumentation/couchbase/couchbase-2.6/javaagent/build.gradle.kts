@@ -19,12 +19,12 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:couchbase:couchbase-2-common:javaagent"))
+  implementation(project(":instrumentation:couchbase:couchbase-2.0-common:javaagent"))
 
   library("com.couchbase.client:java-client:2.6.0")
 
   testInstrumentation(project(":instrumentation:couchbase:couchbase-2.0:javaagent"))
-  testImplementation(project(":instrumentation:couchbase:couchbase-common:testing"))
+  testImplementation(project(":instrumentation:couchbase:couchbase-2.0-common:testing"))
 
   testLibrary("org.springframework.data:spring-data-couchbase:3.1.0.RELEASE")
   testLibrary("com.couchbase.client:encryption:1.0.0")

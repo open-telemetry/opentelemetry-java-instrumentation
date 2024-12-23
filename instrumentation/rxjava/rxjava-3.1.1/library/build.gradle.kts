@@ -5,9 +5,9 @@ plugins {
 dependencies {
   library("io.reactivex.rxjava3:rxjava:3.1.1")
   implementation(project(":instrumentation-annotations-support"))
-  implementation(project(":instrumentation:rxjava:rxjava-3-common:library"))
+  implementation(project(":instrumentation:rxjava:rxjava-3.0-common:library"))
 
-  testImplementation(project(":instrumentation:rxjava:rxjava-3-common:testing"))
+  testImplementation(project(":instrumentation:rxjava:rxjava-3.0-common:testing"))
 }
 
 tasks.withType<Test>().configureEach {
