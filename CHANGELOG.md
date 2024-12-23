@@ -49,7 +49,7 @@ In preparation for stabilizing HTTP library instrumentation soon:
   ([#12791](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12791))
 - Remove class files from spring-boot-autoconfigure source jar
   ([#12798](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12798))
-- Updated Camel rules adding route.started rooute.added and thread pools' pool.core_size
+- Updated Camel rules adding route.started, route.added, and thread pools' pool.core_size
   ([#12763](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12763))
 - Add database client metrics (when using experimental database semconv stability opt-in)
   ([#12806](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12806),
