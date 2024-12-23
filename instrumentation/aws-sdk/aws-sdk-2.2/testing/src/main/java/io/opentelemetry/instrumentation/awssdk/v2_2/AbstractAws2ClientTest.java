@@ -92,12 +92,6 @@ import software.amazon.awssdk.services.sqs.model.SendMessageRequest;
 public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest {
   private static final String QUEUE_URL = "http://xxx/somequeue";
 
-  private static void assumeSupportedConfig(String operation) {
-    Assumptions.assumeFalse(
-        operation.equals("SendMessage") && isSqsAttributeInjectionEnabled(),
-        "Cannot check Sqs.SendMessage here due to hard-coded MD5.");
-  }
-
   // Force localhost instead of relying on mock server because using ip is yet another corner case
   // of the virtual bucket changes introduced by aws sdk v2.18.0. When using IP, there is no way to
   // prefix the hostname with the bucket name as label.
@@ -114,6 +108,12 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
       "<DeleteOptionGroupResponse xmlns=\"http://rds.amazonaws.com/doc/2014-09-01/\">"
           + " <ResponseMetadata><RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId></ResponseMetadata>"
           + "</DeleteOptionGroupResponse>";
+
+  private static void assumeSupportedConfig(String operation) {
+    Assumptions.assumeFalse(
+        operation.equals("SendMessage") && isSqsAttributeInjectionEnabled(),
+        "Cannot check Sqs.SendMessage here due to hard-coded MD5.");
+  }
 
   @SuppressWarnings("deprecation") // uses deprecated semconv
   private void clientAssertions(
@@ -322,7 +322,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
   }
 
   @Test
-  void testKinesisSendOperationRequestWithBuilder() throws Exception {
+  void testKinesisSendOperationRequestWithBuilder() {
     KinesisClientBuilder builder = KinesisClient.builder();
     configureSdkClient(builder);
     KinesisClient client =
@@ -372,8 +372,6 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                   return HttpResponse.of(headers, HttpData.of(StandardCharsets.UTF_8, content));
                 },
             (Function<SqsClient, Object>)
-                c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build()),
-            (Function<SqsAsyncClient, Future<?>>)
                 c -> c.createQueue(CreateQueueRequest.builder().queueName("somequeue").build())),
         Arguments.of(
             "SendMessage",
@@ -407,10 +405,6 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                   return HttpResponse.of(headers, HttpData.of(StandardCharsets.UTF_8, content));
                 },
             (Function<SqsClient, Object>)
-                c ->
-                    c.sendMessage(
-                        SendMessageRequest.builder().queueUrl(QUEUE_URL).messageBody("").build()),
-            (Function<SqsAsyncClient, Future<?>>)
                 c ->
                     c.sendMessage(
                         SendMessageRequest.builder().queueUrl(QUEUE_URL).messageBody("").build())));
@@ -451,8 +445,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
       String operation,
       String requestId,
       Callable<HttpResponse> serverResponse,
-      Function<SqsClient, Object> call,
-      Function<SqsAsyncClient, Future<?>> asyncCall)
+      Function<SqsClient, Object> call)
       throws Exception {
     assumeSupportedConfig(operation);
 
@@ -466,8 +459,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
             .build();
 
     server.enqueue(serverResponse.call());
-    Future<?> response = asyncCall.apply(client);
-    response.get();
+    Object response = call.apply(wrapClient(SqsClient.class, SqsAsyncClient.class, client));
 
     clientAssertions("Sqs", operation, "POST", response, requestId);
   }
@@ -524,8 +516,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     clientAssertions("Sns", "Publish", "POST", response, "d74b8436-ae13-5ab4-a9ff-ce54dfea72a0");
   }
 
-  @ParameterizedTest
-  @MethodSource("provideSnsArguments")
+  @Test
   void testSnsAsyncSendOperationRequestWithBuilder() {
     SnsAsyncClientBuilder builder = SnsAsyncClient.builder();
     configureSdkClient(builder);
@@ -553,7 +544,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
   }
 
   @Test
-  void testEc2SendOperationRequestWithBuilder() throws Exception {
+  void testEc2SendOperationRequestWithBuilder() {
     Ec2ClientBuilder builder = Ec2Client.builder();
     configureSdkClient(builder);
     Ec2Client client =
@@ -575,7 +566,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
   }
 
   @Test
-  void testEc2AsyncSendOperationRequestWithBuilder() throws Exception {
+  void testEc2AsyncSendOperationRequestWithBuilder() {
     Ec2AsyncClientBuilder builder = Ec2AsyncClient.builder();
     configureSdkClient(builder);
     Ec2AsyncClient client =
@@ -593,7 +584,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
   }
 
   @Test
-  void testRdsSendOperationRequestWithBuilder() throws Exception {
+  void testRdsSendOperationRequestWithBuilder() {
     RdsClientBuilder builder = RdsClient.builder();
     configureSdkClient(builder);
     RdsClient client =
@@ -636,7 +627,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
   // spans because of https://github.com/aws/aws-sdk-java-v2/issues/1741. We should at least tweak
   // the instrumentation to add Events for retries instead.
   @Test
-  void testTimeoutAndRetryErrorsAreNotCaptured() throws Exception {
+  void testTimeoutAndRetryErrorsAreNotCaptured() {
     // One retry so two requests.
     server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofSeconds(5)));
     server.enqueue(HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofSeconds(5)));

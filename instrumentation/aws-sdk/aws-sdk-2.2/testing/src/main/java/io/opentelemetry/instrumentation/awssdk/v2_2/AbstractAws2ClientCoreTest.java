@@ -31,7 +31,10 @@ import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.MockWebServerExtension;
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.RecordedRequest;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.Arrays;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Function;
@@ -243,23 +246,30 @@ public abstract class AbstractAws2ClientCoreTest {
             equalTo(maybeStable(DB_OPERATION), operation));
   }
 
+  @SuppressWarnings("unchecked")
+  protected static <T, U> T wrapClient(
+      Class<T> syncClientClass, Class<U> asyncClientClass, U asyncClient) {
+    return (T)
+        Proxy.newProxyInstance(
+            AbstractAws2ClientCoreTest.class.getClassLoader(),
+            new Class<?>[] {syncClientClass},
+            (proxy, method, args) -> {
+              Method asyncMethod =
+                  asyncClientClass.getMethod(method.getName(), method.getParameterTypes());
+              CompletableFuture<?> future =
+                  (CompletableFuture<?>) asyncMethod.invoke(asyncClient, args);
+              return future.get();
+            });
+  }
+
   private static Stream<Arguments> provideArguments() {
     return Stream.of(
         Arguments.of(
             "CreateTable",
-            (Function<DynamoDbClient, Object>) c -> c.createTable(createTableRequest()),
-            (Function<DynamoDbAsyncClient, Object>) c -> c.createTable(createTableRequest())),
+            (Function<DynamoDbClient, Object>) c -> c.createTable(createTableRequest())),
         Arguments.of(
             "DeleteItem",
             (Function<DynamoDbClient, Object>)
-                c ->
-                    c.deleteItem(
-                        DeleteItemRequest.builder()
-                            .tableName("sometable")
-                            .key(createTableRequestKey)
-                            .conditionExpression("property in (:one, :two)")
-                            .build()),
-            (Function<DynamoDbAsyncClient, Object>)
                 c ->
                     c.deleteItem(
                         DeleteItemRequest.builder()
@@ -270,8 +280,6 @@ public abstract class AbstractAws2ClientCoreTest {
         Arguments.of(
             "DeleteTable",
             (Function<DynamoDbClient, Object>)
-                c -> c.deleteTable(DeleteTableRequest.builder().tableName("sometable").build()),
-            (Function<DynamoDbAsyncClient, Object>)
                 c -> c.deleteTable(DeleteTableRequest.builder().tableName("sometable").build())),
         Arguments.of(
             "GetItem",
@@ -282,26 +290,10 @@ public abstract class AbstractAws2ClientCoreTest {
                             .tableName("sometable")
                             .key(getItemRequestKey)
                             .attributesToGet("propertyOne", "propertyTwo")
-                            .build()),
-            (Function<DynamoDbAsyncClient, Object>)
-                c ->
-                    c.getItem(
-                        GetItemRequest.builder()
-                            .tableName("sometable")
-                            .key(getItemRequestKey)
-                            .attributesToGet("propertyOne", "propertyTwo")
                             .build())),
         Arguments.of(
             "PutItem",
             (Function<DynamoDbClient, Object>)
-                c ->
-                    c.putItem(
-                        PutItemRequest.builder()
-                            .tableName("sometable")
-                            .item(putItemRequestKey)
-                            .conditionExpression("attributeOne <> :someVal")
-                            .build()),
-            (Function<DynamoDbAsyncClient, Object>)
                 c ->
                     c.putItem(
                         PutItemRequest.builder()
@@ -320,34 +312,10 @@ public abstract class AbstractAws2ClientCoreTest {
                             .keyConditionExpression("attribute = :aValue")
                             .filterExpression("anotherAttribute = :someVal")
                             .limit(10)
-                            .build()),
-            (Function<DynamoDbAsyncClient, Object>)
-                c ->
-                    c.query(
-                        QueryRequest.builder()
-                            .tableName("sometable")
-                            .select("ALL_ATTRIBUTES")
-                            .keyConditionExpression("attribute = :aValue")
-                            .filterExpression("anotherAttribute = :someVal")
-                            .limit(10)
                             .build())),
         Arguments.of(
             "UpdateItem",
             (Function<DynamoDbClient, Object>)
-                c ->
-                    c.updateItem(
-                        UpdateItemRequest.builder()
-                            .tableName("sometable")
-                            .key(
-                                ImmutableMap.of(
-                                    "keyOne",
-                                    AttributeValue.builder().s("value").build(),
-                                    "keyTwo",
-                                    AttributeValue.builder().s("differentValue").build()))
-                            .conditionExpression("attributeOne <> :someVal")
-                            .updateExpression("set attributeOne = :updateValue")
-                            .build()),
-            (Function<DynamoDbAsyncClient, Object>)
                 c ->
                     c.updateItem(
                         UpdateItemRequest.builder()
@@ -384,9 +352,7 @@ public abstract class AbstractAws2ClientCoreTest {
   @ParameterizedTest
   @MethodSource("provideArguments")
   void testSendDynamoDbAsyncRequestWithBuilderAndMockedResponse(
-      String operation,
-      Function<DynamoDbClient, Object> call,
-      Function<DynamoDbAsyncClient, Object> asyncCall)
+      String operation, Function<DynamoDbClient, Object> call)
       throws ExecutionException, InterruptedException {
     DynamoDbAsyncClientBuilder builder = DynamoDbAsyncClient.builder();
     configureSdkClient(builder);
@@ -397,7 +363,8 @@ public abstract class AbstractAws2ClientCoreTest {
             .credentialsProvider(CREDENTIALS_PROVIDER)
             .build();
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, ""));
-    Object response = asyncCall.apply(client);
+    Object response =
+        call.apply(wrapClient(DynamoDbClient.class, DynamoDbAsyncClient.class, client));
     validateOperationResponse(operation, response);
   }
 }
