@@ -82,6 +82,6 @@ class JaxMultithreadedClientTest {
           .start();
     }
 
-    latch.await();
+    latch.await(10, TimeUnit.SECONDS);
   }
 }

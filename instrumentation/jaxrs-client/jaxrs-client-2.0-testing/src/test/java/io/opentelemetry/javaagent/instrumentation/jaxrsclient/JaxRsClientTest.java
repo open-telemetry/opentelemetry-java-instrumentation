@@ -26,7 +26,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-abstract class JaxRsClientTest extends AbstractHttpClientTest<Invocation.Builder> {
+abstract class AbstractJaxRsClientTest extends AbstractHttpClientTest<Invocation.Builder> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
