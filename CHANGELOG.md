@@ -26,6 +26,12 @@ In preparation for stabilizing HTTP library instrumentation soon:
 - `*KtorClientTracing*` and `*KtorServerTracing*` have been deprecated and renamed to
   `*KtorClientTelemetry*` and `*KtorServerTelemetry*`
   ([#12855](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12855))
+- Some Java agent instrumentation suppression keys have been renamed to match their module names:
+  - `elasticsearch-rest-6.0` --> `elasticsearch-rest-6.4`
+  - `twitter-util-core` --> `finagle-http`
+  - `internal-application-logging` --> `internal-application-logger`
+  - `javalin-5` -> `javalin-5.0`
+  - `pulsar-2.8.0` -> `pulsar-2.8`
 
 ## Version 2.10.0 (2024-11-13)
 
