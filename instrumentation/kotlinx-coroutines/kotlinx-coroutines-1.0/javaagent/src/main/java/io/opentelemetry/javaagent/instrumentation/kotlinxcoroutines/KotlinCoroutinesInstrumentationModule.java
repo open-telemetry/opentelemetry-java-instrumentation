@@ -18,7 +18,7 @@ public class KotlinCoroutinesInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public KotlinCoroutinesInstrumentationModule() {
-    super("kotlinx-coroutines");
+    super("kotlinx-coroutines", "kotlinx-coroutines-1.0");
   }
 
   @Override
