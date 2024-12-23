@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExt
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.Experimental;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientHttpAttributesGetter;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -69,8 +70,8 @@ public final class SpringWebfluxTelemetryBuilder {
    * Configures the HTTP WebClient request headers that will be captured as span attributes.
    *
    * @param requestHeaders A list of HTTP header names.
-   * @deprecated Use {@link SpringWebfluxClientTelemetryBuilder#setCapturedRequestHeaders(List)}
-   *     instead.
+   * @deprecated Use {@link
+   *     SpringWebfluxClientTelemetryBuilder#setCapturedRequestHeaders(Collection)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
@@ -84,8 +85,8 @@ public final class SpringWebfluxTelemetryBuilder {
    * Configures the HTTP WebClient response headers that will be captured as span attributes.
    *
    * @param responseHeaders A list of HTTP header names.
-   * @deprecated Use {@link SpringWebfluxClientTelemetryBuilder#setCapturedResponseHeaders(List)}
-   *     instead.
+   * @deprecated Use {@link
+   *     SpringWebfluxClientTelemetryBuilder#setCapturedResponseHeaders(Collection)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
@@ -115,8 +116,8 @@ public final class SpringWebfluxTelemetryBuilder {
    * instrumentation.
    *
    * @param requestHeaders A list of HTTP header names.
-   * @deprecated Use {@link SpringWebfluxServerTelemetryBuilder#setCapturedRequestHeaders(List)}
-   *     instead.
+   * @deprecated Use {@link
+   *     SpringWebfluxServerTelemetryBuilder#setCapturedRequestHeaders(Collection)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
@@ -131,8 +132,8 @@ public final class SpringWebfluxTelemetryBuilder {
    * instrumentation.
    *
    * @param responseHeaders A list of HTTP header names.
-   * @deprecated Use {@link SpringWebfluxServerTelemetryBuilder#setCapturedResponseHeaders(List)}
-   *     instead.
+   * @deprecated Use {@link
+   *     SpringWebfluxServerTelemetryBuilder#setCapturedResponseHeaders(Collection)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
