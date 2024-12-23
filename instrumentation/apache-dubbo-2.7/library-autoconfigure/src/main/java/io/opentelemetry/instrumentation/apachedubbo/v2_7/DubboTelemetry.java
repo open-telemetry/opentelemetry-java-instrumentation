@@ -13,6 +13,9 @@ import org.apache.dubbo.rpc.Result;
 /** Entrypoint for instrumenting Apache Dubbo servers and clients. */
 public final class DubboTelemetry {
 
+  private final Instrumenter<DubboRequest, Result> serverInstrumenter;
+  private final Instrumenter<DubboRequest, Result> clientInstrumenter;
+
   /** Returns a new {@link DubboTelemetry} configured with the given {@link OpenTelemetry}. */
   public static DubboTelemetry create(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).build();
@@ -24,10 +27,6 @@ public final class DubboTelemetry {
   public static DubboTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new DubboTelemetryBuilder(openTelemetry);
   }
-
-  private final Instrumenter<DubboRequest, Result> serverInstrumenter;
-
-  private final Instrumenter<DubboRequest, Result> clientInstrumenter;
 
   DubboTelemetry(
       Instrumenter<DubboRequest, Result> serverInstrumenter,
