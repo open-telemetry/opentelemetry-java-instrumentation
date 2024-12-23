@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 2.11.0 (2024-12-23)
+
 ### Migration notes
 
 In preparation for stabilizing HTTP library instrumentation soon:
