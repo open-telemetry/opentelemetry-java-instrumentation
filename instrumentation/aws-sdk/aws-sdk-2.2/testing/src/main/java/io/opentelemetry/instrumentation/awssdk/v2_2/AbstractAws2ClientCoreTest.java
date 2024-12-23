@@ -35,8 +35,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
@@ -118,12 +116,7 @@ public abstract class AbstractAws2ClientCoreTest {
     server.beforeTestExecution(null);
   }
 
-  private void validateOperationResponse(String operation, Object response)
-      throws ExecutionException, InterruptedException {
-    if (response instanceof Future) {
-      response = ((Future<?>) response).get();
-    }
-
+  private void validateOperationResponse(String operation, Object response) {
     assertThat(response).isNotNull();
     assertThat(response.getClass().getSimpleName()).startsWith(operation);
 
@@ -334,8 +327,7 @@ public abstract class AbstractAws2ClientCoreTest {
   @ParameterizedTest
   @MethodSource("provideArguments")
   void testSendDynamoDbRequestWithBuilderAndMockedResponse(
-      String operation, Function<DynamoDbClient, Object> call)
-      throws ExecutionException, InterruptedException {
+      String operation, Function<DynamoDbClient, Object> call) {
     DynamoDbClientBuilder builder = DynamoDbClient.builder();
     configureSdkClient(builder);
     DynamoDbClient client =
@@ -352,8 +344,7 @@ public abstract class AbstractAws2ClientCoreTest {
   @ParameterizedTest
   @MethodSource("provideArguments")
   void testSendDynamoDbAsyncRequestWithBuilderAndMockedResponse(
-      String operation, Function<DynamoDbClient, Object> call)
-      throws ExecutionException, InterruptedException {
+      String operation, Function<DynamoDbClient, Object> call) {
     DynamoDbAsyncClientBuilder builder = DynamoDbAsyncClient.builder();
     configureSdkClient(builder);
     DynamoDbAsyncClient client =
