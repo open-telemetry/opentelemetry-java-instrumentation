@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExt
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.Experimental;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackClientInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackServerInstrumenterBuilderFactory;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -76,7 +77,8 @@ public final class RatpackTelemetryBuilder {
    * Configures the HTTP server request headers that will be captured as span attributes.
    *
    * @param requestHeaders A list of HTTP header names.
-   * @deprecated Use {@link RatpackServerTelemetryBuilder#setCapturedRequestHeaders(List)} instead.
+   * @deprecated Use {@link RatpackServerTelemetryBuilder#setCapturedRequestHeaders(Collection)}
+   *     instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
@@ -89,7 +91,8 @@ public final class RatpackTelemetryBuilder {
    * Configures the HTTP server response headers that will be captured as span attributes.
    *
    * @param responseHeaders A list of HTTP header names.
-   * @deprecated Use {@link RatpackServerTelemetryBuilder#setCapturedResponseHeaders(List)} instead.
+   * @deprecated Use {@link RatpackServerTelemetryBuilder#setCapturedResponseHeaders(Collection)}
+   *     instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
@@ -102,7 +105,8 @@ public final class RatpackTelemetryBuilder {
    * Configures the HTTP client request headers that will be captured as span attributes.
    *
    * @param requestHeaders A list of HTTP header names.
-   * @deprecated Use {@link RatpackClientTelemetryBuilder#setCapturedRequestHeaders(List)} instead.
+   * @deprecated Use {@link RatpackClientTelemetryBuilder#setCapturedRequestHeaders(Collection)}
+   *     instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
@@ -115,7 +119,8 @@ public final class RatpackTelemetryBuilder {
    * Configures the HTTP client response headers that will be captured as span attributes.
    *
    * @param responseHeaders A list of HTTP header names.
-   * @deprecated Use {@link RatpackClientTelemetryBuilder#setCapturedResponseHeaders(List)} instead.
+   * @deprecated Use {@link RatpackClientTelemetryBuilder#setCapturedResponseHeaders(Collection)}
+   *     instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
