@@ -140,10 +140,10 @@ public final class RatpackTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
-   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Set)
-   * @deprecated Use {@link RatpackServerTelemetryBuilder#setKnownMethods(Set)} and {@link
-   *     RatpackClientTelemetryBuilder#setKnownMethods(Set)} instead.
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Collection)
+   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Collection)
+   * @deprecated Use {@link RatpackServerTelemetryBuilder#setKnownMethods(Collection)} and {@link
+   *     RatpackClientTelemetryBuilder#setKnownMethods(Collection)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue

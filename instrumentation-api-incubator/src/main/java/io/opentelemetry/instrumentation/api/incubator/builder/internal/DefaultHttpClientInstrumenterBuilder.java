@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -155,11 +154,11 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setKnownMethods(
-      Set<String> knownMethods) {
+      Collection<String> knownMethods) {
     httpAttributesExtractorBuilder.setKnownMethods(knownMethods);
     httpSpanNameExtractorBuilder.setKnownMethods(knownMethods);
     return this;

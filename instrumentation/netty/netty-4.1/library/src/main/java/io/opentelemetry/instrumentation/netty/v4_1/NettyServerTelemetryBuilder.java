@@ -17,7 +17,6 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.Experimental;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.server.NettyServerInstrumenterBuilderUtil;
 import java.util.Collection;
-import java.util.Set;
 
 /** A builder of {@link NettyServerTelemetry}. */
 public final class NettyServerTelemetryBuilder {
@@ -92,10 +91,10 @@ public final class NettyServerTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Set)
+   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
-  public NettyServerTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+  public NettyServerTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
   }

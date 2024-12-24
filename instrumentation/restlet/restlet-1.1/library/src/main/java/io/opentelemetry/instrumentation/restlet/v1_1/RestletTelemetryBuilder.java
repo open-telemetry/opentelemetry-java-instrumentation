@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExt
 import io.opentelemetry.instrumentation.restlet.v1_1.internal.Experimental;
 import io.opentelemetry.instrumentation.restlet.v1_1.internal.RestletTelemetryBuilderFactory;
 import java.util.Collection;
-import java.util.Set;
 import java.util.function.Function;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
@@ -77,10 +76,10 @@ public final class RestletTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Set)
+   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
-  public RestletTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+  public RestletTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
   }
