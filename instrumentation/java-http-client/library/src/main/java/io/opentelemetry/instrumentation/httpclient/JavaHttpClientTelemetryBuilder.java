@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.httpclient.internal.JavaHttpClientInstru
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Collection;
+import java.util.function.Function;
 
 public final class JavaHttpClientTelemetryBuilder {
 
