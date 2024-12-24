@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExt
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.Experimental;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -158,7 +159,8 @@ public final class ArmeriaTelemetryBuilder {
    * Configures the HTTP client request headers that will be captured as span attributes.
    *
    * @param requestHeaders A list of HTTP header names.
-   * @deprecated Use {@link ArmeriaClientTelemetryBuilder#setCapturedRequestHeaders(List)} instead.
+   * @deprecated Use {@link ArmeriaClientTelemetryBuilder#setCapturedRequestHeaders(Collection)}
+   *     instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
@@ -171,7 +173,8 @@ public final class ArmeriaTelemetryBuilder {
    * Configures the HTTP client response headers that will be captured as span attributes.
    *
    * @param responseHeaders A list of HTTP header names.
-   * @deprecated Use {@link ArmeriaClientTelemetryBuilder#setCapturedResponseHeaders(List)} instead.
+   * @deprecated Use {@link ArmeriaClientTelemetryBuilder#setCapturedResponseHeaders(Collection)}
+   *     instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
@@ -184,7 +187,8 @@ public final class ArmeriaTelemetryBuilder {
    * Configures the HTTP server request headers that will be captured as span attributes.
    *
    * @param requestHeaders A list of HTTP header names.
-   * @deprecated Use {@link ArmeriaServerTelemetryBuilder#setCapturedRequestHeaders(List)} instead.
+   * @deprecated Use {@link ArmeriaServerTelemetryBuilder#setCapturedRequestHeaders(Collection)}
+   *     instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
@@ -197,7 +201,8 @@ public final class ArmeriaTelemetryBuilder {
    * Configures the HTTP server response headers that will be captured as span attributes.
    *
    * @param responseHeaders A list of HTTP header names.
-   * @deprecated Use {@link ArmeriaServerTelemetryBuilder#setCapturedResponseHeaders(List)} instead.
+   * @deprecated Use {@link ArmeriaServerTelemetryBuilder#setCapturedResponseHeaders(Collection)}
+   *     instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
