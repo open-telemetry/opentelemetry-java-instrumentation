@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import java.util.Collection;
+import java.util.function.Function;
 import org.apache.hc.core5.http.HttpResponse;
 
 /** A builder for {@link ApacheHttpClientTelemetry}. */
