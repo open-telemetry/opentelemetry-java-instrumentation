@@ -41,12 +41,10 @@ final class TracingFilter implements Filter {
     }
 
     Instrumenter<DubboRequest, Result> instrumenter;
-    boolean isServer = rpcContext.isProviderSide();
-    if (this.clientInstrumenter != null && this.serverInstrumenter != null) {
-      instrumenter = isServer ? serverInstrumenter : clientInstrumenter;
+    if (clientInstrumenter != null && serverInstrumenter != null) {
+      instrumenter = rpcContext.isProviderSide() ? serverInstrumenter : clientInstrumenter;
     } else {
-      instrumenter =
-          this.clientInstrumenter != null ? this.clientInstrumenter : this.serverInstrumenter;
+      instrumenter = clientInstrumenter != null ? clientInstrumenter : serverInstrumenter;
     }
 
     Context parentContext = Context.current();
