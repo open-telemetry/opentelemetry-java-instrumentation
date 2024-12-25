@@ -18,12 +18,14 @@ import org.apache.dubbo.rpc.RpcInvocation;
 
 final class TracingFilter implements Filter {
 
-  private final Instrumenter<DubboRequest, Result> instrumenter;
-  private final boolean isClient;
+  private final Instrumenter<DubboRequest, Result> clientInstrumenter;
+  private final Instrumenter<DubboRequest, Result> serverInstrumenter;
 
-  TracingFilter(Instrumenter<DubboRequest, Result> instrumenter, boolean isClient) {
-    this.instrumenter = instrumenter;
-    this.isClient = isClient;
+  TracingFilter(
+      Instrumenter<DubboRequest, Result> clientInstrumenter,
+      Instrumenter<DubboRequest, Result> serverInstrumenter) {
+    this.clientInstrumenter = clientInstrumenter;
+    this.serverInstrumenter = serverInstrumenter;
   }
 
   @Override
@@ -38,6 +40,15 @@ final class TracingFilter implements Filter {
       return invoker.invoke(invocation);
     }
 
+    Instrumenter<DubboRequest, Result> instrumenter;
+    boolean isServer = rpcContext.isProviderSide();
+    if (this.clientInstrumenter != null && this.serverInstrumenter != null) {
+      instrumenter = isServer ? serverInstrumenter : clientInstrumenter;
+    } else {
+      instrumenter =
+          this.clientInstrumenter != null ? this.clientInstrumenter : this.serverInstrumenter;
+    }
+
     Context parentContext = Context.current();
     DubboRequest request = DubboRequest.create((RpcInvocation) invocation, rpcContext);
 
@@ -50,7 +61,7 @@ final class TracingFilter implements Filter {
     boolean isSynchronous = true;
     try (Scope ignored = context.makeCurrent()) {
       result = invoker.invoke(invocation);
-      if (isClient) {
+      if (instrumenter == this.clientInstrumenter) {
         CompletableFuture<Object> future = rpcContext.getCompletableFuture();
         if (future != null) {
           isSynchronous = false;
