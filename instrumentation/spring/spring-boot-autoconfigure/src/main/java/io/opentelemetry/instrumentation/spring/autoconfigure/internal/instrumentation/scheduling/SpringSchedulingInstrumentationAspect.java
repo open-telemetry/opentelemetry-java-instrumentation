@@ -78,13 +78,15 @@ final class SpringSchedulingInstrumentationAspect {
       return joinPoint.proceed();
     }
     Context context = instrumenter.start(parent, request);
+
+    Object object;
     try (Scope ignored = context.makeCurrent()) {
-      Object object = joinPoint.proceed();
-      instrumenter.end(context, request, object, null);
-      return object;
+      object = joinPoint.proceed();
     } catch (Throwable t) {
       instrumenter.end(context, request, null, t);
       throw t;
     }
+    instrumenter.end(context, request, object, null);
+    return object;
   }
 }
