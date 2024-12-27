@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Migration notes
+
+In preparation for stabilizing HTTP library instrumentation soon:
+
+- `setCaptured*Headers(List)` methods in `*TelemetryBuilder` classes were changed to
+  `setCaptured*Headers(Collection)`       
+  ([#12901](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12901))
+- `setKnownMethods(Set)` methods in `*TelemetryBuilder` classes were changed to
+  `setKnownMethods(Collection)`
+  ([#12902](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12902))
+
 ## Version 2.11.0 (2024-12-23)
 
 ### Migration notes
