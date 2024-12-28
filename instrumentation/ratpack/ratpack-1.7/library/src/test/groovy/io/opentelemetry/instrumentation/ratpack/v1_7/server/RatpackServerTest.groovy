@@ -21,7 +21,7 @@ import ratpack.test.embed.EmbeddedApp
 import spock.lang.Specification
 import spock.util.concurrent.PollingConditions
 
-class RatpackServerTest extends Specification {
+class RatpackServerTest2 extends Specification {
 
   def spanExporter = InMemorySpanExporter.create()
   def tracerProvider = SdkTracerProvider.builder()
