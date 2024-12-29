@@ -6,7 +6,7 @@ plugins {
 group = "io.opentelemetry.javaagent.instrumentation"
 
 dependencies {
-  // this is the latest version that works with azure-core 1.14
+  // this is the latest version that works with azure-core 1.19
   // because newer versions use the new fluent ClientLogger.atWarning() from azure-core 1.24
   //
   // note:

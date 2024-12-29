@@ -88,6 +88,12 @@ tasks {
     classpath(sourceSets["testapp"].java.srcDirs, sourceSets["testapp"].compileClasspath)
 
     argumentProviders.add(CompilerArgumentsProvider())
+
+    if (findProperty("testLatestDeps") as Boolean) {
+      javaLauncher.set(project.javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(11)
+      })
+    }
   }
 
   val copyTestWebapp by registering(Copy::class) {

@@ -128,6 +128,9 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
+      if (scope == null) {
+        return;
+      }
 
       scope.close();
 

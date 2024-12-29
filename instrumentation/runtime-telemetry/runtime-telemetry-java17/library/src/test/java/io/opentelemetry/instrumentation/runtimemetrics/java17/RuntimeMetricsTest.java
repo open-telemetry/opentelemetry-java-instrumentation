@@ -12,6 +12,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import java.util.concurrent.atomic.AtomicBoolean;
+import jdk.jfr.FlightRecorder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,10 +29,11 @@ class RuntimeMetricsTest {
   @BeforeEach
   void setup() {
     try {
-      Class.forName("jdk.jfr.consumer.RecordingStream");
+      Class.forName("jdk.jfr.FlightRecorder");
     } catch (ClassNotFoundException exception) {
       Assumptions.abort("JFR not present");
     }
+    Assumptions.assumeTrue(FlightRecorder.isAvailable(), "JFR not available");
 
     reader = InMemoryMetricReader.createDelta();
     sdk =

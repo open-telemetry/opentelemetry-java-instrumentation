@@ -76,6 +76,14 @@ class Tomee8Jdk21 extends TomeeSmokeTest {
 class Tomee8Jdk21Openj9 extends TomeeSmokeTest {
 }
 
+@AppServer(version = "8.0.16", jdk = "23")
+class Tomee8Jdk23 extends TomeeSmokeTest {
+}
+
+@AppServer(version = "8.0.16", jdk = "23-openj9")
+class Tomee8Jdk23Openj9 extends TomeeSmokeTest {
+}
+
 @AppServer(version = "9.1.2", jdk = "11")
 class Tomee9Jdk11 extends TomeeSmokeTest {
 }
@@ -98,4 +106,12 @@ class Tomee9Jdk21 extends TomeeSmokeTest {
 
 @AppServer(version = "9.1.2", jdk = "21-openj9")
 class Tomee9Jdk21Openj9 extends TomeeSmokeTest {
+}
+
+@AppServer(version = "9.1.2", jdk = "23")
+class Tomee9Jdk23 extends TomeeSmokeTest {
+}
+
+@AppServer(version = "9.1.2", jdk = "23-openj9")
+class Tomee9Jdk23Openj9 extends TomeeSmokeTest {
 }

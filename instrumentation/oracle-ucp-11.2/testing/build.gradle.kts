@@ -4,8 +4,7 @@ plugins {
 
 dependencies {
   api(project(":testing-common"))
-  api("org.mockito:mockito-core")
-  api("org.mockito:mockito-junit-jupiter")
+  implementation("org.testcontainers:oracle-free")
 
   compileOnly("com.oracle.database.jdbc:ucp:11.2.0.4")
 }

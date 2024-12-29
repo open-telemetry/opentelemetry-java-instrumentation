@@ -19,9 +19,12 @@ import net.bytebuddy.utility.JavaModule;
 public class AgentLocationStrategy implements AgentBuilder.LocationStrategy {
 
   private final ClassLoader bootstrapProxy;
+  private final List<ClassFileLocator> additionalLocators;
 
-  public AgentLocationStrategy(ClassLoader bootstrapProxy) {
+  public AgentLocationStrategy(
+      ClassLoader bootstrapProxy, List<ClassFileLocator> additionalLocators) {
     this.bootstrapProxy = bootstrapProxy;
+    this.additionalLocators = additionalLocators;
   }
 
   public ClassFileLocator classFileLocator(ClassLoader classLoader) {
@@ -32,6 +35,9 @@ public class AgentLocationStrategy implements AgentBuilder.LocationStrategy {
   public ClassFileLocator classFileLocator(ClassLoader classLoader, JavaModule javaModule) {
     List<ClassFileLocator> locators = new ArrayList<>();
 
+    if (additionalLocators != null) {
+      locators.addAll(additionalLocators);
+    }
     if (classLoader != null) {
       locators.add(ClassFileLocator.ForClassLoader.WeaklyReferenced.of(classLoader));
     }

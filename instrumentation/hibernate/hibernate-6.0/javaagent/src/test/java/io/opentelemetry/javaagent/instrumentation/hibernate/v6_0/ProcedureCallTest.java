@@ -5,15 +5,22 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v6_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import jakarta.persistence.ParameterMode;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -69,7 +76,7 @@ public class ProcedureCallTest {
     }
   }
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
+  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @Test
   void testProcedureCall() {
     testing.runWithSpan(
@@ -102,12 +109,14 @@ public class ProcedureCallTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, "{call TEST_PROC()}"),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "CALL")),
+                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(maybeStable(DB_NAME), "test"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
+                            equalTo(maybeStable(DB_STATEMENT), "{call TEST_PROC()}"),
+                            equalTo(maybeStable(DB_OPERATION), "CALL")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(SpanKind.INTERNAL)

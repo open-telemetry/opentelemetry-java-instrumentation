@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.spring.resources;
 
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ServiceAttributes;
 import java.io.InputStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -33,7 +33,7 @@ class SpringBootServiceVersionDetectorTest {
 
     SpringBootServiceVersionDetector guesser = new SpringBootServiceVersionDetector(system);
     Resource result = guesser.createResource(config);
-    assertThat(result.getAttribute(ServiceAttributes.SERVICE_VERSION)).isEqualTo("0.0.2");
+    assertThat(result.getAttribute(SERVICE_VERSION)).isEqualTo("0.0.2");
   }
 
   @Test

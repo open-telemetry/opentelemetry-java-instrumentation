@@ -10,7 +10,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_CLIENT_GROUP;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_KEYS;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TYPE;
@@ -38,6 +37,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
   private static final RocketMqProxyContainer container = new RocketMqProxyContainer();
 
@@ -117,7 +117,7 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                     equalTo(
                                         MESSAGING_ROCKETMQ_MESSAGE_TYPE,
                                         MessagingIncubatingAttributes
-                                            .MessagingRocketmqMessageTypeValues.NORMAL),
+                                            .MessagingRocketmqMessageTypeIncubatingValues.NORMAL),
                                     equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
                                     equalTo(MESSAGING_SYSTEM, "rocketmq"),
                                     equalTo(
@@ -132,7 +132,10 @@ public abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                                 // As the child of send span.
                                 .hasParent(trace.getSpan(1))
                                 .hasAttributesSatisfyingExactly(
-                                    equalTo(MESSAGING_ROCKETMQ_CLIENT_GROUP, consumerGroup),
+                                    equalTo(
+                                        MessagingIncubatingAttributes
+                                            .MESSAGING_ROCKETMQ_CLIENT_GROUP,
+                                        consumerGroup),
                                     equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, tag),
                                     equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, Arrays.asList(keys)),
                                     equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),

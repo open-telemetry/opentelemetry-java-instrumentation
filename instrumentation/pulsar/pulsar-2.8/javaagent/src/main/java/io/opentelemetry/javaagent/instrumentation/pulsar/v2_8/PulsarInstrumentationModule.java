@@ -24,6 +24,8 @@ public class PulsarInstrumentationModule extends InstrumentationModule {
         new ConsumerImplInstrumentation(),
         new ProducerImplInstrumentation(),
         new MessageInstrumentation(),
-        new MessageListenerInstrumentation());
+        new MessageListenerInstrumentation(),
+        new SendCallbackInstrumentation(),
+        new TransactionImplInstrumentation());
   }
 }

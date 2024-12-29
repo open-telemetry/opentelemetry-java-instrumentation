@@ -12,6 +12,7 @@ import static org.mockito.Mockito.withSettings;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.exporter.otlp.internal.OtlpSpanExporterProvider;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.AutoConfigureListener;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import org.junit.jupiter.api.DisplayName;
@@ -35,7 +36,12 @@ class OpenTelemetryAutoConfigurationTest {
   private final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
           .withPropertyValues(
-              "otel.traces.exporter=none", "otel.metrics.exporter=none", "otel.logs.exporter=none");
+              "otel.traces.exporter=none",
+              "otel.metrics.exporter=none",
+              "otel.logs.exporter=none",
+              "otel.propagators=b3",
+              "otel.experimental.resource.disabled.keys=a,b",
+              "otel.java.disabled.resource.providers=d");
 
   @Test
   @DisplayName(
@@ -59,6 +65,54 @@ class OpenTelemetryAutoConfigurationTest {
     this.contextRunner
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
         .run(context -> assertThat(context).hasBean("openTelemetry").hasBean("otelProperties"));
+  }
+
+  @Test
+  void specialListProperties() {
+    this.contextRunner
+        .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
+        .run(
+            context ->
+                assertThat(context)
+                    .getBean("otelProperties")
+                    .satisfies(
+                        p -> {
+                          ConfigProperties configProperties = (ConfigProperties) p;
+                          assertThat(configProperties.getList("otel.propagators"))
+                              .containsExactly("b3");
+                          assertThat(
+                                  configProperties.getList(
+                                      "otel.experimental.resource.disabled.keys"))
+                              .containsExactly("a", "b");
+                          assertThat(
+                                  configProperties.getList("otel.java.disabled.resource.providers"))
+                              .containsExactlyInAnyOrder(
+                                  "d",
+                                  "io.opentelemetry.contrib.aws.resource.BeanstalkResourceProvider",
+                                  "io.opentelemetry.contrib.aws.resource.Ec2ResourceProvider",
+                                  "io.opentelemetry.contrib.aws.resource.EcsResourceProvider",
+                                  "io.opentelemetry.contrib.aws.resource.EksResourceProvider",
+                                  "io.opentelemetry.contrib.aws.resource.LambdaResourceProvider",
+                                  "io.opentelemetry.contrib.gcp.resource.GCPResourceProvider",
+                                  "io.opentelemetry.instrumentation.resources.ResourceProviderPropertiesCustomizerTest$Provider");
+                        }));
+  }
+
+  @Test
+  void enabledProviders() {
+    this.contextRunner
+        .withPropertyValues("otel.java.enabled.resource.providers=e1,e2")
+        .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
+        .run(
+            context ->
+                assertThat(context)
+                    .getBean("otelProperties", ConfigProperties.class)
+                    .satisfies(
+                        configProperties ->
+                            assertThat(
+                                    configProperties.getList(
+                                        "otel.java.enabled.resource.providers"))
+                                .containsExactly("e1", "e2")));
   }
 
   @Test

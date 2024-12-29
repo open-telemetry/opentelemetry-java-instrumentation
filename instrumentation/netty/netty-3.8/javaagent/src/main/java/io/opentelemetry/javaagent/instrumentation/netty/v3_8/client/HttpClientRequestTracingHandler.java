@@ -55,10 +55,10 @@ public class HttpClientRequestTracingHandler extends SimpleChannelDownstreamHand
 
     try (Scope ignored = context.makeCurrent()) {
       super.writeRequested(ctx, event);
-      // span is ended normally in HttpClientResponseTracingHandler
     } catch (Throwable throwable) {
       instrumenter().end(context, request, null, throwable);
       throw throwable;
     }
+    // span is ended normally in HttpClientResponseTracingHandler
   }
 }

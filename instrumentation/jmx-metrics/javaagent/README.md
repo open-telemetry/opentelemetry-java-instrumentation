@@ -26,6 +26,7 @@ $ java -javaagent:path/to/opentelemetry-javaagent.jar \
 No targets are enabled by default. The supported target environments are listed below.
 
 - [activemq](activemq.md)
+- [camel](camel.md)
 - [jetty](jetty.md)
 - [kafka-broker](kafka-broker.md)
 - [tomcat](tomcat.md)
@@ -219,6 +220,67 @@ Because we declared metric prefix (here `my.kafka.streams.`) and did not specify
 Thus, the above definitions will create several metrics, named `my.kafka.streams.commit-latency-avg`, `my.kafka.streams.commit-latency-max`, and so on. For the first configuration rule, the default unit has been changed to `ms`, which remains in effect for all MBean attribute mappings listed within the rule, unless they define their own unit. Similarly, the second configuration rule defines the unit as `/s`, valid for all the rates reported.
 
 The metric descriptions will remain undefined, unless they are provided by the queried MBeans.
+
+### State Metrics
+
+Some JMX attributes expose current state as a non-numeric MBean attribute, in order to capture those as metrics it is recommended to use the special `state` metric type.
+For example, with Tomcat connector, the `Catalina:type=Connector,port=*` MBean has `stateName` (of type `String`), we can define the following rule:
+
+```yaml
+---
+rules:
+  - bean: Catalina:type=Connector,port=*
+    mapping:
+      stateName:
+        type: state
+        metric: tomcat.connector
+        metricAttribute:
+          port: param(port)
+          connector_state:
+            ok: STARTED
+            failed: [STOPPED,FAILED]
+            degraded: '*'
+```
+
+For a given value of `port`, let's say `8080` This will capture the `tomcat.connector.state` metric of type `updowncounter` with value `0` or `1` and the `state` metric attribute will have a value in [`ok`,`failed`,`degraded`].
+For every sample, 3 metrics will be captured for each value of `state` depending on the value of `stateName`:
+
+When `stateName` = `STARTED`, we have:
+
+- `tomcat.connector` value = `1`, attributes `port` = `8080` and `connector_state` = `ok`
+- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `failed`
+- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `degraded`
+
+When `stateName` = `STOPPED` or `FAILED`, we have:
+
+- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `ok`
+- `tomcat.connector` value = `1`, attributes `port` = `8080` and `connector_state` = `failed`
+- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `degraded`
+
+For other values of `stateName`, we have:
+
+- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `ok`
+- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `failed`
+- `tomcat.connector` value = `1`, attributes `port` = `8080` and `connector_state` = `degraded`
+
+Each state key can be mapped to one or more values of the MBean attribute using:
+- a string literal or a string array
+- a `*` character to provide default option and avoid enumerating all values, this value must be quoted in YAML
+
+Exactly one `*` value must be present in the mapping to ensure all possible values of the MBean attribute can be mapped to a state key.
+
+The default value indicated by `*` does not require a dedicated state key. For example, if we want to have `connector_state` metric attribute with values `on` or `off`, we can use:
+```yaml
+          connector_state:
+            on: STARTED
+            off: [STOPPED,FAILED,'*']
+```
+In the particular case where only two values are defined, we can simplify further by explicitly defining one state and rely on default for the other.
+```yaml
+          connector_state:
+            on: STARTED
+            off: '*'
+```
 
 ### General Syntax
 

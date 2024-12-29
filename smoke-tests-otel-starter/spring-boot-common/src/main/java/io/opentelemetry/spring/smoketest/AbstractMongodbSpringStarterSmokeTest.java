@@ -33,6 +33,6 @@ abstract class AbstractMongodbSpringStarterSmokeTest extends AbstractSpringStart
                         .hasName("listDatabases admin")
                         .hasAttribute(
                             DbIncubatingAttributes.DB_SYSTEM,
-                            DbIncubatingAttributes.DbSystemValues.MONGODB)));
+                            DbIncubatingAttributes.DbSystemIncubatingValues.MONGODB)));
   }
 }

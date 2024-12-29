@@ -18,19 +18,27 @@ dependencies {
   testImplementation("org.springframework.data:spring-data-jpa:3.0.0")
 
   springAgent("org.springframework:spring-instrument:6.0.7")
-
-  latestDepTestLibrary("org.hibernate:hibernate-core:6.2.+")
 }
 
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
-tasks.withType<Test>().configureEach {
-  jvmArgs("-javaagent:" + springAgent.singleFile.absolutePath)
+tasks {
+  withType<Test>().configureEach {
+    jvmArgs("-javaagent:" + springAgent.singleFile.absolutePath)
 
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+    // TODO run tests both with and without experimental span attributes
+    jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
 
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
 }

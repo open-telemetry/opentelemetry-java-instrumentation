@@ -30,7 +30,7 @@ public class RxJavaPluginsInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class MethodAdvice {
 
-    // TODO(anuraaga): Replace with adding a type initializer to RxJavaPlugins
+    // TODO: Replace with adding a type initializer to RxJavaPlugins
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2685
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void activateOncePerClassloader() {

@@ -15,13 +15,12 @@ import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpClientInstrum
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.TracingInterceptor;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
 import okhttp3.Interceptor;
-import okhttp3.Request;
 import okhttp3.Response;
 
 /** Holder of singleton interceptors for adding to instrumented clients. */
 public final class OkHttp3Singletons {
 
-  private static final Instrumenter<Request, Response> INSTRUMENTER =
+  private static final Instrumenter<Interceptor.Chain, Response> INSTRUMENTER =
       JavaagentHttpClientInstrumenters.create(
           OkHttpClientInstrumenterBuilderFactory.create(GlobalOpenTelemetry.get()));
 

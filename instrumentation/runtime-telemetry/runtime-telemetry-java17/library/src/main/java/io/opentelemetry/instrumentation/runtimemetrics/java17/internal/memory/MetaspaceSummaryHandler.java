@@ -28,10 +28,14 @@ public final class MetaspaceSummaryHandler implements RecordedEventHandler {
   private static final String EVENT_NAME = "jdk.MetaspaceSummary";
 
   private static final Attributes ATTR_MEMORY_METASPACE =
-      Attributes.of(Constants.ATTR_TYPE, Constants.NON_HEAP, Constants.ATTR_POOL, "Metaspace");
+      Attributes.of(
+          Constants.ATTR_MEMORY_TYPE, Constants.NON_HEAP, Constants.ATTR_MEMORY_POOL, "Metaspace");
   private static final Attributes ATTR_MEMORY_COMPRESSED_CLASS_SPACE =
       Attributes.of(
-          Constants.ATTR_TYPE, Constants.NON_HEAP, Constants.ATTR_POOL, "Compressed Class Space");
+          Constants.ATTR_MEMORY_TYPE,
+          Constants.NON_HEAP,
+          Constants.ATTR_MEMORY_POOL,
+          "Compressed Class Space");
 
   private final List<AutoCloseable> observables = new ArrayList<>();
 

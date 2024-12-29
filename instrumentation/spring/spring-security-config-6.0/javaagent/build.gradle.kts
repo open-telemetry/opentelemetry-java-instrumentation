@@ -22,6 +22,7 @@ dependencies {
   library("io.projectreactor:reactor-core:3.5.0")
 
   testLibrary("org.springframework:spring-test:6.0.0")
+  testLibrary("org.springframework:spring-context:6.0.0")
   testLibrary("jakarta.servlet:jakarta.servlet-api:6.0.0")
 }
 

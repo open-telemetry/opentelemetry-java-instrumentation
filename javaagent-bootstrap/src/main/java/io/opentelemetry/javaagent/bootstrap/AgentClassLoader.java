@@ -486,9 +486,10 @@ public class AgentClassLoader extends URLClassLoader {
     @Override
     protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
       // prometheus exporter uses jdk http server, load it from the platform class loader
-      // some custom extensions use java.sql classes, make these available to agent and extensions
+      // some custom extensions use java.* classes which are not in the boot loader such as
+      // java.sql.* and java.net.http.*
       if (name != null
-          && (name.startsWith("com.sun.net.httpserver.") || name.startsWith("java.sql."))) {
+          && (name.startsWith("com.sun.net.httpserver.") || name.startsWith("java."))) {
         return platformClassLoader.loadClass(name);
       }
       return Class.forName(name, false, null);

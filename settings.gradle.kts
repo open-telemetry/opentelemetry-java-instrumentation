@@ -1,26 +1,27 @@
 pluginManagement {
   plugins {
-    id("com.github.jk1.dependency-license-report") version "2.8"
-    id("com.google.cloud.tools.jib") version "3.4.3"
-    id("com.gradle.plugin-publish") version "1.2.1"
+    id("com.github.jk1.dependency-license-report") version "2.9"
+    id("com.google.cloud.tools.jib") version "3.4.4"
+    id("com.gradle.plugin-publish") version "1.3.0"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.0.10"
+    id("org.jetbrains.kotlin.jvm") version "2.1.0"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("org.unbroken-dome.xjc") version "2.0.0"
-    id("org.graalvm.buildtools.native") version "0.10.2"
+    // See https://github.com/graalvm/native-build-tools/issues/626
+    id("org.graalvm.buildtools.native") version "0.10.4"
   }
 }
 
 plugins {
-  id("com.gradle.develocity") version "3.17.6"
   id("com.gradle.common-custom-user-data-gradle-plugin") version "2.0.2"
-  id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
+  id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
   // in particular, these commands are failing (reproducible locally):
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "9.4.0" apply false
+  id("com.gradle.develocity") version "3.19"
 }
 
 dependencyResolutionManagement {
@@ -47,59 +48,18 @@ dependencyResolutionManagement {
   }
 }
 
-val gradleEnterpriseServer = "https://ge.opentelemetry.io"
-val isCI = System.getenv("CI") != null
-val geAccessKey = System.getenv("GRADLE_ENTERPRISE_ACCESS_KEY") ?: ""
+develocity {
+  buildScan {
+    publishing.onlyIf { System.getenv("CI") != null }
+    termsOfUseUrl.set("https://gradle.com/help/legal-terms-of-use")
+    termsOfUseAgree.set("yes")
 
-// if GE access key is not given and we are in CI, then we publish to scans.gradle.com
-val useScansGradleCom = isCI && geAccessKey.isEmpty()
-
-if (useScansGradleCom) {
-  develocity {
-    buildScan {
-      termsOfUseUrl = "https://gradle.com/help/legal-terms-of-use"
-      termsOfUseAgree = "yes"
-      uploadInBackground = !isCI
-
-      capture {
-        fileFingerprints = true
-      }
-
+    if (!gradle.startParameter.taskNames.contains("listTestsInPartition")) {
       buildScanPublished {
         File("build-scan.txt").printWriter().use { writer ->
           writer.println(buildScanUri)
         }
       }
-    }
-  }
-} else {
-  develocity {
-    server = gradleEnterpriseServer
-    buildScan {
-      uploadInBackground = !isCI
-      publishing.onlyIf { it.isAuthenticated }
-
-      capture {
-        fileFingerprints = true
-      }
-
-      gradle.startParameter.projectProperties["testJavaVersion"]?.let { tag(it) }
-      gradle.startParameter.projectProperties["testJavaVM"]?.let { tag(it) }
-      gradle.startParameter.projectProperties["smokeTestSuite"]?.let {
-        value("Smoke test suite", it)
-      }
-
-      buildScanPublished {
-        File("build-scan.txt").printWriter().use { writer ->
-          writer.println(buildScanUri)
-        }
-      }
-    }
-  }
-
-  buildCache {
-    remote(develocity.buildCache) {
-      isPush = isCI && geAccessKey.isNotEmpty()
     }
   }
 }
@@ -121,6 +81,7 @@ include(":javaagent-bootstrap")
 include(":javaagent-extension-api")
 include(":javaagent-tooling")
 include(":javaagent-tooling:javaagent-tooling-java9")
+include(":javaagent-tooling:jdk18-testing")
 include(":javaagent-internal-logging-application")
 include(":javaagent-internal-logging-simple")
 include(":javaagent")
@@ -140,6 +101,7 @@ include(":dependencyManagement")
 include(":testing:agent-exporter")
 include(":testing:agent-for-testing")
 include(":testing:armeria-shaded-for-testing")
+include(":testing:proto-shaded-for-testing")
 include(":testing-common")
 include(":testing-common:integration-tests")
 include(":testing-common:library-for-integration-tests")
@@ -250,6 +212,7 @@ include(":instrumentation:elasticsearch:elasticsearch-rest-common:library")
 include(":instrumentation:elasticsearch:elasticsearch-transport-5.0:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-5.3:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-6.0:javaagent")
+include(":instrumentation:elasticsearch:elasticsearch-transport-6.0:testing")
 include(":instrumentation:elasticsearch:elasticsearch-transport-common:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-common:testing")
 include(":instrumentation:executors:bootstrap")
@@ -333,14 +296,15 @@ include(":instrumentation:jaxws:jaxws-2.0:javaagent")
 include(":instrumentation:jaxws:jaxws-2.0-arquillian-testing")
 include(":instrumentation:jaxws:jaxws-2.0-axis2-1.6:javaagent")
 include(":instrumentation:jaxws:jaxws-2.0-common-testing")
-include(":instrumentation:jaxws:jaxws-2.0-cxf-3.0:javaagent")
-include(":instrumentation:jaxws:jaxws-2.0-cxf-3.0:javaagent-unit-tests")
 include(":instrumentation:jaxws:jaxws-2.0-metro-2.2-testing")
 include(":instrumentation:jaxws:jaxws-2.0-tomee-testing")
 include(":instrumentation:jaxws:jaxws-2.0-wildfly-testing")
 include(":instrumentation:jaxws:jaxws-3.0-common-testing")
+include(":instrumentation:jaxws:jaxws-3.0-cxf-4.0-testing")
 include(":instrumentation:jaxws:jaxws-3.0-metro-2.2-testing")
 include(":instrumentation:jaxws:jaxws-common:javaagent")
+include(":instrumentation:jaxws:jaxws-cxf-3.0:javaagent")
+include(":instrumentation:jaxws:jaxws-cxf-3.0:javaagent-unit-tests")
 include(":instrumentation:jaxws:jaxws-jws-api-1.1:javaagent")
 include(":instrumentation:jaxws:jaxws-metro-2.2:javaagent")
 include(":instrumentation:jboss-logmanager:jboss-logmanager-appender-1.1:javaagent")
@@ -395,6 +359,10 @@ include(":instrumentation:ktor:ktor-1.0:library")
 include(":instrumentation:ktor:ktor-2.0:javaagent")
 include(":instrumentation:ktor:ktor-2.0:library")
 include(":instrumentation:ktor:ktor-2.0:testing")
+include(":instrumentation:ktor:ktor-2-common:library")
+include(":instrumentation:ktor:ktor-3.0:javaagent")
+include(":instrumentation:ktor:ktor-3.0:library")
+include(":instrumentation:ktor:ktor-3.0:testing")
 include(":instrumentation:ktor:ktor-common:library")
 include(":instrumentation:kubernetes-client-7.0:javaagent")
 include(":instrumentation:kubernetes-client-7.0:javaagent-unit-tests")
@@ -456,6 +424,8 @@ include(":instrumentation:opentelemetry-api:opentelemetry-api-1.31:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.32:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.37:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.38:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.40:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.42:javaagent")
 include(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 include(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-annotations:opentelemetry-instrumentation-annotations-1.16:javaagent")
@@ -479,6 +449,7 @@ include(":instrumentation:play:play-ws:play-ws-2.0:javaagent")
 include(":instrumentation:play:play-ws:play-ws-2.1:javaagent")
 include(":instrumentation:play:play-ws:play-ws-common:javaagent")
 include(":instrumentation:play:play-ws:play-ws-common:testing")
+include(":instrumentation:powerjob-4.0:javaagent")
 include(":instrumentation:pulsar:pulsar-2.8:javaagent")
 include(":instrumentation:pulsar:pulsar-2.8:javaagent-unit-tests")
 include(":instrumentation:quarkus-resteasy-reactive:common-testing")
@@ -495,6 +466,7 @@ include(":instrumentation:r2dbc-1.0:testing")
 include(":instrumentation:rabbitmq-2.7:javaagent")
 include(":instrumentation:ratpack:ratpack-1.4:javaagent")
 include(":instrumentation:ratpack:ratpack-1.4:testing")
+include(":instrumentation:ratpack:ratpack-1.7:javaagent")
 include(":instrumentation:ratpack:ratpack-1.7:library")
 include(":instrumentation:reactor:reactor-3.1:javaagent")
 include(":instrumentation:reactor:reactor-3.1:library")
@@ -543,10 +515,13 @@ include(":instrumentation:scala-fork-join-2.8:javaagent")
 include(":instrumentation:servlet:servlet-2.2:javaagent")
 include(":instrumentation:servlet:servlet-3.0:javaagent")
 include(":instrumentation:servlet:servlet-3.0:javaagent-unit-tests")
+include(":instrumentation:servlet:servlet-3.0:testing")
 include(":instrumentation:servlet:servlet-5.0:javaagent")
 include(":instrumentation:servlet:servlet-5.0:javaagent-unit-tests")
+include(":instrumentation:servlet:servlet-5.0:jetty11-testing")
 include(":instrumentation:servlet:servlet-5.0:jetty12-testing")
 include(":instrumentation:servlet:servlet-5.0:testing")
+include(":instrumentation:servlet:servlet-5.0:tomcat-testing")
 include(":instrumentation:servlet:servlet-common:bootstrap")
 include(":instrumentation:servlet:servlet-common:javaagent")
 include(":instrumentation:servlet:servlet-javax-common:javaagent")
@@ -556,12 +531,14 @@ include(":instrumentation:spring:spring-boot-actuator-autoconfigure-2.0:javaagen
 include(":instrumentation:spring:spring-boot-autoconfigure")
 include(":instrumentation:spring:spring-boot-resources:javaagent")
 include(":instrumentation:spring:spring-boot-resources:javaagent-unit-tests")
+include(":instrumentation:spring:spring-cloud-aws-3.0:javaagent")
 include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-2.0:javaagent")
 include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-2.2:testing")
 include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-common:testing")
 include(":instrumentation:spring:spring-core-2.0:javaagent")
 include(":instrumentation:spring:spring-data:spring-data-1.8:javaagent")
 include(":instrumentation:spring:spring-data:spring-data-3.0:testing")
+include(":instrumentation:spring:spring-data:spring-data-3.0:kotlin-testing")
 include(":instrumentation:spring:spring-data:spring-data-common:testing")
 include(":instrumentation:spring:spring-integration-4.1:javaagent")
 include(":instrumentation:spring:spring-integration-4.1:library")
@@ -597,7 +574,8 @@ include(":instrumentation:spring:spring-ws-2.0:javaagent")
 include(":instrumentation:spring:starters:spring-boot-starter")
 include(":instrumentation:spring:starters:zipkin-spring-boot-starter")
 include(":instrumentation:spymemcached-2.12:javaagent")
-include(":instrumentation:struts-2.3:javaagent")
+include(":instrumentation:struts:struts-2.3:javaagent")
+include(":instrumentation:struts:struts-7.0:javaagent")
 include(":instrumentation:tapestry-5.4:javaagent")
 include(":instrumentation:tomcat:tomcat-7.0:javaagent")
 include(":instrumentation:tomcat:tomcat-10.0:javaagent")

@@ -23,6 +23,7 @@ enum RocketMqConsumerReceiveAttributeExtractor
   public void onStart(
       AttributesBuilder attributes, Context parentContext, ReceiveMessageRequest request) {}
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   public void onEnd(
       AttributesBuilder attributes,

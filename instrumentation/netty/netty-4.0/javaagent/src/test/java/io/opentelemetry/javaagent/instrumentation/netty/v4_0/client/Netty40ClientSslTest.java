@@ -9,6 +9,12 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.netty.bootstrap.Bootstrap;
@@ -26,12 +32,11 @@ import io.netty.handler.codec.http.HttpHeaders;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.HttpVersion;
 import io.netty.handler.ssl.SslHandler;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
@@ -40,7 +45,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicReference;
 import javax.net.ssl.SSLContext;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
@@ -52,6 +56,8 @@ class Netty40ClientSslTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static HttpClientTestServer server;
   private static EventLoopGroup eventLoopGroup;
@@ -90,12 +96,12 @@ class Netty40ClientSslTest {
                 span -> {
                   span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
                   span.hasAttributesSatisfyingExactly(
-                      equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
-                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                      equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
-                      equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
-                      equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
-                      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
+                      equalTo(NETWORK_TRANSPORT, "tcp"),
+                      equalTo(NETWORK_TYPE, "ipv4"),
+                      equalTo(SERVER_ADDRESS, uri.getHost()),
+                      equalTo(SERVER_PORT, uri.getPort()),
+                      equalTo(NETWORK_PEER_PORT, uri.getPort()),
+                      equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
                 },
                 span -> {
                   span.hasName("SSL handshake")
@@ -103,34 +109,28 @@ class Netty40ClientSslTest {
                       .hasParent(trace.getSpan(0))
                       .hasStatus(StatusData.error());
                   span.hasAttributesSatisfyingExactly(
-                      equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
-                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                      equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
-                      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
+                      equalTo(NETWORK_TRANSPORT, "tcp"),
+                      equalTo(NETWORK_TYPE, "ipv4"),
+                      equalTo(NETWORK_PEER_PORT, uri.getPort()),
+                      equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
                 }));
   }
 
   private static Throwable getThrowable(
       Bootstrap bootstrap, URI uri, DefaultFullHttpRequest request) {
-    AtomicReference<Channel> channel = new AtomicReference<>();
     Throwable thrown =
         catchThrowable(
             () ->
                 testing.runWithSpan(
                     "parent",
                     () -> {
-                      try {
-                        channel.set(
-                            bootstrap.connect(uri.getHost(), uri.getPort()).sync().channel());
-                        CompletableFuture<Integer> result = new CompletableFuture<>();
-                        channel.get().pipeline().addLast(new ClientHandler(result));
-                        channel.get().writeAndFlush(request).get(10, TimeUnit.SECONDS);
-                        result.get(10, TimeUnit.SECONDS);
-                      } finally {
-                        if (channel.get() != null) {
-                          channel.get().close();
-                        }
-                      }
+                      Channel channel =
+                          bootstrap.connect(uri.getHost(), uri.getPort()).sync().channel();
+                      cleanup.deferCleanup(() -> channel.close().sync());
+                      CompletableFuture<Integer> result = new CompletableFuture<>();
+                      channel.pipeline().addLast(new ClientHandler(result));
+                      channel.writeAndFlush(request).get(10, TimeUnit.SECONDS);
+                      result.get(10, TimeUnit.SECONDS);
                     }));
 
     // Then
@@ -156,22 +156,16 @@ class Netty40ClientSslTest {
             HttpVersion.HTTP_1_1, HttpMethod.GET, uri.getPath(), Unpooled.EMPTY_BUFFER);
     HttpHeaders.setHost(request, uri.getHost() + ":" + uri.getPort());
 
-    AtomicReference<Channel> channel = new AtomicReference<>();
     // when
     testing.runWithSpan(
         "parent",
         () -> {
-          try {
-            channel.set(bootstrap.connect(uri.getHost(), uri.getPort()).sync().channel());
-            CompletableFuture<Integer> result = new CompletableFuture<>();
-            channel.get().pipeline().addLast(new ClientHandler(result));
-            channel.get().writeAndFlush(request).get(10, TimeUnit.SECONDS);
-            result.get(10, TimeUnit.SECONDS);
-          } finally {
-            if (channel.get() != null) {
-              channel.get().close();
-            }
-          }
+          Channel channel = bootstrap.connect(uri.getHost(), uri.getPort()).sync().channel();
+          cleanup.deferCleanup(() -> channel.close().sync());
+          CompletableFuture<Integer> result = new CompletableFuture<>();
+          channel.pipeline().addLast(new ClientHandler(result));
+          channel.writeAndFlush(request).get(10, TimeUnit.SECONDS);
+          result.get(10, TimeUnit.SECONDS);
         });
 
     // then
@@ -182,20 +176,20 @@ class Netty40ClientSslTest {
                 span -> {
                   span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
                   span.hasAttributesSatisfyingExactly(
-                      equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
-                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                      equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
-                      equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
-                      equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
-                      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
+                      equalTo(NETWORK_TRANSPORT, "tcp"),
+                      equalTo(NETWORK_TYPE, "ipv4"),
+                      equalTo(SERVER_ADDRESS, uri.getHost()),
+                      equalTo(SERVER_PORT, uri.getPort()),
+                      equalTo(NETWORK_PEER_PORT, uri.getPort()),
+                      equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
                 },
                 span -> {
                   span.hasName("SSL handshake").hasKind(INTERNAL).hasParent(trace.getSpan(0));
                   span.hasAttributesSatisfyingExactly(
-                      equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
-                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                      equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
-                      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
+                      equalTo(NETWORK_TRANSPORT, "tcp"),
+                      equalTo(NETWORK_TYPE, "ipv4"),
+                      equalTo(NETWORK_PEER_PORT, uri.getPort()),
+                      equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
                 },
                 span -> {
                   span.hasName("GET").hasKind(CLIENT).hasParent(trace.getSpan(0));
@@ -203,10 +197,6 @@ class Netty40ClientSslTest {
                 span -> {
                   span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(3));
                 }));
-
-    if (channel.get() != null) {
-      channel.get().close().sync();
-    }
   }
 
   // list of default ciphers copied from netty's JdkSslContext

@@ -59,7 +59,8 @@ testing {
     val vaadin14LatestTest by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project(":instrumentation:vaadin-14.2:testing"))
-        implementation("com.vaadin:vaadin-spring-boot-starter:14.+")
+        // 14.12 requires license
+        implementation("com.vaadin:vaadin-spring-boot-starter:14.11.+")
       }
     }
 

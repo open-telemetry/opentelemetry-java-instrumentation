@@ -28,12 +28,11 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
+  testInstrumentation(project(":instrumentation:reactor:reactor-3.4:javaagent"))
 
   testImplementation(project(":instrumentation:reactor:reactor-kafka-1.0:testing"))
 
   testLibrary("io.projectreactor.kafka:reactor-kafka:1.0.0.RELEASE")
-
-  latestDepTestLibrary("io.projectreactor:reactor-core:3.4.+")
 }
 
 val testLatestDeps = findProperty("testLatestDeps") as Boolean

@@ -26,12 +26,9 @@ public class ClassLoaderInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isIndyModule() {
-    return false;
-  }
-
-  @Override
   public boolean isHelperClass(String className) {
+    // TODO: this can be removed when we drop inlined-advice support
+    // The advices can directly access this class in the AgentClassLoader with invokedynamic Advice
     return className.equals("io.opentelemetry.javaagent.tooling.Constants");
   }
 

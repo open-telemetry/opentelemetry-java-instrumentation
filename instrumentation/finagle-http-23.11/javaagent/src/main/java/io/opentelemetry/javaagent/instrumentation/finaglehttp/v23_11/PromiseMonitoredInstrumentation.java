@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import scala.Function1;
@@ -34,13 +35,13 @@ public class PromiseMonitoredInstrumentation implements TypeInstrumentation {
   public static class WrapFunctionAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrap(
-        @Advice.Argument(value = 1, readOnly = false) Function1<?, ?> function1) {
+    @Advice.AssignReturned.ToArguments(@ToArgument(1))
+    public static Function1<?, ?> wrap(@Advice.Argument(1) Function1<?, ?> function1) {
       if (function1 == null) {
-        return;
+        return null;
       }
 
-      function1 = Function1Wrapper.wrap(function1);
+      return Function1Wrapper.wrap(function1);
     }
   }
 }

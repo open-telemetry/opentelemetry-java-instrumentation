@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -34,7 +35,8 @@ public final class ElasticsearchTransportInstrumenterFactory {
                 instrumentationName,
                 DbClientSpanNameExtractor.create(dbClientAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
-            .addAttributesExtractor(netAttributesExtractor);
+            .addAttributesExtractor(netAttributesExtractor)
+            .addOperationMetrics(DbClientMetrics.get());
 
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       instrumenterBuilder.addAttributesExtractor(experimentalAttributesExtractor);

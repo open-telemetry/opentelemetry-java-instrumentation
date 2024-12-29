@@ -7,8 +7,10 @@ package test
 
 import grails.artefact.Controller
 import grails.web.Action
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
+import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable
 
-import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.controller
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
@@ -56,7 +58,7 @@ class TestController implements Controller {
   @Action
   def exception() {
     controller(EXCEPTION) {
-      throw new Exception(EXCEPTION.body)
+      throw new IllegalStateException(EXCEPTION.body)
     }
   }
 
@@ -81,5 +83,9 @@ class TestController implements Controller {
       INDEXED_CHILD.collectSpanAttributes({ name -> name == "id" ? params.id : null })
       render INDEXED_CHILD.body
     }
+  }
+
+  private static void controller(ServerEndpoint endpoint, ThrowingRunnable action) {
+    AbstractHttpServerTest.controller(endpoint, action)
   }
 }

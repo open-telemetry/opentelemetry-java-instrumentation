@@ -33,14 +33,6 @@ import net.bytebuddy.matcher.ElementMatcher;
  */
 public abstract class InstrumentationModule implements Ordered {
   private static final Logger logger = Logger.getLogger(InstrumentationModule.class.getName());
-  private static final boolean indyEnabled;
-
-  static {
-    indyEnabled = ExperimentalConfig.get().indyEnabled();
-    if (indyEnabled) {
-      logger.info("Enabled indy for instrumentation modules");
-    }
-  }
 
   private final Set<String> instrumentationNames;
 
@@ -125,7 +117,7 @@ public abstract class InstrumentationModule implements Ordered {
    * techniques. The non-inlining of advice will be enforced by muzzle (TODO)
    */
   public boolean isIndyModule() {
-    return indyEnabled;
+    return IndyConfigurationHolder.indyEnabled;
   }
 
   /** Register resource names to inject into the user's class loader. */
@@ -162,5 +154,17 @@ public abstract class InstrumentationModule implements Ordered {
    */
   public List<String> getAdditionalHelperClassNames() {
     return Collections.emptyList();
+  }
+
+  // InstrumentationModule is loaded before ExperimentalConfig is initialized
+  private static class IndyConfigurationHolder {
+    private static final boolean indyEnabled;
+
+    static {
+      indyEnabled = ExperimentalConfig.get().indyEnabled();
+      if (indyEnabled) {
+        logger.info("Enabled indy for instrumentation modules");
+      }
+    }
   }
 }

@@ -9,13 +9,18 @@ on:
 jobs:
   common:
     uses: ./.github/workflows/build-common.yml
-    secrets:
-      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+    with:
+      max-test-retries: 0
 
   test-latest-deps:
     uses: ./.github/workflows/reusable-test-latest-deps.yml
-    secrets:
-      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+    with:
+      max-test-retries: 0
+
+  test-indy:
+    uses: ./.github/workflows/reusable-test-indy.yml
+    with:
+      max-test-retries: 0
 
   muzzle:
     uses: ./.github/workflows/reusable-muzzle.yml

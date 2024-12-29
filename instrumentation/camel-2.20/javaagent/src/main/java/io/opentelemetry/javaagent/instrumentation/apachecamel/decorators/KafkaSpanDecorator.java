@@ -52,6 +52,7 @@ class KafkaSpanDecorator extends MessagingSpanDecorator {
     return topic != null ? topic : super.getDestination(exchange, endpoint);
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   public void pre(
       AttributesBuilder attributes,

@@ -5,26 +5,32 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.util.ContextInitializer;
 import ch.qos.logback.core.spi.ContextAware;
-import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.net.URL;
-import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.LoggerFactory;
 
 class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
 
+  @RegisterExtension
+  private static final LibraryInstrumentationExtension testing =
+      LibraryInstrumentationExtension.create();
+
   @BeforeEach
   void setup() throws Exception {
-    generalBeforeEachSetup();
     // to make sure we start fresh with a new OpenTelemetryAppender for each test
     reloadLoggerConfiguration();
+  }
+
+  @Override
+  protected InstrumentationExtension getTesting() {
+    return testing;
   }
 
   private static void reloadLoggerConfiguration() throws Exception {
@@ -50,7 +56,7 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
 
   @Override
   void executeAfterLogsExecution() {
-    OpenTelemetryAppender.install(openTelemetrySdk);
+    OpenTelemetryAppender.install(testing.getOpenTelemetry());
   }
 
   @Test
@@ -60,15 +66,14 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
         "log message 2"); // Won't be instrumented because cache size is 1 (see logback-test.xml
     // file)
 
-    OpenTelemetryAppender.install(openTelemetrySdk);
+    OpenTelemetryAppender.install(testing.getOpenTelemetry());
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
-    assertThat(logDataList).hasSize(1);
-    LogRecordData logData = logDataList.get(0);
-    OpenTelemetryAssertions.assertThat(logData)
-        .hasResource(resource)
-        .hasInstrumentationScope(instrumentationScopeInfo)
-        .hasBody("log message 1")
-        .hasTotalAttributeCount(4);
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasResource(resource)
+                .hasInstrumentationScope(instrumentationScopeInfo)
+                .hasBody("log message 1")
+                .hasTotalAttributeCount(4));
   }
 }

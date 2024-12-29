@@ -11,7 +11,8 @@ import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator
 import io.opentelemetry.context.Context
 import io.opentelemetry.context.propagation.ContextPropagators
-import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackTelemetry
+import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackClientTelemetry
+import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackServerTelemetry
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter
 import io.opentelemetry.sdk.trace.SdkTracerProvider
@@ -34,22 +35,21 @@ import java.util.concurrent.TimeUnit
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
 import static io.opentelemetry.api.trace.SpanKind.SERVER
-import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD
-import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE
-import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE
+import static io.opentelemetry.semconv.HttpAttributes.*
 
 class InstrumentedHttpClientTest extends Specification {
 
   def spanExporter = InMemorySpanExporter.create()
   def tracerProvider = SdkTracerProvider.builder()
-    .addSpanProcessor(SimpleSpanProcessor.create(spanExporter))
-    .build()
+      .addSpanProcessor(SimpleSpanProcessor.create(spanExporter))
+      .build()
 
   def openTelemetry = OpenTelemetrySdk.builder()
-    .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
-    .setTracerProvider(tracerProvider).build()
+      .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
+      .setTracerProvider(tracerProvider).build()
 
-  RatpackTelemetry telemetry = RatpackTelemetry.create(openTelemetry)
+  RatpackClientTelemetry telemetry = RatpackClientTelemetry.create(openTelemetry)
+  RatpackServerTelemetry serverTelemetry = RatpackServerTelemetry.create(openTelemetry)
 
   def cleanup() {
     spanExporter.reset()
@@ -59,9 +59,9 @@ class InstrumentedHttpClientTest extends Specification {
     expect:
     def otherApp = EmbeddedApp.of { spec ->
       spec.registry(
-        Guice.registry { bindings ->
-          telemetry.configureServerRegistry(bindings)
-        }
+          Guice.registry { bindings ->
+            serverTelemetry.configureRegistry(bindings)
+          }
       )
       spec.handlers {
         it.get("bar") { ctx -> ctx.render("foo") }
@@ -70,17 +70,17 @@ class InstrumentedHttpClientTest extends Specification {
 
     def app = EmbeddedApp.of { spec ->
       spec.registry(
-        Guice.registry { bindings ->
-          telemetry.configureServerRegistry(bindings)
-          bindings.bindInstance(HttpClient, telemetry.instrumentHttpClient(HttpClient.of(Action.noop())))
-        }
+          Guice.registry { bindings ->
+            serverTelemetry.configureRegistry(bindings)
+            bindings.bindInstance(HttpClient, telemetry.instrument(HttpClient.of(Action.noop())))
+          }
       )
 
       spec.handlers { chain ->
         chain.get("foo") { ctx ->
           HttpClient instrumentedHttpClient = ctx.get(HttpClient)
           instrumentedHttpClient.get(new URI("${otherApp.address}bar"))
-            .then { ctx.render("bar") }
+              .then { ctx.render("bar") }
         }
       }
     }
@@ -131,10 +131,10 @@ class InstrumentedHttpClientTest extends Specification {
 
     def app = EmbeddedApp.of { spec ->
       spec.registry(
-        Guice.registry { bindings ->
-          telemetry.configureServerRegistry(bindings)
-          bindings.bindInstance(HttpClient, telemetry.instrumentHttpClient(HttpClient.of(Action.noop())))
-        }
+          Guice.registry { bindings ->
+            serverTelemetry.configureRegistry(bindings)
+            bindings.bindInstance(HttpClient, telemetry.instrument(HttpClient.of(Action.noop())))
+          }
       )
 
       spec.handlers { chain ->
@@ -189,27 +189,27 @@ class InstrumentedHttpClientTest extends Specification {
       spec.handlers {
         it.get("foo") { ctx ->
           Promise.value("bar").defer(Duration.ofSeconds(1L))
-            .then { ctx.render("bar") }
+              .then { ctx.render("bar") }
         }
       }
     }
 
     def app = EmbeddedApp.of { spec ->
       spec.registry(
-        Guice.registry { bindings ->
-          telemetry.configureServerRegistry(bindings)
-          bindings.bindInstance(HttpClient, telemetry.instrumentHttpClient(
-            HttpClient.of { s -> s.readTimeout(Duration.ofMillis(10)) })
-          )
-        }
+          Guice.registry { bindings ->
+            serverTelemetry.configureRegistry(bindings)
+            bindings.bindInstance(HttpClient, telemetry.instrument(
+                HttpClient.of { s -> s.readTimeout(Duration.ofMillis(10)) })
+            )
+          }
       )
 
       spec.handlers { chain ->
         chain.get("path-name") { ctx ->
           def instrumentedHttpClient = ctx.get(HttpClient)
           instrumentedHttpClient.get(new URI("${otherApp.address}foo"))
-            .onError { ctx.render("error") }
-            .then { ctx.render("hello") }
+              .onError { ctx.render("error") }
+              .then { ctx.render("hello") }
         }
       }
     }
@@ -253,11 +253,11 @@ class InstrumentedHttpClientTest extends Specification {
 
     def app = EmbeddedApp.of { spec ->
       spec.registry(
-        Guice.registry { bindings ->
-          telemetry.configureServerRegistry(bindings)
-          bindings.bindInstance(HttpClient, telemetry.instrumentHttpClient(HttpClient.of(Action.noop())))
-          bindings.bindInstance(new BarService(latch, "${otherApp.address}foo", openTelemetry))
-        },
+          Guice.registry { bindings ->
+            serverTelemetry.configureRegistry(bindings)
+            bindings.bindInstance(HttpClient, telemetry.instrument(HttpClient.of(Action.noop())))
+            bindings.bindInstance(new BarService(latch, "${otherApp.address}foo", openTelemetry))
+          },
       )
       spec.handlers { chain ->
         chain.get("foo") { ctx -> ctx.render("bar") }
@@ -286,11 +286,11 @@ class InstrumentedHttpClientTest extends Specification {
 
     def app = EmbeddedApp.of { spec ->
       spec.registry(
-        Guice.registry { bindings ->
-          telemetry.configureServerRegistry(bindings)
-          bindings.bindInstance(HttpClient, telemetry.instrumentHttpClient(HttpClient.of(Action.noop())))
-          bindings.bindInstance(new BarForkService(latch, "${otherApp.address}foo", openTelemetry))
-        },
+          Guice.registry { bindings ->
+            serverTelemetry.configureRegistry(bindings)
+            bindings.bindInstance(HttpClient, telemetry.instrument(HttpClient.of(Action.noop())))
+            bindings.bindInstance(new BarForkService(latch, "${otherApp.address}foo", openTelemetry))
+          },
       )
       spec.handlers { chain ->
         chain.get("foo") { ctx -> ctx.render("bar") }
@@ -324,23 +324,22 @@ class BarService implements Service {
   void onStart(StartEvent event) {
     def parentContext = Context.current()
     def span = tracer.spanBuilder("a-span")
-      .setParent(parentContext)
-      .startSpan()
+        .setParent(parentContext)
+        .startSpan()
 
     Context otelContext = parentContext.with(span)
     otelContext.makeCurrent().withCloseable {
       Execution.current().add(Context, otelContext)
       def httpClient = event.registry.get(HttpClient)
       httpClient.get(new URI(url))
-        .flatMap { httpClient.get(new URI(url)) }
-        .then {
-          span.end()
-          latch.countDown()
-        }
+          .flatMap { httpClient.get(new URI(url)) }
+          .then {
+            span.end()
+            latch.countDown()
+          }
     }
   }
 }
-
 
 class BarForkService implements Service {
   private final String url
@@ -359,19 +358,19 @@ class BarForkService implements Service {
     Execution.fork().start {
       def parentContext = Context.current()
       def span = tracer.spanBuilder("a-span")
-        .setParent(parentContext)
-        .startSpan()
+          .setParent(parentContext)
+          .startSpan()
 
       Context otelContext = parentContext.with(span)
       otelContext.makeCurrent().withCloseable {
         Execution.current().add(Context, otelContext)
         def httpClient = event.registry.get(HttpClient)
         httpClient.get(new URI(url))
-          .flatMap { httpClient.get(new URI(url)) }
-          .then {
-            span.end()
-            latch.countDown()
-          }
+            .flatMap { httpClient.get(new URI(url)) }
+            .then {
+              span.end()
+              latch.countDown()
+            }
       }
     }
   }

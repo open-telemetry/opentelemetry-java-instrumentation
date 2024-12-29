@@ -17,10 +17,11 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
       SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
   @Override
-  public String getSystem(GeodeRequest request) {
-    return DbIncubatingAttributes.DbSystemValues.GEODE;
+  public String getDbSystem(GeodeRequest request) {
+    return DbIncubatingAttributes.DbSystemIncubatingValues.GEODE;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(GeodeRequest request) {
@@ -28,10 +29,12 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   }
 
   @Override
-  public String getName(GeodeRequest request) {
+  @Nullable
+  public String getDbNamespace(GeodeRequest request) {
     return request.getRegion().getName();
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(GeodeRequest request) {
@@ -40,14 +43,14 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
 
   @Override
   @Nullable
-  public String getStatement(GeodeRequest request) {
+  public String getDbQueryText(GeodeRequest request) {
     // sanitized statement is cached
     return sanitizer.sanitize(request.getQuery()).getFullStatement();
   }
 
   @Override
   @Nullable
-  public String getOperation(GeodeRequest request) {
+  public String getDbOperationName(GeodeRequest request) {
     return request.getOperation();
   }
 }

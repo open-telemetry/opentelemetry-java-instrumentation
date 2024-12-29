@@ -62,16 +62,26 @@ dependencies {
 
   latestDepTestLibrary("org.elasticsearch.plugin:transport-netty3-client:5.+") // see elasticsearch-transport-6.0 module
   latestDepTestLibrary("org.elasticsearch.client:transport:5.+") // see elasticsearch-transport-6.0 module
-  latestDepTestLibrary("org.springframework.data:spring-data-elasticsearch:3.0.+")
+  latestDepTestLibrary("org.springframework.data:spring-data-elasticsearch:3.0.+") // see elasticsearch-transport-6.0 module
 }
 
-tasks.withType<Test>().configureEach {
-  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+tasks {
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
+    // TODO run tests both with and without experimental span attributes
+    jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
 
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
 }

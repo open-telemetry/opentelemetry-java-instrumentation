@@ -39,17 +39,25 @@ dependencies {
   testImplementation("org.hsqldb:hsqldb:2.0.0")
 
   // limit to spring 5; spring 6 is tested in its separate module
-  latestDepTestLibrary("org.hibernate:hibernate-entitymanager:5.+")
-  latestDepTestLibrary("org.springframework.data:spring-data-commons:2.+")
-  latestDepTestLibrary("org.springframework.data:spring-data-jpa:2.+")
-  latestDepTestLibrary("org.springframework:spring-test:5.+")
+  latestDepTestLibrary("org.hibernate:hibernate-entitymanager:5.+") // see spring-data-3.0:testing module
+  latestDepTestLibrary("org.springframework.data:spring-data-commons:2.+") // see spring-data-3.0:testing module
+  latestDepTestLibrary("org.springframework.data:spring-data-jpa:2.+") // see spring-data-3.0:testing module
+  latestDepTestLibrary("org.springframework:spring-test:5.+") // see spring-data-3.0:testing module
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
   }
 }

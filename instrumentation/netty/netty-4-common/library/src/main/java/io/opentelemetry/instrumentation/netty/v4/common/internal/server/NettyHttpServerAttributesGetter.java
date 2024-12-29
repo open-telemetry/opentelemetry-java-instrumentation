@@ -16,7 +16,11 @@ import java.net.SocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
-final class NettyHttpServerAttributesGetter
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class NettyHttpServerAttributesGetter
     implements HttpServerAttributesGetter<HttpRequestAndChannel, HttpResponse> {
 
   @Override

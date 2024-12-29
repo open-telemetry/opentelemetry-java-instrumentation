@@ -9,18 +9,26 @@ import io.lettuce.core.RedisURI;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class LettuceConnectAttributesExtractor implements AttributesExtractor<RedisURI, Void> {
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, RedisURI redisUri) {
-    attributes.put(DbIncubatingAttributes.DB_SYSTEM, DbIncubatingAttributes.DbSystemValues.REDIS);
+    attributes.put(
+        DbIncubatingAttributes.DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.REDIS);
 
     int database = redisUri.getDatabase();
     if (database != 0) {
-      attributes.put(DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX, (long) database);
+      if (SemconvStability.emitStableDatabaseSemconv()) {
+        attributes.put(DbIncubatingAttributes.DB_NAMESPACE, String.valueOf(database));
+      }
+      if (SemconvStability.emitOldDatabaseSemconv()) {
+        attributes.put(DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX, (long) database);
+      }
     }
   }
 

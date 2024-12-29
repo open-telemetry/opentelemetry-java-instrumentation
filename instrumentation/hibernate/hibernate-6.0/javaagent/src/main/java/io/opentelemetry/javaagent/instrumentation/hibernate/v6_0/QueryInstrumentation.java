@@ -14,13 +14,12 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperation;
+import io.opentelemetry.javaagent.instrumentation.hibernate.HibernateOperationScope;
 import io.opentelemetry.javaagent.instrumentation.hibernate.SessionInfo;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -46,13 +45,14 @@ public class QueryInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isMethod()
             .and(
+                // not instrumenting getSingleResult as it calls list that is instrumented and
+                // we don't want to record the NoResultException that it throws
                 namedOneOf(
                     "list",
                     "getResultList",
                     "stream",
                     "getResultStream",
                     "uniqueResult",
-                    "getSingleResult",
                     "getSingleResultOrNull",
                     "uniqueResultOptional",
                     "executeUpdate",
@@ -64,16 +64,10 @@ public class QueryInstrumentation implements TypeInstrumentation {
   public static class QueryMethodAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void startMethod(
-        @Advice.This CommonQueryContract query,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelHibernateOperation") HibernateOperation hibernateOperation,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+    public static HibernateOperationScope startMethod(@Advice.This CommonQueryContract query) {
 
-      callDepth = CallDepth.forClass(HibernateOperation.class);
-      if (callDepth.getAndIncrement() > 0) {
-        return;
+      if (HibernateOperationScope.enterDepthSkipCheck()) {
+        return null;
       }
 
       String queryString = null;
@@ -93,32 +87,17 @@ public class QueryInstrumentation implements TypeInstrumentation {
       SessionInfo sessionInfo = queryVirtualField.get(query);
 
       Context parentContext = Java8BytecodeBridge.currentContext();
-      hibernateOperation =
+      HibernateOperation hibernateOperation =
           new HibernateOperation(getOperationNameForQuery(queryString), sessionInfo);
-      if (!instrumenter().shouldStart(parentContext, hibernateOperation)) {
-        return;
-      }
 
-      context = instrumenter().start(parentContext, hibernateOperation);
-      scope = context.makeCurrent();
+      return HibernateOperationScope.start(hibernateOperation, parentContext, instrumenter());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endMethod(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelHibernateOperation") HibernateOperation hibernateOperation,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Thrown Throwable throwable, @Advice.Enter HibernateOperationScope scope) {
 
-      if (callDepth.decrementAndGet() > 0) {
-        return;
-      }
-
-      if (scope != null) {
-        scope.close();
-        instrumenter().end(context, hibernateOperation, null, throwable);
-      }
+      HibernateOperationScope.end(scope, throwable);
     }
   }
 }

@@ -34,15 +34,13 @@ dependencies {
   testInstrumentation(project(":instrumentation:reactor:reactor-netty:reactor-netty-0.9:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
+  testInstrumentation(project(":instrumentation:reactor:reactor-3.4:javaagent"))
 
   // using 3.4.3 to avoid the "Spec. Rule 1.3" issue in reactor-core during tests
   // https://github.com/reactor/reactor-core/issues/2579
   testLibrary("io.projectreactor:reactor-test:3.4.3")
   testLibrary("io.projectreactor:reactor-core:3.4.3")
   testImplementation(project(":instrumentation-annotations"))
-
-  latestDepTestLibrary("io.projectreactor:reactor-core:3.4.+")
-  latestDepTestLibrary("io.projectreactor.netty:reactor-netty-http:1.0.+")
 }
 
 tasks {

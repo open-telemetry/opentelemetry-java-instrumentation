@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import ratpack.handling.Context;
 
 public final class RatpackSingletons {
@@ -19,6 +20,7 @@ public final class RatpackSingletons {
   private static final Instrumenter<String, Void> INSTRUMENTER =
       Instrumenter.<String, Void>builder(
               GlobalOpenTelemetry.get(), "io.opentelemetry.ratpack-1.4", s -> s)
+          .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
           .buildInstrumenter();
 
   public static Instrumenter<String, Void> instrumenter() {
@@ -28,7 +30,9 @@ public final class RatpackSingletons {
   public static void updateSpanNames(io.opentelemetry.context.Context otelContext, Context ctx) {
     String matchedRoute = updateServerSpanName(otelContext, ctx);
     // update ratpack span name
-    Span.fromContext(otelContext).updateName(matchedRoute);
+    if (ExperimentalConfig.get().controllerTelemetryEnabled()) {
+      Span.fromContext(otelContext).updateName(matchedRoute);
+    }
   }
 
   public static String updateServerSpanName(

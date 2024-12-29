@@ -21,7 +21,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:xxl-job:xxl-job-2.3.0:javaagent"))
 
   testImplementation(project(":instrumentation:xxl-job:xxl-job-common:testing"))
-  latestDepTestLibrary("com.xuxueli:xxl-job-core:2.2.+") {
+  latestDepTestLibrary("com.xuxueli:xxl-job-core:2.2.+") { // see xxl-job-2.3.0 module
     exclude("org.codehaus.groovy", "groovy")
   }
 }

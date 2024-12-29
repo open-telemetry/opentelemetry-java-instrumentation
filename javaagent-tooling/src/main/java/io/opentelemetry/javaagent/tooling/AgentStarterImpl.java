@@ -68,6 +68,8 @@ public class AgentStarterImpl implements AgentStarter {
 
   @Override
   public void start() {
+    installTransformers();
+
     EarlyInitAgentConfig earlyConfig = EarlyInitAgentConfig.create();
     extensionClassLoader = createExtensionClassLoader(getClass().getClassLoader(), earlyConfig);
 
@@ -113,6 +115,14 @@ public class AgentStarterImpl implements AgentStarter {
     } else {
       loggingCustomizer.onStartupFailure(startupError);
     }
+  }
+
+  private void installTransformers() {
+    // prevents loading InetAddressResolverProvider SPI before agent has started
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/7130
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/10921
+    InetAddressClassFileTransformer transformer = new InetAddressClassFileTransformer();
+    instrumentation.addTransformer(transformer, true);
   }
 
   @SuppressWarnings("SystemOut")
@@ -175,6 +185,62 @@ public class AgentStarterImpl implements AgentStarter {
               return mv;
             }
           };
+      cr.accept(cv, 0);
+
+      return hookInserted ? cw.toByteArray() : null;
+    }
+  }
+
+  private static class InetAddressClassFileTransformer implements ClassFileTransformer {
+    boolean hookInserted = false;
+
+    @Override
+    public byte[] transform(
+        ClassLoader loader,
+        String className,
+        Class<?> classBeingRedefined,
+        ProtectionDomain protectionDomain,
+        byte[] classfileBuffer) {
+      if (!"java/net/InetAddress".equals(className)) {
+        return null;
+      }
+      ClassReader cr = new ClassReader(classfileBuffer);
+      ClassWriter cw = new ClassWriter(cr, 0);
+      ClassVisitor cv =
+          new ClassVisitor(AsmApi.VERSION, cw) {
+            @Override
+            public MethodVisitor visitMethod(
+                int access, String name, String descriptor, String signature, String[] exceptions) {
+              MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
+              if (!"resolver".equals(name)) {
+                return mv;
+              }
+              return new MethodVisitor(api, mv) {
+                @Override
+                public void visitMethodInsn(
+                    int opcode,
+                    String ownerClassName,
+                    String methodName,
+                    String descriptor,
+                    boolean isInterface) {
+                  super.visitMethodInsn(
+                      opcode, ownerClassName, methodName, descriptor, isInterface);
+                  // rewrite Vm.isBooted() to AgentInitializer.isAgentStarted(Vm.isBooted())
+                  if ("jdk/internal/misc/VM".equals(ownerClassName)
+                      && "isBooted".equals(methodName)) {
+                    super.visitMethodInsn(
+                        Opcodes.INVOKESTATIC,
+                        Type.getInternalName(AgentInitializer.class),
+                        "isAgentStarted",
+                        "(Z)Z",
+                        false);
+                    hookInserted = true;
+                  }
+                }
+              };
+            }
+          };
+
       cr.accept(cv, 0);
 
       return hookInserted ? cw.toByteArray() : null;

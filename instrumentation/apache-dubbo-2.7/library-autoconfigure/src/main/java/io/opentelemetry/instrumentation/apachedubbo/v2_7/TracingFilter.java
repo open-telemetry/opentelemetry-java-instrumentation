@@ -29,6 +29,7 @@ final class TracingFilter implements Filter {
   }
 
   @Override
+  @SuppressWarnings("deprecation") // deprecation for RpcContext.getContext()
   public Result invoke(Invoker<?> invoker, Invocation invocation) {
     if (!(invocation instanceof RpcInvocation)) {
       return invoker.invoke(invocation);

@@ -7,7 +7,7 @@ This package contains libraries to help instrument AWS lambda functions in your 
 To use the instrumentation, configure `OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER` env property to your lambda handler method in following format `package.ClassName::methodName`
 and use one of wrappers as your lambda `Handler`.
 
-In order to configure a span flush timeout (default is set to 1 second), please configure `OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT` env property. The value is in seconds.
+In order to configure a span flush timeout (default is set to 10 seconds), please configure `OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT` env property. The value is in milliseconds.
 
 Available wrappers:
 

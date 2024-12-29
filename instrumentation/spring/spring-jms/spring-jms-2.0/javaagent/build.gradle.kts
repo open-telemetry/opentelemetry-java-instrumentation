@@ -37,7 +37,7 @@ dependencies {
     exclude("org.jboss.naming", "jnpserver")
   }
 
-  latestDepTestLibrary("org.springframework:spring-jms:5.+")
+  latestDepTestLibrary("org.springframework:spring-jms:5.+") // see spring-jms-6.0 module
 }
 
 testing {

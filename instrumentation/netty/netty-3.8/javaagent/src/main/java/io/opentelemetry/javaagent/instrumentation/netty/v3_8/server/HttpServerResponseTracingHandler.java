@@ -36,18 +36,15 @@ public class HttpServerResponseTracingHandler extends SimpleChannelDownstreamHan
     Context context = requestAndContext.context();
     HttpRequestAndChannel request = requestAndContext.request();
     HttpResponse response = (HttpResponse) msg.getMessage();
+    customizeResponse(context, response);
 
-    Throwable error = null;
     try (Scope ignored = context.makeCurrent()) {
-      customizeResponse(context, response);
       super.writeRequested(ctx, msg);
     } catch (Throwable t) {
-      error = t;
+      instrumenter().end(context, request, response, NettyErrorHolder.getOrDefault(context, t));
       throw t;
-    } finally {
-      error = NettyErrorHolder.getOrDefault(context, error);
-      instrumenter().end(context, request, response, error);
     }
+    instrumenter().end(context, request, response, NettyErrorHolder.getOrDefault(context, null));
   }
 
   private static void customizeResponse(Context context, HttpResponse response) {

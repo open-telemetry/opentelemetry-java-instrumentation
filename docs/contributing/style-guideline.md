@@ -66,6 +66,12 @@ rough guideline of what are commonly accepted static imports:
 - Immutable constants (where clearly named)
 - Singleton instances (especially where clearly named and hopefully immutable)
 - `tracer()` methods that expose tracer singleton instances
+- Semantic convention attribute keys used in tests
+
+Some of these are enforced by checkstyle rules:
+
+- look for `RegexpSinglelineJava` in `checkstyle.xml`
+- use `@SuppressWarnings("checkstyle:RegexpSinglelineJava")` to suppress the checkstyle warning
 
 ## Ordering of class contents
 

@@ -20,11 +20,11 @@ import okhttp3.Response;
  */
 public final class TracingInterceptor implements Interceptor {
 
-  private final Instrumenter<Request, Response> instrumenter;
+  private final Instrumenter<Chain, Response> instrumenter;
   private final ContextPropagators propagators;
 
   public TracingInterceptor(
-      Instrumenter<Request, Response> instrumenter, ContextPropagators propagators) {
+      Instrumenter<Chain, Response> instrumenter, ContextPropagators propagators) {
     this.instrumenter = instrumenter;
     this.propagators = propagators;
   }
@@ -34,24 +34,22 @@ public final class TracingInterceptor implements Interceptor {
     Request request = chain.request();
     Context parentContext = Context.current();
 
-    if (!instrumenter.shouldStart(parentContext, request)) {
+    if (!instrumenter.shouldStart(parentContext, chain)) {
       return chain.proceed(chain.request());
     }
 
-    Context context = instrumenter.start(parentContext, request);
+    Context context = instrumenter.start(parentContext, chain);
     request = injectContextToRequest(request, context);
 
-    Response response = null;
-    Throwable error = null;
+    Response response;
     try (Scope ignored = context.makeCurrent()) {
       response = chain.proceed(request);
-      return response;
-    } catch (Exception e) {
-      error = e;
-      throw e;
-    } finally {
-      instrumenter.end(context, request, response, error);
+    } catch (Throwable t) {
+      instrumenter.end(context, chain, null, t);
+      throw t;
     }
+    instrumenter.end(context, chain, response, null);
+    return response;
   }
 
   // Context injection is being handled manually for a reason: we want to use the OkHttp Request

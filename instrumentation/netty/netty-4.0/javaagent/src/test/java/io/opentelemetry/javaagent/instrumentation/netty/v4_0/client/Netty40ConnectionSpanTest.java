@@ -10,6 +10,12 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -31,8 +37,6 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
-import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
@@ -102,12 +106,12 @@ class Netty40ConnectionSpanTest {
                 span -> {
                   span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
                   span.hasAttributesSatisfyingExactly(
-                      equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
-                      equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                      equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
-                      equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
-                      equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
-                      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"));
+                      equalTo(NETWORK_TRANSPORT, "tcp"),
+                      equalTo(NETWORK_TYPE, "ipv4"),
+                      equalTo(SERVER_ADDRESS, uri.getHost()),
+                      equalTo(SERVER_PORT, uri.getPort()),
+                      equalTo(NETWORK_PEER_PORT, uri.getPort()),
+                      equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
                 },
                 span -> span.hasName("GET").hasKind(CLIENT).hasParent(trace.getSpan(0)),
                 span ->
@@ -130,23 +134,22 @@ class Netty40ConnectionSpanTest {
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent().hasException(thrown),
                 span -> {
                   span.hasName("CONNECT").hasKind(INTERNAL).hasParent(trace.getSpan(0));
-                  span.hasAttributesSatisfying(equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"));
+                  span.hasAttributesSatisfying(equalTo(NETWORK_TRANSPORT, "tcp"));
                   satisfies(
-                      NetworkAttributes.NETWORK_TYPE,
+                      NETWORK_TYPE,
                       val ->
                           val.satisfiesAnyOf(
                               v -> assertThat(val).isNull(), v -> assertThat(v).isEqualTo("ipv4")));
                   span.hasAttributesSatisfying(
-                      equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
-                      equalTo(ServerAttributes.SERVER_PORT, uri.getPort()));
+                      equalTo(SERVER_ADDRESS, uri.getHost()), equalTo(SERVER_PORT, uri.getPort()));
                   satisfies(
-                      NetworkAttributes.NETWORK_PEER_PORT,
+                      NETWORK_PEER_PORT,
                       val ->
                           val.satisfiesAnyOf(
                               v -> assertThat(val).isNull(),
                               v -> assertThat(v).isEqualTo(uri.getPort())));
                   satisfies(
-                      NetworkAttributes.NETWORK_PEER_ADDRESS,
+                      NETWORK_PEER_ADDRESS,
                       val ->
                           val.satisfiesAnyOf(
                               v -> assertThat(val).isNull(),

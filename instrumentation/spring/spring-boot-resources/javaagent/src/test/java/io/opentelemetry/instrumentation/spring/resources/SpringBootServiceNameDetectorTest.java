@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.resources;
 
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,7 +14,6 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ServiceAttributes;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
@@ -173,8 +173,7 @@ class SpringBootServiceNameDetectorTest {
   void shouldNotApplyWhenResourceHasServiceName() {
     SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
     Resource resource =
-        Resource.getDefault()
-            .merge(Resource.create(Attributes.of(ServiceAttributes.SERVICE_NAME, "test-service")));
+        Resource.getDefault().merge(Resource.create(Attributes.of(SERVICE_NAME, "test-service")));
     assertThat(guesser.shouldApply(config, resource)).isFalse();
   }
 
@@ -189,12 +188,12 @@ class SpringBootServiceNameDetectorTest {
   void shouldNotApplyIfConfigHasServiceNameResourceAttribute() {
     SpringBootServiceNameDetector guesser = new SpringBootServiceNameDetector(system);
     when(config.getMap("otel.resource.attributes"))
-        .thenReturn(singletonMap(ServiceAttributes.SERVICE_NAME.getKey(), "test-service"));
+        .thenReturn(singletonMap(SERVICE_NAME.getKey(), "test-service"));
     assertThat(guesser.shouldApply(config, Resource.getDefault())).isFalse();
   }
 
   private static void expectServiceName(Resource result, String expected) {
-    assertThat(result.getAttribute(ServiceAttributes.SERVICE_NAME)).isEqualTo(expected);
+    assertThat(result.getAttribute(SERVICE_NAME)).isEqualTo(expected);
   }
 
   private static void writeString(Path path, String value) throws Exception {

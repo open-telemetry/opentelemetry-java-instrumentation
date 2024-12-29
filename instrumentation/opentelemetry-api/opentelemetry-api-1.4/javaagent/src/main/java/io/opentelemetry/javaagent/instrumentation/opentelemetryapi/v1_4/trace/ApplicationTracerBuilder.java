@@ -8,13 +8,17 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_4.trace;
 import application.io.opentelemetry.api.trace.Tracer;
 import application.io.opentelemetry.api.trace.TracerBuilder;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.ApplicationTracer;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.ApplicationTracerFactory;
 
 class ApplicationTracerBuilder implements TracerBuilder {
 
+  private final ApplicationTracerFactory tracerFactory;
   private final io.opentelemetry.api.trace.TracerBuilder agentTracerBuilder;
 
-  public ApplicationTracerBuilder(io.opentelemetry.api.trace.TracerBuilder agentTracerBuilder) {
+  public ApplicationTracerBuilder(
+      ApplicationTracerFactory tracerFactory,
+      io.opentelemetry.api.trace.TracerBuilder agentTracerBuilder) {
+    this.tracerFactory = tracerFactory;
     this.agentTracerBuilder = agentTracerBuilder;
   }
 
@@ -34,6 +38,6 @@ class ApplicationTracerBuilder implements TracerBuilder {
 
   @Override
   public Tracer build() {
-    return new ApplicationTracer(agentTracerBuilder.build());
+    return tracerFactory.newTracer(agentTracerBuilder.build());
   }
 }

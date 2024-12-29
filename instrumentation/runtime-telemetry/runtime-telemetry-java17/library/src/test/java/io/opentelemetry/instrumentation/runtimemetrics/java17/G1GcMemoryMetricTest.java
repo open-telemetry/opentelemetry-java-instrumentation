@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java17;
 
-import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_ACTION;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_G1_EDEN_SPACE;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_G1_SURVIVOR_SPACE;
-import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_GC;
+import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_GC_ACTION;
+import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_GC_NAME;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.BYTES;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.END_OF_MAJOR_GC;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.END_OF_MINOR_GC;
@@ -16,9 +16,11 @@ import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Co
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_DESCRIPTION_GC_DURATION;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_DESCRIPTION_MEMORY;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_DESCRIPTION_MEMORY_AFTER;
+import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_NAME_COMMITTED;
+import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_NAME_GC_DURATION;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_NAME_MEMORY;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_NAME_MEMORY_AFTER;
-import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.MILLISECONDS;
+import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
@@ -42,7 +44,7 @@ class G1GcMemoryMetricTest {
     System.gc();
     // Test to make sure there's metric data for both eden and survivor spaces.
     // TODO: once G1 old gen usage added to jdk.G1HeapSummary (in JDK 21), test for it here too.
-    // TODO: needs JFR support for process.runtime.jvm.memory.limit.
+    // TODO: needs JFR support for jvm.memory.limit.
     jfrExtension.waitAndAssertMetrics(
         metric ->
             metric
@@ -52,7 +54,7 @@ class G1GcMemoryMetricTest {
                 .satisfies(G1GcMemoryMetricTest::hasGcAttributes),
         metric ->
             metric
-                .hasName("process.runtime.jvm.memory.committed")
+                .hasName(METRIC_NAME_COMMITTED)
                 .hasUnit(BYTES)
                 .hasDescription(METRIC_DESCRIPTION_COMMITTED)
                 // TODO: need JFR support for the other G1 pools
@@ -79,14 +81,14 @@ class G1GcMemoryMetricTest {
     // TODO: Need a reliable way to test old and young gen GC in isolation.
     System.gc();
     Attributes minorGcAttributes =
-        Attributes.of(ATTR_GC, "G1 Young Generation", ATTR_ACTION, END_OF_MINOR_GC);
+        Attributes.of(ATTR_GC_NAME, "G1 Young Generation", ATTR_GC_ACTION, END_OF_MINOR_GC);
     Attributes majorGcAttributes =
-        Attributes.of(ATTR_GC, "G1 Old Generation", ATTR_ACTION, END_OF_MAJOR_GC);
+        Attributes.of(ATTR_GC_NAME, "G1 Old Generation", ATTR_GC_ACTION, END_OF_MAJOR_GC);
     jfrExtension.waitAndAssertMetrics(
         metric ->
             metric
-                .hasName("process.runtime.jvm.gc.duration")
-                .hasUnit(MILLISECONDS)
+                .hasName(METRIC_NAME_GC_DURATION)
+                .hasUnit(SECONDS)
                 .hasDescription(METRIC_DESCRIPTION_GC_DURATION)
                 .satisfies(
                     data ->

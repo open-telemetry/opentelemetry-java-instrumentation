@@ -64,6 +64,10 @@ builds by adding the following to `~/.gradle/gradle.properties` before building.
 disableShadowRelocate=true
 ```
 
+WARNING: disabling shadow renaming will make some of the tests fail. In some cases it can also make
+tests pass when they really should be failing. Use with caution and be prepared for unexpected
+behavior.
+
 ## Missing GraalVM hints
 
 Enable the GraalVM tracing agent:

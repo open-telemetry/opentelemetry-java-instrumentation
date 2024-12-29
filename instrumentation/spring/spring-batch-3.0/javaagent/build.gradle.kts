@@ -19,7 +19,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:spring:spring-core-2.0:javaagent"))
 
   // spring batch 5.0 uses spring framework 6.0
-  latestDepTestLibrary("org.springframework.batch:spring-batch-core:4.+")
+  latestDepTestLibrary("org.springframework.batch:spring-batch-core:4.+") // documented limitation
 }
 
 tasks {

@@ -31,7 +31,7 @@ final class TracingJobListener implements JobListener {
 
   @Override
   public void jobExecutionVetoed(JobExecutionContext jobExecutionContext) {
-    // TODO(anuraaga): Consider adding an attribute for vetoed jobs.
+    // TODO: Consider adding an attribute for vetoed jobs.
   }
 
   @Override

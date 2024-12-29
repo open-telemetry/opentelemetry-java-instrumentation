@@ -64,15 +64,18 @@ for [`dependabot/**/**`](https://github.com/open-telemetry/community/blob/main/d
 
 ## Secrets and variables > Actions
 
+### Repository secrets
+
 - `GPG_PASSWORD` - stored in OpenTelemetry-Java 1Password
 - `GPG_PRIVATE_KEY` - stored in OpenTelemetry-Java 1Password
-- `GRADLE_ENTERPRISE_ACCESS_KEY` - owned by [@trask](https://github.com/trask)
-  - Generated at https://ge.opentelemetry.io > My settings > Access keys
-  - format of env var is `ge.opentelemetry.io=<access key>`,
-    see [docs](https://docs.gradle.com/enterprise/gradle-plugin/#via_environment_variable)
 - `GRADLE_PUBLISH_KEY`
 - `GRADLE_PUBLISH_SECRET`
 - `NVD_API_KEY` - stored in OpenTelemetry-Java 1Password
-- `OPENTELEMETRYBOT_GITHUB_TOKEN` - owned by [@trask](https://github.com/trask)
+  - Generated at https://nvd.nist.gov/developers/request-an-api-key
+  - Key is associated with [@trask](https://github.com/trask)'s gmail address
 - `SONATYPE_KEY` - owned by [@trask](https://github.com/trask)
 - `SONATYPE_USER` - owned by [@trask](https://github.com/trask)
+
+### Organization secrets
+
+- `OPENTELEMETRYBOT_GITHUB_TOKEN`

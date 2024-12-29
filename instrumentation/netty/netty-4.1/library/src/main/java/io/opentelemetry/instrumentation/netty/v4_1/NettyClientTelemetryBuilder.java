@@ -8,44 +8,42 @@ package io.opentelemetry.instrumentation.netty.v4_1;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumentationFlag;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Consumer;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.Experimental;
+import java.util.Collection;
 import java.util.function.Function;
 
 /** A builder of {@link NettyClientTelemetry}. */
 public final class NettyClientTelemetryBuilder {
 
-  private final OpenTelemetry openTelemetry;
-  private final List<AttributesExtractor<HttpRequestAndChannel, HttpResponse>>
-      additionalAttributesExtractors = new ArrayList<>();
-
-  private Consumer<HttpClientAttributesExtractorBuilder<HttpRequestAndChannel, HttpResponse>>
-      extractorConfigurer = builder -> {};
-  private Consumer<HttpSpanNameExtractorBuilder<HttpRequestAndChannel>>
-      spanNameExtractorConfigurer = builder -> {};
-  private Function<
-          SpanNameExtractor<HttpRequestAndChannel>,
-          ? extends SpanNameExtractor<? super HttpRequestAndChannel>>
-      spanNameExtractorTransformer = Function.identity();
-
-  private boolean emitExperimentalHttpClientMetrics = false;
+  private final DefaultHttpClientInstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder;
   private boolean emitExperimentalHttpClientEvents = false;
 
-  NettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {
-    this.openTelemetry = openTelemetry;
+  static {
+    Experimental.setSetEmitExperimentalClientTelemetry(
+        (builder, emit) -> {
+          builder.builder.setEmitExperimentalHttpClientMetrics(emit);
+          builder.emitExperimentalHttpClientEvents = emit;
+        });
   }
 
+  NettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {
+    builder =
+        NettyClientInstrumenterBuilderFactory.create("io.opentelemetry.netty-4.1", openTelemetry);
+  }
+
+  /**
+   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(NettyClientTelemetryBuilder,
+   *     boolean)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setEmitExperimentalHttpClientEvents(
       boolean emitExperimentalHttpClientEvents) {
@@ -60,10 +58,8 @@ public final class NettyClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setCapturedRequestHeaders(
-      List<String> capturedRequestHeaders) {
-    extractorConfigurer =
-        extractorConfigurer.andThen(
-            builder -> builder.setCapturedRequestHeaders(capturedRequestHeaders));
+      Collection<String> capturedRequestHeaders) {
+    builder.setCapturedRequestHeaders(capturedRequestHeaders);
     return this;
   }
 
@@ -74,10 +70,8 @@ public final class NettyClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setCapturedResponseHeaders(
-      List<String> capturedResponseHeaders) {
-    extractorConfigurer =
-        extractorConfigurer.andThen(
-            builder -> builder.setCapturedResponseHeaders(capturedResponseHeaders));
+      Collection<String> capturedResponseHeaders) {
+    builder.setCapturedResponseHeaders(capturedResponseHeaders);
     return this;
   }
 
@@ -88,7 +82,7 @@ public final class NettyClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<HttpRequestAndChannel, HttpResponse> attributesExtractor) {
-    additionalAttributesExtractors.add(attributesExtractor);
+    builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 
@@ -103,14 +97,11 @@ public final class NettyClientTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
-  public NettyClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
-    extractorConfigurer =
-        extractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
-    spanNameExtractorConfigurer =
-        spanNameExtractorConfigurer.andThen(builder -> builder.setKnownMethods(knownMethods));
+  public NettyClientTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
+    builder.setKnownMethods(knownMethods);
     return this;
   }
 
@@ -119,11 +110,14 @@ public final class NettyClientTelemetryBuilder {
    *
    * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
    *     are to be emitted.
+   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(NettyClientTelemetryBuilder,
+   *     boolean)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {
-    this.emitExperimentalHttpClientMetrics = emitExperimentalHttpClientMetrics;
+    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
     return this;
   }
 
@@ -131,10 +125,10 @@ public final class NettyClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setSpanNameExtractor(
       Function<
-              SpanNameExtractor<HttpRequestAndChannel>,
+              SpanNameExtractor<? super HttpRequestAndChannel>,
               ? extends SpanNameExtractor<? super HttpRequestAndChannel>>
           spanNameExtractorTransformer) {
-    this.spanNameExtractorTransformer = spanNameExtractorTransformer;
+    builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
   }
 
@@ -142,17 +136,10 @@ public final class NettyClientTelemetryBuilder {
   public NettyClientTelemetry build() {
     return new NettyClientTelemetry(
         new NettyClientInstrumenterFactory(
-                openTelemetry,
-                "io.opentelemetry.netty-4.1",
+                builder,
                 NettyConnectionInstrumentationFlag.DISABLED,
-                NettyConnectionInstrumentationFlag.DISABLED,
-                PeerServiceResolver.create(Collections.emptyMap()),
-                emitExperimentalHttpClientMetrics)
-            .createHttpInstrumenter(
-                extractorConfigurer,
-                spanNameExtractorConfigurer,
-                spanNameExtractorTransformer,
-                additionalAttributesExtractors),
+                NettyConnectionInstrumentationFlag.DISABLED)
+            .instrumenter(),
         emitExperimentalHttpClientEvents);
   }
 }

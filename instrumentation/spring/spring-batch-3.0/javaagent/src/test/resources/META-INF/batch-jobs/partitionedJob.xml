@@ -1,15 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<job id="partitionedJob" xmlns="http://xmlns.jcp.org/xml/ns/javaee" version="1.0">
+<job id="partitionedJob" xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/jobXML_1_0.xsd"
+     version="1.0">
   <step id="partitionWorkerStep">
     <chunk item-count="5">
-      <reader ref="jsr.TestPartitionedItemReader">
+      <reader ref="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.jsr.TestPartitionedItemReader">
         <properties>
           <property name="start" value="#{partitionPlan['start']}"/>
           <property name="end" value="#{partitionPlan['end']}"/>
         </properties>
       </reader>
-      <processor ref="jsr.TestItemProcessor"/>
-      <writer ref="jsr.TestItemWriter"/>
+      <processor ref="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.jsr.TestItemProcessor"/>
+      <writer ref="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.jsr.TestItemWriter"/>
     </chunk>
     <partition>
       <plan partitions="2" threads="2">

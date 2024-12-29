@@ -50,8 +50,12 @@ public class StructuredTaskScopeInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitCallableFork(
-        @Advice.Enter PropagatedContext propagatedContext, @Advice.Thrown Throwable throwable) {
-      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
+        @Advice.Argument(0) Callable<?> task,
+        @Advice.Enter PropagatedContext propagatedContext,
+        @Advice.Thrown Throwable throwable) {
+      VirtualField<Callable<?>, PropagatedContext> virtualField =
+          VirtualField.find(Callable.class, PropagatedContext.class);
+      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable, virtualField, task);
     }
   }
 }

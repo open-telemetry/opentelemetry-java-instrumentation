@@ -85,7 +85,7 @@ class AdviceSignatureEraser {
       String reference = matcher.group();
       if (reference.startsWith("Ljava/")) {
         // do not erase java.* references
-        matcher.appendReplacement(result, reference);
+        matcher.appendReplacement(result, Matcher.quoteReplacement(reference));
       } else {
         matcher.appendReplacement(result, "Ljava/lang/Object;");
       }

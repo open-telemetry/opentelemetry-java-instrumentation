@@ -13,7 +13,7 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
   }
 
   @Override
-  boolean isSqsAttributeInjectionEnabled() {
+  protected boolean isSqsAttributeInjectionEnabled() {
     return true;
   }
 }

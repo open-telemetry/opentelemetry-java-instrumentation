@@ -5,11 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.vaadin;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
 
@@ -23,17 +22,17 @@ public class AbstractVaadin14Test extends AbstractVaadinTest {
               assertThat(traces.get(0))
                   .satisfies(
                       spans -> {
-                        OpenTelemetryAssertions.assertThat(spans.get(0))
+                        assertThat(spans.get(0))
                             .hasName("GET " + getContextPath() + "/main")
                             .hasNoParent()
                             .hasKind(SpanKind.SERVER);
-                        OpenTelemetryAssertions.assertThat(spans.get(1))
+                        assertThat(spans.get(1))
                             .hasName("SpringVaadinServletService.handleRequest")
                             .hasParent(spans.get(0))
                             .hasKind(SpanKind.INTERNAL);
                         // we don't assert all the handler spans as these vary between
                         // vaadin versions
-                        OpenTelemetryAssertions.assertThat(spans.get(spans.size() - 1))
+                        assertThat(spans.get(spans.size() - 1))
                             .hasName("BootstrapHandler.handleRequest")
                             .hasParent(spans.get(1))
                             .hasKind(SpanKind.INTERNAL);

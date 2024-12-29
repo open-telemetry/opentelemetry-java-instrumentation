@@ -56,6 +56,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractRocketMqClientTest {
 
@@ -416,7 +417,8 @@ public abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, Arrays.asList(keys)),
                 equalTo(
                     MESSAGING_ROCKETMQ_MESSAGE_TYPE,
-                    MessagingIncubatingAttributes.MessagingRocketmqMessageTypeValues.NORMAL),
+                    MessagingIncubatingAttributes.MessagingRocketmqMessageTypeIncubatingValues
+                        .NORMAL),
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
@@ -447,7 +449,8 @@ public abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_GROUP, messageGroup),
                 equalTo(
                     MESSAGING_ROCKETMQ_MESSAGE_TYPE,
-                    MessagingIncubatingAttributes.MessagingRocketmqMessageTypeValues.FIFO),
+                    MessagingIncubatingAttributes.MessagingRocketmqMessageTypeIncubatingValues
+                        .FIFO),
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),
@@ -478,7 +481,8 @@ public abstract class AbstractRocketMqClientTest {
                 equalTo(MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP, deliveryTimestamp),
                 equalTo(
                     MESSAGING_ROCKETMQ_MESSAGE_TYPE,
-                    MessagingIncubatingAttributes.MessagingRocketmqMessageTypeValues.DELAY),
+                    MessagingIncubatingAttributes.MessagingRocketmqMessageTypeIncubatingValues
+                        .DELAY),
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, (long) body.length),
                 equalTo(MESSAGING_SYSTEM, "rocketmq"),
                 equalTo(MESSAGING_MESSAGE_ID, sendReceipt.getMessageId().toString()),

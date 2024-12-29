@@ -20,6 +20,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -36,6 +38,9 @@ import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
+  private static final Logger logger =
+      Logger.getLogger(OpenTelemetryHandlerMappingFilter.class.getName());
+
   private static final MethodHandle usesPathPatternsMh = getUsesPathPatternsMh();
   private static final MethodHandle parseAndCacheMh = parseAndCacheMh();
 
@@ -43,7 +48,9 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
       (context, request) -> {
         if (this.parseRequestPath) {
           // sets new value for PATH_ATTRIBUTE of request
-          parseAndCache(request);
+          if (!parseAndCache(request)) {
+            return null;
+          }
         }
         if (findMapping(request)) {
           // Name the parent span based on the matching pattern
@@ -191,14 +198,16 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
     }
   }
 
-  private static void parseAndCache(HttpServletRequest request) {
+  private static boolean parseAndCache(HttpServletRequest request) {
     if (parseAndCacheMh == null) {
-      return;
+      return false;
     }
     try {
       parseAndCacheMh.invoke(request);
+      return true;
     } catch (Throwable throwable) {
-      throw new IllegalStateException(throwable);
+      logger.log(Level.FINE, "Failed calling parseAndCache", throwable);
+      return false;
     }
   }
 }

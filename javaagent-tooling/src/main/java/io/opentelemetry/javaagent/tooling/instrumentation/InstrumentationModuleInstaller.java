@@ -54,7 +54,7 @@ public final class InstrumentationModuleInstaller {
 
   private final Instrumentation instrumentation;
   private final VirtualFieldImplementationInstallerFactory virtualFieldInstallerFactory =
-      new VirtualFieldImplementationInstallerFactory();
+      VirtualFieldImplementationInstallerFactory.getInstance();
 
   public InstrumentationModuleInstaller(Instrumentation instrumentation) {
     this.instrumentation = instrumentation;

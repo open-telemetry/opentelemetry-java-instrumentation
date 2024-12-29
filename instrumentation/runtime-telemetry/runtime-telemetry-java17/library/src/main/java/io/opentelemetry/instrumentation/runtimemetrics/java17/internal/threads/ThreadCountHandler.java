@@ -21,7 +21,7 @@ import jdk.jfr.consumer.RecordedEvent;
  * any time.
  */
 public final class ThreadCountHandler implements RecordedEventHandler {
-  private static final String METRIC_NAME = "process.runtime.jvm.threads.count";
+  private static final String METRIC_NAME = "jvm.thread.count";
   private static final String EVENT_NAME = "jdk.JavaThreadStatistics";
   private static final String METRIC_DESCRIPTION = "Number of executing threads";
   private static final Attributes ATTR_DAEMON_TRUE = Attributes.of(Constants.ATTR_DAEMON, true);

@@ -13,11 +13,16 @@ otel:
         emit-experimental-telemetry: true
       server:
         emit-experimental-telemetry: true
+        capture-request-headers: [key]
   propagators:
     - b3
   resource:
     attributes:
       attributeFromYaml: true # boolean will be automatically converted to string by spring
+
+application:
+  prop: propValue
+  prop-with-dash: provWithDashValue
 
 spring:
   kafka:

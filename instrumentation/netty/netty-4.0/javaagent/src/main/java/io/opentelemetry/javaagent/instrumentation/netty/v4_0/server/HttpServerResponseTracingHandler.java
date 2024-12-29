@@ -31,14 +31,15 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
       return;
     }
 
+    customizeResponse(context, (HttpResponse) msg);
+
     try (Scope ignored = context.makeCurrent()) {
-      customizeResponse(context, (HttpResponse) msg);
       ctx.write(msg, prm);
-      end(ctx.channel(), (HttpResponse) msg, null);
-    } catch (Throwable throwable) {
-      end(ctx.channel(), (HttpResponse) msg, throwable);
-      throw throwable;
+    } catch (Throwable t) {
+      end(ctx.channel(), (HttpResponse) msg, t);
+      throw t;
     }
+    end(ctx.channel(), (HttpResponse) msg, null);
   }
 
   // make sure to remove the server context on end() call

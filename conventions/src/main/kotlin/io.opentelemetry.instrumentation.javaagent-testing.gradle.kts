@@ -104,8 +104,8 @@ afterEvaluate {
     val agentShadowJar = agentForTesting.resolve().first()
 
     dependsOn(shadowJar)
-    // TODO(anuraaga): Figure out why dependsOn override is still needed in otel.javaagent-testing
-    // despite this dependency.
+    // TODO: Figure out why dependsOn override is still needed in otel.javaagent-testing despite
+    // this dependency.
     dependsOn(agentForTesting.buildDependencies)
 
     jvmArgumentProviders.add(JavaagentTestArgumentsProvider(agentShadowJar, shadowJar.archiveFile.get().asFile))
@@ -119,8 +119,8 @@ afterEvaluate {
         return@filter false
       }
 
-      // TODO(anuraaga): Better not to have this naming constraint, we can likely use
-      // plugin identification instead.
+      // TODO: Better not to have this naming constraint, we can likely use plugin identification
+      // instead.
 
       val lib = it.absoluteFile
       if (lib.name.startsWith("opentelemetry-javaagent-")) {

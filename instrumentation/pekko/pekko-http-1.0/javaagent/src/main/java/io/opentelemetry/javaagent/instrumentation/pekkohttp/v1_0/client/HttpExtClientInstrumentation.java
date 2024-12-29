@@ -16,6 +16,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pekko.http.scaladsl.HttpExt;
@@ -39,46 +40,55 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class SingleRequestAdvice {
-
+    @Advice.AssignReturned.ToArguments(@ToArgument(value = 0, index = 0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
-        @Advice.Argument(value = 0, readOnly = false) HttpRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+    public static Object[] methodEnter(@Advice.Argument(value = 0) HttpRequest request) {
       Context parentContext = currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
+        return new Object[] {request, null, null};
       }
 
-      context = instrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+      Context context = instrumenter().start(parentContext, request);
+      Scope scope = context.makeCurrent();
+
       // Request is immutable, so we have to assign new value once we update headers
-      request = setter().inject(request);
+      HttpRequest modifiedRequest = setter().inject(request);
+
+      // Using array return form allows to provide at the same time
+      // - an argument value to override
+      // - propagate state from enter to exit advice
+      //
+      // As an array is already allocated we avoid creating another object
+      // by storing context and scope directly into the array.
+      return new Object[] {modifiedRequest, context, scope};
     }
 
+    @Advice.AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(
+    public static Future<HttpResponse> methodExit(
         @Advice.Argument(0) HttpRequest request,
         @Advice.This HttpExt thiz,
-        @Advice.Return(readOnly = false) Future<HttpResponse> responseFuture,
+        @Advice.Return Future<HttpResponse> responseFuture,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
+        @Advice.Enter Object[] enter) {
 
-      scope.close();
-      if (throwable == null) {
-        responseFuture.onComplete(
-            new OnCompleteHandler(context, request), thiz.system().dispatcher());
-      } else {
+      if (!(enter[1] instanceof Context) || !(enter[2] instanceof Scope)) {
+        return null;
+      }
+      ((Scope) enter[2]).close();
+      Context context = (Context) enter[1];
+
+      if (throwable != null) {
         instrumenter().end(context, request, null, throwable);
+        return responseFuture;
       }
-      if (responseFuture != null) {
-        responseFuture =
-            FutureWrapper.wrap(responseFuture, thiz.system().dispatcher(), currentContext());
+      if (responseFuture == null) {
+        return null;
       }
+      responseFuture.onComplete(
+          new OnCompleteHandler(context, request), thiz.system().dispatcher());
+
+      return FutureWrapper.wrap(responseFuture, thiz.system().dispatcher(), currentContext());
     }
   }
 }

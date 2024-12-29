@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.runtimemetrics.java17;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.ATTR_COMPRESSED_CLASS_SPACE;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.BYTES;
 import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_DESCRIPTION_MEMORY_LIMIT;
+import static io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants.METRIC_NAME_MEMORY_LIMIT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
@@ -26,7 +27,7 @@ class MetaspaceMemoryLimitMetricTest {
     jfrExtension.waitAndAssertMetrics(
         metric ->
             metric
-                .hasName("process.runtime.jvm.memory.limit")
+                .hasName(METRIC_NAME_MEMORY_LIMIT)
                 .hasUnit(BYTES)
                 .hasDescription(METRIC_DESCRIPTION_MEMORY_LIMIT)
                 .satisfies(

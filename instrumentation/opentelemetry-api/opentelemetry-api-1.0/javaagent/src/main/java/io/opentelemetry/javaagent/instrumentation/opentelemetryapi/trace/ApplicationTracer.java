@@ -18,6 +18,6 @@ public class ApplicationTracer implements Tracer {
 
   @Override
   public SpanBuilder spanBuilder(String spanName) {
-    return new ApplicationSpan.Builder(agentTracer.spanBuilder(spanName));
+    return new ApplicationSpanBuilder(agentTracer.spanBuilder(spanName));
   }
 }

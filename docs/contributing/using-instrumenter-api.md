@@ -84,14 +84,16 @@ Response decoratedMethod(Request request) {
   }
 
   Context context = instrumenter.start(parentContext, request);
+  Response response;
   try (Scope scope = context.makeCurrent()) {
-    Response response = actualMethod(request);
-    instrumenter.end(context, request, response, null);
-    return response;
-  } catch (Throwable error) {
-    instrumenter.end(context, request, null, error);
-    throw error;
+    response = actualMethod(request);
+  } catch (Throwable t) {
+    instrumenter.end(context, request, null, t);
+    throw t;
   }
+  // calling end after the scope is closed is a best practice
+  instrumenter.end(context, request, response, null);
+  return response;
 }
 ```
 

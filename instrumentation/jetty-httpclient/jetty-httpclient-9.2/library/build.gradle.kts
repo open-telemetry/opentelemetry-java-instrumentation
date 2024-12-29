@@ -10,5 +10,5 @@ dependencies {
 
   testImplementation(project(":instrumentation:jetty-httpclient::jetty-httpclient-9.2:testing"))
 
-  latestDepTestLibrary("org.eclipse.jetty:jetty-client:9.+")
+  latestDepTestLibrary("org.eclipse.jetty:jetty-client:9.+") // documented limitation
 }

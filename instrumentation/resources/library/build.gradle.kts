@@ -12,6 +12,7 @@ dependencies {
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service-annotations")
   testCompileOnly("com.google.auto.service:auto-service-annotations")
+  testImplementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
 
   testImplementation("org.junit.jupiter:junit-jupiter-api")
 }
@@ -66,5 +67,24 @@ tasks {
     manifest.attributes(
       "Multi-Release" to "true",
     )
+  }
+}
+
+testing {
+  suites {
+    // Security Manager tests involve setup that can poison the environment for other tests
+    val testSecurityManager by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":instrumentation:resources:library"))
+        implementation("io.opentelemetry:opentelemetry-sdk-common")
+        implementation("io.opentelemetry.semconv:opentelemetry-semconv-incubating")
+      }
+    }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
   }
 }

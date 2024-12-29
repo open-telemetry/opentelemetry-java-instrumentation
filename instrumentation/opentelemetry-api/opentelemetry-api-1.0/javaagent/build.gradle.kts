@@ -46,7 +46,7 @@ dependencies {
 configurations.configureEach {
   if (name == "testRuntimeClasspath" || name == "testCompileClasspath") {
     resolutionStrategy {
-      // earliest version that works with out test harness
+      // earliest version that works with our test harness
       force("io.opentelemetry:opentelemetry-api:1.4.0")
     }
   }

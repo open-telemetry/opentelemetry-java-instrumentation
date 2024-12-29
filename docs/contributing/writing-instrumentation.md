@@ -68,6 +68,47 @@ include("instrumentation:yarpc-1.0:library")
 include("instrumentation:yarpc-1.0:testing")
 ```
 
+### Instrumentation Submodules
+
+When writing instrumentation that requires submodules for different versions, the name of each
+submodule must be prefixed with the name of the parent directory (typically the library or
+framework name).
+
+As an example, if `yarpc` has instrumentation for two different versions, each version submodule
+must include the `yarpc` prefix before the version:
+
+```
+instrumentation ->
+    ...
+    yarpc ->
+      yarpc-1.0 ->
+        javaagent
+            build.gradle.kts
+        library
+            build.gradle.kts
+        testing
+            build.gradle.kts
+      yarpc-2.0 ->
+        javaagent
+            build.gradle.kts
+        library
+            build.gradle.kts
+        testing
+            build.gradle.kts
+```
+
+After creating the submodules, they must be registered in the settings.gradle.kts file. Include each
+submodule explicitly to ensure it is recognized and built as part of the project. For example:
+
+```kotlin
+include(":instrumentation:yarpc:yarpc-1.0:javaagent")
+include(":instrumentation:yarpc:yarpc-1.0:library")
+include(":instrumentation:yarpc:yarpc-1.0:testing")
+include(":instrumentation:yarpc:yarpc-2.0:javaagent")
+include(":instrumentation:yarpc:yarpc-2.0:library")
+include(":instrumentation:yarpc:yarpc-2.0:testing")
+```
+
 ## Writing library instrumentation
 
 Start by creating the `build.gradle.kts` file in the `library`

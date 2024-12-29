@@ -8,9 +8,11 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
+import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.kafka.DefaultKafkaProducerFactoryCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,13 +35,29 @@ public class KafkaInstrumentationAutoConfiguration {
     return producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::wrap);
   }
 
+  @Bean
+  static SpringKafkaTelemetry getTelemetry(
+      ObjectProvider<OpenTelemetry> openTelemetryProvider,
+      ObjectProvider<ConfigProperties> configPropertiesProvider) {
+    return SpringKafkaTelemetry.builder(openTelemetryProvider.getObject())
+        .setCaptureExperimentalSpanAttributes(
+            configPropertiesProvider
+                .getObject()
+                .getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
+        .build();
+  }
+
   // static to avoid "is not eligible for getting processed by all BeanPostProcessors" warning
   @Bean
+  @ConditionalOnProperty(
+      name = "otel.instrumentation.kafka.autoconfigure-interceptor",
+      havingValue = "true",
+      matchIfMissing = true)
   static ConcurrentKafkaListenerContainerFactoryPostProcessor
       otelKafkaListenerContainerFactoryBeanPostProcessor(
           ObjectProvider<OpenTelemetry> openTelemetryProvider,
           ObjectProvider<ConfigProperties> configPropertiesProvider) {
     return new ConcurrentKafkaListenerContainerFactoryPostProcessor(
-        openTelemetryProvider, configPropertiesProvider);
+        () -> getTelemetry(openTelemetryProvider, configPropertiesProvider));
   }
 }

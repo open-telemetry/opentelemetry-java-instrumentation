@@ -16,6 +16,12 @@ muzzle {
     versions.set("[1.0,)")
     assertInverse.set(true)
   }
+  pass {
+    group.set("org.apache.pekko")
+    module.set("pekko-actor_3")
+    versions.set("[1.0,)")
+    assertInverse.set(true)
+  }
 }
 
 dependencies {

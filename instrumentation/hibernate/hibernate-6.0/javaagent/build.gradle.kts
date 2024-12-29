@@ -35,7 +35,17 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
 }
 
-tasks.withType<Test>().configureEach {
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+tasks {
+  withType<Test>().configureEach {
+    // TODO run tests both with and without experimental span attributes
+    jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
 }

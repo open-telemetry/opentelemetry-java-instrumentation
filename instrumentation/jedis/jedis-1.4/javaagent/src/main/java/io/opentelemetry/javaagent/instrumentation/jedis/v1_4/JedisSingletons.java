@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -33,6 +34,7 @@ public final class JedisSingletons {
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     netAttributesGetter, AgentCommonConfig.get().getPeerServiceResolver()))
+            .addOperationMetrics(DbClientMetrics.get())
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

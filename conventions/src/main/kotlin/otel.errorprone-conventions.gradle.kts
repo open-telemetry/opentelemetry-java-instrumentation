@@ -90,7 +90,7 @@ tasks {
         disable("TypeParameterNaming")
 
         // In bytecode instrumentation it's very common to separate across onEnter / onExit
-        // TODO(anuraaga): Only disable for javaagent instrumentation modules.
+        // TODO: Only disable for javaagent instrumentation modules.
         disable("MustBeClosedChecker")
 
         // Common to avoid an allocation. Revisit if it's worth opt-in suppressing instead of
@@ -101,16 +101,15 @@ tasks {
         disable("JdkObsolete")
         disable("JavaUtilDate")
 
-        // TODO(anuraaga): Remove this, we use this pattern in several tests and it will mean
-        // some moving.
+        // TODO: Remove this, we use this pattern in several tests and it will mean some moving.
         disable("DefaultPackage")
 
         // we use modified Otel* checks which ignore *Advice classes
         disable("PrivateConstructorForUtilityClass")
         disable("CanIgnoreReturnValueSuggester")
 
-        // TODO(anuraaga): Remove this, probably after instrumenter API migration instead of dealing
-        // with older APIs.
+        // TODO: Remove this, probably after instrumenter API migration instead of dealing with
+        // older APIs.
         disable("InconsistentOverloads")
 
         // lots of low level APIs use arrays

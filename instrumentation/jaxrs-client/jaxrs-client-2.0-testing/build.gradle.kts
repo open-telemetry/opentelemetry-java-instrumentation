@@ -18,6 +18,9 @@ dependencies {
   testInstrumentation(project(":instrumentation:http-url-connection:javaagent"))
   testInstrumentation(project(":instrumentation:java-http-client:javaagent"))
 
+  // there's no test coverage beyond this, but there's no reason to believe it wouldn't work
+  // also note that this isn't really documented on supported-libraries.md because there's not
+  // really any instrumentation for it, as it just relies on other http client instrumentations
   latestDepTestLibrary("org.glassfish.jersey.inject:jersey-hk2:2.+")
   latestDepTestLibrary("org.glassfish.jersey.core:jersey-client:2.+")
   latestDepTestLibrary("org.jboss.resteasy:resteasy-client:3.0.26.Final")

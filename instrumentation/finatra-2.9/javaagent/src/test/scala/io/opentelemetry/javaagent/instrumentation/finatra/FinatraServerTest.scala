@@ -79,7 +79,9 @@ class FinatraServerTest extends AbstractHttpServerTest[HttpServer] {
     if (endpoint == ServerEndpoint.EXCEPTION) {
       span
         .hasStatus(StatusData.error())
-        .hasException(new Exception(ServerEndpoint.EXCEPTION.getBody))
+        .hasException(
+          new IllegalStateException(ServerEndpoint.EXCEPTION.getBody)
+        )
     }
 
     span

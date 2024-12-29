@@ -7,14 +7,16 @@ package io.opentelemetry.instrumentation.awssdk.v2_2
 
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
-import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.ServerAttributes
 import io.opentelemetry.semconv.UrlAttributes
+import io.opentelemetry.semconv.incubating.AwsIncubatingAttributes
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
+import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus
 import io.opentelemetry.testing.internal.armeria.common.MediaType
+import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.MockWebServerExtension
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
 import software.amazon.awssdk.core.client.builder.SdkClientBuilder
@@ -23,7 +25,6 @@ import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.DynamoDbAsyncClient
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.*
-import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.MockWebServerExtension
 import spock.lang.Shared
 import spock.lang.Unroll
 
@@ -31,7 +32,7 @@ import java.util.concurrent.Future
 
 import static com.google.common.collect.ImmutableMap.of
 import static io.opentelemetry.api.trace.SpanKind.CLIENT
-
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable
 
 @Unroll
 abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
@@ -146,10 +147,10 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
             "$RpcIncubatingAttributes.RPC_SERVICE" "DynamoDb"
             "$RpcIncubatingAttributes.RPC_METHOD" "CreateTable"
             "aws.agent" "java-aws-sdk"
-            "aws.requestId" "$requestId"
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" "$requestId"
             "aws.table.name" "sometable"
             "$DbIncubatingAttributes.DB_SYSTEM" "dynamodb"
-            "$DbIncubatingAttributes.DB_OPERATION" "CreateTable"
+            "${maybeStable(DbIncubatingAttributes.DB_OPERATION)}" "CreateTable"
             "aws.dynamodb.global_secondary_indexes" "[{\"IndexName\":\"globalIndex\",\"KeySchema\":[{\"AttributeName\":\"attribute\"}],\"ProvisionedThroughput\":{\"ReadCapacityUnits\":10,\"WriteCapacityUnits\":12}},{\"IndexName\":\"globalIndexSecondary\",\"KeySchema\":[{\"AttributeName\":\"attributeSecondary\"}],\"ProvisionedThroughput\":{\"ReadCapacityUnits\":7,\"WriteCapacityUnits\":8}}]"
             "aws.dynamodb.provisioned_throughput.read_capacity_units" "1"
             "aws.dynamodb.provisioned_throughput.write_capacity_units" "1"
@@ -179,10 +180,10 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
             "$RpcIncubatingAttributes.RPC_SERVICE" "DynamoDb"
             "$RpcIncubatingAttributes.RPC_METHOD" "Query"
             "aws.agent" "java-aws-sdk"
-            "aws.requestId" "$requestId"
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" "$requestId"
             "aws.table.name" "sometable"
             "$DbIncubatingAttributes.DB_SYSTEM" "dynamodb"
-            "$DbIncubatingAttributes.DB_OPERATION" "Query"
+            "${maybeStable(DbIncubatingAttributes.DB_OPERATION)}" "Query"
             "aws.dynamodb.limit" "10"
             "aws.dynamodb.select" "ALL_ATTRIBUTES"
           }
@@ -211,10 +212,10 @@ abstract class AbstractAws2ClientCoreTest extends InstrumentationSpecification {
             "$RpcIncubatingAttributes.RPC_SERVICE" "$service"
             "$RpcIncubatingAttributes.RPC_METHOD" "${operation}"
             "aws.agent" "java-aws-sdk"
-            "aws.requestId" "$requestId"
+            "$AwsIncubatingAttributes.AWS_REQUEST_ID" "$requestId"
             "aws.table.name" "sometable"
             "$DbIncubatingAttributes.DB_SYSTEM" "dynamodb"
-            "$DbIncubatingAttributes.DB_OPERATION" "${operation}"
+            "${maybeStable(DbIncubatingAttributes.DB_OPERATION)}" "${operation}"
           }
         }
       }

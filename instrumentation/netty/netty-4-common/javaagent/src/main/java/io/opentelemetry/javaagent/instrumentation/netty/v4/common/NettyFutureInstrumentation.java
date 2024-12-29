@@ -19,6 +19,7 @@ import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -58,22 +59,30 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
   public static class AddListenerAdvice {
 
     @Advice.OnMethodEnter
-    public static void wrapListener(
-        @Advice.Argument(value = 0, readOnly = false)
-            GenericFutureListener<? extends Future<?>> listener) {
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
+    public static GenericFutureListener<? extends Future<?>> wrapListener(
+        @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>> listenerArg) {
+
+      // TODO remove this extra variable when migrating to "indy only" instrumentation.
+      GenericFutureListener<? extends Future<?>> listener = listenerArg;
       if (FutureListenerWrappers.shouldWrap(listener)) {
         listener = FutureListenerWrappers.wrap(Java8BytecodeBridge.currentContext(), listener);
       }
+      return listener;
     }
   }
 
   @SuppressWarnings("unused")
   public static class AddListenersAdvice {
 
+    // here the AsScalar allows to assign the value of the returned array to the argument value,
+    // otherwise it's considered to be an Object[] that contains the arguments/return value/thrown
+    // exception assignments that bytebuddy has to do after the advice is invoked.
     @Advice.OnMethodEnter
-    public static void wrapListener(
-        @Advice.Argument(value = 0, readOnly = false)
-            GenericFutureListener<? extends Future<?>>[] listeners) {
+    @Advice.AssignReturned.AsScalar
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
+    public static Object[] wrapListener(
+        @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>>[] listeners) {
 
       Context context = Java8BytecodeBridge.currentContext();
       @SuppressWarnings({"unchecked", "rawtypes"})
@@ -86,7 +95,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
           wrappedListeners[i] = listeners[i];
         }
       }
-      listeners = wrappedListeners;
+      return wrappedListeners;
     }
   }
 
@@ -94,20 +103,24 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
   public static class RemoveListenerAdvice {
 
     @Advice.OnMethodEnter
-    public static void wrapListener(
-        @Advice.Argument(value = 0, readOnly = false)
-            GenericFutureListener<? extends Future<?>> listener) {
-      listener = FutureListenerWrappers.getWrapper(listener);
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
+    public static GenericFutureListener<? extends Future<?>> wrapListener(
+        @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>> listener) {
+      return FutureListenerWrappers.getWrapper(listener);
     }
   }
 
   @SuppressWarnings("unused")
   public static class RemoveListenersAdvice {
 
+    // here the AsScalar allows to assign the value of the returned array to the argument value,
+    // otherwise it's considered to be an Object[] that contains the arguments/return value/thrown
+    // exception assignments that bytebuddy has to do after the advice is invoked.
     @Advice.OnMethodEnter
-    public static void wrapListener(
-        @Advice.Argument(value = 0, readOnly = false)
-            GenericFutureListener<? extends Future<?>>[] listeners) {
+    @Advice.AssignReturned.AsScalar
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
+    public static Object[] wrapListener(
+        @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>>[] listeners) {
 
       @SuppressWarnings({"unchecked", "rawtypes"})
       GenericFutureListener<? extends Future<?>>[] wrappedListeners =
@@ -115,7 +128,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
       for (int i = 0; i < listeners.length; ++i) {
         wrappedListeners[i] = FutureListenerWrappers.getWrapper(listeners[i]);
       }
-      listeners = wrappedListeners;
+      return wrappedListeners;
     }
   }
 }

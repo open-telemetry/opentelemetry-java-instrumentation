@@ -5,12 +5,17 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
+import io.opentelemetry.javaagent.bootstrap.InstrumentationProxy;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.List;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.method.ParameterDescription;
+import net.bytebuddy.description.modifier.SyntheticState;
+import net.bytebuddy.description.modifier.Visibility;
+import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
@@ -68,6 +73,9 @@ public class IndyProxyFactory {
 
   private static final String DELEGATE_FIELD_NAME = "delegate";
 
+  // Matches the single method of IndyProxy interface
+  static final String PROXY_DELEGATE_NAME = "__getIndyProxyDelegate";
+
   private final MethodDescription.InDefinedShape indyBootstrapMethod;
 
   private final BootstrapArgsProvider bootstrapArgsProvider;
@@ -87,10 +95,12 @@ public class IndyProxyFactory {
   public DynamicType.Unloaded<?> generateProxy(
       TypeDescription classToProxy, String proxyClassName) {
     TypeDescription.Generic superClass = classToProxy.getSuperClass();
+    List<TypeDefinition> interfaces = new ArrayList<>(classToProxy.getInterfaces());
+    interfaces.add(TypeDescription.ForLoadedType.of(InstrumentationProxy.class));
     DynamicType.Builder<?> builder =
         new ByteBuddy()
             .subclass(superClass, ConstructorStrategy.Default.NO_CONSTRUCTORS)
-            .implement(classToProxy.getInterfaces())
+            .implement(interfaces)
             .name(proxyClassName)
             .annotateType(classToProxy.getDeclaredAnnotations())
             .defineField(DELEGATE_FIELD_NAME, Object.class, Modifier.PRIVATE | Modifier.FINAL);
@@ -108,6 +118,14 @@ public class IndyProxyFactory {
         }
       }
     }
+
+    // Implement IndyProxy class and return the delegate field
+    builder =
+        builder
+            .defineMethod(
+                PROXY_DELEGATE_NAME, Object.class, Visibility.PUBLIC, SyntheticState.SYNTHETIC)
+            .intercept(FieldAccessor.ofField(DELEGATE_FIELD_NAME));
+
     return builder.make();
   }
 

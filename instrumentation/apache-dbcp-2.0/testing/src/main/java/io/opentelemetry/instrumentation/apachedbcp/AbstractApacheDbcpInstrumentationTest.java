@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.apachedbcp;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -75,7 +76,9 @@ public abstract class AbstractApacheDbcpInstrumentationTest {
     Set<String> metricNames =
         new HashSet<>(
             Arrays.asList(
-                "db.client.connections.usage",
+                emitStableDatabaseSemconv()
+                    ? "db.client.connection.count"
+                    : "db.client.connections.usage",
                 "db.client.connections.idle.min",
                 "db.client.connections.idle.max",
                 "db.client.connections.max"));

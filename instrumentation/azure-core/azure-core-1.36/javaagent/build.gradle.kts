@@ -33,6 +33,12 @@ dependencies {
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
 
+tasks {
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  }
+}
+
 testing {
   suites {
     // using a test suite to ensure that classes from library-instrumentation-shaded that were
@@ -41,8 +47,10 @@ testing {
       dependencies {
         if (latestDepTest) {
           implementation("com.azure:azure-core:+")
+          implementation("com.azure:azure-core-test:+")
         } else {
           implementation("com.azure:azure-core:1.36.0")
+          implementation("com.azure:azure-core-test:1.16.2")
         }
       }
     }

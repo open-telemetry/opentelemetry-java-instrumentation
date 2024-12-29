@@ -28,8 +28,7 @@ val finatraLatest by configurations.creating {
 }
 
 dependencies {
-  // TODO(anuraaga): Something about library configuration doesn't work well with scala compilation
-  // here.
+  // TODO: Something about library configuration doesn't work well with scala compilation here.
   compileOnly("com.twitter:finatra-http_2.11:2.9.0")
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))

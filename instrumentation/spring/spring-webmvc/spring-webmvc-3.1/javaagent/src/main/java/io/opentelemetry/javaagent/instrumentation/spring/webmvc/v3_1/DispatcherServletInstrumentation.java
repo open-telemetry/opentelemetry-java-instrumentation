@@ -15,6 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.bootstrap.InstrumentationProxyHelper;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
@@ -61,13 +62,14 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
     public static void afterRefresh(
         @Advice.Argument(0) ApplicationContext springCtx,
         @Advice.FieldValue("handlerMappings") List<HandlerMapping> handlerMappings) {
-      if (springCtx.containsBean("otelAutoDispatcherFilter")) {
-        OpenTelemetryHandlerMappingFilter filter =
-            (OpenTelemetryHandlerMappingFilter) springCtx.getBean("otelAutoDispatcherFilter");
-        if (handlerMappings != null && filter != null) {
-          filter.setHandlerMappings(handlerMappings);
-        }
+
+      if (handlerMappings == null || !springCtx.containsBean("otelAutoDispatcherFilter")) {
+        return;
       }
+      Object bean = springCtx.getBean("otelAutoDispatcherFilter");
+      OpenTelemetryHandlerMappingFilter filter =
+          InstrumentationProxyHelper.unwrapIfNeeded(bean, OpenTelemetryHandlerMappingFilter.class);
+      filter.setHandlerMappings(handlerMappings);
     }
   }
 

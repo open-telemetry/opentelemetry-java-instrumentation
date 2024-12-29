@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import java.util.List;
 import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
@@ -86,8 +87,11 @@ final class RocketMqInstrumenterFactory {
             .addAttributesExtractor(RocketMqConsumerProcessAttributeExtractor.INSTANCE)
             .setSpanStatusExtractor(
                 (spanStatusBuilder, messageView, consumeResult, error) -> {
-                  if (error != null || consumeResult == ConsumeResult.FAILURE) {
+                  if (consumeResult == ConsumeResult.FAILURE) {
                     spanStatusBuilder.setStatus(StatusCode.ERROR);
+                  } else {
+                    SpanStatusExtractor.getDefault()
+                        .extract(spanStatusBuilder, messageView, consumeResult, error);
                   }
                 });
 

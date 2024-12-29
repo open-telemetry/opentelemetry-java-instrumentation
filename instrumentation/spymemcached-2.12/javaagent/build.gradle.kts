@@ -20,8 +20,18 @@ dependencies {
   testImplementation("com.google.guava:guava")
 }
 
-tasks.withType<Test>().configureEach {
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.spymemcached.experimental-span-attributes=true")
-  usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+tasks {
+  withType<Test>().configureEach {
+    // TODO run tests both with and without experimental span attributes
+    jvmArgs("-Dotel.instrumentation.spymemcached.experimental-span-attributes=true")
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
 }

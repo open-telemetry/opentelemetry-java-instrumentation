@@ -11,11 +11,13 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class JerseyInstrumentationModule extends InstrumentationModule {
+public class JerseyInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public JerseyInstrumentationModule() {
     super("jaxrs", "jaxrs-2.0", "jersey", "jersey-2.0");
   }
@@ -26,11 +28,9 @@ public class JerseyInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isIndyModule() {
-    // net.bytebuddy.pool.TypePool$Resolution$NoSuchTypeException: Cannot resolve type description
-    // for
-    // io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.Servlet3SnippetInjectingResponseWrapper
-    return false;
+  public String getModuleGroup() {
+    // depends on Servlet3SnippetInjectingResponseWrapper
+    return "servlet";
   }
 
   @Override

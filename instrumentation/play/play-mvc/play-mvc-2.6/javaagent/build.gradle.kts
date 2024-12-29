@@ -35,8 +35,7 @@ otelJava {
 }
 
 dependencies {
-  // TODO(anuraaga): Something about library configuration doesn't work well with scala compilation
-  // here.
+  // TODO: Something about library configuration doesn't work well with scala compilation here.
   compileOnly("com.typesafe.play:play_$scalaVersion:$playVersion")
 
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
@@ -60,19 +59,20 @@ testing {
   }
 }
 
+val testLatestDeps = findProperty("testLatestDeps") as Boolean
 tasks {
-  if (findProperty("testLatestDeps") as Boolean) {
+  if (testLatestDeps) {
     // disable regular test running and compiling tasks when latest dep test task is run
     named("test") {
       enabled = false
     }
-    named("compileTestGroovy") {
+    named("compileTestJava") {
       enabled = false
     }
+  }
 
-    check {
-      dependsOn(testing.suites)
-    }
+  check {
+    dependsOn(testing.suites)
   }
 }
 

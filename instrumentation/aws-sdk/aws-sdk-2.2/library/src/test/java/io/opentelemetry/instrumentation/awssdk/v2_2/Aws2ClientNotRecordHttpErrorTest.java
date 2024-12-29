@@ -12,7 +12,8 @@ import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 
 public class Aws2ClientNotRecordHttpErrorTest extends AbstractAws2ClientRecordHttpErrorTest {
   @RegisterExtension
-  public final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  public static final LibraryInstrumentationExtension testing =
+      LibraryInstrumentationExtension.create();
 
   @Override
   public ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder() {

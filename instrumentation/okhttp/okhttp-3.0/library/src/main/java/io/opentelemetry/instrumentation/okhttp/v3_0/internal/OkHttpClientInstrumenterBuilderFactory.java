@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.okhttp.v3_0.internal;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
-import okhttp3.Request;
+import okhttp3.Interceptor;
 import okhttp3.Response;
 
 /**
@@ -19,9 +19,9 @@ public class OkHttpClientInstrumenterBuilderFactory {
 
   private OkHttpClientInstrumenterBuilderFactory() {}
 
-  public static DefaultHttpClientInstrumenterBuilder<Request, Response> create(
+  public static DefaultHttpClientInstrumenterBuilder<Interceptor.Chain, Response> create(
       OpenTelemetry openTelemetry) {
-    return new DefaultHttpClientInstrumenterBuilder<>(
+    return DefaultHttpClientInstrumenterBuilder.create(
         INSTRUMENTATION_NAME, openTelemetry, OkHttpAttributesGetter.INSTANCE);
   }
 }

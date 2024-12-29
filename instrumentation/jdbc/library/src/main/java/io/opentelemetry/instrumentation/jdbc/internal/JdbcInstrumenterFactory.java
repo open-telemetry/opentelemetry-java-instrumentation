@@ -9,6 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -52,6 +53,7 @@ public final class JdbcInstrumenterFactory {
                 .setStatementSanitizationEnabled(statementSanitizationEnabled)
                 .build())
         .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
+        .addOperationMetrics(DbClientMetrics.get())
         .setEnabled(enabled)
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }

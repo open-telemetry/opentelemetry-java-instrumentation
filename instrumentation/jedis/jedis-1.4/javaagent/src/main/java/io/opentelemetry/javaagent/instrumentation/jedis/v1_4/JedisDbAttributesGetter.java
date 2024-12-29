@@ -17,10 +17,11 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
       RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
   @Override
-  public String getSystem(JedisRequest request) {
-    return DbIncubatingAttributes.DbSystemValues.REDIS;
+  public String getDbSystem(JedisRequest request) {
+    return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(JedisRequest request) {
@@ -28,22 +29,23 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   }
 
   @Override
-  public String getName(JedisRequest request) {
+  public String getDbNamespace(JedisRequest request) {
     return null;
   }
 
+  @Deprecated
   @Override
   public String getConnectionString(JedisRequest request) {
     return null;
   }
 
   @Override
-  public String getStatement(JedisRequest request) {
+  public String getDbQueryText(JedisRequest request) {
     return sanitizer.sanitize(request.getCommand().name(), request.getArgs());
   }
 
   @Override
-  public String getOperation(JedisRequest request) {
+  public String getDbOperationName(JedisRequest request) {
     return request.getCommand().name();
   }
 }

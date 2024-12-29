@@ -10,6 +10,9 @@ sourceSets {
   main {
     val armeriaShadedDeps = project(":testing:armeria-shaded-for-testing")
     output.dir(armeriaShadedDeps.file("build/extracted/shadow"), "builtBy" to ":testing:armeria-shaded-for-testing:extractShadowJar")
+
+    val protoShadedDeps = project(":testing:proto-shaded-for-testing")
+    output.dir(protoShadedDeps.file("build/extracted/shadow"), "builtBy" to ":testing:proto-shaded-for-testing:extractShadowJar")
   }
 }
 
@@ -47,12 +50,11 @@ dependencies {
   api("org.slf4j:slf4j-api")
 
   compileOnly(project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
+  compileOnly(project(":testing:proto-shaded-for-testing", configuration = "shadow"))
   compileOnly(project(":javaagent-bootstrap"))
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
-
-  implementation("io.opentelemetry.proto:opentelemetry-proto")
 
   implementation("net.bytebuddy:byte-buddy")
   implementation("ch.qos.logback:logback-classic")

@@ -11,6 +11,8 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
@@ -27,6 +29,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 
 class SpringBootBasedTest extends AbstractSpringBootBasedTest {
 
@@ -73,6 +76,9 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
       span.hasName(handlerSpanName)
           .hasKind(SpanKind.INTERNAL)
           .hasStatus(StatusData.error())
+          .hasAttributesSatisfyingExactly(
+              equalTo(CODE_NAMESPACE, ResourceHttpRequestHandler.class.getName()),
+              equalTo(CODE_FUNCTION, "handleRequest"))
           .hasEventsSatisfyingExactly(
               event ->
                   event

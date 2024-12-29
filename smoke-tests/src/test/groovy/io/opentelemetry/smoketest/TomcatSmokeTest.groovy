@@ -64,6 +64,14 @@ class Tomcat8Jdk21 extends TomcatSmokeTest {
 class Tomcat8Jdk21Openj9 extends TomcatSmokeTest {
 }
 
+@AppServer(version = "8.5.98", jdk = "23")
+class Tomcat8Jdk23 extends TomcatSmokeTest {
+}
+
+@AppServer(version = "8.5.98", jdk = "23-openj9")
+class Tomcat8Jdk23Openj9 extends TomcatSmokeTest {
+}
+
 @AppServer(version = "9.0.85", jdk = "8")
 class Tomcat9Jdk8 extends TomcatSmokeTest {
 }
@@ -96,6 +104,14 @@ class Tomcat9Jdk21 extends TomcatSmokeTest {
 class Tomcat9Jdk21Openj9 extends TomcatSmokeTest {
 }
 
+@AppServer(version = "9.0.85", jdk = "23")
+class Tomcat9Jdk23 extends TomcatSmokeTest {
+}
+
+@AppServer(version = "9.0.85", jdk = "23-openj9")
+class Tomcat9Jdk23Openj9 extends TomcatSmokeTest {
+}
+
 @AppServer(version = "10.1.18", jdk = "11")
 class Tomcat10Jdk11 extends TomcatSmokeTest {
 }
@@ -118,4 +134,12 @@ class Tomcat10Jdk21 extends TomcatSmokeTest {
 
 @AppServer(version = "10.1.18", jdk = "21-openj9")
 class Tomcat10Jdk21Openj9 extends TomcatSmokeTest {
+}
+
+@AppServer(version = "10.1.18", jdk = "23")
+class Tomcat10Jdk23 extends TomcatSmokeTest {
+}
+
+@AppServer(version = "10.1.18", jdk = "23-openj9")
+class Tomcat10Jdk23Openj9 extends TomcatSmokeTest {
 }

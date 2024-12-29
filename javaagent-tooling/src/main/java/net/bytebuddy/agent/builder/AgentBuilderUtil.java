@@ -21,6 +21,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder.Default.Transformation;
+import net.bytebuddy.matcher.BooleanMatcher;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ErasureMatcher;
 import net.bytebuddy.matcher.HasSuperClassMatcher;
@@ -144,7 +145,7 @@ public class AgentBuilderUtil {
       ElementMatcher<?> elementMatcher =
           getDelegateMatcher((AgentBuilder.RawMatcher.ForElementMatchers) matcher);
       Result result = inspect(elementMatcher);
-      if (result == null && logger.isLoggable(FINE)) {
+      if (result == null && logger.isLoggable(FINE) && shouldLog(elementMatcher)) {
         logger.log(Level.FINE, "Could not decompose matcher {0}", elementMatcher);
       }
       return result;
@@ -307,6 +308,10 @@ public class AgentBuilderUtil {
     } catch (NoSuchFieldException e) {
       throw new IllegalStateException(e);
     }
+  }
+
+  private static boolean shouldLog(ElementMatcher<?> elementMatcher) {
+    return !(elementMatcher instanceof BooleanMatcher);
   }
 
   private static class TransformContext extends AgentBuilder.Listener.Adapter {

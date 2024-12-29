@@ -9,8 +9,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import rx.Observable;
+import rx.OpenTelemetryTracingUtil;
 import rx.Subscriber;
-import rx.__OpenTelemetryTracingUtil;
 
 public final class TracedOnSubscribe<T, REQUEST> implements Observable.OnSubscribe<T> {
   private final Observable.OnSubscribe<T> delegate;
@@ -20,7 +20,7 @@ public final class TracedOnSubscribe<T, REQUEST> implements Observable.OnSubscri
 
   public TracedOnSubscribe(
       Observable<T> originalObservable, Instrumenter<REQUEST, ?> instrumenter, REQUEST request) {
-    delegate = __OpenTelemetryTracingUtil.extractOnSubscribe(originalObservable);
+    delegate = OpenTelemetryTracingUtil.extractOnSubscribe(originalObservable);
     this.instrumenter = instrumenter;
     this.request = request;
 

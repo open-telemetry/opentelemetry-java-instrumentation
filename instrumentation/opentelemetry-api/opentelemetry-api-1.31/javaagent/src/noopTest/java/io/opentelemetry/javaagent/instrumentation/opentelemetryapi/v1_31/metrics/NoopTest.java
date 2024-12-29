@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_31.metrics;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.metrics.DoubleGaugeBuilder;
@@ -29,15 +30,19 @@ class NoopTest {
     Meter meter = testing.getOpenTelemetry().getMeter("test");
 
     LongCounterBuilder counterBuilder = meter.counterBuilder("test");
-    assertThat(counterBuilder).isNotInstanceOf(ExtendedLongCounterBuilder.class);
+    assertThat(counterBuilder).isInstanceOf(ExtendedLongCounterBuilder.class);
+    ((ExtendedLongCounterBuilder) counterBuilder).setAttributesAdvice(emptyList());
 
     LongUpDownCounterBuilder upDownCounterBuilder = meter.upDownCounterBuilder("test");
-    assertThat(upDownCounterBuilder).isNotInstanceOf(ExtendedLongUpDownCounterBuilder.class);
+    assertThat(upDownCounterBuilder).isInstanceOf(ExtendedLongUpDownCounterBuilder.class);
+    ((ExtendedLongUpDownCounterBuilder) upDownCounterBuilder).setAttributesAdvice(emptyList());
 
     DoubleGaugeBuilder gaugeBuilder = meter.gaugeBuilder("test");
-    assertThat(gaugeBuilder).isNotInstanceOf(ExtendedDoubleGaugeBuilder.class);
+    assertThat(gaugeBuilder).isInstanceOf(ExtendedDoubleGaugeBuilder.class);
+    ((ExtendedDoubleGaugeBuilder) gaugeBuilder).setAttributesAdvice(emptyList());
 
     DoubleHistogramBuilder histogramBuilder = meter.histogramBuilder("test");
-    assertThat(histogramBuilder).isNotInstanceOf(ExtendedDoubleHistogramBuilder.class);
+    assertThat(histogramBuilder).isInstanceOf(ExtendedDoubleHistogramBuilder.class);
+    ((ExtendedDoubleHistogramBuilder) histogramBuilder).setAttributesAdvice(emptyList());
   }
 }

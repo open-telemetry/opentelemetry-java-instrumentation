@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.r2dbc.v1_0.internal;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -36,7 +37,7 @@ public final class R2dbcInstrumenterBuilder {
   }
 
   @CanIgnoreReturnValue
-  public R2dbcInstrumenterBuilder addAttributeExtractor(
+  public R2dbcInstrumenterBuilder addAttributesExtractor(
       AttributesExtractor<DbExecution, Void> attributesExtractor) {
     additionalExtractors.add(attributesExtractor);
     return this;
@@ -58,6 +59,7 @@ public final class R2dbcInstrumenterBuilder {
                 .build())
         .addAttributesExtractor(ServerAttributesExtractor.create(R2dbcNetAttributesGetter.INSTANCE))
         .addAttributesExtractors(additionalExtractors)
+        .addOperationMetrics(DbClientMetrics.get())
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 }

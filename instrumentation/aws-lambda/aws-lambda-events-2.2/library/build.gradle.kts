@@ -28,7 +28,7 @@ dependencies {
   // We need Jackson for wrappers to reproduce the serialization does when Lambda invokes a RequestHandler with event
   // since Lambda will only be able to invoke the wrapper itself with a generic Object.
   // Note that Lambda itself uses Jackson, but does not expose it to the function so we need to include it here.
-  // TODO(anuraaga): Switch to aws-lambda-java-serialization to more robustly follow Lambda's serialization logic.
+  // TODO: Switch to aws-lambda-java-serialization to more robustly follow Lambda's serialization logic.
   implementation("com.fasterxml.jackson.core:jackson-databind")
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
 

@@ -33,6 +33,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureMarkerAttribute = false;
   private boolean captureKeyValuePairAttributes = false;
   private boolean captureLoggerContext = false;
+  private boolean captureArguments = false;
+  private boolean captureLogstashAttributes = false;
   private List<String> captureMdcAttributes = emptyList();
 
   private volatile OpenTelemetry openTelemetry;
@@ -79,6 +81,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             .setCaptureMarkerAttribute(captureMarkerAttribute)
             .setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes)
             .setCaptureLoggerContext(captureLoggerContext)
+            .setCaptureArguments(captureArguments)
+            .setCaptureLogstashAttributes(captureLogstashAttributes)
             .build();
     eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
     super.start();
@@ -164,6 +168,24 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     this.captureLoggerContext = captureLoggerContext;
   }
 
+  /**
+   * Sets whether the arguments should be set to logs.
+   *
+   * @param captureArguments To enable or disable capturing logger arguments
+   */
+  public void setCaptureArguments(boolean captureArguments) {
+    this.captureArguments = captureArguments;
+  }
+
+  /**
+   * Sets whether the Logstash attributes should be set to logs.
+   *
+   * @param captureLogstashAttributes To enable or disable capturing Logstash attributes
+   */
+  public void setCaptureLogstashAttributes(boolean captureLogstashAttributes) {
+    this.captureLogstashAttributes = captureLogstashAttributes;
+  }
+
   /** Configures the {@link MDC} attributes that will be copied to logs. */
   public void setCaptureMdcAttributes(String attributes) {
     if (attributes != null) {
@@ -193,7 +215,10 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     try {
       // minimize scope of write lock
       this.openTelemetry = openTelemetry;
-      this.eventsToReplay.drainTo(eventsToReplay);
+      // tests set openTelemetry to null, ignore it
+      if (openTelemetry != null) {
+        this.eventsToReplay.drainTo(eventsToReplay);
+      }
     } finally {
       writeLock.unlock();
     }

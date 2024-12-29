@@ -20,7 +20,7 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
   void configure(AwsSdkTelemetryBuilder telemetryBuilder) {}
 
   @Override
-  boolean isSqsAttributeInjectionEnabled() {
+  protected boolean isSqsAttributeInjectionEnabled() {
     return false;
   }
 

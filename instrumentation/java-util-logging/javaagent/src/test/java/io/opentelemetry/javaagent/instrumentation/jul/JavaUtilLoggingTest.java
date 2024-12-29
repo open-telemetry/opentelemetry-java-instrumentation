@@ -8,13 +8,15 @@ package io.opentelemetry.javaagent.instrumentation.jul;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -117,11 +119,10 @@ class JavaUtilLoggingTest {
             .hasAttributesSatisfyingExactly(
                 equalTo(ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
                 equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
-                equalTo(ExceptionAttributes.EXCEPTION_TYPE, IllegalStateException.class.getName()),
-                equalTo(ExceptionAttributes.EXCEPTION_MESSAGE, "hello"),
+                equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
+                equalTo(EXCEPTION_MESSAGE, "hello"),
                 satisfies(
-                    ExceptionAttributes.EXCEPTION_STACKTRACE,
-                    v -> v.contains(JavaUtilLoggingTest.class.getName())));
+                    EXCEPTION_STACKTRACE, v -> v.contains(JavaUtilLoggingTest.class.getName())));
       } else {
         assertThat(log)
             .hasAttributesSatisfyingExactly(

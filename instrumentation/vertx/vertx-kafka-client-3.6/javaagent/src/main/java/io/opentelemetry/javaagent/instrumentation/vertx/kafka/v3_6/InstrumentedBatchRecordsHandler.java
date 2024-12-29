@@ -42,15 +42,13 @@ public final class InstrumentedBatchRecordsHandler<K, V> implements Handler<Cons
     boolean previousWrappingEnabled = KafkaClientsConsumerProcessTracing.setEnabled(false);
     try {
       Context context = batchProcessInstrumenter().start(parentContext, request);
-      Throwable error = null;
       try (Scope ignored = context.makeCurrent()) {
         callDelegateHandler(records);
       } catch (Throwable t) {
-        error = t;
+        batchProcessInstrumenter().end(context, request, null, t);
         throw t;
-      } finally {
-        batchProcessInstrumenter().end(context, request, null, error);
       }
+      batchProcessInstrumenter().end(context, request, null, null);
     } finally {
       KafkaClientsConsumerProcessTracing.setEnabled(previousWrappingEnabled);
     }

@@ -18,6 +18,13 @@ muzzle {
     assertInverse.set(true)
     extraDependency("org.apache.pekko:pekko-stream_2.13:1.0.1")
   }
+  pass {
+    group.set("org.apache.pekko")
+    module.set("pekko-http_3")
+    versions.set("[1.0,)")
+    assertInverse.set(true)
+    extraDependency("org.apache.pekko:pekko-stream_3:1.0.1")
+  }
 }
 
 dependencies {

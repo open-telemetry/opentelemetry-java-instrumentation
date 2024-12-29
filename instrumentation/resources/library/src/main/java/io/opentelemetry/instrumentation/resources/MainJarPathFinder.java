@@ -44,9 +44,14 @@ class MainJarPathFinder {
   @Nullable
   private Path getJarPathFromProcessHandle() {
     String[] javaArgs = getProcessHandleArguments.get();
-    for (int i = 0; i < javaArgs.length; ++i) {
-      if ("-jar".equals(javaArgs[i]) && (i < javaArgs.length - 1)) {
-        return Paths.get(javaArgs[i + 1]);
+    boolean jarOptionFound = false;
+    for (String javaArg : javaArgs) {
+      if ("-jar".equals(javaArg)) {
+        jarOptionFound = true;
+      } else if (jarOptionFound
+          && !javaArg.startsWith(
+              "-")) { // flags can appear between -jar and the jar path, ignore them
+        return Paths.get(javaArg);
       }
     }
     return null;

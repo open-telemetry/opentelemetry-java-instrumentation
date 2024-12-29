@@ -46,7 +46,7 @@ public class DelayedControllerSpringWebFluxServerTest extends ControllerSpringWe
     protected <T> Mono<T> wrapControllerMethod(ServerEndpoint endpoint, Supplier<T> handler) {
       return Mono.just("")
           .delayElement(Duration.ofMillis(10))
-          .map(unused -> controller(endpoint, handler));
+          .map(unused -> controller(endpoint, handler::get));
     }
   }
 }

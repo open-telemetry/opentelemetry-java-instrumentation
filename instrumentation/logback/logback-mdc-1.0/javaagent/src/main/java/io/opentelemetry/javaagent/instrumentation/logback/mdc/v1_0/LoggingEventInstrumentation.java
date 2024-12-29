@@ -22,7 +22,6 @@ import io.opentelemetry.api.baggage.BaggageEntry;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.instrumentation.logback.mdc.v1_0.internal.UnionMap;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
@@ -74,6 +73,9 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
       }
 
       Map<String, String> spanContextData = new HashMap<>();
+      if (contextData != null) {
+        spanContextData.putAll(contextData);
+      }
 
       SpanContext spanContext = Java8BytecodeBridge.spanFromContext(context).getSpanContext();
 
@@ -96,11 +98,7 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
         }
       }
 
-      if (contextData == null) {
-        contextData = spanContextData;
-      } else {
-        contextData = new UnionMap<>(contextData, spanContextData);
-      }
+      contextData = spanContextData;
     }
   }
 }

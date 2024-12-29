@@ -16,7 +16,7 @@ class LettuceSyncClientAuthTest extends AbstractLettuceSyncClientTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Override
-  public InstrumentationExtension getInstrumentationExtension() {
+  public InstrumentationExtension testing() {
     return testing;
   }
 

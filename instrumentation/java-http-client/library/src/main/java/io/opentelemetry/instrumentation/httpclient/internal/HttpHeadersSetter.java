@@ -25,13 +25,13 @@ public final class HttpHeadersSetter {
     this.contextPropagators = contextPropagators;
   }
 
-  public HttpHeaders inject(HttpHeaders original) {
+  public HttpHeaders inject(HttpHeaders original, Context context) {
     Map<String, List<String>> headerMap = new HashMap<>(original.map());
 
     contextPropagators
         .getTextMapPropagator()
         .inject(
-            Context.current(),
+            context,
             headerMap,
             (carrier, key, value) -> {
               if (carrier != null) {

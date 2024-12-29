@@ -20,11 +20,12 @@ import jdk.jfr.consumer.RecordedEvent;
  * any time.
  */
 public final class OverallCpuLoadHandler implements RecordedEventHandler {
-  private static final String METRIC_NAME_PROCESS = "process.runtime.jvm.cpu.utilization";
-  private static final String METRIC_NAME_MACHINE = "process.runtime.jvm.system.cpu.utilization";
-  private static final String METRIC_DESCRIPTION_PROCESS = "Recent CPU utilization for the process";
+  private static final String METRIC_NAME_PROCESS = "jvm.cpu.recent_utilization";
+  private static final String METRIC_NAME_MACHINE = "jvm.system.cpu.utilization";
+  private static final String METRIC_DESCRIPTION_PROCESS =
+      "Recent CPU utilization for the process as reported by the JVM.";
   private static final String METRIC_DESCRIPTION_MACHINE =
-      "Recent CPU utilization for the whole system";
+      "Recent CPU utilization for the whole system as reported by the JVM.";
 
   private static final String EVENT_NAME = "jdk.CPULoad";
   private static final String JVM_USER = "jvmUser";

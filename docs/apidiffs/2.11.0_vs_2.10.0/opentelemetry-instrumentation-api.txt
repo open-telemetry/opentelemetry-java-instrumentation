@@ -1,0 +1,2 @@
+Comparing source compatibility of opentelemetry-instrumentation-api-2.11.0.jar against opentelemetry-instrumentation-api-2.10.0.jar
+No changes.

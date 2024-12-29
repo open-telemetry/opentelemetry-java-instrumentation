@@ -18,8 +18,8 @@ dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
 
-  latestDepTestLibrary("com.sun.xml.ws:jaxws-rt:2.+")
-  latestDepTestLibrary("com.sun.xml.stream.buffer:streambuffer:1.+")
+  latestDepTestLibrary("com.sun.xml.ws:jaxws-rt:2.+") // see jaxws-3.0-metro-2.2-testing module
+  latestDepTestLibrary("com.sun.xml.stream.buffer:streambuffer:1.+") // see jaxws-3.0-metro-2.2-testing module
 }
 
 tasks.withType<Test>().configureEach {

@@ -11,12 +11,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.SchemaUrls;
 import io.opentelemetry.semconv.incubating.HostIncubatingAttributes;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.condition.EnabledOnJre;
-import org.junit.jupiter.api.condition.JRE;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 class HostResourceTest {
   @Test
@@ -29,19 +24,5 @@ class HostResourceTest {
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
     assertThat(attributes.get(HostIncubatingAttributes.HOST_NAME)).isNotBlank();
     assertThat(attributes.get(HostIncubatingAttributes.HOST_ARCH)).isNotBlank();
-  }
-
-  @Nested
-  @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-  @ExtendWith(SecurityManagerExtension.class)
-  @EnabledOnJre(
-      value = {JRE.JAVA_8, JRE.JAVA_11, JRE.JAVA_16},
-      disabledReason = "Java 17 deprecates security manager for removal")
-  static class SecurityManagerEnabled {
-    @Test
-    void empty() {
-      Attributes attributes = HostResource.buildResource().getAttributes();
-      assertThat(attributes.asMap()).containsOnlyKeys(HostIncubatingAttributes.HOST_NAME);
-    }
   }
 }

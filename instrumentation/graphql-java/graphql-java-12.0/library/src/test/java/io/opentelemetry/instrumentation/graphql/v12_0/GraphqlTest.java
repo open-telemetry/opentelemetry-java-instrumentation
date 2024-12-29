@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class GraphqlTest extends AbstractGraphqlTest {
+class GraphqlTest extends AbstractGraphqlTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();

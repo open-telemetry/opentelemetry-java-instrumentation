@@ -10,12 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.SchemaUrls;
 import io.opentelemetry.semconv.incubating.OsIncubatingAttributes;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.condition.EnabledOnJre;
-import org.junit.jupiter.api.condition.JRE;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junitpioneer.jupiter.SetSystemProperty;
 
 class OsResourceTest {
@@ -26,7 +21,7 @@ class OsResourceTest {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE))
-        .isEqualTo(OsIncubatingAttributes.OsTypeValues.LINUX);
+        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.LINUX);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
   }
 
@@ -36,7 +31,7 @@ class OsResourceTest {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE))
-        .isEqualTo(OsIncubatingAttributes.OsTypeValues.DARWIN);
+        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.DARWIN);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
   }
 
@@ -46,7 +41,7 @@ class OsResourceTest {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE))
-        .isEqualTo(OsIncubatingAttributes.OsTypeValues.WINDOWS);
+        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.WINDOWS);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
   }
 
@@ -56,7 +51,7 @@ class OsResourceTest {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE))
-        .isEqualTo(OsIncubatingAttributes.OsTypeValues.FREEBSD);
+        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.FREEBSD);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
   }
 
@@ -66,7 +61,7 @@ class OsResourceTest {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE))
-        .isEqualTo(OsIncubatingAttributes.OsTypeValues.NETBSD);
+        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.NETBSD);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
   }
 
@@ -76,7 +71,7 @@ class OsResourceTest {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE))
-        .isEqualTo(OsIncubatingAttributes.OsTypeValues.OPENBSD);
+        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.OPENBSD);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
   }
 
@@ -86,7 +81,7 @@ class OsResourceTest {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE))
-        .isEqualTo(OsIncubatingAttributes.OsTypeValues.DRAGONFLYBSD);
+        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.DRAGONFLYBSD);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
   }
 
@@ -96,7 +91,7 @@ class OsResourceTest {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE))
-        .isEqualTo(OsIncubatingAttributes.OsTypeValues.HPUX);
+        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.HPUX);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
   }
 
@@ -106,7 +101,7 @@ class OsResourceTest {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE))
-        .isEqualTo(OsIncubatingAttributes.OsTypeValues.AIX);
+        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.AIX);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
   }
 
@@ -116,7 +111,7 @@ class OsResourceTest {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE))
-        .isEqualTo(OsIncubatingAttributes.OsTypeValues.SOLARIS);
+        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.SOLARIS);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
   }
 
@@ -126,7 +121,7 @@ class OsResourceTest {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE))
-        .isEqualTo(OsIncubatingAttributes.OsTypeValues.Z_OS);
+        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.Z_OS);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
   }
 
@@ -137,18 +132,5 @@ class OsResourceTest {
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE)).isNull();
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
-  }
-
-  @Nested
-  @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-  @ExtendWith(SecurityManagerExtension.class)
-  @EnabledOnJre(
-      value = {JRE.JAVA_8, JRE.JAVA_11, JRE.JAVA_16},
-      disabledReason = "Java 17 deprecates security manager for removal")
-  static class SecurityManagerEnabled {
-    @Test
-    void empty() {
-      assertThat(OsResource.buildResource()).isEqualTo(Resource.empty());
-    }
   }
 }

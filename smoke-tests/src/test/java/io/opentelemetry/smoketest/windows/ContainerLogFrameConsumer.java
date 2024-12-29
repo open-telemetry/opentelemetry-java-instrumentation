@@ -7,7 +7,7 @@ package io.opentelemetry.smoketest.windows;
 
 import com.github.dockerjava.api.async.ResultCallbackTemplate;
 import com.github.dockerjava.api.model.Frame;
-import com.google.common.base.Charsets;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,7 +31,7 @@ public class ContainerLogFrameConsumer
 
     if (lineType != null) {
       byte[] bytes = frame.getPayload();
-      String text = bytes == null ? "" : new String(bytes, Charsets.UTF_8);
+      String text = bytes == null ? "" : new String(bytes, StandardCharsets.UTF_8);
 
       for (Listener listener : listeners) {
         listener.accept(lineType, text);

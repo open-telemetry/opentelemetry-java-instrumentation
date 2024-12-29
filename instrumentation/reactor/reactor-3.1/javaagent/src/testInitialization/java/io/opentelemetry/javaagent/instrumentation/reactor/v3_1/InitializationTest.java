@@ -23,7 +23,7 @@ class InitializationTest {
 
     // If reactor augmentation of WithSpan is working correctly, we will end up with these
     // implementation details.
-    // TODO(anuraaga): This should just check actual context propagation instead of implementation
+    // TODO: This should just check actual context propagation instead of implementation
     // but couldn't figure out how.
     assertThat(((Scannable) mono).parents().collect(Collectors.toList()))
         .anySatisfy(

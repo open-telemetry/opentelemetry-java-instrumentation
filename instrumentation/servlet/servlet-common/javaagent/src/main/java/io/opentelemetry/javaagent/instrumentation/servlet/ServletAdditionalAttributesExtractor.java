@@ -37,6 +37,7 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
       Context parentContext,
       ServletRequestContext<REQUEST> requestContext) {}
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   public void onEnd(
       AttributesBuilder attributes,

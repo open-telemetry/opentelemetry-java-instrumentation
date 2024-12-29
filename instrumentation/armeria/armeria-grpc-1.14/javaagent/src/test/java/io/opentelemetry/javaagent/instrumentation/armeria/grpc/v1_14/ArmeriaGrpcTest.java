@@ -6,6 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.armeria.grpc.v1_14;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.linecorp.armeria.client.grpc.GrpcClients;
@@ -18,9 +24,7 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.RpcIncubatingAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -53,6 +57,7 @@ class ArmeriaGrpcTest {
         }
       };
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void grpcInstrumentation() {
     GreeterGrpc.GreeterBlockingStub client =
@@ -74,14 +79,12 @@ class ArmeriaGrpcTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"),
-                            equalTo(RpcIncubatingAttributes.RPC_SERVICE, "example.Greeter"),
-                            equalTo(RpcIncubatingAttributes.RPC_METHOD, "SayHello"),
-                            equalTo(
-                                RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE,
-                                (long) Status.Code.OK.value()),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(ServerAttributes.SERVER_PORT, (long) server.httpPort()))
+                            equalTo(RPC_SYSTEM, "grpc"),
+                            equalTo(RPC_SERVICE, "example.Greeter"),
+                            equalTo(RPC_METHOD, "SayHello"),
+                            equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(SERVER_PORT, (long) server.httpPort()))
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event
@@ -101,14 +104,12 @@ class ArmeriaGrpcTest {
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"),
-                            equalTo(RpcIncubatingAttributes.RPC_SERVICE, "example.Greeter"),
-                            equalTo(RpcIncubatingAttributes.RPC_METHOD, "SayHello"),
-                            equalTo(
-                                RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE,
-                                (long) Status.Code.OK.value()),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(ServerAttributes.SERVER_PORT, server.httpPort()))
+                            equalTo(RPC_SYSTEM, "grpc"),
+                            equalTo(RPC_SERVICE, "example.Greeter"),
+                            equalTo(RPC_METHOD, "SayHello"),
+                            equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(SERVER_PORT, server.httpPort()))
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event

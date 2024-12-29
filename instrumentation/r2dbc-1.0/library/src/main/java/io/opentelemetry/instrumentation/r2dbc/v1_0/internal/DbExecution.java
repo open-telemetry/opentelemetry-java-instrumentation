@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  * any time.
  */
 public final class DbExecution {
-  // copied from DbIncubatingAttributes.DbSystemValues
+  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
   private static final String OTHER_SQL = "other_sql";
 
   private final String system;
@@ -34,7 +34,7 @@ public final class DbExecution {
   private final String host;
   private final Integer port;
   private final String connectionString;
-  private final String rawStatement;
+  private final String rawQueryText;
 
   private Context context;
 
@@ -66,7 +66,7 @@ public final class DbExecution {
             protocol != null ? ":" + protocol : "",
             host != null ? "//" + host : "",
             port != null ? ":" + port : "");
-    this.rawStatement =
+    this.rawQueryText =
         queryInfo.getQueries().stream().map(QueryInfo::getQuery).collect(Collectors.joining(";\n"));
   }
 
@@ -94,8 +94,8 @@ public final class DbExecution {
     return connectionString;
   }
 
-  public String getRawStatement() {
-    return rawStatement;
+  public String getRawQueryText() {
+    return rawQueryText;
   }
 
   public Context getContext() {
@@ -127,7 +127,7 @@ public final class DbExecution {
         + connectionString
         + '\''
         + ", rawStatement='"
-        + rawStatement
+        + rawQueryText
         + '\''
         + ", context="
         + context

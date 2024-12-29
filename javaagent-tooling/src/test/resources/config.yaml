@@ -1,0 +1,20 @@
+instrumentation:
+  java:
+    common:
+      default-enabled: true
+    runtime-telemetry:
+      enabled: false
+    external-annotations:
+      enabled: true
+    example-instrumentation:
+      string_key: value
+      bool_key: true
+      int_key: 1
+      double_key: 1.1
+      list_key:
+        - value1
+        - value2
+      map_key:
+        string_key1: value1
+        string_key2: value2
+        bool_key: true

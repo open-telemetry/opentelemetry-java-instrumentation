@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.reactive.v1_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -294,6 +296,7 @@ class HibernateReactiveTest {
     }
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static void assertTrace() {
     testing.waitAndAssertTraces(
         trace ->
@@ -304,13 +307,13 @@ class HibernateReactiveTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_NAME, DB),
-                            equalTo(DB_USER, USER_DB),
+                            equalTo(maybeStable(DB_NAME), DB),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
                             equalTo(
-                                DB_STATEMENT,
+                                maybeStable(DB_STATEMENT),
                                 "select value0_.id as id1_0_0_, value0_.name as name2_0_0_ from Value value0_ where value0_.id=$1"),
-                            equalTo(DB_OPERATION, "SELECT"),
-                            equalTo(DB_SQL_TABLE, "Value"),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Value"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port)),
                 span ->

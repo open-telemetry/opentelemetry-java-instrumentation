@@ -58,7 +58,7 @@ public final class NetworkWriteHandler extends AbstractThreadDispatchingHandler 
         meter
             .histogramBuilder(Constants.METRIC_NAME_NETWORK_DURATION)
             .setDescription(Constants.METRIC_DESCRIPTION_NETWORK_DURATION)
-            .setUnit(Constants.MILLISECONDS)
+            .setUnit(Constants.SECONDS)
             .build();
   }
 
@@ -99,7 +99,7 @@ public final class NetworkWriteHandler extends AbstractThreadDispatchingHandler 
     @Override
     public void accept(RecordedEvent ev) {
       bytesHistogram.record(ev.getLong(BYTES_WRITTEN), attributes);
-      durationHistogram.record(DurationUtil.toMillis(ev.getDuration()), attributes);
+      durationHistogram.record(DurationUtil.toSeconds(ev.getDuration()), attributes);
     }
   }
 }

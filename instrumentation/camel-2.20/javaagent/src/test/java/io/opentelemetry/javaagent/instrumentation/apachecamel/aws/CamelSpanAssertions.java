@@ -8,10 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.aws;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 
 class CamelSpanAssertions {
 
@@ -31,7 +32,7 @@ class CamelSpanAssertions {
             equalTo(
                 stringKey("camel.uri"),
                 "aws-sqs://" + queueName + "?amazonSQSClient=%23sqsClient&delay=1000"),
-            equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, queueName));
+            equalTo(MESSAGING_DESTINATION_NAME, queueName));
   }
 
   static SpanDataAssert sqsConsume(SpanDataAssert span, String queueName) {
@@ -45,10 +46,9 @@ class CamelSpanAssertions {
             equalTo(
                 stringKey("camel.uri"),
                 "aws-sqs://" + queueName + "?amazonSQSClient=%23sqsClient&delay=" + delay),
-            equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, queueName),
+            equalTo(MESSAGING_DESTINATION_NAME, queueName),
             satisfies(
-                MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID,
-                stringAssert -> stringAssert.isInstanceOf(String.class)));
+                MESSAGING_MESSAGE_ID, stringAssert -> stringAssert.isInstanceOf(String.class)));
   }
 
   static SpanDataAssert snsPublish(SpanDataAssert span, String topicName) {
@@ -57,7 +57,7 @@ class CamelSpanAssertions {
         .hasAttributesSatisfying(
             equalTo(
                 stringKey("camel.uri"), "aws-sns://" + topicName + "?amazonSNSClient=%23snsClient"),
-            equalTo(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, topicName));
+            equalTo(MESSAGING_DESTINATION_NAME, topicName));
   }
 
   static SpanDataAssert s3(SpanDataAssert span, String bucketName) {

@@ -51,25 +51,25 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
   public static class ChannelPipelineAdd2ArgsAdvice {
 
     @Advice.OnMethodEnter
-    public static void checkDepth(
-        @Advice.This ChannelPipeline pipeline,
-        @Advice.Argument(1) ChannelHandler handler,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+    public static CallDepth checkDepth(
+        @Advice.This ChannelPipeline pipeline, @Advice.Argument(1) ChannelHandler handler) {
       // Pipelines are created once as a factory and then copied multiple times using the same add
       // methods as we are hooking. If our handler has already been added we need to remove it so we
       // don't end up with duplicates (this throws an exception)
       if (pipeline.get(handler.getClass().getName()) != null) {
         pipeline.remove(handler.getClass().getName());
       }
-      callDepth = CallDepth.forClass(ChannelPipeline.class);
+      CallDepth callDepth = CallDepth.forClass(ChannelPipeline.class);
       callDepth.getAndIncrement();
+      return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void addHandler(
         @Advice.This ChannelPipeline pipeline,
         @Advice.Argument(1) ChannelHandler handler,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.Enter CallDepth callDepth) {
+
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
@@ -82,29 +82,28 @@ public class NettyChannelPipelineInstrumentation implements TypeInstrumentation 
   public static class ChannelPipelineAdd3ArgsAdvice {
 
     @Advice.OnMethodEnter
-    public static void checkDepth(
-        @Advice.This ChannelPipeline pipeline,
-        @Advice.Argument(2) ChannelHandler handler,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+    public static CallDepth checkDepth(
+        @Advice.This ChannelPipeline pipeline, @Advice.Argument(2) ChannelHandler handler) {
       // Pipelines are created once as a factory and then copied multiple times using the same add
       // methods as we are hooking. If our handler has already been added we need to remove it so we
       // don't end up with duplicates (this throws an exception)
       if (pipeline.get(handler.getClass().getName()) != null) {
         pipeline.remove(handler.getClass().getName());
       }
-      callDepth = CallDepth.forClass(ChannelPipeline.class);
+      CallDepth callDepth = CallDepth.forClass(ChannelPipeline.class);
       callDepth.getAndIncrement();
+      return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void addHandler(
         @Advice.This ChannelPipeline pipeline,
         @Advice.Argument(2) ChannelHandler handler,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.Enter CallDepth callDepth) {
+
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
-
       ChannelPipelineUtil.wrapHandler(pipeline, handler);
     }
   }

@@ -5,6 +5,10 @@
 
 package io.opentelemetry.instrumentation.ratpack.client;
 
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+
 import io.netty.channel.ConnectTimeoutException;
 import io.netty.handler.timeout.ReadTimeoutException;
 import io.opentelemetry.api.common.AttributeKey;
@@ -14,6 +18,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import java.net.URI;
 import java.time.Duration;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.AfterAll;
@@ -29,13 +34,13 @@ import ratpack.test.exec.ExecHarness;
 
 public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void> {
 
-  private final ExecHarness exec = ExecHarness.harness();
+  protected final ExecHarness exec = ExecHarness.harness();
 
-  private HttpClient client;
-  private HttpClient singleConnectionClient;
+  protected HttpClient client;
+  protected HttpClient singleConnectionClient;
 
   @BeforeAll
-  void setUpClient() throws Exception {
+  protected void setUpClient() throws Exception {
     exec.run(
         unused -> {
           client = buildHttpClient();
@@ -66,7 +71,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
   @Override
   public int sendRequest(Void request, String method, URI uri, Map<String, String> headers)
       throws Exception {
-    return exec.yield(unused -> internalSendRequest(client, method, uri, headers))
+    return exec.yield(execution -> internalSendRequest(client, method, uri, headers))
         .getValueOrThrow();
   }
 
@@ -78,13 +83,17 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
       Map<String, String> headers,
       HttpClientResult httpClientResult)
       throws Exception {
-    exec.execute(
-        Operation.of(
-            () ->
-                internalSendRequest(client, method, uri, headers)
-                    .result(
-                        result ->
-                            httpClientResult.complete(result::getValue, result.getThrowable()))));
+    exec.yield(
+            (e) ->
+                Operation.of(
+                        () ->
+                            internalSendRequest(client, method, uri, headers)
+                                .result(
+                                    result ->
+                                        httpClientResult.complete(
+                                            result::getValue, result.getThrowable())))
+                    .promise())
+        .getValueOrThrow();
   }
 
   // overridden in RatpackForkedHttpClientTest
@@ -118,39 +127,21 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
                   .getValueOrThrow();
             });
 
-    optionsBuilder.setExpectedClientSpanNameMapper(
-        (uri, method) -> {
-          switch (uri.toString()) {
-            case "http://localhost:61/": // unopened port
-            case "https://192.0.2.1/": // non routable address
-              return "CONNECT";
-            default:
-              return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(
-                  uri, method);
-          }
-        });
+    if (useNettyClientAttributes()) {
+      optionsBuilder.setExpectedClientSpanNameMapper(
+          AbstractRatpackHttpClientTest::nettyExpectedClientSpanNameMapper);
+    }
 
     optionsBuilder.setClientSpanErrorMapper(
-        (uri, exception) -> {
-          if (uri.toString().equals("https://192.0.2.1/")) {
-            return new ConnectTimeoutException(
-                "connection timed out"
-                    + (Boolean.getBoolean("testLatestDeps") ? " after 2000 ms" : "")
-                    + ": /192.0.2.1:443");
-          } else if (OS.WINDOWS.isCurrentOs() && uri.toString().equals("http://localhost:61/")) {
-            return new ConnectTimeoutException("connection timed out: localhost/127.0.0.1:61");
-          } else if (uri.getPath().equals("/read-timeout")) {
-            return ReadTimeoutException.INSTANCE;
-          }
-          return exception;
-        });
+        AbstractRatpackHttpClientTest::nettyClientSpanErrorMapper);
 
     optionsBuilder.setHttpAttributes(this::computeHttpAttributes);
 
     optionsBuilder.disableTestRedirects();
-
     // these tests will pass, but they don't really test anything since REQUEST is Void
     optionsBuilder.disableTestReusedRequest();
+
+    optionsBuilder.spanEndsAfterBody();
   }
 
   protected Set<AttributeKey<?>> computeHttpAttributes(URI uri) {
@@ -159,7 +150,45 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
       case "https://192.0.2.1/": // non routable address
         return Collections.emptySet();
       default:
-        return HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES;
+        HashSet<AttributeKey<?>> attributes =
+            new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+        if (useNettyClientAttributes()) {
+          // underlying netty instrumentation does not provide these
+          attributes.remove(SERVER_ADDRESS);
+          attributes.remove(SERVER_PORT);
+        } else {
+          // ratpack client instrumentation does not provide this
+          attributes.remove(NETWORK_PROTOCOL_VERSION);
+        }
+        return attributes;
+    }
+  }
+
+  protected boolean useNettyClientAttributes() {
+    return true;
+  }
+
+  private static Throwable nettyClientSpanErrorMapper(URI uri, Throwable exception) {
+    if (uri.toString().equals("https://192.0.2.1/")) {
+      return new ConnectTimeoutException(
+          "connection timed out"
+              + (Boolean.getBoolean("testLatestDeps") ? " after 2000 ms" : "")
+              + ": /192.0.2.1:443");
+    } else if (OS.WINDOWS.isCurrentOs() && uri.toString().equals("http://localhost:61/")) {
+      return new ConnectTimeoutException("connection timed out: localhost/127.0.0.1:61");
+    } else if (uri.getPath().equals("/read-timeout")) {
+      return ReadTimeoutException.INSTANCE;
+    }
+    return exception;
+  }
+
+  private static String nettyExpectedClientSpanNameMapper(URI uri, String method) {
+    switch (uri.toString()) {
+      case "http://localhost:61/": // unopened port
+      case "https://192.0.2.1/": // non routable address
+        return "CONNECT";
+      default:
+        return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(uri, method);
     }
   }
 }

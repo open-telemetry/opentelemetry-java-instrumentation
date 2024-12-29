@@ -52,9 +52,15 @@ public class DefineClassInstrumentation implements TypeInstrumentation {
           classLoader, className, classBytes, offset, length);
     }
 
+    // TODO: the ToReturned does nothing except for signaling the AdviceTransformer that it must
+    // not touch this advice
+    // this is done because we do not want the return values to be wrapped in array types
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Enter DefineClassContext context) {
+    @Advice.AssignReturned.ToReturned
+    public static Class<?> onExit(
+        @Advice.Enter DefineClassContext context, @Advice.Return Class<?> returned) {
       DefineClassHelper.afterDefineClass(context);
+      return returned;
     }
   }
 
@@ -68,9 +74,15 @@ public class DefineClassInstrumentation implements TypeInstrumentation {
       return DefineClassHelper.beforeDefineClass(classLoader, className, classBytes);
     }
 
+    // TODO: the ToReturned does nothing except for signaling the AdviceTransformer that it must
+    // not touch this advice
+    // this is done because we do not want the return values to be wrapped in array types
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Enter DefineClassContext context) {
+    @Advice.AssignReturned.ToReturned
+    public static Class<?> onExit(
+        @Advice.Enter DefineClassContext context, @Advice.Return Class<?> returned) {
       DefineClassHelper.afterDefineClass(context);
+      return returned;
     }
   }
 }

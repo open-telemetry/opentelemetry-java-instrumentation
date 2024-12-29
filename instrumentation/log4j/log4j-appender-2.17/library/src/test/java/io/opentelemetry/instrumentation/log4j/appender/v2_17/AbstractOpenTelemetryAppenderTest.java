@@ -9,21 +9,27 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FILEPATH;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_LINENO;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
-import io.opentelemetry.sdk.logs.SdkLoggerProvider;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.sdk.logs.export.SimpleLogRecordProcessor;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter;
-import io.opentelemetry.semconv.ExceptionAttributes;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -34,6 +40,8 @@ import org.apache.logging.log4j.core.impl.Log4jLogEvent;
 import org.apache.logging.log4j.message.FormattedMessage;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
+import org.assertj.core.api.AbstractLongAssert;
+import org.assertj.core.api.AssertAccess;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -42,30 +50,18 @@ abstract class AbstractOpenTelemetryAppenderTest {
 
   static final Logger logger = LogManager.getLogger("TestLogger");
 
-  static InMemoryLogRecordExporter logRecordExporter;
   static Resource resource;
   static InstrumentationScopeInfo instrumentationScopeInfo;
-  static OpenTelemetry openTelemetry;
 
   void executeAfterLogsExecution() {}
 
   @BeforeAll
   static void setupAll() {
-    logRecordExporter = InMemoryLogRecordExporter.create();
     resource = Resource.getDefault();
     instrumentationScopeInfo = InstrumentationScopeInfo.create("TestLogger");
-
-    SdkLoggerProvider loggerProvider =
-        SdkLoggerProvider.builder()
-            .setResource(resource)
-            .addLogRecordProcessor(SimpleLogRecordProcessor.create(logRecordExporter))
-            .build();
-
-    openTelemetry = OpenTelemetrySdk.builder().setLoggerProvider(loggerProvider).build();
   }
 
   static void generalBeforeEachSetup() {
-    logRecordExporter.reset();
     ThreadContext.clearAll();
   }
 
@@ -75,12 +71,14 @@ abstract class AbstractOpenTelemetryAppenderTest {
     OpenTelemetryAppender.install(null);
   }
 
+  protected abstract InstrumentationExtension getTesting();
+
   @Test
   void initializeWithBuilder() {
     OpenTelemetryAppender appender =
         OpenTelemetryAppender.builder()
             .setName("OpenTelemetryAppender")
-            .setOpenTelemetry(openTelemetry)
+            .setOpenTelemetry(getTesting().getOpenTelemetry())
             .build();
     appender.start();
 
@@ -91,9 +89,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
 
     executeAfterLogsExecution();
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
-    assertThat(logDataList)
-        .satisfiesExactly(logRecordData -> assertThat(logDataList.get(0)).hasBody("log message 1"));
+    getTesting().waitAndAssertLogRecords(logRecord -> logRecord.hasBody("log message 1"));
   }
 
   @Test
@@ -102,13 +98,18 @@ abstract class AbstractOpenTelemetryAppenderTest {
 
     executeAfterLogsExecution();
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
-    assertThat(logDataList).hasSize(1);
-    assertThat(logDataList.get(0))
-        .hasResource(resource)
-        .hasInstrumentationScope(instrumentationScopeInfo)
-        .hasBody("log message 1")
-        .hasAttributes(Attributes.empty());
+    getTesting()
+        .waitAndAssertLogRecords(
+            logRecord ->
+                logRecord
+                    .hasResource(resource)
+                    .hasInstrumentationScope(instrumentationScopeInfo)
+                    .hasBody("log message 1")
+                    .hasAttributesSatisfyingExactly(
+                        addLocationAttributes(
+                            "logNoSpan",
+                            equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                            equalTo(THREAD_ID, Thread.currentThread().getId()))));
   }
 
   @Test
@@ -117,9 +118,8 @@ abstract class AbstractOpenTelemetryAppenderTest {
 
     executeAfterLogsExecution();
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
-    assertThat(logDataList).hasSize(1);
-    assertThat(logDataList.get(0).getSpanContext()).isEqualTo(SpanContext.getInvalid());
+    getTesting()
+        .waitAndAssertLogRecords(logRecord -> logRecord.hasSpanContext(SpanContext.getInvalid()));
   }
 
   @Test
@@ -129,22 +129,29 @@ abstract class AbstractOpenTelemetryAppenderTest {
 
     executeAfterLogsExecution();
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
-    assertThat(logDataList).hasSize(1);
-    assertThat(logDataList.get(0))
-        .hasResource(resource)
-        .hasInstrumentationScope(instrumentationScopeInfo)
-        .hasBody("log message 1")
-        .hasSeverity(Severity.INFO)
-        .hasSeverityText("INFO")
-        .hasAttributesSatisfyingExactly(
-            equalTo(ExceptionAttributes.EXCEPTION_TYPE, IllegalStateException.class.getName()),
-            equalTo(ExceptionAttributes.EXCEPTION_MESSAGE, "Error!"),
-            satisfies(ExceptionAttributes.EXCEPTION_STACKTRACE, v -> v.contains("logWithExtras")));
+    getTesting()
+        .waitAndAssertLogRecords(
+            logRecord -> {
+              logRecord
+                  .hasResource(resource)
+                  .hasInstrumentationScope(instrumentationScopeInfo)
+                  .hasBody("log message 1")
+                  .hasSeverity(Severity.INFO)
+                  .hasSeverityText("INFO")
+                  .hasAttributesSatisfyingExactly(
+                      addLocationAttributes(
+                          "logWithExtras",
+                          equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                          equalTo(THREAD_ID, Thread.currentThread().getId()),
+                          equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
+                          equalTo(EXCEPTION_MESSAGE, "Error!"),
+                          satisfies(EXCEPTION_STACKTRACE, v -> v.contains("logWithExtras"))));
 
-    assertThat(logDataList.get(0).getTimestampEpochNanos())
-        .isGreaterThanOrEqualTo(MILLISECONDS.toNanos(start.toEpochMilli()))
-        .isLessThanOrEqualTo(MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
+              LogRecordData logRecordData = AssertAccess.getActual(logRecord);
+              assertThat(logRecordData.getTimestampEpochNanos())
+                  .isGreaterThanOrEqualTo(MILLISECONDS.toNanos(start.toEpochMilli()))
+                  .isLessThanOrEqualTo(MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
+            });
   }
 
   @Test
@@ -159,14 +166,20 @@ abstract class AbstractOpenTelemetryAppenderTest {
 
     executeAfterLogsExecution();
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
-    assertThat(logDataList).hasSize(1);
-    assertThat(logDataList.get(0))
-        .hasResource(resource)
-        .hasInstrumentationScope(instrumentationScopeInfo)
-        .hasBody("log message 1")
-        .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("key1"), "val1"), equalTo(stringKey("key2"), "val2"));
+    getTesting()
+        .waitAndAssertLogRecords(
+            logRecord ->
+                logRecord
+                    .hasResource(resource)
+                    .hasInstrumentationScope(instrumentationScopeInfo)
+                    .hasBody("log message 1")
+                    .hasAttributesSatisfyingExactly(
+                        addLocationAttributes(
+                            "logContextData",
+                            equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                            equalTo(THREAD_ID, Thread.currentThread().getId()),
+                            equalTo(stringKey("key1"), "val1"),
+                            equalTo(stringKey("key2"), "val2"))));
   }
 
   @Test
@@ -178,14 +191,19 @@ abstract class AbstractOpenTelemetryAppenderTest {
 
     executeAfterLogsExecution();
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
-    assertThat(logDataList).hasSize(1);
-    assertThat(logDataList.get(0))
-        .hasResource(resource)
-        .hasInstrumentationScope(instrumentationScopeInfo)
-        .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("log4j.map_message.key1"), "val1"),
-            equalTo(stringKey("log4j.map_message.key2"), "val2"));
+    getTesting()
+        .waitAndAssertLogRecords(
+            logRecord ->
+                logRecord
+                    .hasResource(resource)
+                    .hasInstrumentationScope(instrumentationScopeInfo)
+                    .hasAttributesSatisfyingExactly(
+                        addLocationAttributes(
+                            "logStringMapMessage",
+                            equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                            equalTo(THREAD_ID, Thread.currentThread().getId()),
+                            equalTo(stringKey("log4j.map_message.key1"), "val1"),
+                            equalTo(stringKey("log4j.map_message.key2"), "val2"))));
   }
 
   @Test
@@ -197,13 +215,19 @@ abstract class AbstractOpenTelemetryAppenderTest {
 
     executeAfterLogsExecution();
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
-    assertThat(logDataList).hasSize(1);
-    assertThat(logDataList.get(0))
-        .hasResource(resource)
-        .hasInstrumentationScope(instrumentationScopeInfo)
-        .hasBody("val2")
-        .hasAttributesSatisfyingExactly(equalTo(stringKey("log4j.map_message.key1"), "val1"));
+    getTesting()
+        .waitAndAssertLogRecords(
+            logRecord ->
+                logRecord
+                    .hasResource(resource)
+                    .hasInstrumentationScope(instrumentationScopeInfo)
+                    .hasBody("val2")
+                    .hasAttributesSatisfyingExactly(
+                        addLocationAttributes(
+                            "logStringMapMessageWithSpecialAttribute",
+                            equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                            equalTo(THREAD_ID, Thread.currentThread().getId()),
+                            equalTo(stringKey("log4j.map_message.key1"), "val1"))));
   }
 
   @Test
@@ -215,9 +239,10 @@ abstract class AbstractOpenTelemetryAppenderTest {
 
     executeAfterLogsExecution();
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
-    LogRecordData logData = logDataList.get(0);
-    assertThat(logData.getAttributes().get(stringKey("log4j.marker"))).isEqualTo(markerName);
+    getTesting()
+        .waitAndAssertLogRecords(
+            logRecord ->
+                logRecord.hasAttributesSatisfying(equalTo(stringKey("log4j.marker"), markerName)));
   }
 
   @Test
@@ -229,14 +254,43 @@ abstract class AbstractOpenTelemetryAppenderTest {
 
     executeAfterLogsExecution();
 
-    List<LogRecordData> logDataList = logRecordExporter.getFinishedLogRecordItems();
-    assertThat(logDataList).hasSize(1);
-    assertThat(logDataList.get(0))
-        .hasResource(resource)
-        .hasInstrumentationScope(instrumentationScopeInfo)
-        .hasBody("a message")
-        .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("log4j.map_message.key1"), "val1"),
-            equalTo(stringKey("log4j.map_message.key2"), "val2"));
+    getTesting()
+        .waitAndAssertLogRecords(
+            logRecord ->
+                logRecord
+                    .hasResource(resource)
+                    .hasInstrumentationScope(instrumentationScopeInfo)
+                    .hasBody("a message")
+                    .hasAttributesSatisfyingExactly(
+                        addLocationAttributes(
+                            "logStructuredDataMessage",
+                            equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                            equalTo(THREAD_ID, Thread.currentThread().getId()),
+                            equalTo(stringKey("log4j.map_message.key1"), "val1"),
+                            equalTo(stringKey("log4j.map_message.key2"), "val2"))));
+  }
+
+  private static List<AttributeAssertion> addLocationAttributes(
+      String methodName, AttributeAssertion... assertions) {
+    return addLocationAttributes(AbstractOpenTelemetryAppenderTest.class, methodName, assertions);
+  }
+
+  protected static List<AttributeAssertion> addLocationAttributes(
+      Class<?> testClass, String methodName, AttributeAssertion... assertions) {
+    String selector = System.getProperty("Log4j2.contextSelector");
+    boolean async = selector != null && selector.endsWith("AsyncLoggerContextSelector");
+    if (async && !Boolean.getBoolean("testLatestDeps")) {
+      // source info is not available by default when async logger is used in non latest dep tests
+      return Arrays.asList(assertions);
+    }
+
+    List<AttributeAssertion> result = new ArrayList<>(Arrays.asList(assertions));
+    result.addAll(
+        Arrays.asList(
+            equalTo(CODE_NAMESPACE, testClass.getName()),
+            equalTo(CODE_FUNCTION, methodName),
+            satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
+            equalTo(CODE_FILEPATH, testClass.getSimpleName() + ".java")));
+    return result;
   }
 }

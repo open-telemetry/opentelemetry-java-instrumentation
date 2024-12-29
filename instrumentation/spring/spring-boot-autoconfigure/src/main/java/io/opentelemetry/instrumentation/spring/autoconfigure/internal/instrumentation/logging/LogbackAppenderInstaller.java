@@ -19,7 +19,19 @@ import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEven
 class LogbackAppenderInstaller {
 
   static void install(ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent) {
-    Optional<OpenTelemetryAppender> existingOpenTelemetryAppender = findOpenTelemetryAppender();
+    Optional<io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender>
+        existingMdcAppender =
+            findAppender(
+                io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender.class);
+    if (existingMdcAppender.isPresent()) {
+      initializeMdcAppenderFromProperties(
+          applicationEnvironmentPreparedEvent, existingMdcAppender.get());
+    } else if (isLogbackMdcAppenderAddable(applicationEnvironmentPreparedEvent)) {
+      addMdcAppender(applicationEnvironmentPreparedEvent);
+    }
+
+    Optional<OpenTelemetryAppender> existingOpenTelemetryAppender =
+        findAppender(OpenTelemetryAppender.class);
     if (existingOpenTelemetryAppender.isPresent()) {
       reInitializeOpenTelemetryAppender(
           existingOpenTelemetryAppender, applicationEnvironmentPreparedEvent);
@@ -30,15 +42,23 @@ class LogbackAppenderInstaller {
 
   private static boolean isLogbackAppenderAddable(
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent) {
-    Boolean otelSdkDisableProperty =
-        evaluateBooleanProperty(applicationEnvironmentPreparedEvent, "otel.sdk.disabled");
-    Boolean logbackInstrumentationEnabledProperty =
-        evaluateBooleanProperty(
-            applicationEnvironmentPreparedEvent, "otel.instrumentation.logback-appender.enabled");
-    return otelSdkDisableProperty == null
-        || !otelSdkDisableProperty.booleanValue()
-        || logbackInstrumentationEnabledProperty == null
-        || logbackInstrumentationEnabledProperty.booleanValue();
+    return isAppenderAddable(
+        applicationEnvironmentPreparedEvent, "otel.instrumentation.logback-appender.enabled");
+  }
+
+  private static boolean isLogbackMdcAppenderAddable(
+      ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent) {
+    return isAppenderAddable(
+        applicationEnvironmentPreparedEvent, "otel.instrumentation.logback-mdc.enabled");
+  }
+
+  private static boolean isAppenderAddable(
+      ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent, String property) {
+    boolean otelSdkDisabled =
+        evaluateBooleanProperty(applicationEnvironmentPreparedEvent, "otel.sdk.disabled", false);
+    boolean logbackInstrumentationEnabled =
+        evaluateBooleanProperty(applicationEnvironmentPreparedEvent, property, true);
+    return !otelSdkDisabled && logbackInstrumentationEnabled;
   }
 
   private static void reInitializeOpenTelemetryAppender(
@@ -115,6 +135,22 @@ class LogbackAppenderInstaller {
       openTelemetryAppender.setCaptureLoggerContext(loggerContextAttributes.booleanValue());
     }
 
+    Boolean captureArguments =
+        evaluateBooleanProperty(
+            applicationEnvironmentPreparedEvent,
+            "otel.instrumentation.logback-appender.experimental.capture-arguments");
+    if (captureArguments != null) {
+      openTelemetryAppender.setCaptureArguments(captureArguments.booleanValue());
+    }
+
+    Boolean captureLogstashAttributes =
+        evaluateBooleanProperty(
+            applicationEnvironmentPreparedEvent,
+            "otel.instrumentation.logback-appender.experimental.capture-logstash-attributes");
+    if (captureLogstashAttributes != null) {
+      openTelemetryAppender.setCaptureLogstashAttributes(captureLogstashAttributes.booleanValue());
+    }
+
     String mdcAttributeProperty =
         applicationEnvironmentPreparedEvent
             .getEnvironment()
@@ -126,6 +162,58 @@ class LogbackAppenderInstaller {
     }
   }
 
+  private static void addMdcAppender(
+      ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent) {
+    ch.qos.logback.classic.Logger logger =
+        (ch.qos.logback.classic.Logger)
+            LoggerFactory.getILoggerFactory().getLogger(Logger.ROOT_LOGGER_NAME);
+    io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender openTelemetryAppender =
+        new io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender();
+    initializeMdcAppenderFromProperties(applicationEnvironmentPreparedEvent, openTelemetryAppender);
+    openTelemetryAppender.start();
+    logger.addAppender(openTelemetryAppender);
+  }
+
+  private static void initializeMdcAppenderFromProperties(
+      ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent,
+      io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender
+          openTelemetryAppender) {
+
+    // Implemented in the same way as the
+    // org.springframework.boot.context.logging.LoggingApplicationListener, config properties not
+    // available
+    Boolean addBaggage =
+        evaluateBooleanProperty(
+            applicationEnvironmentPreparedEvent, "otel.instrumentation.logback-mdc.add-baggage");
+    if (addBaggage != null) {
+      openTelemetryAppender.setAddBaggage(addBaggage);
+    }
+
+    String traceIdKey =
+        applicationEnvironmentPreparedEvent
+            .getEnvironment()
+            .getProperty("otel.instrumentation.common.logging.trace-id", String.class);
+    if (traceIdKey != null) {
+      openTelemetryAppender.setTraceIdKey(traceIdKey);
+    }
+
+    String spanIdKey =
+        applicationEnvironmentPreparedEvent
+            .getEnvironment()
+            .getProperty("otel.instrumentation.common.logging.span-id", String.class);
+    if (spanIdKey != null) {
+      openTelemetryAppender.setSpanIdKey(spanIdKey);
+    }
+
+    String traceFlagsKey =
+        applicationEnvironmentPreparedEvent
+            .getEnvironment()
+            .getProperty("otel.instrumentation.common.logging.trace-flags", String.class);
+    if (traceFlagsKey != null) {
+      openTelemetryAppender.setTraceFlagsKey(traceFlagsKey);
+    }
+  }
+
   private static Boolean evaluateBooleanProperty(
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent, String property) {
     return applicationEnvironmentPreparedEvent
@@ -133,7 +221,16 @@ class LogbackAppenderInstaller {
         .getProperty(property, Boolean.class);
   }
 
-  private static Optional<OpenTelemetryAppender> findOpenTelemetryAppender() {
+  private static boolean evaluateBooleanProperty(
+      ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent,
+      String property,
+      boolean defaultValue) {
+    return applicationEnvironmentPreparedEvent
+        .getEnvironment()
+        .getProperty(property, Boolean.class, defaultValue);
+  }
+
+  private static <T> Optional<T> findAppender(Class<T> appenderClass) {
     ILoggerFactory loggerFactorySpi = LoggerFactory.getILoggerFactory();
     if (!(loggerFactorySpi instanceof LoggerContext)) {
       return Optional.empty();
@@ -143,8 +240,8 @@ class LogbackAppenderInstaller {
       Iterator<Appender<ILoggingEvent>> appenderIterator = logger.iteratorForAppenders();
       while (appenderIterator.hasNext()) {
         Appender<ILoggingEvent> appender = appenderIterator.next();
-        if (appender instanceof OpenTelemetryAppender) {
-          OpenTelemetryAppender openTelemetryAppender = (OpenTelemetryAppender) appender;
+        if (appenderClass.isInstance(appender)) {
+          T openTelemetryAppender = appenderClass.cast(appender);
           return Optional.of(openTelemetryAppender);
         }
       }

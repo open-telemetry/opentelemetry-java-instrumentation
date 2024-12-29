@@ -20,7 +20,7 @@ import io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class GraphqlTest extends AbstractGraphqlTest {
+class GraphqlTest extends AbstractGraphqlTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();

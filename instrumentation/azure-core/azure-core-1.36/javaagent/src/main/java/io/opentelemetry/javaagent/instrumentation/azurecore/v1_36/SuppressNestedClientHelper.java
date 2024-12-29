@@ -16,20 +16,24 @@ import reactor.core.publisher.Mono;
 
 public class SuppressNestedClientHelper {
 
-  public static Scope disallowNestedClientSpanSync() {
+  public static Scope disallowNestedClientSpanSync(com.azure.core.util.Context azContext) {
     Context parentContext = currentContext();
-    if (doesNotHaveClientSpan(parentContext)) {
+    boolean hasAzureClientSpan = azContext.getData("client-method-call-flag").isPresent();
+    if (doesNotHaveClientSpan(parentContext) && hasAzureClientSpan) {
       return disallowNestedClientSpan(parentContext).makeCurrent();
     }
     return null;
   }
 
-  public static <T> Mono<T> disallowNestedClientSpanMono(Mono<T> delegate) {
+  public static <T> Mono<T> disallowNestedClientSpanMono(
+      Mono<T> delegate, com.azure.core.util.Context azContext) {
     return new Mono<T>() {
       @Override
       public void subscribe(CoreSubscriber<? super T> coreSubscriber) {
         Context parentContext = currentContext();
-        if (doesNotHaveClientSpan(parentContext)) {
+
+        boolean hasAzureClientSpan = azContext.getData("client-method-call-flag").isPresent();
+        if (doesNotHaveClientSpan(parentContext) && hasAzureClientSpan) {
           try (Scope ignored = disallowNestedClientSpan(parentContext).makeCurrent()) {
             delegate.subscribe(coreSubscriber);
           }

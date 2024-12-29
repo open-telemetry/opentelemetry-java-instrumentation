@@ -45,14 +45,24 @@ dependencies {
   testLibrary("org.elasticsearch.plugin:transport-netty3-client:5.0.0")
   testLibrary("org.elasticsearch.client:transport:5.0.0")
 
-  latestDepTestLibrary("org.elasticsearch.plugin:transport-netty3-client:5.0.0")
-  latestDepTestLibrary("org.elasticsearch.client:transport:5.0.0")
+  latestDepTestLibrary("org.elasticsearch.plugin:transport-netty3-client:5.2.+") // see elasticsearch-transport-5.3 module
+  latestDepTestLibrary("org.elasticsearch.client:transport:5.2.+") // see elasticsearch-transport-5.3 module
 }
 
-tasks.withType<Test>().configureEach {
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.nio=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+tasks {
+  withType<Test>().configureEach {
+    // TODO run tests both with and without experimental span attributes
+    jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.nio=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
 }
