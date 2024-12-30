@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.ratpack.v1_7.server;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.ratpack.server.AbstractRatpackHttpServerTest;
-import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackTelemetry;
+import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackServerTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
@@ -24,14 +24,12 @@ class RatpackHttpServerTest extends AbstractRatpackHttpServerTest {
 
   @Override
   protected void configure(RatpackServerSpec serverSpec) throws Exception {
-    RatpackTelemetry telemetry =
-        RatpackTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedServerRequestHeaders(
-                singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-            .setCapturedServerResponseHeaders(
-                singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
+    RatpackServerTelemetry telemetry =
+        RatpackServerTelemetry.builder(testing.getOpenTelemetry())
+            .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
+            .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
             .build();
-    serverSpec.registryOf(telemetry::configureServerRegistry);
+    serverSpec.registryOf(telemetry::configureRegistry);
   }
 
   @Override

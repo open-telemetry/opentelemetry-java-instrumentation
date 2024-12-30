@@ -28,8 +28,8 @@ muzzle {
 dependencies {
   // compiling against tomcat 7.0.20 because there seems to be some issues with Tomcat's dependency < 7.0.20
   compileOnly("org.apache.tomcat:tomcat-jasper:7.0.20")
-  compileOnly("javax.servlet.jsp:javax.servlet.jsp-api:2.3.0")
-  compileOnly("javax.servlet:javax.servlet-api:3.1.0")
+  library("javax.servlet.jsp:javax.servlet.jsp-api:2.3.0")
+  library("javax.servlet:javax.servlet-api:3.1.0")
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
@@ -40,11 +40,9 @@ dependencies {
   testLibrary("org.apache.tomcat.embed:tomcat-embed-logging-juli:7.0.37")
   testLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:7.0.37")
 
-  latestDepTestLibrary("javax.servlet.jsp:javax.servlet.jsp-api:+")
-  latestDepTestLibrary("javax.servlet:javax.servlet-api:+")
-  latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-core:9.+")
-  latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:9.+")
-  latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-logging-juli:9.+")
+  latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-core:9.+") // documented limitation
+  latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:9.+") // documented limitation
+  latestDepTestLibrary("org.apache.tomcat.embed:tomcat-embed-logging-juli:9.+") // documented limitation
 }
 
 tasks.withType<Test>().configureEach {

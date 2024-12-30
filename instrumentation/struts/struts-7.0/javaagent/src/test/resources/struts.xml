@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+    "-//Apache Software Foundation//DTD Struts Configuration 2.5//EN"
+    "http://struts.apache.org/dtds/struts-2.5.dtd">
+
+<struts>
+
+  <package name="basic-struts2" extends="struts-default">
+    <global-results>
+      <result name="redirect" type="redirect">
+        <param name="location">/redirected</param>
+        <param name="prependServletContext">false</param>
+      </result>
+      <result name="error" type="httpheader">
+        <param name="error">500</param>
+      </result>
+      <result type="freemarker" name="greeting">/greeting.ftl</result>
+      <result name="greetingServlet">/greetingServlet</result>
+    </global-results>
+
+    <global-exception-mappings>
+      <exception-mapping exception="java.lang.Exception" result="error"/>
+    </global-exception-mappings>
+
+    <action name="success" class="io.opentelemetry.javaagent.instrumentation.struts.v7_0.GreetingAction"
+            method="success"/>
+    <action name="redirect"
+            class="io.opentelemetry.javaagent.instrumentation.struts.v7_0.GreetingAction"
+            method="redirect"/>
+    <action name="query" class="io.opentelemetry.javaagent.instrumentation.struts.v7_0.GreetingAction"
+            method="query_param"/>
+    <action name="error-status"
+            class="io.opentelemetry.javaagent.instrumentation.struts.v7_0.GreetingAction"
+            method="error"/>
+    <action name="exception"
+            class="io.opentelemetry.javaagent.instrumentation.struts.v7_0.GreetingAction"
+            method="exception"/>
+    <action name="path/{id}/param"
+            class="io.opentelemetry.javaagent.instrumentation.struts.v7_0.GreetingAction"
+            method="path_param"/>
+    <action name="child" class="io.opentelemetry.javaagent.instrumentation.struts.v7_0.GreetingAction"
+            method="indexed_child"/>
+    <action name="captureHeaders"
+            class="io.opentelemetry.javaagent.instrumentation.struts.v7_0.GreetingAction"
+            method="capture_headers"/>
+    <action name="dispatch"
+            class="io.opentelemetry.javaagent.instrumentation.struts.v7_0.GreetingAction"
+            method="dispatch_servlet"/>
+  </package>
+</struts>

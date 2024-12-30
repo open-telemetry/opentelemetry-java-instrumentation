@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -25,6 +24,8 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -139,7 +140,12 @@ public class SpringWebfluxTest {
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           satisfies(
-                              stringKey("spring-webflux.handler.type"),
+                              CODE_FUNCTION,
+                              parameter.annotatedMethod == null
+                                  ? val -> val.isEqualTo("handle")
+                                  : val -> val.isEqualTo(parameter.annotatedMethod)),
+                          satisfies(
+                              CODE_NAMESPACE,
                               parameter.annotatedMethod == null
                                   ? val -> val.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
                                   : val -> val.isEqualTo(TestController.class.getName())));
@@ -258,7 +264,12 @@ public class SpringWebfluxTest {
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           satisfies(
-                              stringKey("spring-webflux.handler.type"),
+                              CODE_FUNCTION,
+                              parameter.annotatedMethod == null
+                                  ? val -> val.isEqualTo("handle")
+                                  : val -> val.isEqualTo(parameter.annotatedMethod)),
+                          satisfies(
+                              CODE_NAMESPACE,
                               parameter.annotatedMethod == null
                                   ? val -> val.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
                                   : val -> val.isEqualTo(TestController.class.getName())));
@@ -364,7 +375,12 @@ public class SpringWebfluxTest {
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           satisfies(
-                              stringKey("spring-webflux.handler.type"),
+                              CODE_FUNCTION,
+                              parameter.annotatedMethod == null
+                                  ? val -> val.isEqualTo("handle")
+                                  : val -> val.isEqualTo(parameter.annotatedMethod)),
+                          satisfies(
+                              CODE_NAMESPACE,
                               parameter.annotatedMethod == null
                                   ? val -> val.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
                                   : val -> val.isEqualTo(TestController.class.getName())));
@@ -428,8 +444,9 @@ public class SpringWebfluxTest {
                         .hasStatus(StatusData.error())
                         .hasEventsSatisfyingExactly(SpringWebfluxTest::resource404Exception)
                         .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION, "handle"),
                             equalTo(
-                                stringKey("spring-webflux.handler.type"),
+                                CODE_NAMESPACE,
                                 "org.springframework.web.reactive.resource.ResourceWebHandler"))));
   }
 
@@ -485,9 +502,8 @@ public class SpringWebfluxTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            satisfies(
-                                stringKey("spring-webflux.handler.type"),
-                                val -> val.contains(EchoHandlerFunction.class.getName()))),
+                            equalTo(CODE_FUNCTION, "handle"),
+                            equalTo(CODE_NAMESPACE, EchoHandlerFunction.class.getName())),
                 span ->
                     span.hasName("echo").hasParent(trace.getSpan(1)).hasTotalAttributeCount(0)));
   }
@@ -545,7 +561,12 @@ public class SpringWebfluxTest {
                                           val -> val.isInstanceOf(String.class))))
                       .hasAttributesSatisfyingExactly(
                           satisfies(
-                              stringKey("spring-webflux.handler.type"),
+                              CODE_FUNCTION,
+                              parameter.annotatedMethod == null
+                                  ? val -> val.isEqualTo("handle")
+                                  : val -> val.isEqualTo(parameter.annotatedMethod)),
+                          satisfies(
+                              CODE_NAMESPACE,
                               parameter.annotatedMethod == null
                                   ? val -> val.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
                                   : val -> val.isEqualTo(TestController.class.getName())));
@@ -603,8 +624,9 @@ public class SpringWebfluxTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION, "handle"),
                             satisfies(
-                                stringKey("spring-webflux.handler.type"),
+                                CODE_NAMESPACE,
                                 val -> val.startsWith("server.RedirectComponent$$Lambda")))),
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -631,8 +653,9 @@ public class SpringWebfluxTest {
                   span.hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
+                          equalTo(CODE_FUNCTION, "handle"),
                           satisfies(
-                              stringKey("spring-webflux.handler.type"),
+                              CODE_NAMESPACE,
                               val -> val.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)));
                 }));
   }
@@ -689,7 +712,12 @@ public class SpringWebfluxTest {
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           satisfies(
-                              stringKey("spring-webflux.handler.type"),
+                              CODE_FUNCTION,
+                              parameter.annotatedMethod == null
+                                  ? val -> val.isEqualTo("handle")
+                                  : val -> val.isEqualTo(parameter.annotatedMethod)),
+                          satisfies(
+                              CODE_NAMESPACE,
                               parameter.annotatedMethod == null
                                   ? val -> val.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
                                   : val -> val.isEqualTo(TestController.class.getName())));
@@ -760,10 +788,11 @@ public class SpringWebfluxTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION, "handle"),
                             satisfies(
-                                stringKey("spring-webflux.handler.type"),
-                                value ->
-                                    value.startsWith(
+                                CODE_NAMESPACE,
+                                val ->
+                                    val.startsWith(
                                         "server.SpringWebFluxTestApplication$$Lambda")))));
 
     SpringWebFluxTestApplication.resumeSlowRequest();

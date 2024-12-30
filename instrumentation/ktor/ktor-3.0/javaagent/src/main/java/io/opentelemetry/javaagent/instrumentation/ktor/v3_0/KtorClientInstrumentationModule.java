@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class KtorClientInstrumentationModule extends InstrumentationModule {
 
   public KtorClientInstrumentationModule() {
-    super("ktor", "ktor-client", "ktor-3.0", "ktor-client-3.0");
+    super("ktor", "ktor-3.0", "ktor-client", "ktor-client-3.0");
   }
 
   @Override

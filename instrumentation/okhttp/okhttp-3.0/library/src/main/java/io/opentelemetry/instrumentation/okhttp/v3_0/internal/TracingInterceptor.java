@@ -41,17 +41,15 @@ public final class TracingInterceptor implements Interceptor {
     Context context = instrumenter.start(parentContext, chain);
     request = injectContextToRequest(request, context);
 
-    Response response = null;
-    Throwable error = null;
+    Response response;
     try (Scope ignored = context.makeCurrent()) {
       response = chain.proceed(request);
-      return response;
-    } catch (Exception e) {
-      error = e;
-      throw e;
-    } finally {
-      instrumenter.end(context, chain, response, error);
+    } catch (Throwable t) {
+      instrumenter.end(context, chain, null, t);
+      throw t;
     }
+    instrumenter.end(context, chain, response, null);
+    return response;
   }
 
   // Context injection is being handled manually for a reason: we want to use the OkHttp Request
