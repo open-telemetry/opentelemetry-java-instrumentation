@@ -71,22 +71,6 @@ public abstract class AbstractAws2ClientCoreTest {
 
   protected static final MockWebServerExtension server = new MockWebServerExtension();
 
-  private static final ImmutableMap<String, AttributeValue> createTableRequestKey =
-      ImmutableMap.of(
-          "anotherKey", AttributeValue.builder().s("value").build(),
-          "key", AttributeValue.builder().s("value").build());
-
-  private static final ImmutableMap<String, AttributeValue> getItemRequestKey =
-      ImmutableMap.of(
-          "keyOne", AttributeValue.builder().s("value").build(),
-          "keyTwo", AttributeValue.builder().s("differentValue").build());
-
-  private static final ImmutableMap<String, AttributeValue> putItemRequestKey =
-      ImmutableMap.of(
-          "key", AttributeValue.builder().s("value").build(),
-          "attributeOne", AttributeValue.builder().s("one").build(),
-          "attributeTwo", AttributeValue.builder().s("two").build());
-
   protected abstract InstrumentationExtension getTesting();
 
   protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
@@ -267,7 +251,10 @@ public abstract class AbstractAws2ClientCoreTest {
                     c.deleteItem(
                         DeleteItemRequest.builder()
                             .tableName("sometable")
-                            .key(createTableRequestKey)
+                            .key(
+                                ImmutableMap.of(
+                                    "anotherKey", AttributeValue.builder().s("value").build(),
+                                    "key", AttributeValue.builder().s("value").build()))
                             .conditionExpression("property in (:one, :two)")
                             .build())),
         Arguments.of(
@@ -281,7 +268,10 @@ public abstract class AbstractAws2ClientCoreTest {
                     c.getItem(
                         GetItemRequest.builder()
                             .tableName("sometable")
-                            .key(getItemRequestKey)
+                            .key(
+                                ImmutableMap.of(
+                                    "keyOne", AttributeValue.builder().s("value").build(),
+                                    "keyTwo", AttributeValue.builder().s("differentValue").build()))
                             .attributesToGet("propertyOne", "propertyTwo")
                             .build())),
         Arguments.of(
@@ -291,7 +281,11 @@ public abstract class AbstractAws2ClientCoreTest {
                     c.putItem(
                         PutItemRequest.builder()
                             .tableName("sometable")
-                            .item(putItemRequestKey)
+                            .item(
+                                ImmutableMap.of(
+                                    "key", AttributeValue.builder().s("value").build(),
+                                    "attributeOne", AttributeValue.builder().s("one").build(),
+                                    "attributeTwo", AttributeValue.builder().s("two").build()))
                             .conditionExpression("attributeOne <> :someVal")
                             .build())),
         Arguments.of(
