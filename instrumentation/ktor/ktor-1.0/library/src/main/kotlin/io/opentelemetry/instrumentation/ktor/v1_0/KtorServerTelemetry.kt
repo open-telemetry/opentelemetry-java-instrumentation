@@ -73,7 +73,7 @@ class KtorServerTelemetry private constructor(
       builder.setCapturedResponseHeaders(responseHeaders)
     }
 
-    fun setKnownMethods(knownMethods: Set<String>) {
+    fun setKnownMethods(knownMethods: Collection<String>) {
       builder.setKnownMethods(knownMethods)
     }
 

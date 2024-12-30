@@ -13,8 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.Experimental;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackServerInstrumenterBuilderFactory;
-import java.util.List;
-import java.util.Set;
+import java.util.Collection;
 import java.util.function.Function;
 import ratpack.http.Request;
 import ratpack.http.Response;
@@ -52,7 +51,8 @@ public final class RatpackServerTelemetryBuilder {
    * @param requestHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public RatpackServerTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
+  public RatpackServerTelemetryBuilder setCapturedRequestHeaders(
+      Collection<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
@@ -63,7 +63,8 @@ public final class RatpackServerTelemetryBuilder {
    * @param responseHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public RatpackServerTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
+  public RatpackServerTelemetryBuilder setCapturedResponseHeaders(
+      Collection<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
@@ -79,10 +80,10 @@ public final class RatpackServerTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Set)
+   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
-  public RatpackServerTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+  public RatpackServerTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
   }

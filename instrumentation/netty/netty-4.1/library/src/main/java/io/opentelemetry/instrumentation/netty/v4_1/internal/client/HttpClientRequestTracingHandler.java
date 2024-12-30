@@ -63,12 +63,12 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
     try (Scope ignored = context.makeCurrent()) {
       super.write(ctx, msg, prm);
-      // span is ended normally in HttpClientResponseTracingHandler
     } catch (Throwable throwable) {
       instrumenter.end(contextAttr.getAndSet(null), requestAttr.getAndSet(null), null, throwable);
       parentContextAttr.set(null);
       throw throwable;
     }
+    // span is ended normally in HttpClientResponseTracingHandler
   }
 
   private static boolean isAwsRequest(HttpRequestAndChannel request) {

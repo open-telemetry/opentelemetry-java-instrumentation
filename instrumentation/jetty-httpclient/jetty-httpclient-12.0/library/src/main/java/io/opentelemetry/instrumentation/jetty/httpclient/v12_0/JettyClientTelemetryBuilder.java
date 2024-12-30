@@ -13,8 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.Experimental;
 import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.JettyHttpClientInstrumenterBuilderFactory;
-import java.util.List;
-import java.util.Set;
+import java.util.Collection;
 import java.util.function.Function;
 import org.eclipse.jetty.client.HttpClientTransport;
 import org.eclipse.jetty.client.Request;
@@ -81,7 +80,7 @@ public final class JettyClientTelemetryBuilder {
    * @param requestHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public JettyClientTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
+  public JettyClientTelemetryBuilder setCapturedRequestHeaders(Collection<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
@@ -92,7 +91,8 @@ public final class JettyClientTelemetryBuilder {
    * @param responseHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public JettyClientTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
+  public JettyClientTelemetryBuilder setCapturedResponseHeaders(
+      Collection<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
@@ -108,10 +108,10 @@ public final class JettyClientTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
-  public JettyClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+  public JettyClientTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
   }

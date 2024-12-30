@@ -95,21 +95,17 @@ public final class OpenTelemetryHttpClient extends HttpClient {
       return client.send(request, responseBodyHandler);
     }
 
-    HttpResponse<T> response = null;
-    Throwable error = null;
     Context context = instrumenter.start(parentContext, request);
+    HttpRequestWrapper requestWrapper =
+        new HttpRequestWrapper(request, headersSetter.inject(request.headers(), context));
+    HttpResponse<T> response;
     try (Scope ignore = context.makeCurrent()) {
-      HttpRequestWrapper requestWrapper =
-          new HttpRequestWrapper(request, headersSetter.inject(request.headers()));
-
       response = client.send(requestWrapper, responseBodyHandler);
-    } catch (Throwable throwable) {
-      error = throwable;
-      throw throwable;
-    } finally {
-      instrumenter.end(context, request, response, error);
+    } catch (Throwable t) {
+      instrumenter.end(context, request, null, t);
+      throw t;
     }
-
+    instrumenter.end(context, request, response, null);
     return response;
   }
 
@@ -136,17 +132,18 @@ public final class OpenTelemetryHttpClient extends HttpClient {
     }
 
     Context context = instrumenter.start(parentContext, request);
-    try (Scope ignore = context.makeCurrent()) {
-      HttpRequestWrapper requestWrapper =
-          new HttpRequestWrapper(request, headersSetter.inject(request.headers()));
+    HttpRequestWrapper requestWrapper =
+        new HttpRequestWrapper(request, headersSetter.inject(request.headers(), context));
 
-      CompletableFuture<HttpResponse<T>> future = action.apply(requestWrapper);
-      future = future.whenComplete(new ResponseConsumer(instrumenter, context, request));
-      future = CompletableFutureWrapper.wrap(future, parentContext);
-      return future;
-    } catch (Throwable throwable) {
-      instrumenter.end(context, request, null, throwable);
-      throw throwable;
+    CompletableFuture<HttpResponse<T>> future;
+    try (Scope ignored = context.makeCurrent()) {
+      future = action.apply(requestWrapper);
+    } catch (Throwable t) {
+      instrumenter.end(context, request, null, t);
+      throw t;
     }
+    future = future.whenComplete(new ResponseConsumer(instrumenter, context, request));
+    future = CompletableFutureWrapper.wrap(future, parentContext);
+    return future;
   }
 }
