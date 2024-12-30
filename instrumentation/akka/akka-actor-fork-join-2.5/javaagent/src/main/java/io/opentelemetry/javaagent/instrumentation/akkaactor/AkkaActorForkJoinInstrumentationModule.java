@@ -15,7 +15,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class AkkaActorForkJoinInstrumentationModule extends InstrumentationModule {
   public AkkaActorForkJoinInstrumentationModule() {
-    super("akka-actor", "akka-actor-fork-join", "akka-actor-fork-join-2.5");
+    super("akka-actor-fork-join", "akka-actor-fork-join-2.5", "akka-actor");
   }
 
   @Override

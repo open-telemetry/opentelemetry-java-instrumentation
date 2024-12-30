@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Migration notes
+
+- Some Java agent instrumentation suppression keys have been renamed to match their module names:
+  - `elasticsearch-rest-6.0` --> `elasticsearch-rest-6.4`
+  - `internal-application-logging` --> `internal-application-logger`
+  - `javalin-5` -> `javalin-5.0`
+  - `pulsar-2.8.0` -> `pulsar-2.8`
+
 ## Version 2.11.0 (2024-12-23)
 
 ### Migration notes
@@ -89,6 +97,7 @@ In preparation for stabilizing HTTP library instrumentation soon:
   ([#12883](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12883))
 - Add close to fix CWE-404
   ([#12908](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12908))
+>>>>>>> upstream/main
 
 ## Version 2.10.0 (2024-11-13)
 

@@ -18,7 +18,7 @@ public class TwitterUtilCoreInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public TwitterUtilCoreInstrumentationModule() {
-    super("twitter-util-core");
+    super("finagle-http", "finagle-http-23.11", "twitter-util-core");
   }
 
   @Override
