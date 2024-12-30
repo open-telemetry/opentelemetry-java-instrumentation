@@ -89,16 +89,14 @@ final class TracingProtocolExec implements ClientExecChain {
       HttpExecutionAware httpExecutionAware,
       Context context)
       throws IOException, HttpException {
-    CloseableHttpResponse response = null;
-    Throwable error = null;
+    CloseableHttpResponse response;
     try (Scope ignored = context.makeCurrent()) {
       response = exec.execute(route, request, httpContext, httpExecutionAware);
-      return response;
-    } catch (Throwable e) {
-      error = e;
-      throw e;
-    } finally {
-      instrumenter.end(context, instrumenterRequest, response, error);
+    } catch (Throwable t) {
+      instrumenter.end(context, instrumenterRequest, null, t);
+      throw t;
     }
+    instrumenter.end(context, instrumenterRequest, response, null);
+    return response;
   }
 }

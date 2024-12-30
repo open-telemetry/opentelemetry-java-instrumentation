@@ -16,8 +16,7 @@ import io.opentelemetry.instrumentation.netty.v4.common.internal.server.NettyHtt
 import io.opentelemetry.instrumentation.netty.v4_1.internal.Experimental;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.server.NettyServerInstrumenterBuilderUtil;
-import java.util.List;
-import java.util.Set;
+import java.util.Collection;
 
 /** A builder of {@link NettyServerTelemetry}. */
 public final class NettyServerTelemetryBuilder {
@@ -64,7 +63,7 @@ public final class NettyServerTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setCapturedRequestHeaders(
-      List<String> capturedRequestHeaders) {
+      Collection<String> capturedRequestHeaders) {
     builder.setCapturedRequestHeaders(capturedRequestHeaders);
     return this;
   }
@@ -76,7 +75,7 @@ public final class NettyServerTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setCapturedResponseHeaders(
-      List<String> capturedResponseHeaders) {
+      Collection<String> capturedResponseHeaders) {
     builder.setCapturedResponseHeaders(capturedResponseHeaders);
     return this;
   }
@@ -92,10 +91,10 @@ public final class NettyServerTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Set)
+   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
-  public NettyServerTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+  public NettyServerTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
   }

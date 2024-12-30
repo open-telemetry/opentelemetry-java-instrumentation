@@ -74,10 +74,10 @@ public class TracedDelegatingConsumer implements Consumer {
     try (Scope ignored = context.makeCurrent()) {
       // Call delegate.
       delegate.handleDelivery(consumerTag, envelope, properties, body);
-      deliverInstrumenter().end(context, request, null, null);
-    } catch (Throwable throwable) {
-      deliverInstrumenter().end(context, request, null, throwable);
-      throw throwable;
+    } catch (Throwable t) {
+      deliverInstrumenter().end(context, request, null, t);
+      throw t;
     }
+    deliverInstrumenter().end(context, request, null, null);
   }
 }

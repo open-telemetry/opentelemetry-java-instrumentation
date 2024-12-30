@@ -17,6 +17,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public final class JmsInstrumenterFactory {
@@ -32,8 +34,8 @@ public final class JmsInstrumenterFactory {
   }
 
   @CanIgnoreReturnValue
-  public JmsInstrumenterFactory setCapturedHeaders(List<String> capturedHeaders) {
-    this.capturedHeaders = capturedHeaders;
+  public JmsInstrumenterFactory setCapturedHeaders(Collection<String> capturedHeaders) {
+    this.capturedHeaders = new ArrayList<>(capturedHeaders);
     return this;
   }
 

@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.scala-conventions")
 }
 
 muzzle {
@@ -16,7 +17,9 @@ dependencies {
 
   library("org.scala-lang:scala-library:2.8.0")
 
-  latestDepTestLibrary("org.scala-lang:scala-library:2.11.+")
+  // scala's ForkJoinPool was turned into an alias in scala 2.12 (which is why muzzle doesn't pass
+  // on that version) and was removed completely in scala 2.13
+  latestDepTestLibrary("org.scala-lang:scala-library:2.12.+") // no longer applicable
 
   testImplementation(project(":instrumentation:executors:testing"))
 }

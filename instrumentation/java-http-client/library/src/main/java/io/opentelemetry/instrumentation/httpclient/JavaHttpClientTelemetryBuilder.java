@@ -16,8 +16,7 @@ import io.opentelemetry.instrumentation.httpclient.internal.HttpHeadersSetter;
 import io.opentelemetry.instrumentation.httpclient.internal.JavaHttpClientInstrumenterBuilderFactory;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.List;
-import java.util.Set;
+import java.util.Collection;
 import java.util.function.Function;
 
 public final class JavaHttpClientTelemetryBuilder {
@@ -66,7 +65,8 @@ public final class JavaHttpClientTelemetryBuilder {
    * @param requestHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public JavaHttpClientTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
+  public JavaHttpClientTelemetryBuilder setCapturedRequestHeaders(
+      Collection<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
@@ -77,7 +77,8 @@ public final class JavaHttpClientTelemetryBuilder {
    * @param responseHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public JavaHttpClientTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
+  public JavaHttpClientTelemetryBuilder setCapturedResponseHeaders(
+      Collection<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
@@ -93,10 +94,10 @@ public final class JavaHttpClientTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
-  public JavaHttpClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+  public JavaHttpClientTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
   }

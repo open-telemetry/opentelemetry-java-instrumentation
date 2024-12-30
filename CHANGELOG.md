@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 2.11.0 (2024-12-23)
+
 ### Migration notes
 
 In preparation for stabilizing HTTP library instrumentation soon:
@@ -26,6 +28,67 @@ In preparation for stabilizing HTTP library instrumentation soon:
 - `*KtorClientTracing*` and `*KtorServerTracing*` have been deprecated and renamed to
   `*KtorClientTelemetry*` and `*KtorServerTelemetry*`
   ([#12855](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12855))
+- Experimental opt-in attribute `spring-webflux.handler.type` was removed in favor of
+  standard `code.*` attributes
+  ([#12887](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12887))
+
+### 📈 Enhancements
+
+- Map lettuce 5.1 `db.namespace` to `db.name` (unless using experimental database semconv stability opt-in)
+  ([#12609](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12609))
+- Log4j2: add option to fill code attributes
+  ([#12592](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12592))
+- Fill jvm.thread.state attribute for jvm.thread.count metric on jdk8
+  ([#12724](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12724))
+- Update Spring Scheduling `code.*` attribute extraction for latest release of Spring Scheduling
+  ([#12739](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12739))
+- Add jctools classes to `reflect-config.json` for better native image support
+  ([#12736](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12736))
+- Support Pulsar Client send message with transaction
+  ([#12731](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12731))
+- Implement reading of simple key-value Logstash JSON Marker attributes
+  ([#12513](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12513))
+- Add agent instrumentation for Ratpack 1.7+
+  ([#12572](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12572))
+- Added `spring-scheduling.enabled` property to spring-configuration-metadata.json
+  ([#12791](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12791))
+- Remove class files from spring-boot-autoconfigure source jar
+  ([#12798](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12798))
+- Updated Camel rules adding route.started, route.added, and thread pools' pool.core_size
+  ([#12763](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12763))
+- Add database client metrics (when using experimental database semconv stability opt-in)
+  ([#12806](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12806),
+   [#12818](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12818))
+- Add dynamodb instrumenter for aws v1_11 sdk
+  ([#12756](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12756))
+- Remove public suffixes list from the agent
+  ([#10763](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/10763))
+- Add an option to disable automatic kafka interceptor configuration in spring starter
+  ([#12833](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12833))
+- Add code attributes to spring webmvc controller spans
+  ([#12839](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12839))
+- Hibernate 6: don't record error on NoResultException
+  ([#12879](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12879))
+- Add support for missing spring list properties
+  ([#12819](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12819))
+- Ktor: support setting custom `spanNameExtractor` (#12842)
+  ([#12850](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12850))
+- Rename "db.client.connections.usage" to "db.client.connection.count"
+  (when using experimental database semconv stability opt-in)
+  ([#12886](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12886))
+- Support Struts 7.0
+  ([#12935](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12935))
+- Support latest Ktor release
+  ([#12937](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12937))
+
+### 🛠️ Bug fixes
+
+- Logback: don't make MDCPropertyMap of logging event immutable
+  ([#12718](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12718))
+- Avoid exception when redisson address is null
+  ([#12883](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12883))
+- Add close to fix CWE-404
+  ([#12908](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12908))
 
 ## Version 2.10.0 (2024-11-13)
 
