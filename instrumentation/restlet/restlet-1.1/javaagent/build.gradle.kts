@@ -30,6 +30,8 @@ dependencies {
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
+
+  latestDepTestLibrary("org.restlet:org.restlet:1.+") // see restlet-2.0 module
 }
 
 tasks.withType<Test>().configureEach {
