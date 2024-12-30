@@ -8,6 +8,8 @@ muzzle {
     module.set("org.restlet")
     versions.set("[1.1.0, 1.2-M1)")
     extraDependency("com.noelios.restlet:com.noelios.restlet")
+    // missing dependencies
+    skip("2.5.0")
     assertInverse.set(true)
   }
 }
