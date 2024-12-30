@@ -68,12 +68,14 @@ abstract class WithSpanAspect {
     AsyncOperationEndSupport<JoinPointRequest, Object> asyncOperationEndSupport =
         AsyncOperationEndSupport.create(
             instrumenter, Object.class, request.method().getReturnType());
+
+    Object response;
     try (Scope ignored = context.makeCurrent()) {
-      Object response = pjp.proceed();
-      return asyncOperationEndSupport.asyncEnd(context, request, response, null);
+      response = pjp.proceed();
     } catch (Throwable t) {
       asyncOperationEndSupport.asyncEnd(context, request, null, t);
       throw t;
     }
+    return asyncOperationEndSupport.asyncEnd(context, request, response, null);
   }
 }

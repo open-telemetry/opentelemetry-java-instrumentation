@@ -154,10 +154,10 @@ public final class SpringWebfluxTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
-   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Set)
-   * @deprecated Use {@link SpringWebfluxClientTelemetryBuilder#setKnownMethods(Set)} and {@link
-   *     SpringWebfluxServerTelemetryBuilder#setKnownMethods(Set)} instead.
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Collection)
+   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Collection)
+   * @deprecated Use {@link SpringWebfluxClientTelemetryBuilder#setKnownMethods(Collection)} and
+   *     {@link SpringWebfluxServerTelemetryBuilder#setKnownMethods(Collection)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue

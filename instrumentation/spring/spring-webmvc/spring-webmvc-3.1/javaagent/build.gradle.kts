@@ -37,9 +37,9 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-web:1.5.17.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-security:1.5.17.RELEASE")
 
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.+")
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-web:2.+")
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-security:2.+")
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.+") // see spring-webmvc-6.0 module
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-web:2.+") // see spring-webmvc-6.0 module
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-security:2.+") // see spring-webmvc-6.0 module
 }
 
 tasks.withType<Test>().configureEach {

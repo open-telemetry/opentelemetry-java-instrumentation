@@ -32,7 +32,8 @@ dependencies {
   testLibrary("com.zaxxer:HikariCP:2.4.0")
   testLibrary("com.mchange:c3p0:0.9.5")
 
-  latestDepTestLibrary("org.apache.derby:derby:10.14.+")
+  // some classes in earlier versions of derby were split out into derbytools in later versions
+  latestDepTestLibrary("org.apache.derby:derbytools:+")
 
   testImplementation(project(":instrumentation:jdbc:testing"))
 

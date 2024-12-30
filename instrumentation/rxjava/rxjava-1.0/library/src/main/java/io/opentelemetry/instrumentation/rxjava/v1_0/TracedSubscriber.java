@@ -59,15 +59,13 @@ final class TracedSubscriber<T, REQUEST> extends Subscriber<T> {
   public void onCompleted() {
     Context context = contextRef.getAndSet(null);
     if (context != null) {
-      Throwable error = null;
       try (Scope ignored = context.makeCurrent()) {
         delegate.onCompleted();
       } catch (Throwable t) {
-        error = t;
+        instrumenter.end(context, request, null, t);
         throw t;
-      } finally {
-        instrumenter.end(context, request, null, error);
       }
+      instrumenter.end(context, request, null, null);
     } else {
       delegate.onCompleted();
     }
