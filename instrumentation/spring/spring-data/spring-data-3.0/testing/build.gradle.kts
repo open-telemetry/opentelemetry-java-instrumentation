@@ -20,8 +20,6 @@ dependencies {
   testImplementation("org.hsqldb:hsqldb:2.0.0")
   testImplementation("com.h2database:h2:1.4.197")
   testImplementation("io.r2dbc:r2dbc-h2:1.0.0.RELEASE")
-
-  latestDepTestLibrary("org.hibernate.orm:hibernate-core:6.2.+")
 }
 
 otelJava {

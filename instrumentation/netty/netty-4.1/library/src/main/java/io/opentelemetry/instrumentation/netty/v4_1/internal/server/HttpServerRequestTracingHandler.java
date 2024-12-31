@@ -59,15 +59,15 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
 
     try (Scope ignored = context.makeCurrent()) {
       super.channelRead(ctx, msg);
-      // the span is ended normally in HttpServerResponseTracingHandler
-    } catch (Throwable throwable) {
+    } catch (Throwable t) {
       // make sure to remove the server context on end() call
       ServerContext serverContext = serverContexts.pollLast();
       if (serverContext != null) {
-        instrumenter.end(serverContext.context(), serverContext.request(), null, throwable);
+        instrumenter.end(serverContext.context(), serverContext.request(), null, t);
       }
-      throw throwable;
+      throw t;
     }
+    // span is ended normally in HttpServerResponseTracingHandler
   }
 
   @Override

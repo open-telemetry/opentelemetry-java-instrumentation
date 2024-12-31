@@ -26,9 +26,8 @@ dependencies {
 
   testImplementation(project(":instrumentation:couchbase:couchbase-common:testing"))
 
-  // later versions are tested with couchbase-2.6 instrumentation
-  latestDepTestLibrary("org.springframework.data:spring-data-couchbase:2.+")
-  latestDepTestLibrary("com.couchbase.client:java-client:2.5.+")
+  latestDepTestLibrary("org.springframework.data:spring-data-couchbase:2.+") // see couchbase-2.6 module
+  latestDepTestLibrary("com.couchbase.client:java-client:2.5.+") // see couchbase-2.6 module
 }
 
 tasks {

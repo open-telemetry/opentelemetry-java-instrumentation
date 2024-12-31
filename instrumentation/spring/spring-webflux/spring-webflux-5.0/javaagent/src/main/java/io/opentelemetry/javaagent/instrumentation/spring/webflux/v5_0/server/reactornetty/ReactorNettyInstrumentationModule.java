@@ -17,7 +17,7 @@ public class ReactorNettyInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public ReactorNettyInstrumentationModule() {
-    super("reactor-netty", "reactor-netty-server");
+    super("spring-webflux", "spring-webflux-5.0", "reactor-netty", "reactor-netty-server");
   }
 
   @Override

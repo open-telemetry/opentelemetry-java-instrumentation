@@ -22,7 +22,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class SpringSecurityConfigServletInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public SpringSecurityConfigServletInstrumentationModule() {
-    super("spring-security-config-servlet", "spring-security-config-servlet-6.0");
+    super(
+        "spring-security-config",
+        "spring-security-config-6.0",
+        "spring-security-config-servlet",
+        "spring-security-config-servlet-6.0");
   }
 
   @Override
