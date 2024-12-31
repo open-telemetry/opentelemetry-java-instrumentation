@@ -55,6 +55,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -437,8 +438,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
   // TODO: add basic auth scenario
 
-  @Test
-  void errorSpan() {
+  @ParameterizedTest
+  @CsvSource({"/error,500", "/client-error,400"})
+  void errorSpan(String path, int resposeCode) {
     String method = "GET";
     URI uri = resolveAddress("/error");
 
@@ -1027,34 +1029,6 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               .describedAs("Span duration should be less than 2s")
               .isTrue();
         });
-  }
-
-  @Test
-  void requestClientError() throws Exception {
-    assumeTrue(options.getTestClientError());
-
-    URI uri = resolveAddress("/client-error");
-    String method = "GET";
-
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          try {
-            doRequest(method, uri);
-          } catch (Throwable ignored) {
-            // ignored
-          }
-        });
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    assertClientSpan(span, uri, method, 400, null)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error()),
-                span -> assertServerSpan(span).hasParent(trace.getSpan(1))));
   }
 
   // Visible for spock bridge.
