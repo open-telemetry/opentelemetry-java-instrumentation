@@ -440,9 +440,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
   @ParameterizedTest
   @CsvSource({"/error,500", "/client-error,400"})
-  void errorSpan(String path, int resposeCode) {
+  void errorSpan(String path, int responseCode) {
     String method = "GET";
-    URI uri = resolveAddress("/error");
+    URI uri = resolveAddress(path);
 
     testing.runWithSpan(
         "parent",
@@ -458,7 +458,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span -> assertClientSpan(span, uri, method, 500, null).hasParent(trace.getSpan(0)),
+              span ->
+                  assertClientSpan(span, uri, method, responseCode, null)
+                      .hasParent(trace.getSpan(0)),
               span -> assertServerSpan(span).hasParent(trace.getSpan(1)));
         });
   }
