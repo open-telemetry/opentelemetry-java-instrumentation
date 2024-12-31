@@ -14,13 +14,13 @@ import org.apache.cxf.jaxrs.client.spec.ClientBuilderImpl;
 class CxfClientTest extends AbstractJaxRsClientTest {
 
   @Override
-  public ClientBuilder builder() {
+  public ClientBuilder builder(URI uri) {
     return new ClientBuilderImpl()
-        .property("http.connection.timeout", (long) CONNECT_TIMEOUT_MS)
+        .property("http.connection.timeout", CONNECTION_TIMEOUT.toMillis())
         .property("org.apache.cxf.transport.http.forceVersion", "1.1");
   }
 
-  Throwable clientSpanError(URI uri, Throwable exception) {
+  private static Throwable clientSpanError(URI uri, Throwable exception) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
         if (exception.getCause() instanceof ConnectException) {
@@ -43,6 +43,11 @@ class CxfClientTest extends AbstractJaxRsClientTest {
     super.configure(optionsBuilder);
     optionsBuilder.setTestReadTimeout(false);
     optionsBuilder.setTestWithClientParent(!Boolean.getBoolean("testLatestDeps"));
-    optionsBuilder.setClientSpanErrorMapper((uri, exception) -> clientSpanError(uri, exception));
+    optionsBuilder.setClientSpanErrorMapper(CxfClientTest::clientSpanError);
+    // CXF JAX-RS client uses HttpURLConnection internally, which does not support pipelining nor
+    // waiting for a connection in the pool to become available. Therefore, a high concurrency test
+    // would require manually doing requests one after another which is not meaningful for a high
+    // concurrency test.
+    optionsBuilder.setSingleConnectionFactory((host, port) -> null);
   }
 }

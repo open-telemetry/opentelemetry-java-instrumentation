@@ -32,12 +32,10 @@ abstract class AbstractJaxRsClientTest extends AbstractHttpClientTest<Invocation
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
   protected static final List<String> BODY_METHODS = asList("POST", "PUT");
-  protected static final int CONNECT_TIMEOUT_MS = 5000;
-  protected static final int READ_TIMEOUT_MS = 3000;
 
   @Override
   public Invocation.Builder buildRequest(String method, URI uri, Map<String, String> headers) {
-    Client client = builder().build();
+    Client client = builder(uri).build();
     WebTarget service = client.target(uri);
     Invocation.Builder requestBuilder = service.request(MediaType.TEXT_PLAIN);
     for (Map.Entry<String, String> entry : headers.entrySet()) {
@@ -46,7 +44,7 @@ abstract class AbstractJaxRsClientTest extends AbstractHttpClientTest<Invocation
     return requestBuilder;
   }
 
-  abstract ClientBuilder builder();
+  abstract ClientBuilder builder(URI uri);
 
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
