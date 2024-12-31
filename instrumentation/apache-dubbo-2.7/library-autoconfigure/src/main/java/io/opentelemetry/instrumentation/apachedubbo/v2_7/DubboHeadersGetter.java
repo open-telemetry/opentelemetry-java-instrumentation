@@ -14,11 +14,11 @@ enum DubboHeadersGetter implements TextMapGetter<DubboRequest> {
   INSTANCE;
 
   @Override
-  @SuppressWarnings("deprecation") // deprecation for dubbo 3.2.15
+  @SuppressWarnings("unchecked") // unchecked for dubbo 2.7.6
   public Iterable<String> keys(DubboRequest request) {
     RpcInvocation invocation = request.invocation();
     Map<String, String> attachments = invocation.getAttachments();
-    // in 2.7.6+, type of attachments is StringToObjectMap, it doesn't contains keySet method.
+    // in 2.7.6+, type of attachments is StringToObjectMap, it doesn't contain keySet method.
     if ("ObjectToStringMap".equals(attachments.getClass().getSimpleName())) {
       Method getObjectAttachmentsMethod = null;
       try {
