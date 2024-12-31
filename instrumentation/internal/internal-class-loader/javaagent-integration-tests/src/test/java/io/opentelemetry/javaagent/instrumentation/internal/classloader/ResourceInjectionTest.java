@@ -42,6 +42,7 @@ class ResourceInjectionTest {
 
     Enumeration<URL> resourceUrls = emptyLoader.get().getResources(resourceName);
     assertThat(resourceUrls.hasMoreElements()).isFalse();
+    resourceUrls = null;
 
     URLClassLoader notInjectedLoader = new URLClassLoader(urls, null);
 
