@@ -46,8 +46,8 @@
       "groupName": "quarkus packages"
     },
     {
-      "matchPackagePrefixes": ["com.gradle.enterprise"],
-      "groupName": "gradle enterprise packages"
+      "matchPackagePrefixes": ["com.gradle.develocity"],
+      "groupName": "gradle develocity packages"
     },
     {
       "matchPackagePrefixes": ["org.eclipse.jetty:"],
@@ -146,6 +146,14 @@
       // intentionally using slf4j 1 in this smoke tests
       "matchFileNames": ["smoke-tests/images/spring-boot/build.gradle.kts"],
       "matchPackagePrefixes": ["org.slf4j:"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      // intentionally pinning specifically to guice 5 in the play smoke test
+      // until we are able to test against the latest version of play
+      "matchFileNames": ["smoke-tests/images/play/build.gradle.kts"],
+      "matchPackagePrefixes": ["com.google.inject:", "com.google.inject.extensions:"],
       "matchUpdateTypes": ["major"],
       "enabled": false
     },

@@ -12,7 +12,7 @@ muzzle {
 }
 
 dependencies {
-  compileOnly("org.apache.shenyu:shenyu-web:2.4.0")
+  library("org.apache.shenyu:shenyu-web:2.4.0")
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
@@ -27,7 +27,7 @@ dependencies {
   }
 
   // the latest version of apache shenyu uses spring-boot 2.7
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.7.+")
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.7.+") // related dependency
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 }

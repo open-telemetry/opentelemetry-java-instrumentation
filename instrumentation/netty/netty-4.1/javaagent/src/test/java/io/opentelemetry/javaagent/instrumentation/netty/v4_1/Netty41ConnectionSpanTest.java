@@ -7,6 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -31,8 +37,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
@@ -121,19 +125,19 @@ class Netty41ConnectionSpanTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
-                            equalTo(ServerAttributes.SERVER_PORT, uri.getPort())),
+                            equalTo(SERVER_ADDRESS, uri.getHost()),
+                            equalTo(SERVER_PORT, uri.getPort())),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
-                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
-                            equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
-                            equalTo(NetworkAttributes.NETWORK_PEER_PORT, uri.getPort()),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1")),
+                            equalTo(NETWORK_TRANSPORT, "tcp"),
+                            equalTo(NETWORK_TYPE, "ipv4"),
+                            equalTo(SERVER_ADDRESS, uri.getHost()),
+                            equalTo(SERVER_PORT, uri.getPort()),
+                            equalTo(NETWORK_PEER_PORT, uri.getPort()),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1")),
                 span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("test-http-server")
@@ -162,8 +166,8 @@ class Netty41ConnectionSpanTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
-                            equalTo(ServerAttributes.SERVER_PORT, uri.getPort())),
+                            equalTo(SERVER_ADDRESS, uri.getHost()),
+                            equalTo(SERVER_PORT, uri.getPort())),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(SpanKind.INTERNAL)
@@ -171,23 +175,23 @@ class Netty41ConnectionSpanTest {
                         .hasStatus(StatusData.error())
                         .hasException(finalThrownException)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+                            equalTo(NETWORK_TRANSPORT, "tcp"),
                             satisfies(
-                                NetworkAttributes.NETWORK_TYPE,
+                                NETWORK_TYPE,
                                 k ->
                                     k.satisfiesAnyOf(
                                         v -> assertThat(v).isEqualTo("ipv4"),
                                         v -> assertThat(v).isNull())),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, uri.getHost()),
-                            equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
+                            equalTo(SERVER_ADDRESS, uri.getHost()),
+                            equalTo(SERVER_PORT, uri.getPort()),
                             satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
+                                NETWORK_PEER_PORT,
                                 k ->
                                     k.satisfiesAnyOf(
                                         v -> assertThat(v).isEqualTo(uri.getPort()),
                                         v -> assertThat(v).isNull())),
                             satisfies(
-                                NetworkAttributes.NETWORK_PEER_ADDRESS,
+                                NETWORK_PEER_ADDRESS,
                                 k ->
                                     k.satisfiesAnyOf(
                                         v -> assertThat(v).isEqualTo("127.0.0.1"),

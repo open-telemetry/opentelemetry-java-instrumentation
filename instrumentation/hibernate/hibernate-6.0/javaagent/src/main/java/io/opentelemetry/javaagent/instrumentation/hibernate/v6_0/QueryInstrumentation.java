@@ -45,13 +45,14 @@ public class QueryInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isMethod()
             .and(
+                // not instrumenting getSingleResult as it calls list that is instrumented and
+                // we don't want to record the NoResultException that it throws
                 namedOneOf(
                     "list",
                     "getResultList",
                     "stream",
                     "getResultStream",
                     "uniqueResult",
-                    "getSingleResult",
                     "getSingleResultOrNull",
                     "uniqueResultOptional",
                     "executeUpdate",

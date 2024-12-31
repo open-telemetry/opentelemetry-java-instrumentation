@@ -20,7 +20,6 @@ import java.io.IOException;
 import java.io.Writer;
 import java.net.InetSocketAddress;
 import javax.servlet.Servlet;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ErrorHandler;
@@ -47,7 +46,6 @@ public abstract class JettyServlet3Test
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
     options.setTestNotFound(false);
-    options.setExpectedException(new ServletException(EXCEPTION.getBody()));
     options.setContextPath("/jetty-context");
     options.setVerifyServerSpanEndTime(!isAsyncTest());
   }

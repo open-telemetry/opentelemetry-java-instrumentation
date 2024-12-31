@@ -9,10 +9,10 @@ To instrument all AWS SDK clients include the `opentelemetry-aws-sdk-2.2-autocon
 To register instrumentation only on a specific SDK client, register the interceptor when creating it.
 
 ```java
-AwsSdkTelemetry telemetrty = AwsSdkTelemetry.create(openTelemetry).build();
+AwsSdkTelemetry telemetry = AwsSdkTelemetry.create(openTelemetry).build();
 DynamoDbClient client = DynamoDbClient.builder()
   .overrideConfiguration(ClientOverrideConfiguration.builder()
-    .addExecutionInterceptor(telemetrty.newExecutionInterceptor()))
+    .addExecutionInterceptor(telemetry.newExecutionInterceptor()))
     .build())
   .build();
 ```

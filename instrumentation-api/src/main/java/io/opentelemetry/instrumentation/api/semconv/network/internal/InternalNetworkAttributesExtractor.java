@@ -33,18 +33,23 @@ public final class InternalNetworkAttributesExtractor<REQUEST, RESPONSE> {
   }
 
   public void onEnd(AttributesBuilder attributes, REQUEST request, @Nullable RESPONSE response) {
-    String protocolName = lowercase(getter.getNetworkProtocolName(request, response));
-    String protocolVersion = lowercase(getter.getNetworkProtocolVersion(request, response));
-
     if (captureProtocolAttributes) {
-      String transport = lowercase(getter.getNetworkTransport(request, response));
-      internalSet(attributes, NetworkAttributes.NETWORK_TRANSPORT, transport);
+      internalSet(
+          attributes,
+          NetworkAttributes.NETWORK_TRANSPORT,
+          lowercase(getter.getNetworkTransport(request, response)));
       internalSet(
           attributes,
           NetworkAttributes.NETWORK_TYPE,
           lowercase(getter.getNetworkType(request, response)));
-      internalSet(attributes, NetworkAttributes.NETWORK_PROTOCOL_NAME, protocolName);
-      internalSet(attributes, NetworkAttributes.NETWORK_PROTOCOL_VERSION, protocolVersion);
+      internalSet(
+          attributes,
+          NetworkAttributes.NETWORK_PROTOCOL_NAME,
+          lowercase(getter.getNetworkProtocolName(request, response)));
+      internalSet(
+          attributes,
+          NetworkAttributes.NETWORK_PROTOCOL_VERSION,
+          lowercase(getter.getNetworkProtocolVersion(request, response)));
     }
 
     if (captureLocalSocketAttributes) {

@@ -42,7 +42,7 @@ dependencies {
   testImplementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
   testImplementation("org.testcontainers:elasticsearch")
 
-  latestDepTestLibrary("co.elastic.clients:elasticsearch-java:7.17.19")
+  latestDepTestLibrary("co.elastic.clients:elasticsearch-java:7.17.19") // native on-by-default instrumentation after this version
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
@@ -74,14 +74,17 @@ testing {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
   check {
     dependsOn(testing.suites)
+    dependsOn(testStableSemconv)
   }
-}
-
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

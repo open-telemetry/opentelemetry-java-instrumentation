@@ -14,7 +14,7 @@ muzzle {
 val testLatestDeps = findProperty("testLatestDeps") as Boolean
 
 dependencies {
-  library("org.apache.logging.log4j:log4j-core:2.17.0")
+  library("org.apache.logging.log4j:log4j-core:2.0")
 
   compileOnly(project(":javaagent-bootstrap"))
 
@@ -56,9 +56,10 @@ tasks {
 
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental log attributes
+  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
+  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-code-attributes=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-map-message-attributes=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=*")
-  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-marker-attribute=true")
 }
 

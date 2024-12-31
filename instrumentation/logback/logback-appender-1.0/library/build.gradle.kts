@@ -19,6 +19,11 @@ dependencies {
       strictly("2.0.0")
     }
   }
+  compileOnly("net.logstash.logback:logstash-logback-encoder") {
+    version {
+      strictly("3.0")
+    }
+  }
 
   if (findProperty("testLatestDeps") as Boolean) {
     testImplementation("ch.qos.logback:logback-classic:+")
@@ -75,6 +80,7 @@ testing {
         if (latestDepTest) {
           implementation("ch.qos.logback:logback-classic:+")
           implementation("org.slf4j:slf4j-api:+")
+          implementation("net.logstash.logback:logstash-logback-encoder:+")
         } else {
           implementation("ch.qos.logback:logback-classic") {
             version {
@@ -84,6 +90,11 @@ testing {
           implementation("org.slf4j:slf4j-api") {
             version {
               strictly("2.0.0")
+            }
+          }
+          implementation("net.logstash.logback:logstash-logback-encoder") {
+            version {
+              strictly("3.0")
             }
           }
         }

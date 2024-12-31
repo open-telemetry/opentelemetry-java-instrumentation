@@ -60,7 +60,7 @@ class KtorHttpServerTest : AbstractHttpServerTest<ApplicationEngine>() {
 
         get(ServerEndpoint.EXCEPTION.path) {
           controller(ServerEndpoint.EXCEPTION) {
-            throw Exception(ServerEndpoint.EXCEPTION.body)
+            throw IllegalStateException(ServerEndpoint.EXCEPTION.body)
           }
         }
 

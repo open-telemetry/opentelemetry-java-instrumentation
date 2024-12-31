@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.jdbc;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
@@ -77,7 +78,7 @@ class TomcatJdbcInstrumentationTest {
   private static void assertNoConnectionPoolMetrics() {
     testing.waitAndAssertMetrics(
         "io.opentelemetry.tomcat-jdbc",
-        "db.client.connections.usage",
+        emitStableDatabaseSemconv() ? "db.client.connection.count" : "db.client.connections.usage",
         AbstractIterableAssert::isEmpty);
     testing.waitAndAssertMetrics(
         "io.opentelemetry.tomcat-jdbc",

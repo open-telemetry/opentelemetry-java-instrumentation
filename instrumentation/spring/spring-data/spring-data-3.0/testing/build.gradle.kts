@@ -20,8 +20,6 @@ dependencies {
   testImplementation("org.hsqldb:hsqldb:2.0.0")
   testImplementation("com.h2database:h2:1.4.197")
   testImplementation("io.r2dbc:r2dbc-h2:1.0.0.RELEASE")
-
-  latestDepTestLibrary("org.hibernate.orm:hibernate-core:6.2.+")
 }
 
 otelJava {
@@ -42,14 +40,19 @@ testing {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
 
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
   check {
     dependsOn(testing.suites)
+    dependsOn(testStableSemconv)
   }
 }

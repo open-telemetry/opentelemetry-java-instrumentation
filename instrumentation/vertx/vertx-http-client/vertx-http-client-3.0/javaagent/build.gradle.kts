@@ -27,9 +27,8 @@ dependencies {
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
-  // Vert.x 4.0 is incompatible with our tests.
   // 3.9.7 Requires Netty 4.1.60, no other version works with it.
-  latestDepTestLibrary(enforcedPlatform("io.netty:netty-bom:4.1.60.Final"))
+  latestDepTestLibrary(enforcedPlatform("io.netty:netty-bom:4.1.60.Final")) // see vertx-http-client-4.0 module
   latestDepTestLibrary("io.vertx:vertx-core:3.+") // see vertx-http-client-4.0 module
   latestDepTestLibrary("io.vertx:vertx-codegen:3.+") // see vertx-http-client-4.0 module
   latestDepTestLibrary("io.vertx:vertx-docgen:3.+") // see vertx-http-client-4.0 module

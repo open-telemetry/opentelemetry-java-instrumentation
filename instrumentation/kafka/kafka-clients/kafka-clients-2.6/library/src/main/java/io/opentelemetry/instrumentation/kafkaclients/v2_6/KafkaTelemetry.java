@@ -252,10 +252,10 @@ public final class KafkaTelemetry {
     }
 
     Context context = producerInstrumenter.start(parentContext, request);
+    propagator().inject(context, record.headers(), SETTER);
+
     try (Scope ignored = context.makeCurrent()) {
-      propagator().inject(context, record.headers(), SETTER);
-      callback = new ProducerCallback(callback, parentContext, context, request);
-      return sendFn.apply(record, callback);
+      return sendFn.apply(record, new ProducerCallback(callback, parentContext, context, request));
     }
   }
 

@@ -24,10 +24,11 @@ class DeclarativeConfigTest {
   @Test
   void endToEnd() {
     String yaml =
-        "file_format: 0.1\n"
+        "file_format: 0.3\n"
             + "resource:\n"
             + "  attributes:\n"
-            + "    service.name: my-service\n"
+            + "    - name: service.name\n"
+            + "      value: my-service\n"
             + "tracer_provider:\n";
 
     OpenTelemetrySdk openTelemetrySdk =

@@ -49,7 +49,7 @@ if (project.findProperty("skipTests") as String? == "true") {
   }
 }
 
-if (gradle.startParameter.taskNames.any { it.equals("listTestsInPartition") }) {
+if (gradle.startParameter.taskNames.contains("listTestsInPartition")) {
   tasks {
     val listTestsInPartition by registering {
       group = "Help"

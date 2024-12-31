@@ -14,6 +14,8 @@ dependencies {
   library("com.noelios.restlet:com.noelios.restlet:1.1.5")
 
   testImplementation(project(":instrumentation:restlet:restlet-1.1:testing"))
+
+  latestDepTestLibrary("org.restlet:org.restlet:1.+") // see restlet-2.0 module
 }
 
 tasks.withType<Test>().configureEach {

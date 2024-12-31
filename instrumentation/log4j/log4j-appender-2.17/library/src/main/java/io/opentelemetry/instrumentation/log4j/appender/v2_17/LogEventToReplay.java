@@ -36,8 +36,9 @@ class LogEventToReplay implements LogEvent {
   private final ReadOnlyStringMap contextData;
   private final String threadName;
   private final long threadId;
+  private final StackTraceElement source;
 
-  LogEventToReplay(LogEvent logEvent) {
+  LogEventToReplay(LogEvent logEvent, boolean captureCodeAttributes) {
     this.loggerName = logEvent.getLoggerName();
     Message messageOrigin = logEvent.getMessage();
     if (messageOrigin instanceof StructuredDataMessage) {
@@ -64,6 +65,7 @@ class LogEventToReplay implements LogEvent {
     this.contextData = new SortedArrayStringMap(logEvent.getContextData());
     this.threadName = logEvent.getThreadName();
     this.threadId = logEvent.getThreadId();
+    this.source = captureCodeAttributes ? logEvent.getSource() : null;
   }
 
   @Override
@@ -125,7 +127,7 @@ class LogEventToReplay implements LogEvent {
 
   @Override
   public StackTraceElement getSource() {
-    return null;
+    return source;
   }
 
   @Override

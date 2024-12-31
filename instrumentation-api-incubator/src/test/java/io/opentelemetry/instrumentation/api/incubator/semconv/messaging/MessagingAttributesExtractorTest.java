@@ -29,6 +29,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class MessagingAttributesExtractorTest {
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
   @MethodSource("destinations")
   void shouldExtractAllAvailableAttributes(
@@ -88,7 +89,7 @@ class MessagingAttributesExtractorTest {
         entry(MessagingIncubatingAttributes.MESSAGING_MESSAGE_CONVERSATION_ID, "42"));
     expectedEntries.add(entry(MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE, 100L));
     expectedEntries.add(entry(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ENVELOPE_SIZE, 120L));
-    expectedEntries.add(entry(MessagingIncubatingAttributes.MESSAGING_CLIENT_ID, "43"));
+    expectedEntries.add(entry(AttributeKey.stringKey("messaging.client_id"), "43"));
     expectedEntries.add(
         entry(MessagingIncubatingAttributes.MESSAGING_OPERATION, operation.operationName()));
 
