@@ -1,28 +1,44 @@
-package io.opentelemetry.javaagent.instrumentation.internal.classloader;
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-import org.junit.jupiter.api.Test;
-import java.io.IOException;
-import java.lang.ref.WeakReference;
-import java.net.URL;
-import java.net.URLClassLoader;
-import java.time.Duration;
-import java.util.Enumeration;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicReference;
+package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
 import static io.opentelemetry.instrumentation.test.utils.GcUtils.awaitGc;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.lang.ref.WeakReference;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.charset.Charset;
+import java.time.Duration;
+import java.util.Collections;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
+import org.apache.commons.lang3.SystemUtils;
+import org.junit.jupiter.api.Test;
 
 class ResourceInjectionTest {
 
+  private static String trimStream(URL url) throws Exception {
+    try (BufferedReader reader =
+        new BufferedReader(new InputStreamReader(url.openStream(), Charset.defaultCharset()))) {
+      return reader.readLine().trim();
+    }
+  }
+
   @Test
   @SuppressWarnings("UnnecessaryAsync")
-  void resourcesInjectedToNonDelegatingClassLoader()
-      throws IOException, ClassNotFoundException, InterruptedException, TimeoutException {
+  void resourcesInjectedToNonDelegatingClassLoader() throws Exception {
+
     String resourceName = "test-resources/test-resource.txt";
-    URL[] urls = {ResourceInjectionTest.class.getProtectionDomain().getCodeSource().getLocation()};
-    AtomicReference<URLClassLoader> emptyLoader = new AtomicReference<>(new URLClassLoader(urls, null));
+    URL[] urls = {SystemUtils.class.getProtectionDomain().getCodeSource().getLocation()};
+    AtomicReference<URLClassLoader> emptyLoader =
+        new AtomicReference<>(new URLClassLoader(urls, null));
 
     Enumeration<URL> resourceUrls = emptyLoader.get().getResources(resourceName);
     assertThat(resourceUrls.hasMoreElements()).isFalse();
@@ -30,29 +46,18 @@ class ResourceInjectionTest {
     URLClassLoader notInjectedLoader = new URLClassLoader(urls, null);
 
     // this triggers resource injection
-    emptyLoader.get().loadClass(ResourceInjectionTest.class.getName());
+    emptyLoader.get().loadClass(SystemUtils.class.getName());
 
-    for (int i = 0; i < 2; i++) {
+    List<URL> resourceList = Collections.list(emptyLoader.get().getResources(resourceName));
 
-      URL test = ( resourceUrls.asIterator();
-      if (i == 0) {
-        assertThat(test).isEqualTo("Hello world!");
-      } else {
-        assertThat(test).isEqualTo("Hello there");
-      }
-    }
-    assertThat(resourceUrls.hasMoreElements()).isFalse();
-
-
-//    resourceUrls = (Enumeration<URL>) Collections.list(emptyLoader.get().getResources(resourceName));
-//    assertThat(resourceUrls.).isEqualTo(2);
-//    assertThat(list.get(0).openStream().toString().trim()).isEqualTo("Hello world!");
-//    assertThat(list.get(1).openStream().toString().trim()).isEqualTo("Hello there");
+    assertThat(resourceList.size()).isEqualTo(2);
+    assertThat(trimStream(resourceList.get(0))).isEqualTo("Hello world!");
+    assertThat(trimStream(resourceList.get(1))).isEqualTo("Hello there");
 
     assertThat(notInjectedLoader.getResources(resourceName).hasMoreElements()).isFalse();
 
     // references to emptyloader are gone
-    emptyLoader.get().close();
+    emptyLoader.get().close(); // cleanup
     WeakReference<URLClassLoader> ref = new WeakReference<>(emptyLoader.get());
     emptyLoader.set(null);
 
@@ -60,5 +65,4 @@ class ResourceInjectionTest {
 
     assertThat(ref.get()).isNull();
   }
-
 }
