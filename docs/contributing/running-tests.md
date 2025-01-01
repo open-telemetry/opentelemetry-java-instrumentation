@@ -77,7 +77,7 @@ If you want to run a specific smoke test:
 ## OpenTelemetry starter smoke tests
 
 Smoke tests for the [OpenTelemetry Spring starter](../../instrumentation/spring/starters/spring-boot-starter/README.md)
-can be executed in a JVM (`./gradlew smoke-tests-otel-starter:test`) or as Spring native tests (`./gradlew smoke-tests-otel-starter:nativeTest`).
+can be executed in a JVM (`./gradlew smoke-tests-otel-starter:test`) or as Spring Native tests (`./gradlew smoke-tests-otel-starter:nativeTest`).
 
 ## GraalVM native test
 
