@@ -139,4 +139,6 @@ Then you can just use the raw logs to search for "FAILED" or "Task failed with a
 For instrumentation that has been migrated to use the [invokedynamic based instrumentation mechanism](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8999),
 you can leverage breakpoints and standard debugging strategies by adding `-PtestIndy=true` to the gradle command:
 
-`./gradlew -PtestIndy=true :instrumentation:<INSTRUMENTATION_NAME>:test`
+```
+./gradlew -PtestIndy=true :instrumentation:<INSTRUMENTATION_NAME>:test
+```
