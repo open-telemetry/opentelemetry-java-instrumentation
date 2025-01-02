@@ -23,8 +23,8 @@ dependencies {
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.0.0.RELEASE")
 
-  latestDepTestLibrary("org.springframework.cloud:spring-cloud-starter-gateway:2.1.+")
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.1.+")
+  latestDepTestLibrary("org.springframework.cloud:spring-cloud-starter-gateway:2.1.+") // see spring-cloud-gateway-2.2:testing module
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.1.+") // see spring-cloud-gateway-2.2:testing module
 }
 
 tasks.withType<Test>().configureEach {

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.hikaricp;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -81,7 +82,9 @@ public abstract class AbstractHikariInstrumentationTest {
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.hikaricp-3.0",
-            "db.client.connections.usage",
+            emitStableDatabaseSemconv()
+                ? "db.client.connection.count"
+                : "db.client.connections.usage",
             AbstractIterableAssert::isEmpty);
     testing()
         .waitAndAssertMetrics(

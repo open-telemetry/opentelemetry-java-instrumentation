@@ -18,7 +18,7 @@ public class GatewayInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
 
   public GatewayInstrumentationModule() {
-    super("spring-cloud-gateway");
+    super("spring-cloud-gateway", "spring-cloud-gateway-2.0");
   }
 
   @Override

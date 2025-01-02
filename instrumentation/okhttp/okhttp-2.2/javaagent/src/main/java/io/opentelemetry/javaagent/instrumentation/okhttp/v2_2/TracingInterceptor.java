@@ -39,9 +39,9 @@ public class TracingInterceptor implements Interceptor {
     Response response;
     try (Scope ignored = context.makeCurrent()) {
       response = chain.proceed(request);
-    } catch (Exception e) {
-      instrumenter.end(context, request, null, e);
-      throw e;
+    } catch (Throwable t) {
+      instrumenter.end(context, request, null, t);
+      throw t;
     }
     instrumenter.end(context, request, response, null);
     return response;

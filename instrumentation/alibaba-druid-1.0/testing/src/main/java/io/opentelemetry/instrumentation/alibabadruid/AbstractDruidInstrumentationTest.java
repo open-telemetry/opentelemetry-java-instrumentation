@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.alibabadruid;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.alibaba.druid.pool.DruidDataSource;
@@ -73,7 +74,9 @@ public abstract class AbstractDruidInstrumentationTest {
     Set<String> metricNames =
         new HashSet<>(
             Arrays.asList(
-                "db.client.connections.usage",
+                emitStableDatabaseSemconv()
+                    ? "db.client.connection.count"
+                    : "db.client.connections.usage",
                 "db.client.connections.idle.min",
                 "db.client.connections.idle.max",
                 "db.client.connections.max",
