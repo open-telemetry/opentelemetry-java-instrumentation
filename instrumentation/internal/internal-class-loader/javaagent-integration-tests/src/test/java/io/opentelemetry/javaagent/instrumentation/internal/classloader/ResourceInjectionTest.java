@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 
 class ResourceInjectionTest {
 
-  private static String trimStream(URL url) throws Exception {
+  private static String readLine(URL url) throws Exception {
     try (BufferedReader reader =
         new BufferedReader(new InputStreamReader(url.openStream(), Charset.defaultCharset()))) {
       return reader.readLine().trim();
@@ -52,8 +52,8 @@ class ResourceInjectionTest {
     List<URL> resourceList = Collections.list(emptyLoader.get().getResources(resourceName));
 
     assertThat(resourceList.size()).isEqualTo(2);
-    assertThat(trimStream(resourceList.get(0))).isEqualTo("Hello world!");
-    assertThat(trimStream(resourceList.get(1))).isEqualTo("Hello there");
+    assertThat(readLine(resourceList.get(0))).isEqualTo("Hello world!");
+    assertThat(readLine(resourceList.get(1))).isEqualTo("Hello there");
 
     assertThat(notInjectedLoader.getResources(resourceName).hasMoreElements()).isFalse();
 
