@@ -13,7 +13,7 @@ import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -26,7 +26,7 @@ class ResourceInjectionTest {
 
   private static String readLine(URL url) throws Exception {
     try (BufferedReader reader =
-        new BufferedReader(new InputStreamReader(url.openStream(), Charset.defaultCharset()))) {
+        new BufferedReader(new InputStreamReader(url.openStream(), StandardCharsets.UTF_8))) {
       return reader.readLine().trim();
     }
   }
@@ -34,7 +34,6 @@ class ResourceInjectionTest {
   @Test
   @SuppressWarnings("UnnecessaryAsync")
   void resourcesInjectedToNonDelegatingClassLoader() throws Exception {
-
     String resourceName = "test-resources/test-resource.txt";
     URL[] urls = {SystemUtils.class.getProtectionDomain().getCodeSource().getLocation()};
     AtomicReference<URLClassLoader> emptyLoader =
