@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import io.opentelemetry.semconv.HttpAttributes;
 import org.apache.shenyu.common.dto.MetaData;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -111,7 +112,7 @@ class ShenYuRouteTest {
                     span.hasName("GET /a/b/c")
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfying(
-                            equalTo(AttributeKey.stringKey("http.route"), "/a/b/c"),
+                            equalTo(HttpAttributes.HTTP_ROUTE, "/a/b/c"),
                             equalTo(META_ID_ATTRIBUTE, "123"),
                             equalTo(META_ENABLED_ATTRIBUTE, true),
                             equalTo(METHOD_NAME_ATTRIBUTE, "hello"),
