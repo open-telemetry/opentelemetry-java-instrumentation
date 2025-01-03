@@ -21,6 +21,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import java.util.List;
 import javax.sql.DataSource;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import tech.powerjob.official.processors.impl.FileCleanupProcessor;
@@ -342,8 +343,8 @@ class PowerJobBasicProcessorTest {
     List<AttributeAssertion> attributeAssertions =
         new ArrayList<>(
             asList(
-                equalTo(AttributeKey.stringKey("code.namespace"), codeNamespace),
-                equalTo(AttributeKey.stringKey("code.function"), "process"),
+                equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, codeNamespace),
+                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "process"),
                 equalTo(AttributeKey.stringKey("job.system"), "powerjob"),
                 equalTo(AttributeKey.longKey("scheduling.powerjob.job.id"), jobId),
                 equalTo(AttributeKey.stringKey("scheduling.powerjob.job.type"), jobType)));

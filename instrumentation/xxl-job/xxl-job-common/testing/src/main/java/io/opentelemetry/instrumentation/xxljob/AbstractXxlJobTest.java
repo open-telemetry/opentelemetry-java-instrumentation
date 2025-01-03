@@ -21,6 +21,7 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.ArrayList;
 import java.util.List;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -147,8 +148,8 @@ public abstract class AbstractXxlJobTest {
       String codeFunction) {
     List<AttributeAssertion> attributeAssertions = new ArrayList<>();
     attributeAssertions.addAll(attributeAssertions(glueType));
-    attributeAssertions.add(equalTo(AttributeKey.stringKey("code.namespace"), codeNamespace));
-    attributeAssertions.add(equalTo(AttributeKey.stringKey("code.function"), codeFunction));
+    attributeAssertions.add(equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, codeNamespace));
+    attributeAssertions.add(equalTo(CodeIncubatingAttributes.CODE_FUNCTION, codeFunction));
 
     checkXxlJob(spanName, statusData, attributeAssertions);
   }
