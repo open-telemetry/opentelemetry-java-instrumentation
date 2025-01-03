@@ -63,8 +63,6 @@ public abstract class KafkaClientBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(KafkaClientBaseTest.class);
 
   protected static final String SHARED_TOPIC = "shared.topic";
-  protected static final AttributeKey<String> MESSAGING_CLIENT_ID =
-      AttributeKey.stringKey("messaging.client_id");
 
   private KafkaContainer kafka;
   protected Producer<Integer, String> producer;
