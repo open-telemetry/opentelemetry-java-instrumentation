@@ -13,6 +13,9 @@ import org.apache.dubbo.rpc.Result;
 /** Entrypoint for instrumenting Apache Dubbo servers and clients. */
 public final class DubboTelemetry {
 
+  private final Instrumenter<DubboRequest, Result> serverInstrumenter;
+  private final Instrumenter<DubboRequest, Result> clientInstrumenter;
+
   /** Returns a new {@link DubboTelemetry} configured with the given {@link OpenTelemetry}. */
   public static DubboTelemetry create(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).build();
@@ -25,9 +28,6 @@ public final class DubboTelemetry {
     return new DubboTelemetryBuilder(openTelemetry);
   }
 
-  private final Instrumenter<DubboRequest, Result> serverInstrumenter;
-  private final Instrumenter<DubboRequest, Result> clientInstrumenter;
-
   DubboTelemetry(
       Instrumenter<DubboRequest, Result> serverInstrumenter,
       Instrumenter<DubboRequest, Result> clientInstrumenter) {
@@ -35,8 +35,23 @@ public final class DubboTelemetry {
     this.clientInstrumenter = clientInstrumenter;
   }
 
-  /** Returns a new Dubbo {@link Filter} that traces Dubbo RPC invocations. */
+  /**
+   * Returns a new Dubbo {@link Filter} that traces Dubbo RPC invocations.
+   *
+   * @deprecated Use {@link #newClientFilter} and {@link #newServerFilter} instead.
+   */
+  @Deprecated
   public Filter newFilter() {
-    return new TracingFilter(serverInstrumenter, clientInstrumenter);
+    return TracingFilter.newFilter(serverInstrumenter, clientInstrumenter);
+  }
+
+  /** Returns a new Dubbo client {@link Filter} that traces Dubbo RPC invocations. */
+  public Filter newClientFilter() {
+    return TracingFilter.newClientFilter(clientInstrumenter);
+  }
+
+  /** Returns a new Dubbo server {@link Filter} that traces Dubbo RPC invocations. */
+  public Filter newServerFilter() {
+    return TracingFilter.newServerFilter(serverInstrumenter);
   }
 }

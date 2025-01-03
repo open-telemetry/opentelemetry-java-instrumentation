@@ -10,30 +10,23 @@ import io.opentelemetry.instrumentation.apachedubbo.v2_7.DubboTelemetry;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.internal.DubboClientNetworkAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import org.apache.dubbo.common.extension.Activate;
 import org.apache.dubbo.rpc.Filter;
-import org.apache.dubbo.rpc.Invocation;
-import org.apache.dubbo.rpc.Invoker;
-import org.apache.dubbo.rpc.Result;
 
-@Activate(group = {"consumer", "provider"})
-public class OpenTelemetryFilter implements Filter {
+public final class DubboSingletons {
+  public static final Filter CLIENT_FILTER;
+  public static final Filter SERVER_FILTER;
 
-  private final Filter delegate;
-
-  public OpenTelemetryFilter() {
-    delegate =
+  static {
+    DubboTelemetry telemetry =
         DubboTelemetry.builder(GlobalOpenTelemetry.get())
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     new DubboClientNetworkAttributesGetter(),
                     AgentCommonConfig.get().getPeerServiceResolver()))
-            .build()
-            .newFilter();
+            .build();
+    CLIENT_FILTER = telemetry.newClientFilter();
+    SERVER_FILTER = telemetry.newServerFilter();
   }
 
-  @Override
-  public Result invoke(Invoker<?> invoker, Invocation invocation) {
-    return delegate.invoke(invoker, invocation);
-  }
+  private DubboSingletons() {}
 }
