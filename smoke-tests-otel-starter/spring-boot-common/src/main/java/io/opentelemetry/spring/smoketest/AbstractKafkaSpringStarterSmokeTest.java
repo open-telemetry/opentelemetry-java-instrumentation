@@ -63,7 +63,7 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
                                 "testTopic"),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
                             satisfies(
-                                AttributeKey.stringKey("messaging.client_id"),
+                                MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("producer")),
                             satisfies(
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
@@ -101,7 +101,7 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
                                 AttributeKey.longKey("kafka.record.queue_time_ms"),
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
-                                AttributeKey.stringKey("messaging.client_id"),
+                                MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("consumer"))),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }

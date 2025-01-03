@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CLIENT_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
@@ -17,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.KAFKA;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -25,7 +27,6 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -101,10 +102,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                         .hasKind(SpanKind.PRODUCER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                MESSAGING_SYSTEM,
-                                MessagingIncubatingAttributes.MessagingSystemIncubatingValues
-                                    .KAFKA),
+                            equalTo(MESSAGING_SYSTEM, KAFKA),
                             equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
                             equalTo(MESSAGING_OPERATION, "publish"),
                             equalTo(MESSAGING_CLIENT_ID, "producer-1"),
@@ -118,10 +116,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                   List<AttributeAssertion> assertions =
                       new ArrayList<>(
                           asList(
-                              equalTo(
-                                  MESSAGING_SYSTEM,
-                                  MessagingIncubatingAttributes.MessagingSystemIncubatingValues
-                                      .KAFKA),
+                              equalTo(MESSAGING_SYSTEM, KAFKA),
                               equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
                               equalTo(MESSAGING_OPERATION, "process"),
                               satisfies(MESSAGING_CLIENT_ID, k -> k.endsWith("consumer")),
@@ -153,9 +148,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                       .hasTraceId(receivedContext.getTraceId())
                       .hasSpanId(receivedContext.getSpanId())
                       .hasAttributesSatisfyingExactly(
-                          equalTo(
-                              MESSAGING_SYSTEM,
-                              MessagingIncubatingAttributes.MessagingSystemIncubatingValues.KAFKA),
+                          equalTo(MESSAGING_SYSTEM, KAFKA),
                           equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
                           equalTo(MESSAGING_OPERATION, "publish"),
                           satisfies(MESSAGING_CLIENT_ID, k -> k.isInstanceOf(String.class)),
@@ -169,10 +162,7 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                   List<AttributeAssertion> assertions =
                       new ArrayList<>(
                           asList(
-                              equalTo(
-                                  MESSAGING_SYSTEM,
-                                  MessagingIncubatingAttributes.MessagingSystemIncubatingValues
-                                      .KAFKA),
+                              equalTo(MESSAGING_SYSTEM, KAFKA),
                               equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
                               equalTo(MESSAGING_OPERATION, "process"),
                               satisfies(MESSAGING_CLIENT_ID, k -> k.startsWith("consumer")),

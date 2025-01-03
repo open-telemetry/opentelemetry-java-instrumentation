@@ -17,11 +17,11 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.vertx.core.Vertx;
 import io.vertx.redis.client.Redis;
 import io.vertx.redis.client.RedisAPI;
@@ -212,9 +212,9 @@ class VertxRedisClientTest {
     if (emitStableDatabaseSemconv()) {
       return new AttributeAssertion[] {
         equalTo(DB_SYSTEM, "redis"),
-        equalTo(AttributeKey.stringKey("db.query.text"), statement),
-        equalTo(AttributeKey.stringKey("db.operation.name"), operation),
-        equalTo(AttributeKey.stringKey("db.namespace"), "1"),
+        equalTo(DbIncubatingAttributes.DB_QUERY_TEXT, statement),
+        equalTo(DbIncubatingAttributes.DB_OPERATION_NAME, operation),
+        equalTo(DbIncubatingAttributes.DB_NAMESPACE, "1"),
         equalTo(SERVER_ADDRESS, host),
         equalTo(SERVER_PORT, port),
         equalTo(NETWORK_PEER_PORT, port),
