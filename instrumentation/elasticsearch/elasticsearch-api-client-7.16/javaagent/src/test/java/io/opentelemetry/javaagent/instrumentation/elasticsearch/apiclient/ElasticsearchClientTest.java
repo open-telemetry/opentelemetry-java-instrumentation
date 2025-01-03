@@ -27,6 +27,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -139,10 +140,12 @@ class ElasticsearchClientTest {
                                 URL_FULL,
                                 httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
                             equalTo(
-                                AttributeKey.stringKey("db.elasticsearch.path_parts.index"),
+                                DbIncubatingAttributes.DB_ELASTICSEARCH_PATH_PARTS.getAttributeKey(
+                                    "index"),
                                 "test-index"),
                             equalTo(
-                                AttributeKey.stringKey("db.elasticsearch.path_parts.id"),
+                                DbIncubatingAttributes.DB_ELASTICSEARCH_PATH_PARTS.getAttributeKey(
+                                    "id"),
                                 "test-id")),
                 span ->
                     span.hasName("PUT")

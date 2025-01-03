@@ -90,9 +90,9 @@ class DbClientAttributesExtractorTest {
               entry(DbIncubatingAttributes.DB_CONNECTION_STRING, "mydb:///potatoes"),
               entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM potato"),
               entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-              entry(AttributeKey.stringKey("db.namespace"), "potatoes"),
-              entry(AttributeKey.stringKey("db.query.text"), "SELECT * FROM potato"),
-              entry(AttributeKey.stringKey("db.operation.name"), "SELECT"));
+              entry(DbIncubatingAttributes.DB_NAMESPACE, "potatoes"),
+              entry(DbIncubatingAttributes.DB_QUERY_TEXT, "SELECT * FROM potato"),
+              entry(DbIncubatingAttributes.DB_OPERATION_NAME, "SELECT"));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
@@ -106,9 +106,9 @@ class DbClientAttributesExtractorTest {
       assertThat(startAttributes.build())
           .containsOnly(
               entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
-              entry(AttributeKey.stringKey("db.namespace"), "potatoes"),
-              entry(AttributeKey.stringKey("db.query.text"), "SELECT * FROM potato"),
-              entry(AttributeKey.stringKey("db.operation.name"), "SELECT"));
+              entry(DbIncubatingAttributes.DB_NAMESPACE, "potatoes"),
+              entry(DbIncubatingAttributes.DB_QUERY_TEXT, "SELECT * FROM potato"),
+              entry(DbIncubatingAttributes.DB_OPERATION_NAME, "SELECT"));
     }
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
