@@ -38,10 +38,7 @@ public class BarService implements Service {
             httpClient
                 .get(new URI(url))
                 .flatMap(response -> httpClient.get(new URI(url)))
-                .then(
-                    response -> {
-                      span.end();
-                    });
+                .then(response -> span.end());
           } catch (URISyntaxException e) {
             throw new RuntimeException(e);
           }

@@ -21,6 +21,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackServerTelemetry;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.BeforeAll;
@@ -33,6 +34,9 @@ import ratpack.test.embed.EmbeddedApp;
 class RatpackServerTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static final RatpackServerTelemetry telemetry =
       RatpackServerTelemetry.builder(testing.getOpenTelemetry()).build();
@@ -52,6 +56,7 @@ class RatpackServerTest {
               spec.registry(registry);
               spec.handlers(chain -> chain.get("foo", ctx -> ctx.render("hi-foo")));
             });
+    cleanup.deferCleanup(app);
 
     assertThat(app.getHttpClient().get("foo").getBody().getText()).isEqualTo("hi-foo");
 
@@ -97,6 +102,7 @@ class RatpackServerTest {
                                 .then();
                           }));
             });
+    cleanup.deferCleanup(app);
 
     assertThat(app.getHttpClient().get("foo").getBody().getText()).isEqualTo("hi-foo");
 
@@ -162,6 +168,7 @@ class RatpackServerTest {
                         });
                   });
             });
+    cleanup.deferCleanup(app);
 
     assertThat(app.getHttpClient().get("foo").getBody().getText()).isEqualTo("hi-foo");
     assertThat(app.getHttpClient().get("bar").getBody().getText()).isEqualTo("hi-bar");
