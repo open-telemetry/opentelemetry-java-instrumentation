@@ -32,11 +32,12 @@ import ratpack.test.embed.EmbeddedApp;
 
 class RatpackServerTest {
   @RegisterExtension
-  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  static Registry registry;
-  static RatpackServerTelemetry telemetry =
+  private static final RatpackServerTelemetry telemetry =
       RatpackServerTelemetry.builder(testing.getOpenTelemetry()).build();
+
+  private static Registry registry;
 
   @BeforeAll
   static void setUp() throws Exception {
@@ -52,28 +53,25 @@ class RatpackServerTest {
               spec.handlers(chain -> chain.get("foo", ctx -> ctx.render("hi-foo")));
             });
 
-    app.test(
-        httpClient -> {
-          assertThat(httpClient.get("foo").getBody().getText()).isEqualTo("hi-foo");
+    assertThat(app.getHttpClient().get("foo").getBody().getText()).isEqualTo("hi-foo");
 
-          testing.waitAndAssertTraces(
-              trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span ->
-                          span.hasName("GET /foo")
-                              .hasNoParent()
-                              .hasKind(SpanKind.SERVER)
-                              .hasAttributesSatisfyingExactly(
-                                  equalTo(HTTP_ROUTE, "/foo"),
-                                  equalTo(URL_PATH, "/foo"),
-                                  equalTo(URL_SCHEME, "http"),
-                                  equalTo(SERVER_PORT, app.getServer().getBindPort()),
-                                  equalTo(SERVER_ADDRESS, "localhost"),
-                                  equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                                  equalTo(URL_QUERY, ""),
-                                  equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                  equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
-        });
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET /foo")
+                        .hasNoParent()
+                        .hasKind(SpanKind.SERVER)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_ROUTE, "/foo"),
+                            equalTo(URL_PATH, "/foo"),
+                            equalTo(URL_SCHEME, "http"),
+                            equalTo(SERVER_PORT, app.getServer().getBindPort()),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(URL_QUERY, ""),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
 
   @Test
@@ -100,33 +98,30 @@ class RatpackServerTest {
                           }));
             });
 
-    app.test(
-        httpClient -> {
-          assertThat(httpClient.get("foo").getBody().getText()).isEqualTo("hi-foo");
+    assertThat(app.getHttpClient().get("foo").getBody().getText()).isEqualTo("hi-foo");
 
-          testing.waitAndAssertTraces(
-              trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span ->
-                          span.hasName("GET /foo")
-                              .hasNoParent()
-                              .hasKind(SpanKind.SERVER)
-                              .hasAttributesSatisfyingExactly(
-                                  equalTo(HTTP_ROUTE, "/foo"),
-                                  equalTo(URL_PATH, "/foo"),
-                                  equalTo(URL_SCHEME, "http"),
-                                  equalTo(SERVER_PORT, app.getServer().getBindPort()),
-                                  equalTo(SERVER_ADDRESS, "localhost"),
-                                  equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                                  equalTo(URL_QUERY, ""),
-                                  equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                  equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
-                      span ->
-                          span.hasName("a-span")
-                              .hasParent(trace.getSpan(0))
-                              .hasAttributes(Attributes.empty())
-                              .hasTotalRecordedEvents(1)));
-        });
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET /foo")
+                        .hasNoParent()
+                        .hasKind(SpanKind.SERVER)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_ROUTE, "/foo"),
+                            equalTo(URL_PATH, "/foo"),
+                            equalTo(URL_SCHEME, "http"),
+                            equalTo(SERVER_PORT, app.getServer().getBindPort()),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(URL_QUERY, ""),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
+                span ->
+                    span.hasName("a-span")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributes(Attributes.empty())
+                        .hasTotalRecordedEvents(1)));
   }
 
   @Test
@@ -168,54 +163,51 @@ class RatpackServerTest {
                   });
             });
 
-    app.test(
-        httpClient -> {
-          assertThat(httpClient.get("foo").getBody().getText()).isEqualTo("hi-foo");
-          assertThat(httpClient.get("bar").getBody().getText()).isEqualTo("hi-bar");
+    assertThat(app.getHttpClient().get("foo").getBody().getText()).isEqualTo("hi-foo");
+    assertThat(app.getHttpClient().get("bar").getBody().getText()).isEqualTo("hi-bar");
 
-          testing.waitAndAssertTraces(
-              trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span ->
-                          span.hasName("GET /foo")
-                              .hasNoParent()
-                              .hasKind(SpanKind.SERVER)
-                              .hasAttributesSatisfyingExactly(
-                                  equalTo(HTTP_ROUTE, "/foo"),
-                                  equalTo(URL_PATH, "/foo"),
-                                  equalTo(URL_SCHEME, "http"),
-                                  equalTo(SERVER_PORT, app.getServer().getBindPort()),
-                                  equalTo(SERVER_ADDRESS, "localhost"),
-                                  equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                                  equalTo(URL_QUERY, ""),
-                                  equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                  equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
-                      span ->
-                          span.hasName("a-span")
-                              .hasParent(trace.getSpan(0))
-                              .hasAttributes(Attributes.empty())
-                              .hasTotalRecordedEvents(1)),
-              trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span ->
-                          span.hasName("GET /bar")
-                              .hasNoParent()
-                              .hasKind(SpanKind.SERVER)
-                              .hasAttributesSatisfyingExactly(
-                                  equalTo(HTTP_ROUTE, "/bar"),
-                                  equalTo(URL_PATH, "/bar"),
-                                  equalTo(URL_SCHEME, "http"),
-                                  equalTo(SERVER_PORT, app.getServer().getBindPort()),
-                                  equalTo(SERVER_ADDRESS, "localhost"),
-                                  equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                                  equalTo(URL_QUERY, ""),
-                                  equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                  equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
-                      span ->
-                          span.hasName("another-span")
-                              .hasParent(trace.getSpan(0))
-                              .hasAttributes(Attributes.empty())
-                              .hasTotalRecordedEvents(1)));
-        });
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET /foo")
+                        .hasNoParent()
+                        .hasKind(SpanKind.SERVER)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_ROUTE, "/foo"),
+                            equalTo(URL_PATH, "/foo"),
+                            equalTo(URL_SCHEME, "http"),
+                            equalTo(SERVER_PORT, app.getServer().getBindPort()),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(URL_QUERY, ""),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
+                span ->
+                    span.hasName("a-span")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributes(Attributes.empty())
+                        .hasTotalRecordedEvents(1)),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET /bar")
+                        .hasNoParent()
+                        .hasKind(SpanKind.SERVER)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_ROUTE, "/bar"),
+                            equalTo(URL_PATH, "/bar"),
+                            equalTo(URL_SCHEME, "http"),
+                            equalTo(SERVER_PORT, app.getServer().getBindPort()),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(URL_QUERY, ""),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
+                span ->
+                    span.hasName("another-span")
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributes(Attributes.empty())
+                        .hasTotalRecordedEvents(1)));
   }
 }

@@ -28,7 +28,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class RatpackServerApplicationTest {
   @RegisterExtension
-  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   private static RatpackFunctionalTest app;
 
@@ -38,9 +38,8 @@ class RatpackServerApplicationTest {
   }
 
   @Test
-  void testAddSpanOnHandlers() throws Exception {
-    app.test(
-        httpClient -> assertThat(httpClient.get("foo").getBody().getText()).isEqualTo("hi-foo"));
+  void testAddSpanOnHandlers() {
+    assertThat(app.getHttpClient().get("foo").getBody().getText()).isEqualTo("hi-foo");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -62,9 +61,8 @@ class RatpackServerApplicationTest {
   }
 
   @Test
-  void testPropagateTraceToHttpCalls() throws Exception {
-    app.test(
-        httpClient -> assertThat(httpClient.get("bar").getBody().getText()).isEqualTo("hi-bar"));
+  void testPropagateTraceToHttpCalls() {
+    assertThat(app.getHttpClient().get("bar").getBody().getText()).isEqualTo("hi-bar");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -97,12 +95,9 @@ class RatpackServerApplicationTest {
   }
 
   @Test
-  void testIgnoreHandlersBeforeOpenTelemetryServerHandler() throws Exception {
-    app.test(
-        httpClient -> {
-          assertThat(httpClient.get("ignore").getBody().getText()).isEqualTo("ignored");
-          assertThat(testing.spans().stream().filter(span -> "GET /ignore".equals(span.getName())))
-              .isEmpty();
-        });
+  void testIgnoreHandlersBeforeOpenTelemetryServerHandler() {
+    assertThat(app.getHttpClient().get("ignore").getBody().getText()).isEqualTo("ignored");
+    assertThat(testing.spans().stream().filter(span -> "GET /ignore".equals(span.getName())))
+        .isEmpty();
   }
 }

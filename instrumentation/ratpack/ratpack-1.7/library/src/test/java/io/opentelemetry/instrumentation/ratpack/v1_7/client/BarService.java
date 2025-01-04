@@ -18,11 +18,9 @@ import ratpack.service.StartEvent;
 
 public class BarService implements Service {
   private final String url;
-  //  private final CountDownLatch latch;
   private final InstrumentationExtension testing;
 
   public BarService(String url, InstrumentationExtension testing) {
-    //    this.latch = latch;
     this.url = url;
     this.testing = testing;
   }
@@ -43,7 +41,6 @@ public class BarService implements Service {
                 .then(
                     response -> {
                       span.end();
-                      //                  latch.countDown();
                     });
           } catch (URISyntaxException e) {
             throw new RuntimeException(e);

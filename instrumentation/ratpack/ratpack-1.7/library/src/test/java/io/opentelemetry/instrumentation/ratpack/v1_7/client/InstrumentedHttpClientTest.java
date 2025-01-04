@@ -48,15 +48,16 @@ import ratpack.test.embed.EmbeddedApp;
 class InstrumentedHttpClientTest {
 
   @RegisterExtension
-  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  protected static final RatpackClientTelemetry clientTelemetry =
+  @RegisterExtension
+  private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
+  private static final RatpackClientTelemetry clientTelemetry =
       RatpackClientTelemetry.create(testing.getOpenTelemetry());
 
-  protected static final RatpackServerTelemetry serverTelemetry =
+  private static final RatpackServerTelemetry serverTelemetry =
       RatpackServerTelemetry.create(testing.getOpenTelemetry());
-
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
   void testPropagateTraceWithHttpCalls() throws Exception {

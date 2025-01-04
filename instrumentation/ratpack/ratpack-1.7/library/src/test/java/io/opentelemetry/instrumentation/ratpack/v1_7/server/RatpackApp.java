@@ -13,8 +13,6 @@ import ratpack.server.RatpackServer;
 
 public class RatpackApp {
 
-  private RatpackApp() {}
-
   public static void main(String... args) throws Exception {
     RatpackServer.start(
         server ->
@@ -33,4 +31,6 @@ public class RatpackApp {
                                         .get(ctx.get(URI.class))
                                         .then(response -> ctx.render("hi-bar")))));
   }
+
+  private RatpackApp() {}
 }
