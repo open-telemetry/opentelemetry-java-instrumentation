@@ -123,7 +123,7 @@ class InstrumentedHttpClientTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
                             satisfies(SERVER_PORT, v -> v.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(URL_FULL, otherApp.getAddress() + "/bar")),
+                            equalTo(URL_FULL, otherApp.getAddress() + "bar")),
                 span ->
                     span.hasName("GET /bar")
                         .hasParent(trace.getSpan(1))
@@ -212,7 +212,7 @@ class InstrumentedHttpClientTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
                             satisfies(SERVER_PORT, v -> v.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(URL_FULL, otherApp.getAddress() + "/foo")),
+                            equalTo(URL_FULL, otherApp.getAddress() + "foo")),
                 span ->
                     span.hasName("GET")
                         .hasParent(trace.getSpan(0))
@@ -223,7 +223,7 @@ class InstrumentedHttpClientTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
                             satisfies(SERVER_PORT, v -> v.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(URL_FULL, otherApp.getAddress() + "/bar"))));
+                            equalTo(URL_FULL, otherApp.getAddress() + "bar"))));
   }
 
   @Test
@@ -298,7 +298,7 @@ class InstrumentedHttpClientTest {
                             equalTo(ERROR_TYPE, HttpClientReadTimeoutException.class.getName()),
                             satisfies(SERVER_PORT, v -> v.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(URL_FULL, otherApp.getAddress() + "/foo"))));
+                            equalTo(URL_FULL, otherApp.getAddress() + "foo"))));
   }
 
   private static Stream<Arguments> provideArguments() {
