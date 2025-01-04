@@ -5,88 +5,95 @@
 
 package io.opentelemetry.instrumentation.ratpack.v1_7.server;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.sdk.trace.data.SpanData;
-import java.util.Map;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class RatpackServerApplicationTest {
+  @RegisterExtension
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  private final RatpackFunctionalTest app = new RatpackFunctionalTest(RatpackApp.class);
+  private static RatpackFunctionalTest app;
+
+  @BeforeAll
+  static void setup() throws Exception {
+    app = new RatpackFunctionalTest(RatpackApp.class);
+  }
 
   @Test
   void testAddSpanOnHandlers() throws Exception {
     app.test(
-        httpClient -> {
-          assertThat(httpClient.get("foo").getBody().getText()).isEqualTo("hi-foo");
+        httpClient -> assertThat(httpClient.get("foo").getBody().getText()).isEqualTo("hi-foo"));
 
-          await()
-              .untilAsserted(
-                  () -> {
-                    SpanData spanData =
-                        app.spanExporter.getFinishedSpanItems().stream()
-                            .filter(span -> "GET /foo".equals(span.getName()))
-                            .findFirst()
-                            .orElseThrow(() -> new AssertionError("Span not found"));
-
-                    Map<AttributeKey<?>, Object> attributes = spanData.getAttributes().asMap();
-
-                    assertThat(spanData.getKind()).isEqualTo(SpanKind.SERVER);
-                    assertThat(attributes.get(HTTP_ROUTE)).isEqualTo("/foo");
-                    assertThat(attributes.get(URL_PATH)).isEqualTo("/foo");
-                    assertThat(attributes.get(HTTP_REQUEST_METHOD)).isEqualTo("GET");
-                    assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE)).isEqualTo(200L);
-                  });
-        });
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET /foo")
+                        .hasNoParent()
+                        .hasKind(SpanKind.SERVER)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_ROUTE, "/foo"),
+                            equalTo(URL_PATH, "/foo"),
+                            equalTo(URL_SCHEME, "http"),
+                            satisfies(SERVER_PORT, v -> v.isInstanceOf(Long.class)),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(URL_QUERY, ""),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
 
   @Test
   void testPropagateTraceToHttpCalls() throws Exception {
     app.test(
-        httpClient -> {
-          assertThat(httpClient.get("bar").getBody().getText()).isEqualTo("hi-bar");
+        httpClient -> assertThat(httpClient.get("bar").getBody().getText()).isEqualTo("hi-bar"));
 
-          await()
-              .untilAsserted(
-                  () -> {
-                    SpanData spanData =
-                        app.spanExporter.getFinishedSpanItems().stream()
-                            .filter(span -> "GET /bar".equals(span.getName()))
-                            .findFirst()
-                            .orElseThrow(() -> new AssertionError("Span not found"));
-
-                    SpanData spanDataClient =
-                        app.spanExporter.getFinishedSpanItems().stream()
-                            .filter(span -> span.getName().equals("GET"))
-                            .findFirst()
-                            .orElseThrow(() -> new AssertionError("Span not found"));
-
-                    assertThat(spanData.getTraceId()).isEqualTo(spanDataClient.getTraceId());
-
-                    Map<AttributeKey<?>, Object> attributes = spanData.getAttributes().asMap();
-                    assertThat(spanData.getKind()).isEqualTo(SpanKind.SERVER);
-                    assertThat(attributes.get(HTTP_ROUTE)).isEqualTo("/bar");
-                    assertThat(attributes.get(URL_PATH)).isEqualTo("/bar");
-                    assertThat(attributes.get(HTTP_REQUEST_METHOD)).isEqualTo("GET");
-                    assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE)).isEqualTo(200L);
-
-                    Map<AttributeKey<?>, Object> clientAttributes =
-                        spanDataClient.getAttributes().asMap();
-
-                    assertThat(spanDataClient.getKind()).isEqualTo(SpanKind.CLIENT);
-                    assertThat(clientAttributes.get(HTTP_ROUTE)).isEqualTo("/other");
-                    assertThat(clientAttributes.get(HTTP_REQUEST_METHOD)).isEqualTo("GET");
-                    assertThat(clientAttributes.get(HTTP_RESPONSE_STATUS_CODE)).isEqualTo(200L);
-                  });
-        });
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET /bar")
+                        .hasNoParent()
+                        .hasKind(SpanKind.SERVER)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_ROUTE, "/bar"),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                            equalTo(URL_PATH, "/bar"),
+                            equalTo(URL_SCHEME, "http"),
+                            satisfies(SERVER_PORT, v -> v.isInstanceOf(Long.class)),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(URL_QUERY, "")),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_ROUTE, "/other"),
+                            equalTo(URL_FULL, "http://localhost:" + app.getAppPort() + "/other"),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                            satisfies(SERVER_PORT, v -> v.isInstanceOf(Long.class)),
+                            equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
   @Test
@@ -94,16 +101,8 @@ class RatpackServerApplicationTest {
     app.test(
         httpClient -> {
           assertThat(httpClient.get("ignore").getBody().getText()).isEqualTo("ignored");
-
-          await()
-              .untilAsserted(
-                  () ->
-                      assertThat(
-                              app.spanExporter.getFinishedSpanItems().stream()
-                                  .noneMatch(span -> "GET /ignore".equals(span.getName())))
-                          .isTrue());
+          assertThat(testing.spans().stream().filter(span -> "GET /ignore".equals(span.getName())))
+              .isEmpty();
         });
   }
-
-  RatpackServerApplicationTest() throws Exception {}
 }

@@ -10,22 +10,23 @@ import com.google.inject.Provides;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackClientTelemetry;
 import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackServerTelemetry;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
-import io.opentelemetry.sdk.trace.SdkTracerProvider;
-import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
-import io.opentelemetry.sdk.trace.export.SpanExporter;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import javax.inject.Singleton;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import ratpack.exec.ExecInitializer;
 import ratpack.exec.ExecInterceptor;
-import ratpack.func.Action;
 import ratpack.handling.Handler;
 import ratpack.http.client.HttpClient;
 
 public class OpenTelemetryModule extends AbstractModule {
+
+  @RegisterExtension
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+
   @Override
   protected void configure() {
-    bind(SpanExporter.class).toInstance(InMemorySpanExporter.create());
+    bind(OpenTelemetry.class).toInstance(testing.getOpenTelemetry());
   }
 
   @Singleton
@@ -52,20 +53,10 @@ public class OpenTelemetryModule extends AbstractModule {
     return ratpackTracing.getExecInterceptor();
   }
 
-  @Provides
-  @Singleton
-  OpenTelemetry providesOpenTelemetry(SpanExporter spanExporter) {
-    SdkTracerProvider tracerProvider =
-        SdkTracerProvider.builder()
-            .addSpanProcessor(SimpleSpanProcessor.create(spanExporter))
-            .build();
-    return OpenTelemetrySdk.builder().setTracerProvider(tracerProvider).build();
-  }
-
   @Singleton
   @Provides
   HttpClient instrumentedHttpClient(RatpackClientTelemetry ratpackTracing) throws Exception {
-    return ratpackTracing.instrument(HttpClient.of(Action.noop()));
+    return ratpackTracing.instrument(HttpClient.of(spec -> {}));
   }
 
   @Singleton
