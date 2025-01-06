@@ -20,8 +20,7 @@ enum DubboHeadersGetter implements TextMapGetter<DubboRequest> {
     RpcInvocation invocation = request.invocation();
     try {
       // In 2.7.6, 2.7.7, the StringToObjectMap implementation does not correctly retrieve the
-      // keySet.
-      // Therefore, it's advisable to always call getObjectAttachments when it is available.
+      // keySet. Therefore, it's advisable to always call getObjectAttachments when it is available.
       Method getObjectAttachmentsMethod = invocation.getClass().getMethod("getObjectAttachments");
       if (getObjectAttachmentsMethod != null) {
         return ((Map<String, Object>) getObjectAttachmentsMethod.invoke(invocation)).keySet();
