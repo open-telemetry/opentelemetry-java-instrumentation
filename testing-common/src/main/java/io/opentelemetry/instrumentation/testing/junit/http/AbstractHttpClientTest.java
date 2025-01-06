@@ -510,6 +510,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
   @Test
   void captureHttpHeaders() throws Exception {
+    assumeTrue(options.getTestCaptureHttpHeaders());
     URI uri = resolveAddress("/success");
     String method = "GET";
     int responseCode =
