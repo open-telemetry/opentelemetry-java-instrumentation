@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.Set;
 import org.apache.dubbo.rpc.RpcInvocation;
 
 enum DubboHeadersGetter implements TextMapGetter<DubboRequest> {
@@ -18,19 +17,17 @@ enum DubboHeadersGetter implements TextMapGetter<DubboRequest> {
   @SuppressWarnings("unchecked") // unchecked for 2.7.6, 2.7.7
   public Iterable<String> keys(DubboRequest request) {
     RpcInvocation invocation = request.invocation();
-    Map<String, String> attachments = invocation.getAttachments();
-    Set<String> keys = invocation.getAttachments().keySet();
-    // In 2.7.6, 2.7.7, the StringToObjectMap implementation does not correctly retrieve the keySet.
-    if (keys.size() == 0 && "ObjectToStringMap".equals(attachments.getClass().getSimpleName())) {
-      Method getObjectAttachmentsMethod = null;
-      try {
-        getObjectAttachmentsMethod = invocation.getClass().getMethod("getObjectAttachments");
+    // In 2.7.6, 2.7.7, the StringToObjectMap implementation does not correctly retrieve the keySet,
+    // so always call getObjectAttachments when it is present.
+    try {
+      Method getObjectAttachmentsMethod = invocation.getClass().getMethod("getObjectAttachments");
+      if (getObjectAttachmentsMethod != null) {
         return ((Map<String, Object>) getObjectAttachmentsMethod.invoke(invocation)).keySet();
-      } catch (Exception e) {
-        // ignore
       }
+    } catch (Exception e) {
+      // ignore
     }
-    return keys;
+    return invocation.getAttachments().keySet();
   }
 
   @Override
