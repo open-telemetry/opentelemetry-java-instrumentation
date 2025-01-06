@@ -18,7 +18,7 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   private static final AttributeKey<String> DB_SQL_TABLE = AttributeKey.stringKey("db.sql.table");
 
   final SqlClientAttributesGetter<REQUEST> getter;
-  AttributeKey<String> dbTableAttribute = DB_SQL_TABLE;
+  AttributeKey<String> oldSemconvTableAttribute = DB_SQL_TABLE;
   boolean statementSanitizationEnabled = true;
 
   SqlClientAttributesExtractorBuilder(SqlClientAttributesGetter<REQUEST> getter) {
@@ -26,17 +26,13 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Configures the extractor to set the table value extracted by the {@link
-   * SqlClientAttributesExtractor} under the {@code dbTableAttribute} key. By default, the <code>
-   * db.sql.table</code> attribute is used.
-   *
-   * @param dbTableAttribute The {@link AttributeKey} under which the table extracted by the {@link
-   *     SqlClientAttributesExtractor} will be stored.
+   * @deprecated not needed anymore since the new semantic conventions always use db.collection.name
    */
   @CanIgnoreReturnValue
+  @Deprecated
   public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setTableAttribute(
-      AttributeKey<String> dbTableAttribute) {
-    this.dbTableAttribute = requireNonNull(dbTableAttribute);
+      AttributeKey<String> oldSemconvTableAttribute) {
+    this.oldSemconvTableAttribute = requireNonNull(oldSemconvTableAttribute);
     return this;
   }
 
@@ -58,6 +54,6 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    */
   public AttributesExtractor<REQUEST, RESPONSE> build() {
     return new SqlClientAttributesExtractor<>(
-        getter, dbTableAttribute, statementSanitizationEnabled);
+        getter, oldSemconvTableAttribute, statementSanitizationEnabled);
   }
 }

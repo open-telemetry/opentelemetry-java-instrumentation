@@ -26,7 +26,8 @@ public abstract class AbstractSpringStarterSmokeTest {
   private static final List<String> IGNORED_WARNINGS =
       Arrays.asList(
           "Unable to load io.netty.resolver.dns.macos.MacOSDnsServerAddressStreamProvider",
-          "The architecture 'amd64' for image");
+          "The architecture 'amd64' for image",
+          "The DescribeTopicPartitions API is not supported, using Metadata API to describe topics");
 
   @Autowired protected OpenTelemetry openTelemetry;
 

@@ -16,7 +16,7 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:okhttp:okhttp-3.0:javaagent"))
 
-  latestDepTestLibrary("io.kubernetes:client-java-api:19.+")
+  latestDepTestLibrary("io.kubernetes:client-java-api:19.+") // see test suite below
 }
 
 testing {

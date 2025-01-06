@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
@@ -16,7 +16,6 @@ import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
@@ -28,6 +27,7 @@ class MessagingProducerMetricsTest {
   private static final double[] DURATION_BUCKETS =
       MessagingMetricsAdvice.DURATION_SECONDS_BUCKETS.stream().mapToDouble(d -> d).toArray();
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void collectsMetrics() {
     InMemoryMetricReader metricReader = InMemoryMetricReader.create();
@@ -50,7 +50,7 @@ class MessagingProducerMetricsTest {
     Attributes responseAttributes =
         Attributes.builder()
             .put(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, "1:1:0:0")
-            .put(MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 2)
+            .put(MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID, "1")
             .build();
 
     Context parent =
@@ -76,7 +76,7 @@ class MessagingProducerMetricsTest {
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
             metric ->
-                OpenTelemetryAssertions.assertThat(metric)
+                assertThat(metric)
                     .hasName("messaging.publish.duration")
                     .hasUnit("s")
                     .hasDescription("Measures the duration of publish operation.")
@@ -90,6 +90,10 @@ class MessagingProducerMetricsTest {
                                             equalTo(
                                                 MessagingIncubatingAttributes.MESSAGING_SYSTEM,
                                                 "pulsar"),
+                                            equalTo(
+                                                MessagingIncubatingAttributes
+                                                    .MESSAGING_DESTINATION_PARTITION_ID,
+                                                "1"),
                                             equalTo(
                                                 MessagingIncubatingAttributes
                                                     .MESSAGING_DESTINATION_NAME,
@@ -108,7 +112,7 @@ class MessagingProducerMetricsTest {
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
             metric ->
-                OpenTelemetryAssertions.assertThat(metric)
+                assertThat(metric)
                     .hasName("messaging.publish.duration")
                     .hasHistogramSatisfying(
                         histogram ->

@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -55,6 +57,7 @@ public class AwsLambdaSqsEventWrapperTest {
     assertThat(testing.forceFlushCalled()).isTrue();
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void eventTraced() {
     SQSEvent event = new SQSEvent();
@@ -85,10 +88,10 @@ public class AwsLambdaSqsEventWrapperTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                MessagingIncubatingAttributes.MESSAGING_SYSTEM,
-                                MessagingIncubatingAttributes.MessagingSystemValues.AWS_SQS),
-                            equalTo(
-                                MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"))));
+                                MESSAGING_SYSTEM,
+                                MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                    .AWS_SQS),
+                            equalTo(MESSAGING_OPERATION, "process"))));
   }
 
   public static final class TestRequestHandler implements RequestHandler<SQSEvent, Void> {

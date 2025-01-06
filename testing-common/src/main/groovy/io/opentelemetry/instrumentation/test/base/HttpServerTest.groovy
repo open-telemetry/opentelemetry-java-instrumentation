@@ -9,7 +9,6 @@ import io.opentelemetry.api.common.AttributeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanId
 import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.instrumentation.api.internal.HttpConstants
 import io.opentelemetry.instrumentation.test.InstrumentationSpecification
 import io.opentelemetry.instrumentation.test.asserts.TraceAssert
@@ -17,9 +16,9 @@ import io.opentelemetry.instrumentation.testing.GlobalTraceUtil
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.HttpAttributes
+import io.opentelemetry.semconv.NetworkAttributes
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod
 import spock.lang.Shared
@@ -28,12 +27,8 @@ import spock.lang.Unroll
 import javax.annotation.Nullable
 import java.util.concurrent.Callable
 
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.*
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat
 import static org.junit.jupiter.api.Assumptions.assumeFalse
 import static org.junit.jupiter.api.Assumptions.assumeTrue
 
@@ -455,7 +450,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   void controllerSpan(TraceAssert trace, int index, Object parent, Throwable expectedException = null) {
     trace.assertedIndexes.add(index)
     def spanData = trace.span(index)
-    def assertion = junitTest.assertControllerSpan(OpenTelemetryAssertions.assertThat(spanData), expectedException)
+    def assertion = junitTest.assertControllerSpan(assertThat(spanData), expectedException)
     if (parent == null) {
       assertion.hasParentSpanId(SpanId.invalid)
     } else {
@@ -502,7 +497,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   void serverSpan(TraceAssert trace, int index, String traceID = null, String parentID = null, String method = "GET", ServerEndpoint endpoint = SUCCESS, String spanID = null) {
     trace.assertedIndexes.add(index)
     def spanData = trace.span(index)
-    def assertion = junitTest.assertServerSpan(OpenTelemetryAssertions.assertThat(spanData), method, endpoint, endpoint.status)
+    def assertion = junitTest.assertServerSpan(assertThat(spanData), method, endpoint, endpoint.status)
     if (parentID == null) {
       assertion.hasParentSpanId(SpanId.invalid)
     } else {
@@ -519,7 +514,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   void indexedServerSpan(TraceAssert trace, int index, Object parent, int requestId) {
     trace.assertedIndexes.add(index)
     def spanData = trace.span(index)
-    def assertion = junitTest.assertIndexedServerSpan(OpenTelemetryAssertions.assertThat(spanData), requestId)
+    def assertion = junitTest.assertIndexedServerSpan(assertThat(spanData), requestId)
     if (parent == null) {
       assertion.hasParentSpanId(SpanId.invalid)
     } else {
@@ -530,7 +525,7 @@ abstract class HttpServerTest<SERVER> extends InstrumentationSpecification imple
   void indexedControllerSpan(TraceAssert trace, int index, Object parent, int requestId) {
     trace.assertedIndexes.add(index)
     def spanData = trace.span(index)
-    def assertion = junitTest.assertIndexedControllerSpan(OpenTelemetryAssertions.assertThat(spanData), requestId)
+    def assertion = junitTest.assertIndexedControllerSpan(assertThat(spanData), requestId)
     if (parent == null) {
       assertion.hasParentSpanId(SpanId.invalid)
     } else {

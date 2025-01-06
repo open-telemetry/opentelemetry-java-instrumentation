@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0;
 
-import io.opentelemetry.instrumentation.test.base.HttpServerTest;
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.io.IOException;
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -21,11 +20,11 @@ class TestServlet extends HttpServlet {
 
     ServerEndpoint serverEndpoint = ServerEndpoint.forPath(path);
     if (serverEndpoint != null) {
-      HttpServerTest.controller(
+      AbstractHttpServerTest.controller(
           serverEndpoint,
           () -> {
             if (serverEndpoint == ServerEndpoint.EXCEPTION) {
-              throw new Exception(serverEndpoint.getBody());
+              throw new IllegalStateException(serverEndpoint.getBody());
             }
             if (serverEndpoint == ServerEndpoint.CAPTURE_HEADERS) {
               resp.setHeader("X-Test-Response", req.getHeader("X-Test-Request"));
@@ -34,7 +33,7 @@ class TestServlet extends HttpServlet {
               req.setCharacterEncoding("UTF8");
               String value = req.getParameter("test-parameter");
               if (!"test value õäöü".equals(value)) {
-                throw new ServletException(
+                throw new IllegalStateException(
                     "request parameter does not have expected value " + value);
               }
             }

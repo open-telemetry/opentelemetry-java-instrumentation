@@ -10,16 +10,20 @@ jobs:
   common:
     uses: ./.github/workflows/build-common.yml
     with:
+      max-test-retries: 0
       no-build-cache: true
-    secrets:
-      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
 
   test-latest-deps:
     uses: ./.github/workflows/reusable-test-latest-deps.yml
     with:
+      max-test-retries: 0
       no-build-cache: true
-    secrets:
-      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
+
+  test-indy:
+    uses: ./.github/workflows/reusable-test-indy.yml
+    with:
+      max-test-retries: 0
+      no-build-cache: true
 
   # muzzle is not included here because it doesn't use gradle cache anyway and so is already covered
   # by the normal daily build

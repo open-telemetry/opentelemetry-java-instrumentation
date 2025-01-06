@@ -17,10 +17,11 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
 
   @Nullable
   @Override
-  public String getSystem(DbRequest request) {
+  public String getDbSystem(DbRequest request) {
     return request.getDbInfo().getSystem();
   }
 
+  @Deprecated
   @Nullable
   @Override
   public String getUser(DbRequest request) {
@@ -29,11 +30,12 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
 
   @Nullable
   @Override
-  public String getName(DbRequest request) {
+  public String getDbNamespace(DbRequest request) {
     DbInfo dbInfo = request.getDbInfo();
     return dbInfo.getName() == null ? dbInfo.getDb() : dbInfo.getName();
   }
 
+  @Deprecated
   @Nullable
   @Override
   public String getConnectionString(DbRequest request) {
@@ -42,7 +44,7 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
 
   @Nullable
   @Override
-  public String getRawStatement(DbRequest request) {
-    return request.getStatement();
+  public String getRawQueryText(DbRequest request) {
+    return request.getQueryText();
   }
 }

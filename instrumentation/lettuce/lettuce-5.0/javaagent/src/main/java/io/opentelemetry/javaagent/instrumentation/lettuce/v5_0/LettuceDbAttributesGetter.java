@@ -21,10 +21,11 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisC
       RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
   @Override
-  public String getSystem(RedisCommand<?, ?, ?> request) {
-    return DbIncubatingAttributes.DbSystemValues.REDIS;
+  public String getDbSystem(RedisCommand<?, ?, ?> request) {
+    return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(RedisCommand<?, ?, ?> request) {
@@ -33,10 +34,11 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisC
 
   @Override
   @Nullable
-  public String getName(RedisCommand<?, ?, ?> request) {
+  public String getDbNamespace(RedisCommand<?, ?, ?> request) {
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(RedisCommand<?, ?, ?> request) {
@@ -44,7 +46,7 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisC
   }
 
   @Override
-  public String getStatement(RedisCommand<?, ?, ?> request) {
+  public String getDbQueryText(RedisCommand<?, ?, ?> request) {
     String command = LettuceInstrumentationUtil.getCommandName(request);
     List<String> args =
         request.getArgs() == null
@@ -54,7 +56,7 @@ final class LettuceDbAttributesGetter implements DbClientAttributesGetter<RedisC
   }
 
   @Override
-  public String getOperation(RedisCommand<?, ?, ?> request) {
+  public String getDbOperationName(RedisCommand<?, ?, ?> request) {
     return request.getType().name();
   }
 }

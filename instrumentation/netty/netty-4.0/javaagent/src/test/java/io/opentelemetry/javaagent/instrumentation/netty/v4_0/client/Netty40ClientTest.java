@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_0.client;
 
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -27,7 +30,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.ServerAttributes;
 import java.net.URI;
 import java.util.Collections;
 import java.util.HashSet;
@@ -36,6 +38,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import org.jetbrains.annotations.NotNull;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
@@ -44,15 +47,12 @@ class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
   private final EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
-
   private final Bootstrap bootstrap = buildBootstrap(false);
-
   private final Bootstrap readTimeoutBootstrap = buildBootstrap(true);
 
-  void cleanupSpec() {
-    if (eventLoopGroup != null) {
-      eventLoopGroup.shutdownGracefully();
-    }
+  @AfterAll
+  void cleanup() {
+    eventLoopGroup.shutdownGracefully();
   }
 
   Bootstrap buildBootstrap(boolean readTimeout) {
@@ -137,7 +137,7 @@ class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestRedirects();
     optionsBuilder.disableTestHttps();
-    optionsBuilder.disableTestReadTimeout();
+    optionsBuilder.spanEndsAfterBody();
 
     optionsBuilder.setExpectedClientSpanNameMapper(Netty40ClientTest::expectedClientSpanName);
     optionsBuilder.setHttpAttributes(Netty40ClientTest::httpAttributes);
@@ -176,8 +176,8 @@ class Netty40ClientTest extends AbstractHttpClientTest<DefaultFullHttpRequest> {
         return Collections.emptySet();
     }
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-    attributes.remove(ServerAttributes.SERVER_ADDRESS);
-    attributes.remove(ServerAttributes.SERVER_PORT);
+    attributes.remove(SERVER_ADDRESS);
+    attributes.remove(SERVER_PORT);
     return attributes;
   }
 }

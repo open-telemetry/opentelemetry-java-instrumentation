@@ -9,7 +9,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 
 /** A builder of {@link GraphQLTelemetry}. */
-@SuppressWarnings("AbbreviationAsWordInName")
+@SuppressWarnings({"AbbreviationAsWordInName", "MemberName"})
 public final class GraphQLTelemetryBuilder {
 
   private final OpenTelemetry openTelemetry;

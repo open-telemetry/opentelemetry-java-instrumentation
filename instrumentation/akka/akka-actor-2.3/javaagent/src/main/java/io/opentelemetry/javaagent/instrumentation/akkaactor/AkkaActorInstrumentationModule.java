@@ -23,6 +23,7 @@ public class AkkaActorInstrumentationModule extends InstrumentationModule {
     return asList(
         new AkkaDispatcherInstrumentation(),
         new AkkaActorCellInstrumentation(),
-        new AkkaDefaultSystemMessageQueueInstrumentation());
+        new AkkaDefaultSystemMessageQueueInstrumentation(),
+        new AkkaScheduleInstrumentation());
   }
 }

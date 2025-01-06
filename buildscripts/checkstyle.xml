@@ -50,6 +50,18 @@
   -->
 
   <module name="TreeWalker">
+    <module name="RegexpSinglelineJava">
+      <property name="format"
+                value="(?&lt;!import static io.opentelemetry.sdk.testing.assertj.)OpenTelemetryAssertions\."/>
+      <property name="message"
+                value="Please statically import methods from OpenTelemetryAssertions"/>
+    </module>
+    <module name="RegexpSinglelineJava">
+      <property name="format"
+                value="(?&lt;!import static org.assertj.core.api.|OpenTelemetry)Assertions.assertThat"/>
+      <property name="message"
+                value="Please statically import methods from Assertions (OpenTelemetryAssertions extends Assertions)"/>
+    </module>
     <module name="OuterTypeFilename"/>
     <module name="IllegalTokenText">
       <property name="tokens" value="STRING_LITERAL, CHAR_LITERAL"/>
@@ -393,7 +405,7 @@
   <!-- skip jflex generated files -->
   <module name="SuppressionSingleFilter">
     <property name="checks" value=".*"/>
-    <!-- TODO(anuraaga): Fix path after https://github.com/jprante/gradle-plugin-jflex/issues/20 -->
+    <!-- TODO: Fix path after https://github.com/jprante/gradle-plugin-jflex/issues/20 -->
     <property name="files"
       value="instrumentation-api[/\\]build[/\\]generated[/\\]sources[/\\]main"/>
   </module>

@@ -71,6 +71,9 @@ public class ActionInstrumentation implements TypeInstrumentation {
         @Advice.Return(readOnly = false) Future<Result> responseFuture,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      if (scope == null) {
+        return;
+      }
       scope.close();
 
       updateSpan(context, req);

@@ -8,11 +8,13 @@ package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.Arrays;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class FinagleHttpInstrumentationModule extends InstrumentationModule {
+public class FinagleHttpInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public FinagleHttpInstrumentationModule() {
     super("finagle-http", "finagle-http-23.11");
@@ -27,9 +29,17 @@ public class FinagleHttpInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isIndyModule() {
-    // injects helpers to access package-private members
-    return false;
+  public String getModuleGroup() {
+    // relies on netty and needs access to common netty instrumentation classes
+    return "netty";
+  }
+
+  @Override
+  public List<String> injectedClassNames() {
+    // these are injected so that they can access package-private members
+    return Arrays.asList(
+        "com.twitter.finagle.ChannelTransportHelpers",
+        "io.netty.channel.OpenTelemetryChannelInitializerDelegate");
   }
 
   @Override

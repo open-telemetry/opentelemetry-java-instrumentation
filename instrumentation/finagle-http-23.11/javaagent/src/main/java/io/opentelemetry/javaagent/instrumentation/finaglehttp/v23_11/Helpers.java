@@ -18,12 +18,11 @@ import io.netty.handler.codec.http2.Http2StreamFrameToHttpObjectCodec;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
-import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContexts;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerTracingHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyHttpServerResponseBeforeCommitHandler;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyServerSingletons;
-import java.util.Deque;
 
 public final class Helpers {
 
@@ -42,9 +41,8 @@ public final class Helpers {
         // the parent channel is the original http/1.1 channel and has the contexts stored in it;
         // we assign to this new channel as the old one will not be evaluated in the upgraded h2c
         // chain
-        Deque<ServerContext> serverContexts =
-            channel.parent().attr(AttributeKeys.SERVER_CONTEXT).get();
-        channel.attr(AttributeKeys.SERVER_CONTEXT).set(serverContexts);
+        ServerContexts serverContexts = ServerContexts.get(channel.parent());
+        channel.attr(AttributeKeys.SERVER_CONTEXTS).set(serverContexts);
 
         // todo add way to propagate the protocol version override up to the netty instrumentation;
         //  why: the netty instrumentation extracts the http protocol version from the HttpRequest

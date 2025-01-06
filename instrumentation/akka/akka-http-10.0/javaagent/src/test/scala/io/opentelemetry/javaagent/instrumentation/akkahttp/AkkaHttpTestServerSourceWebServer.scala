@@ -14,8 +14,8 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Sink
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint._
+import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier
 
-import java.util.function.Supplier
 import scala.concurrent.Await
 
 object AkkaHttpTestServerSourceWebServer {
@@ -33,7 +33,7 @@ object AkkaHttpTestServerSourceWebServer {
       },
       path(INDEXED_CHILD.rawPath()) {
         parameterMap { map =>
-          val supplier = new Supplier[String] {
+          val supplier = new ThrowingSupplier[String, Exception] {
             def get(): String = {
               INDEXED_CHILD.collectSpanAttributes(new UrlParameterProvider {
                 override def getParameter(name: String): String =
@@ -114,8 +114,8 @@ object AkkaHttpTestServerSourceWebServer {
     }
   }
 
-  def supplier(string: String): Supplier[String] = {
-    new Supplier[String] {
+  def supplier(string: String): ThrowingSupplier[String, Exception] = {
+    new ThrowingSupplier[String, Exception] {
       def get(): String = {
         string
       }

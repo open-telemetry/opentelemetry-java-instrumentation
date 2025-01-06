@@ -11,12 +11,12 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridgin
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationDoubleUpDownCounterBuilder;
 import java.util.List;
 
-final class ApplicationDoubleUpDownCounterBuilder137 extends ApplicationDoubleUpDownCounterBuilder
+public class ApplicationDoubleUpDownCounterBuilder137 extends ApplicationDoubleUpDownCounterBuilder
     implements ExtendedDoubleUpDownCounterBuilder {
 
   private final io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder agentBuilder;
 
-  ApplicationDoubleUpDownCounterBuilder137(
+  protected ApplicationDoubleUpDownCounterBuilder137(
       io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder agentBuilder) {
     super(agentBuilder);
     this.agentBuilder = agentBuilder;

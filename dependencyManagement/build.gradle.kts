@@ -8,12 +8,12 @@ val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.40.0"
-val otelContribVersion = "1.37.0-alpha"
+val otelSdkVersion = "1.45.0"
+val otelContribVersion = "1.42.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.22"
+val groovyVersion = "4.0.24"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -27,26 +27,26 @@ val groovyVersion = "4.0.22"
 // configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"
 
 val DEPENDENCY_BOMS = listOf(
-  "com.fasterxml.jackson:jackson-bom:2.17.2",
-  "com.squareup.okio:okio-bom:3.9.0", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
-  "com.google.guava:guava-bom:33.2.1-jre",
+  "com.fasterxml.jackson:jackson-bom:2.18.2",
+  "com.squareup.okio:okio-bom:3.9.1", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
+  "com.google.guava:guava-bom:33.4.0-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
-  "org.junit:junit-bom:5.10.3",
-  "org.testcontainers:testcontainers-bom:1.20.1",
+  "org.junit:junit-bom:5.11.4",
+  "org.testcontainers:testcontainers-bom:1.20.4",
   "org.spockframework:spock-bom:2.4-M4-groovy-4.0"
 )
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
-val errorProneVersion = "2.30.0"
-val byteBuddyVersion = "1.14.18"
-val asmVersion = "9.7"
+val errorProneVersion = "2.36.0"
+val byteBuddyVersion = "1.15.11"
+val asmVersion = "9.7.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.16"
-val semConvVersion = "1.25.0-alpha"
+val semConvVersion = "1.29.0-alpha"
 
 val CORE_DEPENDENCIES = listOf(
   "io.opentelemetry.semconv:opentelemetry-semconv:${semConvVersion}",
@@ -83,29 +83,29 @@ val CORE_DEPENDENCIES = listOf(
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
   "io.r2dbc:r2dbc-proxy:1.1.5.RELEASE",
-  "ch.qos.logback:logback-classic:1.3.14", // 1.4+ requires Java 11+
+  "ch.qos.logback:logback-classic:1.3.15", // 1.4+ requires Java 11+
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.11.1",
+  "com.uber.nullaway:nullaway:0.12.2",
   "commons-beanutils:commons-beanutils:1.9.4",
-  "commons-cli:commons-cli:1.8.0",
+  "commons-cli:commons-cli:1.9.0",
   "commons-codec:commons-codec:1.17.1",
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
   "commons-fileupload:commons-fileupload:1.5",
-  "commons-io:commons-io:2.16.1",
+  "commons-io:commons-io:2.18.0",
   "commons-lang:commons-lang:2.6",
-  "commons-logging:commons-logging:1.3.3",
+  "commons-logging:commons-logging:1.3.4",
   "commons-validator:commons-validator:1.9.0",
   "io.netty:netty:3.10.6.Final",
   "io.opentelemetry.contrib:opentelemetry-aws-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-gcp-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-baggage-processor:${otelContribVersion}",
-  "io.opentelemetry.proto:opentelemetry-proto:1.3.2-alpha",
+  "io.opentelemetry.proto:opentelemetry-proto:1.4.0-alpha",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
-  "org.assertj:assertj-core:3.26.3",
+  "org.assertj:assertj-core:3.27.2",
   "org.awaitility:awaitility:4.2.2",
   "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",
@@ -115,7 +115,8 @@ val DEPENDENCIES = listOf(
   "org.junit-pioneer:junit-pioneer:1.9.1",
   "org.objenesis:objenesis:3.4",
   "javax.validation:validation-api:2.0.1.Final",
-  "org.snakeyaml:snakeyaml-engine:2.7"
+  "org.snakeyaml:snakeyaml-engine:2.8",
+  "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.10"
 )
 
 javaPlatform {

@@ -1,0 +1,283 @@
+---
+rules:
+
+  # Context Level Metrics
+
+  - bean: org.apache.camel:context=*,type=context,name=*
+    prefix: camel.context.
+    metricAttribute:
+      context: param(context)
+      camel_version: beanattr(CamelVersion)
+      camel_class_resolver: beanattr(PackageScanClassResolver)
+    mapping:
+      StartedRoutes:
+        metric: route.started
+        type: updowncounter
+        unit: "{route}"
+        desc: Indicates the number of routes started successfully since context start-up or the last reset operation.
+      TotalRoutes:
+        metric: route.added
+        type: counter
+        unit: "{route}"
+        desc: Indicates the total number of routes added successfully since context start-up or the last reset operation.
+      ExchangesCompleted:
+        metric: exchange.completed
+        type: counter
+        unit: "{exchange}"
+        desc: Indicates the total number of exchanges processed successfully since context start-up or the last reset operation.
+      ExchangesFailed:
+        metric: exchange.failed
+        type: counter
+        unit: "{exchange}"
+        desc: Indicates the total number of exchanges that failed to process since context start-up or the last reset operation.
+      ExchangesInflight:
+        metric: exchange.inflight
+        type: updowncounter
+        unit: "{exchange}"
+        desc: Indicates the number of exchanges currently transiting the context.
+      ExchangesTotal:
+        metric: exchange
+        type: counter
+        unit: "{exchange}"
+        desc: Indicates the total number of exchanges, passed or failed, processed context start-up or the last reset operation.
+      FailuresHandled:
+        metric: exchange.failed_handled
+        unit: "{exchange}"
+        type: counter
+        desc: Indicates the number of exchanges failed and handled by an ExceptionHandler in the context.
+      Redeliveries:
+        metric: exchange.redelivered
+        type: counter
+        unit: "{exchange}"
+        desc: Number of exchanges redelivered (internal only)  since context start-up or the last reset operation.
+      ExternalRedeliveries:
+        metric: exchange.redelivered_external
+        type: counter
+        unit: "{exchange}"
+        desc: The total number of all external initiated redeliveries (such as from JMS broker) since context start-up or the last reset operation.
+      MaxProcessingTime:
+        metric: exchange.processing.max_time
+        unit: ms
+        type: gauge
+        desc: Indicates the longest time, in milliseconds, to process an exchange since context start-up or the last reset operation.
+      MeanProcessingTime:
+        metric: exchange.processing.mean_time
+        type: gauge
+        unit: ms
+        desc: Indicates the mean processing time, in milliseconds, for all exchanges processed since context start-up or the last reset operation.
+      MinProcessingTime:
+        metric: exchange.processing.min_time
+        unit: ms
+        type: gauge
+        desc: Indicates the shortest time, in milliseconds, to process an exchange since context start-up or the last reset operation.
+      LastProcessingTime:
+        metric: exchange.processing.last_time
+        unit: ms
+        type: gauge
+        desc: Indicates the time, in milliseconds, it took to process the last exchange.
+      DeltaProcessingTime:
+        metric: exchange.processing.delta_time
+        type: gauge
+        unit: ms
+        desc: Indicates the difference, in milliseconds, of the Processing Time of the last two exchanges transited the context.
+      TotalProcessingTime:
+        metric: exchange.processing.time
+        type: counter
+        unit: ms
+        desc: Indicates the total processing time, in milliseconds, to process all exchanges since context start-up or the last reset operation.
+
+  # Route Level metrics
+
+  - bean: org.apache.camel:context=*,type=routes,name=*
+    prefix: camel.route.
+    metricAttribute:
+      route: beanattr(RouteId)
+      context: param(context)
+    mapping:
+      ExchangesCompleted:
+        metric: exchange.completed
+        type: counter
+        unit: "{exchange}"
+        desc: Indicates the total number of exchanges the route has processed successfully since route start-up or the last reset operation.
+      ExchangesFailed:
+        metric: exchange.failed
+        type: counter
+        unit: "{exchange}"
+        desc: Indicates the total number of exchanges that the route has failed to process since route start-up or the last reset operation.
+      ExchangesInflight:
+        metric: exchange.inflight
+        type: updowncounter
+        unit: "{exchange}"
+        desc: Indicates the number of exchanges currently transiting the route.
+      ExchangesTotal:
+        metric: exchange
+        unit: "{exchange}"
+        type: counter
+        desc: Indicates the total number of exchanges, passed or failed, that the route has processed since route start-up or the last reset operation.
+      FailuresHandled:
+        metric: exchange.failed_handled
+        unit: "{exchange}"
+        type: counter
+        desc: Indicates the number of exchanges failed and handled by an ExceptionHandler in the route.
+      ExternalRedeliveries:
+        metric: exchange.redelivered_external
+        unit: "{exchange}"
+        type: counter
+        desc: The total number of all external initiated redeliveries (such as from JMS broker) since the route start-up or the last reset operation.
+      Redeliveries:
+        metric: exchange.redelivered
+        type: counter
+        unit: "{exchange}"
+        desc: Number of exchanges redelivered (internal only)  since route start-up or the last reset operation.
+      MaxProcessingTime:
+        metric: exchange.processing.max_time
+        unit: ms
+        type: gauge
+        desc: Indicates the longest time, in milliseconds, to process an exchange since the route start-up or the last reset operation.
+      MeanProcessingTime:
+        metric: exchange.processing.mean_time
+        unit: ms
+        type: gauge
+        desc: Indicates the mean processing time, in milliseconds, for all exchanges processed since the route start-up or the last reset operation.
+      MinProcessingTime:
+        metric: exchange.processing.min_time
+        type: gauge
+        unit: ms
+        desc: Indicates the shortest time, in milliseconds, to process an exchange since the route start-up or the last reset operation.
+      LastProcessingTime:
+        metric: exchange.processing.last_time
+        type: gauge
+        unit: ms
+        desc: Indicates the time, in milliseconds, it took the route to process the last exchange.
+      DeltaProcessingTime:
+        metric: exchange.processing.delta_time
+        type: gauge
+        unit: ms
+        desc: Indicates the difference, in milliseconds, of the Processing Time of the last two exchanges transited the route.
+      TotalProcessingTime:
+        metric: exchange.processing.time
+        type: counter
+        unit: ms
+        desc: Indicates the total processing time, in milliseconds, of all exchanges the selected processed since route start-up or the last reset operation.
+
+  # Processor Level Metrics
+
+  - bean: org.apache.camel:context=*,type=processors,name=*
+    prefix: camel.processor.
+    metricAttribute:
+      processor: beanattr(ProcessorId)
+      route: beanattr(RouteId)
+      context: param(context)
+      destination: beanattr(Destination)
+    mapping:
+      ExchangesCompleted:
+        metric: exchange.completed
+        type: counter
+        unit: "{exchange}"
+        desc: Indicates the total number of exchanges the selected processor has processed successfully since processor start-up or the last reset operation.
+      ExchangesFailed:
+        metric: exchange.failed
+        type: counter
+        unit: "{exchange}"
+        desc: Indicates the total number of exchanges that the selected processor has failed to process since processor start-up or the last reset operation.
+      ExchangesInflight:
+        metric: exchange.inflight
+        type: updowncounter
+        unit: "{exchange}"
+        desc: Indicates the number of exchanges currently transiting the processor.
+      ExchangesTotal:
+        metric: exchange
+        type: counter
+        unit: "{exchange}"
+        desc: Indicates the total number of exchanges, passed or failed, that the selected processor has processed since processor start-up or the last reset operation.
+      FailuresHandled:
+        metric: exchange.failed_handled
+        unit: "{exchange}"
+        type: counter
+        desc: Indicates the number of exchanges failed and handled by an ExceptionHandler in the context.
+      ExternalRedeliveries:
+        metric: exchange.redelivered_external
+        type: counter
+        unit: "{exchange}"
+        desc: The total number of all external initiated redeliveries (such as from JMS broker) since processor start-up or the last reset operation.
+      Redeliveries:
+        metric: exchange.redelivered
+        type: counter
+        unit: "{exchange}"
+        desc: Number of exchanges redelivered (internal only)  since selected processor start-up or the last reset operation.
+      MaxProcessingTime:
+        metric: exchange.processing.max_time
+        unit: ms
+        type: gauge
+        desc: Indicates the longest time, in milliseconds, to process an exchange since processor start-up or the last reset operation.
+      MeanProcessingTime:
+        metric: exchange.processing.mean_time
+        type: gauge
+        unit: ms
+        desc: Indicates the mean processing time, in milliseconds, for all exchanges processed since processor start-up or the last reset operation.
+      MinProcessingTime:
+        metric: exchange.processing.min_time
+        type: gauge
+        unit: ms
+        desc: Indicates the shortest time, in milliseconds, to process an exchange since processor start-up or the last reset operation.
+      LastProcessingTime:
+        metric: exchange.processing.last_time
+        type: gauge
+        unit: ms
+        desc: Indicates the time, in milliseconds, it took the selected processor to process the last exchange.
+      DeltaProcessingTime:
+        metric: exchange.processing.delta_time
+        type: gauge
+        unit: ms
+        desc: Indicates the difference, in milliseconds, of the Processing Time of the last two exchanges transited the selected processor.
+      TotalProcessingTime:
+        metric: exchange.processing.time
+        type: counter
+        unit: ms
+        desc: Indicates the total processing time, in milliseconds, to process all exchanges since start-up or the last reset operation.
+
+ # Thread Pools
+
+  - bean: org.apache.camel:context=*,type=threadpools,name=*
+    prefix: camel.threadpool.
+    metricAttribute:
+      route: beanattr(RouteId)
+      context: param(context)
+      pool_id: beanattr(Id)
+    mapping:
+      ActiveCount:
+        metric: active
+        type: updowncounter
+        unit: "{thread}"
+        desc: The approximate number of threads that are actively executing tasks.
+      CompletedTaskCount:
+        metric: task.completed
+        type: counter
+        unit: "{task}"
+        desc: The approximate total number of tasks that have completed execution. Because the states of tasks and threads may change dynamically during computation, the returned value is only an approximation, but one that does not ever decrease across successive calls.
+      PoolSize:
+        metric: pool.size
+        type: updowncounter
+        unit: "{thread}"
+        desc: The current number of threads in the pool.
+      CorePoolSize:
+        metric: pool.core_size
+        type: updowncounter
+        unit: "{thread}"
+        desc: The number of threads that are always kept in the pool, even if they are idle.
+      LargestPoolSize:
+        metric: pool.largest_size
+        type: gauge
+        unit: "{thread}"
+        desc: The largest number of threads that have ever simultaneously been in the pool.
+      TaskCount:
+        metric: task
+        type: counter
+        unit: "{task}"
+        desc: The approximate total number of tasks that have ever been scheduled for execution.
+      TaskQueueSize:
+        metric: task.queue_size
+        type: updowncounter
+        unit: "{threads}"
+        desc:  The number of Tasks in the Task Queue.
+

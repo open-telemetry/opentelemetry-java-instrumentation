@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.netty.v4_1.internal;
 
 import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
-import java.util.Deque;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -17,9 +16,9 @@ public final class AttributeKeys {
 
   // this is the context that has the server span
   //
-  // note: this attribute key is also used by ratpack instrumentation
-  public static final AttributeKey<Deque<ServerContext>> SERVER_CONTEXT =
-      AttributeKey.valueOf(AttributeKeys.class, "server-context");
+  // note: this attribute key is also used by finagle instrumentation
+  public static final AttributeKey<ServerContexts> SERVER_CONTEXTS =
+      AttributeKey.valueOf(AttributeKeys.class, "server-contexts");
 
   public static final AttributeKey<Context> CLIENT_CONTEXT =
       AttributeKey.valueOf(AttributeKeys.class, "client-context");

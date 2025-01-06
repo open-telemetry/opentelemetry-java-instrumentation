@@ -11,11 +11,11 @@ import application.io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 
-class ApplicationDoubleCounter implements DoubleCounter {
+public class ApplicationDoubleCounter implements DoubleCounter {
 
   private final io.opentelemetry.api.metrics.DoubleCounter agentCounter;
 
-  ApplicationDoubleCounter(io.opentelemetry.api.metrics.DoubleCounter agentCounter) {
+  protected ApplicationDoubleCounter(io.opentelemetry.api.metrics.DoubleCounter agentCounter) {
     this.agentCounter = agentCounter;
   }
 

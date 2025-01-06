@@ -75,15 +75,13 @@ final class InstrumentedKafkaFlux<R extends ConsumerRecord<?, ?>> extends FluxOp
       }
 
       Context context = processInstrumenter().start(parentContext, request);
-      Throwable error = null;
       try (Scope ignored = context.makeCurrent()) {
         actual.onNext(record);
       } catch (Throwable t) {
-        error = t;
+        processInstrumenter().end(context, request, null, t);
         throw t;
-      } finally {
-        processInstrumenter().end(context, request, null, error);
       }
+      processInstrumenter().end(context, request, null, null);
     }
 
     @Override

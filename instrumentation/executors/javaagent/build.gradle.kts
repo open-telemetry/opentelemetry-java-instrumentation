@@ -15,6 +15,7 @@ dependencies {
   testImplementation(project(":instrumentation:executors:testing"))
   testImplementation("org.scala-lang:scala-library:2.11.12")
   testCompileOnly(project(":instrumentation:executors:bootstrap"))
+  testCompileOnly(project(":javaagent-bootstrap"))
 }
 
 testing {
@@ -30,6 +31,7 @@ testing {
       dependencies {
         implementation(project(":instrumentation:executors:testing"))
         compileOnly(project(":instrumentation:executors:bootstrap"))
+        compileOnly(project(":javaagent-bootstrap"))
       }
 
       targets {

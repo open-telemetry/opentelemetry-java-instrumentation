@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_32.metrics;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
 
@@ -17,7 +18,6 @@ import io.opentelemetry.api.metrics.LongHistogramBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -61,7 +61,7 @@ class MeterTest {
         metrics ->
             metrics.anySatisfy(
                 metric ->
-                    OpenTelemetryAssertions.assertThat(metric)
+                    assertThat(metric)
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(
@@ -96,7 +96,7 @@ class MeterTest {
         metrics ->
             metrics.anySatisfy(
                 metric ->
-                    OpenTelemetryAssertions.assertThat(metric)
+                    assertThat(metric)
                         .hasDescription("d")
                         .hasUnit("u")
                         .hasInstrumentationScope(

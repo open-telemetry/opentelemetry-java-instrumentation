@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 public interface ContextDataAccessor<T> {
 
   @Nullable
-  Object getValue(T contextData, String key);
+  String getValue(T contextData, String key);
 
-  void forEach(T contextData, BiConsumer<String, Object> action);
+  void forEach(T contextData, BiConsumer<String, String> action);
 }

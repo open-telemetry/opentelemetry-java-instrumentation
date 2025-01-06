@@ -4,7 +4,6 @@
     "config:base"
   ],
   "ignorePaths": ["instrumentation/**"],
-  "baseBranches": ["main", "release/v1.33.x"],
   // needed in order to get patch-only updates in package rules below
   // unfortunately you can't combine updateTypes and separateMinorPatch in the same package rule
   // so we have to apply it globally here, see
@@ -35,13 +34,6 @@
       "allowedVersions": "!/\\-SNAPSHOT$/"
     },
     {
-      // we are not going to update the semconv in 1.x branch
-      "matchPackageNames": ["io.opentelemetry.semconv:opentelemetry-semconv"],
-      "matchUpdateTypes": ["minor"],
-      "matchBaseBranches": ["release/v1.33.x"],
-      "enabled": false
-    },
-    {
       "matchPackagePrefixes": ["ch.qos.logback:"],
       "groupName": "logback packages"
     },
@@ -54,8 +46,8 @@
       "groupName": "quarkus packages"
     },
     {
-      "matchPackagePrefixes": ["com.gradle.enterprise"],
-      "groupName": "gradle enterprise packages"
+      "matchPackagePrefixes": ["com.gradle.develocity"],
+      "groupName": "gradle develocity packages"
     },
     {
       "matchPackagePrefixes": ["org.eclipse.jetty:"],
@@ -76,6 +68,10 @@
     {
       "matchPackagePrefixes": ["com.fasterxml.jackson"],
       "groupName": "jackson packages"
+    },
+    {
+      "matchPackagePrefixes": ["com.gradleup.shadow"],
+      "groupName": "gradle shadow packages"
     },
     {
       // prevent update to 2.4-groovy-4.0-SNAPSHOT
@@ -124,7 +120,7 @@
       ],
       "matchPackageNames": [
         "org.slf4j:slf4j-api",
-        "org.springframework.boot",
+        "org.springframework.boot:org.springframework.boot.gradle.plugin", // this is for plugin id "org.springframework.boot"
         "org.springframework.boot:spring-boot-dependencies"],
       "matchUpdateTypes": ["major", "minor"],
       "enabled": false,
@@ -154,6 +150,14 @@
       "enabled": false
     },
     {
+      // intentionally pinning specifically to guice 5 in the play smoke test
+      // until we are able to test against the latest version of play
+      "matchFileNames": ["smoke-tests/images/play/build.gradle.kts"],
+      "matchPackagePrefixes": ["com.google.inject:", "com.google.inject.extensions:"],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
       // intentionally aligning both netty 4.0 and 4.1 version in this convention
       "matchFileNames": ["conventions/src/main/kotlin/otel.java-conventions.gradle.kts"],
       "matchPackageNames": ["io.netty:netty-bom"],
@@ -163,7 +167,7 @@
     {
       // intentionally using scala 2.11 in otel.scala-conventions.gradle.kts
       "matchFileNames": ["conventions/src/main/kotlin/otel.scala-conventions.gradle.kts"],
-      "matchPackagePrefixes": ["org.scala-lang:scala-library"],
+      "matchPackageNames": ["org.scala-lang:scala-library"],
       "matchUpdateTypes": ["major", "minor"],
       "enabled": false
     },

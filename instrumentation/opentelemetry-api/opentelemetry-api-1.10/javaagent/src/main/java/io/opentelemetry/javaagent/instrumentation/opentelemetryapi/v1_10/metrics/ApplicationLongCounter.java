@@ -11,11 +11,11 @@ import application.io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 
-class ApplicationLongCounter implements LongCounter {
+public class ApplicationLongCounter implements LongCounter {
 
   private final io.opentelemetry.api.metrics.LongCounter agentCounter;
 
-  ApplicationLongCounter(io.opentelemetry.api.metrics.LongCounter agentCounter) {
+  protected ApplicationLongCounter(io.opentelemetry.api.metrics.LongCounter agentCounter) {
     this.agentCounter = agentCounter;
   }
 

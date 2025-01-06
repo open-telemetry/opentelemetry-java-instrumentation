@@ -6,11 +6,11 @@
 package io.opentelemetry.instrumentation.resources;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ServiceAttributes;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Function;
@@ -68,9 +68,21 @@ class JarServiceNameDetectorTest {
 
     Resource resource = serviceNameProvider.createResource(config);
 
-    assertThat(resource.getAttributes())
-        .hasSize(1)
-        .containsEntry(ServiceAttributes.SERVICE_NAME, "my-service");
+    assertThat(resource.getAttributes()).hasSize(1).containsEntry(SERVICE_NAME, "my-service");
+  }
+
+  @Test
+  void createResource_processHandleJarExtraFlag() {
+    String path = Paths.get("path", "to", "app", "my-service.jar").toString();
+    JarServiceNameDetector serviceNameProvider =
+        getDetector(
+            new String[] {"-Dtest=42", "-jar", "-Xmx512m", path, "abc", "def"},
+            prop -> null,
+            JarServiceNameDetectorTest::failPath);
+
+    Resource resource = serviceNameProvider.createResource(config);
+
+    assertThat(resource.getAttributes()).hasSize(1).containsEntry(SERVICE_NAME, "my-service");
   }
 
   @Test
@@ -80,9 +92,7 @@ class JarServiceNameDetectorTest {
 
     Resource resource = serviceNameProvider.createResource(config);
 
-    assertThat(resource.getAttributes())
-        .hasSize(1)
-        .containsEntry(ServiceAttributes.SERVICE_NAME, "my-service");
+    assertThat(resource.getAttributes()).hasSize(1).containsEntry(SERVICE_NAME, "my-service");
   }
 
   static String[] getArgs(String jarName) {
@@ -102,9 +112,7 @@ class JarServiceNameDetectorTest {
 
     Resource resource = serviceNameProvider.createResource(config);
 
-    assertThat(resource.getAttributes())
-        .hasSize(1)
-        .containsEntry(ServiceAttributes.SERVICE_NAME, "my-service");
+    assertThat(resource.getAttributes()).hasSize(1).containsEntry(SERVICE_NAME, "my-service");
   }
 
   // regression test for
