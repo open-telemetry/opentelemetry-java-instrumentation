@@ -42,8 +42,8 @@ for file in $(find instrumentation -name "*Module.java"); do
   else
     expected="super\(\n? *\"$simple_module_name\",\n? *\"$module_name\""
   fi
-
-  echo "$module_name"
+  echo "simple_module_name: $simple_module_name"
+  echo "module_name: $module_name"
 
   matches=$(perl -0 -ne "print if /$expected/" "$file" | wc -l)
   if [ "$matches" == 0 ]; then
