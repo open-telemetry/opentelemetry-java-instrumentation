@@ -105,40 +105,8 @@ The following environment variables can be used for configuration:
 
 # Troubleshooting CI Test Failures
 
-CI test logs are pretty large, sometimes exceeding 75MB. To make it easier to troubleshoot test failures, you can download or
-view the raw logs from the CI job and then look for `Publishing build scan...` in the logs. There may be several occurrences
-of this phrase, so look for the one that follows "BUILD FAILED".
+See [Troubleshooting CI Test Failures](../../CONTRIBUTING.md#troubleshooting-pr-build-failures) for common issues and solutions.
 
-Example:
+# Debugging
 
-```
-2025-01-01T05:06:24.8710392Z BUILD FAILED in 15m 4s
-2025-01-01T05:06:24.8710682Z
-2025-01-01T05:06:24.8713216Z 1121 actionable tasks: 1103 executed, 18 up-to-date
-2025-01-01T05:06:25.2671952Z
-2025-01-01T05:06:25.2672609Z Publishing build scan...
-2025-01-01T05:06:25.4674291Z https://gradle.com/s/u4vbxhlidd5ka
-```
-
-Copy the gradle.com URL and open it in a browser. This will give you a nice view of the test execution breakdown.
-
-## How to download the raw logs
-
-1. Click on the `Details` link in one of the failing CI jobs under `Some checks were not successful` section of your PR.
-2. Click on one of the failed tests in the left panel.
-3. Click on the `Setting` gear in the top right corner of the logs panel.
-4. Right click on 'View raw logs' and then 'Save link as' to save the page as a text file locally.
-5. Once the file is downloaded, open it in a text editor and search for `Publishing build scan...` that follows an occurrence of "BUILD FAILED" to find the URL.
-6. Open the URL in a browser to view the test execution breakdown. It might prompt you to "Activate your Build Scan" the very 1st time, you can use your own email address and activate it via email.
-
-Unfortunately, the Build Scan service hosted via Develocity has an allowed size limits of the free build scans. Once you exceed the limit, then you won't be able to view the scan anymore.
-Then you can just use the raw logs to search for "FAILED" or "Task failed with an exception" to identify the failing tests.
-
-# Using breakpoints in instrumentation
-
-For instrumentation that has been migrated to use the [invokedynamic based instrumentation mechanism](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8999),
-you can leverage breakpoints and standard debugging strategies by adding `-PtestIndy=true` to the gradle command:
-
-```
-./gradlew -PtestIndy=true :instrumentation:<INSTRUMENTATION_NAME>:test
-```
+For information on debugging tests or instrumentation, see [Debugging](debugging.md).
