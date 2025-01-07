@@ -26,7 +26,6 @@ public class MetricsAnnotationInstrumentationModule extends InstrumentationModul
 
   public MetricsAnnotationInstrumentationModule() {
     super(
-        "opentelemetry-instrumentation-annotations",
         "opentelemetry-instrumentation-annotations-incubator",
         "metrics-annotations");
   }
