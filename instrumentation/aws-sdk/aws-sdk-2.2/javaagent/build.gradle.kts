@@ -164,4 +164,16 @@ tasks {
       include("software/amazon/awssdk/global/handlers/execution.interceptors")
     }
   }
+
+  val testStableSemconv by registering(Test::class) {
+    filter {
+      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+    }
+    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
 }

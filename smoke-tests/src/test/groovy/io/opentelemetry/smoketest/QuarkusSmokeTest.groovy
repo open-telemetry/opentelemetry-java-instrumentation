@@ -19,7 +19,7 @@ import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContaine
 class QuarkusSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-quarkus:jdk$jdk-20211213.1574595137"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-quarkus:jdk$jdk-20241105.11678591860"
   }
 
   @Override
@@ -50,12 +50,12 @@ class QuarkusSmokeTest extends SmokeTest {
     traces.countFilteredResourceAttributes("telemetry.distro.version", currentAgentVersion) == 1
 
     and: "service.name is detected from manifest"
-    traces.countFilteredResourceAttributes(ServiceAttributes.SERVICE_NAME.key, "smoke-test-quarkus-images") == 1
+    traces.countFilteredResourceAttributes(ServiceAttributes.SERVICE_NAME.key, "quarkus") == 1
 
     cleanup:
     stopTarget()
 
     where:
-    jdk << [11, 17] // Quarkus 2.0+ does not support Java 8
+    jdk << [17, 21, 23] // Quarkus 3.7+ requires Java 17+
   }
 }

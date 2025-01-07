@@ -17,6 +17,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.test.server.http.RequestContextGetter;
 import io.opentelemetry.testing.internal.armeria.common.HttpData;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
+import io.opentelemetry.testing.internal.armeria.common.HttpResponseWriter;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.ResponseHeaders;
 import io.opentelemetry.testing.internal.armeria.common.ResponseHeadersBuilder;
@@ -29,6 +30,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyStore;
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import javax.net.ssl.KeyManagerFactory;
 
 public final class HttpClientTestServer extends ServerExtension {
@@ -99,6 +101,29 @@ public final class HttpClientTestServer extends ServerExtension {
             "/read-timeout",
             (ctx, req) ->
                 HttpResponse.delayed(HttpResponse.of(HttpStatus.OK), Duration.ofSeconds(20)))
+        .service(
+            "/long-request",
+            (ctx, req) -> {
+              HttpResponseWriter writer = HttpResponse.streaming();
+              writer.write(ResponseHeaders.of(HttpStatus.OK));
+              writer.write(HttpData.ofUtf8("Hello"));
+
+              long delay = TimeUnit.SECONDS.toMillis(1);
+              String delayString = req.headers().get("delay");
+              if (delayString != null) {
+                delay = Long.parseLong(delayString);
+              }
+              ctx.eventLoop()
+                  .schedule(
+                      () -> {
+                        writer.write(HttpData.ofUtf8("World"));
+                        writer.close();
+                      },
+                      delay,
+                      TimeUnit.MILLISECONDS);
+
+              return writer;
+            })
         .decorator(
             (delegate, ctx, req) -> {
               for (String field : openTelemetry.getPropagators().getTextMapPropagator().fields()) {

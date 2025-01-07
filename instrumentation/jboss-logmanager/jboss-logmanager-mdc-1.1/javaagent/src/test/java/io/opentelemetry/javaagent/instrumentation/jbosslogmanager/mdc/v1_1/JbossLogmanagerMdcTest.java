@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.mdc.v1_1;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.instrumentation.test.AgentInstrumentationSpecification;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.reflect.InvocationTargetException;
@@ -25,7 +24,7 @@ import org.jboss.logmanager.Logger;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class JbossLogmanagerMdcTest extends AgentInstrumentationSpecification {
+public class JbossLogmanagerMdcTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -97,6 +96,7 @@ public class JbossLogmanagerMdcTest extends AgentInstrumentationSpecification {
     try {
       getMdcCopy = logRecords.get(0).getClass().getMethod("getMdcCopy");
     } catch (NoSuchMethodException ignored) {
+      // ignored
     }
 
     assertThat(logRecords.get(0).getMessage()).isEqualTo("log message 1");

@@ -6,22 +6,24 @@
 package io.opentelemetry.javaagent.instrumentation.scalaexecutors
 
 import io.opentelemetry.api.trace.{SpanKind, Tracer}
+import io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv
+import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable
 import io.opentelemetry.instrumentation.testing.junit.{
   AgentInstrumentationExtension,
   InstrumentationExtension
 }
 import io.opentelemetry.javaagent.testing.common.Java8BytecodeBridge
-import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemValues
-import java.util.function.Consumer
+import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes._
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.{Test, TestInstance}
 import org.junit.jupiter.api.extension.RegisterExtension
-import scala.concurrent.{Await, Future}
-import scala.concurrent.duration.Duration
+import org.junit.jupiter.api.{Test, TestInstance}
 import slick.jdbc.H2Profile.api._
+
+import java.util.function.Consumer
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class SlickTest {
@@ -79,18 +81,18 @@ class SlickTest {
                   .hasKind(SpanKind.CLIENT)
                   .hasParent(trace.getSpan(0))
                   .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM, DbSystemIncubatingValues.H2),
+                    equalTo(maybeStable(DB_NAME), Db),
                     equalTo(
-                      DbIncubatingAttributes.DB_SYSTEM,
-                      DbSystemValues.H2
+                      DB_USER,
+                      if (emitStableDatabaseSemconv()) null else Username
                     ),
-                    equalTo(DbIncubatingAttributes.DB_NAME, Db),
-                    equalTo(DbIncubatingAttributes.DB_USER, Username),
                     equalTo(
-                      DbIncubatingAttributes.DB_CONNECTION_STRING,
-                      "h2:mem:"
+                      DB_CONNECTION_STRING,
+                      if (emitStableDatabaseSemconv()) null else "h2:mem:"
                     ),
-                    equalTo(DbIncubatingAttributes.DB_STATEMENT, "SELECT ?"),
-                    equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT")
+                    equalTo(maybeStable(DB_STATEMENT), "SELECT ?"),
+                    equalTo(maybeStable(DB_OPERATION), "SELECT")
                   )
             }
           )

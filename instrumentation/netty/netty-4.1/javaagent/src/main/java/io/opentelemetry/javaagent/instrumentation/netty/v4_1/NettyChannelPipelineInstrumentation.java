@@ -52,9 +52,7 @@ public class NettyChannelPipelineInstrumentation
   public static class ChannelPipelineAddAdvice {
 
     @Advice.OnMethodEnter
-    public static void trackCallDepth(
-        @Advice.Argument(2) ChannelHandler handler,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+    public static CallDepth trackCallDepth(@Advice.Argument(2) ChannelHandler handler) {
       // Previously we used one unique call depth tracker for all handlers, using
       // ChannelPipeline.class as a key.
       // The problem with this approach is that it does not work with netty's
@@ -64,8 +62,9 @@ public class NettyChannelPipelineInstrumentation
       // Using the specific handler key instead of the generic ChannelPipeline.class will help us
       // both to handle such cases and avoid adding our additional handlers in case of internal
       // calls of `addLast` to other method overloads with a compatible signature.
-      callDepth = CallDepth.forClass(handler.getClass());
+      CallDepth callDepth = CallDepth.forClass(handler.getClass());
       callDepth.getAndIncrement();
+      return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -73,7 +72,8 @@ public class NettyChannelPipelineInstrumentation
         @Advice.This ChannelPipeline pipeline,
         @Advice.Argument(1) String handlerName,
         @Advice.Argument(2) ChannelHandler handler,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.Enter CallDepth callDepth) {
+
       if (callDepth.decrementAndGet() > 0) {
         return;
       }

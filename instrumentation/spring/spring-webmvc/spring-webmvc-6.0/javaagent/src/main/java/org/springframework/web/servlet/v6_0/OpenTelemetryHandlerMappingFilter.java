@@ -26,6 +26,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.springframework.core.Ordered;
 import org.springframework.web.servlet.HandlerExecutionChain;
@@ -34,12 +36,19 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 import org.springframework.web.util.ServletRequestPathUtils;
 
 public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
+  private static final Logger logger =
+      Logger.getLogger(OpenTelemetryHandlerMappingFilter.class.getName());
 
   private final HttpServerRouteGetter<HttpServletRequest> serverSpanName =
       (context, request) -> {
         if (this.parseRequestPath) {
           // sets new value for PATH_ATTRIBUTE of request
-          ServletRequestPathUtils.parseAndCache(request);
+          try {
+            ServletRequestPathUtils.parseAndCache(request);
+          } catch (RuntimeException exception) {
+            logger.log(Level.FINE, "Failed calling parseAndCache", exception);
+            return null;
+          }
         }
         if (findMapping(request)) {
           // Name the parent span based on the matching pattern

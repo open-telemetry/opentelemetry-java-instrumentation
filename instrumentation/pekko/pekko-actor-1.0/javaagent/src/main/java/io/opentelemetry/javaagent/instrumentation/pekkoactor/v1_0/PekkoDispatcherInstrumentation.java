@@ -52,8 +52,12 @@ public class PekkoDispatcherInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitDispatch(
-        @Advice.Enter PropagatedContext propagatedContext, @Advice.Thrown Throwable throwable) {
-      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
+        @Advice.Argument(1) Envelope envelope,
+        @Advice.Enter PropagatedContext propagatedContext,
+        @Advice.Thrown Throwable throwable) {
+      VirtualField<Envelope, PropagatedContext> virtualField =
+          VirtualField.find(Envelope.class, PropagatedContext.class);
+      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable, virtualField, envelope);
     }
   }
 }

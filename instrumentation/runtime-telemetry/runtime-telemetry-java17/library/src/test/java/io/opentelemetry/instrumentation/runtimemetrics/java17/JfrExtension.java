@@ -16,6 +16,7 @@ import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import jdk.jfr.FlightRecorder;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
@@ -36,10 +37,11 @@ public class JfrExtension implements BeforeEachCallback, AfterEachCallback {
   @Override
   public void beforeEach(ExtensionContext context) throws InterruptedException {
     try {
-      Class.forName("jdk.jfr.consumer.RecordingStream");
+      Class.forName("jdk.jfr.FlightRecorder");
     } catch (ClassNotFoundException exception) {
       Assumptions.abort("JFR not present");
     }
+    Assumptions.assumeTrue(FlightRecorder.isAvailable(), "JFR not available");
 
     metricReader = InMemoryMetricReader.create();
     meterProvider = SdkMeterProvider.builder().registerMetricReader(metricReader).build();

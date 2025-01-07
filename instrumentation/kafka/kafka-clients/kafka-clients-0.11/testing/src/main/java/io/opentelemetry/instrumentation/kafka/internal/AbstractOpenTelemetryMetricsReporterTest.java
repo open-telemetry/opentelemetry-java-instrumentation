@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -50,10 +51,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
 @SuppressWarnings("OtelInternalJavadoc")
@@ -70,6 +71,13 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
   private static KafkaProducer<byte[], byte[]> producer;
   private static KafkaConsumer<byte[], byte[]> consumer;
 
+  private static final List<OpenTelemetryMetricsReporter> metricsReporters =
+      new CopyOnWriteArrayList<>();
+
+  static {
+    OpenTelemetryMetricsReporter.setListener(metricsReporters::add);
+  }
+
   @BeforeEach
   void beforeAll() {
     // only start the kafka container the first time this runs
@@ -78,10 +86,10 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
     }
 
     kafka =
-        new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.7.0"))
+        new KafkaContainer(DockerImageName.parse("apache/kafka:3.8.0"))
             .withEnv("KAFKA_HEAP_OPTS", "-Xmx256m")
             .withLogConsumer(new Slf4jLogConsumer(logger))
-            .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.KafkaServer\\).*", 1))
+            .waitingFor(Wait.forLogMessage(".*started \\(kafka.server.Kafka.*Server\\).*", 1))
             .withStartupTimeout(Duration.ofMinutes(1));
     kafka.start();
     producer = new KafkaProducer<>(producerConfig());
@@ -90,14 +98,16 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
 
   @AfterAll
   static void afterAll() {
-    kafka.stop();
     producer.close();
     consumer.close();
+    kafka.stop();
   }
 
   @AfterEach
   void tearDown() {
-    OpenTelemetryMetricsReporter.resetForTest();
+    for (OpenTelemetryMetricsReporter metricsReporter : metricsReporters) {
+      metricsReporter.resetForTest();
+    }
   }
 
   protected abstract InstrumentationExtension testing();
@@ -186,6 +196,14 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
 
   @Test
   void observeMetrics() {
+    // Firstly create new producer and consumer and close them. This is done tp verify that metrics
+    // are still produced after closing one producer/consumer. See
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/11880
+    KafkaProducer<byte[], byte[]> producer2 = new KafkaProducer<>(producerConfig());
+    KafkaConsumer<byte[], byte[]> consumer2 = new KafkaConsumer<>(consumerConfig());
+    producer2.close();
+    consumer2.close();
+
     produceRecords();
     consumeRecords();
 
@@ -405,7 +423,9 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
     Map<String, List<KafkaMetricId>> kafkaMetricsByGroup =
         TestMetricsReporter.seenMetrics.stream().collect(groupingBy(KafkaMetricId::getGroup));
     List<RegisteredObservable> registeredObservables =
-        OpenTelemetryMetricsReporter.getRegisteredObservables();
+        metricsReporters.stream()
+            .flatMap(metricsReporter -> metricsReporter.getRegisteredObservables().stream())
+            .collect(toList());
     // Iterate through groups in alpha order
     for (String group : kafkaMetricsByGroup.keySet().stream().sorted().collect(toList())) {
       List<KafkaMetricId> kafkaMetricIds =

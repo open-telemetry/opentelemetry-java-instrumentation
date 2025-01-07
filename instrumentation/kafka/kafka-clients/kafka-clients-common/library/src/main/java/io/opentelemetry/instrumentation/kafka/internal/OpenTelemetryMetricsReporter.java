@@ -41,25 +41,32 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
 
   private static final Logger logger =
       Logger.getLogger(OpenTelemetryMetricsReporter.class.getName());
-  private volatile Meter meter;
+  private static volatile Listener listener;
 
-  private static final Object lock = new Object();
+  private volatile Meter meter;
+  private final Object lock = new Object();
 
   @GuardedBy("lock")
-  private static final List<RegisteredObservable> registeredObservables = new ArrayList<>();
+  private final List<RegisteredObservable> registeredObservables = new ArrayList<>();
 
   /**
    * Reset for test by resetting the {@link #meter} to {@code null} and closing all registered
    * instruments.
    */
-  static void resetForTest() {
+  void resetForTest() {
     closeAllInstruments();
   }
 
   // Visible for test
-  static List<RegisteredObservable> getRegisteredObservables() {
+  List<RegisteredObservable> getRegisteredObservables() {
     synchronized (lock) {
       return new ArrayList<>(registeredObservables);
+    }
+  }
+
+  public OpenTelemetryMetricsReporter() {
+    if (listener != null) {
+      listener.metricsReporterCreated(this);
     }
   }
 
@@ -131,7 +138,7 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
     closeAllInstruments();
   }
 
-  private static void closeAllInstruments() {
+  private void closeAllInstruments() {
     synchronized (lock) {
       for (Iterator<RegisteredObservable> it = registeredObservables.iterator(); it.hasNext(); ) {
         closeInstrument(it.next().getObservable());
@@ -176,5 +183,15 @@ public final class OpenTelemetryMetricsReporter implements MetricsReporter {
           "Configuration property " + key + " is not instance of " + requiredType.getSimpleName());
     }
     return (T) value;
+  }
+
+  // Visible for test
+  static void setListener(Listener listener) {
+    OpenTelemetryMetricsReporter.listener = listener;
+  }
+
+  // used for testing
+  interface Listener {
+    void metricsReporterCreated(OpenTelemetryMetricsReporter metricsReporter);
   }
 }

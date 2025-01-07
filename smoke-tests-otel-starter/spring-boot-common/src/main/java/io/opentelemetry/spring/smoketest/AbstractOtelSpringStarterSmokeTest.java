@@ -13,8 +13,8 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.PropagationProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.SpringConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -28,6 +28,7 @@ import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
+import java.net.URI;
 import java.util.Collections;
 import java.util.List;
 import org.assertj.core.api.AbstractCharSequenceAssert;
@@ -46,6 +47,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.RequestEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.client.RestTemplate;
 
@@ -53,13 +57,14 @@ import org.springframework.web.client.RestTemplate;
  * This test class enforces the order of the tests to make sure that {@link #shouldSendTelemetry()},
  * which asserts the telemetry data from the application startup, is executed first.
  */
+@SuppressWarnings("deprecation") // using deprecated semconv
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
   @Autowired private TestRestTemplate testRestTemplate;
 
   @Autowired private Environment environment;
-  @Autowired private PropagationProperties propagationProperties;
+  @Autowired private OtelSpringProperties otelSpringProperties;
   @Autowired private OtelResourceProperties otelResourceProperties;
   @Autowired private OtlpExporterProperties otlpExporterProperties;
   @Autowired private RestTemplateBuilder restTemplateBuilder;
@@ -104,6 +109,21 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                           Attributes.of(
                               AttributeKey.booleanKey("keyFromResourceCustomizer"), true))));
     }
+
+    @Bean
+    AutoConfigurationCustomizerProvider customizerUsingPropertyDefinedInaSpringFile() {
+      return customizer ->
+          customizer.addResourceCustomizer(
+              (resource, config) -> {
+                String valueForKeyDeclaredZsEnvVariable = config.getString("APPLICATION_PROP");
+                assertThat(valueForKeyDeclaredZsEnvVariable).isNotEmpty();
+
+                String valueForKeyWithDash = config.getString("application.prop-with-dash");
+                assertThat(valueForKeyWithDash).isNotEmpty();
+
+                return resource;
+              });
+    }
   }
 
   @Test
@@ -113,7 +133,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
             environment,
             otlpExporterProperties,
             otelResourceProperties,
-            propagationProperties,
+            otelSpringProperties,
             DefaultConfigProperties.createFromMap(
                 Collections.singletonMap("otel.exporter.otlp.headers", "a=1,b=2")));
     assertThat(configProperties.getMap("otel.exporter.otlp.headers"))
@@ -126,7 +146,13 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
   @Test
   @org.junit.jupiter.api.Order(1)
   void shouldSendTelemetry() {
-    testRestTemplate.getForObject(OtelSpringStarterSmokeTestController.PING, String.class);
+    HttpHeaders headers = new HttpHeaders();
+    headers.add("key", "value");
+
+    testRestTemplate.exchange(
+        new RequestEntity<>(
+            null, headers, HttpMethod.GET, URI.create(OtelSpringStarterSmokeTestController.PING)),
+        String.class);
 
     // Span
     testing.waitAndAssertTraces(
@@ -170,6 +196,9 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                             equalTo(HttpAttributes.HTTP_ROUTE, "/ping"),
                             equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                             equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
+                            equalTo(
+                                AttributeKey.stringArrayKey("http.request.header.key"),
+                                Collections.singletonList("value")),
                             satisfies(
                                 ServerAttributes.SERVER_PORT,
                                 integerAssert -> integerAssert.isNotZero())),
@@ -187,7 +216,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
     if (System.getProperty("org.graalvm.nativeimage.imagecode") == null) {
       // log records differ in native image mode due to different startup timing
       LogRecordData firstLog = exportedLogRecords.get(0);
-      assertThat(firstLog.getBody().asString())
+      assertThat(firstLog.getBodyValue().asString())
           .as("Should instrument logs")
           .startsWith("Starting ")
           .contains(this.getClass().getSimpleName());

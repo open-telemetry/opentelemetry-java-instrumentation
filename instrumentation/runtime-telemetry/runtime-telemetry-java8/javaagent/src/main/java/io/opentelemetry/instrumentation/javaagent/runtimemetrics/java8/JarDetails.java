@@ -219,8 +219,10 @@ class JarDetails {
           return null;
         }
         Properties props = new Properties();
-        props.load(jarFile.getInputStream(jarEntry));
-        pom = props;
+        try (InputStream in = jarFile.getInputStream(jarEntry)) {
+          props.load(in);
+          pom = props;
+        }
       }
     }
     return pom;

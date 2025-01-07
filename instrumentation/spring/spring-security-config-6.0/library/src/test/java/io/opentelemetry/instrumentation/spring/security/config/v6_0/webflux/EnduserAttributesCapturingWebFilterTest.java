@@ -23,9 +23,11 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import org.springframework.web.server.handler.DefaultWebFilterChain;
 import reactor.core.publisher.Mono;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class EnduserAttributesCapturingWebFilterTest {
 
-  @RegisterExtension InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  @RegisterExtension
+  static InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   /**
    * Tests to ensure enduser attributes are captured.
@@ -37,7 +39,6 @@ class EnduserAttributesCapturingWebFilterTest {
    */
   @Test
   void test() {
-
     EnduserAttributesCapturer capturer = new EnduserAttributesCapturer();
     capturer.setEnduserIdEnabled(true);
     capturer.setEnduserRoleEnabled(true);

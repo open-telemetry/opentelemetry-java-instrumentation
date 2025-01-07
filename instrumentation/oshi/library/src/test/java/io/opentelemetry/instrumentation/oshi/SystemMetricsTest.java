@@ -5,11 +5,12 @@
 
 package io.opentelemetry.instrumentation.oshi;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.util.List;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -48,6 +49,6 @@ class SystemMetricsTest extends AbstractSystemMetricsTest {
 
   @Test
   void verifyObservablesAreNotEmpty() {
-    Assertions.assertThat(observables).as("List of observables").isNotEmpty();
+    assertThat(observables).as("List of observables").isNotEmpty();
   }
 }

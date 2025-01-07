@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.armeria.v1_3.internal;
 
+import com.linecorp.armeria.client.ClientRequestContext;
 import com.linecorp.armeria.common.HttpRequest;
 import com.linecorp.armeria.common.HttpStatus;
-import com.linecorp.armeria.common.RequestContext;
 import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.logging.RequestLog;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
@@ -16,12 +16,8 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
-public enum ArmeriaHttpClientAttributesGetter
-    implements HttpClientAttributesGetter<RequestContext, RequestLog> {
+enum ArmeriaHttpClientAttributesGetter
+    implements HttpClientAttributesGetter<ClientRequestContext, RequestLog> {
   INSTANCE;
 
   private static final ClassValue<Method> authorityMethodCache =
@@ -38,12 +34,12 @@ public enum ArmeriaHttpClientAttributesGetter
       };
 
   @Override
-  public String getHttpRequestMethod(RequestContext ctx) {
+  public String getHttpRequestMethod(ClientRequestContext ctx) {
     return ctx.method().name();
   }
 
   @Override
-  public String getUrlFull(RequestContext ctx) {
+  public String getUrlFull(ClientRequestContext ctx) {
     HttpRequest request = request(ctx);
     StringBuilder uri = new StringBuilder();
     String scheme = request.scheme();
@@ -65,14 +61,14 @@ public enum ArmeriaHttpClientAttributesGetter
   }
 
   @Override
-  public List<String> getHttpRequestHeader(RequestContext ctx, String name) {
+  public List<String> getHttpRequestHeader(ClientRequestContext ctx, String name) {
     return request(ctx).headers().getAll(name);
   }
 
   @Override
   @Nullable
   public Integer getHttpResponseStatusCode(
-      RequestContext ctx, RequestLog requestLog, @Nullable Throwable error) {
+      ClientRequestContext ctx, RequestLog requestLog, @Nullable Throwable error) {
     HttpStatus status = requestLog.responseHeaders().status();
     if (!status.equals(HttpStatus.UNKNOWN)) {
       return status.code();
@@ -82,17 +78,18 @@ public enum ArmeriaHttpClientAttributesGetter
 
   @Override
   public List<String> getHttpResponseHeader(
-      RequestContext ctx, RequestLog requestLog, String name) {
+      ClientRequestContext ctx, RequestLog requestLog, String name) {
     return requestLog.responseHeaders().getAll(name);
   }
 
   @Override
-  public String getNetworkProtocolName(RequestContext ctx, @Nullable RequestLog requestLog) {
+  public String getNetworkProtocolName(ClientRequestContext ctx, @Nullable RequestLog requestLog) {
     return "http";
   }
 
   @Override
-  public String getNetworkProtocolVersion(RequestContext ctx, @Nullable RequestLog requestLog) {
+  public String getNetworkProtocolVersion(
+      ClientRequestContext ctx, @Nullable RequestLog requestLog) {
     SessionProtocol protocol =
         requestLog != null ? requestLog.sessionProtocol() : ctx.sessionProtocol();
     return protocol.isMultiplex() ? "2" : "1.1";
@@ -100,7 +97,7 @@ public enum ArmeriaHttpClientAttributesGetter
 
   @Nullable
   @Override
-  public String getServerAddress(RequestContext ctx) {
+  public String getServerAddress(ClientRequestContext ctx) {
     String authority = authority(ctx);
     if (authority == null) {
       return null;
@@ -111,7 +108,7 @@ public enum ArmeriaHttpClientAttributesGetter
 
   @Nullable
   @Override
-  public Integer getServerPort(RequestContext ctx) {
+  public Integer getServerPort(ClientRequestContext ctx) {
     String authority = authority(ctx);
     if (authority == null) {
       return null;
@@ -130,12 +127,12 @@ public enum ArmeriaHttpClientAttributesGetter
   @Override
   @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
-      RequestContext ctx, @Nullable RequestLog requestLog) {
+      ClientRequestContext ctx, @Nullable RequestLog requestLog) {
     return RequestContextAccess.remoteAddress(ctx);
   }
 
   @Nullable
-  private static String authority(RequestContext ctx) {
+  private static String authority(ClientRequestContext ctx) {
     // newer armeria versions expose authority through DefaultClientRequestContext#authority
     // we are using this method as it provides default values based on endpoint
     // in older versions armeria wraps the request, and we can get the same default values through
@@ -153,7 +150,7 @@ public enum ArmeriaHttpClientAttributesGetter
     return request.authority();
   }
 
-  private static HttpRequest request(RequestContext ctx) {
+  private static HttpRequest request(ClientRequestContext ctx) {
     HttpRequest request = ctx.request();
     if (request == null) {
       throw new IllegalStateException(

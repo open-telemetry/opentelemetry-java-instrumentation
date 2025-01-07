@@ -32,7 +32,8 @@ dependencies {
   testLibrary("com.zaxxer:HikariCP:2.4.0")
   testLibrary("com.mchange:c3p0:0.9.5")
 
-  latestDepTestLibrary("org.apache.derby:derby:10.14.+")
+  // some classes in earlier versions of derby were split out into derbytools in later versions
+  latestDepTestLibrary("org.apache.derby:derbytools:+")
 
   testImplementation(project(":instrumentation:jdbc:testing"))
 
@@ -67,7 +68,25 @@ tasks {
     jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
   }
 
+  val testStableSemconv by registering(Test::class) {
+    filter {
+      excludeTestsMatching("SlickTest")
+    }
+    jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  val testSlickStableSemconv by registering(Test::class) {
+    filter {
+      includeTestsMatching("SlickTest")
+    }
+    include("**/SlickTest.*")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
   check {
     dependsOn(testSlick)
+    dependsOn(testStableSemconv)
+    dependsOn(testSlickStableSemconv)
   }
 }
