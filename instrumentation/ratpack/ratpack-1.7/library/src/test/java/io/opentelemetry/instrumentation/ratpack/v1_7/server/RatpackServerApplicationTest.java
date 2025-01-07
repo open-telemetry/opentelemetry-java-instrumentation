@@ -19,9 +19,11 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
 import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -35,6 +37,11 @@ class RatpackServerApplicationTest {
   @BeforeAll
   static void setup() throws Exception {
     app = new RatpackFunctionalTest(RatpackApp.class);
+  }
+
+  @AfterAll
+  static void cleanup() {
+    app.close();
   }
 
   @Test
@@ -96,8 +103,18 @@ class RatpackServerApplicationTest {
 
   @Test
   void testIgnoreHandlersBeforeOpenTelemetryServerHandler() {
-    assertThat(app.getHttpClient().get("ignore").getBody().getText()).isEqualTo("ignored");
-    assertThat(testing.spans().stream().filter(span -> "GET /ignore".equals(span.getName())))
-        .isEmpty();
+    testing.runWithSpan(
+        "parent",
+        () ->
+            assertThat(app.getHttpClient().get("ignore").getBody().getText()).isEqualTo("ignored"));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("parent")
+                        .hasNoParent()
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasAttributes(Attributes.empty())));
   }
 }
