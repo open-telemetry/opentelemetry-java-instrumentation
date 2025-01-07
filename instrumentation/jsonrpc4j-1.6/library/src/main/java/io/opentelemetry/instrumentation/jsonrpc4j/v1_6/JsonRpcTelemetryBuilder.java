@@ -54,9 +54,6 @@ public class JsonRpcTelemetryBuilder {
     return this;
   }
 
-
-
-
   public JsonRpcTelemetry build() {
     SpanNameExtractor<SimpleJsonRpcRequest> clientSpanNameExtractor = new JsonRpcClientSpanNameExtractor();
     SpanNameExtractor<JsonRpcRequest> serverSpanNameExtractor = new JsonRpcServerSpanNameExtractor();

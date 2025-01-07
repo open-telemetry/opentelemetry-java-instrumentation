@@ -17,6 +17,7 @@ public final class JsonRpcTelemetry {
 
   private final Instrumenter<JsonRpcRequest, JsonRpcResponse> serverInstrumenter;
   private final Instrumenter<SimpleJsonRpcRequest, SimpleJsonRpcResponse> clientInstrumenter;
+  private final ContextPropagators propagators;
 
   JsonRpcTelemetry(
       Instrumenter<JsonRpcRequest, JsonRpcResponse> serverInstrumenter,
@@ -24,6 +25,7 @@ public final class JsonRpcTelemetry {
       ContextPropagators propagators) {
     this.serverInstrumenter = serverInstrumenter;
     this.clientInstrumenter = clientInstrumenter;
+    this.propagators = propagators;
   }
 
 
@@ -33,5 +35,9 @@ public final class JsonRpcTelemetry {
 
   public Instrumenter<SimpleJsonRpcRequest, SimpleJsonRpcResponse> getClientInstrumenter() {
     return clientInstrumenter;
+  }
+
+  public ContextPropagators getPropagators() {
+    return propagators;
   }
 }
