@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
+import static java.util.Collections.emptyIterator;
+
 import io.grpc.Metadata;
 import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
-import java.util.Collections;
 import java.util.Iterator;
 import javax.annotation.Nullable;
 
@@ -31,14 +32,14 @@ enum GrpcRequestGetter implements ExtendedTextMapGetter<GrpcRequest> {
   @Override
   public Iterator<String> getAll(@Nullable GrpcRequest request, String key) {
     if (request == null || request.getMetadata() == null) {
-      return Collections.emptyIterator();
+      return emptyIterator();
     }
 
     Iterable<String> values =
         request.getMetadata().getAll(Metadata.Key.of(key, Metadata.ASCII_STRING_MARSHALLER));
 
     if (values == null) {
-      return Collections.emptyIterator();
+      return emptyIterator();
     }
     return values.iterator();
   }
