@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.jsonrpc4j.v1_6;
 
 import com.googlecode.jsonrpc4j.JsonRpcBasicServer;
@@ -18,10 +23,7 @@ public class LibraryJsonRpcTest extends AbstractJsonRpcTest {
   @Override
   protected JsonRpcBasicServer configureServer(JsonRpcBasicServer server) {
     server.setInvocationListener(
-        JsonRpcTelemetry.builder(testing.getOpenTelemetry())
-            .build()
-            .newServerInvocationListener());
+        JsonRpcTelemetry.builder(testing.getOpenTelemetry()).build().newServerInvocationListener());
     return server;
   }
-
 }

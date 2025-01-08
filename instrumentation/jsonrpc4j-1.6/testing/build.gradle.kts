@@ -10,9 +10,5 @@ dependencies {
   implementation("com.github.briandilley.jsonrpc4j:jsonrpc4j:$jsonrpcVersion")
   implementation("com.fasterxml.jackson.core:jackson-databind:2.13.3")
 
-
   // ...
 }
-
-
-

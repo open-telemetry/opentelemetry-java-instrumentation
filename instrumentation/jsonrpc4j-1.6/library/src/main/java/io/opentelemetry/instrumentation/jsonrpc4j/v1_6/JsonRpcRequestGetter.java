@@ -1,8 +1,13 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.jsonrpc4j.v1_6;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
+import javax.annotation.Nullable;
 
 enum JsonRpcRequestGetter implements TextMapGetter<JsonRpcRequest> {
   INSTANCE;

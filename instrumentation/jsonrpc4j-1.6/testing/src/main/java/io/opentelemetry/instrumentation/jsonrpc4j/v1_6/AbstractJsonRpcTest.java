@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.jsonrpc4j.v1_6;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -29,24 +34,29 @@ public abstract class AbstractJsonRpcTest {
 
   protected abstract JsonRpcBasicServer configureServer(JsonRpcBasicServer server);
 
-
   @Test
   void testServer() throws IOException {
     CalculatorService calculator = new CalculatorServiceImpl();
-    JsonRpcBasicServer server = configureServer(new JsonRpcBasicServer(calculator, CalculatorService.class));
+    JsonRpcBasicServer server =
+        configureServer(new JsonRpcBasicServer(calculator, CalculatorService.class));
 
-    JsonNode response = testing()
-        .runWithSpan(
-            "parent",
-            () -> {
-              InputStream inputStream = new ByteArrayInputStream("{\"jsonrpc\":\"2.0\",\"method\":\"add\",\"params\":[1,2],\"id\":1}".getBytes(UTF_8));
-              ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-              server.handleRequest(inputStream, outputStream);
+    JsonNode response =
+        testing()
+            .runWithSpan(
+                "parent",
+                () -> {
+                  InputStream inputStream =
+                      new ByteArrayInputStream(
+                          "{\"jsonrpc\":\"2.0\",\"method\":\"add\",\"params\":[1,2],\"id\":1}"
+                              .getBytes(UTF_8));
+                  ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                  server.handleRequest(inputStream, outputStream);
 
-              // Read the JsonNode from the InputStream
-              ObjectMapper objectMapper = new ObjectMapper();
-              return objectMapper.readTree(new ByteArrayInputStream(outputStream.toByteArray()));
-            });
+                  // Read the JsonNode from the InputStream
+                  ObjectMapper objectMapper = new ObjectMapper();
+                  return objectMapper.readTree(
+                      new ByteArrayInputStream(outputStream.toByteArray()));
+                });
 
     assertThat(response.get("result").asInt()).isEqualTo(3);
 
@@ -81,10 +91,6 @@ public abstract class AbstractJsonRpcTest {
                                             point.hasAttributesSatisfying(
                                                 equalTo(RPC_METHOD, "add"),
                                                 equalTo(RPC_SERVICE, "/calculator"),
-                                                equalTo(RPC_SYSTEM, "jsonrpc")
-                                            )))));
-
-
+                                                equalTo(RPC_SYSTEM, "jsonrpc"))))));
   }
-
 }

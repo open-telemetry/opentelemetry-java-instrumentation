@@ -1,8 +1,13 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.jsonrpc4j.v1_6;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import java.lang.reflect.Method;
 import java.util.List;
-import com.fasterxml.jackson.databind.JsonNode;
 
 public final class JsonRpcResponse {
   private final Method method;

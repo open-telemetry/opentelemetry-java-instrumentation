@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.jsonrpc4j.v1_6;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -23,12 +28,11 @@ public final class OpenTelemetryJsonRpcInvocationListener implements InvocationL
   /**
    * This method will be invoked prior to a JSON-RPC service being invoked.
    *
-   * @param method    is the method that will be invoked.
+   * @param method is the method that will be invoked.
    * @param arguments are the arguments that will be passed to the method when it is invoked.
    */
   @Override
   public void willInvoke(Method method, List<JsonNode> arguments) {
-//    System.out.printf("inside willInvoke: method is %s, arguments are %s \n", method.getName(), arguments.toString());
     Context parentContext = Context.current();
     JsonRpcRequest request = new JsonRpcRequest(method, arguments);
     if (!serverInstrumenter.shouldStart(parentContext, request)) {
@@ -43,18 +47,18 @@ public final class OpenTelemetryJsonRpcInvocationListener implements InvocationL
   /**
    * This method will be invoked after a JSON-RPC service has been invoked.
    *
-   * @param method    is the method that will was invoked.
+   * @param method is the method that will was invoked.
    * @param arguments are the arguments that were be passed to the method when it is invoked.
-   * @param result    is the result of the method invocation.  If an error arose, this value will be
-   *                  null.
-   * @param t         is the throwable that was thrown from the invocation, if no error arose, this value
-   *                  will be null.
-   * @param duration  is approximately the number of milliseconds that elapsed during which the method was invoked.
+   * @param result is the result of the method invocation. If an error arose, this value will be
+   *     null.
+   * @param t is the throwable that was thrown from the invocation, if no error arose, this value
+   *     will be null.
+   * @param duration is approximately the number of milliseconds that elapsed during which the
+   *     method was invoked.
    */
   @Override
-  public void didInvoke(Method method, List<JsonNode> arguments, Object result, Throwable t,
-      long duration) {
-//    System.out.printf("inside didInvoke: method is %s, arguments are %s \n", method.getName(), arguments.toString());
+  public void didInvoke(
+      Method method, List<JsonNode> arguments, Object result, Throwable t, long duration) {
     JsonRpcRequest request = new JsonRpcRequest(method, arguments);
     JsonRpcResponse response = new JsonRpcResponse(method, arguments, result);
     threadLocalScope.get().close();

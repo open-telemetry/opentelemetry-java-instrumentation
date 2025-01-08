@@ -95,7 +95,6 @@ public class JsonRpcClientBuilderInstrumentation implements TypeInstrumentation 
           new SimpleJsonRpcRequest(methodName, argument),
           new SimpleJsonRpcResponse(result),
           throwable);
-      System.out.println(extraHeaders);
     }
   }
 }
