@@ -6,10 +6,13 @@
 package io.opentelemetry.instrumentation.jsonrpc4j.v1_6;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import java.lang.reflect.Method;
 
 public class JsonRpcServerSpanNameExtractor implements SpanNameExtractor<JsonRpcRequest> {
+  // Follow https://opentelemetry.io/docs/specs/semconv/rpc/rpc-spans/#span-name
   @Override
   public String extract(JsonRpcRequest request) {
-    return request.getMethod().getName();
+    Method method = request.getMethod();
+    return String.format("%s/%s", method.getDeclaringClass().getName(), method.getName());
   }
 }

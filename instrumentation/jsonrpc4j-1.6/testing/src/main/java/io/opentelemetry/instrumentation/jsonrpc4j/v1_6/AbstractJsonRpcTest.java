@@ -66,13 +66,16 @@ public abstract class AbstractJsonRpcTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
-                        span.hasName("add")
+                        span.hasName(
+                                "io.opentelemetry.instrumentation.jsonrpc4j.v1_6.CalculatorService/add")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(RPC_SYSTEM, "jsonrpc"),
                                 equalTo(RPC_JSONRPC_VERSION, "2.0"),
-                                equalTo(RPC_SERVICE, "/calculator"),
+                                equalTo(
+                                    RPC_SERVICE,
+                                    "io.opentelemetry.instrumentation.jsonrpc4j.v1_6.CalculatorService"),
                                 equalTo(RPC_METHOD, "add"),
                                 equalTo(RPC_JSONRPC_ERROR_CODE, 0L))));
     testing()
@@ -90,7 +93,9 @@ public abstract class AbstractJsonRpcTest {
                                         point ->
                                             point.hasAttributesSatisfying(
                                                 equalTo(RPC_METHOD, "add"),
-                                                equalTo(RPC_SERVICE, "/calculator"),
+                                                equalTo(
+                                                    RPC_SERVICE,
+                                                    "io.opentelemetry.instrumentation.jsonrpc4j.v1_6.CalculatorService"),
                                                 equalTo(RPC_SYSTEM, "jsonrpc"))))));
   }
 }
