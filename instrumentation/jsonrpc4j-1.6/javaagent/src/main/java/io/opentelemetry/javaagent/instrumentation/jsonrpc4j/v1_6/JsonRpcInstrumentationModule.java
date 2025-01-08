@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.jsonrpc4j.v1_6;
 
 import static java.util.Arrays.asList;
@@ -18,7 +23,6 @@ public class JsonRpcInstrumentationModule extends InstrumentationModule {
     return asList(
         new JsonRpcServerBuilderInstrumentation(),
         new JsonServiceExporterBuilderInstrumentation(),
-        new JsonRpcClientBuilderInstrumentation()
-    );
+        new JsonRpcClientBuilderInstrumentation());
   }
 }

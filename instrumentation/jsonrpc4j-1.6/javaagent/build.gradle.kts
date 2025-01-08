@@ -19,7 +19,6 @@ dependencies {
   testImplementation(project(":instrumentation:jsonrpc4j-1.6:testing"))
 }
 
-
 tasks {
   test {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)

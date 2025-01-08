@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.jsonrpc4j.v1_6;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
@@ -15,10 +20,10 @@ import io.opentelemetry.instrumentation.jsonrpc4j.v1_6.SimpleJsonRpcRequest;
 import io.opentelemetry.instrumentation.jsonrpc4j.v1_6.SimpleJsonRpcResponse;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import java.util.Map;
 
 public class JsonRpcClientBuilderInstrumentation implements TypeInstrumentation {
 
@@ -37,8 +42,8 @@ public class JsonRpcClientBuilderInstrumentation implements TypeInstrumentation 
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isMethod()
-          .and(named("invoke"))
-          .and(takesArguments(4))
+            .and(named("invoke"))
+            .and(takesArguments(4))
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, Object.class))
             .and(takesArgument(2, named("java.lang.reflect.Type")))
@@ -58,16 +63,15 @@ public class JsonRpcClientBuilderInstrumentation implements TypeInstrumentation 
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = Context.current();
-      SimpleJsonRpcRequest request = new SimpleJsonRpcRequest(
-          methodName,
-          argument
-      );
+      SimpleJsonRpcRequest request = new SimpleJsonRpcRequest(methodName, argument);
       if (!JsonRpcSingletons.CLIENT_INSTRUMENTER.shouldStart(parentContext, request)) {
         return;
       }
 
       context = JsonRpcSingletons.CLIENT_INSTRUMENTER.start(parentContext, request);
-      JsonRpcSingletons.PROPAGATORS.getTextMapPropagator().inject(context, extraHeaders, HeadersSetter.INSTANCE);
+      JsonRpcSingletons.PROPAGATORS
+          .getTextMapPropagator()
+          .inject(context, extraHeaders, HeadersSetter.INSTANCE);
 
       scope = context.makeCurrent();
     }
@@ -86,7 +90,11 @@ public class JsonRpcClientBuilderInstrumentation implements TypeInstrumentation 
       }
 
       scope.close();
-      JsonRpcSingletons.CLIENT_INSTRUMENTER.end(context, new SimpleJsonRpcRequest(methodName, argument), new SimpleJsonRpcResponse(result), throwable);
+      JsonRpcSingletons.CLIENT_INSTRUMENTER.end(
+          context,
+          new SimpleJsonRpcRequest(methodName, argument),
+          new SimpleJsonRpcResponse(result),
+          throwable);
       System.out.println(extraHeaders);
     }
   }
