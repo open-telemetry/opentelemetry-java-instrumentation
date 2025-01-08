@@ -15,7 +15,20 @@ import org.apache.dubbo.rpc.RpcInvocation;
 enum DubboHeadersGetter implements TextMapGetter<DubboRequest> {
   INSTANCE;
 
-  private static final MethodHandles.Lookup lookup = MethodHandles.lookup();
+  private static final MethodHandle GET_OBJECT_ATTACHMENTS;
+
+  static {
+    MethodHandles.Lookup lookup = MethodHandles.lookup();
+    MethodHandle getObjectAttachments = null;
+    try {
+      getObjectAttachments =
+          lookup.findStatic(
+              RpcInvocation.class, "getObjectAttachments", MethodType.methodType(void.class));
+    } catch (Throwable t) {
+      // ignore
+    }
+    GET_OBJECT_ATTACHMENTS = getObjectAttachments;
+  }
 
   @Override
   @SuppressWarnings("unchecked") // unchecked for 2.7.6, 2.7.7
@@ -24,10 +37,7 @@ enum DubboHeadersGetter implements TextMapGetter<DubboRequest> {
     try {
       // In 2.7.6, 2.7.7, the StringToObjectMap implementation does not correctly retrieve the
       // keySet. Therefore, it's advisable to always call getObjectAttachments when it is available.
-      MethodHandle getObjectAttachments =
-          lookup.findStatic(
-              RpcInvocation.class, "getObjectAttachments", MethodType.methodType(void.class));
-      return ((Map<String, Object>) getObjectAttachments.invoke(invocation)).keySet();
+      return ((Map<String, Object>) GET_OBJECT_ATTACHMENTS.invoke(invocation)).keySet();
     } catch (Throwable t) {
       // ignore
     }
