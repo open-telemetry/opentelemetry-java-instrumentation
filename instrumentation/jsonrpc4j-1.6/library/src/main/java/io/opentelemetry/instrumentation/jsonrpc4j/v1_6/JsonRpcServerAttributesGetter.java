@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.jsonrpc4j.v1_6;
 
-import com.googlecode.jsonrpc4j.JsonRpcService;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
 
 // Check
@@ -21,7 +20,7 @@ public enum JsonRpcServerAttributesGetter implements RpcAttributesGetter<JsonRpc
 
   @Override
   public String getService(JsonRpcRequest request) {
-    return request.getMethod().getDeclaringClass().getAnnotation(JsonRpcService.class).value();
+    return request.getMethod().getDeclaringClass().getName();
   }
 
   @Override

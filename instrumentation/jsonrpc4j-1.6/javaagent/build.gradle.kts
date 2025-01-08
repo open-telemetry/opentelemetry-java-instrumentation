@@ -15,7 +15,7 @@ val jsonrpcVersion = "1.6"
 
 dependencies {
   implementation(project(":instrumentation:jsonrpc4j-1.6:library"))
-  implementation("com.github.briandilley.jsonrpc4j:jsonrpc4j:$jsonrpcVersion")
+  library("com.github.briandilley.jsonrpc4j:jsonrpc4j:$jsonrpcVersion")
   testImplementation(project(":instrumentation:jsonrpc4j-1.6:testing"))
 }
 

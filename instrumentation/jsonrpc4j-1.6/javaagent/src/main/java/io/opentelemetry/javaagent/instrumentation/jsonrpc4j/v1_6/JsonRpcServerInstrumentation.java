@@ -7,18 +7,21 @@ package io.opentelemetry.javaagent.instrumentation.jsonrpc4j.v1_6;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.googlecode.jsonrpc4j.InvocationListener;
 import com.googlecode.jsonrpc4j.JsonRpcBasicServer;
+import com.googlecode.jsonrpc4j.MultipleInvocationListener;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JsonRpcServerBuilderInstrumentation implements TypeInstrumentation {
+public class JsonRpcServerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -34,6 +37,10 @@ public class JsonRpcServerBuilderInstrumentation implements TypeInstrumentation 
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isConstructor(), this.getClass().getName() + "$ConstructorAdvice");
+
+    transformer.applyAdviceToMethod(
+        isMethod().and(named("setInvocationListener")),
+        this.getClass().getName() + "$SetInvocationListenerAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -42,11 +49,34 @@ public class JsonRpcServerBuilderInstrumentation implements TypeInstrumentation 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void setInvocationListener(
         @Advice.This JsonRpcBasicServer jsonRpcServer,
-        @Advice.FieldValue("invocationListener") InvocationListener invocationListener) {
+        @Advice.FieldValue(value = "invocationListener", readOnly = false)
+            InvocationListener invocationListener) {
+      invocationListener = JsonRpcSingletons.SERVER_INVOCATION_LISTENER;
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class SetInvocationListenerAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void setInvocationListener(
+        @Advice.This JsonRpcBasicServer jsonRpcServer,
+        @Advice.Argument(value = 0, readOnly = false, typing = Assigner.Typing.DYNAMIC)
+            InvocationListener invocationListener) {
       VirtualField<JsonRpcBasicServer, Boolean> instrumented =
           VirtualField.find(JsonRpcBasicServer.class, Boolean.class);
       if (!Boolean.TRUE.equals(instrumented.get(jsonRpcServer))) {
-        jsonRpcServer.setInvocationListener(JsonRpcSingletons.SERVER_INVOCATION_LISTENER);
+        if (invocationListener == null) {
+          invocationListener = JsonRpcSingletons.SERVER_INVOCATION_LISTENER;
+        } else if (invocationListener instanceof MultipleInvocationListener) {
+          ((MultipleInvocationListener) invocationListener)
+              .addInvocationListener(JsonRpcSingletons.SERVER_INVOCATION_LISTENER);
+        } else {
+          invocationListener =
+              new MultipleInvocationListener(
+                  invocationListener, JsonRpcSingletons.SERVER_INVOCATION_LISTENER);
+        }
+
         instrumented.set(jsonRpcServer, true);
       }
     }

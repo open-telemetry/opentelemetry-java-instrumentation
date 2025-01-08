@@ -6,7 +6,7 @@ val jsonrpcVersion = "1.6"
 val jacksonVersion = "2.13.3"
 
 dependencies {
-  implementation("com.github.briandilley.jsonrpc4j:jsonrpc4j:$jsonrpcVersion")
+  library("com.github.briandilley.jsonrpc4j:jsonrpc4j:$jsonrpcVersion")
 
   implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
 

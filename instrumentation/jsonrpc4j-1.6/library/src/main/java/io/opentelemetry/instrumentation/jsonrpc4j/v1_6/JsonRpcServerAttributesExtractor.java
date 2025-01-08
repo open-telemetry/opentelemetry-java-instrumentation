@@ -25,13 +25,6 @@ final class JsonRpcServerAttributesExtractor
   private static final AttributeKey<String> RPC_JSONRPC_ERROR_MESSAGE =
       AttributeKey.stringKey("rpc.jsonrpc.error_message");
 
-  //  private final JsonRpcServerAttributesGetter getter;
-  //
-  //
-  //  JsonRpcServerAttributesExtractor(JsonRpcServerAttributesGetter getter) {
-  //    this.getter = getter;
-  //  }
-
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, JsonRpcRequest jsonRpcRequest) {

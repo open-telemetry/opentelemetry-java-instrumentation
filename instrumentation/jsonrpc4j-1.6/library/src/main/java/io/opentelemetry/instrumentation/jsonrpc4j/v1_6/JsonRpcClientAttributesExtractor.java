@@ -14,13 +14,6 @@ import javax.annotation.Nullable;
 final class JsonRpcClientAttributesExtractor
     implements AttributesExtractor<SimpleJsonRpcRequest, SimpleJsonRpcResponse> {
 
-  //  private final JsonRpcClientAttributesGetter getter;
-  //
-  //
-  //  JsonRpcClientAttributesExtractor(JsonRpcClientAttributesGetter getter) {
-  //    this.getter = getter;
-  //  }
-
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, SimpleJsonRpcRequest jsonRpcRequest) {
