@@ -31,7 +31,7 @@ enum GrpcRequestGetter implements ExtendedTextMapGetter<GrpcRequest> {
 
   @Override
   public Iterator<String> getAll(@Nullable GrpcRequest request, String key) {
-    if (request == null || request.getMetadata() == null) {
+    if (request == null) {
       return emptyIterator();
     }
 
