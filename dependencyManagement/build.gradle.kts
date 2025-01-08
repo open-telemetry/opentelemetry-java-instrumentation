@@ -35,7 +35,7 @@ val DEPENDENCY_BOMS = listOf(
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
   "org.junit:junit-bom:5.11.4",
   "org.testcontainers:testcontainers-bom:1.20.4",
-  "org.spockframework:spock-bom:2.4-M4-groovy-4.0"
+  "org.spockframework:spock-bom:2.4-M5-groovy-4.0"
 )
 
 val autoServiceVersion = "1.1.1"
