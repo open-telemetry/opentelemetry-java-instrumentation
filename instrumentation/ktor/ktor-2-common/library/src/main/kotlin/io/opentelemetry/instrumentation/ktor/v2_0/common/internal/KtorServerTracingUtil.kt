@@ -74,11 +74,9 @@ object KtorServerTracingUtil {
     }
   }
 
-  private fun instrumenter(builder: AbstractKtorServerTracingBuilder): Instrumenter<ApplicationRequest, ApplicationResponse> {
-    return InstrumenterUtil.buildUpstreamInstrumenter(
-      builder.serverBuilder.instrumenterBuilder(),
-      ApplicationRequestGetter,
-      builder.spanKindExtractor(SpanKindExtractor.alwaysServer())
-    )
-  }
+  private fun instrumenter(builder: AbstractKtorServerTracingBuilder): Instrumenter<ApplicationRequest, ApplicationResponse> = InstrumenterUtil.buildUpstreamInstrumenter(
+    builder.serverBuilder.instrumenterBuilder(),
+    ApplicationRequestGetter,
+    builder.spanKindExtractor(SpanKindExtractor.alwaysServer())
+  )
 }

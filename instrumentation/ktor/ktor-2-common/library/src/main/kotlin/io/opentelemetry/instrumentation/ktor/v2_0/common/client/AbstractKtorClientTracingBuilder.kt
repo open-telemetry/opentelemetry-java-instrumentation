@@ -40,9 +40,7 @@ abstract class AbstractKtorClientTracingBuilder(
     )
   }
 
-  protected fun getOpenTelemetry(): OpenTelemetry {
-    return openTelemetry
-  }
+  protected fun getOpenTelemetry(): OpenTelemetry = openTelemetry
 
   @Deprecated(
     "Please use method `capturedRequestHeaders`",
@@ -137,9 +135,7 @@ abstract class AbstractKtorClientTracingBuilder(
       onEnd = block
     }
 
-    internal fun build(): Extractor {
-      return Extractor(onStart, onEnd)
-    }
+    internal fun build(): Extractor = Extractor(onStart, onEnd)
   }
 
   internal class Extractor(val onStart: OnStartData.() -> Unit, val onEnd: OnEndData.() -> Unit)

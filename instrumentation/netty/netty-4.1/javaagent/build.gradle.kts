@@ -74,7 +74,8 @@ if (!(findProperty("testLatestDeps") as Boolean)) {
   configurations.configureEach {
     if (!name.contains("muzzle")) {
       resolutionStrategy.eachDependency {
-        if (requested.group == "io.netty" && requested.name != "netty-bom" &&
+        if (requested.group == "io.netty" &&
+          requested.name != "netty-bom" &&
           !requested.name.startsWith("netty-transport-native") &&
           !requested.name.startsWith("netty-transport-classes")) {
           useVersion("4.1.0.Final")
