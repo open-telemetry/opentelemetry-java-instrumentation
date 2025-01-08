@@ -4,14 +4,18 @@
 
 ### Migration notes
 
-In preparation for stabilizing HTTP library instrumentation soon:
-
-- `setCaptured*Headers(List)` methods in `*TelemetryBuilder` classes were changed to
-  `setCaptured*Headers(Collection)`       
-  ([#12901](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12901))
-- `setKnownMethods(Set)` methods in `*TelemetryBuilder` classes were changed to
-  `setKnownMethods(Collection)`
-  ([#12902](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12902))
+- Some Java agent instrumentation suppression keys have been renamed to match their module names:
+  - `elasticsearch-rest-6.0` --> `elasticsearch-rest-6.4`
+  - `internal-application-logging` --> `internal-application-logger`
+  - `javalin-5` -> `javalin-5.0`
+  - `pulsar-2.8.0` -> `pulsar-2.8`
+- In preparation for stabilizing HTTP library instrumentation soon:
+  - `setCaptured*Headers(List)` methods in `*TelemetryBuilder` classes were changed to
+    `setCaptured*Headers(Collection)`       
+    ([#12901](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12901))
+  - `setKnownMethods(Set)` methods in `*TelemetryBuilder` classes were changed to
+    `setKnownMethods(Collection)`
+    ([#12902](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12902))
 
 ## Version 2.11.0 (2024-12-23)
 

@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class ElasticsearchRest6InstrumentationModule extends InstrumentationModule {
   public ElasticsearchRest6InstrumentationModule() {
-    super("elasticsearch-rest", "elasticsearch-rest-6.0", "elasticsearch");
+    super("elasticsearch-rest", "elasticsearch-rest-6.4", "elasticsearch");
   }
 
   @Override

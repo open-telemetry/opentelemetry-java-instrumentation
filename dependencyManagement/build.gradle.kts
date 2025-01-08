@@ -83,14 +83,14 @@ val CORE_DEPENDENCIES = listOf(
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
   "io.r2dbc:r2dbc-proxy:1.1.5.RELEASE",
-  "ch.qos.logback:logback-classic:1.3.14", // 1.4+ requires Java 11+
+  "ch.qos.logback:logback-classic:1.3.15", // 1.4+ requires Java 11+
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.12.2",
-  "commons-beanutils:commons-beanutils:1.9.4",
+  "com.uber.nullaway:nullaway:0.12.3",
+  "commons-beanutils:commons-beanutils:1.10.0",
   "commons-cli:commons-cli:1.9.0",
-  "commons-codec:commons-codec:1.17.1",
+  "commons-codec:commons-codec:1.17.2",
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
   "commons-fileupload:commons-fileupload:1.5",
@@ -105,7 +105,7 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-baggage-processor:${otelContribVersion}",
   "io.opentelemetry.proto:opentelemetry-proto:1.4.0-alpha",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
-  "org.assertj:assertj-core:3.27.0",
+  "org.assertj:assertj-core:3.27.2",
   "org.awaitility:awaitility:4.2.2",
   "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",
@@ -116,7 +116,7 @@ val DEPENDENCIES = listOf(
   "org.objenesis:objenesis:3.4",
   "javax.validation:validation-api:2.0.1.Final",
   "org.snakeyaml:snakeyaml-engine:2.8",
-  "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.10"
+  "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.11"
 )
 
 javaPlatform {
