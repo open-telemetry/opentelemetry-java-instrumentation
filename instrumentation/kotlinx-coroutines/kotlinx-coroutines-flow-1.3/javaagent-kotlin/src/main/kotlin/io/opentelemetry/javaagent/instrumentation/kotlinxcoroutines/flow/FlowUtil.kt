@@ -10,8 +10,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onCompletion
 
-fun <REQUEST, RESPONSE> onComplete(flow: Flow<*>, instrumenter: Instrumenter<REQUEST, RESPONSE>, context: Context, request: REQUEST & Any): Flow<*> {
-  return flow.onCompletion { cause: Throwable? ->
-    instrumenter.end(context, request, null, cause)
-  }
+fun <REQUEST, RESPONSE> onComplete(flow: Flow<*>, instrumenter: Instrumenter<REQUEST, RESPONSE>, context: Context, request: REQUEST & Any): Flow<*> = flow.onCompletion { cause: Throwable? ->
+  instrumenter.end(context, request, null, cause)
 }

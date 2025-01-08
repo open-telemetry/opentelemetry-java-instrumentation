@@ -60,7 +60,7 @@ public abstract class RedissonRequest {
     switch (sanitizedStatements.size()) {
       case 0:
         return null;
-        // optimize for the most common case
+      // optimize for the most common case
       case 1:
         return sanitizedStatements.get(0);
       default:

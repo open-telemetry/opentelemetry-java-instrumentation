@@ -49,10 +49,12 @@ class KtorServerTracing private constructor(
       extractor: (SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>
     ) {
       builder.setStatusExtractor { prevExtractor ->
-        SpanStatusExtractor { spanStatusBuilder: SpanStatusBuilder,
-                              request: ApplicationRequest,
-                              response: ApplicationResponse?,
-                              throwable: Throwable? ->
+        SpanStatusExtractor {
+            spanStatusBuilder: SpanStatusBuilder,
+            request: ApplicationRequest,
+            response: ApplicationResponse?,
+            throwable: Throwable?
+          ->
           extractor(prevExtractor).extract(spanStatusBuilder, request, response, throwable)
         }
       }
