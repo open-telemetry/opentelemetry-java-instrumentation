@@ -61,16 +61,7 @@ public class JsonRpcClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) Object argument,
         @Advice.Argument(3) Map<String, String> extraHeaders,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = Context.current();
-      SimpleJsonRpcRequest request = new SimpleJsonRpcRequest(methodName, argument);
-      if (!CLIENT_INSTRUMENTER.shouldStart(parentContext, request)) {
-        return;
-      }
-
-      context = CLIENT_INSTRUMENTER.start(parentContext, request);
-      scope = context.makeCurrent();
-    }
+        @Advice.Local("otelScope") Scope scope) {}
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(

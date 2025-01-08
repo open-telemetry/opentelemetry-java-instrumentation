@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jsonrpc4j.v1_6;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.instrumentation.jsonrpc4j.v1_6.JsonRpcSingletons.SERVER_INVOCATION_LISTENER;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -51,7 +52,7 @@ public class JsonRpcServerInstrumentation implements TypeInstrumentation {
         @Advice.This JsonRpcBasicServer jsonRpcServer,
         @Advice.FieldValue(value = "invocationListener", readOnly = false)
             InvocationListener invocationListener) {
-      invocationListener = JsonRpcSingletons.SERVER_INVOCATION_LISTENER;
+      invocationListener = SERVER_INVOCATION_LISTENER;
     }
   }
 
@@ -67,14 +68,13 @@ public class JsonRpcServerInstrumentation implements TypeInstrumentation {
           VirtualField.find(JsonRpcBasicServer.class, Boolean.class);
       if (!Boolean.TRUE.equals(instrumented.get(jsonRpcServer))) {
         if (invocationListener == null) {
-          invocationListener = JsonRpcSingletons.SERVER_INVOCATION_LISTENER;
+          invocationListener = SERVER_INVOCATION_LISTENER;
         } else if (invocationListener instanceof MultipleInvocationListener) {
           ((MultipleInvocationListener) invocationListener)
-              .addInvocationListener(JsonRpcSingletons.SERVER_INVOCATION_LISTENER);
+              .addInvocationListener(SERVER_INVOCATION_LISTENER);
         } else {
           invocationListener =
-              new MultipleInvocationListener(
-                  invocationListener, JsonRpcSingletons.SERVER_INVOCATION_LISTENER);
+              new MultipleInvocationListener(invocationListener, SERVER_INVOCATION_LISTENER);
         }
 
         instrumented.set(jsonRpcServer, true);
