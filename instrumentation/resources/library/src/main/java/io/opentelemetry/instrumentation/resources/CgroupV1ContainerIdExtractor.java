@@ -20,14 +20,21 @@ final class CgroupV1ContainerIdExtractor {
       Logger.getLogger(CgroupV1ContainerIdExtractor.class.getName());
   static final Path V1_CGROUP_PATH = Paths.get("/proc/self/cgroup");
   private final ContainerResource.Filesystem filesystem;
+  private final Path inputFilePath;
 
   CgroupV1ContainerIdExtractor() {
-    this(ContainerResource.FILESYSTEM_INSTANCE);
+    this(ContainerResource.FILESYSTEM_INSTANCE, V1_CGROUP_PATH);
   }
 
   // Exists for testing
   CgroupV1ContainerIdExtractor(ContainerResource.Filesystem filesystem) {
+    this(filesystem, V1_CGROUP_PATH);
+  }
+
+  // Exists for testing
+  CgroupV1ContainerIdExtractor(ContainerResource.Filesystem filesystem, Path inputFilePath) {
     this.filesystem = filesystem;
+    this.inputFilePath = inputFilePath;
   }
 
   /**
@@ -38,10 +45,10 @@ final class CgroupV1ContainerIdExtractor {
    * @return containerId
    */
   Optional<String> extractContainerId() {
-    if (!filesystem.isReadable(V1_CGROUP_PATH)) {
+    if (!filesystem.isReadable(inputFilePath)) {
       return Optional.empty();
     }
-    try (Stream<String> lines = filesystem.lines(V1_CGROUP_PATH)) {
+    try (Stream<String> lines = filesystem.lines(inputFilePath)) {
       return lines
           .filter(line -> !line.isEmpty())
           .map(CgroupV1ContainerIdExtractor::getIdFromLine)

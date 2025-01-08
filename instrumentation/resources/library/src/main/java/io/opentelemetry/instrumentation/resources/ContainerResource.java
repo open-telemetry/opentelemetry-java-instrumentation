@@ -78,7 +78,11 @@ public final class ContainerResource {
 
     @MustBeClosed
     Stream<String> lines(Path path) throws IOException {
-      return Files.lines(path, Charset.defaultCharset());
+      return Files.lines(path, getDefaultCharset());
+    }
+
+    Charset getDefaultCharset() {
+      return Charset.defaultCharset();
     }
 
     List<String> lineList(Path path) throws IOException {
