@@ -9,7 +9,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import java.net.InetSocketAddress;
-import java.util.Collections;
 import java.util.Iterator;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.rpc.RpcContext;
@@ -24,17 +23,16 @@ class DubboHeadersGetterTest {
 
   @Mock RpcContext context;
 
-  @Mock RpcInvocation rpcInvocation;
-
   @Test
-  @SuppressWarnings({"deprecation", "unchecked"}) // deprecation for RpcInvocation()
+  @SuppressWarnings("deprecation") // deprecation for RpcInvocation()
   void testKeys() {
     when(context.getUrl()).thenReturn(new URL("http", "localhost", 1));
     when(context.getRemoteAddress()).thenReturn(new InetSocketAddress(1));
     when(context.getLocalAddress()).thenReturn(new InetSocketAddress(1));
 
-    when(rpcInvocation.getObjectAttachments()).thenReturn(Collections.singletonMap("key", "value"));
-    DubboRequest request = DubboRequest.create(rpcInvocation, context);
+    RpcInvocation invocation = new RpcInvocation();
+    invocation.setAttachment("key", "value");
+    DubboRequest request = DubboRequest.create(invocation, context);
 
     Iterator<String> iterator = DubboHeadersGetter.INSTANCE.keys(request).iterator();
     assertThat(iterator.hasNext()).isTrue();

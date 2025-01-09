@@ -13,14 +13,12 @@ dependencies {
   testLibrary("org.apache.dubbo:dubbo-config-api:2.7.0")
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
-
 testing {
   suites {
     val testLatestDepDubbo by registering(JvmTestSuite::class) {
       dependencies {
-        implementation("org.apache.dubbo:dubbo:+")
         implementation(project(":instrumentation:apache-dubbo-2.7:library-autoconfigure"))
+        implementation("org.apache.dubbo:dubbo:+")
       }
     }
   }
@@ -34,7 +32,7 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
 }
 
-if (!(findProperty("testLatestDeps") as Boolean)) {
+if (findProperty("testLatestDeps") as Boolean) {
   tasks.check {
     dependsOn(testing.suites)
   }
