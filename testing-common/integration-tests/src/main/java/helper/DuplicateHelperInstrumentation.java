@@ -27,7 +27,7 @@ public class DuplicateHelperInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class TestAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
-    static void addSuffix(@Advice.Return(readOnly = false) String string) {
+    public static void addSuffix(@Advice.Return(readOnly = false) String string) {
       string = DuplicateHelper.addSuffix(string, " foo");
     }
   }
