@@ -9,7 +9,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import java.net.InetSocketAddress;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.Map;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.rpc.RpcContext;
 import org.apache.dubbo.rpc.RpcInvocation;
@@ -22,21 +24,32 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class DubboHeadersGetterTest {
 
   @Mock RpcContext context;
+  @Mock RpcInvocation rpcInvocation;
 
   @Test
   @SuppressWarnings("deprecation") // deprecation for RpcInvocation()
-  void testKeys() {
+  void testKeys() throws Exception {
     when(context.getUrl()).thenReturn(new URL("http", "localhost", 1));
     when(context.getRemoteAddress()).thenReturn(new InetSocketAddress(1));
     when(context.getLocalAddress()).thenReturn(new InetSocketAddress(1));
 
-    RpcInvocation invocation = new RpcInvocation();
-    invocation.setAttachment("key", "value");
-    DubboRequest request = DubboRequest.create(invocation, context);
+    // for latest dep tests call getObjectAttachments, otherwise call getAttachments
+    if (Boolean.getBoolean("testLatestDeps")) {
+      when(getObjectAttachments()).thenReturn(Collections.singletonMap("key", "value"));
+    } else {
+      when(rpcInvocation.getAttachments()).thenReturn(Collections.singletonMap("key", "value"));
+    }
+    DubboRequest request = DubboRequest.create(rpcInvocation, context);
 
     Iterator<String> iterator = DubboHeadersGetter.INSTANCE.keys(request).iterator();
     assertThat(iterator.hasNext()).isTrue();
     assertThat(iterator.next()).isEqualTo("key");
     assertThat(iterator.hasNext()).isFalse();
+  }
+
+  @SuppressWarnings("unchecked")
+  private Map<Object, Object> getObjectAttachments() throws Exception {
+    return (Map<Object, Object>)
+        RpcInvocation.class.getMethod("getObjectAttachments").invoke(rpcInvocation);
   }
 }

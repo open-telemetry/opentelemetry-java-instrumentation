@@ -13,27 +13,11 @@ dependencies {
   testLibrary("org.apache.dubbo:dubbo-config-api:2.7.0")
 }
 
-testing {
-  suites {
-    val testLatestDepDubbo by registering(JvmTestSuite::class) {
-      dependencies {
-        implementation(project(":instrumentation:apache-dubbo-2.7:library-autoconfigure"))
-        implementation("org.apache.dubbo:dubbo:+")
-      }
-    }
-  }
-}
-
 tasks.withType<Test>().configureEach {
+  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   // to suppress non-fatal errors on jdk17
   jvmArgs("--add-opens=java.base/java.math=ALL-UNNAMED")
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-}
-
-if (findProperty("testLatestDeps") as Boolean) {
-  tasks.check {
-    dependsOn(testing.suites)
-  }
 }
