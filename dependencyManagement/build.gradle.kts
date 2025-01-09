@@ -28,7 +28,7 @@ val groovyVersion = "4.0.24"
 
 val DEPENDENCY_BOMS = listOf(
   "com.fasterxml.jackson:jackson-bom:2.18.2",
-  "com.squareup.okio:okio-bom:3.10.1", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
+  "com.squareup.okio:okio-bom:3.10.2", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
   "com.google.guava:guava-bom:33.4.0-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
