@@ -104,7 +104,7 @@ dependencies {
   testImplementation("com.google.protobuf:protobuf-java-util:4.29.3")
   testImplementation("com.squareup.okhttp3:okhttp:4.12.0")
   testImplementation("io.opentelemetry:opentelemetry-api")
-  testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.4.0-alpha")
+  testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.5.0-alpha")
 
   testImplementation("org.junit.jupiter:junit-jupiter-api:${versions.junit}")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${versions.junit}")
