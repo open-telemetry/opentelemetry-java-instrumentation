@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.tooling;
 
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.SEVERE;
-import static java.util.logging.Level.WARNING;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
@@ -118,6 +117,7 @@ public class HelperInjector implements Transformer {
 
     List<HelperClassDefinition> helpers =
         helperClassNames.stream()
+            .distinct()
             .map(
                 className ->
                     HelperClassDefinition.create(
@@ -184,11 +184,8 @@ public class HelperInjector implements Transformer {
                           HelperClassDefinition::getClassName,
                           helper -> () -> helper.getBytecode().getBytecode(),
                           (a, b) -> {
-                            logger.log(
-                                WARNING,
-                                "Duplicate classname for helper class in module {0} detected",
-                                new Object[] {this.requestingName});
-                            return a;
+                            throw new IllegalStateException(
+                                "Duplicate classnames for helper class detected!");
                           },
                           LinkedHashMap::new));
 
