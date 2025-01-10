@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_ELASTICSEARCH_PATH_PARTS;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 
@@ -26,7 +27,6 @@ import co.elastic.clients.transport.rest_client.RestClientTransport;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -139,13 +139,8 @@ class ElasticsearchClientTest {
                                 URL_FULL,
                                 httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
                             equalTo(
-                                DbIncubatingAttributes.DB_ELASTICSEARCH_PATH_PARTS.getAttributeKey(
-                                    "index"),
-                                "test-index"),
-                            equalTo(
-                                DbIncubatingAttributes.DB_ELASTICSEARCH_PATH_PARTS.getAttributeKey(
-                                    "id"),
-                                "test-id")),
+                                DB_ELASTICSEARCH_PATH_PARTS.getAttributeKey("index"), "test-index"),
+                            equalTo(DB_ELASTICSEARCH_PATH_PARTS.getAttributeKey("id"), "test-id")),
                 span ->
                     span.hasName("PUT")
                         .hasKind(SpanKind.CLIENT)
