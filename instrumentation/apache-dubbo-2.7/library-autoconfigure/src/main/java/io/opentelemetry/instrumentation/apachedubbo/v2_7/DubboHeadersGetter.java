@@ -21,10 +21,9 @@ enum DubboHeadersGetter implements TextMapGetter<DubboRequest> {
     MethodHandles.Lookup lookup = MethodHandles.lookup();
     MethodHandle getObjectAttachments = null;
     try {
-      Class<?> rpcInvocation = Class.forName("org.apache.dubbo.rpc.RpcInvocation");
       getObjectAttachments =
           lookup.findVirtual(
-              rpcInvocation, "getObjectAttachments", MethodType.methodType(Map.class));
+              RpcInvocation.class, "getObjectAttachments", MethodType.methodType(Map.class));
     } catch (Throwable t) {
       // ignore
     }
@@ -32,7 +31,7 @@ enum DubboHeadersGetter implements TextMapGetter<DubboRequest> {
   }
 
   @Override
-  @SuppressWarnings("unchecked") // unchecked for 2.7.6, 2.7.7
+  @SuppressWarnings("unchecked")
   public Iterable<String> keys(DubboRequest request) {
     RpcInvocation invocation = request.invocation();
     try {

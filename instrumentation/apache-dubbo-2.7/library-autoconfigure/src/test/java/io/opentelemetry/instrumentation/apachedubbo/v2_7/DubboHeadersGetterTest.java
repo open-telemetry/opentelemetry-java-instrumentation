@@ -27,7 +27,6 @@ class DubboHeadersGetterTest {
   @Mock RpcInvocation rpcInvocation;
 
   @Test
-  @SuppressWarnings("deprecation") // deprecation for RpcInvocation()
   void testKeys() throws Exception {
     when(context.getUrl()).thenReturn(new URL("http", "localhost", 1));
     when(context.getRemoteAddress()).thenReturn(new InetSocketAddress(1));
