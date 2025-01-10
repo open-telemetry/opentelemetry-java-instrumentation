@@ -94,16 +94,8 @@ public class IndyModuleRegistry {
         experimentalModule
             .jpmsModulesToOpen()
             .forEach(
-                (className, packages) -> {
-                  Class<?> type;
-                  try {
-                    type = Class.forName(className, false, instrumentedClassLoader);
-                  } catch (ClassNotFoundException e) {
-                    throw new IllegalStateException("missing witness class " + className, e);
-                  }
-
-                  ModuleOpener.open(instrumentation, type, loader, packages);
-                });
+                (javaModule, packages) ->
+                    ModuleOpener.open(instrumentation, javaModule, loader, packages));
       }
     }
     return loader;
