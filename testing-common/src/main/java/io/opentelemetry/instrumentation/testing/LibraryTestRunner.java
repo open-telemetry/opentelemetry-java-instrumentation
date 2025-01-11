@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.testing;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
 import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.api.trace.TracerBuilder;
@@ -14,6 +15,8 @@ import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.contrib.baggage.processor.BaggageSpanProcessor;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
@@ -73,13 +76,18 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
                     .addSpanProcessor(new FlushTrackingSpanProcessor())
                     .addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()))
                     .addSpanProcessor(SimpleSpanProcessor.create(testSpanExporter))
+                    .addSpanProcessor(BaggageSpanProcessor.allowAllBaggageKeys())
                     .build())
             .setMeterProvider(SdkMeterProvider.builder().registerMetricReader(metricReader).build())
             .setLoggerProvider(
                 SdkLoggerProvider.builder()
                     .addLogRecordProcessor(SimpleLogRecordProcessor.create(testLogRecordExporter))
                     .build())
-            .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
+            .setPropagators(
+                ContextPropagators.create(
+                    TextMapPropagator.composite(
+                        W3CTraceContextPropagator.getInstance(),
+                        W3CBaggagePropagator.getInstance())))
             .buildAndRegisterGlobal();
     openTelemetry = wrap(openTelemetrySdk);
   }

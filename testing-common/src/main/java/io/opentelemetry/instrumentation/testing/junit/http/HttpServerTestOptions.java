@@ -64,6 +64,7 @@ public final class HttpServerTestOptions {
   boolean testNonStandardHttpMethod = true;
   boolean verifyServerSpanEndTime = true;
   boolean useHttp2 = false;
+  boolean testExtractMultiBaggage = false;
 
   HttpServerTestOptions() {}
 

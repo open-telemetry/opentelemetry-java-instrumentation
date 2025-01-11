@@ -543,6 +543,49 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     }
   }
 
+  @Test
+  void extractSingleBaggage() {
+    String method = "GET";
+    AggregatedHttpRequest request =
+        AggregatedHttpRequest.of(
+            request(SUCCESS, method).headers().toBuilder()
+                .set("baggage", "test-baggage-key-1=test-baggage-value-1")
+                .build());
+    client.execute(request).aggregate().join();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.anySatisfy(
+                span ->
+                    assertServerSpan(assertThat(span), method, SUCCESS, SUCCESS.status)
+                        .hasAttribute(
+                            AttributeKey.stringKey("test-baggage-key-1"), "test-baggage-value-1")));
+  }
+
+  @Test
+  void extractMultiBaggage() {
+    assumeTrue(options.testExtractMultiBaggage);
+
+    String method = "GET";
+    AggregatedHttpRequest request =
+        AggregatedHttpRequest.of(
+            request(SUCCESS, method).headers().toBuilder()
+                .add("baggage", "test-baggage-key-1=test-baggage-value-1")
+                .add("baggage", "test-baggage-key-2=test-baggage-value-2")
+                .build());
+    client.execute(request).aggregate().join();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.anySatisfy(
+                span ->
+                    assertServerSpan(assertThat(span), method, SUCCESS, SUCCESS.status)
+                        .hasAttribute(
+                            AttributeKey.stringKey("test-baggage-key-1"), "test-baggage-value-1")
+                        .hasAttribute(
+                            AttributeKey.stringKey("test-baggage-key-2"), "test-baggage-value-2")));
+  }
+
   private static Bootstrap buildBootstrap(EventLoopGroup eventLoopGroup) {
     Bootstrap bootstrap = new Bootstrap();
     bootstrap

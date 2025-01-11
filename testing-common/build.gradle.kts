@@ -9,10 +9,16 @@ group = "io.opentelemetry.javaagent"
 sourceSets {
   main {
     val armeriaShadedDeps = project(":testing:armeria-shaded-for-testing")
-    output.dir(armeriaShadedDeps.file("build/extracted/shadow"), "builtBy" to ":testing:armeria-shaded-for-testing:extractShadowJar")
+    output.dir(
+      armeriaShadedDeps.file("build/extracted/shadow"),
+      "builtBy" to ":testing:armeria-shaded-for-testing:extractShadowJar"
+    )
 
     val protoShadedDeps = project(":testing:proto-shaded-for-testing")
-    output.dir(protoShadedDeps.file("build/extracted/shadow"), "builtBy" to ":testing:proto-shaded-for-testing:extractShadowJar")
+    output.dir(
+      protoShadedDeps.file("build/extracted/shadow"),
+      "builtBy" to ":testing:proto-shaded-for-testing:extractShadowJar"
+    )
   }
 }
 
@@ -62,6 +68,7 @@ dependencies {
   implementation("org.slf4j:jcl-over-slf4j")
   implementation("org.slf4j:jul-to-slf4j")
   implementation("io.opentelemetry:opentelemetry-exporter-logging")
+  implementation("io.opentelemetry.contrib:opentelemetry-baggage-processor")
   api(project(":instrumentation-api-incubator"))
 
   annotationProcessor("com.google.auto.service:auto-service")
