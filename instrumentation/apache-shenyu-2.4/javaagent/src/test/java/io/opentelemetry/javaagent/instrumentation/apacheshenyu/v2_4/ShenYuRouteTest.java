@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apacheshenyu.v2_4;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
@@ -111,7 +112,7 @@ class ShenYuRouteTest {
                     span.hasName("GET /a/b/c")
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfying(
-                            equalTo(AttributeKey.stringKey("http.route"), "/a/b/c"),
+                            equalTo(HTTP_ROUTE, "/a/b/c"),
                             equalTo(META_ID_ATTRIBUTE, "123"),
                             equalTo(META_ENABLED_ATTRIBUTE, true),
                             equalTo(METHOD_NAME_ATTRIBUTE, "hello"),
