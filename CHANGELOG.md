@@ -11,7 +11,7 @@
   - `pulsar-2.8.0` -> `pulsar-2.8`
 - In preparation for stabilizing HTTP library instrumentation soon:
   - `setCaptured*Headers(List)` methods in `*TelemetryBuilder` classes were changed to
-    `setCaptured*Headers(Collection)`       
+    `setCaptured*Headers(Collection)`
     ([#12901](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12901))
   - `setKnownMethods(Set)` methods in `*TelemetryBuilder` classes were changed to
     `setKnownMethods(Collection)`
