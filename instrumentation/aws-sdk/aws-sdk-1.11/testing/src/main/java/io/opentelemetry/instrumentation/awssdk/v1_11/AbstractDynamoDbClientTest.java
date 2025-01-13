@@ -6,8 +6,13 @@
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_TABLE_NAMES;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.DYNAMODB;
 import static java.util.Collections.singletonList;
@@ -52,5 +57,14 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
     Object response = client.createTable(new CreateTableRequest("sometable", null));
     assertRequestWithMockedResponse(
         response, client, "DynamoDBv2", "CreateTable", "POST", additionalAttributes);
+
+    assertDurationMetric(
+        testing(),
+        "io.opentelemetry.aws-sdk-1.11",
+        DB_NAMESPACE,
+        DB_OPERATION_NAME,
+        DB_SYSTEM,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 }
