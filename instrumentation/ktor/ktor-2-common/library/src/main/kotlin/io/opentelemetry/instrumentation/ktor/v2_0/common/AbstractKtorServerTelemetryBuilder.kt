@@ -44,10 +44,12 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
 
   fun spanStatusExtractor(extract: SpanStatusData.(SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>) -> Unit) {
     builder.setStatusExtractor { prevExtractor ->
-      SpanStatusExtractor { spanStatusBuilder: SpanStatusBuilder,
-                            request: ApplicationRequest,
-                            response: ApplicationResponse?,
-                            throwable: Throwable? ->
+      SpanStatusExtractor {
+          spanStatusBuilder: SpanStatusBuilder,
+          request: ApplicationRequest,
+          response: ApplicationResponse?,
+          throwable: Throwable?
+        ->
         extract(
           SpanStatusData(spanStatusBuilder, request, response, throwable),
           prevExtractor
@@ -102,9 +104,7 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
       onEnd = block
     }
 
-    internal fun build(): Extractor {
-      return Extractor(onStart, onEnd)
-    }
+    internal fun build(): Extractor = Extractor(onStart, onEnd)
   }
 
   internal class Extractor(val onStart: OnStartData.() -> Unit, val onEnd: OnEndData.() -> Unit)

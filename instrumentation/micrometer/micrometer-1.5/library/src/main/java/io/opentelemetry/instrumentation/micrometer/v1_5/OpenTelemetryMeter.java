@@ -40,7 +40,7 @@ final class OpenTelemetryMeter extends AbstractMeter implements Meter, Removable
 
       switch (measurement.getStatistic()) {
         case TOTAL:
-          // fall through
+        // fall through
         case TOTAL_TIME:
         case COUNT:
           observableInstruments.add(
@@ -63,7 +63,7 @@ final class OpenTelemetryMeter extends AbstractMeter implements Meter, Removable
           break;
 
         case DURATION:
-          // fall through
+        // fall through
         case MAX:
         case VALUE:
         case UNKNOWN:

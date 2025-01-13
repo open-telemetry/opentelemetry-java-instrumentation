@@ -48,8 +48,7 @@ class KotlinSpringDataTest {
       Assertions.assertThat(customer?.name).isEqualTo("Name")
     }
 
-    testing.waitAndAssertTraces({
-        trace ->
+    testing.waitAndAssertTraces({ trace ->
       trace.hasSpansSatisfyingExactly({
         it.hasName("CustomerRepository.findById").hasNoParent()
       }, {

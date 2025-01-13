@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.clickhouse.client.ClickHouseClient;
 import com.clickhouse.client.ClickHouseRequest;
+import com.clickhouse.client.ClickHouseRequestAccess;
 import com.clickhouse.client.config.ClickHouseDefaults;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
@@ -59,7 +60,7 @@ public class ClickHouseClientInstrumentation implements TypeInstrumentation {
                   .getServer()
                   .getDatabase()
                   .orElse(ClickHouseDefaults.DATABASE.getDefaultValue().toString()),
-              clickHouseRequest.getPreparedQuery().getOriginalQuery());
+              ClickHouseRequestAccess.getQuery(clickHouseRequest));
 
       return ClickHouseScope.start(parentContext, request);
     }

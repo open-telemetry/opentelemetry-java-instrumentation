@@ -3,6 +3,17 @@
 Debugging javaagent instrumentation can be a challenging task since instrumentation
 code is directly inlined into target classes.
 
+## Indy compatible instrumentation
+
+For instrumentation that has been migrated to use the
+[invokedynamic based instrumentation mechanism](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8999),
+you can leverage breakpoints and standard debugging strategies by adding `-PtestIndy=true` to the
+gradle command when running tests:
+
+```
+./gradlew -PtestIndy=true :instrumentation:<INSTRUMENTATION_NAME>:test
+```
+
 ## Advice methods
 
 Breakpoints do not work in advice methods, because their code is directly inlined
