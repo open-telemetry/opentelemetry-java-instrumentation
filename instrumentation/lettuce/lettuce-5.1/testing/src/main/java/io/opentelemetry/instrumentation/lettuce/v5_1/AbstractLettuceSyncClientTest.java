@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -13,6 +14,9 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -135,6 +139,18 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
+
+    assertDurationMetric(
+        testing(),
+        "io.opentelemetry.lettuce-5.1",
+        DB_SYSTEM,
+        DB_COLLECTION_NAME,
+        DB_NAMESPACE,
+        DB_OPERATION_NAME);
+    //
+    //    testing().waitAndAssertMetrics(metric ->
+    //                    OpenTelemetryAssertions.assertThat(metric)
+    //                        .hasName("db.client.operation.duration"));
   }
 
   @Test

@@ -27,6 +27,7 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
@@ -54,8 +55,11 @@ final class OpenTelemetryTracing implements Tracing {
       NetworkAttributesExtractor.create(new LettuceServerAttributesGetter());
   private final TracerProvider tracerProvider;
 
-  OpenTelemetryTracing(io.opentelemetry.api.trace.Tracer tracer, RedisCommandSanitizer sanitizer) {
-    this.tracerProvider = new OpenTelemetryTracerProvider(tracer, sanitizer);
+  OpenTelemetryTracing(
+      io.opentelemetry.api.trace.Tracer tracer,
+      RedisCommandSanitizer sanitizer,
+      OperationListener metrics) {
+    this.tracerProvider = new OpenTelemetryTracerProvider(tracer, sanitizer, metrics);
   }
 
   @Override
@@ -93,8 +97,10 @@ final class OpenTelemetryTracing implements Tracing {
     private final Tracer openTelemetryTracer;
 
     OpenTelemetryTracerProvider(
-        io.opentelemetry.api.trace.Tracer tracer, RedisCommandSanitizer sanitizer) {
-      openTelemetryTracer = new OpenTelemetryTracer(tracer, sanitizer);
+        io.opentelemetry.api.trace.Tracer tracer,
+        RedisCommandSanitizer sanitizer,
+        OperationListener metrics) {
+      openTelemetryTracer = new OpenTelemetryTracer(tracer, sanitizer, metrics);
     }
 
     @Override
@@ -135,10 +141,15 @@ final class OpenTelemetryTracing implements Tracing {
 
     private final io.opentelemetry.api.trace.Tracer tracer;
     private final RedisCommandSanitizer sanitizer;
+    private final OperationListener metrics;
 
-    OpenTelemetryTracer(io.opentelemetry.api.trace.Tracer tracer, RedisCommandSanitizer sanitizer) {
+    OpenTelemetryTracer(
+        io.opentelemetry.api.trace.Tracer tracer,
+        RedisCommandSanitizer sanitizer,
+        OperationListener metrics) {
       this.tracer = tracer;
       this.sanitizer = sanitizer;
+      this.metrics = metrics;
     }
 
     @Override
@@ -165,7 +176,7 @@ final class OpenTelemetryTracing implements Tracing {
               .setSpanKind(SpanKind.CLIENT)
               .setParent(context)
               .setAttribute(DB_SYSTEM, REDIS);
-      return new OpenTelemetrySpan(context, spanBuilder, sanitizer);
+      return new OpenTelemetrySpan(context, spanBuilder, sanitizer, metrics);
     }
   }
 
@@ -178,18 +189,26 @@ final class OpenTelemetryTracing implements Tracing {
     private final Context context;
     private final SpanBuilder spanBuilder;
     private final RedisCommandSanitizer sanitizer;
+    private final OperationListener metrics;
 
     @Nullable private String name;
     @Nullable private List<Object> events;
     @Nullable private Throwable error;
     @Nullable private Span span;
+    private long spanStartTime;
+    private final AttributesBuilder attributesBuilder = Attributes.builder();
     @Nullable private List<String> argsList;
     @Nullable private String argsString;
 
-    OpenTelemetrySpan(Context context, SpanBuilder spanBuilder, RedisCommandSanitizer sanitizer) {
+    OpenTelemetrySpan(
+        Context context,
+        SpanBuilder spanBuilder,
+        RedisCommandSanitizer sanitizer,
+        OperationListener metrics) {
       this.context = context;
       this.spanBuilder = spanBuilder;
       this.sanitizer = sanitizer;
+      this.metrics = metrics;
     }
 
     @Override
@@ -218,11 +237,13 @@ final class OpenTelemetryTracing implements Tracing {
       Context currentContext = span == null ? context : context.with(span);
       serverAttributesExtractor.onStart(attributesBuilder, currentContext, endpoint);
       networkAttributesExtractor.onEnd(attributesBuilder, currentContext, endpoint, null, null);
+      Attributes attributes = attributesBuilder.build();
       if (span != null) {
-        span.setAllAttributes(attributesBuilder.build());
+        span.setAllAttributes(attributes);
       } else {
-        spanBuilder.setAllAttributes(attributesBuilder.build());
+        spanBuilder.setAllAttributes(attributes);
       }
+      attributesBuilder.putAll(attributes);
     }
 
     // Added and called in 6.0+
@@ -231,6 +252,7 @@ final class OpenTelemetryTracing implements Tracing {
     @SuppressWarnings("UnusedMethod")
     public synchronized Tracer.Span start(RedisCommand<?, ?, ?> command) {
       start();
+      long startTime = System.nanoTime();
 
       Span span = this.span;
       if (span == null) {
@@ -258,7 +280,7 @@ final class OpenTelemetryTracing implements Tracing {
                 }
               }
 
-              finish(span);
+              finish(span, startTime);
             });
       }
 
@@ -270,6 +292,7 @@ final class OpenTelemetryTracing implements Tracing {
     @CanIgnoreReturnValue
     public synchronized Tracer.Span start() {
       span = spanBuilder.startSpan();
+      spanStartTime = System.nanoTime();
       if (name != null) {
         span.updateName(name);
       }
@@ -330,6 +353,7 @@ final class OpenTelemetryTracing implements Tracing {
       } else {
         spanBuilder.setAttribute(key, value);
       }
+      attributesBuilder.put(key, value);
       return this;
     }
 
@@ -347,16 +371,18 @@ final class OpenTelemetryTracing implements Tracing {
     @Override
     public synchronized void finish() {
       if (span != null) {
-        finish(span);
+        finish(span, spanStartTime);
       }
     }
 
-    private void finish(Span span) {
+    private void finish(Span span, long startTime) {
       if (name != null) {
         String statement =
             sanitizer.sanitize(name, argsList != null ? argsList : splitArgs(argsString));
         if (SemconvStability.emitStableDatabaseSemconv()) {
           span.setAttribute(DB_QUERY_TEXT, statement);
+          Context c = metrics.onStart(Context.current(), Attributes.empty(), startTime);
+          metrics.onEnd(c, attributesBuilder.build(), System.nanoTime());
         }
         if (SemconvStability.emitOldDatabaseSemconv()) {
           span.setAttribute(DB_STATEMENT, statement);
