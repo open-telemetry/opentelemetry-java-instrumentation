@@ -39,12 +39,12 @@ public final class Experimental {
     }
   }
 
-  public static void setSetEmitExperimentalClientTelemetry(
+  public static void internalSetEmitExperimentalClientTelemetry(
       BiConsumer<RatpackClientTelemetryBuilder, Boolean> setEmitExperimentalClientTelemetry) {
     Experimental.setEmitExperimentalClientTelemetry = setEmitExperimentalClientTelemetry;
   }
 
-  public static void setSetEmitExperimentalServerTelemetry(
+  public static void internalSetEmitExperimentalServerTelemetry(
       BiConsumer<RatpackServerTelemetryBuilder, Boolean> setEmitExperimentalServerTelemetry) {
     Experimental.setEmitExperimentalServerTelemetry = setEmitExperimentalServerTelemetry;
   }

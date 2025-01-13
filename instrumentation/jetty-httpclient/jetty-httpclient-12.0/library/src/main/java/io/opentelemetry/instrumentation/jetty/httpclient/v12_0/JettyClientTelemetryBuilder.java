@@ -27,7 +27,7 @@ public final class JettyClientTelemetryBuilder {
   private SslContextFactory.Client sslContextFactory;
 
   static {
-    Experimental.setSetEmitExperimentalTelemetry(
+    Experimental.internalSetEmitExperimentalTelemetry(
         (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
   }
 
