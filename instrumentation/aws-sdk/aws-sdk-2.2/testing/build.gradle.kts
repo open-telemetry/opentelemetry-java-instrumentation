@@ -26,7 +26,5 @@ dependencies {
 
   implementation("com.google.guava:guava")
 
-  implementation("org.apache.groovy:groovy")
   implementation("io.opentelemetry:opentelemetry-api")
-  implementation("org.spockframework:spock-core")
 }

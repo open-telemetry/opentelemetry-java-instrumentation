@@ -117,21 +117,23 @@ public class SpringDataInstrumentationModule extends InstrumentationModule {
       }
 
       Context context = instrumenter().start(parentContext, classAndMethod);
+
+      Object result;
       try (Scope ignored = context.makeCurrent()) {
-        Object result = methodInvocation.proceed();
-        Class<?> type = method.getReturnType();
-        // the return type for
-        // org.springframework.data.repository.kotlin.CoroutineCrudRepository#findById
-        // is Object but the method may actually return a Mono
-        if (Object.class == type && MONO_CLASS != null && MONO_CLASS.isInstance(result)) {
-          type = MONO_CLASS;
-        }
-        return AsyncOperationEndSupport.create(instrumenter(), Void.class, type)
-            .asyncEnd(context, classAndMethod, result, null);
+        result = methodInvocation.proceed();
       } catch (Throwable t) {
         instrumenter().end(context, classAndMethod, null, t);
         throw t;
       }
+      Class<?> type = method.getReturnType();
+      // the return type for
+      // org.springframework.data.repository.kotlin.CoroutineCrudRepository#findById
+      // is Object but the method may actually return a Mono
+      if (Object.class == type && MONO_CLASS != null && MONO_CLASS.isInstance(result)) {
+        type = MONO_CLASS;
+      }
+      return AsyncOperationEndSupport.create(instrumenter(), Void.class, type)
+          .asyncEnd(context, classAndMethod, result, null);
     }
   }
 }

@@ -98,15 +98,16 @@ final class TestInstrumenters {
       String spanName, Instrumenter<String, Void> instrumenter, ThrowingSupplier<T, E> callback)
       throws E {
     Context context = instrumenter.start(Context.current(), spanName);
-    Throwable err = null;
+
+    T result;
     try (Scope ignored = context.makeCurrent()) {
-      return callback.get();
+      result = callback.get();
     } catch (Throwable t) {
-      err = t;
+      instrumenter.end(context, spanName, null, t);
       throw t;
-    } finally {
-      instrumenter.end(context, spanName, null, err);
     }
+    instrumenter.end(context, spanName, null, null);
+    return result;
   }
 
   private static final class SpanKeyAttributesExtractor

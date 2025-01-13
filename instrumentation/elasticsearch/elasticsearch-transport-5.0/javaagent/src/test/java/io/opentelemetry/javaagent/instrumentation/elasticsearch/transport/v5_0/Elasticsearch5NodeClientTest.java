@@ -43,7 +43,6 @@ class Elasticsearch5NodeClientTest extends AbstractElasticsearchNodeClientTest {
             .put("transport.type", "netty3")
             .put("http.type", "netty3")
             .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
-            .put("discovery.type", "local")
             .build();
     testNode =
         new Node(

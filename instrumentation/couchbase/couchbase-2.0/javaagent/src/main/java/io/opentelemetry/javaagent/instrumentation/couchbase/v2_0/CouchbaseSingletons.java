@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -34,7 +35,8 @@ public final class CouchbaseSingletons {
             .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributesGetter))
             .addContextCustomizer(
                 (context, couchbaseRequest, startAttributes) ->
-                    CouchbaseRequestInfo.init(context, couchbaseRequest));
+                    CouchbaseRequestInfo.init(context, couchbaseRequest))
+            .addOperationMetrics(DbClientMetrics.get());
 
     if (AgentInstrumentationConfig.get()
         .getBoolean("otel.instrumentation.couchbase.experimental-span-attributes", false)) {

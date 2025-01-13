@@ -35,67 +35,65 @@ class KtorHttpServerTest : AbstractHttpServerTest<ApplicationEngine>() {
     val testing = HttpServerInstrumentationExtension.forLibrary()
   }
 
-  override fun setupServer(): ApplicationEngine {
-    return embeddedServer(Netty, port = port) {
-      KtorTestUtil.installOpenTelemetry(this, testing.openTelemetry)
+  override fun setupServer(): ApplicationEngine = embeddedServer(Netty, port = port) {
+    KtorTestUtil.installOpenTelemetry(this, testing.openTelemetry)
 
-      routing {
-        get(ServerEndpoint.SUCCESS.path) {
-          controller(ServerEndpoint.SUCCESS) {
-            call.respondText(ServerEndpoint.SUCCESS.body, status = HttpStatusCode.fromValue(ServerEndpoint.SUCCESS.status))
-          }
-        }
-
-        get(ServerEndpoint.REDIRECT.path) {
-          controller(ServerEndpoint.REDIRECT) {
-            call.respondRedirect(ServerEndpoint.REDIRECT.body)
-          }
-        }
-
-        get(ServerEndpoint.ERROR.path) {
-          controller(ServerEndpoint.ERROR) {
-            call.respondText(ServerEndpoint.ERROR.body, status = HttpStatusCode.fromValue(ServerEndpoint.ERROR.status))
-          }
-        }
-
-        get(ServerEndpoint.EXCEPTION.path) {
-          controller(ServerEndpoint.EXCEPTION) {
-            throw IllegalStateException(ServerEndpoint.EXCEPTION.body)
-          }
-        }
-
-        get("/query") {
-          controller(ServerEndpoint.QUERY_PARAM) {
-            call.respondText("some=${call.request.queryParameters["some"]}", status = HttpStatusCode.fromValue(ServerEndpoint.QUERY_PARAM.status))
-          }
-        }
-
-        get("/path/{id}/param") {
-          controller(ServerEndpoint.PATH_PARAM) {
-            call.respondText(
-              call.parameters["id"]
-                ?: "",
-              status = HttpStatusCode.fromValue(ServerEndpoint.PATH_PARAM.status),
-            )
-          }
-        }
-
-        get("/child") {
-          controller(ServerEndpoint.INDEXED_CHILD) {
-            ServerEndpoint.INDEXED_CHILD.collectSpanAttributes { call.request.queryParameters[it] }
-            call.respondText(ServerEndpoint.INDEXED_CHILD.body, status = HttpStatusCode.fromValue(ServerEndpoint.INDEXED_CHILD.status))
-          }
-        }
-
-        get("/captureHeaders") {
-          controller(ServerEndpoint.CAPTURE_HEADERS) {
-            call.response.header("X-Test-Response", call.request.header("X-Test-Request") ?: "")
-            call.respondText(ServerEndpoint.CAPTURE_HEADERS.body, status = HttpStatusCode.fromValue(ServerEndpoint.CAPTURE_HEADERS.status))
-          }
+    routing {
+      get(ServerEndpoint.SUCCESS.path) {
+        controller(ServerEndpoint.SUCCESS) {
+          call.respondText(ServerEndpoint.SUCCESS.body, status = HttpStatusCode.fromValue(ServerEndpoint.SUCCESS.status))
         }
       }
-    }.start()
-  }
+
+      get(ServerEndpoint.REDIRECT.path) {
+        controller(ServerEndpoint.REDIRECT) {
+          call.respondRedirect(ServerEndpoint.REDIRECT.body)
+        }
+      }
+
+      get(ServerEndpoint.ERROR.path) {
+        controller(ServerEndpoint.ERROR) {
+          call.respondText(ServerEndpoint.ERROR.body, status = HttpStatusCode.fromValue(ServerEndpoint.ERROR.status))
+        }
+      }
+
+      get(ServerEndpoint.EXCEPTION.path) {
+        controller(ServerEndpoint.EXCEPTION) {
+          throw IllegalStateException(ServerEndpoint.EXCEPTION.body)
+        }
+      }
+
+      get("/query") {
+        controller(ServerEndpoint.QUERY_PARAM) {
+          call.respondText("some=${call.request.queryParameters["some"]}", status = HttpStatusCode.fromValue(ServerEndpoint.QUERY_PARAM.status))
+        }
+      }
+
+      get("/path/{id}/param") {
+        controller(ServerEndpoint.PATH_PARAM) {
+          call.respondText(
+            call.parameters["id"]
+              ?: "",
+            status = HttpStatusCode.fromValue(ServerEndpoint.PATH_PARAM.status),
+          )
+        }
+      }
+
+      get("/child") {
+        controller(ServerEndpoint.INDEXED_CHILD) {
+          ServerEndpoint.INDEXED_CHILD.collectSpanAttributes { call.request.queryParameters[it] }
+          call.respondText(ServerEndpoint.INDEXED_CHILD.body, status = HttpStatusCode.fromValue(ServerEndpoint.INDEXED_CHILD.status))
+        }
+      }
+
+      get("/captureHeaders") {
+        controller(ServerEndpoint.CAPTURE_HEADERS) {
+          call.response.header("X-Test-Response", call.request.header("X-Test-Request") ?: "")
+          call.respondText(ServerEndpoint.CAPTURE_HEADERS.body, status = HttpStatusCode.fromValue(ServerEndpoint.CAPTURE_HEADERS.status))
+        }
+      }
+    }
+  }.start()
 
   override fun stopServer(server: ApplicationEngine) {
     server.stop(0, 10, TimeUnit.SECONDS)

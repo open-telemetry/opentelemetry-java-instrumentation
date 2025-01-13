@@ -165,6 +165,9 @@ tasks {
     configurations = listOf(javaagentLibs)
 
     excludeBootstrapClasses()
+    // remove MPL licensed content
+    exclude("okhttp3/internal/publicsuffix/NOTICE")
+    exclude("okhttp3/internal/publicsuffix/publicsuffixes.gz")
 
     duplicatesStrategy = DuplicatesStrategy.FAIL
 
@@ -380,6 +383,8 @@ fun CopySpec.isolateClasses(jar: Provider<RegularFile>) {
     exclude("META-INF/INDEX.LIST")
     exclude("META-INF/*.DSA")
     exclude("META-INF/*.SF")
+    exclude("META-INF/maven/**")
+    exclude("META-INF/MANIFEST.MF")
   }
 }
 

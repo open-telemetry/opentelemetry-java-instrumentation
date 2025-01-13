@@ -33,7 +33,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       AttributeKey.stringKey("db.operation.name");
   private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
   private static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.query.text");
-  private static final AttributeKey<String> DB_COLLECTION_NAME =
+  static final AttributeKey<String> DB_COLLECTION_NAME =
       AttributeKey.stringKey("db.collection.name");
 
   /** Creates the SQL client attributes extractor with default configuration. */

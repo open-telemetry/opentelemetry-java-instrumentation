@@ -19,24 +19,23 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaInstrumenterBuilderFactory;
-import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaInstrumenterBuilderUtil;
+import io.opentelemetry.instrumentation.armeria.v1_3.internal.Experimental;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 
+/**
+ * @deprecated Use {@link ArmeriaClientTelemetryBuilder} and {@link ArmeriaServerTelemetryBuilder}
+ *     instead.
+ */
+@Deprecated
 public final class ArmeriaTelemetryBuilder {
 
   private final DefaultHttpClientInstrumenterBuilder<ClientRequestContext, RequestLog>
       clientBuilder;
   private final DefaultHttpServerInstrumenterBuilder<ServiceRequestContext, RequestLog>
       serverBuilder;
-
-  static {
-    ArmeriaInstrumenterBuilderUtil.setClientBuilderExtractor(
-        ArmeriaTelemetryBuilder::getClientBuilder);
-    ArmeriaInstrumenterBuilderUtil.setServerBuilderExtractor(
-        ArmeriaTelemetryBuilder::getServerBuilder);
-  }
 
   ArmeriaTelemetryBuilder(OpenTelemetry openTelemetry) {
     clientBuilder = ArmeriaInstrumenterBuilderFactory.getClientBuilder(openTelemetry);
@@ -46,8 +45,8 @@ public final class ArmeriaTelemetryBuilder {
   /**
    * Sets the status extractor for both client and server spans.
    *
-   * @deprecated Use {@link #setClientStatusExtractor(Function)} or {@link
-   *     #setServerStatusExtractor(Function)} instead.
+   * @deprecated Use {@link ArmeriaClientTelemetryBuilder#setStatusExtractor(Function)} and {@link
+   *     ArmeriaServerTelemetryBuilder#setStatusExtractor(Function)} instead.
    */
   @Deprecated
   @SuppressWarnings({"unchecked", "rawtypes"})
@@ -62,7 +61,12 @@ public final class ArmeriaTelemetryBuilder {
     return this;
   }
 
-  /** Sets the status extractor for client spans. */
+  /**
+   * Sets the status extractor for client spans.
+   *
+   * @deprecated Use {@link ArmeriaClientTelemetryBuilder#setStatusExtractor(Function)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setClientStatusExtractor(
       Function<
@@ -73,7 +77,12 @@ public final class ArmeriaTelemetryBuilder {
     return this;
   }
 
-  /** Sets the status extractor for server spans. */
+  /**
+   * Sets the status extractor for server spans.
+   *
+   * @deprecated Use {@link ArmeriaServerTelemetryBuilder#setStatusExtractor(Function)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setServerStatusExtractor(
       Function<
@@ -88,14 +97,15 @@ public final class ArmeriaTelemetryBuilder {
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items. The {@link AttributesExtractor} will be executed after all default extractors.
    *
-   * @deprecated Use {@link #addClientAttributeExtractor(AttributesExtractor)} or {@link
-   *     #addServerAttributeExtractor(AttributesExtractor)} instead.
+   * @deprecated Use {@link
+   *     ArmeriaClientTelemetryBuilder#addAttributesExtractor(AttributesExtractor)} and {@link
+   *     ArmeriaServerTelemetryBuilder#addAttributesExtractor(AttributesExtractor)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder addAttributeExtractor(
       AttributesExtractor<? super RequestContext, ? super RequestLog> attributesExtractor) {
-    clientBuilder.addAttributeExtractor(attributesExtractor);
+    clientBuilder.addAttributesExtractor(attributesExtractor);
     serverBuilder.addAttributesExtractor(attributesExtractor);
     return this;
   }
@@ -104,11 +114,15 @@ public final class ArmeriaTelemetryBuilder {
    * Adds an extra client-only {@link AttributesExtractor} to invoke to set attributes to
    * instrumented items. The {@link AttributesExtractor} will be executed after all default
    * extractors.
+   *
+   * @deprecated Use {@link
+   *     ArmeriaClientTelemetryBuilder#addAttributesExtractor(AttributesExtractor)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder addClientAttributeExtractor(
       AttributesExtractor<? super ClientRequestContext, ? super RequestLog> attributesExtractor) {
-    clientBuilder.addAttributeExtractor(attributesExtractor);
+    clientBuilder.addAttributesExtractor(attributesExtractor);
     return this;
   }
 
@@ -116,7 +130,11 @@ public final class ArmeriaTelemetryBuilder {
    * Adds an extra server-only {@link AttributesExtractor} to invoke to set attributes to
    * instrumented items. The {@link AttributesExtractor} will be executed after all default
    * extractors.
+   *
+   * @deprecated Use {@link
+   *     ArmeriaServerTelemetryBuilder#addAttributesExtractor(AttributesExtractor)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder addServerAttributeExtractor(
       AttributesExtractor<? super ServiceRequestContext, ? super RequestLog> attributesExtractor) {
@@ -124,7 +142,13 @@ public final class ArmeriaTelemetryBuilder {
     return this;
   }
 
-  /** Sets the {@code peer.service} attribute for http client spans. */
+  /**
+   * Sets the {@code peer.service} attribute for http client spans.
+   *
+   * @deprecated Use {@link Experimental#setClientPeerService(ArmeriaClientTelemetryBuilder,
+   *     String)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setPeerService(String peerService) {
     clientBuilder.setPeerService(peerService);
@@ -135,7 +159,10 @@ public final class ArmeriaTelemetryBuilder {
    * Configures the HTTP client request headers that will be captured as span attributes.
    *
    * @param requestHeaders A list of HTTP header names.
+   * @deprecated Use {@link ArmeriaClientTelemetryBuilder#setCapturedRequestHeaders(Collection)}
+   *     instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setCapturedClientRequestHeaders(List<String> requestHeaders) {
     clientBuilder.setCapturedRequestHeaders(requestHeaders);
@@ -146,7 +173,10 @@ public final class ArmeriaTelemetryBuilder {
    * Configures the HTTP client response headers that will be captured as span attributes.
    *
    * @param responseHeaders A list of HTTP header names.
+   * @deprecated Use {@link ArmeriaClientTelemetryBuilder#setCapturedResponseHeaders(Collection)}
+   *     instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setCapturedClientResponseHeaders(List<String> responseHeaders) {
     clientBuilder.setCapturedResponseHeaders(responseHeaders);
@@ -157,7 +187,10 @@ public final class ArmeriaTelemetryBuilder {
    * Configures the HTTP server request headers that will be captured as span attributes.
    *
    * @param requestHeaders A list of HTTP header names.
+   * @deprecated Use {@link ArmeriaServerTelemetryBuilder#setCapturedRequestHeaders(Collection)}
+   *     instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setCapturedServerRequestHeaders(List<String> requestHeaders) {
     serverBuilder.setCapturedRequestHeaders(requestHeaders);
@@ -168,7 +201,10 @@ public final class ArmeriaTelemetryBuilder {
    * Configures the HTTP server response headers that will be captured as span attributes.
    *
    * @param responseHeaders A list of HTTP header names.
+   * @deprecated Use {@link ArmeriaServerTelemetryBuilder#setCapturedResponseHeaders(Collection)}
+   *     instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setCapturedServerResponseHeaders(List<String> responseHeaders) {
     serverBuilder.setCapturedResponseHeaders(responseHeaders);
@@ -186,9 +222,12 @@ public final class ArmeriaTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
-   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Set)
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Collection)
+   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Collection)
+   * @deprecated Use {@link ArmeriaClientTelemetryBuilder#setKnownMethods(Collection)} and {@link
+   *     ArmeriaServerTelemetryBuilder#setKnownMethods(Collection)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
     clientBuilder.setKnownMethods(knownMethods);
@@ -201,7 +240,10 @@ public final class ArmeriaTelemetryBuilder {
    *
    * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
    *     are to be emitted.
+   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(ArmeriaClientTelemetryBuilder,
+   *     boolean)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setEmitExperimentalHttpClientMetrics(
       boolean emitExperimentalHttpClientMetrics) {
@@ -214,7 +256,10 @@ public final class ArmeriaTelemetryBuilder {
    *
    * @param emitExperimentalHttpServerMetrics {@code true} if the experimental HTTP server metrics
    *     are to be emitted.
+   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(ArmeriaServerTelemetryBuilder,
+   *     boolean)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setEmitExperimentalHttpServerMetrics(
       boolean emitExperimentalHttpServerMetrics) {
@@ -222,7 +267,12 @@ public final class ArmeriaTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom client {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom client {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link ArmeriaClientTelemetryBuilder#setSpanNameExtractor(Function)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setClientSpanNameExtractor(
       Function<
@@ -233,7 +283,12 @@ public final class ArmeriaTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom server {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link ArmeriaServerTelemetryBuilder#setSpanNameExtractor(Function)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaTelemetryBuilder setServerSpanNameExtractor(
       Function<
@@ -244,17 +299,12 @@ public final class ArmeriaTelemetryBuilder {
     return this;
   }
 
+  /**
+   * @deprecated Use {@link ArmeriaClientTelemetryBuilder#build()} and {@link
+   *     ArmeriaServerTelemetryBuilder#build()} instead.
+   */
+  @Deprecated
   public ArmeriaTelemetry build() {
     return new ArmeriaTelemetry(clientBuilder.build(), serverBuilder.build());
-  }
-
-  private DefaultHttpClientInstrumenterBuilder<ClientRequestContext, RequestLog>
-      getClientBuilder() {
-    return clientBuilder;
-  }
-
-  private DefaultHttpServerInstrumenterBuilder<ServiceRequestContext, RequestLog>
-      getServerBuilder() {
-    return serverBuilder;
   }
 }

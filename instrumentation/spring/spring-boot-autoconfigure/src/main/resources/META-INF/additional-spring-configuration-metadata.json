@@ -358,6 +358,12 @@
       "defaultValue": false
     },
     {
+      "name": "otel.instrumentation.kafka.autoconfigure-interceptor",
+      "type": "java.lang.Boolean",
+      "description": "Enable automatic configuration of tracing interceptors on <code>ConcurrentKafkaListenerContainerFactory</code> using a <code>BeanPostProcessor</code>. You may disable this if you wish to manually configure these interceptors.",
+      "defaultValue": true
+    },
+    {
       "name": "otel.instrumentation.mongo.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable the Mongo client instrumentation.",
@@ -419,8 +425,8 @@
     },
     {
       "name": "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
-      "type": "java.util.List<java.lang.String>",
-      "description": "MDC attributes to capture. Use the wildcard character <code>*</code> to capture all attributes."
+      "type": "java.lang.String",
+      "description": "MDC attributes to capture. Use the wildcard character <code>*</code> to capture all attributes. This is a comma-separated list of attribute names."
     },
     {
       "name": "otel.instrumentation.logback-mdc.enabled",
@@ -486,6 +492,12 @@
       "name": "otel.instrumentation.spring-webmvc.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable the Servlet instrumentation.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.spring-scheduling.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the Spring Scheduling instrumentation.",
       "defaultValue": true
     },
     {

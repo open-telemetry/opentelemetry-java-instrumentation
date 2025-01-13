@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.ratpack.client;
 
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 
@@ -14,7 +15,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.NetworkAttributes;
 import java.net.URI;
 import java.time.Duration;
 import java.util.Collections;
@@ -158,7 +158,7 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
           attributes.remove(SERVER_PORT);
         } else {
           // ratpack client instrumentation does not provide this
-          attributes.remove(NetworkAttributes.NETWORK_PROTOCOL_VERSION);
+          attributes.remove(NETWORK_PROTOCOL_VERSION);
         }
         return attributes;
     }

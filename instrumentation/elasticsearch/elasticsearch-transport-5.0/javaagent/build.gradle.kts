@@ -45,8 +45,8 @@ dependencies {
   testLibrary("org.elasticsearch.plugin:transport-netty3-client:5.0.0")
   testLibrary("org.elasticsearch.client:transport:5.0.0")
 
-  latestDepTestLibrary("org.elasticsearch.plugin:transport-netty3-client:5.0.0")
-  latestDepTestLibrary("org.elasticsearch.client:transport:5.0.0")
+  latestDepTestLibrary("org.elasticsearch.plugin:transport-netty3-client:5.2.+") // see elasticsearch-transport-5.3 module
+  latestDepTestLibrary("org.elasticsearch.client:transport:5.2.+") // see elasticsearch-transport-5.3 module
 }
 
 tasks {

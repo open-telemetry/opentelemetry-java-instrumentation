@@ -16,7 +16,7 @@ import java.util.List;
 public class KtorServerInstrumentationModule extends InstrumentationModule {
 
   public KtorServerInstrumentationModule() {
-    super("ktor", "ktor-server", "ktor-3.0", "ktor-server-3.0");
+    super("ktor", "ktor-3.0", "ktor-server", "ktor-server-3.0");
   }
 
   @Override

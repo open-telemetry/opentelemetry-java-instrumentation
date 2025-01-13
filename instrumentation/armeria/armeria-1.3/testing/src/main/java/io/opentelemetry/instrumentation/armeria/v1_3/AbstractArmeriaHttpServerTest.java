@@ -180,8 +180,8 @@ public abstract class AbstractArmeriaHttpServerTest extends AbstractHttpServerTe
     options.setExpectedHttpRoute(
         (endpoint, method) -> {
           if (endpoint == ServerEndpoint.NOT_FOUND) {
-            // TODO(anuraaga): Revisit this when applying instrumenters to more libraries, Armeria
-            // currently reports '/*' which is a fallback route.
+            // TODO: Revisit this when applying instrumenters to more libraries, Armeria currently
+            // reports '/*' which is a fallback route.
             return "/*";
           }
           return expectedHttpRoute(endpoint, method);
