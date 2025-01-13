@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.testing;
 
+import static java.util.Arrays.asList;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
@@ -76,7 +78,11 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
                     .addSpanProcessor(new FlushTrackingSpanProcessor())
                     .addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()))
                     .addSpanProcessor(SimpleSpanProcessor.create(testSpanExporter))
-                    .addSpanProcessor(BaggageSpanProcessor.allowAllBaggageKeys())
+                    .addSpanProcessor(
+                        new BaggageSpanProcessor(
+                            baggageKey ->
+                                asList("test-baggage-key-1", "test-baggage-key-2")
+                                    .contains(baggageKey)))
                     .build())
             .setMeterProvider(SdkMeterProvider.builder().registerMetricReader(metricReader).build())
             .setLoggerProvider(

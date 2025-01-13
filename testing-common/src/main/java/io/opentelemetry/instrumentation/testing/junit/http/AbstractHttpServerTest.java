@@ -549,9 +549,13 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     AggregatedHttpRequest request =
         AggregatedHttpRequest.of(
             request(SUCCESS, method).headers().toBuilder()
+                // adding baggage header in w3c baggage format
                 .set("baggage", "test-baggage-key-1=test-baggage-value-1")
                 .build());
-    client.execute(request).aggregate().join();
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
 
     testing.waitAndAssertTraces(
         trace ->
@@ -570,10 +574,14 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     AggregatedHttpRequest request =
         AggregatedHttpRequest.of(
             request(SUCCESS, method).headers().toBuilder()
+                // adding baggage header in w3c baggage format
                 .add("baggage", "test-baggage-key-1=test-baggage-value-1")
                 .add("baggage", "test-baggage-key-2=test-baggage-value-2")
                 .build());
-    client.execute(request).aggregate().join();
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
 
     testing.waitAndAssertTraces(
         trace ->
