@@ -231,6 +231,12 @@ public final class HttpServerTestOptions {
     return setUseHttp2(true);
   }
 
+  @CanIgnoreReturnValue
+  public HttpServerTestOptions setTestExtractMultiBaggage(boolean testExtractMultiBaggage) {
+    this.testExtractMultiBaggage = testExtractMultiBaggage;
+    return this;
+  }
+
   @FunctionalInterface
   public interface SpanNameMapper {
 
