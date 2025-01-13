@@ -23,6 +23,13 @@ interface ResteasyProxyResource {
       @HeaderParam("test-request-id") String requestId);
 
   @GET
+  @Path("client-error")
+  Response get_client_error(
+      @QueryParam("with") String param,
+      @HeaderParam("is-test-server") String isTestServer,
+      @HeaderParam("test-request-id") String requestId);
+
+  @GET
   @Path("success")
   Response get_success(
       @QueryParam("with") String param,
