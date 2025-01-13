@@ -147,10 +147,6 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
         DB_COLLECTION_NAME,
         DB_NAMESPACE,
         DB_OPERATION_NAME);
-    //
-    //    testing().waitAndAssertMetrics(metric ->
-    //                    OpenTelemetryAssertions.assertThat(metric)
-    //                        .hasName("db.client.operation.duration"));
   }
 
   @Test
