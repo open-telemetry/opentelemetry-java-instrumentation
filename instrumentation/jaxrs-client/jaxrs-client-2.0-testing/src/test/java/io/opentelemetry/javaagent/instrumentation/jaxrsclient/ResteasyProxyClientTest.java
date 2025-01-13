@@ -58,6 +58,8 @@ class ResteasyProxyClientTest extends AbstractHttpClientTest<ResteasyProxyResour
       response = proxy.put_success(param, isTestServer, requestId);
     } else if (proxyMethodName.equals("get_error")) {
       response = proxy.get_error(param, isTestServer, requestId);
+    } else if (proxyMethodName.equals("get_client_error")) {
+      response = proxy.get_client_error(param, isTestServer, requestId);
     } else {
       throw new IllegalArgumentException("Unknown method: " + proxyMethodName);
     }

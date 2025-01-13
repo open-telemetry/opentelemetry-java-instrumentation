@@ -55,6 +55,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -437,10 +438,11 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
   // TODO: add basic auth scenario
 
-  @Test
-  void errorSpan() {
+  @ParameterizedTest
+  @CsvSource({"/error,500", "/client-error,400"})
+  void errorSpan(String path, int responseCode) {
     String method = "GET";
-    URI uri = resolveAddress("/error");
+    URI uri = resolveAddress(path);
 
     testing.runWithSpan(
         "parent",
@@ -456,7 +458,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         trace -> {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span -> assertClientSpan(span, uri, method, 500, null).hasParent(trace.getSpan(0)),
+              span ->
+                  assertClientSpan(span, uri, method, responseCode, null)
+                      .hasParent(trace.getSpan(0)),
               span -> assertServerSpan(span).hasParent(trace.getSpan(1)));
         });
   }
