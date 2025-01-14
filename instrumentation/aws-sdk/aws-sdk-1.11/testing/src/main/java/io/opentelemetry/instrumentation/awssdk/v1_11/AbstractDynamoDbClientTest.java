@@ -11,7 +11,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_TABLE_NAMES;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.DYNAMODB;
 import static java.util.Collections.singletonList;
@@ -58,10 +57,6 @@ public abstract class AbstractDynamoDbClientTest extends AbstractBaseAwsClientTe
         response, client, "DynamoDBv2", "CreateTable", "POST", additionalAttributes);
 
     assertDurationMetric(
-        testing(),
-        "io.opentelemetry.aws-sdk-1.11",
-        DB_SYSTEM,
-        SERVER_ADDRESS,
-        SERVER_PORT);
+        testing(), "io.opentelemetry.aws-sdk-1.11", DB_SYSTEM, SERVER_ADDRESS, SERVER_PORT);
   }
 }
