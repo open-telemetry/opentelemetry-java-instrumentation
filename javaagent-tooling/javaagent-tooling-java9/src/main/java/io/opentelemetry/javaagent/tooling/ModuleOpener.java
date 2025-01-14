@@ -16,10 +16,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import net.bytebuddy.description.type.PackageDescription;
 import net.bytebuddy.dynamic.loading.ClassInjector;
 import net.bytebuddy.utility.JavaModule;
-import javax.annotation.Nullable;
 
 /**
  * Module opener provides ability to open JPMS modules and allows instrumentation classloader to
