@@ -43,6 +43,7 @@ import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.utility.JavaModule;
 
 public final class InstrumentationModuleInstaller {
 
@@ -213,7 +214,8 @@ public final class InstrumentationModuleInstaller {
               .transform(ConstantAdjuster.instance())
               .transform(
                   (builder, typeDescription, classLoader, module, protectionDomain) -> {
-                    if (instrumentationModule instanceof ExperimentalInstrumentationModule
+                    if (JavaModule.isSupported()
+                        && instrumentationModule instanceof ExperimentalInstrumentationModule
                         && !openerRun.get()) {
                       ExperimentalInstrumentationModule experimentalModule =
                           (ExperimentalInstrumentationModule) instrumentationModule;
