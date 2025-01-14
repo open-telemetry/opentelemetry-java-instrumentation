@@ -26,10 +26,19 @@ dependencies {
     exclude("org.codehaus.groovy", "groovy")
   }
 
-  // the latest version of apache shenyu uses spring-boot 2.7
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.7.+") // related dependency
+  // the latest version of apache shenyu uses spring-boot 3.3
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:3.3.+") // related dependency
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
+}
+
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
+// spring 6 (spring boot 3) requires java 17
+if (latestDepTest) {
+  otelJava {
+    minJavaVersionSupported.set(JavaVersion.VERSION_17)
+  }
 }
 
 tasks.withType<Test>().configureEach {
@@ -39,13 +48,16 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  systemProperty("testLatestDeps", latestDepTest)
 }
 
-configurations.testRuntimeClasspath {
-  resolutionStrategy {
-    // requires old logback (and therefore also old slf4j)
-    force("ch.qos.logback:logback-classic:1.2.11")
-    force("org.slf4j:slf4j-api:1.7.36")
+// spring 6 (spring boot 3) uses slf4j 2.0
+if (!latestDepTest) {
+  configurations.testRuntimeClasspath {
+    resolutionStrategy {
+      // requires old logback (and therefore also old slf4j)
+      force("ch.qos.logback:logback-classic:1.2.11")
+      force("org.slf4j:slf4j-api:1.7.36")
+    }
   }
 }
