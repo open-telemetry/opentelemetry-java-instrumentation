@@ -74,7 +74,7 @@ class ShenYuRouteTest {
           InvocationTargetException,
           IllegalAccessException {
 
-    Class<?> metaDataCache = null;
+    Class<?> metaDataCache;
     try {
       metaDataCache = Class.forName("org.apache.shenyu.plugin.global.cache.MetaDataCache");
     } catch (ClassNotFoundException e) {
@@ -87,17 +87,18 @@ class ShenYuRouteTest {
 
     cacheMethod.invoke(
         cacheInst,
-        new MetaData(
-            "123",
-            "test-shenyu",
-            "/",
-            "/a/b/c",
-            "http",
-            "shenyu-service",
-            "hello",
-            "string",
-            "test-ext",
-            true));
+        MetaData.builder()
+            .id("123")
+            .appName("test-shenyu")
+            .contextPath("/")
+            .path("/a/b/c")
+            .rpcType("http")
+            .serviceName("shenyu-service")
+            .methodName("hello")
+            .parameterTypes("string")
+            .rpcExt("test-ext")
+            .enabled(true)
+            .build());
   }
 
   @Test
