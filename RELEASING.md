@@ -13,7 +13,7 @@ as the last step, which publishes a snapshot build to
 ## Release cadence
 
 This repository roughly targets monthly minor releases from the `main` branch on the Wednesday after
-the second Monday of the month (roughly a few of days after the monthly minor release of
+the second Monday of the month (roughly a few days after the monthly minor release of
 [opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)).
 
 ## Preparing a new major or minor release
