@@ -150,8 +150,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
       expected.add(DB_NAMESPACE);
     }
     assertDurationMetric(
-        testing(),
-        "io.opentelemetry.lettuce-5.1", expected.toArray(new AttributeKey[0]));
+        testing(), "io.opentelemetry.lettuce-5.1", expected.toArray(new AttributeKey[0]));
   }
 
   @Test
