@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -30,9 +31,13 @@ import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -137,14 +142,16 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
 
+    List<AttributeKey<? extends Serializable>> expected =
+        new ArrayList<>(
+            Arrays.asList(
+                DB_SYSTEM, SERVER_ADDRESS, SERVER_PORT, NETWORK_PEER_ADDRESS, NETWORK_PEER_PORT));
+    if (Boolean.getBoolean("testLatestDeps")) {
+      expected.add(DB_NAMESPACE);
+    }
     assertDurationMetric(
         testing(),
-        "io.opentelemetry.lettuce-5.1",
-        DB_SYSTEM,
-        SERVER_ADDRESS,
-        SERVER_PORT,
-        NETWORK_PEER_ADDRESS,
-        NETWORK_PEER_PORT);
+        "io.opentelemetry.lettuce-5.1", expected.toArray(new AttributeKey[0]));
   }
 
   @Test
