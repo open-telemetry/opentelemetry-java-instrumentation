@@ -19,6 +19,8 @@ public class DbClientMetricsTestUtil {
       InstrumentationExtension testing,
       String instrumentationName,
       AttributeKey<?>... expectedKeys) {
+    // db.system is required - see https://opentelemetry.io/docs/specs/semconv/database/database-metrics/#metric-dbclientoperationduration
+    assertThat(expectedKeys).extracting(AttributeKey::getKey).contains("db.system");
     if (!emitStableDatabaseSemconv()) {
       return;
     }

@@ -196,7 +196,7 @@ final class OpenTelemetryTracing implements Tracing {
     @Nullable private Throwable error;
     @Nullable private Span span;
     private long spanStartTime;
-    private final AttributesBuilder attributesBuilder = Attributes.builder();
+    private final AttributesBuilder attributesBuilder = Attributes.builder().put(DB_SYSTEM, REDIS);
     @Nullable private List<String> argsList;
     @Nullable private String argsString;
 
@@ -243,7 +243,7 @@ final class OpenTelemetryTracing implements Tracing {
       } else {
         spanBuilder.setAllAttributes(attributes);
       }
-      attributesBuilder.putAll(attributes);
+      this.attributesBuilder.putAll(attributes);
     }
 
     // Added and called in 6.0+
@@ -381,8 +381,10 @@ final class OpenTelemetryTracing implements Tracing {
             sanitizer.sanitize(name, argsList != null ? argsList : splitArgs(argsString));
         if (SemconvStability.emitStableDatabaseSemconv()) {
           span.setAttribute(DB_QUERY_TEXT, statement);
-          Context c = metrics.onStart(Context.current(), Attributes.empty(), startTime);
-          metrics.onEnd(c, attributesBuilder.build(), System.nanoTime());
+          metrics.onEnd(
+              metrics.onStart(Context.current(), Attributes.empty(), startTime),
+              attributesBuilder.build(),
+              System.nanoTime());
         }
         if (SemconvStability.emitOldDatabaseSemconv()) {
           span.setAttribute(DB_STATEMENT, statement);
