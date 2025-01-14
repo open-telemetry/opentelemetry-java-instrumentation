@@ -40,7 +40,8 @@ public class ModuleOpener {
    * Opens JPMS module to a class loader unnamed module
    *
    * @param targetModule target module
-   * @param openTo class loader to open module for, {@literal null} to use the unnamed module of bootstrap classloader.
+   * @param openTo class loader to open module for, {@literal null} to use the unnamed module of
+   *     bootstrap classloader.
    * @param packagesToOpen packages to open
    */
   public static void open(

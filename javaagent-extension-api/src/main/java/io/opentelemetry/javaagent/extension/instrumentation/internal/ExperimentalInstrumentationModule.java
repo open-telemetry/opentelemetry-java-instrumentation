@@ -73,6 +73,8 @@ public interface ExperimentalInstrumentationModule {
    *
    * @return map of module to open as key, list of packages as value.
    */
+  // TODO: when moving this method outside of experimental API, we need to decide using JavaModule
+  // instance or a class FQN in the map entry, as it could lead to some limitations
   default Map<JavaModule, List<String>> jpmsModulesToOpen() {
     return Collections.emptyMap();
   }
