@@ -20,6 +20,9 @@ public class JsonRpcInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new JsonRpcServerInstrumentation(), new JsonRpcClientInstrumentation());
+    return asList(
+        new JsonRpcServerInstrumentation(),
+        new JsonRpcClientInstrumentation(),
+        new JsonRpcProxyInstrumentation());
   }
 }

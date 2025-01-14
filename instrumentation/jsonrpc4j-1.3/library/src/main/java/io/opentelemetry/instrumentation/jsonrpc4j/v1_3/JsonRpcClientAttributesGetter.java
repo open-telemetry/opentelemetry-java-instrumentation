@@ -20,7 +20,6 @@ public enum JsonRpcClientAttributesGetter implements RpcAttributesGetter<SimpleJ
 
   @Override
   public String getService(SimpleJsonRpcRequest request) {
-    // TODO
     if (request.getMethod() != null) {
       return request.getMethod().getDeclaringClass().getName();
     }
