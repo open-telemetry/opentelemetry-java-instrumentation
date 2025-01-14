@@ -46,7 +46,7 @@ public class ModuleOpener {
   public static void open(
       Instrumentation instrumentation,
       JavaModule targetModule,
-      ClassLoader openTo,
+      @Nullable ClassLoader openTo,
       Collection<String> packagesToOpen) {
 
     JavaModule openToModule =
