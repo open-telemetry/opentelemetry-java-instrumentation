@@ -27,7 +27,7 @@ public final class NettyClientTelemetryBuilder {
   private boolean emitExperimentalHttpClientEvents = false;
 
   static {
-    Experimental.setSetEmitExperimentalClientTelemetry(
+    Experimental.internalSetEmitExperimentalClientTelemetry(
         (builder, emit) -> {
           builder.builder.setEmitExperimentalHttpClientMetrics(emit);
           builder.emitExperimentalHttpClientEvents = emit;

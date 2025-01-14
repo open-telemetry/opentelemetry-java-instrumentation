@@ -26,7 +26,7 @@ public final class RatpackServerTelemetryBuilder {
   private final DefaultHttpServerInstrumenterBuilder<Request, Response> builder;
 
   static {
-    Experimental.setSetEmitExperimentalServerTelemetry(
+    Experimental.internalSetEmitExperimentalServerTelemetry(
         (builder, emit) -> builder.builder.setEmitExperimentalHttpServerMetrics(emit));
   }
 

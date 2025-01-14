@@ -24,7 +24,7 @@ public final class ApacheHttpClientTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
 
   static {
-    Experimental.setSetEmitExperimentalTelemetry(
+    Experimental.internalSetEmitExperimentalTelemetry(
         (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
   }
 
