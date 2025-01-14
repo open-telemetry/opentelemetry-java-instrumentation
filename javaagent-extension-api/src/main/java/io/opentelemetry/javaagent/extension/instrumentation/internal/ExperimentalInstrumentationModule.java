@@ -12,6 +12,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.C
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import net.bytebuddy.utility.JavaModule;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -70,9 +71,9 @@ public interface ExperimentalInstrumentationModule {
    * to get a reference to the module. <br>
    * Map value is a list of packages to open in the module
    *
-   * @return map of "witness class" FQN as key, list of packages as value.
+   * @return map of module to open as key, list of packages as value.
    */
-  default Map<String, List<String>> jpmsModulesToOpen() {
+  default Map<JavaModule, List<String>> jpmsModulesToOpen() {
     return Collections.emptyMap();
   }
 }

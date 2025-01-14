@@ -13,10 +13,12 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.instrumentation.rmi.context.client.RmiClientContextInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.rmi.context.server.RmiServerContextInstrumentation;
+import java.rmi.Remote;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import net.bytebuddy.utility.JavaModule;
 
 @AutoService(InstrumentationModule.class)
 public class RmiContextPropagationInstrumentationModule extends InstrumentationModule
@@ -31,9 +33,8 @@ public class RmiContextPropagationInstrumentationModule extends InstrumentationM
   }
 
   @Override
-  public Map<String, List<String>> jpmsModulesToOpen() {
-    String witnessClass = "sun.rmi.transport.StreamRemoteCall";
+  public Map<JavaModule, List<String>> jpmsModulesToOpen() {
     return Collections.singletonMap(
-        witnessClass, Arrays.asList("sun.rmi.server", "sun.rmi.transport"));
+        JavaModule.ofType(Remote.class), Arrays.asList("sun.rmi.server", "sun.rmi.transport"));
   }
 }

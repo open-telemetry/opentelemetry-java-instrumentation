@@ -8,14 +8,17 @@ package io.opentelemetry.javaagent.tooling;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.WARNING;
 
+import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import java.lang.instrument.Instrumentation;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import net.bytebuddy.description.type.PackageDescription;
+import net.bytebuddy.dynamic.loading.ClassInjector;
+import net.bytebuddy.utility.JavaModule;
 
 /**
  * Module opener provides ability to open JPMS modules and allows instrumentation classloader to
@@ -28,27 +31,30 @@ public class ModuleOpener {
 
   private static final Logger logger = Logger.getLogger(ModuleOpener.class.getName());
 
+  // AgentClassLoader is in unnamed module of the bootstrap loader
+  private static final JavaModule UNNAMED_BOOT_MODULE = JavaModule.ofType(AgentClassLoader.class);
+
   private ModuleOpener() {}
 
   /**
    * Opens JPMS module to a class loader unnamed module
    *
-   * @param classFromTargetModule class from target module
-   * @param openTo class loader to open module for
+   * @param targetModule target module
+   * @param openTo class loader to open module for, {@literal null} to use the unnamed module of bootstrap classloader.
    * @param packagesToOpen packages to open
    */
   public static void open(
       Instrumentation instrumentation,
-      Class<?> classFromTargetModule,
-      ClassLoader openTo,
+      JavaModule targetModule,
+      @Nullable ClassLoader openTo,
       Collection<String> packagesToOpen) {
 
-    Module targetModule = classFromTargetModule.getModule();
-    Module openToModule = openTo.getUnnamedModule();
-    Set<Module> openToModuleSet = Collections.singleton(openToModule);
-    Map<String, Set<Module>> missingOpens = new HashMap<>();
+    JavaModule openToModule =
+        openTo != null ? JavaModule.of(openTo.getUnnamedModule()) : UNNAMED_BOOT_MODULE;
+    Set<JavaModule> openToModuleSet = Collections.singleton(openToModule);
+    Map<String, Set<JavaModule>> missingOpens = new HashMap<>();
     for (String packageName : packagesToOpen) {
-      if (!targetModule.isOpen(packageName, openToModule)) {
+      if (!targetModule.isOpened(new PackageDescription.Simple(packageName), openToModule)) {
         missingOpens.put(packageName, openToModuleSet);
         logger.log(
             FINE,
@@ -60,22 +66,17 @@ public class ModuleOpener {
       return;
     }
 
-    if (!instrumentation.isModifiableModule(targetModule)) {
-      logger.log(WARNING, "Module '{0}' can't be modified", targetModule);
-      return;
-    }
-
     try {
-      instrumentation.redefineModule(
+      ClassInjector.UsingInstrumentation.redefineModule(
+          instrumentation,
           targetModule,
-          Collections.<Module>emptySet(), // reads
-          Collections.<String, Set<Module>>emptyMap(), // exports
-          missingOpens, // opens
-          Collections.<Class<?>>emptySet(), // uses
-          Collections.<Class<?>, List<Class<?>>>emptyMap() // provides
-          );
+          Collections.emptySet(),
+          Collections.emptyMap(),
+          missingOpens,
+          Collections.emptySet(),
+          Collections.emptyMap());
     } catch (Exception e) {
-      logger.log(WARNING, "unable to redefine module", e);
+      logger.log(WARNING, "Failed to redefine module '" + targetModule.getActualName() + "'", e);
     }
   }
 }
