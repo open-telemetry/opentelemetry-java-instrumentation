@@ -41,7 +41,7 @@ val DEPENDENCY_BOMS = listOf(
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
 val errorProneVersion = "2.36.0"
-val byteBuddyVersion = "1.15.11"
+val byteBuddyVersion = "1.15.12-SNAPSHOT"
 val asmVersion = "9.7.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
@@ -62,7 +62,7 @@ val CORE_DEPENDENCIES = listOf(
   "net.bytebuddy:byte-buddy:${byteBuddyVersion}",
   "net.bytebuddy:byte-buddy-dep:${byteBuddyVersion}",
   "net.bytebuddy:byte-buddy-agent:${byteBuddyVersion}",
-  "net.bytebuddy:byte-buddy-gradle-plugin:${byteBuddyVersion}",
+  "net.bytebuddy:byte-buddy-gradle-plugin:1.15.11",
   "org.ow2.asm:asm:${asmVersion}",
   "org.ow2.asm:asm-tree:${asmVersion}",
   "org.ow2.asm:asm-util:${asmVersion}",
