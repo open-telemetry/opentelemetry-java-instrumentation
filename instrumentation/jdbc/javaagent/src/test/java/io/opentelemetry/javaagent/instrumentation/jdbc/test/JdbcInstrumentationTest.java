@@ -48,7 +48,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -383,12 +382,10 @@ class JdbcInstrumentationTest {
       assertDurationMetric(
           testing,
           "io.opentelemetry.jdbc",
-          Arrays.asList(DB_SYSTEM, DB_COLLECTION_NAME, DB_NAMESPACE, DB_OPERATION_NAME));
+          asList(DB_SYSTEM, DB_COLLECTION_NAME, DB_NAMESPACE, DB_OPERATION_NAME));
     } else {
       assertDurationMetric(
-          testing,
-          "io.opentelemetry.jdbc",
-          Arrays.asList(DB_SYSTEM, DB_OPERATION_NAME, DB_NAMESPACE));
+          testing, "io.opentelemetry.jdbc", asList(DB_SYSTEM, DB_OPERATION_NAME, DB_NAMESPACE));
     }
   }
 
@@ -979,7 +976,7 @@ class JdbcInstrumentationTest {
         trace -> {
           List<Consumer<SpanDataAssert>> assertions =
               new ArrayList<>(
-                  Arrays.asList(
+                  asList(
                       span1 -> span1.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                       span1 ->
                           span1
