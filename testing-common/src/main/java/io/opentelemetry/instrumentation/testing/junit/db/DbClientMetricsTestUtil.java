@@ -10,6 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.util.List;
 
 public class DbClientMetricsTestUtil {
 
@@ -18,7 +19,7 @@ public class DbClientMetricsTestUtil {
   public static void assertDurationMetric(
       InstrumentationExtension testing,
       String instrumentationName,
-      AttributeKey<?>... expectedKeys) {
+      List<AttributeKey<?>> expectedKeys) {
     // db.system is required - see
     // https://opentelemetry.io/docs/specs/semconv/database/database-metrics/#metric-dbclientoperationduration
     assertThat(expectedKeys).extracting(AttributeKey::getKey).contains("db.system");

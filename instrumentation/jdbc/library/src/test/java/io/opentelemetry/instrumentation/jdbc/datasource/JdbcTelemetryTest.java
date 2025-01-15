@@ -24,6 +24,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -54,11 +55,7 @@ class JdbcTelemetryTest {
     assertDurationMetric(
         testing,
         "io.opentelemetry.jdbc",
-        DB_NAMESPACE,
-        DB_OPERATION_NAME,
-        DB_SYSTEM,
-        SERVER_ADDRESS,
-        SERVER_PORT);
+        Arrays.asList(DB_NAMESPACE, DB_OPERATION_NAME, DB_SYSTEM, SERVER_ADDRESS, SERVER_PORT));
   }
 
   @Test

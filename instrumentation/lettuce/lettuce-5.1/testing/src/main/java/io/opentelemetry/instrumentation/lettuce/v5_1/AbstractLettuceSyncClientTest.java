@@ -31,7 +31,6 @@ import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
-import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -142,15 +141,14 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
 
-    List<AttributeKey<? extends Serializable>> expected =
+    List<AttributeKey<?>> expected =
         new ArrayList<>(
             Arrays.asList(
                 DB_SYSTEM, SERVER_ADDRESS, SERVER_PORT, NETWORK_PEER_ADDRESS, NETWORK_PEER_PORT));
     if (Boolean.getBoolean("testLatestDeps")) {
       expected.add(DB_NAMESPACE);
     }
-    assertDurationMetric(
-        testing(), "io.opentelemetry.lettuce-5.1", expected.toArray(new AttributeKey[0]));
+    assertDurationMetric(testing(), "io.opentelemetry.lettuce-5.1", expected);
   }
 
   @Test
