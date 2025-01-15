@@ -73,17 +73,6 @@ public class IndyModuleRegistry {
       ExperimentalInstrumentationModule experimentalModule =
           (ExperimentalInstrumentationModule) module;
 
-      // Opening JPMS modules requires to use a 'witness class' in the target module to get a
-      // reference to the module, which means we have to eagerly load the class.
-      //
-      // However, this code here triggered when the advice is being executed for the first time so
-      // this only creates a very small eager loading that is unlikely to have impact on the
-      // application.
-      //
-      // Also, using a class that is already loaded like the one that is being instrumented or a
-      // related one would increase the likeliness of not having an effect on application class
-      // loading.
-
       Instrumentation instrumentation = InstrumentationHolder.getInstrumentation();
       if (instrumentation == null) {
         throw new IllegalStateException("global instrumentation not available");
