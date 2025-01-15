@@ -59,7 +59,7 @@ public final class Experimental {
     Experimental.setEmitExperimentalServerTelemetry = setEmitExperimentalServerTelemetry;
   }
 
-  public static void setSetClientPeerService(
+  public static void internalSetClientPeerService(
       BiConsumer<ArmeriaClientTelemetryBuilder, String> setClientPeerService) {
     Experimental.setClientPeerService = setClientPeerService;
   }
