@@ -142,8 +142,9 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                 event -> event.hasName("redis.encode.end"))));
 
     List<AttributeKey<?>> expected =
-        Arrays.asList(
-            DB_SYSTEM, SERVER_ADDRESS, SERVER_PORT, NETWORK_PEER_ADDRESS, NETWORK_PEER_PORT);
+        new ArrayList<>(
+            Arrays.asList(
+                DB_SYSTEM, SERVER_ADDRESS, SERVER_PORT, NETWORK_PEER_ADDRESS, NETWORK_PEER_PORT));
     if (Boolean.getBoolean("testLatestDeps")) {
       expected.add(DB_NAMESPACE);
     }
