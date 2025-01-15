@@ -17,6 +17,22 @@
     `setKnownMethods(Collection)`
     ([#12902](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12902))
 
+### 📈 Enhancements
+
+- Implementing `ExtendedTextMapGetter` in grpc-1.6 instrumentation
+  ([#13011](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13011))
+
+### 🛠️ Bug fixes
+
+- Fix wrong dubbo trace caused by using rpcContext.isProviderSide()
+  ([#12930](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12930))
+- Fix clickhouse query failing with syntax error
+  ([#13020](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13020))
+- Fix instrumentation module not loading silently when duplicate helper classnames are detected
+  ([#13005](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13005))
+- Fix compatibility problem of DubboHeadersGetter#keys in Dubbo 2.7.6 and 2.7.7
+  ([#12982](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12982))
+
 ## Version 2.11.0 (2024-12-23)
 
 ### Migration notes
