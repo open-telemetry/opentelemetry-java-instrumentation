@@ -9,7 +9,9 @@ import static java.util.Collections.emptyList;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
+import ch.qos.logback.core.spi.AppenderAttachable;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
 import java.util.ArrayList;
@@ -60,14 +62,17 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     }
     LoggerContext loggerContext = (LoggerContext) loggerFactorySpi;
     for (ch.qos.logback.classic.Logger logger : loggerContext.getLoggerList()) {
-      logger
+      logger.iteratorForAppenders().forEachRemaining(appender -> install(openTelemetry, appender));
+    }
+  }
+
+  private static void install(OpenTelemetry openTelemetry, Appender<?> appender) {
+    if (appender instanceof OpenTelemetryAppender) {
+      ((OpenTelemetryAppender) appender).setOpenTelemetry(openTelemetry);
+    } else if (appender instanceof AppenderAttachable) {
+      ((AppenderAttachable<?>) appender)
           .iteratorForAppenders()
-          .forEachRemaining(
-              appender -> {
-                if (appender instanceof OpenTelemetryAppender) {
-                  ((OpenTelemetryAppender) appender).setOpenTelemetry(openTelemetry);
-                }
-              });
+          .forEachRemaining(a -> OpenTelemetryAppender.install(openTelemetry, a));
     }
   }
 
