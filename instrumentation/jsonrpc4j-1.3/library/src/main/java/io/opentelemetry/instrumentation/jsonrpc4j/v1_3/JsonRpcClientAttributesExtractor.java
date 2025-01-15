@@ -12,11 +12,11 @@ import javax.annotation.Nullable;
 
 // Check https://opentelemetry.io/docs/specs/semconv/rpc/json-rpc/
 final class JsonRpcClientAttributesExtractor
-    implements AttributesExtractor<SimpleJsonRpcRequest, SimpleJsonRpcResponse> {
+    implements AttributesExtractor<JsonRpcClientRequest, JsonRpcClientResponse> {
 
   @Override
   public void onStart(
-      AttributesBuilder attributes, Context parentContext, SimpleJsonRpcRequest jsonRpcRequest) {
+      AttributesBuilder attributes, Context parentContext, JsonRpcClientRequest jsonRpcRequest) {
     attributes.put("rpc.jsonrpc.version", "2.0");
   }
 
@@ -24,7 +24,7 @@ final class JsonRpcClientAttributesExtractor
   public void onEnd(
       AttributesBuilder attributes,
       Context context,
-      SimpleJsonRpcRequest jsonRpcRequest,
-      @Nullable SimpleJsonRpcResponse jsonRpcResponse,
+      JsonRpcClientRequest jsonRpcRequest,
+      @Nullable JsonRpcClientResponse jsonRpcResponse,
       @Nullable Throwable error) {}
 }

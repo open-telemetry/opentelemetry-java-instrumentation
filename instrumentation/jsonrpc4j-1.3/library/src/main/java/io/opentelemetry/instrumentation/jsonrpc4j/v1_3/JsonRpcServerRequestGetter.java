@@ -9,17 +9,17 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.ArrayList;
 import javax.annotation.Nullable;
 
-enum JsonRpcRequestGetter implements TextMapGetter<JsonRpcRequest> {
+enum JsonRpcServerRequestGetter implements TextMapGetter<JsonRpcServerRequest> {
   INSTANCE;
 
   @Override
-  public Iterable<String> keys(JsonRpcRequest request) {
+  public Iterable<String> keys(JsonRpcServerRequest request) {
     return new ArrayList<>();
   }
 
   @Override
   @Nullable
-  public String get(@Nullable JsonRpcRequest request, String key) {
+  public String get(@Nullable JsonRpcServerRequest request, String key) {
     return null;
   }
 }

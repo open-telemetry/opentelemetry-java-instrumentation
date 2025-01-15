@@ -17,7 +17,7 @@ import javax.annotation.Nullable;
 
 // Check https://opentelemetry.io/docs/specs/semconv/rpc/json-rpc/
 final class JsonRpcServerAttributesExtractor
-    implements AttributesExtractor<JsonRpcRequest, JsonRpcResponse> {
+    implements AttributesExtractor<JsonRpcServerRequest, JsonRpcServerResponse> {
 
   private static final AttributeKey<Long> RPC_JSONRPC_ERROR_CODE =
       AttributeKey.longKey("rpc.jsonrpc.error_code");
@@ -27,7 +27,9 @@ final class JsonRpcServerAttributesExtractor
 
   @Override
   public void onStart(
-      AttributesBuilder attributes, Context parentContext, JsonRpcRequest jsonRpcRequest) {
+      AttributesBuilder attributes,
+      Context parentContext,
+      JsonRpcServerRequest jsonRpcServerRequest) {
     attributes.put("rpc.jsonrpc.version", "2.0");
   }
 
@@ -35,8 +37,8 @@ final class JsonRpcServerAttributesExtractor
   public void onEnd(
       AttributesBuilder attributes,
       Context context,
-      JsonRpcRequest jsonRpcRequest,
-      @Nullable JsonRpcResponse jsonRpcResponse,
+      JsonRpcServerRequest jsonRpcServerRequest,
+      @Nullable JsonRpcServerResponse jsonRpcServerResponse,
       @Nullable Throwable error) {
     // use the DEFAULT_ERROR_RESOLVER to extract error code and message
     if (error != null) {
@@ -45,7 +47,7 @@ final class JsonRpcServerAttributesExtractor
               AnnotationsErrorResolver.INSTANCE, DefaultErrorResolver.INSTANCE);
       ErrorResolver.JsonError jsonError =
           errorResolver.resolveError(
-              error, jsonRpcRequest.getMethod(), jsonRpcRequest.getArguments());
+              error, jsonRpcServerRequest.getMethod(), jsonRpcServerRequest.getArguments());
       attributes.put(RPC_JSONRPC_ERROR_CODE, jsonError.code);
       attributes.put(RPC_JSONRPC_ERROR_MESSAGE, jsonError.message);
     } else {

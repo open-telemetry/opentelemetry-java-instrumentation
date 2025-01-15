@@ -15,13 +15,13 @@ import java.util.List;
 
 public final class OpenTelemetryJsonRpcInvocationListener implements InvocationListener {
 
-  private final Instrumenter<JsonRpcRequest, JsonRpcResponse> serverInstrumenter;
+  private final Instrumenter<JsonRpcServerRequest, JsonRpcServerResponse> serverInstrumenter;
 
   private static final ThreadLocal<Context> threadLocalContext = new ThreadLocal<>();
   private static final ThreadLocal<Scope> threadLocalScope = new ThreadLocal<>();
 
   public OpenTelemetryJsonRpcInvocationListener(
-      Instrumenter<JsonRpcRequest, JsonRpcResponse> serverInstrumenter) {
+      Instrumenter<JsonRpcServerRequest, JsonRpcServerResponse> serverInstrumenter) {
     this.serverInstrumenter = serverInstrumenter;
   }
 
@@ -34,7 +34,7 @@ public final class OpenTelemetryJsonRpcInvocationListener implements InvocationL
   @Override
   public void willInvoke(Method method, List<JsonNode> arguments) {
     Context parentContext = Context.current();
-    JsonRpcRequest request = new JsonRpcRequest(method, arguments);
+    JsonRpcServerRequest request = new JsonRpcServerRequest(method, arguments);
     if (!serverInstrumenter.shouldStart(parentContext, request)) {
       return;
     }
@@ -59,8 +59,8 @@ public final class OpenTelemetryJsonRpcInvocationListener implements InvocationL
   @Override
   public void didInvoke(
       Method method, List<JsonNode> arguments, Object result, Throwable t, long duration) {
-    JsonRpcRequest request = new JsonRpcRequest(method, arguments);
-    JsonRpcResponse response = new JsonRpcResponse(method, arguments, result);
+    JsonRpcServerRequest request = new JsonRpcServerRequest(method, arguments);
+    JsonRpcServerResponse response = new JsonRpcServerResponse(method, arguments, result);
     threadLocalScope.get().close();
     serverInstrumenter.end(threadLocalContext.get(), request, response, t);
     threadLocalContext.remove();

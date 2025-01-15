@@ -10,21 +10,21 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesG
 // Check
 // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#attributes
 // Check https://opentelemetry.io/docs/specs/semconv/rpc/json-rpc/
-public enum JsonRpcServerAttributesGetter implements RpcAttributesGetter<JsonRpcRequest> {
+public enum JsonRpcServerAttributesGetter implements RpcAttributesGetter<JsonRpcServerRequest> {
   INSTANCE;
 
   @Override
-  public String getSystem(JsonRpcRequest request) {
+  public String getSystem(JsonRpcServerRequest request) {
     return "jsonrpc";
   }
 
   @Override
-  public String getService(JsonRpcRequest request) {
+  public String getService(JsonRpcServerRequest request) {
     return request.getMethod().getDeclaringClass().getName();
   }
 
   @Override
-  public String getMethod(JsonRpcRequest request) {
+  public String getMethod(JsonRpcServerRequest request) {
     return request.getMethod().getName();
   }
 }

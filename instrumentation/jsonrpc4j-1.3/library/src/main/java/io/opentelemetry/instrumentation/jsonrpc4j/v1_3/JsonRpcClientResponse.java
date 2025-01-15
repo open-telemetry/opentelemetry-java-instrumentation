@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.jsonrpc4j.v1_3;
 
-public final class SimpleJsonRpcResponse {
+public final class JsonRpcClientResponse {
 
   private final Object result;
 
-  public SimpleJsonRpcResponse(Object result) {
+  public JsonRpcClientResponse(Object result) {
     this.result = result;
   }
 

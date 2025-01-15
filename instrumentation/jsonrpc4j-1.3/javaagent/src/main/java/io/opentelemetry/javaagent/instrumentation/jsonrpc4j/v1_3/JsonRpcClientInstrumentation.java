@@ -16,8 +16,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.jsonrpc4j.v1_3.SimpleJsonRpcRequest;
-import io.opentelemetry.instrumentation.jsonrpc4j.v1_3.SimpleJsonRpcResponse;
+import io.opentelemetry.instrumentation.jsonrpc4j.v1_3.JsonRpcClientRequest;
+import io.opentelemetry.instrumentation.jsonrpc4j.v1_3.JsonRpcClientResponse;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Map;
@@ -63,7 +63,7 @@ public class JsonRpcClientInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = Context.current();
-      SimpleJsonRpcRequest request = new SimpleJsonRpcRequest(methodName, argument);
+      JsonRpcClientRequest request = new JsonRpcClientRequest(methodName, argument);
       if (!CLIENT_INSTRUMENTER.shouldStart(parentContext, request)) {
         return;
       }
@@ -88,8 +88,8 @@ public class JsonRpcClientInstrumentation implements TypeInstrumentation {
       scope.close();
       CLIENT_INSTRUMENTER.end(
           context,
-          new SimpleJsonRpcRequest(methodName, argument),
-          new SimpleJsonRpcResponse(result),
+          new JsonRpcClientRequest(methodName, argument),
+          new JsonRpcClientResponse(result),
           throwable);
     }
   }

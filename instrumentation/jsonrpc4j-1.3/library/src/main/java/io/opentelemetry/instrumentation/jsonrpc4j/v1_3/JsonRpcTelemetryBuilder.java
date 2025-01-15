@@ -26,9 +26,10 @@ public class JsonRpcTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
 
   private final List<
-          AttributesExtractor<? super SimpleJsonRpcRequest, ? super SimpleJsonRpcResponse>>
+          AttributesExtractor<? super JsonRpcClientRequest, ? super JsonRpcClientResponse>>
       additionalClientExtractors = new ArrayList<>();
-  private final List<AttributesExtractor<? super JsonRpcRequest, ? super JsonRpcResponse>>
+  private final List<
+          AttributesExtractor<? super JsonRpcServerRequest, ? super JsonRpcServerResponse>>
       additionalServerExtractors = new ArrayList<>();
 
   JsonRpcTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -42,7 +43,7 @@ public class JsonRpcTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JsonRpcTelemetryBuilder addClientAttributeExtractor(
-      AttributesExtractor<? super SimpleJsonRpcRequest, ? super SimpleJsonRpcResponse>
+      AttributesExtractor<? super JsonRpcClientRequest, ? super JsonRpcClientResponse>
           attributesExtractor) {
     additionalClientExtractors.add(attributesExtractor);
     return this;
@@ -55,21 +56,22 @@ public class JsonRpcTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JsonRpcTelemetryBuilder addServerAttributeExtractor(
-      AttributesExtractor<? super JsonRpcRequest, ? super JsonRpcResponse> attributesExtractor) {
+      AttributesExtractor<? super JsonRpcServerRequest, ? super JsonRpcServerResponse>
+          attributesExtractor) {
     additionalServerExtractors.add(attributesExtractor);
     return this;
   }
 
   public JsonRpcTelemetry build() {
-    SpanNameExtractor<SimpleJsonRpcRequest> clientSpanNameExtractor =
+    SpanNameExtractor<JsonRpcClientRequest> clientSpanNameExtractor =
         new JsonRpcClientSpanNameExtractor();
-    SpanNameExtractor<JsonRpcRequest> serverSpanNameExtractor =
+    SpanNameExtractor<JsonRpcServerRequest> serverSpanNameExtractor =
         new JsonRpcServerSpanNameExtractor();
 
-    InstrumenterBuilder<SimpleJsonRpcRequest, SimpleJsonRpcResponse> clientInstrumenterBuilder =
+    InstrumenterBuilder<JsonRpcClientRequest, JsonRpcClientResponse> clientInstrumenterBuilder =
         Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, clientSpanNameExtractor);
 
-    InstrumenterBuilder<JsonRpcRequest, JsonRpcResponse> serverInstrumenterBuilder =
+    InstrumenterBuilder<JsonRpcServerRequest, JsonRpcServerResponse> serverInstrumenterBuilder =
         Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, serverSpanNameExtractor);
 
     JsonRpcServerAttributesGetter serverRpcAttributesGetter =
@@ -91,7 +93,7 @@ public class JsonRpcTelemetryBuilder {
         .addOperationMetrics(RpcServerMetrics.get());
 
     return new JsonRpcTelemetry(
-        serverInstrumenterBuilder.buildServerInstrumenter(JsonRpcRequestGetter.INSTANCE),
+        serverInstrumenterBuilder.buildServerInstrumenter(JsonRpcServerRequestGetter.INSTANCE),
         clientInstrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient()),
         openTelemetry.getPropagators());
   }

@@ -9,12 +9,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.lang.reflect.Method;
 import java.util.List;
 
-public final class JsonRpcRequest {
+public final class JsonRpcServerRequest {
 
   private final Method method;
   private final List<JsonNode> arguments;
 
-  JsonRpcRequest(Method method, List<JsonNode> arguments) {
+  JsonRpcServerRequest(Method method, List<JsonNode> arguments) {
     this.method = method;
     this.arguments = arguments;
   }

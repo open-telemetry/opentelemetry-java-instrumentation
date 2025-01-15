@@ -13,15 +13,15 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import javax.annotation.Nullable;
 
 public enum JsonRpcServerSpanStatusExtractor
-    implements SpanStatusExtractor<JsonRpcRequest, JsonRpcResponse> {
+    implements SpanStatusExtractor<JsonRpcServerRequest, JsonRpcServerResponse> {
   INSTANCE;
 
   /** Extracts the status from the response and sets it to the {@code spanStatusBuilder}. */
   @Override
   public void extract(
       SpanStatusBuilder spanStatusBuilder,
-      JsonRpcRequest jsonRpcRequest,
-      @Nullable JsonRpcResponse jsonRpcResponse,
+      JsonRpcServerRequest jsonRpcServerRequest,
+      @Nullable JsonRpcServerResponse jsonRpcServerResponse,
       @Nullable Throwable error) {
     if (error == null) {
       spanStatusBuilder.setStatus(StatusCode.OK);
