@@ -47,7 +47,7 @@ class TelemetryRetriever {
 
     return OBJECT_MAPPER.readTree(content).collect {
       def builder = builderConstructor.get()
-      // TODO(anuraaga): Register parser into object mapper to avoid de -> re -> deserialize.
+      // TODO: Register parser into object mapper to avoid de -> re -> deserialize.
       JsonFormat.parser().merge(OBJECT_MAPPER.writeValueAsString(it), builder)
       return (T) builder.build()
     }

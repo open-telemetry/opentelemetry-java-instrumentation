@@ -19,7 +19,6 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:rxjava:rxjava-1.0:library"))
   implementation(project(":instrumentation:couchbase:couchbase-2-common:javaagent"))
 
   library("com.couchbase.client:java-client:2.6.0")
@@ -30,8 +29,8 @@ dependencies {
   testLibrary("org.springframework.data:spring-data-couchbase:3.1.0.RELEASE")
   testLibrary("com.couchbase.client:encryption:1.0.0")
 
-  latestDepTestLibrary("org.springframework.data:spring-data-couchbase:3.1.+")
-  latestDepTestLibrary("com.couchbase.client:java-client:2.+")
+  latestDepTestLibrary("org.springframework.data:spring-data-couchbase:3.1.+") // see couchbase-3.1 module
+  latestDepTestLibrary("com.couchbase.client:java-client:2.+") // see couchbase-3.1 module
 }
 
 tasks {

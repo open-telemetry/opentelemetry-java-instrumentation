@@ -25,9 +25,6 @@ dependencies {
   testImplementation("io.awspring.cloud:spring-cloud-aws-starter-sqs:3.0.0")
   testLibrary("org.springframework.boot:spring-boot-starter-test:3.0.0")
   testLibrary("org.springframework.boot:spring-boot-starter-web:3.0.0")
-
-  // current latest release 3.3.0-M1 has parent that is from central
-  latestDepTestLibrary("io.awspring.cloud:spring-cloud-aws-starter-sqs:3.2.1")
 }
 
 otelJava {

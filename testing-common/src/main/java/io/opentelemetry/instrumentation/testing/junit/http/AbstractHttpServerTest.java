@@ -543,6 +543,57 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     }
   }
 
+  @Test
+  void extractSingleBaggage() {
+    String method = "GET";
+    AggregatedHttpRequest request =
+        AggregatedHttpRequest.of(
+            request(SUCCESS, method).headers().toBuilder()
+                // adding baggage header in w3c baggage format
+                .set("baggage", "test-baggage-key-1=test-baggage-value-1")
+                .build());
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.anySatisfy(
+                span ->
+                    assertServerSpan(assertThat(span), method, SUCCESS, SUCCESS.status)
+                        .hasAttribute(
+                            AttributeKey.stringKey("test-baggage-key-1"), "test-baggage-value-1")));
+  }
+
+  @Test
+  void extractMultiBaggage() {
+    assumeTrue(options.testExtractMultiBaggage);
+
+    String method = "GET";
+    AggregatedHttpRequest request =
+        AggregatedHttpRequest.of(
+            request(SUCCESS, method).headers().toBuilder()
+                // adding baggage header in w3c baggage format
+                .add("baggage", "test-baggage-key-1=test-baggage-value-1")
+                .add("baggage", "test-baggage-key-2=test-baggage-value-2")
+                .build());
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.anySatisfy(
+                span ->
+                    assertServerSpan(assertThat(span), method, SUCCESS, SUCCESS.status)
+                        .hasAttribute(
+                            AttributeKey.stringKey("test-baggage-key-1"), "test-baggage-value-1")
+                        .hasAttribute(
+                            AttributeKey.stringKey("test-baggage-key-2"), "test-baggage-value-2")));
+  }
+
   private static Bootstrap buildBootstrap(EventLoopGroup eventLoopGroup) {
     Bootstrap bootstrap = new Bootstrap();
     bootstrap
@@ -877,6 +928,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
   public final boolean hasHttpRouteAttribute(ServerEndpoint endpoint) {
     return options.httpAttributes.apply(endpoint).contains(HttpAttributes.HTTP_ROUTE);
+  }
+
+  public final boolean hasHandlerSpan(ServerEndpoint endpoint) {
+    return options.hasHandlerSpan.test(endpoint);
   }
 
   public String expectedHttpRoute(ServerEndpoint endpoint, String method) {

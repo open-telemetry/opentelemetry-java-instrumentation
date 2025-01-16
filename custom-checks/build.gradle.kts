@@ -73,7 +73,7 @@ tasks.withType<Javadoc>().configureEach {
 configurations {
   named("errorprone") {
     dependencies.removeIf {
-      it is ProjectDependency && it.dependencyProject == project
+      it is ProjectDependency && it.group == project.group && it.name == project.name
     }
   }
 }

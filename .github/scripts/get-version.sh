@@ -1,3 +1,3 @@
 #!/bin/bash -e
 
-grep -Po "val stableVersion = \"\K[0-9]+.[0-9]+.[0-9]+" version.gradle.kts
+grep "val stableVersion = " version.gradle.kts | grep -Eo "[0-9]+.[0-9]+.[0-9]+"

@@ -112,7 +112,7 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
 
     // TODO: context is not automatically propagated into callbacks
     Context context = Context.current();
-    // TODO(anuraaga): Do we also need to test ListenableFuture callback?
+    // TODO: Do we also need to test ListenableFuture callback?
     client.executeRequest(
         request,
         new AsyncCompletionHandler<Void>() {

@@ -23,6 +23,7 @@ public class AsyncHttpClientInstrumentationModule extends InstrumentationModule 
     return asList(
         new AsyncHttpClientInstrumentation(),
         new AsyncCompletionHandlerInstrumentation(),
-        new NettyRequestSenderInstrumentation());
+        new NettyRequestSenderInstrumentation(),
+        new NettyResponseFutureInstrumentation());
   }
 }

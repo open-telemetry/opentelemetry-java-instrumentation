@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
@@ -163,8 +162,8 @@ class SqlClientAttributesExtractorTest {
           .containsOnly(
               entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT *"),
               entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-              entry(stringKey("db.query.text"), "SELECT *"),
-              entry(stringKey("db.operation.name"), "SELECT"));
+              entry(DbIncubatingAttributes.DB_QUERY_TEXT, "SELECT *"),
+              entry(DbIncubatingAttributes.DB_OPERATION_NAME, "SELECT"));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(attributes.build())
           .containsOnly(
@@ -173,8 +172,8 @@ class SqlClientAttributesExtractorTest {
     } else if (SemconvStability.emitStableDatabaseSemconv()) {
       assertThat(attributes.build())
           .containsOnly(
-              entry(stringKey("db.query.text"), "SELECT *"),
-              entry(stringKey("db.operation.name"), "SELECT"));
+              entry(DbIncubatingAttributes.DB_QUERY_TEXT, "SELECT *"),
+              entry(DbIncubatingAttributes.DB_OPERATION_NAME, "SELECT"));
     }
   }
 
@@ -203,9 +202,9 @@ class SqlClientAttributesExtractorTest {
               entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM table"),
               entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
               entry(DbIncubatingAttributes.DB_CASSANDRA_TABLE, "table"),
-              entry(stringKey("db.query.text"), "SELECT * FROM table"),
-              entry(stringKey("db.operation.name"), "SELECT"),
-              entry(stringKey("db.collection.name"), "table"));
+              entry(DbIncubatingAttributes.DB_QUERY_TEXT, "SELECT * FROM table"),
+              entry(DbIncubatingAttributes.DB_OPERATION_NAME, "SELECT"),
+              entry(DbIncubatingAttributes.DB_COLLECTION_NAME, "table"));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(attributes.build())
           .containsOnly(
@@ -215,9 +214,9 @@ class SqlClientAttributesExtractorTest {
     } else if (SemconvStability.emitStableDatabaseSemconv()) {
       assertThat(attributes.build())
           .containsOnly(
-              entry(stringKey("db.query.text"), "SELECT * FROM table"),
-              entry(stringKey("db.operation.name"), "SELECT"),
-              entry(stringKey("db.collection.name"), "table"));
+              entry(DbIncubatingAttributes.DB_QUERY_TEXT, "SELECT * FROM table"),
+              entry(DbIncubatingAttributes.DB_OPERATION_NAME, "SELECT"),
+              entry(DbIncubatingAttributes.DB_COLLECTION_NAME, "table"));
     }
   }
 

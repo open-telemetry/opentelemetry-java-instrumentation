@@ -77,8 +77,7 @@ public class ExtensionClassLoader extends URLClassLoader {
   }
 
   private static void includeEmbeddedExtensionsIfFound(List<URL> extensions, File javaagentFile) {
-    try {
-      JarFile jarFile = new JarFile(javaagentFile, false);
+    try (JarFile jarFile = new JarFile(javaagentFile, false)) {
       Enumeration<JarEntry> entryEnumeration = jarFile.entries();
       String prefix = "extensions/";
       File tempDirectory = null;
