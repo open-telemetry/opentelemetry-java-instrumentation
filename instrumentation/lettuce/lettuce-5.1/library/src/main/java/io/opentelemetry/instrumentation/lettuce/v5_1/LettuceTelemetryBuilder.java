@@ -10,7 +10,6 @@ import static io.opentelemetry.instrumentation.lettuce.v5_1.LettuceTelemetry.INS
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
-import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 
 /** A builder of {@link LettuceTelemetry}. */
 public final class LettuceTelemetryBuilder {
@@ -18,11 +17,9 @@ public final class LettuceTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
 
   private boolean statementSanitizationEnabled = true;
-  private OperationMetrics metrics;
 
   LettuceTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
-    metrics = DbClientMetrics.get();
   }
 
   /**
@@ -37,7 +34,6 @@ public final class LettuceTelemetryBuilder {
     return this;
   }
 
-
   /**
    * Returns a new {@link LettuceTelemetry} with the settings of this {@link
    * LettuceTelemetryBuilder}.
@@ -46,6 +42,6 @@ public final class LettuceTelemetryBuilder {
     return new LettuceTelemetry(
         openTelemetry,
         statementSanitizationEnabled,
-        metrics.create(openTelemetry.getMeterProvider().get(INSTRUMENTATION_NAME)));
+        DbClientMetrics.get().create(openTelemetry.getMeterProvider().get(INSTRUMENTATION_NAME)));
   }
 }

@@ -25,7 +25,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Arrays;
 import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -95,13 +94,12 @@ class Jedis30ClientTest {
     assertDurationMetric(
         testing,
         "io.opentelemetry.jedis-3.0",
-        Arrays.asList(
-            DB_OPERATION_NAME,
-            DB_SYSTEM,
-            SERVER_ADDRESS,
-            SERVER_PORT,
-            NETWORK_PEER_ADDRESS,
-            NETWORK_PEER_PORT));
+        DB_OPERATION_NAME,
+        DB_SYSTEM,
+        SERVER_ADDRESS,
+        SERVER_PORT,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT);
   }
 
   @Test
