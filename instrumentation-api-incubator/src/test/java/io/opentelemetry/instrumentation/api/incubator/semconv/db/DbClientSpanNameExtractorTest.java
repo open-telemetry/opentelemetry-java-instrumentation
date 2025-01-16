@@ -5,14 +5,13 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static java.util.Collections.singleton;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.MultiQuerySqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Arrays;
-import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -22,14 +21,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class DbClientSpanNameExtractorTest {
   @Mock DbClientAttributesGetter<DbRequest> dbAttributesGetter;
   @Mock SqlClientAttributesGetter<DbRequest> sqlAttributesGetter;
-  @Mock MultiQuerySqlClientAttributesGetter<DbRequest> multiQuerySqlClientAttributesGetter;
 
   @Test
   void shouldExtractFullSpanName() {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    when(sqlAttributesGetter.getRawQueryText(dbRequest)).thenReturn("SELECT * from table");
+    when(sqlAttributesGetter.getRawQueryTexts(dbRequest))
+        .thenReturn(singleton("SELECT * from table"));
     when(sqlAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
 
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
@@ -46,7 +45,8 @@ class DbClientSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    when(sqlAttributesGetter.getRawQueryText(dbRequest)).thenReturn("SELECT * from another.table");
+    when(sqlAttributesGetter.getRawQueryTexts(dbRequest))
+        .thenReturn(singleton("SELECT * from another.table"));
     when(sqlAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
 
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
@@ -63,7 +63,8 @@ class DbClientSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    when(sqlAttributesGetter.getRawQueryText(dbRequest)).thenReturn("SELECT * from table");
+    when(sqlAttributesGetter.getRawQueryTexts(dbRequest))
+        .thenReturn(singleton("SELECT * from table"));
 
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
 
@@ -142,13 +143,11 @@ class DbClientSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    when(multiQuerySqlClientAttributesGetter.getRawQueryTexts(dbRequest))
+    when(sqlAttributesGetter.getRawQueryTexts(dbRequest))
         .thenReturn(Arrays.asList("INSERT INTO table VALUES(1)", "INSERT INTO table VALUES(2)"));
-    when(multiQuerySqlClientAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
-    when(multiQuerySqlClientAttributesGetter.getBatchSize(dbRequest)).thenReturn(2L);
+    when(sqlAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
 
-    SpanNameExtractor<DbRequest> underTest =
-        DbClientSpanNameExtractor.create(multiQuerySqlClientAttributesGetter);
+    SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
 
     // when
     String spanName = underTest.extract(dbRequest);
@@ -164,24 +163,21 @@ class DbClientSpanNameExtractorTest {
     // given
     DbRequest dbRequest = new DbRequest();
 
-    when(multiQuerySqlClientAttributesGetter.getRawQueryTexts(dbRequest))
-        .thenReturn(Collections.singletonList("INSERT INTO table VALUES(?)"));
-    if (SemconvStability.emitStableDatabaseSemconv()) {
-      when(multiQuerySqlClientAttributesGetter.getRawQueryText(dbRequest))
-          .thenReturn("INSERT INTO table VALUES(?)");
-    }
-    when(multiQuerySqlClientAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
-    when(multiQuerySqlClientAttributesGetter.getBatchSize(dbRequest)).thenReturn(2L);
+    when(sqlAttributesGetter.getRawQueryTexts(dbRequest))
+        .thenReturn(singleton("INSERT INTO table VALUES(?)"));
+    when(sqlAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
+    when(sqlAttributesGetter.getBatchSize(dbRequest)).thenReturn(2L);
 
-    SpanNameExtractor<DbRequest> underTest =
-        DbClientSpanNameExtractor.create(multiQuerySqlClientAttributesGetter);
+    SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
 
     // when
     String spanName = underTest.extract(dbRequest);
 
     // then
     assertEquals(
-        SemconvStability.emitStableDatabaseSemconv() ? "BATCH INSERT database.table" : "database",
+        SemconvStability.emitStableDatabaseSemconv()
+            ? "BATCH INSERT database.table"
+            : "INSERT database",
         spanName);
   }
 

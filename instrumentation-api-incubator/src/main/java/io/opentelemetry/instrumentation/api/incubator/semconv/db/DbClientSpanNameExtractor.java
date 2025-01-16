@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.MultiQuerySqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import java.util.Collection;
 
 public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtractor<REQUEST> {
 
@@ -95,39 +95,41 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
     @Override
     public String extract(REQUEST request) {
-      boolean isMultiQuery = false;
-      MultiQuerySqlClientAttributesGetter<REQUEST> multiGetter = null;
-      if (getter instanceof MultiQuerySqlClientAttributesGetter) {
-        multiGetter = (MultiQuerySqlClientAttributesGetter<REQUEST>) getter;
-        isMultiQuery = multiGetter.getRawQueryTexts(request).size() > 1;
-      }
-
-      Long batchSize = getter.getBatchSize(request);
-      boolean isBatch = batchSize != null && batchSize > 1;
-
       String namespace = getter.getDbNamespace(request);
-      if (!isBatch || (!SemconvStability.emitStableDatabaseSemconv() && !isMultiQuery)) {
-        SqlStatementInfo sanitizedStatement = sanitizer.sanitize(getter.getRawQueryText(request));
-        return computeSpanName(
-            namespace, sanitizedStatement.getOperation(), sanitizedStatement.getMainIdentifier());
-      } else if (SemconvStability.emitStableDatabaseSemconv()) {
-        if (!isMultiQuery) { // batch query with single unique query
-          SqlStatementInfo sanitizedStatement = sanitizer.sanitize(getter.getRawQueryText(request));
-          return computeSpanName(
-              namespace,
-              "BATCH " + sanitizedStatement.getOperation(),
-              sanitizedStatement.getMainIdentifier());
-        } else { // batch query with multiple unique queries
-          MultiQuery multiQuery = MultiQuery.analyze(multiGetter.getRawQueryTexts(request), false);
+      Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
 
-          return computeSpanName(
-              namespace,
-              multiQuery.getOperation() != null ? "BATCH " + multiQuery.getOperation() : "BATCH",
-              multiQuery.getMainIdentifier());
-        }
-      } else {
+      if (rawQueryTexts.isEmpty()) {
         return computeSpanName(namespace, null, null);
       }
+
+      if (!SemconvStability.emitStableDatabaseSemconv()) {
+        if (rawQueryTexts.size() > 1) { // for backcompat(?)
+          return computeSpanName(namespace, null, null);
+        }
+        SqlStatementInfo sanitizedStatement = sanitizer.sanitize(rawQueryTexts.iterator().next());
+        return computeSpanName(
+            namespace, sanitizedStatement.getOperation(), sanitizedStatement.getMainIdentifier());
+      }
+
+      if (rawQueryTexts.size() == 1) {
+        SqlStatementInfo sanitizedStatement = sanitizer.sanitize(rawQueryTexts.iterator().next());
+        String operation = sanitizedStatement.getOperation();
+        if (isBatch(request)) {
+          operation = "BATCH " + operation;
+        }
+        return computeSpanName(namespace, operation, sanitizedStatement.getMainIdentifier());
+      }
+
+      MultiQuery multiQuery = MultiQuery.analyze(rawQueryTexts, false);
+      return computeSpanName(
+          namespace,
+          multiQuery.getOperation() != null ? "BATCH " + multiQuery.getOperation() : "BATCH",
+          multiQuery.getMainIdentifier());
+    }
+
+    private boolean isBatch(REQUEST request) {
+      Long batchSize = getter.getBatchSize(request);
+      return batchSize != null && batchSize > 1;
     }
   }
 }
