@@ -5,11 +5,14 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
-import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 import javax.annotation.Nullable;
 import org.springframework.web.server.ServerWebExchange;
 
-enum WebfluxTextMapGetter implements TextMapGetter<ServerWebExchange> {
+enum WebfluxTextMapGetter implements ExtendedTextMapGetter<ServerWebExchange> {
   INSTANCE;
 
   @Override
@@ -24,5 +27,14 @@ enum WebfluxTextMapGetter implements TextMapGetter<ServerWebExchange> {
       return null;
     }
     return exchange.getRequest().getHeaders().getFirst(key);
+  }
+
+  @Override
+  public Iterator<String> getAll(@Nullable ServerWebExchange exchange, String key) {
+    if (exchange == null) {
+      return Collections.emptyIterator();
+    }
+    List<String> list = exchange.getRequest().getHeaders().get(key);
+    return list != null ? list.iterator() : Collections.emptyIterator();
   }
 }
