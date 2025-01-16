@@ -19,9 +19,9 @@
 
 ### 📈 Enhancements
 
-- Implementing `ExtendedTextMapGetter` in grpc-1.6 instrumentation
+- Support `ExtendedTextMapGetter` in gRPC instrumentation
   ([#13011](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13011))
-- Add database client metrics for dynamo db
+- Add database client metrics in DynamoDB instrumentation
   ([#13033](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13033))
 - Propagate context into async http client CompletableFuture callbacks
   ([#13041](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13041))
@@ -32,13 +32,13 @@
 
 ### 🛠️ Bug fixes
 
-- Fix wrong dubbo trace caused by using rpcContext.isProviderSide()
+- Fix incorrect dubbo trace caused by using rpcContext.isProviderSide()
   ([#12930](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12930))
-- Fix clickhouse query failing with syntax error
+- Fix ClickHouse query failing with syntax error
   ([#13020](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13020))
 - Fix instrumentation module not loading silently when duplicate helper classnames are detected
   ([#13005](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13005))
-- Fix compatibility problem of DubboHeadersGetter#keys in Dubbo 2.7.6 and 2.7.7
+- Fix compatibility problem due to DubboHeadersGetter#keys in Dubbo 2.7.6 and 2.7.7
   ([#12982](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12982))
 - Fix appender install for async Logback appenders
   ([#13047](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13047))
