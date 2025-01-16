@@ -166,7 +166,9 @@ class DbClientSpanNameExtractorTest {
     when(sqlAttributesGetter.getRawQueryTexts(dbRequest))
         .thenReturn(singleton("INSERT INTO table VALUES(?)"));
     when(sqlAttributesGetter.getDbNamespace(dbRequest)).thenReturn("database");
-    when(sqlAttributesGetter.getBatchSize(dbRequest)).thenReturn(2L);
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      when(sqlAttributesGetter.getBatchSize(dbRequest)).thenReturn(2L);
+    }
 
     SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(sqlAttributesGetter);
 
@@ -177,7 +179,7 @@ class DbClientSpanNameExtractorTest {
     assertEquals(
         SemconvStability.emitStableDatabaseSemconv()
             ? "BATCH INSERT database.table"
-            : "INSERT database",
+            : "INSERT database.table",
         spanName);
   }
 
