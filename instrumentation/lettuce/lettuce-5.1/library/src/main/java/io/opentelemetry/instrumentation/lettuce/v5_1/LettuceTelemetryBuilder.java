@@ -37,11 +37,6 @@ public final class LettuceTelemetryBuilder {
     return this;
   }
 
-  @CanIgnoreReturnValue
-  public LettuceTelemetryBuilder setMetrics(OperationMetrics metrics) {
-    this.metrics = metrics;
-    return this;
-  }
 
   /**
    * Returns a new {@link LettuceTelemetry} with the settings of this {@link
