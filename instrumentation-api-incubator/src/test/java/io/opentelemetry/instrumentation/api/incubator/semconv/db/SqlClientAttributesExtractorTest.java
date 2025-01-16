@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.entry;
 
@@ -29,8 +30,9 @@ class SqlClientAttributesExtractorTest {
   static class TestAttributesGetter implements SqlClientAttributesGetter<Map<String, Object>> {
 
     @Override
-    public String getRawQueryText(Map<String, Object> map) {
-      return read(map, "db.statement");
+    public Collection<String> getRawQueryTexts(Map<String, Object> map) {
+      String statement = read(map, "db.statement");
+      return statement == null ? emptySet() : singleton(statement);
     }
 
     @Override
