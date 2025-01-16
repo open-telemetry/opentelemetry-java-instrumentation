@@ -16,6 +16,7 @@ group = "io.opentelemetry.instrumentation"
 apply(from = "../version.gradle.kts")
 
 repositories {
+  mavenLocal()
   mavenCentral()
   gradlePluginPortal()
 }
@@ -25,7 +26,7 @@ configurations.named("compileOnly") {
   extendsFrom(bbGradlePlugin)
 }
 
-val byteBuddyVersion = "1.15.11"
+val byteBuddyVersion = "1.15.12-SNAPSHOT"
 val aetherVersion = "1.1.0"
 
 dependencies {

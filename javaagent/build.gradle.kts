@@ -397,7 +397,7 @@ fun CopySpec.copyByteBuddy(jar: Provider<RegularFile>) {
       if (path.startsWith("net/bytebuddy/") &&
         // this is our class that we have placed in the byte buddy package, need to preserve it
         !path.startsWith("net/bytebuddy/agent/builder/AgentBuilderUtil")) {
-        exclude()
+        //exclude() //local build seems to not include the classes under META-INF
       } else if (path.startsWith("META-INF/versions/9/net/bytebuddy/")) {
         path = path.removePrefix("META-INF/versions/9/")
       }
