@@ -5,12 +5,16 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
+import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import io.opentelemetry.javaagent.tooling.ModuleOpener;
 import io.opentelemetry.javaagent.tooling.util.ClassLoaderValue;
+import java.lang.instrument.Instrumentation;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.utility.JavaModule;
 
 public class IndyModuleRegistry {
 
@@ -65,6 +69,24 @@ public class IndyModuleRegistry {
               + " yet");
     }
 
+    if (module instanceof ExperimentalInstrumentationModule) {
+      ExperimentalInstrumentationModule experimentalModule =
+          (ExperimentalInstrumentationModule) module;
+
+      Instrumentation instrumentation = InstrumentationHolder.getInstrumentation();
+      if (instrumentation == null) {
+        throw new IllegalStateException("global instrumentation not available");
+      }
+
+      if (JavaModule.isSupported()) {
+        // module opener only usable for java 9+
+        experimentalModule
+            .jpmsModulesToOpen()
+            .forEach(
+                (javaModule, packages) ->
+                    ModuleOpener.open(instrumentation, javaModule, loader, packages));
+      }
+    }
     return loader;
   }
 
