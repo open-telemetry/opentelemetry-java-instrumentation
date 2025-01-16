@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.KAFKA;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -57,6 +58,9 @@ import org.testcontainers.utility.DockerImageName;
 public abstract class AbstractVertxKafkaTest {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractVertxKafkaTest.class);
+
+  private static final AttributeKey<String> MESSAGING_CLIENT_ID =
+      AttributeKey.stringKey("messaging.client_id");
 
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -209,12 +213,10 @@ public abstract class AbstractVertxKafkaTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(MESSAGING_SYSTEM, KAFKA),
                 equalTo(MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(MESSAGING_OPERATION, "publish"),
-                satisfies(
-                    AttributeKey.stringKey("messaging.client_id"),
-                    stringAssert -> stringAssert.startsWith("producer")),
+                satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("producer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
     String messageKey = record.key();
@@ -237,12 +239,10 @@ public abstract class AbstractVertxKafkaTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(MESSAGING_SYSTEM, KAFKA),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION, operation),
-                satisfies(
-                    AttributeKey.stringKey("messaging.client_id"),
-                    stringAssert -> stringAssert.startsWith("consumer")),
+                satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")),
                 satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive)));
     // consumer group is not available in version 0.11
     if (Boolean.getBoolean("testLatestDeps")) {
@@ -257,12 +257,10 @@ public abstract class AbstractVertxKafkaTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(MESSAGING_SYSTEM, KAFKA),
                 equalTo(MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(MESSAGING_OPERATION, "process"),
-                satisfies(
-                    AttributeKey.stringKey("messaging.client_id"),
-                    stringAssert -> stringAssert.startsWith("consumer")),
+                satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
     if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {

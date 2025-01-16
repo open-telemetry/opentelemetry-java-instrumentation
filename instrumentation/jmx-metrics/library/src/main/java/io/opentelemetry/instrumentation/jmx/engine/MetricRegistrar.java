@@ -71,7 +71,7 @@ class MetricRegistrar {
     String unit = metricInfo.getUnit();
 
     switch (instrumentType) {
-        // CHECKSTYLE:OFF
+      // CHECKSTYLE:OFF
       case COUNTER:
         {
           // CHECKSTYLE:ON
@@ -88,7 +88,7 @@ class MetricRegistrar {
         }
         break;
 
-        // CHECKSTYLE:OFF
+      // CHECKSTYLE:OFF
       case UPDOWNCOUNTER:
         {
           // CHECKSTYLE:ON
@@ -105,7 +105,7 @@ class MetricRegistrar {
         }
         break;
 
-        // CHECKSTYLE:OFF
+      // CHECKSTYLE:OFF
       case GAUGE:
         {
           // CHECKSTYLE:ON
@@ -121,7 +121,7 @@ class MetricRegistrar {
           logger.log(INFO, "Created Gauge for {0}", metricName);
         }
         break;
-        // CHECKSTYLE:OFF
+      // CHECKSTYLE:OFF
       case STATE:
         {
           // CHECKSTYLE:ON

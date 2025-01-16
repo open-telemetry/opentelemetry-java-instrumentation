@@ -384,6 +384,8 @@ fun CopySpec.isolateClasses(jar: Provider<RegularFile>) {
     exclude("META-INF/INDEX.LIST")
     exclude("META-INF/*.DSA")
     exclude("META-INF/*.SF")
+    exclude("META-INF/maven/**")
+    exclude("META-INF/MANIFEST.MF")
   }
 }
 

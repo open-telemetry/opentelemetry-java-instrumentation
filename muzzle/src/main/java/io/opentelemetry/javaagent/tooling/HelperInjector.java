@@ -117,6 +117,7 @@ public class HelperInjector implements Transformer {
 
     List<HelperClassDefinition> helpers =
         helperClassNames.stream()
+            .distinct()
             .map(
                 className ->
                     HelperClassDefinition.create(

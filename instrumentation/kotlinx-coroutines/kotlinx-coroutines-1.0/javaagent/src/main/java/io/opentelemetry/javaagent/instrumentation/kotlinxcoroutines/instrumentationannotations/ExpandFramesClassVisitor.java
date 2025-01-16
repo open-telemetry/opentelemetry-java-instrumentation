@@ -95,34 +95,34 @@ class ExpandFramesClassVisitor extends ClassVisitor {
     @Override
     public void visitFrame(int type, int numLocal, Object[] local, int numStack, Object[] stack) {
       switch (type) {
-          // An expanded frame.
+        // An expanded frame.
         case Opcodes.F_NEW:
-          // A compressed frame with complete frame data.
+        // A compressed frame with complete frame data.
         case Opcodes.F_FULL:
           copy(local, numLocal, currentLocals);
           copy(stack, numStack, currentStack);
           break;
-          // A compressed frame with exactly the same locals as the previous frame and with an empty
-          // stack.
+        // A compressed frame with exactly the same locals as the previous frame and with an empty
+        // stack.
         case Opcodes.F_SAME:
           currentStack.clear();
           break;
-          // A compressed frame with exactly the same locals as the previous frame and with a single
-          // value on the stack.
+        // A compressed frame with exactly the same locals as the previous frame and with a single
+        // value on the stack.
         case Opcodes.F_SAME1:
           currentStack.clear();
           currentStack.add(stack[0]);
           break;
-          // A compressed frame where locals are the same as the locals in the previous frame,
-          // except that additional 1-3 locals are defined, and with an empty stack.
+        // A compressed frame where locals are the same as the locals in the previous frame,
+        // except that additional 1-3 locals are defined, and with an empty stack.
         case Opcodes.F_APPEND:
           currentStack.clear();
           for (int i = 0; i < numLocal; i++) {
             currentLocals.add(local[i]);
           }
           break;
-          // A compressed frame where locals are the same as the locals in the previous frame,
-          // except that the last 1-3 locals are absent and with an empty stack.
+        // A compressed frame where locals are the same as the locals in the previous frame,
+        // except that the last 1-3 locals are absent and with an empty stack.
         case Opcodes.F_CHOP:
           currentStack.clear();
           for (Iterator<Object> iterator =

@@ -39,12 +39,12 @@ public final class Experimental {
     }
   }
 
-  public static void setSetEmitExperimentalClientTelemetry(
+  public static void internalSetEmitExperimentalClientTelemetry(
       BiConsumer<SpringWebfluxClientTelemetryBuilder, Boolean> setEmitExperimentalClientTelemetry) {
     Experimental.setEmitExperimentalClientTelemetry = setEmitExperimentalClientTelemetry;
   }
 
-  public static void setSetEmitExperimentalServerTelemetry(
+  public static void internalSetEmitExperimentalServerTelemetry(
       BiConsumer<SpringWebfluxServerTelemetryBuilder, Boolean> setEmitExperimentalServerTelemetry) {
     Experimental.setEmitExperimentalServerTelemetry = setEmitExperimentalServerTelemetry;
   }

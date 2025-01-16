@@ -18,9 +18,7 @@ class KtorHttpServerOldTest : AbstractKtorHttpServerTest() {
     val TESTING: InstrumentationExtension = HttpServerInstrumentationExtension.forLibrary()
   }
 
-  override fun getTesting(): InstrumentationExtension {
-    return TESTING
-  }
+  override fun getTesting(): InstrumentationExtension = TESTING
 
   override fun installOpenTelemetry(application: Application) {
     KtorOldTestUtil.installOpenTelemetry(application, TESTING.openTelemetry)
