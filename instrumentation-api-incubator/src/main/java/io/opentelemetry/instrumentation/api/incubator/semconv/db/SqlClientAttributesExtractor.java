@@ -117,8 +117,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       } else {
         MultiQuery multiQuery =
             MultiQuery.analyze(getter.getRawQueryTexts(request), statementSanitizationEnabled);
-        // TODO (trask) change ";" to "; "
-        internalSet(attributes, DB_QUERY_TEXT, join(";", multiQuery.getStatements()));
+        internalSet(attributes, DB_QUERY_TEXT, join("; ", multiQuery.getStatements()));
 
         String operation =
             multiQuery.getOperation() != null ? "BATCH " + multiQuery.getOperation() : "BATCH";
