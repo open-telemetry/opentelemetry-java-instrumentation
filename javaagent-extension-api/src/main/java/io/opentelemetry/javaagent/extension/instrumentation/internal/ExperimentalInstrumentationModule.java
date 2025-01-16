@@ -66,10 +66,7 @@ public interface ExperimentalInstrumentationModule {
 
   /**
    * Some instrumentation need to access JPMS modules that are not accessible by default, this
-   * method provides a way to access those classes like the "--add-opens" JVM command. <br>
-   * Map key is the name of a "witness class" belonging to the module that will be loaded and used
-   * to get a reference to the module. <br>
-   * Map value is a list of packages to open in the module
+   * method provides a way to access those classes like the "--add-opens" JVM command.
    *
    * @return map of module to open as key, list of packages as value.
    */
