@@ -5,7 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql;
 
+import static java.util.Collections.singleton;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
+import java.util.Collection;
 import javax.annotation.Nullable;
 
 public enum VertxSqlClientAttributesGetter
@@ -38,8 +41,7 @@ public enum VertxSqlClientAttributesGetter
   }
 
   @Override
-  @Nullable
-  public String getRawQueryText(VertxSqlClientRequest request) {
-    return request.getQueryText();
+  public Collection<String> getRawQueryTexts(VertxSqlClientRequest request) {
+    return singleton(request.getQueryText());
   }
 }

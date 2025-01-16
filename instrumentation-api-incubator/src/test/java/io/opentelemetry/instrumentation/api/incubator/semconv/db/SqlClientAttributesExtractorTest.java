@@ -7,12 +7,13 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.MultiQuerySqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
@@ -29,8 +30,9 @@ class SqlClientAttributesExtractorTest {
   static class TestAttributesGetter implements SqlClientAttributesGetter<Map<String, Object>> {
 
     @Override
-    public String getRawQueryText(Map<String, Object> map) {
-      return read(map, "db.statement");
+    public Collection<String> getRawQueryTexts(Map<String, Object> map) {
+      String statement = read(map, "db.statement");
+      return statement == null ? emptySet() : singleton(statement);
     }
 
     @Override
@@ -70,7 +72,7 @@ class SqlClientAttributesExtractorTest {
   }
 
   static class TestMultiAttributesGetter extends TestAttributesGetter
-      implements MultiQuerySqlClientAttributesGetter<Map<String, Object>> {
+      implements SqlClientAttributesGetter<Map<String, Object>> {
 
     @SuppressWarnings("unchecked")
     @Override
@@ -238,8 +240,7 @@ class SqlClientAttributesExtractorTest {
     // given
     Map<String, Object> request = new HashMap<>();
     request.put("db.name", "potatoes");
-    request.put("db.statement", "INSERT INTO potato VALUES(?)");
-    request.put("db.statements", Collections.emptyList());
+    request.put("db.statements", singleton("INSERT INTO potato VALUES(?)"));
     request.put("db.operation.batch.size", 2L);
 
     Context context = Context.root();
@@ -340,8 +341,7 @@ class SqlClientAttributesExtractorTest {
     // given
     Map<String, Object> request = new HashMap<>();
     request.put("db.name", "potatoes");
-    request.put("db.statement", "INSERT INTO potato VALUES(?)");
-    request.put("db.statements", Collections.emptyList());
+    request.put("db.statements", singleton("INSERT INTO potato VALUES(?)"));
     request.put("db.operation.batch.size", 1L);
 
     Context context = Context.root();
