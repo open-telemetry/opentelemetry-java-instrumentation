@@ -49,17 +49,17 @@ public final class Experimental {
     }
   }
 
-  public static void setSetEmitExperimentalClientTelemetry(
+  public static void internalSetEmitExperimentalClientTelemetry(
       BiConsumer<ArmeriaClientTelemetryBuilder, Boolean> setEmitExperimentalClientTelemetry) {
     Experimental.setEmitExperimentalClientTelemetry = setEmitExperimentalClientTelemetry;
   }
 
-  public static void setSetEmitExperimentalServerTelemetry(
+  public static void internalSetEmitExperimentalServerTelemetry(
       BiConsumer<ArmeriaServerTelemetryBuilder, Boolean> setEmitExperimentalServerTelemetry) {
     Experimental.setEmitExperimentalServerTelemetry = setEmitExperimentalServerTelemetry;
   }
 
-  public static void setSetClientPeerService(
+  public static void internalSetClientPeerService(
       BiConsumer<ArmeriaClientTelemetryBuilder, String> setClientPeerService) {
     Experimental.setClientPeerService = setClientPeerService;
   }

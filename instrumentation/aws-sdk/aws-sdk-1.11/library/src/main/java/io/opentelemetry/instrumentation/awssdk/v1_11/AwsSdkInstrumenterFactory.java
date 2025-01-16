@@ -14,6 +14,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
@@ -27,6 +28,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -189,13 +191,12 @@ final class AwsSdkInstrumenterFactory {
   Instrumenter<Request<?>, Response<?>> dynamoDbInstrumenter() {
     DynamoDbAttributesExtractor dynamoDbAttributesExtractor = new DynamoDbAttributesExtractor();
 
-    return createInstrumenter(
-        openTelemetry,
-        spanName,
-        SpanKindExtractor.alwaysClient(),
-        attributesExtractors(),
-        singletonList(dynamoDbAttributesExtractor),
-        true);
+    return Instrumenter.<Request<?>, Response<?>>builder(
+            openTelemetry, INSTRUMENTATION_NAME, spanName)
+        .addAttributesExtractors(attributesExtractors())
+        .addAttributesExtractors(Collections.singletonList(dynamoDbAttributesExtractor))
+        .addOperationMetrics(DbClientMetrics.get())
+        .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   private static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> createInstrumenter(

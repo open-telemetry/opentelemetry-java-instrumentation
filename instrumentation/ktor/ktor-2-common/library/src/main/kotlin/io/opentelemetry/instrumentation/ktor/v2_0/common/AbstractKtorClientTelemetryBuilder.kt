@@ -29,9 +29,7 @@ abstract class AbstractKtorClientTelemetryBuilder(
   internal lateinit var openTelemetry: OpenTelemetry
   protected lateinit var builder: DefaultHttpClientInstrumenterBuilder<HttpRequestData, HttpResponse>
 
-  internal fun builder(): DefaultHttpClientInstrumenterBuilder<HttpRequestData, HttpResponse> {
-    return builder
-  }
+  internal fun builder(): DefaultHttpClientInstrumenterBuilder<HttpRequestData, HttpResponse> = builder
 
   fun setOpenTelemetry(openTelemetry: OpenTelemetry) {
     this.openTelemetry = openTelemetry
@@ -42,9 +40,7 @@ abstract class AbstractKtorClientTelemetryBuilder(
     )
   }
 
-  protected fun getOpenTelemetry(): OpenTelemetry {
-    return openTelemetry
-  }
+  protected fun getOpenTelemetry(): OpenTelemetry = openTelemetry
 
   fun capturedRequestHeaders(vararg headers: String) = capturedRequestHeaders(headers.asIterable())
 
@@ -98,9 +94,7 @@ abstract class AbstractKtorClientTelemetryBuilder(
       onEnd = block
     }
 
-    internal fun build(): Extractor {
-      return Extractor(onStart, onEnd)
-    }
+    internal fun build(): Extractor = Extractor(onStart, onEnd)
   }
 
   internal class Extractor(val onStart: OnStartData.() -> Unit, val onEnd: OnEndData.() -> Unit)

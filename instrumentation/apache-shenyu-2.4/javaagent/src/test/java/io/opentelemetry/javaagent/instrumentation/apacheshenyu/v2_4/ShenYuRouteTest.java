@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apacheshenyu.v2_4;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
@@ -73,7 +74,7 @@ class ShenYuRouteTest {
           InvocationTargetException,
           IllegalAccessException {
 
-    Class<?> metaDataCache = null;
+    Class<?> metaDataCache;
     try {
       metaDataCache = Class.forName("org.apache.shenyu.plugin.global.cache.MetaDataCache");
     } catch (ClassNotFoundException e) {
@@ -86,17 +87,18 @@ class ShenYuRouteTest {
 
     cacheMethod.invoke(
         cacheInst,
-        new MetaData(
-            "123",
-            "test-shenyu",
-            "/",
-            "/a/b/c",
-            "http",
-            "shenyu-service",
-            "hello",
-            "string",
-            "test-ext",
-            true));
+        MetaData.builder()
+            .id("123")
+            .appName("test-shenyu")
+            .contextPath("/")
+            .path("/a/b/c")
+            .rpcType("http")
+            .serviceName("shenyu-service")
+            .methodName("hello")
+            .parameterTypes("string")
+            .rpcExt("test-ext")
+            .enabled(true)
+            .build());
   }
 
   @Test
@@ -111,7 +113,7 @@ class ShenYuRouteTest {
                     span.hasName("GET /a/b/c")
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfying(
-                            equalTo(AttributeKey.stringKey("http.route"), "/a/b/c"),
+                            equalTo(HTTP_ROUTE, "/a/b/c"),
                             equalTo(META_ID_ATTRIBUTE, "123"),
                             equalTo(META_ENABLED_ATTRIBUTE, true),
                             equalTo(METHOD_NAME_ATTRIBUTE, "hello"),
