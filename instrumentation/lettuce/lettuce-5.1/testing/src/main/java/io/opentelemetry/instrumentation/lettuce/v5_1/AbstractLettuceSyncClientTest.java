@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -34,7 +35,6 @@ import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -143,7 +143,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
 
     List<AttributeKey<?>> expected =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 DB_SYSTEM, SERVER_ADDRESS, SERVER_PORT, NETWORK_PEER_ADDRESS, NETWORK_PEER_PORT));
     if (Boolean.getBoolean("testLatestDeps")) {
       expected.add(DB_NAMESPACE);
