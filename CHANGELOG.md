@@ -21,6 +21,14 @@
 
 - Implementing `ExtendedTextMapGetter` in grpc-1.6 instrumentation
   ([#13011](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13011))
+- Add database client metrics for dynamo db
+  ([#13033](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13033))
+- Propagate context into async http client CompletableFuture callbacks
+  ([#13041](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13041))
+- Exclude spring routing data source from Spring Starter instrumentation
+  ([#13054](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13054))
+- Instrument jdbc batch queries
+  ([#12797](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12797))
 
 ### 🛠️ Bug fixes
 
@@ -32,6 +40,8 @@
   ([#13005](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13005))
 - Fix compatibility problem of DubboHeadersGetter#keys in Dubbo 2.7.6 and 2.7.7
   ([#12982](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12982))
+- Fix appender install for async Logback appenders
+  ([#13047](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13047))
 
 ## Version 2.11.0 (2024-12-23)
 
