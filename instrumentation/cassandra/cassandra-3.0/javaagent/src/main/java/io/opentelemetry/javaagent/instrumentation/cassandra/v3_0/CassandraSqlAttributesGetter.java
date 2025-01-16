@@ -5,8 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
+import static java.util.Collections.singleton;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import java.util.Collection;
 import javax.annotation.Nullable;
 
 final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<CassandraRequest> {
@@ -37,8 +40,7 @@ final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<Ca
   }
 
   @Override
-  @Nullable
-  public String getRawQueryText(CassandraRequest request) {
-    return request.getQueryText();
+  public Collection<String> getRawQueryTexts(CassandraRequest request) {
+    return singleton(request.getQueryText());
   }
 }
