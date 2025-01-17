@@ -195,7 +195,7 @@ final class OpenTelemetryTracing implements Tracing {
     @Nullable private List<Object> events;
     @Nullable private Throwable error;
     @Nullable private Span span;
-    private long spanStartTime;
+    private long spanStartNanos;
     private final AttributesBuilder attributesBuilder = Attributes.builder().put(DB_SYSTEM, REDIS);
     @Nullable private List<String> argsList;
     @Nullable private String argsString;
@@ -252,7 +252,7 @@ final class OpenTelemetryTracing implements Tracing {
     @SuppressWarnings("UnusedMethod")
     public synchronized Tracer.Span start(RedisCommand<?, ?, ?> command) {
       start();
-      long startTime = System.nanoTime();
+      long startNanos = System.nanoTime();
 
       Span span = this.span;
       if (span == null) {
@@ -280,7 +280,7 @@ final class OpenTelemetryTracing implements Tracing {
                 }
               }
 
-              finish(span, startTime);
+              finish(span, startNanos);
             });
       }
 
@@ -292,7 +292,7 @@ final class OpenTelemetryTracing implements Tracing {
     @CanIgnoreReturnValue
     public synchronized Tracer.Span start() {
       span = spanBuilder.startSpan();
-      spanStartTime = System.nanoTime();
+      spanStartNanos = System.nanoTime();
       if (name != null) {
         span.updateName(name);
       }
@@ -371,7 +371,7 @@ final class OpenTelemetryTracing implements Tracing {
     @Override
     public synchronized void finish() {
       if (span != null) {
-        finish(span, spanStartTime);
+        finish(span, spanStartNanos);
       }
     }
 
