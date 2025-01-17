@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 2.12.0 (2025-01-17)
+
 ### Migration notes
 
 - Some Java agent instrumentation suppression keys have been renamed to match their module names:
