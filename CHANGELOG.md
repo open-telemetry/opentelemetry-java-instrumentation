@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+### Migration notes
+
+- `io.opentelemetry.instrumentation.api.incubator.semconv.util.SpanNames` has been deprecated,
+  replaced by the stable `io.opentelemetry.instrumentation.api.semconv.util.SpanNames`
+
 ## Version 2.12.0 (2025-01-17)
 
 ### Migration notes
