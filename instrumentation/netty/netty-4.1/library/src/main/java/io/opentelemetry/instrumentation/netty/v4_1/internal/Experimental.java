@@ -39,12 +39,12 @@ public final class Experimental {
     }
   }
 
-  public static void setSetEmitExperimentalClientTelemetry(
+  public static void internalSetEmitExperimentalClientTelemetry(
       BiConsumer<NettyClientTelemetryBuilder, Boolean> setEmitExperimentalClientTelemetry) {
     Experimental.setEmitExperimentalClientTelemetry = setEmitExperimentalClientTelemetry;
   }
 
-  public static void setSetEmitExperimentalServerTelemetry(
+  public static void internalSetEmitExperimentalServerTelemetry(
       BiConsumer<NettyServerTelemetryBuilder, Boolean> setEmitExperimentalServerTelemetry) {
     Experimental.setEmitExperimentalServerTelemetry = setEmitExperimentalServerTelemetry;
   }

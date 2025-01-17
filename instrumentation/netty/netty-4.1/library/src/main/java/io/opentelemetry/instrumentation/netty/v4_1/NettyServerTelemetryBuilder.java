@@ -28,7 +28,7 @@ public final class NettyServerTelemetryBuilder {
   static {
     NettyServerInstrumenterBuilderUtil.setBuilderExtractor(
         nettyServerTelemetryBuilder -> nettyServerTelemetryBuilder.builder);
-    Experimental.setSetEmitExperimentalServerTelemetry(
+    Experimental.internalSetEmitExperimentalServerTelemetry(
         (builder, emit) -> {
           builder.builder.setEmitExperimentalHttpServerMetrics(emit);
           builder.emitExperimentalHttpServerEvents = emit;

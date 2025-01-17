@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 2.12.0 (2025-01-17)
+
 ### Migration notes
 
 - Some Java agent instrumentation suppression keys have been renamed to match their module names:
@@ -16,6 +18,32 @@
   - `setKnownMethods(Set)` methods in `*TelemetryBuilder` classes were changed to
     `setKnownMethods(Collection)`
     ([#12902](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12902))
+
+### 📈 Enhancements
+
+- Support `ExtendedTextMapGetter` in gRPC instrumentation
+  ([#13011](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13011))
+- Add database client metrics in DynamoDB instrumentation
+  ([#13033](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13033))
+- Propagate context into async http client CompletableFuture callbacks
+  ([#13041](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13041))
+- Exclude spring routing data source from Spring Starter instrumentation
+  ([#13054](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13054))
+- Instrument jdbc batch queries
+  ([#12797](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12797))
+
+### 🛠️ Bug fixes
+
+- Fix incorrect dubbo trace caused by using rpcContext.isProviderSide()
+  ([#12930](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12930))
+- Fix ClickHouse query failing with syntax error
+  ([#13020](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13020))
+- Fix instrumentation module not loading silently when duplicate helper classnames are detected
+  ([#13005](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13005))
+- Fix compatibility problem due to DubboHeadersGetter#keys in Dubbo 2.7.6 and 2.7.7
+  ([#12982](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12982))
+- Fix appender install for async Logback appenders
+  ([#13047](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13047))
 
 ## Version 2.11.0 (2024-12-23)
 

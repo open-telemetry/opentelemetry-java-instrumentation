@@ -26,7 +26,7 @@ public final class ArmeriaServerTelemetryBuilder {
 
   static {
     ArmeriaInstrumenterBuilderUtil.setServerBuilderExtractor(builder -> builder.builder);
-    Experimental.setSetEmitExperimentalServerTelemetry(
+    Experimental.internalSetEmitExperimentalServerTelemetry(
         (builder, emit) -> builder.builder.setEmitExperimentalHttpServerMetrics(emit));
   }
 

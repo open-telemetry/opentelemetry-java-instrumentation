@@ -24,7 +24,7 @@ public final class RestletTelemetryBuilder {
   private final DefaultHttpServerInstrumenterBuilder<Request, Response> builder;
 
   static {
-    Experimental.setSetEmitExperimentalTelemetry(
+    Experimental.internalSetEmitExperimentalTelemetry(
         (builder, emit) -> builder.builder.setEmitExperimentalHttpServerMetrics(emit));
   }
 

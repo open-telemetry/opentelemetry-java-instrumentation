@@ -1,7 +1,7 @@
 plugins {
   `kotlin-dsl`
   // When updating, update below in dependencies too
-  id("com.diffplug.spotless") version "7.0.1"
+  id("com.diffplug.spotless") version "7.0.2"
 }
 
 spotless {
@@ -54,7 +54,7 @@ dependencies {
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
   // When updating, update above in plugins too
-  implementation("com.diffplug.spotless:spotless-plugin-gradle:7.0.1")
+  implementation("com.diffplug.spotless:spotless-plugin-gradle:7.0.2")
   implementation("com.google.guava:guava:33.4.0-jre")
   implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.18")
   implementation("com.gradleup.shadow:shadow-gradle-plugin:8.3.5")
@@ -68,7 +68,7 @@ dependencies {
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.2")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:4.1.0")
-  implementation("net.ltgt.gradle:gradle-nullaway-plugin:2.1.0")
+  implementation("net.ltgt.gradle:gradle-nullaway-plugin:2.2.0")
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.5")
 
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.11.4"))

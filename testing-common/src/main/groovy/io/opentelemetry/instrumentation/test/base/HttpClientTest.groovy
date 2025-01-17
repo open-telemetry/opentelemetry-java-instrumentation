@@ -256,9 +256,14 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     junitTest.redirectToSecuredCopiesAuthHeader()
   }
 
-  def "error span"() {
+  def "error span for #path"() {
     expect:
-    junitTest.errorSpan()
+    junitTest.errorSpan(path, statusCode)
+
+    where:
+    path            | statusCode
+    "/client-error" | 400
+    "/error"        | 500
   }
 
   def "reuse request"() {

@@ -93,7 +93,8 @@ class JavaagentTestArgumentsProvider(
     "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.internal.ServerImplBuilder=INFO",
     "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.internal.ManagedChannelImplBuilder=INFO",
     "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.perfmark.PerfMark=INFO",
-    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.Context=INFO"
+    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.Context=INFO",
+    "-Dotel.java.experimental.span-attributes.copy-from-baggage.include=test-baggage-key-1,test-baggage-key-2"
   )
 }
 
@@ -108,12 +109,22 @@ afterEvaluate {
     // this dependency.
     dependsOn(agentForTesting.buildDependencies)
 
-    jvmArgumentProviders.add(JavaagentTestArgumentsProvider(agentShadowJar, shadowJar.archiveFile.get().asFile))
+    jvmArgumentProviders.add(
+      JavaagentTestArgumentsProvider(
+        agentShadowJar,
+        shadowJar.archiveFile.get().asFile
+      )
+    )
 
     // We do fine-grained filtering of the classpath of this codebase's sources since Gradle's
     // configurations will include transitive dependencies as well, which tests do often need.
     classpath = classpath.filter {
-      if (file(layout.buildDirectory.dir("resources/main")).equals(it) || file(layout.buildDirectory.dir("classes/java/main")).equals(it)) {
+      if (file(layout.buildDirectory.dir("resources/main")).equals(it) || file(
+          layout.buildDirectory.dir(
+            "classes/java/main"
+          )
+        ).equals(it)
+      ) {
         // The sources are packaged into the testing jar, so we need to exclude them from the test
         // classpath, which automatically inherits them, to ensure our shaded versions are used.
         return@filter false
