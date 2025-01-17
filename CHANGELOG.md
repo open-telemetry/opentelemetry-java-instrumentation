@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Version 2.12.0 (2025-01-17)
 
 ### Migration notes
 
