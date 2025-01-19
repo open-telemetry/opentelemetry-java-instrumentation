@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.kafka.internal.KafkaClientBaseTest;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaClientPropagationBaseTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -22,19 +23,37 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @Test
-  void testKafkaProduceAndConsume() throws InterruptedException {
+  @ParameterizedTest
+  @ValueSource(strings = {"testSingleBaggage", "testMultiBaggage"})
+  void testKafkaProduceAndConsume(String testBaggageKind) throws InterruptedException {
     String greeting = "Hello Kafka!";
     testing.runWithSpan(
         "parent",
         () -> {
+          ProducerRecord<Integer, String> producerRecord =
+              new ProducerRecord<>(SHARED_TOPIC, 10, greeting);
+          producerRecord
+              .headers()
+              // adding baggage header in w3c baggage format
+              .add(
+                  "baggage",
+                  "test-baggage-key-1=test-baggage-value-1".getBytes(StandardCharsets.UTF_8));
+          if (testBaggageKind.equals("testMultiBaggage")) {
+            producerRecord
+                .headers()
+                .add(
+                    "baggage",
+                    "test-baggage-key-2=test-baggage-value-2".getBytes(StandardCharsets.UTF_8));
+          }
           producer.send(
-              new ProducerRecord<>(SHARED_TOPIC, 10, greeting),
+              producerRecord,
               (meta, ex) -> {
                 if (ex == null) {
                   testing.runWithSpan("producer callback", () -> {});
@@ -70,7 +89,8 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(processAttributes("10", greeting, false)),
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes("10", greeting, false, testBaggageKind)),
                 span ->
                     span.hasName("processing")
                         .hasKind(SpanKind.INTERNAL)

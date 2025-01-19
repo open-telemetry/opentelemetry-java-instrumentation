@@ -30,7 +30,7 @@ class InterceptorsTest extends AbstractInterceptorsTest {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
-  void assertTraces() {
+  void assertTraces(String unused) {
     AtomicReference<SpanContext> producerSpanContext = new AtomicReference<>();
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName("parent", SHARED_TOPIC + " receive", "producer callback"),

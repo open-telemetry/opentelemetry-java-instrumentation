@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaClientBaseTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -17,8 +18,9 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
 
@@ -43,13 +45,29 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
     return props;
   }
 
-  @Test
-  void testInterceptors() throws InterruptedException {
+  @ParameterizedTest
+  @ValueSource(strings = {"testSingleBaggage", "testMultiBaggage"})
+  void testInterceptors(String testBaggageKind) throws InterruptedException {
     testing.runWithSpan(
         "parent",
         () -> {
+          ProducerRecord<Integer, String> producerRecord =
+              new ProducerRecord<>(SHARED_TOPIC, greeting);
+          producerRecord
+              .headers()
+              // adding baggage header in w3c baggage format
+              .add(
+                  "baggage",
+                  "test-baggage-key-1=test-baggage-value-1".getBytes(StandardCharsets.UTF_8));
+          if (testBaggageKind.equals("testMultiBaggage")) {
+            producerRecord
+                .headers()
+                .add(
+                    "baggage",
+                    "test-baggage-key-2=test-baggage-value-2".getBytes(StandardCharsets.UTF_8));
+          }
           producer.send(
-              new ProducerRecord<>(SHARED_TOPIC, greeting),
+              producerRecord,
               (meta, ex) -> {
                 if (ex == null) {
                   testing.runWithSpan("producer callback", () -> {});
@@ -69,8 +87,8 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
       testing.runWithSpan("process child", () -> {});
     }
 
-    assertTraces();
+    assertTraces(testBaggageKind);
   }
 
-  abstract void assertTraces();
+  abstract void assertTraces(String testBaggageKind);
 }

@@ -251,4 +251,26 @@ public abstract class KafkaClientBaseTest {
     }
     return assertions;
   }
+
+  protected static List<AttributeAssertion> processAttributes(
+      String messageKey, String messageValue, boolean testHeaders, String testBaggageKind) {
+    List<AttributeAssertion> attributeAssertions =
+        processAttributes(messageKey, messageValue, testHeaders);
+    attributeAssertions.addAll(processAttributes(testBaggageKind));
+    return attributeAssertions;
+  }
+
+  protected static List<AttributeAssertion> processAttributes(String testBaggageKind) {
+    switch (testBaggageKind) {
+      case "testSingleBaggage":
+        return Collections.singletonList(
+            equalTo(AttributeKey.stringKey("test-baggage-key-1"), "test-baggage-value-1"));
+      case "testMultiBaggage":
+        return Arrays.asList(
+            equalTo(AttributeKey.stringKey("test-baggage-key-1"), "test-baggage-value-1"),
+            equalTo(AttributeKey.stringKey("test-baggage-key-2"), "test-baggage-value-2"));
+      default:
+        throw new IllegalArgumentException("Unknown testBaggageKind: " + testBaggageKind);
+    }
+  }
 }
