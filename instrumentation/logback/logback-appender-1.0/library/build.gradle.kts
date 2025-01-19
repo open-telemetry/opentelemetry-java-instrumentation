@@ -100,6 +100,30 @@ testing {
         }
       }
     }
+
+    val asyncAppenderTest by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
+        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+        implementation(project(":testing-common"))
+
+        if (latestDepTest) {
+          implementation("ch.qos.logback:logback-classic:+")
+        } else {
+          implementation("ch.qos.logback:logback-classic") {
+            version {
+              // first version that has ch.qos.logback.classic.AsyncAppender
+              strictly("1.0.4")
+            }
+          }
+          implementation("org.slf4j:slf4j-api") {
+            version {
+              strictly("1.6.4")
+            }
+          }
+        }
+      }
+    }
   }
 }
 
