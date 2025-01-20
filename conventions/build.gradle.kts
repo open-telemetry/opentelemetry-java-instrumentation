@@ -35,7 +35,6 @@ spotless {
 
 repositories {
   mavenCentral()
-  mavenLocal()
   gradlePluginPortal()
 }
 

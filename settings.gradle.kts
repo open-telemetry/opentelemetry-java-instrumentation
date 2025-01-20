@@ -10,11 +10,6 @@ pluginManagement {
     // See https://github.com/graalvm/native-build-tools/issues/626
     id("org.graalvm.buildtools.native") version "0.10.4"
   }
-  repositories {
-    mavenLocal()
-    mavenCentral()
-    gradlePluginPortal()
-  }
 }
 
 plugins {

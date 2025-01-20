@@ -62,7 +62,7 @@ val CORE_DEPENDENCIES = listOf(
   "net.bytebuddy:byte-buddy:${byteBuddyVersion}",
   "net.bytebuddy:byte-buddy-dep:${byteBuddyVersion}",
   "net.bytebuddy:byte-buddy-agent:${byteBuddyVersion}",
-  "net.bytebuddy:byte-buddy-gradle-plugin:1.15.11",
+  "net.bytebuddy:byte-buddy-gradle-plugin:${byteBuddyVersion}",
   "org.ow2.asm:asm:${asmVersion}",
   "org.ow2.asm:asm-tree:${asmVersion}",
   "org.ow2.asm:asm-util:${asmVersion}",

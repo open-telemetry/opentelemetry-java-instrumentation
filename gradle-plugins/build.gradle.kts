@@ -16,7 +16,6 @@ group = "io.opentelemetry.instrumentation"
 apply(from = "../version.gradle.kts")
 
 repositories {
-  mavenLocal()
   mavenCentral()
   gradlePluginPortal()
 }
