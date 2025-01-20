@@ -20,8 +20,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.annotation.AnnotationDescription;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.utility.JavaConstant;
 
 /**
@@ -229,17 +227,8 @@ public class IndyBootstrap {
             Arrays.asList(
                 JavaConstant.Simple.ofLoaded(BOOTSTRAP_KIND_ADVICE),
                 JavaConstant.Simple.ofLoaded(moduleName),
-                JavaConstant.Simple.ofLoaded(getOriginalSignature(adviceMethod)),
+                JavaConstant.Simple.ofLoaded(adviceMethod.getDescriptor()),
                 JavaConstant.Simple.ofLoaded(adviceMethod.getDeclaringType().getName()));
-  }
-
-  private static String getOriginalSignature(MethodDescription.InDefinedShape adviceMethod) {
-    for (AnnotationDescription an : adviceMethod.getDeclaredAnnotations()) {
-      if (OriginalDescriptor.class.getName().equals(an.getAnnotationType().getName())) {
-        return (String) an.getValue("value").resolve();
-      }
-    }
-    throw new IllegalStateException("OriginalSignature annotation is not present!");
   }
 
   private static ConstantCallSite bootstrapProxyMethod(
