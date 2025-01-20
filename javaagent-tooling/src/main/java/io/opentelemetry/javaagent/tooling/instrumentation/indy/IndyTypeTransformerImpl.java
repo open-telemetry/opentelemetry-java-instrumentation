@@ -20,8 +20,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 public final class IndyTypeTransformerImpl implements TypeTransformer {
 
-  private static final TypeDescription.Generic OBJECT_TYPE = TypeDescription.ForLoadedType.of(Object.class).asGenericType();
-
   // path (with trailing slash) to dump transformed advice class to
   private static final String DUMP_PATH = null;
   private final Advice.WithCustomMapping adviceMapping;
@@ -40,48 +38,7 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
             .bootstrap(
                 IndyBootstrap.getIndyBootstrapMethod(),
                 IndyBootstrap.getAdviceBootstrapArguments(instrumentationModule),
-                new TypeDescription.Generic.Visitor<TypeDescription.Generic>() {
-                  @Override
-                  public TypeDescription.Generic onGenericArray(TypeDescription.Generic generic) {
-                    return reduceErasedType(generic.asErasure());
-                  }
-
-                  @Override
-                  public TypeDescription.Generic onWildcard(TypeDescription.Generic generic) {
-                    return reduceErasedType(generic.asErasure());
-                  }
-
-                  @Override
-                  public TypeDescription.Generic onParameterizedType(TypeDescription.Generic generic) {
-                    return reduceErasedType(generic.asErasure());
-                  }
-
-                  @Override
-                  public TypeDescription.Generic onTypeVariable(TypeDescription.Generic generic) {
-                    return reduceErasedType(generic.asErasure());
-                  }
-
-                  @Override
-                  public TypeDescription.Generic onNonGenericType(TypeDescription.Generic generic) {
-                    return reduceErasedType(generic.asErasure());
-                  }
-
-                  private TypeDescription.Generic reduceErasedType(TypeDescription erased) {
-                    if (erased.isPrimitive()) {
-                      return erased.asGenericType();
-                    }
-                    if (erased.isArray()) {
-                      return TypeDescription.Generic.Builder.of(reduceErasedType(erased.getComponentType()))
-                          .asArray()
-                          .build();
-                    }
-                    if (!erased.getName().startsWith("java.")) {
-                      return OBJECT_TYPE;
-                    }
-                    return erased.asGenericType();
-                  }
-                }
-            );
+                TypeDescription.Generic.Visitor.Generalizing.INSTANCE);
   }
 
   @Override

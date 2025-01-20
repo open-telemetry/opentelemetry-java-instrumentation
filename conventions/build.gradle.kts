@@ -65,7 +65,7 @@ dependencies {
   implementation("ru.vyarus:gradle-animalsniffer-plugin:1.7.2")
   implementation("org.spdx:spdx-gradle-plugin:0.8.0")
   // When updating, also update dependencyManagement/build.gradle.kts
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.15.12-SNAPSHOT")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.16.1")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.2")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:4.1.0")
