@@ -8,8 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.akkaactor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -46,8 +44,7 @@ public class AkkaScheduleInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void enterSchedule(
         @Advice.Argument(value = 2, readOnly = false) Runnable runnable) {
-      Context context = Java8BytecodeBridge.currentContext();
-      runnable = context.wrap(runnable);
+      runnable = AkkaSchedulerTaskWrapper.wrap(runnable);
     }
   }
 
@@ -57,8 +54,7 @@ public class AkkaScheduleInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void enterScheduleOnce(
         @Advice.Argument(value = 1, readOnly = false) Runnable runnable) {
-      Context context = Java8BytecodeBridge.currentContext();
-      runnable = context.wrap(runnable);
+      runnable = AkkaSchedulerTaskWrapper.wrap(runnable);
     }
   }
 }
