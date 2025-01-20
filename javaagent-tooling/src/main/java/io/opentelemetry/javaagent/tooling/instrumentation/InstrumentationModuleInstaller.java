@@ -17,6 +17,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import io.opentelemetry.javaagent.tooling.HelperClassDefinition;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
+import io.opentelemetry.javaagent.tooling.ModuleOpener;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
@@ -36,11 +37,13 @@ import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.description.annotation.AnnotationSource;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.utility.JavaModule;
 
 public final class InstrumentationModuleInstaller {
 
@@ -202,13 +205,32 @@ public final class InstrumentationModuleInstaller {
     VirtualFieldImplementationInstaller contextProvider =
         virtualFieldInstallerFactory.create(instrumentationModule);
 
+    AtomicBoolean openerRun = new AtomicBoolean();
     AgentBuilder agentBuilder = parentAgentBuilder;
     for (TypeInstrumentation typeInstrumentation : typeInstrumentations) {
-
       AgentBuilder.Identified.Extendable extendableAgentBuilder =
           setTypeMatcher(agentBuilder, instrumentationModule, typeInstrumentation)
               .and(muzzleMatcher)
               .transform(ConstantAdjuster.instance())
+              .transform(
+                  (builder, typeDescription, classLoader, module, protectionDomain) -> {
+                    if (JavaModule.isSupported()
+                        && instrumentationModule instanceof ExperimentalInstrumentationModule
+                        && !openerRun.get()) {
+                      ExperimentalInstrumentationModule experimentalModule =
+                          (ExperimentalInstrumentationModule) instrumentationModule;
+                      experimentalModule
+                          .jpmsModulesToOpen()
+                          .forEach(
+                              (javaModule, packages) -> {
+                                ModuleOpener.open(
+                                    instrumentation, javaModule, classLoader, packages);
+                              });
+                      openerRun.set(true);
+                    }
+
+                    return builder;
+                  })
               .transform(helperInjector);
       extendableAgentBuilder = contextProvider.injectHelperClasses(extendableAgentBuilder);
       extendableAgentBuilder = contextProvider.rewriteVirtualFieldsCalls(extendableAgentBuilder);

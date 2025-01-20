@@ -111,6 +111,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   @ParameterizedTest
   @ValueSource(strings = {"/success", "/success?with=params"})
   void successfulGetRequest(String path) throws Exception {
+    assumeTrue(options.getHasSendRequest());
+
     URI uri = resolveAddress(path);
     String method = "GET";
     int responseCode = doRequest(method, uri);
@@ -130,6 +132,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   @Test
   void requestWithNonStandardHttpMethod() throws Exception {
     assumeTrue(options.getTestNonStandardHttpMethod());
+    assumeTrue(options.getHasSendRequest());
 
     URI uri = resolveAddress("/success");
     String method = "TEST";
@@ -150,6 +153,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   @ParameterizedTest
   @ValueSource(strings = {"PUT", "POST"})
   void successfulRequestWithParent(String method) throws Exception {
+    assumeTrue(options.getHasSendRequest());
+
     URI uri = resolveAddress("/success");
     int responseCode = testing.runWithSpan("parent", () -> doRequest(method, uri));
 
@@ -168,6 +173,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
   @Test
   void successfulRequestWithNotSampledParent() throws Exception {
+    assumeTrue(options.getHasSendRequest());
+
     String method = "GET";
     URI uri = resolveAddress("/success");
     int responseCode = testing.runWithNonRecordingSpan(() -> doRequest(method, uri));
@@ -185,6 +192,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   void shouldSuppressNestedClientSpanIfAlreadyUnderParentClientSpan(String method)
       throws Exception {
     assumeTrue(options.getTestWithClientParent());
+    assumeTrue(options.getHasSendRequest());
 
     URI uri = resolveAddress("/success");
     int responseCode =
@@ -441,6 +449,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   @ParameterizedTest
   @CsvSource({"/error,500", "/client-error,400"})
   void errorSpan(String path, int responseCode) {
+    assumeTrue(options.getHasSendRequest());
+
     String method = "GET";
     URI uri = resolveAddress(path);
 
@@ -468,6 +478,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   @Test
   void reuseRequest() throws Exception {
     assumeTrue(options.getTestReusedRequest());
+    assumeTrue(options.getHasSendRequest());
 
     String method = "GET";
     URI uri = resolveAddress("/success");
@@ -497,6 +508,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   //   and the trace is not broken)
   @Test
   void requestWithExistingTracingHeaders() throws Exception {
+    assumeTrue(options.getHasSendRequest());
+
     String method = "GET";
     URI uri = resolveAddress("/success");
 
@@ -515,6 +528,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   @Test
   void captureHttpHeaders() throws Exception {
     assumeTrue(options.getTestCaptureHttpHeaders());
+    assumeTrue(options.getHasSendRequest());
+
     URI uri = resolveAddress("/success");
     String method = "GET";
     int responseCode =
@@ -544,6 +559,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   @Test
   void connectionErrorUnopenedPort() {
     assumeTrue(options.getTestConnectionFailure());
+    assumeTrue(options.getHasSendRequest());
 
     String method = "GET";
     URI uri = URI.create("http://localhost:" + PortUtils.UNUSABLE_PORT + '/');
@@ -615,6 +631,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   @Test
   void connectionErrorNonRoutableAddress() {
     assumeTrue(options.getTestRemoteConnection());
+    assumeTrue(options.getHasSendRequest());
 
     String method = "HEAD";
     URI uri = URI.create(options.getTestHttps() ? "https://192.0.2.1/" : "http://192.0.2.1/");
@@ -648,6 +665,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   @Test
   void readTimedOut() {
     assumeTrue(options.getTestReadTimeout());
+    assumeTrue(options.getHasSendRequest());
 
     String method = "GET";
     URI uri = resolveAddress("/read-timeout");
@@ -687,6 +705,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   void httpsRequest() throws Exception {
     assumeTrue(options.getTestRemoteConnection());
     assumeTrue(options.getTestHttps());
+    assumeTrue(options.getHasSendRequest());
 
     String method = "GET";
     URI uri = URI.create("https://localhost:" + server.httpsPort() + "/success");
@@ -705,6 +724,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
   @Test
   void httpClientMetrics() throws Exception {
+    assumeTrue(options.getHasSendRequest());
+
     URI uri = resolveAddress("/success");
     String method = "GET";
     int responseCode = doRequest(method, uri);
@@ -743,6 +764,8 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
    */
   @Test
   void highConcurrency() {
+    assumeTrue(options.getHasSendRequest());
+
     int count = 50;
     String method = "GET";
     URI uri = resolveAddress("/success");
@@ -968,6 +991,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
   @Test
   void spanEndsAfterBodyReceived() throws Exception {
     assumeTrue(options.isSpanEndsAfterBody());
+    assumeTrue(options.getHasSendRequest());
 
     String method = "GET";
     URI uri = resolveAddress("/long-request");

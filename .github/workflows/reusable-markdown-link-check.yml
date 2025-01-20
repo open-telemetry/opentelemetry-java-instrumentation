@@ -14,8 +14,6 @@ jobs:
 
       - uses: lycheeverse/lychee-action@v2
         with:
-          # remove version after next release of lychee-action
-          lycheeVersion: latest
           # excluding links to pull requests and issues is done for performance
           args: >
             --include-fragments
