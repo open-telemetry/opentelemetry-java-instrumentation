@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.ratpack.v1_7.internal;
 
-import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
+import java.util.Collections;
+import java.util.Iterator;
 import javax.annotation.Nullable;
 import ratpack.http.Request;
 
@@ -13,7 +15,7 @@ import ratpack.http.Request;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-enum RatpackGetter implements TextMapGetter<Request> {
+enum RatpackGetter implements ExtendedTextMapGetter<Request> {
   INSTANCE;
 
   @Override
@@ -28,5 +30,13 @@ enum RatpackGetter implements TextMapGetter<Request> {
       return null;
     }
     return request.getHeaders().get(key);
+  }
+
+  @Override
+  public Iterator<String> getAll(@Nullable Request request, String key) {
+    if (request == null) {
+      return Collections.emptyIterator();
+    }
+    return request.getHeaders().getAll(key).iterator();
   }
 }

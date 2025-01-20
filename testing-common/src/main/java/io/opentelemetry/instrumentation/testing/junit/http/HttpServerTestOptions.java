@@ -64,7 +64,6 @@ public final class HttpServerTestOptions {
   boolean testNonStandardHttpMethod = true;
   boolean verifyServerSpanEndTime = true;
   boolean useHttp2 = false;
-  boolean testExtractMultiBaggage = false;
 
   HttpServerTestOptions() {}
 
@@ -229,12 +228,6 @@ public final class HttpServerTestOptions {
   @CanIgnoreReturnValue
   public HttpServerTestOptions useHttp2() {
     return setUseHttp2(true);
-  }
-
-  @CanIgnoreReturnValue
-  public HttpServerTestOptions setTestExtractMultiBaggage(boolean testExtractMultiBaggage) {
-    this.testExtractMultiBaggage = testExtractMultiBaggage;
-    return this;
   }
 
   @FunctionalInterface
