@@ -23,16 +23,13 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @ParameterizedTest
-  @ValueSource(strings = {"testSingleBaggage", "testMultiBaggage"})
-  void testKafkaProduceAndConsume(String testBaggageKind) throws InterruptedException {
+  @Test
+  void testKafkaProduceAndConsume() throws InterruptedException {
     String greeting = "Hello Kafka!";
     testing.runWithSpan(
         "parent",
@@ -44,14 +41,10 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
               // adding baggage header in w3c baggage format
               .add(
                   "baggage",
-                  "test-baggage-key-1=test-baggage-value-1".getBytes(StandardCharsets.UTF_8));
-          if (testBaggageKind.equals("testMultiBaggage")) {
-            producerRecord
-                .headers()
-                .add(
-                    "baggage",
-                    "test-baggage-key-2=test-baggage-value-2".getBytes(StandardCharsets.UTF_8));
-          }
+                  "test-baggage-key-1=test-baggage-value-1".getBytes(StandardCharsets.UTF_8))
+              .add(
+                  "baggage",
+                  "test-baggage-key-2=test-baggage-value-2".getBytes(StandardCharsets.UTF_8));
           producer.send(
               producerRecord,
               (meta, ex) -> {
@@ -90,7 +83,7 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            processAttributes("10", greeting, false, testBaggageKind)),
+                            processAttributes("10", greeting, false, true)),
                 span ->
                     span.hasName("processing")
                         .hasKind(SpanKind.INTERNAL)
@@ -128,7 +121,8 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(processAttributes(null, null, false))));
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(null, null, false, false))));
   }
 
   @Test
@@ -166,6 +160,7 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(processAttributes(null, greeting, false))));
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(null, greeting, false, false))));
   }
 }

@@ -14,13 +14,10 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static java.util.Arrays.asList;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 
@@ -28,7 +25,7 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
-  void assertTraces(String testBaggageKind) {
+  void assertTraces() {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -44,32 +41,32 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
                             satisfies(
                                 MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("producer"))),
-                span -> {
-                  List<AttributeAssertion> assertions =
-                      new ArrayList<>(
-                          asList(
-                              equalTo(MESSAGING_SYSTEM, "kafka"),
-                              equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                              equalTo(MESSAGING_OPERATION, "process"),
-                              equalTo(
-                                  MESSAGING_MESSAGE_BODY_SIZE,
-                                  greeting.getBytes(StandardCharsets.UTF_8).length),
-                              satisfies(
-                                  MESSAGING_DESTINATION_PARTITION_ID,
-                                  AbstractStringAssert::isNotEmpty),
-                              satisfies(
-                                  MESSAGING_KAFKA_MESSAGE_OFFSET,
-                                  AbstractLongAssert::isNotNegative),
-                              equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
-                              satisfies(
-                                  MESSAGING_CLIENT_ID,
-                                  stringAssert -> stringAssert.startsWith("consumer"))));
-                  assertions.addAll(processAttributes(testBaggageKind));
-                  span.hasName(SHARED_TOPIC + " process")
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasParent(trace.getSpan(1))
-                      .hasAttributesSatisfyingExactly(assertions);
-                },
+                span ->
+                    span.hasName(SHARED_TOPIC + " process")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "kafka"),
+                            equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                            equalTo(MESSAGING_OPERATION, "process"),
+                            equalTo(
+                                MESSAGING_MESSAGE_BODY_SIZE,
+                                greeting.getBytes(StandardCharsets.UTF_8).length),
+                            satisfies(
+                                MESSAGING_DESTINATION_PARTITION_ID,
+                                AbstractStringAssert::isNotEmpty),
+                            satisfies(
+                                MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
+                            equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
+                            satisfies(
+                                MESSAGING_CLIENT_ID,
+                                stringAssert -> stringAssert.startsWith("consumer")),
+                            equalTo(
+                                AttributeKey.stringKey("test-baggage-key-1"),
+                                "test-baggage-value-1"),
+                            equalTo(
+                                AttributeKey.stringKey("test-baggage-key-2"),
+                                "test-baggage-value-2")),
                 span ->
                     span.hasName("process child")
                         .hasKind(SpanKind.INTERNAL)

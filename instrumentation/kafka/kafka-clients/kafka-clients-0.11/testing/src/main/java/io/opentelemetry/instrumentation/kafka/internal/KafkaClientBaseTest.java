@@ -216,7 +216,7 @@ public abstract class KafkaClientBaseTest {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> processAttributes(
-      String messageKey, String messageValue, boolean testHeaders) {
+      String messageKey, String messageValue, boolean testHeaders, boolean testMultiBaggage) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
@@ -249,28 +249,11 @@ public abstract class KafkaClientBaseTest {
               AttributeKey.stringArrayKey("messaging.header.test_message_header"),
               Collections.singletonList("test")));
     }
-    return assertions;
-  }
 
-  protected static List<AttributeAssertion> processAttributes(
-      String messageKey, String messageValue, boolean testHeaders, String testBaggageKind) {
-    List<AttributeAssertion> attributeAssertions =
-        processAttributes(messageKey, messageValue, testHeaders);
-    attributeAssertions.addAll(processAttributes(testBaggageKind));
-    return attributeAssertions;
-  }
-
-  protected static List<AttributeAssertion> processAttributes(String testBaggageKind) {
-    switch (testBaggageKind) {
-      case "testSingleBaggage":
-        return Collections.singletonList(
-            equalTo(AttributeKey.stringKey("test-baggage-key-1"), "test-baggage-value-1"));
-      case "testMultiBaggage":
-        return Arrays.asList(
-            equalTo(AttributeKey.stringKey("test-baggage-key-1"), "test-baggage-value-1"),
-            equalTo(AttributeKey.stringKey("test-baggage-key-2"), "test-baggage-value-2"));
-      default:
-        throw new IllegalArgumentException("Unknown testBaggageKind: " + testBaggageKind);
+    if (testMultiBaggage) {
+      assertions.add(equalTo(AttributeKey.stringKey("test-baggage-key-1"), "test-baggage-value-1"));
+      assertions.add(equalTo(AttributeKey.stringKey("test-baggage-key-2"), "test-baggage-value-2"));
     }
+    return assertions;
   }
 }
