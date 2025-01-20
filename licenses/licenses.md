@@ -147,19 +147,19 @@
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**33** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-aws-resources` **Version:** `1.42.0-alpha`
+**33** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-aws-resources` **Version:** `1.43.0-alpha`
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java-contrib](https://github.com/open-telemetry/opentelemetry-java-contrib)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**34** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-aws-xray-propagator` **Version:** `1.42.0-alpha`
+**34** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-aws-xray-propagator` **Version:** `1.43.0-alpha`
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java-contrib](https://github.com/open-telemetry/opentelemetry-java-contrib)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**35** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-baggage-processor` **Version:** `1.42.0-alpha`
+**35** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-baggage-processor` **Version:** `1.43.0-alpha`
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java-contrib](https://github.com/open-telemetry/opentelemetry-java-contrib)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**36** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-gcp-resources` **Version:** `1.42.0-alpha`
+**36** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-gcp-resources` **Version:** `1.43.0-alpha`
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java-contrib](https://github.com/open-telemetry/opentelemetry-java-contrib)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
@@ -269,7 +269,7 @@
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **POM License**: The 3-Clause BSD License - [https://opensource.org/licenses/BSD-3-Clause](https://opensource.org/licenses/BSD-3-Clause)
 
-**58** **Group:** `org.snakeyaml` **Name:** `snakeyaml-engine` **Version:** `2.8`
+**58** **Group:** `org.snakeyaml` **Name:** `snakeyaml-engine` **Version:** `2.9`
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM Project URL**: [https://bitbucket.org/snakeyaml/snakeyaml-engine](https://bitbucket.org/snakeyaml/snakeyaml-engine)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+  <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>
+        %d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n
+      </pattern>
+    </encoder>
+  </appender>
+  <appender name="OpenTelemetry"
+    class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
+  </appender>
+
+  <appender name="AsyncAppender" class="ch.qos.logback.classic.AsyncAppender">
+    <appender-ref ref="OpenTelemetry" />
+  </appender>
+
+  <root level="INFO">
+    <appender-ref ref="console"/>
+    <appender-ref ref="AsyncAppender"/>
+  </root>
+
+</configuration>

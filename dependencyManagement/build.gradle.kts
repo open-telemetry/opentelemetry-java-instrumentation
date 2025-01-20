@@ -9,7 +9,7 @@ rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.46.0"
-val otelContribVersion = "1.42.0-alpha"
+val otelContribVersion = "1.43.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -105,7 +105,7 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-baggage-processor:${otelContribVersion}",
   "io.opentelemetry.proto:opentelemetry-proto:1.5.0-alpha",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
-  "org.assertj:assertj-core:3.27.2",
+  "org.assertj:assertj-core:3.27.3",
   "org.awaitility:awaitility:4.2.2",
   "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",
@@ -115,7 +115,7 @@ val DEPENDENCIES = listOf(
   "org.junit-pioneer:junit-pioneer:1.9.1",
   "org.objenesis:objenesis:3.4",
   "javax.validation:validation-api:2.0.1.Final",
-  "org.snakeyaml:snakeyaml-engine:2.8",
+  "org.snakeyaml:snakeyaml-engine:2.9",
   "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.11"
 )
 

@@ -5,8 +5,11 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.instrumentation.lettuce.v5_1.LettuceTelemetry.INSTRUMENTATION_NAME;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 
 /** A builder of {@link LettuceTelemetry}. */
 public final class LettuceTelemetryBuilder {
@@ -36,6 +39,9 @@ public final class LettuceTelemetryBuilder {
    * LettuceTelemetryBuilder}.
    */
   public LettuceTelemetry build() {
-    return new LettuceTelemetry(openTelemetry, statementSanitizationEnabled);
+    return new LettuceTelemetry(
+        openTelemetry,
+        statementSanitizationEnabled,
+        DbClientMetrics.get().create(openTelemetry.getMeterProvider().get(INSTRUMENTATION_NAME)));
   }
 }

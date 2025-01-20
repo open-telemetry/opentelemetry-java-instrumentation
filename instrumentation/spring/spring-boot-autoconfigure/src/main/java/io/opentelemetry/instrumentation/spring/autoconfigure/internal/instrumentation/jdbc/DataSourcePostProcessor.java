@@ -18,6 +18,8 @@ import org.springframework.core.Ordered;
 
 final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
 
+  private static final Class<?> ROUTING_DATA_SOURCE_CLASS = getRoutingDataSourceClass();
+
   private final ObjectProvider<OpenTelemetry> openTelemetryProvider;
   private final ObjectProvider<ConfigProperties> configPropertiesProvider;
 
@@ -28,11 +30,25 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
     this.configPropertiesProvider = configPropertiesProvider;
   }
 
+  private static Class<?> getRoutingDataSourceClass() {
+    try {
+      return Class.forName("org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource");
+    } catch (ClassNotFoundException exception) {
+      return null;
+    }
+  }
+
+  private static boolean isRoutingDatasource(Object bean) {
+    return ROUTING_DATA_SOURCE_CLASS != null && ROUTING_DATA_SOURCE_CLASS.isInstance(bean);
+  }
+
   @CanIgnoreReturnValue
   @Override
   public Object postProcessAfterInitialization(Object bean, String beanName) {
     // Exclude scoped proxy beans to avoid double wrapping
-    if (bean instanceof DataSource && !ScopedProxyUtils.isScopedTarget(beanName)) {
+    if (bean instanceof DataSource
+        && !isRoutingDatasource(bean)
+        && !ScopedProxyUtils.isScopedTarget(beanName)) {
       DataSource dataSource = (DataSource) bean;
       return JdbcTelemetry.builder(openTelemetryProvider.getObject())
           .setStatementSanitizationEnabled(

@@ -34,3 +34,13 @@ if (!(findProperty("testLatestDeps") as Boolean)) {
     }
   }
 }
+
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
+}
