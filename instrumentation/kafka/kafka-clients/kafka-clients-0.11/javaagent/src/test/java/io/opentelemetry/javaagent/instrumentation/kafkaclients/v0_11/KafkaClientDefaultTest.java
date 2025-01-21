@@ -108,7 +108,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            processAttributes("10", greeting, testHeaders)),
+                            processAttributes("10", greeting, testHeaders, false)),
                 span -> span.hasName("processing").hasParent(trace.getSpan(1))));
   }
 
@@ -152,7 +152,8 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(processAttributes(null, null, false))));
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(null, null, false, false))));
   }
 
   @DisplayName("test records(TopicPartition) kafka consume")
@@ -203,6 +204,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(processAttributes(null, greeting, false))));
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(null, greeting, false, false))));
   }
 }
