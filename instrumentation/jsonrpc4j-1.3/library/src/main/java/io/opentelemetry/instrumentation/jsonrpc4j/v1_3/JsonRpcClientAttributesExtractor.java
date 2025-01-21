@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jsonrpc4j.v1_3;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -14,10 +15,14 @@ import javax.annotation.Nullable;
 final class JsonRpcClientAttributesExtractor
     implements AttributesExtractor<JsonRpcClientRequest, JsonRpcClientResponse> {
 
+  // copied from RpcIncubatingAttributes
+  private static final AttributeKey<String> RPC_JSONRPC_VERSION =
+      AttributeKey.stringKey("rpc.jsonrpc.version");
+
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, JsonRpcClientRequest jsonRpcRequest) {
-    attributes.put("rpc.jsonrpc.version", "2.0");
+    attributes.put(RPC_JSONRPC_VERSION, "2.0");
   }
 
   @Override

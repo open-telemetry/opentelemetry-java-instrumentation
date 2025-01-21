@@ -39,8 +39,4 @@ public final class JsonRpcTelemetry {
   public Instrumenter<JsonRpcClientRequest, JsonRpcClientResponse> getClientInstrumenter() {
     return clientInstrumenter;
   }
-
-  public ContextPropagators getPropagators() {
-    return propagators;
-  }
 }

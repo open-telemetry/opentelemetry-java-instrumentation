@@ -9,16 +9,15 @@ import com.googlecode.jsonrpc4j.AnnotationsErrorResolver;
 import com.googlecode.jsonrpc4j.JsonRpcServer;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.Random;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 
-@SuppressWarnings("WeakerAccess")
 public class JettyServer implements AutoCloseable {
 
   public static final String DEFAULT_LOCAL_HOSTNAME = "127.0.0.1";
@@ -40,14 +39,14 @@ public class JettyServer implements AutoCloseable {
   }
 
   public void startup() throws Exception {
-    port = 10000 + new Random().nextInt(30000);
-    jetty = new Server(port);
+    jetty = new Server(0);
     ServletContextHandler context = new ServletContextHandler(ServletContextHandler.NO_SESSIONS);
     context.setContextPath("/");
     jetty.setHandler(context);
     ServletHolder servlet = context.addServlet(JsonRpcTestServlet.class, "/" + SERVLET);
     servlet.setInitParameter("class", service.getCanonicalName());
     jetty.start();
+    port = ((ServerConnector) jetty.getConnectors()[0]).getLocalPort();
   }
 
   @Override

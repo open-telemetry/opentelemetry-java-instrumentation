@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.lang.reflect.Method;
 import java.util.List;
 
-public final class JsonRpcServerResponse {
+final class JsonRpcServerResponse {
   private final Method method;
   private final List<JsonNode> params;
   private final Object result;

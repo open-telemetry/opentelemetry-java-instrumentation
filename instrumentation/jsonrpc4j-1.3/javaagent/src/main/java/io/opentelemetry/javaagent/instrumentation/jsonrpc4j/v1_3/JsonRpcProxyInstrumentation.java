@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.jsonrpc4j.v1_3.JsonRpcClientResponse;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Map;
@@ -60,21 +61,6 @@ public class JsonRpcProxyInstrumentation implements TypeInstrumentation {
       proxy = instrumentCreateClientProxy(classLoader, proxyInterface, client, extraHeaders, proxy);
     }
 
-    private static Object proxyObjectMethods(Method method, Object proxyObject, Object[] args) {
-      String name = method.getName();
-      switch (name) {
-        case "toString":
-          return proxyObject.getClass().getName() + "@" + System.identityHashCode(proxyObject);
-        case "hashCode":
-          return System.identityHashCode(proxyObject);
-        case "equals":
-          return proxyObject == args[0];
-        default:
-          throw new IllegalArgumentException(
-              method.getName() + " is not a member of java.lang.Object");
-      }
-    }
-
     @SuppressWarnings({"unchecked"})
     public static <T> T instrumentCreateClientProxy(
         ClassLoader classLoader,
@@ -94,28 +80,28 @@ public class JsonRpcProxyInstrumentation implements TypeInstrumentation {
                   Context parentContext = Context.current();
                   JsonRpcClientRequest request = new JsonRpcClientRequest(method, args);
                   if (!CLIENT_INSTRUMENTER.shouldStart(parentContext, request)) {
-                    return method.invoke(proxy, args);
+                    try {
+                      return method.invoke(proxy, args);
+                    } catch (InvocationTargetException exception) {
+                      throw exception.getCause();
+                    }
                   }
 
                   Context context = CLIENT_INSTRUMENTER.start(parentContext, request);
-                  Scope scope = context.makeCurrent();
-                  try {
-                    Object result = method.invoke(proxy, args);
-                    // after invoke
-                    scope.close();
-                    CLIENT_INSTRUMENTER.end(
-                        context,
-                        new JsonRpcClientRequest(method, args),
-                        new JsonRpcClientResponse(result),
-                        null);
-                    return result;
-
+                  Object result;
+                  try (Scope scope = context.makeCurrent()) {
+                    result = method.invoke(proxy, args);
                   } catch (Throwable t) {
                     // after invoke
-                    scope.close();
                     CLIENT_INSTRUMENTER.end(context, request, null, t);
                     throw t;
                   }
+                  CLIENT_INSTRUMENTER.end(
+                      context,
+                      new JsonRpcClientRequest(method, args),
+                      new JsonRpcClientResponse(result),
+                      null);
+                  return result;
                 }
               });
     }

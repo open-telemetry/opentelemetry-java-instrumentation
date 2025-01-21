@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.lang.reflect.Method;
 import java.util.List;
 
-public final class OpenTelemetryJsonRpcInvocationListener implements InvocationListener {
+final class OpenTelemetryJsonRpcInvocationListener implements InvocationListener {
 
   private final Instrumenter<JsonRpcServerRequest, JsonRpcServerResponse> serverInstrumenter;
 

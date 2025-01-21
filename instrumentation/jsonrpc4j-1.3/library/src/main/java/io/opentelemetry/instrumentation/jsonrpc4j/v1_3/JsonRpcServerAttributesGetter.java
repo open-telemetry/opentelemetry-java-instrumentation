@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesG
 // Check
 // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#attributes
 // Check https://opentelemetry.io/docs/specs/semconv/rpc/json-rpc/
-public enum JsonRpcServerAttributesGetter implements RpcAttributesGetter<JsonRpcServerRequest> {
+enum JsonRpcServerAttributesGetter implements RpcAttributesGetter<JsonRpcServerRequest> {
   INSTANCE;
 
   @Override

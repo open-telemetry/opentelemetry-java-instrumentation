@@ -19,18 +19,20 @@ import javax.annotation.Nullable;
 final class JsonRpcServerAttributesExtractor
     implements AttributesExtractor<JsonRpcServerRequest, JsonRpcServerResponse> {
 
+  // copied from RpcIncubatingAttributes
   private static final AttributeKey<Long> RPC_JSONRPC_ERROR_CODE =
       AttributeKey.longKey("rpc.jsonrpc.error_code");
-
   private static final AttributeKey<String> RPC_JSONRPC_ERROR_MESSAGE =
       AttributeKey.stringKey("rpc.jsonrpc.error_message");
+  private static final AttributeKey<String> RPC_JSONRPC_VERSION =
+      AttributeKey.stringKey("rpc.jsonrpc.version");
 
   @Override
   public void onStart(
       AttributesBuilder attributes,
       Context parentContext,
       JsonRpcServerRequest jsonRpcServerRequest) {
-    attributes.put("rpc.jsonrpc.version", "2.0");
+    attributes.put(RPC_JSONRPC_VERSION, "2.0");
   }
 
   @Override
@@ -50,8 +52,6 @@ final class JsonRpcServerAttributesExtractor
               error, jsonRpcServerRequest.getMethod(), jsonRpcServerRequest.getArguments());
       attributes.put(RPC_JSONRPC_ERROR_CODE, jsonError.code);
       attributes.put(RPC_JSONRPC_ERROR_MESSAGE, jsonError.message);
-    } else {
-      attributes.put(RPC_JSONRPC_ERROR_CODE, ErrorResolver.JsonError.OK.code);
     }
   }
 }

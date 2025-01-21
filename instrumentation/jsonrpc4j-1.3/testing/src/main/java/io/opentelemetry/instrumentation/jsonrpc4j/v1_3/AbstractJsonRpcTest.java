@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.jsonrpc4j.v1_3;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_JSONRPC_ERROR_CODE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_JSONRPC_VERSION;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
@@ -26,7 +25,6 @@ import java.io.InputStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractJsonRpcTest {
 
@@ -76,8 +74,7 @@ public abstract class AbstractJsonRpcTest {
                                 equalTo(
                                     RPC_SERVICE,
                                     "io.opentelemetry.instrumentation.jsonrpc4j.v1_3.CalculatorService"),
-                                equalTo(RPC_METHOD, "add"),
-                                equalTo(RPC_JSONRPC_ERROR_CODE, 0L))));
+                                equalTo(RPC_METHOD, "add"))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.jsonrpc4j-1.3",

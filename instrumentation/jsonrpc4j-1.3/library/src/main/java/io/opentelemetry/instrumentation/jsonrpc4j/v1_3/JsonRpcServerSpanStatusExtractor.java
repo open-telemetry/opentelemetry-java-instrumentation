@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import javax.annotation.Nullable;
 
-public enum JsonRpcServerSpanStatusExtractor
+enum JsonRpcServerSpanStatusExtractor
     implements SpanStatusExtractor<JsonRpcServerRequest, JsonRpcServerResponse> {
   INSTANCE;
 
@@ -23,15 +23,11 @@ public enum JsonRpcServerSpanStatusExtractor
       JsonRpcServerRequest jsonRpcServerRequest,
       @Nullable JsonRpcServerResponse jsonRpcServerResponse,
       @Nullable Throwable error) {
-    if (error == null) {
-      spanStatusBuilder.setStatus(StatusCode.OK);
+    // do not treat client invalid input as server error
+    if ((error != null)
+        && !(error instanceof JsonParseException)
+        && !(error instanceof JsonMappingException)) {
+      spanStatusBuilder.setStatus(StatusCode.ERROR);
     }
-
-    // treat client invalid input as OK
-    if (error instanceof JsonParseException || error instanceof JsonMappingException) {
-      spanStatusBuilder.setStatus(StatusCode.OK);
-    }
-
-    spanStatusBuilder.setStatus(StatusCode.ERROR);
   }
 }

@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.jsonrpc4j.v1_3.JsonRpcClientRequest;
 import io.opentelemetry.instrumentation.jsonrpc4j.v1_3.JsonRpcClientResponse;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.lang.reflect.Type;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -46,8 +47,8 @@ public class JsonRpcClientInstrumentation implements TypeInstrumentation {
             .and(takesArguments(4))
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, Object.class))
-            .and(takesArgument(2, named("java.lang.reflect.Type")))
-            .and(takesArgument(3, named("java.util.Map")))
+            .and(takesArgument(2, Type.class))
+            .and(takesArgument(3, Map.class))
             .and(returns(Object.class)),
         this.getClass().getName() + "$InvokeAdvice");
   }
@@ -60,10 +61,11 @@ public class JsonRpcClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) String methodName,
         @Advice.Argument(1) Object argument,
         @Advice.Argument(3) Map<String, String> extraHeaders,
+        @Advice.Local("otelRequest") JsonRpcClientRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = Context.current();
-      JsonRpcClientRequest request = new JsonRpcClientRequest(methodName, argument);
+      request = new JsonRpcClientRequest(methodName, argument);
       if (!CLIENT_INSTRUMENTER.shouldStart(parentContext, request)) {
         return;
       }
@@ -79,6 +81,7 @@ public class JsonRpcClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(3) Map<String, String> extraHeaders,
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelRequest") JsonRpcClientRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
@@ -86,11 +89,7 @@ public class JsonRpcClientInstrumentation implements TypeInstrumentation {
       }
 
       scope.close();
-      CLIENT_INSTRUMENTER.end(
-          context,
-          new JsonRpcClientRequest(methodName, argument),
-          new JsonRpcClientResponse(result),
-          throwable);
+      CLIENT_INSTRUMENTER.end(context, request, new JsonRpcClientResponse(result), throwable);
     }
   }
 }
