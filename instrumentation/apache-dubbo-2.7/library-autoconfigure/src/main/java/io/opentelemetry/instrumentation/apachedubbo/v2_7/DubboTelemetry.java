@@ -35,16 +35,6 @@ public final class DubboTelemetry {
     this.clientInstrumenter = clientInstrumenter;
   }
 
-  /**
-   * Returns a new Dubbo {@link Filter} that traces Dubbo RPC invocations.
-   *
-   * @deprecated Use {@link #newClientFilter} and {@link #newServerFilter} instead.
-   */
-  @Deprecated
-  public Filter newFilter() {
-    return TracingFilter.newFilter(serverInstrumenter, clientInstrumenter);
-  }
-
   /** Returns a new Dubbo client {@link Filter} that traces Dubbo RPC invocations. */
   public Filter newClientFilter() {
     return TracingFilter.newClientFilter(clientInstrumenter);

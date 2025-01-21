@@ -49,23 +49,6 @@ final class TracingFilter implements Filter {
         });
   }
 
-  static TracingFilter newFilter(
-      Instrumenter<DubboRequest, Result> serverInstrumenter,
-      Instrumenter<DubboRequest, Result> clientInstrumenter) {
-    return new TracingFilter(
-        new InstrumenterSupplier() {
-          @Override
-          public Instrumenter<DubboRequest, Result> get(RpcContext rpcContext) {
-            return rpcContext.isConsumerSide() ? clientInstrumenter : serverInstrumenter;
-          }
-
-          @Override
-          public boolean isClientSide(RpcContext rpcContext) {
-            return rpcContext.isConsumerSide();
-          }
-        });
-  }
-
   @Override
   @SuppressWarnings("deprecation") // deprecation for RpcContext.getContext()
   public Result invoke(Invoker<?> invoker, Invocation invocation) {
