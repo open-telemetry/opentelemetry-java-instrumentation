@@ -27,12 +27,6 @@ public class AnnotationInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isIndyModule() {
-    // needs helper classes in the same class loader
-    return false;
-  }
-
-  @Override
   public int order() {
     // Run first to ensure other automatic instrumentation is added after and therefore is executed
     // earlier in the instrumented method and create the span to attach attributes to.
