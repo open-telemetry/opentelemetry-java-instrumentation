@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.restlet.v1_1.internal;
 
 import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
 import java.util.Iterator;
-import java.util.stream.Collectors;
 import org.restlet.data.Form;
 import org.restlet.data.Message;
 import org.restlet.data.Parameter;
@@ -30,10 +29,7 @@ enum RestletHeadersGetter implements ExtendedTextMapGetter<Request> {
   @Override
   public Iterator<String> getAll(Request carrier, String key) {
     Form headers = getHeaders(carrier);
-    return headers.subList(key, true).stream()
-        .map(Parameter::getValue)
-        .collect(Collectors.toList())
-        .iterator();
+    return headers.subList(key, true).stream().map(Parameter::getValue).iterator();
   }
 
   static Form getHeaders(Message carrier) {

@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -46,7 +45,7 @@ public class PekkoScheduleInstrumentation implements TypeInstrumentation {
     @Advice.AssignReturned.ToArguments(@ToArgument(2))
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Runnable enterSchedule(@Advice.Argument(value = 2) Runnable runnable) {
-      return Java8BytecodeBridge.currentContext().wrap(runnable);
+      return PekkoSchedulerTaskWrapper.wrap(runnable);
     }
   }
 
@@ -56,7 +55,7 @@ public class PekkoScheduleInstrumentation implements TypeInstrumentation {
     @Advice.AssignReturned.ToArguments(@ToArgument(1))
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Runnable enterScheduleOnce(@Advice.Argument(value = 1) Runnable runnable) {
-      return Java8BytecodeBridge.currentContext().wrap(runnable);
+      return PekkoSchedulerTaskWrapper.wrap(runnable);
     }
   }
 }
