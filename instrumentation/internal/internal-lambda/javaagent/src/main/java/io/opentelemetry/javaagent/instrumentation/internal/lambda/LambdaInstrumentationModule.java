@@ -32,6 +32,19 @@ public class LambdaInstrumentationModule extends InstrumentationModule
   }
 
   @Override
+  public List<String> injectedClassNames() {
+    // this instrumentation uses ASM not ByteBuddy so muzzle doesn't automatically add helper
+    // classes
+    List<String> classNames = new ArrayList<>();
+    classNames.add("io.opentelemetry.javaagent.instrumentation.internal.lambda.LambdaTransformer");
+    if (JavaModule.isSupported()) {
+      classNames.add(
+          "io.opentelemetry.javaagent.instrumentation.internal.lambda.Java9LambdaTransformer");
+    }
+    return classNames;
+  }
+
+  @Override
   public void injectClasses(ClassInjector injector) {
     injector
         .proxyBuilder(
@@ -47,15 +60,7 @@ public class LambdaInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<String> getAdditionalHelperClassNames() {
-    // this instrumentation uses ASM not ByteBuddy so muzzle doesn't automatically add helper
-    // classes
-    List<String> classNames = new ArrayList<>();
-    classNames.add("io.opentelemetry.javaagent.instrumentation.internal.lambda.LambdaTransformer");
-    if (JavaModule.isSupported()) {
-      classNames.add(
-          "io.opentelemetry.javaagent.instrumentation.internal.lambda.Java9LambdaTransformer");
-    }
-    return classNames;
+    return injectedClassNames();
   }
 
   @Override
