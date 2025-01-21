@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.twilio;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
@@ -41,7 +42,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -387,17 +387,17 @@ public class TwilioClientTest {
                 new ByteArrayInputStream(ERROR_RESPONSE_BODY.getBytes(StandardCharsets.UTF_8)),
                 500));
 
-    Assertions.assertThrows(
-        ApiException.class,
-        () ->
-            testing.runWithSpan(
-                "test",
-                () ->
-                    Message.creator(
-                            new PhoneNumber("+1 555 720 5913"),
-                            new PhoneNumber("+1 555 555 5215"),
-                            "Hello world!")
-                        .create(twilioRestClient)));
+    assertThatThrownBy(
+            () ->
+                testing.runWithSpan(
+                    "test",
+                    () ->
+                        Message.creator(
+                                new PhoneNumber("+1 555 720 5913"),
+                                new PhoneNumber("+1 555 555 5215"),
+                                "Hello world!")
+                            .create(twilioRestClient)))
+        .isInstanceOf(ApiException.class);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -480,7 +480,7 @@ public class TwilioClientTest {
               }
             });
 
-    Assertions.assertNotNull(message);
+    assertThat(message).isNotNull();
     assertThat(message.getBody()).isEqualTo("Hello, World!");
 
     testing.waitAndAssertTraces(
@@ -513,25 +513,25 @@ public class TwilioClientTest {
                 new ByteArrayInputStream(ERROR_RESPONSE_BODY.getBytes(StandardCharsets.UTF_8)),
                 500));
 
-    Assertions.assertThrows(
-        ExecutionException.class,
-        () ->
-            testing.runWithSpan(
-                "test",
-                () -> {
-                  ListenableFuture<Message> future =
-                      Message.creator(
-                              new PhoneNumber("+1 555 720 5913"),
-                              new PhoneNumber("+1 555 555 5215"),
-                              "Hello world!")
-                          .createAsync(twilioRestClient);
+    assertThatThrownBy(
+            () ->
+                testing.runWithSpan(
+                    "test",
+                    () -> {
+                      ListenableFuture<Message> future =
+                          Message.creator(
+                                  new PhoneNumber("+1 555 720 5913"),
+                                  new PhoneNumber("+1 555 555 5215"),
+                                  "Hello world!")
+                              .createAsync(twilioRestClient);
 
-                  try {
-                    return future.get(10, TimeUnit.SECONDS);
-                  } finally {
-                    Thread.sleep(1000);
-                  }
-                }));
+                      try {
+                        return future.get(10, TimeUnit.SECONDS);
+                      } finally {
+                        Thread.sleep(1000);
+                      }
+                    }))
+        .isInstanceOf(ExecutionException.class);
 
     testing.waitAndAssertTraces(
         trace ->
