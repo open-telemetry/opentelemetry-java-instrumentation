@@ -33,8 +33,6 @@ public class LambdaInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<String> injectedClassNames() {
-    // this instrumentation uses ASM not ByteBuddy so muzzle doesn't automatically add helper
-    // classes
     List<String> classNames = new ArrayList<>();
     classNames.add("io.opentelemetry.javaagent.instrumentation.internal.lambda.LambdaTransformer");
     if (JavaModule.isSupported()) {
@@ -60,6 +58,8 @@ public class LambdaInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<String> getAdditionalHelperClassNames() {
+    // this instrumentation uses ASM not ByteBuddy so muzzle doesn't automatically add helper
+    // classes
     return injectedClassNames();
   }
 
