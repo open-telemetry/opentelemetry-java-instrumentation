@@ -157,13 +157,13 @@ void synchronousMessage() {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test").hasNoParent(),
+                span -> span.hasName("test").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
                     span.hasName("MessageCreator.create")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                AttributeKey.stringKey("twilio.type"),
+                               stringKey("twilio.type"),
                                 "com.twilio.rest.api.v2010.account.Message"),
                             equalTo(
                                 AttributeKey.stringKey("twilio.account"),
@@ -203,6 +203,7 @@ void synchronousCall() throws URISyntaxException {
                 span ->
                     span.hasName("CallCreator.create")
                         .hasKind(CLIENT)
+                        .hasAttributes(Attributes.empty())
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 AttributeKey.stringKey("twilio.type"),
@@ -247,7 +248,7 @@ void httpClient() throws IOException {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test").hasNoParent(),
+                span -> span.hasName("test").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
                     span.hasName("MessageCreator.create")
                         .hasKind(CLIENT)
@@ -303,7 +304,7 @@ void httpClientRetry() throws IOException {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test").hasNoParent(),
+                span -> span.hasName("test").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
                     span.hasName("MessageCreator.create")
                         .hasKind(CLIENT)
@@ -360,7 +361,7 @@ void httpClientRetryAsync() throws Exception {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test").hasNoParent(),
+                span -> span.hasName("test").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
                     span.hasName("MessageCreator.createAsync")
                         .hasKind(CLIENT)
@@ -486,7 +487,7 @@ void asynchronousCall() throws Exception {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test").hasNoParent(),
+                span -> span.hasName("test").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
                     span.hasName("MessageCreator.createAsync")
                         .hasKind(CLIENT)
