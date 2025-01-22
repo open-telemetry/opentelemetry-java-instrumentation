@@ -11,8 +11,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,20 +38,6 @@ public class LambdaInstrumentationModule extends InstrumentationModule
           "io.opentelemetry.javaagent.instrumentation.internal.lambda.Java9LambdaTransformer");
     }
     return classNames;
-  }
-
-  @Override
-  public void injectClasses(ClassInjector injector) {
-    injector
-        .proxyBuilder(
-            "io.opentelemetry.javaagent.instrumentation.internal.lambda.LambdaTransformer")
-        .inject(InjectionMode.CLASS_ONLY);
-    if (JavaModule.isSupported()) {
-      injector
-          .proxyBuilder(
-              "io.opentelemetry.javaagent.instrumentation.internal.lambda.Java9LambdaTransformer")
-          .inject(InjectionMode.CLASS_ONLY);
-    }
   }
 
   @Override
