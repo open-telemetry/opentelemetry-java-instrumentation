@@ -29,13 +29,10 @@ public final class LambdaTransformer {
       return classBytes;
     }
 
-    // lambda instrumentation happens only when the lambda is defined, thus the classBeingRedefined
-    // must be null otherwise we get a partial instrumentation, for example virtual fields are not
-    // properly applied
     try {
       byte[] result =
           transformer.transform(
-              targetClass.getClassLoader(), slashClassName, null, null, classBytes);
+              targetClass.getClassLoader(), slashClassName, targetClass, null, classBytes);
       if (result != null) {
         classBytes = result;
       }
