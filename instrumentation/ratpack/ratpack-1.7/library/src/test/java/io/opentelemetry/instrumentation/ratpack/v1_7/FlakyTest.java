@@ -13,17 +13,7 @@ import org.junit.jupiter.api.Test;
 class FlakyTest {
 
   @Test
-  void flakyTest1() {
-    assertThat(new Random().nextInt(10)).isLessThan(3);
-  }
-
-  @Test
-  void flakyTest2() {
-    assertThat(new Random().nextInt(10)).isLessThan(3);
-  }
-
-  @Test
-  void flakyTest3() {
+  void flakyTest() {
     assertThat(new Random().nextInt(10)).isLessThan(3);
   }
 }
