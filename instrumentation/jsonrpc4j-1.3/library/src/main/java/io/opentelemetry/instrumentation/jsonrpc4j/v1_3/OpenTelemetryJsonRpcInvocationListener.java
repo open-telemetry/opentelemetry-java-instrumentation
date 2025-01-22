@@ -15,10 +15,33 @@ import java.util.List;
 
 final class OpenTelemetryJsonRpcInvocationListener implements InvocationListener {
 
+  static class JsonRpcContext {
+    private final Context context;
+    private final Scope scope;
+    private final JsonRpcServerRequest request;
+
+    JsonRpcContext(Context context, Scope scope, JsonRpcServerRequest request) {
+      this.context = context;
+      this.scope = scope;
+      this.request = request;
+    }
+
+    Context getContext() {
+      return context;
+    }
+
+    Scope getScope() {
+      return scope;
+    }
+
+    JsonRpcServerRequest getRequest() {
+      return request;
+    }
+  }
+
   private final Instrumenter<JsonRpcServerRequest, JsonRpcServerResponse> serverInstrumenter;
 
-  private static final ThreadLocal<Context> threadLocalContext = new ThreadLocal<>();
-  private static final ThreadLocal<Scope> threadLocalScope = new ThreadLocal<>();
+  private static final ThreadLocal<JsonRpcContext> threadLocalContext = new ThreadLocal<>();
 
   public OpenTelemetryJsonRpcInvocationListener(
       Instrumenter<JsonRpcServerRequest, JsonRpcServerResponse> serverInstrumenter) {
@@ -40,8 +63,8 @@ final class OpenTelemetryJsonRpcInvocationListener implements InvocationListener
     }
 
     Context context = serverInstrumenter.start(parentContext, request);
-    threadLocalContext.set(context);
-    threadLocalScope.set(context.makeCurrent());
+    Scope scope = context.makeCurrent();
+    threadLocalContext.set(new JsonRpcContext(context, scope, request));
   }
 
   /**
@@ -59,11 +82,10 @@ final class OpenTelemetryJsonRpcInvocationListener implements InvocationListener
   @Override
   public void didInvoke(
       Method method, List<JsonNode> arguments, Object result, Throwable t, long duration) {
-    JsonRpcServerRequest request = new JsonRpcServerRequest(method, arguments);
     JsonRpcServerResponse response = new JsonRpcServerResponse(method, arguments, result);
-    threadLocalScope.get().close();
-    serverInstrumenter.end(threadLocalContext.get(), request, response, t);
+    threadLocalContext.get().getScope().close();
+    serverInstrumenter.end(
+        threadLocalContext.get().getContext(), threadLocalContext.get().getRequest(), response, t);
     threadLocalContext.remove();
-    threadLocalScope.remove();
   }
 }
