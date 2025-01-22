@@ -85,6 +85,25 @@ jobs:
         if: ${{ !cancelled() && hashFiles('build-scan.txt') != '' }}
         run: cat build-scan.txt
 
+      - name: Get current job url
+        uses: Tiryoh/gha-jobid-action@be260d8673c9211a84cdcf37794ebd654ba81eef # v1.4.0
+        id: jobs
+        if: ${{ !cancelled() }}
+        with:
+          job_name: "test-latest-deps / testLatestDeps${{ matrix.test-partition }}"
+          per_page: 100 # input matrix size here if it is larger than 30
+
+      - name: Flaky test report
+        if: ${{ !cancelled() }}
+        env:
+          FLAKY_TEST_REPORTER_ACCESS_KEY: ${{ secrets.FLAKY_TEST_REPORTER_ACCESS_KEY }}
+          JOB_URL: ${{ steps.jobs.outputs.html_url }}
+        run: |
+          if [ -s build-scan.txt ]; then
+            export BUILD_SCAN_URL=$(cat build-scan.txt)
+          fi
+          ./gradlew :test-report:reportFlakyTests
+
       - name: Upload deadlock detector artifacts if any
         if: failure()
         uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
