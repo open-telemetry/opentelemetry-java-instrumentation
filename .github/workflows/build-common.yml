@@ -293,6 +293,7 @@ jobs:
       - name: Get current job url
         uses: Tiryoh/gha-jobid-action@be260d8673c9211a84cdcf37794ebd654ba81eef # v1.4.0
         id: jobs
+        if: ${{ !cancelled() }}
         with:
           job_name: "common / test${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }})"
           per_page: 100 # input matrix size here if it is larger than 30
