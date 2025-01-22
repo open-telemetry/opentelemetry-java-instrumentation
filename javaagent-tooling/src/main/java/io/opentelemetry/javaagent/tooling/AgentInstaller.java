@@ -203,6 +203,9 @@ public class AgentInstaller {
     if (JavaModule.isSupported()) {
       // wrapping in a JPMS compliant implementation
       transformer = new Java9LambdaClassFileTransformer(transformer);
+    } else {
+      // wrapping in a java 8 compliant transformer
+      transformer = new LambdaClassFileTransformer(transformer);
     }
     ClassFileTransformerHolder.setLambdaClassFileTransformer(transformer);
 
