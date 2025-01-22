@@ -197,11 +197,10 @@ class TwilioClientTest {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test").hasNoParent(),
+                span -> span.hasName("test").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
                     span.hasName("CallCreator.create")
                         .hasKind(CLIENT)
-                        .hasAttributes(Attributes.empty())
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("twilio.type"), "com.twilio.rest.api.v2010.account.Call"),
