@@ -200,12 +200,13 @@ public class AgentInstaller {
 
     agentBuilder = AgentBuilderUtil.optimize(agentBuilder);
     ClassFileTransformer transformer = agentBuilder.installOn(inst);
-    instrumentationInstalled = true;
     if (JavaModule.isSupported()) {
       // wrapping in a JPMS compliant implementation
-      transformer = new JavaModuleClassFileTransformer(transformer);
+      transformer = new Java9LambdaClassFileTransformer(transformer);
     }
-    ClassFileTransformerHolder.setClassFileTransformer(transformer);
+    ClassFileTransformerHolder.setLambdaClassFileTransformer(transformer);
+
+    instrumentationInstalled = true;
 
     addHttpServerResponseCustomizers(extensionClassLoader);
 

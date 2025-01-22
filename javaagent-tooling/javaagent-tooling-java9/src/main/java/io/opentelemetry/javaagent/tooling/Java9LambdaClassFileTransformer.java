@@ -10,11 +10,11 @@ import java.lang.instrument.IllegalClassFormatException;
 import java.security.ProtectionDomain;
 
 /** {@link ClassFileTransformer} implementation that provides java9 jpms module compatibility */
-public class JavaModuleClassFileTransformer implements ClassFileTransformer {
+public class Java9LambdaClassFileTransformer implements ClassFileTransformer {
 
   private ClassFileTransformer delegate;
 
-  public JavaModuleClassFileTransformer(ClassFileTransformer delegate) {
+  public Java9LambdaClassFileTransformer(ClassFileTransformer delegate) {
     this.delegate = delegate;
   }
 
@@ -28,7 +28,10 @@ public class JavaModuleClassFileTransformer implements ClassFileTransformer {
       throws IllegalClassFormatException {
 
     Module module = targetClass != null ? targetClass.getModule() : null;
-    return delegate.transform(
-        module, loader, className, targetClass, protectionDomain, classfileBuffer);
+
+    // lambda instrumentation happens only when the lambda is defined, thus the classBeingRedefined
+    // must be null otherwise we get a partial instrumentation, for example virtual fields are not
+    // properly applied
+    return delegate.transform(module, loader, className, null, null, classfileBuffer);
   }
 }

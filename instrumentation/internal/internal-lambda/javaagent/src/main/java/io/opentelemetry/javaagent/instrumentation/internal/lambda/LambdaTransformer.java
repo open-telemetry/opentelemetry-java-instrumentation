@@ -24,14 +24,18 @@ public final class LambdaTransformer {
     if (InjectedClassHelper.isHelperClass(targetClass)) {
       return classBytes;
     }
-    ClassFileTransformer transformer = ClassFileTransformerHolder.getClassFileTransformer();
+    ClassFileTransformer transformer = ClassFileTransformerHolder.getLambdaClassFileTransformer();
     if (transformer == null) {
       return classBytes;
     }
+
+    // lambda instrumentation happens only when the lambda is defined, thus the classBeingRedefined
+    // must be null otherwise we get a partial instrumentation, for example virtual fields are not
+    // properly applied
     try {
       byte[] result =
           transformer.transform(
-              targetClass.getClassLoader(), slashClassName, targetClass, null, classBytes);
+              targetClass.getClassLoader(), slashClassName, null, null, classBytes);
       if (result != null) {
         classBytes = result;
       }
