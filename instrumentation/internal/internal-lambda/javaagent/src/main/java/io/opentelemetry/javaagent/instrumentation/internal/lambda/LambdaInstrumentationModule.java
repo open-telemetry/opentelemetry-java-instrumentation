@@ -12,9 +12,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
-import net.bytebuddy.utility.JavaModule;
 
 @AutoService(InstrumentationModule.class)
 public class LambdaInstrumentationModule extends InstrumentationModule
@@ -31,13 +30,8 @@ public class LambdaInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<String> injectedClassNames() {
-    List<String> classNames = new ArrayList<>();
-    classNames.add("io.opentelemetry.javaagent.instrumentation.internal.lambda.LambdaTransformer");
-    if (JavaModule.isSupported()) {
-      classNames.add(
-          "io.opentelemetry.javaagent.instrumentation.internal.lambda.Java9LambdaTransformer");
-    }
-    return classNames;
+    return Collections.singletonList(
+        "io.opentelemetry.javaagent.instrumentation.internal.lambda.LambdaTransformer");
   }
 
   @Override
