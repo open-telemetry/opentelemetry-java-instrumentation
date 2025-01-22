@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.twilio;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,7 +25,7 @@ import com.twilio.http.TwilioRestClient;
 import com.twilio.rest.api.v2010.account.Call;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
-import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -133,7 +134,7 @@ class TwilioClientTest {
   }
 
   @Test
-void synchronousMessage() {
+  void synchronousMessage() {
     twilioRestClient = mock(TwilioRestClient.class);
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
@@ -163,19 +164,16 @@ void synchronousMessage() {
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                               stringKey("twilio.type"),
+                                stringKey("twilio.type"),
                                 "com.twilio.rest.api.v2010.account.Message"),
                             equalTo(
-                                AttributeKey.stringKey("twilio.account"),
-                                "AC14984e09e497506cf0d5eb59b1f6ace7"),
-                            equalTo(
-                                AttributeKey.stringKey("twilio.sid"),
-                                "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
-                            equalTo(AttributeKey.stringKey("twilio.status"), "sent"))));
+                                stringKey("twilio.account"), "AC14984e09e497506cf0d5eb59b1f6ace7"),
+                            equalTo(stringKey("twilio.sid"), "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
+                            equalTo(stringKey("twilio.status"), "sent"))));
   }
 
   @Test
-void synchronousCall() throws URISyntaxException {
+  void synchronousCall() throws URISyntaxException {
     twilioRestClient = mock(TwilioRestClient.class);
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
@@ -206,19 +204,15 @@ void synchronousCall() throws URISyntaxException {
                         .hasAttributes(Attributes.empty())
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                AttributeKey.stringKey("twilio.type"),
-                                "com.twilio.rest.api.v2010.account.Call"),
+                                stringKey("twilio.type"), "com.twilio.rest.api.v2010.account.Call"),
                             equalTo(
-                                AttributeKey.stringKey("twilio.account"),
-                                "ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
-                            equalTo(
-                                AttributeKey.stringKey("twilio.sid"),
-                                "CAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
-                            equalTo(AttributeKey.stringKey("twilio.status"), "completed"))));
+                                stringKey("twilio.account"), "ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
+                            equalTo(stringKey("twilio.sid"), "CAXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
+                            equalTo(stringKey("twilio.status"), "completed"))));
   }
 
   @Test
-void httpClient() throws IOException {
+  void httpClient() throws IOException {
     CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
     CloseableHttpResponse response1 = mockResponse(MESSAGE_RESPONSE_BODY, 200);
     when(httpClient.execute(any())).thenReturn(response1);
@@ -254,15 +248,12 @@ void httpClient() throws IOException {
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                AttributeKey.stringKey("twilio.type"),
+                                stringKey("twilio.type"),
                                 "com.twilio.rest.api.v2010.account.Message"),
                             equalTo(
-                                AttributeKey.stringKey("twilio.account"),
-                                "AC14984e09e497506cf0d5eb59b1f6ace7"),
-                            equalTo(
-                                AttributeKey.stringKey("twilio.sid"),
-                                "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
-                            equalTo(AttributeKey.stringKey("twilio.status"), "sent"))));
+                                stringKey("twilio.account"), "AC14984e09e497506cf0d5eb59b1f6ace7"),
+                            equalTo(stringKey("twilio.sid"), "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
+                            equalTo(stringKey("twilio.status"), "sent"))));
   }
 
   @SuppressWarnings("CannotMockMethod")
@@ -273,7 +264,7 @@ void httpClient() throws IOException {
   }
 
   @Test
-void httpClientRetry() throws IOException {
+  void httpClientRetry() throws IOException {
     CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
     CloseableHttpResponse response1 = mockResponse(ERROR_RESPONSE_BODY, 500);
     CloseableHttpResponse response2 = mockResponse(MESSAGE_RESPONSE_BODY, 200);
@@ -310,19 +301,16 @@ void httpClientRetry() throws IOException {
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                AttributeKey.stringKey("twilio.type"),
+                                stringKey("twilio.type"),
                                 "com.twilio.rest.api.v2010.account.Message"),
                             equalTo(
-                                AttributeKey.stringKey("twilio.account"),
-                                "AC14984e09e497506cf0d5eb59b1f6ace7"),
-                            equalTo(
-                                AttributeKey.stringKey("twilio.sid"),
-                                "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
-                            equalTo(AttributeKey.stringKey("twilio.status"), "sent"))));
+                                stringKey("twilio.account"), "AC14984e09e497506cf0d5eb59b1f6ace7"),
+                            equalTo(stringKey("twilio.sid"), "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
+                            equalTo(stringKey("twilio.status"), "sent"))));
   }
 
   @Test
-void httpClientRetryAsync() throws Exception {
+  void httpClientRetryAsync() throws Exception {
     CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
     CloseableHttpResponse response1 = mockResponse(ERROR_RESPONSE_BODY, 500);
     CloseableHttpResponse response2 = mockResponse(MESSAGE_RESPONSE_BODY, 200);
@@ -367,19 +355,16 @@ void httpClientRetryAsync() throws Exception {
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                AttributeKey.stringKey("twilio.type"),
+                                stringKey("twilio.type"),
                                 "com.twilio.rest.api.v2010.account.Message"),
                             equalTo(
-                                AttributeKey.stringKey("twilio.account"),
-                                "AC14984e09e497506cf0d5eb59b1f6ace7"),
-                            equalTo(
-                                AttributeKey.stringKey("twilio.sid"),
-                                "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
-                            equalTo(AttributeKey.stringKey("twilio.status"), "sent"))));
+                                stringKey("twilio.account"), "AC14984e09e497506cf0d5eb59b1f6ace7"),
+                            equalTo(stringKey("twilio.sid"), "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
+                            equalTo(stringKey("twilio.status"), "sent"))));
   }
 
   @Test
-void syncFailure() {
+  void syncFailure() {
     twilioRestClient = mock(TwilioRestClient.class);
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
@@ -416,7 +401,7 @@ void syncFailure() {
   }
 
   @Test
-void rootSpan() {
+  void rootSpan() {
     twilioRestClient = mock(TwilioRestClient.class);
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
@@ -442,19 +427,16 @@ void rootSpan() {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                AttributeKey.stringKey("twilio.type"),
+                                stringKey("twilio.type"),
                                 "com.twilio.rest.api.v2010.account.Message"),
                             equalTo(
-                                AttributeKey.stringKey("twilio.account"),
-                                "AC14984e09e497506cf0d5eb59b1f6ace7"),
-                            equalTo(
-                                AttributeKey.stringKey("twilio.sid"),
-                                "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
-                            equalTo(AttributeKey.stringKey("twilio.status"), "sent"))));
+                                stringKey("twilio.account"), "AC14984e09e497506cf0d5eb59b1f6ace7"),
+                            equalTo(stringKey("twilio.sid"), "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
+                            equalTo(stringKey("twilio.status"), "sent"))));
   }
 
   @Test
-void asynchronousCall() throws Exception {
+  void asynchronousCall() throws Exception {
     twilioRestClient = mock(TwilioRestClient.class);
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
@@ -493,19 +475,16 @@ void asynchronousCall() throws Exception {
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                AttributeKey.stringKey("twilio.type"),
+                                stringKey("twilio.type"),
                                 "com.twilio.rest.api.v2010.account.Message"),
                             equalTo(
-                                AttributeKey.stringKey("twilio.account"),
-                                "AC14984e09e497506cf0d5eb59b1f6ace7"),
-                            equalTo(
-                                AttributeKey.stringKey("twilio.sid"),
-                                "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
-                            equalTo(AttributeKey.stringKey("twilio.status"), "sent"))));
+                                stringKey("twilio.account"), "AC14984e09e497506cf0d5eb59b1f6ace7"),
+                            equalTo(stringKey("twilio.sid"), "MMXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"),
+                            equalTo(stringKey("twilio.status"), "sent"))));
   }
 
   @Test
-void asynchronousError() {
+  void asynchronousError() {
     twilioRestClient = mock(TwilioRestClient.class);
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
