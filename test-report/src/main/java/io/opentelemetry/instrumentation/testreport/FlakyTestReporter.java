@@ -277,8 +277,8 @@ public class FlakyTestReporter {
     String jobUrl = System.getProperty("jobUrl");
     System.err.println("buildScanUrl " + buildScanUrl);
     System.err.println("jobUrl " + jobUrl);
-    System.err.println("secret set " + (accessKey != null));
-    if (accessKey != null) {
+    System.err.println("secret length " + (accessKey != null ? accessKey.length() : -1));
+    if (accessKey != null && !accessKey.isEmpty()) {
       reporter.report(accessKey, buildScanUrl, jobUrl);
     }
   }
