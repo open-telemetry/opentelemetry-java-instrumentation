@@ -8,9 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jsonrpc4j.v1_3;
 import com.googlecode.jsonrpc4j.InvocationListener;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.jsonrpc4j.v1_3.JsonRpcClientRequest;
-import io.opentelemetry.instrumentation.jsonrpc4j.v1_3.JsonRpcClientResponse;
-import io.opentelemetry.instrumentation.jsonrpc4j.v1_3.JsonRpcTelemetry;
+import io.opentelemetry.instrumentation.jsonrpc4j.v1_3.JsonRpcServerTelemetry;
 
 public final class JsonRpcSingletons {
 
@@ -19,10 +17,13 @@ public final class JsonRpcSingletons {
   public static final Instrumenter<JsonRpcClientRequest, JsonRpcClientResponse> CLIENT_INSTRUMENTER;
 
   static {
-    JsonRpcTelemetry telemetry = JsonRpcTelemetry.builder(GlobalOpenTelemetry.get()).build();
+    JsonRpcServerTelemetry serverTelemetry =
+        JsonRpcServerTelemetry.builder(GlobalOpenTelemetry.get()).build();
+    JsonRpcClientTelemetry clientTelemetry =
+        JsonRpcClientTelemetry.builder(GlobalOpenTelemetry.get()).build();
 
-    SERVER_INVOCATION_LISTENER = telemetry.newServerInvocationListener();
-    CLIENT_INSTRUMENTER = telemetry.getClientInstrumenter();
+    SERVER_INVOCATION_LISTENER = serverTelemetry.newServerInvocationListener();
+    CLIENT_INSTRUMENTER = clientTelemetry.getClientInstrumenter();
   }
 
   private JsonRpcSingletons() {}

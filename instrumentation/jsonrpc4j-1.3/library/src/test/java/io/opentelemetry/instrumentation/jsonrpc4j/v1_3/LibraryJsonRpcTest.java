@@ -23,7 +23,9 @@ public class LibraryJsonRpcTest extends AbstractJsonRpcTest {
   @Override
   protected JsonRpcBasicServer configureServer(JsonRpcBasicServer server) {
     server.setInvocationListener(
-        JsonRpcTelemetry.builder(testing.getOpenTelemetry()).build().newServerInvocationListener());
+        JsonRpcServerTelemetry.builder(testing.getOpenTelemetry())
+            .build()
+            .newServerInvocationListener());
     return server;
   }
 }

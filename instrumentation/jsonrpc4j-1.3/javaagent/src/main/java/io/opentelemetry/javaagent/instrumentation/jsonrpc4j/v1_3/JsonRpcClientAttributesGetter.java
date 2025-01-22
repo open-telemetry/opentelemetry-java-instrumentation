@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jsonrpc4j.v1_3;
+package io.opentelemetry.javaagent.instrumentation.jsonrpc4j.v1_3;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
 
@@ -23,7 +23,7 @@ enum JsonRpcClientAttributesGetter implements RpcAttributesGetter<JsonRpcClientR
     if (request.getMethod() != null) {
       return request.getMethod().getDeclaringClass().getName();
     }
-    return "NOT_AVAILABLE";
+    return null;
   }
 
   @Override

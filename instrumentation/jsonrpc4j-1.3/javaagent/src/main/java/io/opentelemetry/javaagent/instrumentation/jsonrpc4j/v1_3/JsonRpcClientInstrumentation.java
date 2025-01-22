@@ -16,8 +16,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.jsonrpc4j.v1_3.JsonRpcClientRequest;
-import io.opentelemetry.instrumentation.jsonrpc4j.v1_3.JsonRpcClientResponse;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Type;
