@@ -97,6 +97,7 @@ include(":instrumentation-annotations-support-testing")
 
 // misc
 include(":dependencyManagement")
+include(":test-report")
 include(":testing:agent-exporter")
 include(":testing:agent-for-testing")
 include(":testing:armeria-shaded-for-testing")
