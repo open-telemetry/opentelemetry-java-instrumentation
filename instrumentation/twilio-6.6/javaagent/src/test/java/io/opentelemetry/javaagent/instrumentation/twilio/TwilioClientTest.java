@@ -46,7 +46,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class TwilioClientTest {
+class TwilioClientTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -133,7 +133,7 @@ public class TwilioClientTest {
   }
 
   @Test
-  public void synchronousMessage() {
+void synchronousMessage() {
     twilioRestClient = mock(TwilioRestClient.class);
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
@@ -175,7 +175,7 @@ public class TwilioClientTest {
   }
 
   @Test
-  public void synchronousCall() throws URISyntaxException {
+void synchronousCall() throws URISyntaxException {
     twilioRestClient = mock(TwilioRestClient.class);
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
@@ -217,7 +217,7 @@ public class TwilioClientTest {
   }
 
   @Test
-  public void httpClient() throws IOException {
+void httpClient() throws IOException {
     CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
     CloseableHttpResponse response1 = mockResponse(MESSAGE_RESPONSE_BODY, 200);
     when(httpClient.execute(any())).thenReturn(response1);
@@ -272,7 +272,7 @@ public class TwilioClientTest {
   }
 
   @Test
-  public void httpClientRetry() throws IOException {
+void httpClientRetry() throws IOException {
     CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
     CloseableHttpResponse response1 = mockResponse(ERROR_RESPONSE_BODY, 500);
     CloseableHttpResponse response2 = mockResponse(MESSAGE_RESPONSE_BODY, 200);
@@ -321,7 +321,7 @@ public class TwilioClientTest {
   }
 
   @Test
-  public void httpClientRetryAsync() throws Exception {
+void httpClientRetryAsync() throws Exception {
     CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
     CloseableHttpResponse response1 = mockResponse(ERROR_RESPONSE_BODY, 500);
     CloseableHttpResponse response2 = mockResponse(MESSAGE_RESPONSE_BODY, 200);
@@ -378,7 +378,7 @@ public class TwilioClientTest {
   }
 
   @Test
-  public void syncFailure() {
+void syncFailure() {
     twilioRestClient = mock(TwilioRestClient.class);
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
@@ -415,7 +415,7 @@ public class TwilioClientTest {
   }
 
   @Test
-  public void rootSpan() {
+void rootSpan() {
     twilioRestClient = mock(TwilioRestClient.class);
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
@@ -453,7 +453,7 @@ public class TwilioClientTest {
   }
 
   @Test
-  public void asynchronousCall() throws Exception {
+void asynchronousCall() throws Exception {
     twilioRestClient = mock(TwilioRestClient.class);
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
@@ -504,7 +504,7 @@ public class TwilioClientTest {
   }
 
   @Test
-  public void asynchronousError() {
+void asynchronousError() {
     twilioRestClient = mock(TwilioRestClient.class);
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
