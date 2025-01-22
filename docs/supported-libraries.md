@@ -168,7 +168,7 @@ These are the supported libraries and frameworks:
 
 **[5]** Doesn't currently support capturing HTTP/2 traffic.
 
-**[6]** Database Client Metrics are available for those who opt-in to [semantic convention stability](https://opentelemetry.io/docs/specs/semconv/non-normative/http-migration/).
+**[6]** Database Client Metrics are available for those who opt-in to [semantic convention stability](https://opentelemetry.io/docs/specs/semconv/non-normative/db-migration/).
 
 [Elasticsearch Client Spans]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/elasticsearch.md
 [HTTP Server Spans]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-server
