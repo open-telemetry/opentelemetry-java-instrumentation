@@ -309,7 +309,8 @@ jobs:
             const { data: workflow_run } = await github.rest.actions.listJobsForWorkflowRun({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              run_id: context.runId
+              run_id: context.runId,
+              per_page: 100
             });
             const matrix = JSON.parse(process.env.matrix);
             const job_name = `common / test${ matrix['test-partition'] } (${ matrix['test-java-version'] }, ${ matrix.vm })`;
