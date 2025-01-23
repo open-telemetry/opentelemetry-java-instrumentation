@@ -59,7 +59,7 @@ dependencies {
   implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.18")
   implementation("com.gradleup.shadow:shadow-gradle-plugin:8.3.5")
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
-  implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:3.19")
+  implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:3.19.1")
   implementation("org.owasp:dependency-check-gradle:12.0.1")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:1.7.2")
   implementation("org.spdx:spdx-gradle-plugin:0.8.0")
