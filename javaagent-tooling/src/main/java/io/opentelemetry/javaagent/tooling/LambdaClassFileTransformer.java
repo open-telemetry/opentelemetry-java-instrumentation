@@ -29,7 +29,7 @@ public class LambdaClassFileTransformer implements ClassFileTransformer {
 
     // lambda instrumentation happens only when the lambda is defined, thus the classBeingRedefined
     // must be null otherwise we get a partial instrumentation, for example virtual fields are not
-    // properly applied. This parameter is however used in Java9LambdaClassFileTransformer.
+    // properly applied.
     return delegate.transform(loader, className, null, null, classfileBuffer);
   }
 }

@@ -30,6 +30,9 @@ public final class LambdaTransformer {
     }
 
     try {
+      // The 'targetClass' needs to be non-null as it is used in Java9LambdaClassFileTransformer
+      // to get a reference to the jpms module. However, a null value must be passed to the
+      // underlying transformer as this code is called when the lambda is defined.
       byte[] result =
           transformer.transform(
               targetClass.getClassLoader(), slashClassName, targetClass, null, classBytes);
