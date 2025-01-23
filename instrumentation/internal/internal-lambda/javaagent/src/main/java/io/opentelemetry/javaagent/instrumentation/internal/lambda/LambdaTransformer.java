@@ -15,7 +15,7 @@ public final class LambdaTransformer {
   private LambdaTransformer() {}
 
   /**
-   * Called from {@code java.lang.invoke.InnerClassLambdaMetaFactory} to transform lambda class
+   * Called from {@code java.lang.invoke.InnerClassLambdaMetafactory} to transform lambda class
    * bytes.
    */
   @SuppressWarnings("unused")
