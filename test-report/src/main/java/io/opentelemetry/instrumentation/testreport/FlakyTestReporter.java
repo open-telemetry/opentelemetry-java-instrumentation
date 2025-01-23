@@ -275,6 +275,8 @@ public class FlakyTestReporter {
     String accessKey = System.getProperty("googleSheetsAccessKey");
     String buildScanUrl = System.getProperty("buildScanUrl");
     String jobUrl = System.getProperty("jobUrl");
+    System.err.println("buildScanUrl " + buildScanUrl);
+    System.err.println("jobUrl " + jobUrl);
     if (accessKey != null && !accessKey.isEmpty()) {
       reporter.report(accessKey, buildScanUrl, jobUrl);
     }

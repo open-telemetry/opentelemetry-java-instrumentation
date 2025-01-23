@@ -290,19 +290,37 @@ jobs:
         if: ${{ !cancelled() && hashFiles('build-scan.txt') != '' }}
         run: cat build-scan.txt
 
+#      - name: Get current job url
+#        uses: Tiryoh/gha-jobid-action@be260d8673c9211a84cdcf37794ebd654ba81eef # v1.4.0
+#        id: jobs
+#        if: ${{ !cancelled() }}
+#        with:
+#          job_name: "common / test${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }})"
+#          per_page: 100 # input matrix size here if it is larger than 30
+
       - name: Get current job url
-        uses: Tiryoh/gha-jobid-action@be260d8673c9211a84cdcf37794ebd654ba81eef # v1.4.0
         id: jobs
         if: ${{ !cancelled() }}
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          matrix: ${{ toJson(matrix) }}
         with:
-          job_name: "common / test${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }})"
-          per_page: 100 # input matrix size here if it is larger than 30
+          script: |
+            const { data: workflow_run } = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId
+            });
+            const matrix = JSON.parse(process.env.matrix);
+            const job_name = `common / test${ matrix.test-partition } (${ matrix.test-java-version }, ${ matrix.vm })`;
+            return workflow_run.jobs.find((job) => job.name === job_name).html_url;
 
       - name: Flaky test report
         if: ${{ !cancelled() }}
         env:
           FLAKY_TEST_REPORTER_ACCESS_KEY: ${{ secrets.FLAKY_TEST_REPORTER_ACCESS_KEY }}
-          JOB_URL: ${{ steps.jobs.outputs.html_url }}
+          JOB_URL: ${{ steps.jobs.outputs.result }}
+          # JOB_URL: ${{ steps.jobs.outputs.html_url }}
         run: |
           if [ -s build-scan.txt ]; then
             export BUILD_SCAN_URL=$(cat build-scan.txt)
