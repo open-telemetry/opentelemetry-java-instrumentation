@@ -324,13 +324,6 @@ class WithSpanInstrumentation implements TypeInstrumentation {
               // initialize our local variables, start span and open scope
               {
                 MethodNode temp = new MethodNode();
-                // insert
-                // request =
-                // AnnotationInstrumentationHelper.createMethodRequest(InstrumentedClass.class,
-                //   instrumentedMethodName, withSpanValue, withSpanKind)
-                // context = AnnotationInstrumentationHelper.enterCoroutine(label, continuation,
-                // request)
-                // scope = AnnotationInstrumentationHelper.openScope(context)
                 if (hasBlockingOperation) {
                   // value of label is on stack
                   // label is used in call to enterCoroutine and later in @SpanAttribute handling
