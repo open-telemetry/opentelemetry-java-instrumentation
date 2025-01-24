@@ -54,8 +54,8 @@ develocity {
     termsOfUseUrl.set("https://gradle.com/help/legal-terms-of-use")
     termsOfUseAgree.set("yes")
 
-    if (!gradle.startParameter.taskNames.contains("listTestsInPartition")
-      && !gradle.startParameter.taskNames.contains(":test-report:reportFlakyTests")) {
+    if (!gradle.startParameter.taskNames.contains("listTestsInPartition") &&
+      !gradle.startParameter.taskNames.contains(":test-report:reportFlakyTests")) {
       buildScanPublished {
         File("build-scan.txt").printWriter().use { writer ->
           writer.println(buildScanUri)
