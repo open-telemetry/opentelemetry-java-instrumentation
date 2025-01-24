@@ -59,7 +59,6 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-webflux:2.0.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.0.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:2.0.0.RELEASE")
-  testImplementation("org.spockframework:spock-spring:2.4-M1-groovy-4.0")
 }
 
 tasks.withType<Test>().configureEach {
