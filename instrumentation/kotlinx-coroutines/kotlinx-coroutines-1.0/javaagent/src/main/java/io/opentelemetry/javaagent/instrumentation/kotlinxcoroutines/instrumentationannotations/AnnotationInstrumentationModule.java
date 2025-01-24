@@ -12,7 +12,8 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import java.util.Arrays;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -49,11 +50,15 @@ public class AnnotationInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public List<String> injectedClassNames() {
-    return Arrays.asList(
-        "io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumentationannotations.AnnotationSingletons",
-        "io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumentationannotations.AnnotationInstrumentationHelper",
-        "io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumentationannotations.MethodRequest",
-        "io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumentationannotations.MethodRequestCodeAttributesGetter");
+  public void injectClasses(ClassInjector injector) {
+    // AnnotationInstrumentationHelper is called directly in the instrumented bytecode.
+    //
+    // With invokedynamic instrumentation a proxy class can be used as long as it does not pull
+    // extra types in the method signatures (which would require those types to also be available
+    // in the instrumented code).
+    injector
+        .proxyBuilder(
+            "io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumentationannotations.AnnotationInstrumentationHelper")
+        .inject(InjectionMode.CLASS_ONLY);
   }
 }
