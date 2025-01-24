@@ -45,8 +45,12 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class TwilioClientTest {
 
   @RegisterExtension
@@ -119,7 +123,9 @@ class TwilioClientTest {
           + "      \"more_info\": \"Testing\"\n"
           + "    }";
 
-  private TwilioRestClient twilioRestClient;
+  @Mock private TwilioRestClient twilioRestClient;
+
+  @Mock private CloseableHttpClient httpClient;
 
   @BeforeAll
   static void setUp() {
@@ -135,7 +141,6 @@ class TwilioClientTest {
 
   @Test
   void synchronousMessage() {
-    twilioRestClient = mock(TwilioRestClient.class);
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
         .thenReturn(
@@ -162,6 +167,7 @@ class TwilioClientTest {
                 span ->
                     span.hasName("MessageCreator.create")
                         .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("twilio.type"),
@@ -174,7 +180,6 @@ class TwilioClientTest {
 
   @Test
   void synchronousCall() throws URISyntaxException {
-    twilioRestClient = mock(TwilioRestClient.class);
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
         .thenReturn(
@@ -201,6 +206,7 @@ class TwilioClientTest {
                 span ->
                     span.hasName("CallCreator.create")
                         .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("twilio.type"), "com.twilio.rest.api.v2010.account.Call"),
@@ -212,9 +218,8 @@ class TwilioClientTest {
 
   @Test
   void httpClient() throws IOException {
-    CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
-    CloseableHttpResponse response1 = mockResponse(MESSAGE_RESPONSE_BODY, 200);
-    when(httpClient.execute(any())).thenReturn(response1);
+    CloseableHttpResponse response = mockResponse(MESSAGE_RESPONSE_BODY, 200);
+    when(httpClient.execute(any())).thenReturn(response);
 
     HttpClientBuilder clientBuilder = getHttpClientBuilder(httpClient);
 
@@ -245,6 +250,7 @@ class TwilioClientTest {
                 span ->
                     span.hasName("MessageCreator.create")
                         .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("twilio.type"),
@@ -264,7 +270,6 @@ class TwilioClientTest {
 
   @Test
   void httpClientRetry() throws IOException {
-    CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
     CloseableHttpResponse response1 = mockResponse(ERROR_RESPONSE_BODY, 500);
     CloseableHttpResponse response2 = mockResponse(MESSAGE_RESPONSE_BODY, 200);
     when(httpClient.execute(any())).thenReturn(response1, response2);
@@ -297,6 +302,7 @@ class TwilioClientTest {
                 span -> span.hasName("test").hasNoParent().hasAttributes(Attributes.empty()),
                 span ->
                     span.hasName("MessageCreator.create")
+                        .hasParent(trace.getSpan(0))
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
@@ -310,7 +316,6 @@ class TwilioClientTest {
 
   @Test
   void httpClientRetryAsync() throws Exception {
-    CloseableHttpClient httpClient = mock(CloseableHttpClient.class);
     CloseableHttpResponse response1 = mockResponse(ERROR_RESPONSE_BODY, 500);
     CloseableHttpResponse response2 = mockResponse(MESSAGE_RESPONSE_BODY, 200);
     when(httpClient.execute(any())).thenReturn(response1, response2);
@@ -352,6 +357,7 @@ class TwilioClientTest {
                 span ->
                     span.hasName("MessageCreator.createAsync")
                         .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("twilio.type"),
@@ -364,7 +370,6 @@ class TwilioClientTest {
 
   @Test
   void syncFailure() {
-    twilioRestClient = mock(TwilioRestClient.class);
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
         .thenReturn(
@@ -395,13 +400,13 @@ class TwilioClientTest {
                 span ->
                     span.hasName("MessageCreator.create")
                         .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
                         .hasException(new ApiException("Testing Failure"))));
   }
 
   @Test
   void rootSpan() {
-    twilioRestClient = mock(TwilioRestClient.class);
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
         .thenReturn(
@@ -436,7 +441,6 @@ class TwilioClientTest {
 
   @Test
   void asynchronousCall() throws Exception {
-    twilioRestClient = mock(TwilioRestClient.class);
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
         .thenReturn(
@@ -472,6 +476,7 @@ class TwilioClientTest {
                 span ->
                     span.hasName("MessageCreator.createAsync")
                         .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("twilio.type"),
@@ -484,7 +489,6 @@ class TwilioClientTest {
 
   @Test
   void asynchronousError() {
-    twilioRestClient = mock(TwilioRestClient.class);
     when(twilioRestClient.getObjectMapper()).thenReturn(new ObjectMapper());
     when(twilioRestClient.request(any()))
         .thenReturn(
@@ -523,6 +527,7 @@ class TwilioClientTest {
                 span ->
                     span.hasName("MessageCreator.createAsync")
                         .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
                         .hasException(new ApiException("Testing Failure"))));
   }
