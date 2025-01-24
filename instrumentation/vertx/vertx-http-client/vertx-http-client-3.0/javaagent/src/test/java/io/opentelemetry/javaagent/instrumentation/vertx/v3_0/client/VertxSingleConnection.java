@@ -3,22 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package client;
+package io.opentelemetry.javaagent.instrumentation.vertx.v3_0.client;
 
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection;
-import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
-import io.vertx.core.http.RequestOptions;
+import io.vertx.core.http.HttpMethod;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-public class VertxSingleConnection implements SingleConnection {
+class VertxSingleConnection implements SingleConnection {
 
   private final HttpClient httpClient;
   private final String host;
@@ -36,13 +36,15 @@ public class VertxSingleConnection implements SingleConnection {
   public int doRequest(String path, Map<String, String> headers)
       throws ExecutionException, InterruptedException {
     String requestId = Objects.requireNonNull(headers.get(REQUEST_ID_HEADER));
-    RequestOptions requestOptions = new RequestOptions().setHost(host).setPort(port).setURI(path);
-    headers.forEach(requestOptions::putHeader);
-    Future<HttpClientRequest> request = httpClient.request(requestOptions);
 
-    HttpClientResponse response =
-        request.compose(req -> req.send()).toCompletionStage().toCompletableFuture().get();
+    HttpClientRequest request = httpClient.request(HttpMethod.GET, port, host, path);
+    headers.forEach(request::putHeader);
 
+    CompletableFuture<HttpClientResponse> future = new CompletableFuture<>();
+    request.handler(future::complete);
+
+    request.end();
+    HttpClientResponse response = future.get();
     String responseId = response.getHeader(REQUEST_ID_HEADER);
     if (!requestId.equals(responseId)) {
       throw new IllegalStateException(
