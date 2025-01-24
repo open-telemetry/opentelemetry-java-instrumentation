@@ -54,7 +54,8 @@ develocity {
     termsOfUseUrl.set("https://gradle.com/help/legal-terms-of-use")
     termsOfUseAgree.set("yes")
 
-    if (!gradle.startParameter.taskNames.contains("listTestsInPartition")) {
+    if (!gradle.startParameter.taskNames.contains("listTestsInPartition") &&
+      !gradle.startParameter.taskNames.contains(":test-report:reportFlakyTests")) {
       buildScanPublished {
         File("build-scan.txt").printWriter().use { writer ->
           writer.println(buildScanUri)
@@ -97,6 +98,7 @@ include(":instrumentation-annotations-support-testing")
 
 // misc
 include(":dependencyManagement")
+include(":test-report")
 include(":testing:agent-exporter")
 include(":testing:agent-for-testing")
 include(":testing:armeria-shaded-for-testing")
