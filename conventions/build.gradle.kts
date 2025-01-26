@@ -61,7 +61,7 @@ dependencies {
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
   implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:3.19.1")
   implementation("org.owasp:dependency-check-gradle:12.0.1")
-  implementation("ru.vyarus:gradle-animalsniffer-plugin:1.7.2")
+  implementation("ru.vyarus:gradle-animalsniffer-plugin:2.0.0")
   implementation("org.spdx:spdx-gradle-plugin:0.8.0")
   // When updating, also update dependencyManagement/build.gradle.kts
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.16.1")
