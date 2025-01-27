@@ -13,7 +13,7 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.0.2"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.1"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
@@ -21,7 +21,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "9.4.0" apply false
-  id("com.gradle.develocity") version "3.19"
+  id("com.gradle.develocity") version "3.19.1"
 }
 
 dependencyResolutionManagement {
@@ -54,7 +54,8 @@ develocity {
     termsOfUseUrl.set("https://gradle.com/help/legal-terms-of-use")
     termsOfUseAgree.set("yes")
 
-    if (!gradle.startParameter.taskNames.contains("listTestsInPartition")) {
+    if (!gradle.startParameter.taskNames.contains("listTestsInPartition") &&
+      !gradle.startParameter.taskNames.contains(":test-report:reportFlakyTests")) {
       buildScanPublished {
         File("build-scan.txt").printWriter().use { writer ->
           writer.println(buildScanUri)
@@ -97,6 +98,7 @@ include(":instrumentation-annotations-support-testing")
 
 // misc
 include(":dependencyManagement")
+include(":test-report")
 include(":testing:agent-exporter")
 include(":testing:agent-for-testing")
 include(":testing:armeria-shaded-for-testing")

@@ -86,3 +86,33 @@ jobs:
       - name: Build scan
         if: ${{ !cancelled() && hashFiles('build-scan.txt') != '' }}
         run: cat build-scan.txt
+
+      - name: Get current job url
+        id: jobs
+        if: ${{ !cancelled() }}
+        uses: actions/github-script@60a0d83039c74a4aee543508d2ffcb1c3799cdea # v7.0.1
+        env:
+          matrix: ${{ toJson(matrix) }}
+        with:
+          result-encoding: string
+          script: |
+            const { data: workflow_run } = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+              per_page: 100
+            });
+            const matrix = JSON.parse(process.env.matrix);
+            const job_name = `test-indy / testIndy${ matrix['test-partition'] }`;
+            return workflow_run.jobs.find((job) => job.name === job_name).html_url;
+
+      - name: Flaky test report
+        if: ${{ !cancelled() }}
+        env:
+          FLAKY_TEST_REPORTER_ACCESS_KEY: ${{ secrets.FLAKY_TEST_REPORTER_ACCESS_KEY }}
+          JOB_URL: ${{ steps.jobs.outputs.result }}
+        run: |
+          if [ -s build-scan.txt ]; then
+            export BUILD_SCAN_URL=$(cat build-scan.txt)
+          fi
+          ./gradlew :test-report:reportFlakyTests
