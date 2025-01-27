@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.client;
 
+import static java.util.Collections.emptySet;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
@@ -20,7 +22,6 @@ import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.RequestOptions;
 import java.net.URI;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -105,7 +106,7 @@ class VertxHttpClientTest extends AbstractHttpClientTest<Future<HttpClientReques
     String uriString = uri.toString();
     // http://localhost:61/ => unopened port, http://192.0.2.1/ => non routable address
     if ("http://localhost:61/".equals(uriString) || "http://192.0.2.1/".equals(uriString)) {
-      return Collections.emptySet();
+      return emptySet();
     }
     return HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES;
   }
