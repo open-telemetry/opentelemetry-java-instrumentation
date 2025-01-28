@@ -209,11 +209,20 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
         OtelSpringStarterSmokeTestController.METER_SCOPE_NAME,
         OtelSpringStarterSmokeTestController.TEST_HISTOGRAM,
         AbstractIterableAssert::isNotEmpty);
+
     // runtime metrics
+    // from special logic for threads that is automatically detected in GraalVM native image
+    // see io.opentelemetry.instrumentation.runtimemetrics.java8.Threads
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
         "jvm.thread.count",
         AbstractIterableAssert::isNotEmpty);
+    // JMX based metrics
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.runtime-telemetry-java8",
+        "jvm.memory.used",
+        AbstractIterableAssert::isNotEmpty);
+    assertAdditionalMetrics();
 
     // Log
     List<LogRecordData> exportedLogRecords = testing.getExportedLogRecords();
@@ -232,6 +241,8 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
               "org.springframework.boot.StartupInfoLogger");
     }
   }
+
+  protected void assertAdditionalMetrics() {}
 
   @Test
   void databaseQuery() {
