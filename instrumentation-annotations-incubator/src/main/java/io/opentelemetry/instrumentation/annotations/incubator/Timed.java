@@ -20,8 +20,8 @@ import java.util.concurrent.TimeUnit;
  * <ul>
  *   <li><b>code.namespace:</b> The fully qualified name of the class whose method is invoked.
  *   <li><b>code.function:</b> The name of the annotated method.
- *   <li><b>error.type:</b> This is only present if an Exception is thrown, and contains the
- *       {@link Class#getName name} of the Exception class.
+ *   <li><b>error.type:</b> This is only present if an Exception is thrown, and contains the {@link
+ *       Class#getName name} of the Exception class.
  * </ul>
  *
  * <p>Application developers can use this annotation to signal OpenTelemetry auto-instrumentation
