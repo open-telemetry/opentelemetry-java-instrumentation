@@ -38,7 +38,8 @@ class MessagingSpanNameExtractorTest {
       when(getter.getDestination(message)).thenReturn(destinationName);
     }
 
-    SpanNameExtractor<Message> underTest = MessagingSpanNameExtractor.create(getter, operation);
+    SpanNameExtractor<Message> underTest =
+        MessagingSpanNameExtractor.create(getter, operation, null);
 
     // when
     String spanName = underTest.extract(message);
@@ -47,6 +48,7 @@ class MessagingSpanNameExtractorTest {
     assertEquals(expectedSpanName, spanName);
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   static Stream<Arguments> spanNameParams() {
     return Stream.of(
         Arguments.of(false, "destination", MessageOperation.PUBLISH, "destination publish"),
