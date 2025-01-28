@@ -18,11 +18,10 @@ dependencies {
   // Get the semconv version from :dependencyManagement
   val semconvConstraint = project.project(project(":dependencyManagement").path).configurations["api"].allDependencyConstraints
     .find { it.group.equals("io.opentelemetry.semconv")
-            && it.name.equals("opentelemetry-semconv") }
+            && it.name.equals("opentelemetry-semconv-incubating") }
     ?: throw Exception("semconv constraint not found")
-  val semconvVersion = semconvConstraint.version ?: throw Exception("missing version")
-  otelBom.addExtra(semconvConstraint.group, semconvConstraint.name, semconvVersion)
-  otelBom.addExtra(semconvConstraint.group, "opentelemetry-semconv-incubating", semconvVersion)
+  val semconvAlphaVersion = semconvConstraint.version ?: throw Exception("missing version")
+  otelBom.addExtra(semconvConstraint.group, "opentelemetry-semconv-incubating", semconvAlphaVersion)
 }
 
 otelBom.projectFilter.set { it.findProperty("otel.stable") != "true" }
