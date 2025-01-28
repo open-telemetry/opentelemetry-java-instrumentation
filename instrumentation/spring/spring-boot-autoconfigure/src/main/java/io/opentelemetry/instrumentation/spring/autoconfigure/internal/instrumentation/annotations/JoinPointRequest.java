@@ -8,7 +8,11 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.instrumentation.api.semconv.util.SpanNames;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
+import javax.annotation.Nullable;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 
@@ -60,6 +64,21 @@ final class JoinPointRequest {
 
   static final class InstrumentationAnnotationFactory implements Factory {
 
+    // The reason for using reflection here is that it needs to be compatible with the old version
+    // of @WithSpan annotation that does not include the withParent option to avoid failing the
+    // muzzle check.
+    private static MethodHandle withParentMethodHandle = null;
+
+    static {
+      try {
+        withParentMethodHandle =
+            MethodHandles.publicLookup()
+                .findVirtual(WithSpan.class, "withParent", MethodType.methodType(boolean.class));
+      } catch (NoSuchMethodException | IllegalAccessException ignore) {
+        // ignore
+      }
+    }
+
     @Override
     public JoinPointRequest create(JoinPoint joinPoint) {
       MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
@@ -72,9 +91,21 @@ final class JoinPointRequest {
       WithSpan annotation = method.getDeclaredAnnotation(WithSpan.class);
       String spanName = annotation != null ? annotation.value() : "";
       SpanKind spanKind = annotation != null ? annotation.kind() : SpanKind.INTERNAL;
-      boolean withParent = annotation == null || annotation.withParent();
 
-      return new JoinPointRequest(joinPoint, method, spanName, spanKind, withParent);
+      return new JoinPointRequest(
+          joinPoint, method, spanName, spanKind, withParentValueFrom(annotation));
+    }
+
+    private static boolean withParentValueFrom(@Nullable WithSpan annotation) {
+      if (annotation == null || withParentMethodHandle == null) {
+        return true;
+      }
+
+      try {
+        return (boolean) withParentMethodHandle.invoke(annotation);
+      } catch (Throwable ignore) {
+        return true;
+      }
     }
   }
 }

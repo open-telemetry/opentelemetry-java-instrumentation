@@ -17,6 +17,9 @@ import io.opentelemetry.instrumentation.api.annotation.support.SpanAttributesExt
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.util.SpanNames;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 import java.util.logging.Logger;
 
@@ -30,6 +33,21 @@ public final class AnnotationSingletons {
   private static final Instrumenter<MethodRequest, Object> INSTRUMENTER_WITH_ATTRIBUTES =
       createInstrumenterWithAttributes();
   private static final SpanAttributesExtractor ATTRIBUTES = createAttributesExtractor();
+
+  // The reason for using reflection here is that it needs to be compatible with the old version of
+  // @WithSpan annotation that does not include the withParent option to avoid failing the muzzle
+  // check.
+  private static MethodHandle withParentMethodHandle = null;
+
+  static {
+    try {
+      withParentMethodHandle =
+          MethodHandles.publicLookup()
+              .findVirtual(WithSpan.class, "withParent", MethodType.methodType(boolean.class));
+    } catch (NoSuchMethodException | IllegalAccessException ignore) {
+      // ignore
+    }
+  }
 
   public static Instrumenter<Method, Object> instrumenter() {
     return INSTRUMENTER;
@@ -115,12 +133,20 @@ public final class AnnotationSingletons {
 
   private static Context parentContextFromMethod(
       Context context, Method method, Attributes attributes) {
-    WithSpan annotation = method.getDeclaredAnnotation(WithSpan.class);
-    if (annotation.withParent()) {
+    if (withParentMethodHandle == null) {
       return context;
     }
 
-    return Context.root();
+    WithSpan annotation = method.getDeclaredAnnotation(WithSpan.class);
+
+    boolean withParent = true;
+    try {
+      withParent = (boolean) withParentMethodHandle.invoke(annotation);
+    } catch (Throwable ignore) {
+      // ignore
+    }
+
+    return withParent ? context : Context.root();
   }
 
   private AnnotationSingletons() {}

@@ -59,12 +59,9 @@ abstract class WithSpanAspect {
     this.requestFactory = requestFactory;
   }
 
-  static Context parentContext(Context parentContext, JoinPointRequest request, Attributes unused) {
-    if (request.withParent()) {
-      return parentContext;
-    }
-
-    return Context.root();
+  private static Context parentContext(
+      Context parentContext, JoinPointRequest request, Attributes unused) {
+    return request.withParent() ? parentContext : Context.root();
   }
 
   public Object traceMethod(ProceedingJoinPoint pjp) throws Throwable {
