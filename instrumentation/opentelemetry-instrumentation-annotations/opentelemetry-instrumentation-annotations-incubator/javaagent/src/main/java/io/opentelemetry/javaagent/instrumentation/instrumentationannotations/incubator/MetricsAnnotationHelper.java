@@ -90,7 +90,7 @@ public abstract class MetricsAnnotationHelper {
         bindReturn.accept(attributesBuilder, returnValue);
       }
       if (throwable != null) {
-        attributesBuilder.put("exception.type", throwable.getClass().getName());
+        attributesBuilder.put("error.type", throwable.getClass().getName());
       }
       return attributesBuilder.build();
     }

@@ -106,7 +106,7 @@ class TimedInstrumentationTest {
                                         .getName()
                                         .equals(
                                             p.getAttributes()
-                                                .get(AttributeKey.stringKey("exception.type"))))));
+                                                .get(AttributeKey.stringKey("error.type"))))));
   }
 
   @Test
