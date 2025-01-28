@@ -74,7 +74,6 @@ class VertxRxWebClientTest extends AbstractHttpClientTest<HttpRequest<Buffer>> {
     optionsBuilder.disableTestRedirects();
     optionsBuilder.disableTestHttps();
     optionsBuilder.disableTestReadTimeout();
-    optionsBuilder.disableTestNonStandardHttpMethod();
     optionsBuilder.setHttpAttributes(VertxRxWebClientTest::getHttpAttributes);
     optionsBuilder.setClientSpanErrorMapper(VertxRxWebClientTest::clientSpanError);
     optionsBuilder.setExpectedClientSpanNameMapper(VertxRxWebClientTest::expectedClientSpanName);

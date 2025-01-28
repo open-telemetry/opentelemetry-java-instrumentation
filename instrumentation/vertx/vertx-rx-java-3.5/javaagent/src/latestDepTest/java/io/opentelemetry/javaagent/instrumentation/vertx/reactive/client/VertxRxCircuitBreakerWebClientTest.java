@@ -109,7 +109,6 @@ class VertxRxCircuitBreakerWebClientTest extends AbstractHttpClientTest<HttpRequ
     optionsBuilder.disableTestRedirects();
     optionsBuilder.disableTestHttps();
     optionsBuilder.disableTestReadTimeout();
-    optionsBuilder.disableTestNonStandardHttpMethod();
     optionsBuilder.setHttpAttributes(VertxRxCircuitBreakerWebClientTest::getHttpAttributes);
     optionsBuilder.setExpectedClientSpanNameMapper(
         VertxRxCircuitBreakerWebClientTest::expectedClientSpanName);
