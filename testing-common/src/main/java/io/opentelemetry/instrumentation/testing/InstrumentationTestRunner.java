@@ -6,9 +6,9 @@
 package io.opentelemetry.instrumentation.testing;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.testing.internal.AwaitUtil;
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
@@ -29,7 +29,6 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.assertj.core.api.ListAssert;
-import org.awaitility.core.ConditionTimeoutException;
 
 /**
  * This interface defines a common set of operations for interaction with OpenTelemetry SDK and
@@ -118,25 +117,8 @@ public abstract class InstrumentationTestRunner {
     List<T> assertionsList = new ArrayList<>();
     assertions.forEach(assertionsList::add);
 
-    try {
-      await()
-          .untilAsserted(() -> doAssertTraces(traceComparator, assertionsList, verifyScopeVersion));
-    } catch (Throwable t) {
-      // awaitility is doing a jmx call that is not implemented in GraalVM:
-      // call:
-      // https://github.com/awaitility/awaitility/blob/fbe16add874b4260dd240108304d5c0be84eabc8/awaitility/src/main/java/org/awaitility/core/ConditionAwaiter.java#L157
-      // see https://github.com/oracle/graal/issues/6101 (spring boot graal native image)
-      if (t.getClass().getName().equals("com.oracle.svm.core.jdk.UnsupportedFeatureError")
-          || t instanceof ConditionTimeoutException) {
-        // Don't throw this failure since the stack is the awaitility thread, causing confusion.
-        // Instead, just assert one more time on the test thread, which will fail with a better
-        // stack trace.
-        // TODO: There is probably a better way to do this.
-        doAssertTraces(traceComparator, assertionsList, verifyScopeVersion);
-      } else {
-        throw t;
-      }
-    }
+    AwaitUtil.awaitUntilAsserted(
+        () -> doAssertTraces(traceComparator, assertionsList, verifyScopeVersion));
   }
 
   private <T extends Consumer<TraceAssert>> void doAssertTraces(
@@ -159,31 +141,35 @@ public abstract class InstrumentationTestRunner {
    */
   public final void waitAndAssertMetrics(
       String instrumentationName, String metricName, Consumer<ListAssert<MetricData>> assertion) {
-    await()
-        .untilAsserted(
-            () ->
-                assertion.accept(
-                    assertThat(getExportedMetrics())
-                        .filteredOn(
-                            data ->
-                                data.getInstrumentationScopeInfo()
-                                        .getName()
-                                        .equals(instrumentationName)
-                                    && data.getName().equals(metricName))));
+
+    AwaitUtil.awaitUntilAsserted(
+        () ->
+            assertion.accept(
+                assertThat(getExportedMetrics())
+                    .describedAs(
+                        "Metrics for instrumentation %s and metric name %s",
+                        instrumentationName, metricName)
+                    .filteredOn(
+                        data ->
+                            data.getInstrumentationScopeInfo().getName().equals(instrumentationName)
+                                && data.getName().equals(metricName))));
   }
 
   @SafeVarargs
   public final void waitAndAssertMetrics(
       String instrumentationName, Consumer<MetricAssert>... assertions) {
-    await()
-        .untilAsserted(
-            () -> {
-              Collection<MetricData> metrics = instrumentationMetrics(instrumentationName);
-              assertThat(metrics).isNotEmpty();
-              for (Consumer<MetricAssert> assertion : assertions) {
-                assertThat(metrics).anySatisfy(metric -> assertion.accept(assertThat(metric)));
-              }
-            });
+    AwaitUtil.awaitUntilAsserted(
+        () -> {
+          Collection<MetricData> metrics = instrumentationMetrics(instrumentationName);
+          assertThat(metrics).isNotEmpty();
+          for (int i = 0; i < assertions.length; i++) {
+            int index = i;
+            assertThat(metrics)
+                .describedAs(
+                    "Metrics for instrumentation %s and assertion %d", instrumentationName, index)
+                .anySatisfy(metric -> assertions[index].accept(assertThat(metric)));
+          }
+        });
   }
 
   private List<MetricData> instrumentationMetrics(String instrumentationName) {
