@@ -13,7 +13,7 @@ val otelContribVersion = "1.43.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.24"
+val groovyVersion = "4.0.25"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -41,7 +41,7 @@ val DEPENDENCY_BOMS = listOf(
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
 val errorProneVersion = "2.36.0"
-val byteBuddyVersion = "1.15.11"
+val byteBuddyVersion = "1.16.1"
 val asmVersion = "9.7.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
@@ -90,7 +90,7 @@ val DEPENDENCIES = listOf(
   "com.uber.nullaway:nullaway:0.12.3",
   "commons-beanutils:commons-beanutils:1.10.0",
   "commons-cli:commons-cli:1.9.0",
-  "commons-codec:commons-codec:1.17.2",
+  "commons-codec:commons-codec:1.18.0",
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
   "commons-fileupload:commons-fileupload:1.5",

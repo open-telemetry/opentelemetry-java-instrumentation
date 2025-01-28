@@ -53,8 +53,6 @@ class WebMvcHttpServerTest extends AbstractHttpServerTest<ConfigurableApplicatio
           }
           return expectedHttpRoute(endpoint, method);
         });
-
-    options.setTestExtractMultiBaggage(true);
   }
 
   @Test

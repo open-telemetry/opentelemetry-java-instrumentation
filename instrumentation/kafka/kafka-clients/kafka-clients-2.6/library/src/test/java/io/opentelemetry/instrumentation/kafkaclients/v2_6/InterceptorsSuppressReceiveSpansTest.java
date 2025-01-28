@@ -15,6 +15,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import java.nio.charset.StandardCharsets;
 import org.assertj.core.api.AbstractLongAssert;
@@ -59,7 +60,13 @@ class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
                             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
                             satisfies(
                                 MESSAGING_CLIENT_ID,
-                                stringAssert -> stringAssert.startsWith("consumer"))),
+                                stringAssert -> stringAssert.startsWith("consumer")),
+                            equalTo(
+                                AttributeKey.stringKey("test-baggage-key-1"),
+                                "test-baggage-value-1"),
+                            equalTo(
+                                AttributeKey.stringKey("test-baggage-key-2"),
+                                "test-baggage-value-2")),
                 span ->
                     span.hasName("process child")
                         .hasKind(SpanKind.INTERNAL)

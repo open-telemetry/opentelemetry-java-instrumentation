@@ -568,8 +568,6 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
   @Test
   void extractMultiBaggage() {
-    assumeTrue(options.testExtractMultiBaggage);
-
     String method = "GET";
     AggregatedHttpRequest request =
         AggregatedHttpRequest.of(

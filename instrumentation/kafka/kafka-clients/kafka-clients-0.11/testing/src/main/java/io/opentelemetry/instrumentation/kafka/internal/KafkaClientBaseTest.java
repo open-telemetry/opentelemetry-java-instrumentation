@@ -216,7 +216,7 @@ public abstract class KafkaClientBaseTest {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> processAttributes(
-      String messageKey, String messageValue, boolean testHeaders) {
+      String messageKey, String messageValue, boolean testHeaders, boolean testMultiBaggage) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
@@ -248,6 +248,11 @@ public abstract class KafkaClientBaseTest {
           equalTo(
               AttributeKey.stringArrayKey("messaging.header.test_message_header"),
               Collections.singletonList("test")));
+    }
+
+    if (testMultiBaggage) {
+      assertions.add(equalTo(AttributeKey.stringKey("test-baggage-key-1"), "test-baggage-value-1"));
+      assertions.add(equalTo(AttributeKey.stringKey("test-baggage-key-2"), "test-baggage-value-2"));
     }
     return assertions;
   }

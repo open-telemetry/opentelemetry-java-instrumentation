@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.kafka.internal.KafkaClientBaseTest;
 import io.opentelemetry.instrumentation.kafka.internal.KafkaClientPropagationBaseTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -33,8 +34,19 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
     testing.runWithSpan(
         "parent",
         () -> {
+          ProducerRecord<Integer, String> producerRecord =
+              new ProducerRecord<>(SHARED_TOPIC, 10, greeting);
+          producerRecord
+              .headers()
+              // adding baggage header in w3c baggage format
+              .add(
+                  "baggage",
+                  "test-baggage-key-1=test-baggage-value-1".getBytes(StandardCharsets.UTF_8))
+              .add(
+                  "baggage",
+                  "test-baggage-key-2=test-baggage-value-2".getBytes(StandardCharsets.UTF_8));
           producer.send(
-              new ProducerRecord<>(SHARED_TOPIC, 10, greeting),
+              producerRecord,
               (meta, ex) -> {
                 if (ex == null) {
                   testing.runWithSpan("producer callback", () -> {});
@@ -70,7 +82,8 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(processAttributes("10", greeting, false)),
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes("10", greeting, false, true)),
                 span ->
                     span.hasName("processing")
                         .hasKind(SpanKind.INTERNAL)
@@ -108,7 +121,8 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(processAttributes(null, null, false))));
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(null, null, false, false))));
   }
 
   @Test
@@ -146,6 +160,7 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(processAttributes(null, greeting, false))));
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(null, greeting, false, false))));
   }
 }
