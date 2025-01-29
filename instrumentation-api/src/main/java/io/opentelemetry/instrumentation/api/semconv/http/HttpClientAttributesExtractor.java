@@ -166,11 +166,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
 
     int questionMarkIndex = urlpart.indexOf('?');
 
-    if (questionMarkIndex == -1) {
-      return urlpart;
-    }
-
-    if (!containsParamToRedact(urlpart)) {
+    if (questionMarkIndex == -1 || !containsParamToRedact(urlpart)) {
       return urlpart;
     }
 
