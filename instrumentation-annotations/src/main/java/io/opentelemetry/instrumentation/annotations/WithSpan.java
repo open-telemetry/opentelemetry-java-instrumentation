@@ -39,11 +39,11 @@ public @interface WithSpan {
   /**
    * Specifies whether to use the current context as the parent when creating a Span.
    *
-   * <p>If set to {@code true} (default), the newly created span will use the current context as its
-   * parent, forming part of the same trace.
+   * <p>If set to {@code true} (default), the created span will use the current context as its
+   * parent, remaining within the same trace.
    *
-   * <p>If set to {@code false}, the newly created span will use {@link Context#root()} as its
-   * parent, starting a new trace independently.
+   * <p>If set to {@code false}, the created span will use {@link Context#root()} as its parent,
+   * starting a new, independent trace.
    */
   boolean withParent() default true;
 }
