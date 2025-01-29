@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.testing.junit.db;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 
@@ -16,13 +17,16 @@ public class DbClientMetricsTestUtil {
 
   private DbClientMetricsTestUtil() {}
 
+  @SuppressWarnings("deprecation") // DbIncubatingAttributes.DB_SYSTEM is deprecated
   public static void assertDurationMetric(
       InstrumentationExtension testing,
       String instrumentationName,
       AttributeKey<?>... expectedKeys) {
     // db.system is required - see
     // https://opentelemetry.io/docs/specs/semconv/database/database-metrics/#metric-dbclientoperationduration
-    assertThat(expectedKeys).extracting(AttributeKey::getKey).contains(DB_SYSTEM.getKey());
+    assertThat(expectedKeys)
+        .extracting(AttributeKey::getKey)
+        .contains(maybeStable(DB_SYSTEM).getKey());
     if (!emitStableDatabaseSemconv()) {
       return;
     }

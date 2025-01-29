@@ -64,6 +64,7 @@ import server.FooModel;
 import server.SpringWebFluxTestApplication;
 import server.TestController;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,

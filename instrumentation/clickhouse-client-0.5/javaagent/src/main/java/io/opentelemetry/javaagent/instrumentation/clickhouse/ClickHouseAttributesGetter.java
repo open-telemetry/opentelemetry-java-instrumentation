@@ -29,7 +29,7 @@ final class ClickHouseAttributesGetter implements DbClientAttributesGetter<Click
     return request.getSqlStatementInfo().getOperation();
   }
 
-  @Nullable
+  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
   public String getDbSystem(ClickHouseDbRequest request) {
     return DbIncubatingAttributes.DbSystemIncubatingValues.CLICKHOUSE;

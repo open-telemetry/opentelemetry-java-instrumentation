@@ -11,6 +11,8 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
@@ -38,6 +40,7 @@ public class SemconvStabilityUtil {
     map.put(DB_SQL_TABLE, DB_COLLECTION_NAME);
     map.put(DB_CASSANDRA_TABLE, DB_COLLECTION_NAME);
     map.put(DB_MONGODB_COLLECTION, DB_COLLECTION_NAME);
+    map.put(DB_SYSTEM, DB_SYSTEM_NAME);
     return map;
   }
 

@@ -48,6 +48,7 @@ import org.springframework.security.web.util.OnCommittedResponseWrapper;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 import org.springframework.web.servlet.view.RedirectView;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractSpringBootBasedTest
     extends AbstractHttpServerTest<ConfigurableApplicationContext> {
 

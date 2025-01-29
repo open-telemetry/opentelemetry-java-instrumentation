@@ -19,6 +19,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation") // CodeIncubatingAttributes.CODE_FUNCTION is deprecated
 public abstract class AbstractWithSpanTest<T extends U, U> {
 
   @RegisterExtension

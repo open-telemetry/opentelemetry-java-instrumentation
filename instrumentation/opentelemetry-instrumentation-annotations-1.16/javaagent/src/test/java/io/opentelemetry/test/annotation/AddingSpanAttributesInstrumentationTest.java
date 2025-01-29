@@ -23,6 +23,7 @@ class AddingSpanAttributesInstrumentationTest {
   public static final AgentInstrumentationExtension testing =
       AgentInstrumentationExtension.create();
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void captureAttributesInNewSpan() {
     testing.runWithSpan(

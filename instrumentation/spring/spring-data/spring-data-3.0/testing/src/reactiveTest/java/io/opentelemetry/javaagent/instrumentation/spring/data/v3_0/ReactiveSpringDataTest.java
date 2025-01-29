@@ -51,7 +51,7 @@ class ReactiveSpringDataTest {
     applicationContext.close();
   }
 
-  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testFindAll() {
     long count =

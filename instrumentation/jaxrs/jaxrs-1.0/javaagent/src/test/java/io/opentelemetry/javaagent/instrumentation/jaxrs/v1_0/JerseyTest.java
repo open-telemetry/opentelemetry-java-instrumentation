@@ -93,6 +93,7 @@ class JerseyTest extends AbstractHttpServerUsingTest<Server> {
         Arguments.of("test3/nested", "/test3/nested", "Test3", "nested", "Test3 nested!"));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
   @MethodSource("provideArguments")
   void request(

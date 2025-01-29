@@ -12,6 +12,7 @@ import javax.annotation.Nullable;
 final class ElasticsearchTransportAttributesGetter
     implements DbClientAttributesGetter<ElasticTransportRequest> {
 
+  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
   public String getDbSystem(ElasticTransportRequest request) {
     return DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH;

@@ -18,6 +18,7 @@ class JaxWsAnnotationsTest {
   @RegisterExtension
   static InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void webServiceProviderSpan() {
     new SoapProvider().invoke(null);
