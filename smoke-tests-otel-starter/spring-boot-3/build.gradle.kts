@@ -66,6 +66,10 @@ graalvmNative {
     // Workaround for https://github.com/junit-team/junit5/issues/3405
     buildArgs.add("--initialize-at-build-time=org.junit.platform.launcher.core.LauncherConfig")
     buildArgs.add("--initialize-at-build-time=org.junit.jupiter.engine.config.InstantiatingConfigurationParameterConverter")
+
+    // enable JFR - see https://www.graalvm.org/22.0/reference-manual/native-image/JFR/
+    buildArgs.add("-H:+AllowVMInspection")
+    jvmArgs("-XX:+FlightRecorder")
   }
 
   // See https://github.com/graalvm/native-build-tools/issues/572
