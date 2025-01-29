@@ -3,6 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+package io.opentelemetry.javaagent.instrumentation.vertx.reactive.server;
+
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -12,8 +14,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.reactivex.Single;
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Future;
 import io.vertx.core.Handler;
-import io.vertx.core.Promise;
 import io.vertx.core.VertxOptions;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -77,7 +79,7 @@ public class VertxReactiveWebServer extends AbstractVerticle {
   }
 
   @Override
-  public void start(Promise<Void> startPromise) {
+  public void start(Future<Void> startFuture) {
     setUpInitialData(
         ready -> {
           Router router = Router.router(vertx);
@@ -92,8 +94,8 @@ public class VertxReactiveWebServer extends AbstractVerticle {
 
           vertx
               .createHttpServer()
-              .requestHandler(router)
-              .listen(port, h -> startPromise.complete());
+              .requestHandler(router::accept)
+              .listen(port, h -> startFuture.complete());
         });
   }
 
