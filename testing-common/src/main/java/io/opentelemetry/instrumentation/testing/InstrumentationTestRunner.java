@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.testing;
 
+import static io.opentelemetry.instrumentation.testing.internal.AwaitUtil.awaitUntilAsserted;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.testing.internal.AwaitUtil;
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
@@ -117,8 +117,7 @@ public abstract class InstrumentationTestRunner {
     List<T> assertionsList = new ArrayList<>();
     assertions.forEach(assertionsList::add);
 
-    AwaitUtil.awaitUntilAsserted(
-        () -> doAssertTraces(traceComparator, assertionsList, verifyScopeVersion));
+    awaitUntilAsserted(() -> doAssertTraces(traceComparator, assertionsList, verifyScopeVersion));
   }
 
   private <T extends Consumer<TraceAssert>> void doAssertTraces(
@@ -142,7 +141,7 @@ public abstract class InstrumentationTestRunner {
   public final void waitAndAssertMetrics(
       String instrumentationName, String metricName, Consumer<ListAssert<MetricData>> assertion) {
 
-    AwaitUtil.awaitUntilAsserted(
+    awaitUntilAsserted(
         () ->
             assertion.accept(
                 assertThat(getExportedMetrics())
@@ -158,7 +157,7 @@ public abstract class InstrumentationTestRunner {
   @SafeVarargs
   public final void waitAndAssertMetrics(
       String instrumentationName, Consumer<MetricAssert>... assertions) {
-    AwaitUtil.awaitUntilAsserted(
+    awaitUntilAsserted(
         () -> {
           Collection<MetricData> metrics = instrumentationMetrics(instrumentationName);
           assertThat(metrics).isNotEmpty();
