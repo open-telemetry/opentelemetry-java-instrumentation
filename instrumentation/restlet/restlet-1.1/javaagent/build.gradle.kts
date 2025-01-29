@@ -10,6 +10,7 @@ muzzle {
     extraDependency("com.noelios.restlet:com.noelios.restlet")
     // missing dependencies
     skip("2.5.0")
+    skip("2.5.1")
     assertInverse.set(true)
   }
 }
