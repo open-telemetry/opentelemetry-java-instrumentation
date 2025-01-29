@@ -68,8 +68,7 @@ graalvmNative {
     buildArgs.add("--initialize-at-build-time=org.junit.jupiter.engine.config.InstantiatingConfigurationParameterConverter")
 
     // enable JFR - see https://www.graalvm.org/22.0/reference-manual/native-image/JFR/
-    buildArgs.add("-H:+AllowVMInspection")
-    jvmArgs("-XX:+FlightRecorder")
+    buildArgs.add("--enable-monitoring=jfr")
   }
 
   // See https://github.com/graalvm/native-build-tools/issues/572
