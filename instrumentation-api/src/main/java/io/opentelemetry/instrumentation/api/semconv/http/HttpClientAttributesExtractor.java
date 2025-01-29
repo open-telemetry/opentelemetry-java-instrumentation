@@ -170,38 +170,42 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       return urlpart;
     }
 
-    StringBuilder redactedParameters = new StringBuilder();
-    boolean paramToRedact = false;
+    boolean paramToRedact = false; // To be able to skip the characters of the parameters to redact
     boolean paramNameDetected = false;
     boolean reference = false;
 
+    StringBuilder urlPartAfterQuestionMark = new StringBuilder();
+
+    // To build a parameter name until we reach the '=' character
+    // If the parameter name is a one to redact, we will redact the value
     StringBuilder currentParamName = new StringBuilder();
 
     for (int i = questionMarkIndex + 1; i < urlpart.length(); i++) {
       char currentChar = urlpart.charAt(i);
       if (currentChar == '=') {
         paramNameDetected = true;
-        redactedParameters.append(currentParamName);
-        redactedParameters.append('=');
+        urlPartAfterQuestionMark.append(currentParamName);
+        urlPartAfterQuestionMark.append('=');
         if (PARAMS_TO_REDACT.contains(currentParamName.toString())) {
-          redactedParameters.append("REDACTED");
+          urlPartAfterQuestionMark.append("REDACTED");
           paramToRedact = true;
         }
-      } else if (currentChar == '&') {
-        redactedParameters.append('&');
+      } else if (currentChar == '&') { // New parameter delimiter
+        urlPartAfterQuestionMark.append('&');
         paramNameDetected = false;
         paramToRedact = false;
-        currentParamName.setLength(0);
-      } else if (currentChar == '#') {
+        currentParamName.setLength(
+            0); // To avoid creating a new StringBuilder for each new parameter
+      } else if (currentChar == '#') { // Reference delimiter
         reference = true;
-        redactedParameters.append('#');
+        urlPartAfterQuestionMark.append('#');
       } else if (!paramNameDetected) {
         currentParamName.append(currentChar);
       } else if (!paramToRedact || reference) {
-        redactedParameters.append(currentChar);
+        urlPartAfterQuestionMark.append(currentChar);
       }
     }
-    return urlpart.substring(0, questionMarkIndex) + "?" + redactedParameters;
+    return urlpart.substring(0, questionMarkIndex) + "?" + urlPartAfterQuestionMark;
   }
 
   private static boolean containsParamToRedact(String urlpart) {
