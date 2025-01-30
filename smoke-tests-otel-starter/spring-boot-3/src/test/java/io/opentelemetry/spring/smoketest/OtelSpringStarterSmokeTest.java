@@ -39,7 +39,7 @@ class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {
             "jvm.memory.init",
             "jvm.memory.used",
             "jvm.memory.allocation",
-            "jvm.network.io            ",
+            "jvm.network.io",
             "jvm.thread.count")) {
       testing.waitAndAssertMetrics(
           "io.opentelemetry.runtime-telemetry-java17", metric, AbstractIterableAssert::isNotEmpty);
