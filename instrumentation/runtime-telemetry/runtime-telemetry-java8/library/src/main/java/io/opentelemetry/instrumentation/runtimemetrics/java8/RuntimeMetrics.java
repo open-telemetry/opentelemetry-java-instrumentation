@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/** The entry point class for runtime metrics support using JFR and JMX. */
+/** The entry point class for runtime metrics support using JMX. */
 public final class RuntimeMetrics implements Closeable {
 
   private static final Logger logger = Logger.getLogger(RuntimeMetrics.class.getName());
@@ -29,7 +29,7 @@ public final class RuntimeMetrics implements Closeable {
   /**
    * Create and start {@link RuntimeMetrics}.
    *
-   * <p>Listens for select JFR events, extracts data, and records to various metrics. Recording will
+   * <p>Listens for select JMX beans, extracts data, and records to various metrics. Recording will
    * continue until {@link #close()} is called.
    *
    * @param openTelemetry the {@link OpenTelemetry} instance used to record telemetry
@@ -47,7 +47,7 @@ public final class RuntimeMetrics implements Closeable {
     return new RuntimeMetricsBuilder(openTelemetry);
   }
 
-  /** Stop recording JFR events. */
+  /** Stop recording JMX metrics. */
   @Override
   public void close() {
     if (!isClosed.compareAndSet(false, true)) {
