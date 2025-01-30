@@ -15,11 +15,13 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
   /**
    * Returns a {@link SpanNameExtractor} that constructs the span name according to <a
    * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md#span-name">
-   * messaging semantic conventions</a>: {@code <destination name> <operation name>}.
+   * messaging semantic conventions</a>: {@code <operation name> <destination name> }.
    *
-   * @see MessagingAttributesGetter#getDestination(Object) used to extract {@code <destination
-   *     name>}.
-   * @see MessageOperation used to extract {@code <operation name>}.
+   * @see MessagingAttributesGetter#getDestination(Object) used to extract {@code <operation name>}
+   *     and {@code <destination name>}.
+   * @see MessageOperation used to extract {@code <operation name>} (backwards compatibility with
+   *     old conventions).
+   * @see ServerAttributesGetter used to extract data for {@code <destination name>}
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       MessagingAttributesGetter<REQUEST, ?> getter,
