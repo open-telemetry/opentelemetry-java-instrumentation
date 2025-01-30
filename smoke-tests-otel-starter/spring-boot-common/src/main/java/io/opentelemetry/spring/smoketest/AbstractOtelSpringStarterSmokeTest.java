@@ -29,6 +29,7 @@ import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.assertj.core.api.AbstractCharSequenceAssert;
@@ -217,11 +218,20 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
         "io.opentelemetry.runtime-telemetry-java8",
         "jvm.thread.count",
         AbstractIterableAssert::isNotEmpty);
+
     // JMX based metrics
-    testing.waitAndAssertMetrics(
-        "io.opentelemetry.runtime-telemetry-java8",
-        "jvm.memory.used",
-        AbstractIterableAssert::isNotEmpty);
+    Arrays.asList(
+            "jvm.memory.used",
+            "jvm.system.cpu.load_1m",
+            "jvm.buffer.memory.usage",
+            "jvm.memory.init")
+        .forEach(
+            metricName ->
+                testing.waitAndAssertMetrics(
+                    "io.opentelemetry.runtime-telemetry-java8",
+                    metricName,
+                    AbstractIterableAssert::isNotEmpty));
+
     assertAdditionalMetrics();
 
     // Log
