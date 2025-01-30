@@ -142,6 +142,11 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     io.opentelemetry.context.Context parentOtelContext = io.opentelemetry.context.Context.current();
     SdkRequest request = context.request();
 
+    // the request has already been modified, duplicate interceptor?
+    if (executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE) != null) {
+      return request;
+    }
+
     // Ignore presign request. These requests don't run all interceptor methods and the span created
     // here would never be ended and scope closed.
     if (executionAttributes.getAttribute(AwsSignerExecutionAttribute.PRESIGNER_EXPIRATION)
@@ -192,13 +197,6 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     executionAttributes.putAttribute(PARENT_CONTEXT_ATTRIBUTE, parentOtelContext);
     executionAttributes.putAttribute(CONTEXT_ATTRIBUTE, otelContext);
     executionAttributes.putAttribute(REQUEST_FINISHER_ATTRIBUTE, requestFinisher);
-    if (executionAttributes
-        .getAttribute(SdkExecutionAttribute.CLIENT_TYPE)
-        .equals(ClientType.SYNC)) {
-      // We can only activate context for synchronous clients, which allows downstream
-      // instrumentation like Apache to know about the SDK span.
-      executionAttributes.putAttribute(SCOPE_ATTRIBUTE, otelContext.makeCurrent());
-    }
 
     Span span = Span.fromContext(otelContext);
 
@@ -231,6 +229,25 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     // Insert other special handling here, following the same pattern as SQS and SNS.
 
     return request;
+  }
+
+  @Override
+  public void afterMarshalling(
+      Context.AfterMarshalling context, ExecutionAttributes executionAttributes) {
+    // the request has already been modified, duplicate interceptor?
+    if (executionAttributes.getAttribute(SCOPE_ATTRIBUTE) != null) {
+      return;
+    }
+
+    io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
+    if (otelContext != null
+        && executionAttributes
+            .getAttribute(SdkExecutionAttribute.CLIENT_TYPE)
+            .equals(ClientType.SYNC)) {
+      // We can only activate context for synchronous clients, which allows downstream
+      // instrumentation like Apache to know about the SDK span.
+      executionAttributes.putAttribute(SCOPE_ATTRIBUTE, otelContext.makeCurrent());
+    }
   }
 
   @Override
