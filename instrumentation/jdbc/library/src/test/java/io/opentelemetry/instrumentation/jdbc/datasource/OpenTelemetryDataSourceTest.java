@@ -59,7 +59,7 @@ class OpenTelemetryDataSourceTest {
                                 CodeIncubatingAttributes.CODE_NAMESPACE,
                                 TestDataSource.class.getName()),
                             equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "getConnection"),
-                            equalTo(DB_SYSTEM, "postgresql"),
+                            equalTo(maybeStable(DB_SYSTEM), "postgresql"),
                             equalTo(maybeStable(DB_NAME), "dbname"),
                             equalTo(
                                 DB_CONNECTION_STRING,

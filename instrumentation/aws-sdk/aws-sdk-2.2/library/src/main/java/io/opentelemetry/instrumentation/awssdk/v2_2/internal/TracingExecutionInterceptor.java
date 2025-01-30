@@ -336,10 +336,10 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
     if (awsSdkRequest.type() == DYNAMODB) {
       if (SemconvStability.emitStableDatabaseSemconv()) {
-        span.setAttribute(DB_SYSTEM, DB_SYSTEM_DYNAMODB);
+        span.setAttribute(DB_SYSTEM_NAME, DB_SYSTEM_AWS_DYNAMODB);
       }
       if (SemconvStability.emitOldDatabaseSemconv()) {
-        span.setAttribute(DB_SYSTEM_NAME, DB_SYSTEM_AWS_DYNAMODB);
+        span.setAttribute(DB_SYSTEM, DB_SYSTEM_DYNAMODB);
       }
       String operation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
       if (operation != null) {

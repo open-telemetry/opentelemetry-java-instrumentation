@@ -82,7 +82,8 @@ class SpringJpaTest {
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
+                                maybeStable(DB_SYSTEM),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -135,7 +136,8 @@ class SpringJpaTest {
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
+                                maybeStable(DB_SYSTEM),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(maybeStable(DB_STATEMENT), "call next value for Customer_SEQ"),
@@ -160,7 +162,8 @@ class SpringJpaTest {
                         .hasParent(trace.getSpan(3))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
+                                maybeStable(DB_SYSTEM),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -200,7 +203,8 @@ class SpringJpaTest {
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
+                                maybeStable(DB_SYSTEM),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -229,7 +233,8 @@ class SpringJpaTest {
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
+                                maybeStable(DB_SYSTEM),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -273,7 +278,8 @@ class SpringJpaTest {
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
+                                maybeStable(DB_SYSTEM),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -315,7 +321,8 @@ class SpringJpaTest {
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
+                                maybeStable(DB_SYSTEM),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -357,7 +364,8 @@ class SpringJpaTest {
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
+                                maybeStable(DB_SYSTEM),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.HSQLDB),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
