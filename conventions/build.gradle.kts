@@ -66,7 +66,7 @@ dependencies {
   // When updating, also update dependencyManagement/build.gradle.kts
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.17.0")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")
-  implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.2")
+  implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.3")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:4.1.0")
   implementation("net.ltgt.gradle:gradle-nullaway-plugin:2.2.0")
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.5")
