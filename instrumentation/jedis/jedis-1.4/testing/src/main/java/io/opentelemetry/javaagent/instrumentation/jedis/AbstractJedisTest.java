@@ -69,7 +69,7 @@ public abstract class AbstractJedisTest {
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), "redis"),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, host),
@@ -90,7 +90,7 @@ public abstract class AbstractJedisTest {
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), "redis"),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, host),
@@ -101,7 +101,7 @@ public abstract class AbstractJedisTest {
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), "redis"),
                             equalTo(maybeStable(DB_STATEMENT), "GET foo"),
                             equalTo(maybeStable(DB_OPERATION), "GET"),
                             equalTo(SERVER_ADDRESS, host),
@@ -122,7 +122,7 @@ public abstract class AbstractJedisTest {
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), "redis"),
                             equalTo(maybeStable(DB_STATEMENT), "SET foo ?"),
                             equalTo(maybeStable(DB_OPERATION), "SET"),
                             equalTo(SERVER_ADDRESS, host),
@@ -133,7 +133,7 @@ public abstract class AbstractJedisTest {
                     span.hasName("RANDOMKEY")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "redis"),
+                            equalTo(maybeStable(DB_SYSTEM), "redis"),
                             equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
                             equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"),
                             equalTo(SERVER_ADDRESS, host),

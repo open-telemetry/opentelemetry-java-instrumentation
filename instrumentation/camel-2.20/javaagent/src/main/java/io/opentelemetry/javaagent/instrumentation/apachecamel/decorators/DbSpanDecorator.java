@@ -124,7 +124,12 @@ class DbSpanDecorator extends BaseSpanDecorator {
       CamelDirection camelDirection) {
     super.pre(attributes, exchange, endpoint, camelDirection);
 
-    attributes.put(DbIncubatingAttributes.DB_SYSTEM, system);
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      attributes.put(DbIncubatingAttributes.DB_SYSTEM_NAME, system);
+    }
+    if (SemconvStability.emitOldDatabaseSemconv()) {
+      attributes.put(DbIncubatingAttributes.DB_SYSTEM, system);
+    }
     String statement = getStatement(exchange, endpoint);
     if (statement != null) {
       if (SemconvStability.emitStableDatabaseSemconv()) {

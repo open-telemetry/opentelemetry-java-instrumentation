@@ -33,6 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpServerTest<SERVER> {
 
   protected abstract void awaitBarrier(int amount, TimeUnit timeUnit) throws Exception;

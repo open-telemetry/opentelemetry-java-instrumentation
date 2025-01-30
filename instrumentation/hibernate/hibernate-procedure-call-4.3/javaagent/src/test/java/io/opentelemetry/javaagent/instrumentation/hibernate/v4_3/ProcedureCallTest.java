@@ -121,7 +121,7 @@ class ProcedureCallTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(maybeStable(DB_STATEMENT), "{call TEST_PROC()}"),

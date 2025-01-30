@@ -23,6 +23,8 @@ enum DataSourceDbAttributesExtractor implements AttributesExtractor<DataSource, 
   private static final AttributeKey<String> DB_NAME = AttributeKey.stringKey("db.name");
   private static final AttributeKey<String> DB_NAMESPACE = AttributeKey.stringKey("db.namespace");
   private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
+  private static final AttributeKey<String> DB_SYSTEM_NAME =
+      AttributeKey.stringKey("db.system.name");
   private static final AttributeKey<String> DB_USER = AttributeKey.stringKey("db.user");
   private static final AttributeKey<String> DB_CONNECTION_STRING =
       AttributeKey.stringKey("db.connection_string");
@@ -43,13 +45,15 @@ enum DataSourceDbAttributesExtractor implements AttributesExtractor<DataSource, 
     }
     if (SemconvStability.emitStableDatabaseSemconv()) {
       internalSet(attributes, DB_NAMESPACE, getName(dbInfo));
+      internalSet(
+          attributes, DB_SYSTEM_NAME, SemconvStability.stableDbSystemName(dbInfo.getSystem()));
     }
     if (SemconvStability.emitOldDatabaseSemconv()) {
       internalSet(attributes, DB_USER, dbInfo.getUser());
       internalSet(attributes, DB_NAME, getName(dbInfo));
       internalSet(attributes, DB_CONNECTION_STRING, dbInfo.getShortUrl());
+      internalSet(attributes, DB_SYSTEM, dbInfo.getSystem());
     }
-    internalSet(attributes, DB_SYSTEM, dbInfo.getSystem());
   }
 
   private static String getName(DbInfo dbInfo) {

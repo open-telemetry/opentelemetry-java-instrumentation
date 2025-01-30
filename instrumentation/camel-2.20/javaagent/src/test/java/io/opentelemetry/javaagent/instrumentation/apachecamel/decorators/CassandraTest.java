@@ -124,6 +124,6 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                             equalTo(
                                 maybeStable(DB_STATEMENT),
                                 "select * from test.users where id=? ALLOW FILTERING"),
-                            equalTo(DB_SYSTEM, "cassandra"))));
+                            equalTo(maybeStable(DB_SYSTEM), "cassandra"))));
   }
 }

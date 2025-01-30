@@ -46,6 +46,7 @@ class MyBatisTest {
     }
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testSelect() {
     TestMapper testMapper = sqlSession.getMapper(TestMapper.class);

@@ -54,8 +54,12 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
   private static final AttributeKey<String> DB_OPERATION_NAME =
       AttributeKey.stringKey("db.operation.name");
   private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
+  private static final AttributeKey<String> DB_SYSTEM_NAME =
+      AttributeKey.stringKey("db.system.name");
   // copied from DbIncubatingAttributes.DbSystemIncubatingValues
   private static final String DB_SYSTEM_DYNAMODB = "dynamodb";
+  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
+  private static final String DB_SYSTEM_AWS_DYNAMODB = "aws.dynamodb";
   // copied from AwsIncubatingAttributes
   private static final AttributeKey<String> AWS_REQUEST_ID =
       AttributeKey.stringKey("aws.request_id");
@@ -348,7 +352,12 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     fieldMapper.mapToAttributes(sdkRequest, awsSdkRequest, span);
 
     if (awsSdkRequest.type() == DYNAMODB) {
-      span.setAttribute(DB_SYSTEM, DB_SYSTEM_DYNAMODB);
+      if (SemconvStability.emitStableDatabaseSemconv()) {
+        span.setAttribute(DB_SYSTEM_NAME, DB_SYSTEM_AWS_DYNAMODB);
+      }
+      if (SemconvStability.emitOldDatabaseSemconv()) {
+        span.setAttribute(DB_SYSTEM, DB_SYSTEM_DYNAMODB);
+      }
       String operation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
       if (operation != null) {
         if (SemconvStability.emitStableDatabaseSemconv()) {
