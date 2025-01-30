@@ -9,7 +9,6 @@ on:
 permissions:
   contents: read
 
-
 jobs:
   analyze:
     permissions:
@@ -48,6 +47,8 @@ jobs:
         uses: github/codeql-action/analyze@f6091c0113d1dcf9b98e269ee48e8a7e51b7bdd4 # v3.28.5
 
   workflow-notification:
+    permissions:
+      issues: write
     needs:
       - analyze
     if: always()
