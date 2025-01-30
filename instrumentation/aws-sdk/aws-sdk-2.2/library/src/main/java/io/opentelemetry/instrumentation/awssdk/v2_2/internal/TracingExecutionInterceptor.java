@@ -142,6 +142,11 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     io.opentelemetry.context.Context parentOtelContext = io.opentelemetry.context.Context.current();
     SdkRequest request = context.request();
 
+    // the request has already been modified, duplicate interceptor?
+    if (executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE) != null) {
+      return request;
+    }
+
     // Ignore presign request. These requests don't run all interceptor methods and the span created
     // here would never be ended and scope closed.
     if (executionAttributes.getAttribute(AwsSignerExecutionAttribute.PRESIGNER_EXPIRATION)
@@ -229,6 +234,11 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
   @Override
   public void afterMarshalling(
       Context.AfterMarshalling context, ExecutionAttributes executionAttributes) {
+    // the request has already been modified, duplicate interceptor?
+    if (executionAttributes.getAttribute(SCOPE_ATTRIBUTE) != null) {
+      return;
+    }
+
     io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
     if (otelContext != null
         && executionAttributes
