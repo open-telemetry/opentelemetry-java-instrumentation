@@ -5,6 +5,7 @@
 
 package io.opentelemetry.spring.smoketest;
 
+import java.util.List;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -18,16 +19,30 @@ import org.springframework.boot.test.context.SpringBootTest;
     properties = {
       // The headers are simply set here to make sure that headers can be parsed
       "otel.exporter.otlp.headers.c=3",
-      "otel.instrumentation.runtime-telemetry-java17.enabled=true",
+      "otel.instrumentation.runtime-telemetry.emit-experimental-telemetry=true",
+      "otel.instrumentation.runtime-telemetry-java17.enable-all=true",
     })
 class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {
 
   @Override
   protected void assertAdditionalMetrics() {
     // JFR based metrics
-    testing.waitAndAssertMetrics(
-        "io.opentelemetry.runtime-telemetry-java17",
-        "jvm.cpu.limit",
-        AbstractIterableAssert::isNotEmpty);
+    for (String metric :
+        List.of(
+            "jvm.cpu.limit",
+            "jvm.buffer.count",
+            "jvm.class.count",
+            "jvm.cpu.context_switch",
+            "jvm.cpu.longlock",
+            "jvm.system.cpu.utilization",
+            "jvm.gc.duration",
+            "jvm.memory.init",
+            "jvm.memory.used",
+            "jvm.memory.allocation",
+            "jvm.network.io            ",
+            "jvm.thread.count")) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.runtime-telemetry-java17", metric, AbstractIterableAssert::isNotEmpty);
+    }
   }
 }
