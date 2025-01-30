@@ -101,7 +101,7 @@ public final class RuntimeMetrics implements Closeable {
             recordingStream.onEvent(handler.getEventName(), handler);
           });
       recordingStream.onMetadata(event -> startUpLatch.countDown());
-      Thread daemonRunner = new Thread(recordingStream::start, "JFR-Metrics-Runner");
+      Thread daemonRunner = new Thread(recordingStream::start, "OpenTelemetry JFR-Metrics-Runner");
       daemonRunner.setDaemon(true);
       daemonRunner.start();
     }

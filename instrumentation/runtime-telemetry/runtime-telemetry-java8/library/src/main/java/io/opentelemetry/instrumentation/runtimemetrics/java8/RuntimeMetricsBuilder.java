@@ -20,7 +20,7 @@ public final class RuntimeMetricsBuilder {
   private boolean enableExperimentalJmxTelemetry = false;
   private Consumer<Runnable> shutdownHook =
       runnable -> {
-        Runtime.getRuntime().addShutdownHook(new Thread(runnable, "RuntimeMetricsShutdownHook"));
+        Runtime.getRuntime().addShutdownHook(new Thread(runnable, "OpenTelemetry RuntimeMetricsShutdownHook"));
       };
 
   RuntimeMetricsBuilder(OpenTelemetry openTelemetry) {
@@ -49,10 +49,6 @@ public final class RuntimeMetricsBuilder {
   }
 
   public void startFromInstrumentationConfig(InstrumentationConfig config) {
-    /*
-    By default, don't use any JFR metrics. May change this once semantic conventions are updated.
-    If enabled, default to only the metrics not already covered by runtime-telemetry-java8
-    */
     boolean defaultEnabled = config.getBoolean("otel.instrumentation.common.default-enabled", true);
     if (!config.getBoolean("otel.instrumentation.runtime-telemetry.enabled", defaultEnabled)) {
       // nothing is enabled

@@ -26,7 +26,7 @@ public final class RuntimeMetricsBuilder {
   private boolean enableExperimentalJmxTelemetry = false;
   private Consumer<Runnable> shutdownHook =
       runnable -> {
-        Runtime.getRuntime().addShutdownHook(new Thread(runnable, "RuntimeMetricsShutdownHook"));
+        Runtime.getRuntime().addShutdownHook(new Thread(runnable, "OpenTelemetry RuntimeMetricsShutdownHook"));
       };
 
   RuntimeMetricsBuilder(OpenTelemetry openTelemetry) {
