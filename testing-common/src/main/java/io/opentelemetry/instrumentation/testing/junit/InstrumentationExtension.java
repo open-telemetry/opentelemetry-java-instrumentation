@@ -12,7 +12,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.ContextStorage;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
 import io.opentelemetry.instrumentation.testing.LibraryTestRunner;
-import io.opentelemetry.instrumentation.testing.internal.AwaitUtil;
 import io.opentelemetry.instrumentation.testing.util.ContextStorageCloser;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
@@ -126,9 +125,12 @@ public abstract class InstrumentationExtension
    * This waits up to 20 seconds, then times out.
    */
   public List<LogRecordData> waitForLogRecords(int numberOfLogRecords) {
-    AwaitUtil.awaitUntilAsserted(
-        () -> assertThat(testRunner.getExportedLogRecords().size()).isEqualTo(numberOfLogRecords),
-        await().timeout(Duration.ofSeconds(20)));
+    await()
+        .timeout(Duration.ofSeconds(20))
+        .untilAsserted(
+            () ->
+                assertThat(testRunner.getExportedLogRecords().size())
+                    .isEqualTo(numberOfLogRecords));
     return testRunner.getExportedLogRecords();
   }
 
