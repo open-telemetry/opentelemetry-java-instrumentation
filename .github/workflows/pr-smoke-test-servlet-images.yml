@@ -6,6 +6,9 @@ on:
       - "smoke-tests/images/servlet/**"
       - ".github/workflows/pr-smoke-test-servlet-images.yml"
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}

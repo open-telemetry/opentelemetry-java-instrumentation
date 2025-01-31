@@ -3,7 +3,7 @@
 #on:
 #  push:
 #    paths:
-#      - ".github/workflows/reusable-smoke-test-images.yml"
+#      - ".github/workflows/reusable-publish-smoke-test-images.yml"
 
 name: PR build fake backend images for smoke tests
 
@@ -13,9 +13,6 @@ on:
       project:
         type: string
         required: true
-      publish:
-        type: boolean
-        required: false
       cache-read-only:
         type: boolean
         required: false
@@ -39,7 +36,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      packages: write # for publishing docker image to github packages
+      packages: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
@@ -70,20 +67,20 @@ jobs:
 
       - name: Build Java 8 Docker image
         if: "!inputs.skip-java-8"
-        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -Ptag=${{ env.TAG }} -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain
+        run: ./gradlew ${{ inputs.project }}:jib -Ptag=${{ env.TAG }} -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java 11 Docker image
         if: "!inputs.skip-java-11"
-        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -Ptag=${{ env.TAG }} -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain
+        run: ./gradlew ${{ inputs.project }}:jib -Ptag=${{ env.TAG }} -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java 17 Docker image
         if: "!inputs.skip-java-17"
-        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -Ptag=${{ env.TAG }} -PtargetJDK=17 -Djib.httpTimeout=120000 -Djib.console=plain
+        run: ./gradlew ${{ inputs.project }}:jib -Ptag=${{ env.TAG }} -PtargetJDK=17 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java 21 Docker image
         if: "!inputs.skip-java-21"
-        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -Ptag=${{ env.TAG }} -PtargetJDK=21 -Djib.httpTimeout=120000 -Djib.console=plain
+        run: ./gradlew ${{ inputs.project }}:jib -Ptag=${{ env.TAG }} -PtargetJDK=21 -Djib.httpTimeout=120000 -Djib.console=plain
 
       - name: Build Java 23 Docker image
         if: "!inputs.skip-java-23"
-        run: ./gradlew ${{ inputs.project }}:${{ inputs.publish && 'jib' || 'jibDockerBuild' }} -Ptag=${{ env.TAG }} -PtargetJDK=23 -Djib.httpTimeout=120000 -Djib.console=plain
+        run: ./gradlew ${{ inputs.project }}:jib -Ptag=${{ env.TAG }} -PtargetJDK=23 -Djib.httpTimeout=120000 -Djib.console=plain

@@ -15,7 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       packages: write
-      contents: read
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
@@ -37,3 +36,13 @@ jobs:
           push: true
           file: benchmark-overhead/Dockerfile-petclinic-base
           tags: ghcr.io/open-telemetry/opentelemetry-java-instrumentation/petclinic-rest-base:${{ env.TS }}
+
+  workflow-notification:
+    permissions:
+      issues: write
+    needs:
+      - publish
+    if: always()
+    uses: ./.github/workflows/reusable-workflow-notification.yml
+    with:
+      success: ${{ needs.publish.result == 'success' }}

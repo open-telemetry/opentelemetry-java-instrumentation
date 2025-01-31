@@ -6,6 +6,9 @@ on:
     - cron: "24 3 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   common:
     uses: ./.github/workflows/build-common.yml
@@ -32,6 +35,8 @@ jobs:
     uses: ./.github/workflows/reusable-misspell-check.yml
 
   workflow-notification:
+    permissions:
+      issues: write
     needs:
       - common
       - test-latest-deps
