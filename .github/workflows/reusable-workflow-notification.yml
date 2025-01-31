@@ -9,6 +9,9 @@ on:
         type: boolean
         required: true
 
+permissions:
+  issues: write
+
 jobs:
   workflow-notification:
     runs-on: ubuntu-latest
