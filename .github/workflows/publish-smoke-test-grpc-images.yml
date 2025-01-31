@@ -19,7 +19,6 @@ jobs:
     uses: ./.github/workflows/reusable-publish-smoke-test-images.yml
     with:
       project: ":smoke-tests:images:grpc"
-      publish: true
 
   workflow-notification:
     permissions:
