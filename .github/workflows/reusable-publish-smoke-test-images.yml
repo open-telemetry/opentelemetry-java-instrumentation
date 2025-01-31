@@ -51,7 +51,6 @@ jobs:
           java-version-file: .java-version
 
       - name: Login to GitHub package registry
-        if: inputs.publish
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
         with:
           registry: ghcr.io
