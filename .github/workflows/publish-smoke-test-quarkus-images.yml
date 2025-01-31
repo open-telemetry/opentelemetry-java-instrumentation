@@ -19,7 +19,6 @@ jobs:
     uses: ./.github/workflows/reusable-publish-smoke-test-images.yml
     with:
       project: ":smoke-tests:images:quarkus"
-      publish: true
       # Quarkus 3.7+ requires Java 17+
       skip-java-8: true
       skip-java-11: true
