@@ -24,6 +24,7 @@ jobs:
 
   publish:
     permissions:
+      contents: read
       packages: write
     needs: prepare
     runs-on: ${{ matrix.os }}
