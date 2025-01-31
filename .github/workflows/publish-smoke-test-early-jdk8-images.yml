@@ -9,8 +9,13 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   publish:
+    permissions:
+      packages: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -41,6 +46,8 @@ jobs:
         run: ./gradlew :smoke-tests:images:early-jdk8:dockerPush -PextraTag=${{ env.TAG }}
 
   workflow-notification:
+    permissions:
+      issues: write
     needs:
       - publish
     if: always()

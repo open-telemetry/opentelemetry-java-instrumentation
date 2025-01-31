@@ -9,6 +9,9 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   prepare:
     runs-on: ubuntu-latest
@@ -20,6 +23,8 @@ jobs:
         run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_OUTPUT
 
   publish:
+    permissions:
+      packages: write
     needs: prepare
     runs-on: ${{ matrix.os }}
     defaults:
@@ -81,6 +86,8 @@ jobs:
         run: ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PextraTag=${{ needs.prepare.outputs.tag }} -PsmokeTestServer=${{ matrix.smoke-test-server }}
 
   workflow-notification:
+    permissions:
+      issues: write
     needs:
       - publish
     if: always()

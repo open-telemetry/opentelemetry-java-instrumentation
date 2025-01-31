@@ -6,6 +6,9 @@ on:
     - cron: "48 4 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   common:
     uses: ./.github/workflows/build-common.yml
@@ -29,6 +32,8 @@ jobs:
   # anyway and so are already covered by the normal daily build
 
   workflow-notification:
+    permissions:
+      issues: write
     needs:
       - common
       - test-latest-deps
