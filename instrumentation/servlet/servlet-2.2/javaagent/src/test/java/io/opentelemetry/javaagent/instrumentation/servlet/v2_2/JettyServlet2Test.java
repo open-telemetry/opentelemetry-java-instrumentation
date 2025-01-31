@@ -111,6 +111,7 @@ class JettyServlet2Test extends AbstractHttpServerTest<Server> {
     }
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {

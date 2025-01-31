@@ -18,8 +18,15 @@ final class LettuceConnectAttributesExtractor implements AttributesExtractor<Red
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, RedisURI redisUri) {
-    attributes.put(
-        DbIncubatingAttributes.DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.REDIS);
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      attributes.put(
+          DbIncubatingAttributes.DB_SYSTEM_NAME,
+          DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS);
+    }
+    if (SemconvStability.emitOldDatabaseSemconv()) {
+      attributes.put(
+          DbIncubatingAttributes.DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.REDIS);
+    }
 
     int database = redisUri.getDatabase();
     if (database != 0) {

@@ -9,7 +9,6 @@ on:
 permissions:
   contents: read
 
-
 jobs:
   analyze:
     permissions:
@@ -24,13 +23,13 @@ jobs:
         run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up Java 17
-        uses: actions/setup-java@7a6d8a8234af8eb26422e24e3006232cccaa061b # v4.6.0
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
         with:
           distribution: temurin
           java-version-file: .java-version
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@f6091c0113d1dcf9b98e269ee48e8a7e51b7bdd4 # v3.28.5
+        uses: github/codeql-action/init@dd746615b3b9d728a6a37ca2045b68ca76d4841a # v3.28.8
         with:
           languages: java
           # using "latest" helps to keep up with the latest Kotlin support
@@ -45,9 +44,11 @@ jobs:
         run: ./gradlew assemble -x javadoc --no-build-cache --no-daemon
 
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@f6091c0113d1dcf9b98e269ee48e8a7e51b7bdd4 # v3.28.5
+        uses: github/codeql-action/analyze@dd746615b3b9d728a6a37ca2045b68ca76d4841a # v3.28.8
 
   workflow-notification:
+    permissions:
+      issues: write
     needs:
       - analyze
     if: always()

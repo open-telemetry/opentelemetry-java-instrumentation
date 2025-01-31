@@ -14,6 +14,7 @@ import javax.annotation.Nullable;
 
 final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<CassandraRequest> {
 
+  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
   public String getDbSystem(CassandraRequest request) {
     return DbIncubatingAttributes.DbSystemIncubatingValues.CASSANDRA;

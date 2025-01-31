@@ -115,6 +115,7 @@ class TomcatAsyncTest extends AbstractHttpServerTest<Tomcat> {
     options.setHasResponseSpan(endpoint -> endpoint == NOT_FOUND || endpoint == REDIRECT);
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
