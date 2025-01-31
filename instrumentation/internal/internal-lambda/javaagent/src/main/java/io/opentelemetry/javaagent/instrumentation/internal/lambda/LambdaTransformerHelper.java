@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.lambda;
 
-import io.opentelemetry.javaagent.bootstrap.ClassFileTransformerHolder;
 import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper;
-import java.lang.instrument.ClassFileTransformer;
+import io.opentelemetry.javaagent.bootstrap.LambdaTransformer;
+import io.opentelemetry.javaagent.bootstrap.LambdaTransformerHolder;
 
 /** Helper class for transforming lambda class bytes. */
-public final class LambdaTransformer {
+public final class LambdaTransformerHelper {
 
-  private LambdaTransformer() {}
+  private LambdaTransformerHelper() {}
 
   /**
    * Called from {@code java.lang.invoke.InnerClassLambdaMetafactory} to transform lambda class
@@ -24,18 +24,13 @@ public final class LambdaTransformer {
     if (InjectedClassHelper.isHelperClass(targetClass)) {
       return classBytes;
     }
-    ClassFileTransformer transformer = ClassFileTransformerHolder.getLambdaClassFileTransformer();
+    LambdaTransformer transformer = LambdaTransformerHolder.setLambdaTransformer();
     if (transformer == null) {
       return classBytes;
     }
 
     try {
-      // The 'targetClass' needs to be non-null as it is used in Java9LambdaClassFileTransformer
-      // to get a reference to the jpms module. However, a null value must be passed to the
-      // underlying transformer as this code is called when the lambda is defined.
-      byte[] result =
-          transformer.transform(
-              targetClass.getClassLoader(), slashClassName, targetClass, null, classBytes);
+      byte[] result = transformer.transform(slashClassName, targetClass, classBytes);
       if (result != null) {
         classBytes = result;
       }

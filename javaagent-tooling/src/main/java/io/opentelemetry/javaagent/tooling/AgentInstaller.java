@@ -21,9 +21,10 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.bootstrap.BootstrapPackagePrefixesHolder;
-import io.opentelemetry.javaagent.bootstrap.ClassFileTransformerHolder;
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
 import io.opentelemetry.javaagent.bootstrap.InstrumentedTaskClasses;
+import io.opentelemetry.javaagent.bootstrap.LambdaTransformer;
+import io.opentelemetry.javaagent.bootstrap.LambdaTransformerHolder;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizer;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
@@ -200,14 +201,15 @@ public class AgentInstaller {
 
     agentBuilder = AgentBuilderUtil.optimize(agentBuilder);
     ClassFileTransformer transformer = agentBuilder.installOn(inst);
+    LambdaTransformer lambdaTransformer;
     if (JavaModule.isSupported()) {
       // wrapping in a JPMS compliant implementation
-      transformer = new Java9LambdaClassFileTransformer(transformer);
+      lambdaTransformer = new Java9LambdaTransformer(transformer);
     } else {
       // wrapping in a java 8 compliant transformer
-      transformer = new LambdaClassFileTransformer(transformer);
+      lambdaTransformer = new Java8LambdaTransformer(transformer);
     }
-    ClassFileTransformerHolder.setLambdaClassFileTransformer(transformer);
+    LambdaTransformerHolder.setLambdaTransformer(lambdaTransformer);
 
     instrumentationInstalled = true;
 
