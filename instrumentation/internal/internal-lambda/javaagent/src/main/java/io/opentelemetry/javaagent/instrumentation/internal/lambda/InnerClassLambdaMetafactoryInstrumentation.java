@@ -128,7 +128,7 @@ public class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumen
                       Opcodes.GETFIELD, slashClassName, "targetClass", "Ljava/lang/Class;");
                   mv.visitMethodInsn(
                       Opcodes.INVOKESTATIC,
-                      Type.getInternalName(LambdaTransformer.class),
+                      Type.getInternalName(LambdaTransformerHelper.class),
                       "transform",
                       "([BLjava/lang/String;Ljava/lang/Class;)[B",
                       false);
