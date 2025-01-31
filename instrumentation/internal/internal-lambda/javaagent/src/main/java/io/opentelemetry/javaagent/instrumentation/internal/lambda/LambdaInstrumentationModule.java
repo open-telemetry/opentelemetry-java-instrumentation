@@ -31,7 +31,7 @@ public class LambdaInstrumentationModule extends InstrumentationModule
   @Override
   public List<String> injectedClassNames() {
     return Collections.singletonList(
-        "io.opentelemetry.javaagent.instrumentation.internal.lambda.LambdaTransformer");
+        "io.opentelemetry.javaagent.instrumentation.internal.lambda.LambdaTransformerHelper");
   }
 
   @Override

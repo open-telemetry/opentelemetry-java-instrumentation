@@ -24,7 +24,7 @@ public final class LambdaTransformerHelper {
     if (InjectedClassHelper.isHelperClass(targetClass)) {
       return classBytes;
     }
-    LambdaTransformer transformer = LambdaTransformerHolder.setLambdaTransformer();
+    LambdaTransformer transformer = LambdaTransformerHolder.getLambdaTransformer();
     if (transformer == null) {
       return classBytes;
     }

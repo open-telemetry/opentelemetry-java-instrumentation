@@ -19,7 +19,7 @@ public final class LambdaTransformerHolder {
    *
    * @return class transformer for defining lambdas
    */
-  public static LambdaTransformer setLambdaTransformer() {
+  public static LambdaTransformer getLambdaTransformer() {
     return lambdaTransformer;
   }
 
