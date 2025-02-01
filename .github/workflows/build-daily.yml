@@ -36,6 +36,7 @@ jobs:
 
   workflow-notification:
     permissions:
+      contents: read
       issues: write
     needs:
       - common

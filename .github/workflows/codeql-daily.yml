@@ -12,6 +12,7 @@ permissions:
 jobs:
   analyze:
     permissions:
+      contents: read
       actions: read  # for github/codeql-action/init to get workflow details
       security-events: write  # for github/codeql-action/analyze to upload SARIF results
     runs-on: ubuntu-latest
@@ -48,6 +49,7 @@ jobs:
 
   workflow-notification:
     permissions:
+      contents: read
       issues: write
     needs:
       - analyze

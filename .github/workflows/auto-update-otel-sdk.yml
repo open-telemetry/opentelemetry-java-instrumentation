@@ -6,6 +6,9 @@ on:
     - cron: "46 * * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   check-versions:
     runs-on: ubuntu-latest
@@ -44,7 +47,7 @@ jobs:
 
   update-otel-sdk:
     permissions:
-      contents: write  # for Git to git push
+      contents: write  # for git push to PR branch
     runs-on: ubuntu-latest
     if: |
       needs.check-versions.outputs.current-version != needs.check-versions.outputs.latest-version &&

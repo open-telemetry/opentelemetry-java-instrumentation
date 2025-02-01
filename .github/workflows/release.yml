@@ -2,6 +2,9 @@ name: Release
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   required-jobs:
     uses: ./.github/workflows/build-common.yml
@@ -16,6 +19,8 @@ jobs:
   # and this is not a reason to hold up the release
 
   release:
+    permissions:
+      contents: write # for creating the release
     runs-on: ubuntu-latest
     needs:
       - required-jobs
@@ -181,6 +186,8 @@ jobs:
           echo "prior-version=$PRIOR_VERSION" >> $GITHUB_OUTPUT
 
   merge-change-log-to-main:
+    permissions:
+      contents: write # for git push to PR branch
     runs-on: ubuntu-latest
     needs:
       - release

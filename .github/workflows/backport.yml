@@ -12,7 +12,7 @@ permissions:
 jobs:
   backport:
     permissions:
-      contents: write  # for Git to git push
+      contents: write  # for git push to PR branch
     runs-on: ubuntu-latest
     steps:
       - run: |
