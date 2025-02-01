@@ -18,6 +18,11 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
   (To reduce friction for new contributors,
   as the default is "Require approval for first-time contributors")
 
+- Workflow permissions
+  - Default permissions granted to the `GITHUB_TOKEN` when running workflows in this repository:
+    Read repository contents and packages permissions
+  - Allow GitHub Actions to create and approve pull requests: UNCHECKED
+
 ## Branch protections
 
 The order of branch protection rules

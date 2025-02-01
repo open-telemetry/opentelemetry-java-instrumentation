@@ -8,8 +8,14 @@ on:
   # because repository write permission is needed to assign reviewers
   pull_request_target:
 
+permissions:
+  contents: read
+
 jobs:
   assign-reviewers:
+    permissions:
+      contents: read
+      pull-requests: write
     runs-on: ubuntu-latest
     steps:
       - uses: trask/component-owners@02dfde3c03025c064cc6961975e28a42e81c394a # main
