@@ -17,6 +17,7 @@ jobs:
 
   workflow-notification:
     permissions:
+      contents: read
       issues: write
     needs:
       - graalvm-native-tests
