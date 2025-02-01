@@ -9,7 +9,7 @@ import io.opentelemetry.javaagent.bootstrap.LambdaTransformer;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
 
-/** lambda transformer for java < 9 without jpms modules support */
+/** Lambda transformer for java versions before 9 without jpms modules support. */
 public class Java8LambdaTransformer implements LambdaTransformer {
 
   private final ClassFileTransformer delegate;
