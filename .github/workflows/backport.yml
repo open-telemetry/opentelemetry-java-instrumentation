@@ -26,14 +26,16 @@ jobs:
           # history is needed to run git cherry-pick below
           fetch-depth: 0
 
-      - name: Use CLA approved github bot
-        run: .github/scripts/use-cla-approved-github-bot.sh
-
       - uses: actions/create-github-app-token@136412a57a7081aa63c935a2cc2918f76c34f514 # v1.11.2
         id: app-token
         with:
           app-id: ${{ vars.OTELBOT_APP_ID }}
           private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+
+      - name: Use CLA approved author
+        run: |
+          git config user.name otelbot
+          git config user.email 197425009+otelbot@users.noreply.github.com
 
       - name: Create pull request
         env:
