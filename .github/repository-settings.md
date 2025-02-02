@@ -45,11 +45,6 @@ The branch protection rules below should be added before the `**/**` branch prot
 
 Same settings as above for [`main`](#main).
 
-### `cloudfoundry`
-
-Same settings as above for [`main`](#main),
-except for the `required-status-check` required status check.
-
 ### `renovate/**/**` and `opentelemetrybot/**/**`
 
 Same settings as
