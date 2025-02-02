@@ -23,45 +23,59 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
     Read repository contents and packages permissions
   - Allow GitHub Actions to create and approve pull requests: UNCHECKED
 
-## Branch protections
+## Rules > Rulesets
 
-The order of branch protection rules
-[can be important](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/defining-the-mergeability-of-pull-requests/managing-a-branch-protection-rule#about-branch-protection-rules).
-The branch protection rules below should be added before the `**/**` branch protection rule
-(this may require deleting the `**/**` rule and recreating it at the end).
+### `main` and release branches
 
-### `main`
+- Targeted branches:
+  - `main`
+  - `release/*`
+  - `v0.*`
+  - `v1.*`
+- Branch rules
+  - Restrict deletions: CHECKED
+  - Require linear history: CHECKED
+  - Require a pull request before merging: CHECKED
+    - Required approvals: 1
+    - Require review from Code Owners: CHECKED
+    - Allowed merge methods: Squash
+  - Require status checks to pass
+    - EasyCLA
+    - `required-status-check`
+  - Block force pushes: CHECKED
 
-- Require branches to be up to date before merging: UNCHECKED
+### `cloudfoundry` branch
 
-  (PR jobs take too long, and leaving this unchecked has not been a significant problem)
+- Targeted branches:
+  - `cloudfoundry`
+- Branch rules
+  - Restrict deletions: CHECKED
+  - Require linear history: CHECKED
+  - Require a pull request before merging: CHECKED
+    - Required approvals: 1
+    - Require review from Code Owners: CHECKED
+    - Allowed merge methods: Squash
+  - Require status checks to pass
+    - EasyCLA
+  - Block force pushes: CHECKED
 
-- Status checks that are required:
+### `gh-pages` branch
 
-  - EasyCLA
-  - required-status-check
+- Targeted branches:
+  - `gh-pages`
+- Branch rules
+  - Restrict deletions: CHECKED
+  - Require linear history: CHECKED
+  - Block force pushes: CHECKED
 
-### `release/*`
+### Restrict branch creation
 
-Same settings as above for [`main`](#main).
-
-### `cloudfoundry`
-
-Same settings as above for [`main`](#main),
-except for the `required-status-check` required status check.
-
-### `renovate/**/**` and `opentelemetrybot/**/**`
-
-Same settings as
-for [`dependabot/**/**`](https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md#branch-protection-rule-dependabot)
-
-### `gh-pages`
-
-- Everything UNCHECKED
-
-  (This branch is currently only used for directly pushing benchmarking results from the
-  [Nightly overhead benchmark](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/nightly-benchmark-overhead.yml)
-  job)
+- Targeted branches
+  - Exclude:
+    - `release/*`
+    - `renovate/**/**`
+    - `opentelemetrybot/**/**`
+- Restrict creations: CHECKED
 
 ## Code security and analysis
 
@@ -85,3 +99,5 @@ for [`dependabot/**/**`](https://github.com/open-telemetry/community/blob/main/d
 ### Organization secrets
 
 - `OPENTELEMETRYBOT_GITHUB_TOKEN`
+- `OTELBOT_CLIENT_ID`
+- `OTELBOT_PRIVATE_KEY`
