@@ -20,14 +20,21 @@ jobs:
           # history is needed to run git cherry-pick below
           fetch-depth: 0
 
-      - name: Use CLA approved github bot
-        run: .github/scripts/use-cla-approved-github-bot.sh
-
       - uses: actions/create-github-app-token@136412a57a7081aa63c935a2cc2918f76c34f514 # v1.11.2
         id: app-token
         with:
-          app-id: ${{ secrets.OPENTELEMETRY_BASIC_AUTOMATION_APP_ID }}
+          app-id: ${{ secrets.OPENTELEMETRY_BASIC_AUTOMATION_CLIENT_ID }}
           private-key: ${{ secrets.OPENTELEMETRY_BASIC_AUTOMATION_PRIVATE_KEY }}
+
+      - name: Use CLA approved author
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          user_name=${{ steps.app-token.outputs.app-slug }}[bot]
+          user_id=$(gh api "/users/$user_name" --jq .id)
+
+          git config user.name "$user_name"
+          git config user.email "${user_id}+${user_name}@users.noreply.github.com"
 
       - name: Create pull request
         env:
