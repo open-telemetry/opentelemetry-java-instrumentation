@@ -175,11 +175,13 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cp javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar opentelemetry-javaagent.jar
+          cp javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar.asc opentelemetry-javaagent.jar.asc
           gh release create --target $GITHUB_REF_NAME \
                             --title "Version $VERSION" \
                             --notes-file /tmp/release-notes.txt \
                             v$VERSION \
                             opentelemetry-javaagent.jar \
+                            opentelemetry-javaagent.asc.jar \
                             opentelemetry-java-instrumentation-SBOM.zip
 
           echo "version=$VERSION" >> $GITHUB_OUTPUT
