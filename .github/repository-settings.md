@@ -77,6 +77,13 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
     - `opentelemetrybot/**/**`
 - Restrict creations: CHECKED
 
+### Restrict updating tags
+
+- Targeted tags
+  - All tags
+- Restrict updates: CHECKED
+- Restrict deletions: CHECKED
+
 ## Code security and analysis
 
 - Secret scanning: Enabled
