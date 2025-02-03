@@ -26,6 +26,11 @@ class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {
 
   @Override
   protected void assertAdditionalMetrics() {
+    if (System.getProperty("org.graalvm.nativeimage.imagecode") != null) {
+      // GraalVM native image does not support JFR
+      return;
+    }
+
     // JFR based metrics
     for (String metric :
         List.of(
