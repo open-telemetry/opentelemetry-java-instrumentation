@@ -21,6 +21,8 @@ jobs:
 
   common:
     uses: ./.github/workflows/build-common.yml
+    secrets:
+      FLAKY_TEST_REPORTER_ACCESS_KEY: ${{ secrets.FLAKY_TEST_REPORTER_ACCESS_KEY }}
 
   test-latest-deps:
     # release branches are excluded
@@ -28,6 +30,8 @@ jobs:
     # which requires unnecessary release branch maintenance, especially for patches
     if: "!startsWith(github.ref_name, 'release/')"
     uses: ./.github/workflows/reusable-test-latest-deps.yml
+    secrets:
+      FLAKY_TEST_REPORTER_ACCESS_KEY: ${{ secrets.FLAKY_TEST_REPORTER_ACCESS_KEY }}
 
   muzzle:
     # release branches are excluded
