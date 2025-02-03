@@ -212,18 +212,14 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
         OtelSpringStarterSmokeTestController.TEST_HISTOGRAM,
         AbstractIterableAssert::isNotEmpty);
 
-    // runtime metrics
-    // from special logic for threads that is automatically detected in GraalVM native image
-    // see io.opentelemetry.instrumentation.runtimemetrics.java8.Threads
-    testing.waitAndAssertMetrics(
-        "io.opentelemetry.runtime-telemetry-java8",
-        "jvm.thread.count",
-        AbstractIterableAssert::isNotEmpty);
-
-    // JMX based metrics
+    // JMX based metrics - test one per JMX bean
     List<String> jmxMetrics =
         new ArrayList<>(
-            Arrays.asList("jvm.memory.used", "jvm.system.cpu.load_1m", "jvm.memory.init"));
+            Arrays.asList(
+                "jvm.thread.count",
+                "jvm.memory.used",
+                "jvm.system.cpu.load_1m",
+                "jvm.memory.init"));
 
     boolean noNative = System.getProperty("org.graalvm.nativeimage.imagecode") == null;
     if (noNative) {
