@@ -178,6 +178,13 @@ public class FlakyTestReporter {
 
             return CONTINUE;
           }
+
+          @Override
+          public FileVisitResult visitFileFailed(Path file, IOException exception) {
+            System.err.println("Failed to visit " + file.toString());
+            exception.printStackTrace();
+            return CONTINUE;
+          }
         });
   }
 
