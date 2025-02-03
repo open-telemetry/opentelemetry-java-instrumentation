@@ -29,6 +29,7 @@ import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -220,24 +221,28 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
         AbstractIterableAssert::isNotEmpty);
 
     // JMX based metrics
-    Arrays.asList(
-            "jvm.memory.used",
-            "jvm.system.cpu.load_1m",
-            "jvm.buffer.memory.usage",
-            "jvm.memory.init")
-        .forEach(
-            metricName ->
-                testing.waitAndAssertMetrics(
-                    "io.opentelemetry.runtime-telemetry-java8",
-                    metricName,
-                    AbstractIterableAssert::isNotEmpty));
+    List<String> jmxMetrics =
+        new ArrayList<>(
+            Arrays.asList("jvm.memory.used", "jvm.system.cpu.load_1m", "jvm.memory.init"));
+
+    boolean noNative = System.getProperty("org.graalvm.nativeimage.imagecode") == null;
+    if (noNative) {
+      // GraalVM native image does not support buffer pools - have to investigate why
+      jmxMetrics.add("jvm.buffer.memory.usage");
+    }
+    jmxMetrics.forEach(
+        metricName ->
+            testing.waitAndAssertMetrics(
+                "io.opentelemetry.runtime-telemetry-java8",
+                metricName,
+                AbstractIterableAssert::isNotEmpty));
 
     assertAdditionalMetrics();
 
     // Log
     List<LogRecordData> exportedLogRecords = testing.getExportedLogRecords();
     assertThat(exportedLogRecords).as("No log record exported.").isNotEmpty();
-    if (System.getProperty("org.graalvm.nativeimage.imagecode") == null) {
+    if (noNative) {
       // log records differ in native image mode due to different startup timing
       LogRecordData firstLog = exportedLogRecords.get(0);
       assertThat(firstLog.getBodyValue().asString())
