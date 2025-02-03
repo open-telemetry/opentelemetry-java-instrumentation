@@ -283,6 +283,7 @@ public class FlakyTestReporter {
     String buildScanUrl = System.getProperty("buildScanUrl");
     String jobUrl = System.getProperty("jobUrl");
     if (accessKey != null && !accessKey.isEmpty()) {
+      System.err.println("access key is set");
       reporter.report(accessKey, buildScanUrl, jobUrl);
     }
   }
