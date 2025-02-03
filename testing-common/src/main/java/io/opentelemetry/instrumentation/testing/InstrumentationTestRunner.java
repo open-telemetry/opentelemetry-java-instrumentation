@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.testing;
 
-import static io.opentelemetry.instrumentation.testing.internal.AwaitUtil.awaitUntilAsserted;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
@@ -18,6 +18,7 @@ import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -29,6 +30,8 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.assertj.core.api.ListAssert;
+import org.awaitility.core.ConditionFactory;
+import org.awaitility.core.ConditionTimeoutException;
 
 /**
  * This interface defines a common set of operations for interaction with OpenTelemetry SDK and
@@ -171,6 +174,13 @@ public abstract class InstrumentationTestRunner {
         });
   }
 
+  public final List<LogRecordData> waitForLogRecords(int numberOfLogRecords) {
+    awaitUntilAsserted(
+        () -> assertThat(getExportedLogRecords().size()).isEqualTo(numberOfLogRecords),
+        await().timeout(Duration.ofSeconds(20)));
+    return getExportedLogRecords();
+  }
+
   private List<MetricData> instrumentationMetrics(String instrumentationName) {
     return getExportedMetrics().stream()
         .filter(m -> m.getInstrumentationScopeInfo().getName().equals(instrumentationName))
@@ -249,5 +259,30 @@ public abstract class InstrumentationTestRunner {
   public final <T, E extends Throwable> T runWithNonRecordingSpan(ThrowingSupplier<T, E> callback)
       throws E {
     return testInstrumenters.runWithNonRecordingSpan(callback);
+  }
+
+  private static void awaitUntilAsserted(Runnable runnable) {
+    awaitUntilAsserted(runnable, await());
+  }
+
+  private static void awaitUntilAsserted(Runnable runnable, ConditionFactory conditionFactory) {
+    try {
+      conditionFactory.untilAsserted(runnable::run);
+    } catch (Throwable t) {
+      // awaitility is doing a jmx call that is not implemented in GraalVM:
+      // call:
+      // https://github.com/awaitility/awaitility/blob/fbe16add874b4260dd240108304d5c0be84eabc8/awaitility/src/main/java/org/awaitility/core/ConditionAwaiter.java#L157
+      // see https://github.com/oracle/graal/issues/6101 (spring boot graal native image)
+      if (t.getClass().getName().equals("com.oracle.svm.core.jdk.UnsupportedFeatureError")
+          || t instanceof ConditionTimeoutException) {
+        // Don't throw this failure since the stack is the awaitility thread, causing confusion.
+        // Instead, just assert one more time on the test thread, which will fail with a better
+        // stack trace - that is on the same thread as the test.
+        // TODO: There is probably a better way to do this.
+        runnable.run();
+      } else {
+        throw t;
+      }
+    }
   }
 }

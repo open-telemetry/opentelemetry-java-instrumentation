@@ -5,9 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing.junit;
 
-import static io.opentelemetry.instrumentation.testing.internal.AwaitUtil.awaitUntilAsserted;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.ContextStorage;
@@ -23,7 +21,6 @@ import io.opentelemetry.sdk.testing.assertj.LogRecordDataAssert;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -126,10 +123,7 @@ public abstract class InstrumentationExtension
    * This waits up to 20 seconds, then times out.
    */
   public List<LogRecordData> waitForLogRecords(int numberOfLogRecords) {
-    awaitUntilAsserted(
-        () -> assertThat(testRunner.getExportedLogRecords().size()).isEqualTo(numberOfLogRecords),
-        await().timeout(Duration.ofSeconds(20)));
-    return testRunner.getExportedLogRecords();
+    return testRunner.waitForLogRecords(numberOfLogRecords);
   }
 
   @SafeVarargs
