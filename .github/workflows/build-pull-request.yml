@@ -71,7 +71,6 @@ jobs:
     # only the "common" checks are required for release branch PRs in order to avoid any unnecessary
     # release branch maintenance (especially for patches)
     needs:
-      - gradle-wrapper-validation
       - common
       - muzzle
       - shell-script-check
