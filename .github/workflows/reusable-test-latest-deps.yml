@@ -12,6 +12,9 @@ on:
       max-test-retries:
         type: string
         required: false
+    secrets:
+      FLAKY_TEST_REPORTER_ACCESS_KEY:
+        required: false
 
 permissions:
   contents: read

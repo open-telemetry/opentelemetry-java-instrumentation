@@ -18,6 +18,9 @@ on:
       skip-windows-smoke-tests:
         type: boolean
         required: false
+    secrets:
+      FLAKY_TEST_REPORTER_ACCESS_KEY:
+        required: false
 
 permissions:
   contents: read
