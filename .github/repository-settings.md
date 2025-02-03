@@ -42,7 +42,6 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
   - Require status checks to pass
     - EasyCLA
     - `required-status-check`
-    - `gradle-wrapper-validation`
   - Block force pushes: CHECKED
 
 ### `cloudfoundry` branch
