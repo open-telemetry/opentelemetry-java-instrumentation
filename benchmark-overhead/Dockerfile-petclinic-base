@@ -13,7 +13,7 @@ RUN git checkout 8aa4d49
 RUN ./mvnw package -Dmaven.test.skip=true
 RUN cp target/spring-petclinic-rest*.jar /app/spring-petclinic-rest.jar
 
-FROM bellsoft/liberica-openjdk-alpine:21.0.6
+FROM bellsoft/liberica-openjdk-alpine:21.0.5@sha256:45083bf56e4cf13c34c6ec04356deec655638c8aa8443f9dcab7a90fb4db8fb6
 COPY --from=app-build /app/spring-petclinic-rest.jar /app/spring-petclinic-rest.jar
 WORKDIR /app
 EXPOSE 9966
