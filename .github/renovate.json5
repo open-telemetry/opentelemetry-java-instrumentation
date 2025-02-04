@@ -216,5 +216,27 @@
       "matchUpdateTypes": ["major"],
       "enabled": false
     }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "datasourceTemplate": "pypi",
+      "fileMatch": [
+        "^.github/workflows/"
+      ],
+      "matchStrings": [
+        "pip install (?<depName>[^=]+)==(?<currentValue>[^\\s]+)"
+      ]
+    },
+    {
+      "customType": "regex",
+      "datasourceTemplate": "npm",
+      "fileMatch": [
+        "^.github/workflows/"
+      ],
+      "matchStrings": [
+        "npx (?<depName>[^@]+)@(?<currentValue>[^\\s]+)"
+      ]
+    }
   ]
 }
