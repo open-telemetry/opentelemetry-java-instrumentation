@@ -1,9 +1,9 @@
-name: CodeQL (daily)
+name: CodeQL
 
 on:
-  schedule:
-    # daily at 1:30 UTC
-    - cron: "30 1 * * *"
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
