@@ -85,6 +85,13 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
 - Restrict updates: CHECKED
 - Restrict deletions: CHECKED
 
+## Branch protections
+
+### `main`, `release/*`, `v0.*`, `v1.*`, `cloudfoundry`
+
+- Restrict who can push to matching branches: CHECKED
+  - Restrict pushes that create matching branches: CHECKED
+
 ## Code security and analysis
 
 - Secret scanning: Enabled
