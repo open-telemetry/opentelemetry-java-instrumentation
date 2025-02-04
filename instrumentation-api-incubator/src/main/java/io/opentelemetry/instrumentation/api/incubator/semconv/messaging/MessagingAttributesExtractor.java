@@ -189,6 +189,7 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
    * any time.
    */
   @Override
+  @SuppressWarnings("deprecation") // using deprecated semconv
   public SpanKey internalGetSpanKey() {
     if (operation == null) {
       return null;
