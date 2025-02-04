@@ -1,10 +1,24 @@
 name: CodeQL
 
 on:
+  pull_request:
+    branches:
+      - main
+      - release/*
+      - v0.*
+      - v1.*
+      - cloudfoundry
+      - gh-pages
   push:
     branches:
       - main
-  workflow_dispatch:
+      - release/*
+      - v0.*
+      - v1.*
+      - cloudfoundry
+      - gh-pages
+  schedule:
+    - cron: "29 13 * * 2"  # weekly at 13:29 UTC on Tuesday
 
 permissions:
   contents: read
@@ -46,14 +60,3 @@ jobs:
 
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@dd746615b3b9d728a6a37ca2045b68ca76d4841a # v3.28.8
-
-  workflow-notification:
-    permissions:
-      contents: read
-      issues: write
-    needs:
-      - analyze
-    if: always()
-    uses: ./.github/workflows/reusable-workflow-notification.yml
-    with:
-      success: ${{ needs.analyze.result == 'success' }}
