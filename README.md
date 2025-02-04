@@ -11,15 +11,6 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/build.yml">
-    <img alt="Build Status" src="https://img.shields.io/github/actions/workflow/status/open-telemetry/opentelemetry-java-instrumentation/build.yml?branch=main&style=for-the-badge">
-  </a>
-  <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases">
-    <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/open-telemetry/opentelemetry-java-instrumentation?style=for-the-badge">
-  </a>
-</p>
-
-<p align="center">
   <strong>
     <a href="CONTRIBUTING.md">Contributing</a>
     &nbsp;&nbsp;&bull;&nbsp;&nbsp;
@@ -153,6 +144,16 @@ To turn on the agent's internal debug logging:
 
 **Note**: These logs are extremely verbose. Enable debug logging only when needed.
 Debug logging negatively impacts the performance of your application.
+
+## Badges
+
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/open-telemetry/opentelemetry-java-instrumentation/badge)](https://scorecard.dev/viewer/?uri=github.com/open-telemetry/opentelemetry-java-instrumentation)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/9977/badge)](https://www.bestpractices.dev/projects/9977)
+[![Reproducible Builds](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/jvm-repo-rebuild/reproducible-central/master/content/io/opentelemetry/instrumentation/badge.json)](https://github.com/jvm-repo-rebuild/reproducible-central/blob/master/content/io/opentelemetry/instrumentation/README.md)
+[![CodeQL](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/codeql-daily.yml/badge.svg)](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/codeql-daily.yml)
+[![Build Status](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/open-telemetry/opentelemetry-java-instrumentation?include_prereleases&style=)](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/)
+[![Slack](https://img.shields.io/badge/slack-@cncf/otel--java-blue.svg?logo=slack)](https://cloud-native.slack.com/archives/C014L2KCTE3)
 
 ## Contributing
 
