@@ -2,7 +2,7 @@ name: Publish PetClinic benchmark image
 on:
   push:
     paths:
-      - "benchmark-overhead/Dockerfile-petclinic-base"
+      - "benchmark-overhead/Dockerfile.petclinic"
     branches:
       - main
   workflow_dispatch:
@@ -35,7 +35,7 @@ jobs:
         uses: docker/build-push-action@ca877d9245402d1537745e0e356eab47c3520991 # v6.13.0
         with:
           push: true
-          file: benchmark-overhead/Dockerfile-petclinic-base
+          file: benchmark-overhead/Dockerfile.petclinic
           tags: ghcr.io/open-telemetry/opentelemetry-java-instrumentation/petclinic-rest-base:${{ env.TS }}
 
   workflow-notification:
