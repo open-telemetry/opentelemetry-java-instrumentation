@@ -136,11 +136,6 @@ public final class RuntimeMetrics implements Closeable {
     }
 
     private static boolean isJfrAvailable() {
-      if (System.getProperty("org.graalvm.nativeimage.imagecode") != null) {
-        // GraalVM native image does not support JFR
-        return false;
-      }
-
       try {
         Class.forName("jdk.jfr.FlightRecorder");
         // UnsatisfiedLinkError or ClassNotFoundException
