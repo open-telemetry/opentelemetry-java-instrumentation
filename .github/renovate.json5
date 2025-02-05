@@ -1,7 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base",
+    "config:recommended",
     "docker:pinDigests",
     "helpers:pinGitHubActionDigests"
   ],
@@ -36,24 +36,12 @@
       "allowedVersions": "!/\\-SNAPSHOT$/"
     },
     {
-      "matchPackagePrefixes": ["ch.qos.logback:"],
-      "groupName": "logback packages"
-    },
-    {
-      "matchPackagePrefixes": ["com.google.guava:"],
-      "groupName": "guava packages"
-    },
-    {
       "matchPackagePrefixes": ["io.quarkus"],
       "groupName": "quarkus packages"
     },
     {
       "matchPackagePrefixes": ["com.gradle.develocity"],
       "groupName": "gradle develocity packages"
-    },
-    {
-      "matchPackagePrefixes": ["org.eclipse.jetty:"],
-      "groupName": "jetty packages"
     },
     {
       "matchPackagePrefixes": ["com.linecorp.armeria:"],
@@ -66,10 +54,6 @@
     {
       "matchPackagePrefixes": ["net.bytebuddy:"],
       "groupName": "byte buddy packages"
-    },
-    {
-      "matchPackagePrefixes": ["com.fasterxml.jackson"],
-      "groupName": "jackson packages"
     },
     {
       "matchPackagePrefixes": ["com.gradleup.shadow"],
