@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.TracerProvider;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OTelMapConverter;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelMapConverter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties;
@@ -64,9 +64,9 @@ public class OpenTelemetryAutoConfiguration {
 
     @Bean
     @ConfigurationPropertiesBinding
-    public OTelMapConverter oTelMapConverter() {
+    public OtelMapConverter otelMapConverter() {
       // needed for otlp exporter headers and OtelResourceProperties
-      return new OTelMapConverter();
+      return new OtelMapConverter();
     }
 
     @Bean
@@ -137,11 +137,11 @@ public class OpenTelemetryAutoConfiguration {
     @ConfigurationPropertiesBinding
     // Duplicated in OpenTelemetrySdkConfig and DisabledOpenTelemetrySdkConfig to not expose the
     // converter in the public API
-    public OTelMapConverter oTelMapConverter() {
+    public OtelMapConverter otelMapConverter() {
       // needed for otlp exporter headers and OtelResourceProperties
       // we need this converter, even if the SDK is disabled,
       // because the properties are parsed before the SDK is disabled
-      return new OTelMapConverter();
+      return new OtelMapConverter();
     }
 
     @Bean
