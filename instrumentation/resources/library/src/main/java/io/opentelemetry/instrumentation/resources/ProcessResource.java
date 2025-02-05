@@ -14,7 +14,6 @@ import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
@@ -35,6 +34,9 @@ public final class ProcessResource {
   // Important: This is statically used in buildResource, so must be declared/initialized first.
   private static final Pattern JAR_FILE_PATTERN =
       Pattern.compile("^\\S+\\.(jar|war)", Pattern.CASE_INSENSITIVE);
+  // scrub values for system properties containing "secret" or "password" in the name
+  private static final Pattern SCRUB_PATTERN =
+      Pattern.compile("(-D.*(password|secret).*=).*", Pattern.CASE_INSENSITIVE);
 
   private static final Resource INSTANCE = buildResource();
 
@@ -94,12 +96,14 @@ public final class ProcessResource {
       if (args.length > 0) {
         List<String> commandArgs = new ArrayList<>(args.length + 1);
         commandArgs.add(executablePath.toString());
-        commandArgs.addAll(Arrays.asList(args));
+        for (String arg : args) {
+          commandArgs.add(scrub(arg));
+        }
         attributes.put(PROCESS_COMMAND_ARGS, commandArgs);
       } else { // Java 8
         StringBuilder commandLine = new StringBuilder(executablePath);
         for (String arg : runtime.getInputArguments()) {
-          commandLine.append(' ').append(arg);
+          commandLine.append(' ').append(scrub(arg));
         }
         // sun.java.command isn't well document and may not be available on all systems.
         String javaCommand = System.getProperty("sun.java.command");
@@ -116,6 +120,10 @@ public final class ProcessResource {
     }
 
     return Resource.create(attributes.build(), SchemaUrls.V1_24_0);
+  }
+
+  private static String scrub(String argument) {
+    return SCRUB_PATTERN.matcher(argument).replaceFirst("$1***");
   }
 
   private ProcessResource() {}
