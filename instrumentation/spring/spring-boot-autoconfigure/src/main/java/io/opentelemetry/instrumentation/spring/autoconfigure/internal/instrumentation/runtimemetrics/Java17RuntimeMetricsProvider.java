@@ -1,11 +1,16 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.runtimemetrics;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.RuntimeMetrics;
+import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.function.Consumer;
 
 /**
  * Configures runtime metrics collection for Java 17+.
