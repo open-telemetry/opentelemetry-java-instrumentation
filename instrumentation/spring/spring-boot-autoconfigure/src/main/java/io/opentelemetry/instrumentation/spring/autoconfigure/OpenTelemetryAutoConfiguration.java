@@ -135,7 +135,8 @@ public class OpenTelemetryAutoConfiguration {
 
     @Bean
     @ConfigurationPropertiesBinding
-    // Duplicated in OpenTelemetrySdkConfig and DisabledOpenTelemetrySdkConfig to not expose the converter in the public API
+    // Duplicated in OpenTelemetrySdkConfig and DisabledOpenTelemetrySdkConfig to not expose the
+    // converter in the public API
     public OTelMapConverter oTelMapConverter() {
       // needed for otlp exporter headers and OtelResourceProperties
       // we need this converter, even if the SDK is disabled,
