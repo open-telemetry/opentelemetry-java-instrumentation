@@ -61,8 +61,10 @@ jobs:
           tools: latest
 
       - name: Build
-        # skipping build cache is needed so that all modules will be analyzed
-        run: ./gradlew assemble -x javadoc
+        # --no-build-cache is required for codeql to analyze all modules
+        # --no-daemon is required for codeql to observe the compilation
+        # (see https://docs.github.com/en/code-security/codeql-cli/getting-started-with-the-codeql-cli/preparing-your-code-for-codeql-analysis#specifying-build-commands)
+        run: ./gradlew assemble -x javadoc --no-build-cache --no-daemon
 
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@dd746615b3b9d728a6a37ca2045b68ca76d4841a # v3.28.8
