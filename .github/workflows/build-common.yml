@@ -374,7 +374,8 @@ jobs:
 
       - name: Build
         # running suite "none" compiles everything needed by smoke tests without executing any tests
-        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=none ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+        # --no-daemon is used to free up the memory from the build step before running the test step below
+        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=none --no-daemon ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Test
         run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
