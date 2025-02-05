@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.TracerProvider;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.MapConverter;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OTelMapConverter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties;
@@ -57,19 +57,17 @@ public class OpenTelemetryAutoConfiguration {
 
   public OpenTelemetryAutoConfiguration() {}
 
-  @Bean
-  @ConfigurationPropertiesBinding
-  public MapConverter mapConverter() {
-    // needed for otlp exporter headers and OtelResourceProperties
-    // we need this converter, even if the SDK is disabled,
-    // because the properties are parsed before the SDK is disabled
-    return new MapConverter();
-  }
-
   @Configuration
   @Conditional(SdkEnabled.class)
   @ConditionalOnMissingBean(OpenTelemetry.class)
   static class OpenTelemetrySdkConfig {
+
+    @Bean
+    @ConfigurationPropertiesBinding
+    public OTelMapConverter oTelMapConverter() {
+      // needed for otlp exporter headers and OtelResourceProperties
+      return new OTelMapConverter();
+    }
 
     @Bean
     public OpenTelemetrySdkComponentLoader openTelemetrySdkComponentLoader(
@@ -134,6 +132,15 @@ public class OpenTelemetryAutoConfiguration {
   @ConditionalOnMissingBean(OpenTelemetry.class)
   @ConditionalOnProperty(name = "otel.sdk.disabled", havingValue = "true")
   static class DisabledOpenTelemetrySdkConfig {
+
+    @Bean
+    @ConfigurationPropertiesBinding
+    public OTelMapConverter oTelMapConverter() {
+      // needed for otlp exporter headers and OtelResourceProperties
+      // we need this converter, even if the SDK is disabled,
+      // because the properties are parsed before the SDK is disabled
+      return new OTelMapConverter();
+    }
 
     @Bean
     public OpenTelemetry openTelemetry() {

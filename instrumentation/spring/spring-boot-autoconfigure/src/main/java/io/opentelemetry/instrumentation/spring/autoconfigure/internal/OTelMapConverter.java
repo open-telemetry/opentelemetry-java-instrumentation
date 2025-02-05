@@ -20,7 +20,7 @@ import org.springframework.core.convert.converter.Converter;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public class MapConverter implements Converter<String, Map<String, String>> {
+public class OTelMapConverter implements Converter<String, Map<String, String>> {
 
   public static final String KEY = "key";
 
