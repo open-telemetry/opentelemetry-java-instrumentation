@@ -32,7 +32,7 @@ jobs:
       - name: install xq (which is part of yq)
         run: |
           sudo apt-get install jq python3-pip
-          pip install yq==3.4.2
+          pip install yq==3.4.3
 
       - name: update index.yml
         run: |
