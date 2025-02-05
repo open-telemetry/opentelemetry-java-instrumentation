@@ -1,0 +1,32 @@
+package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.runtimemetrics;
+
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.instrumentation.runtimemetrics.java8.RuntimeMetrics;
+import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Configures runtime metrics collection for Java 8.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
+ */
+public class Java8RuntimeMetricsProvider implements RuntimeMetricsProvider {
+  private static final Logger logger = LoggerFactory.getLogger(Java8RuntimeMetricsProvider.class);
+
+  @Override
+  public int minJavaVersion() {
+    return 1;
+  }
+
+  @Override
+  public void start(
+      OpenTelemetry openTelemetry, Consumer<Runnable> shutdownHook, InstrumentationConfig config) {
+    logger.debug("Use runtime metrics instrumentation for Java 8");
+    RuntimeMetrics.builder(openTelemetry)
+        .setShutdownHook(shutdownHook)
+        .startFromInstrumentationConfig(config);
+  }
+}
