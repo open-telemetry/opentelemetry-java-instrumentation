@@ -57,17 +57,19 @@ public class OpenTelemetryAutoConfiguration {
 
   public OpenTelemetryAutoConfiguration() {}
 
+  @Bean
+  @ConfigurationPropertiesBinding
+  public MapConverter mapConverter() {
+    // needed for otlp exporter headers and OtelResourceProperties
+    // we need this converter, even if the SDK is disabled,
+    // because the properties are parsed before the SDK is disabled
+    return new MapConverter();
+  }
+
   @Configuration
   @Conditional(SdkEnabled.class)
   @ConditionalOnMissingBean(OpenTelemetry.class)
   static class OpenTelemetrySdkConfig {
-
-    @Bean
-    @ConfigurationPropertiesBinding
-    public MapConverter mapConverter() {
-      // needed for otlp exporter headers and OtelResourceProperties
-      return new MapConverter();
-    }
 
     @Bean
     public OpenTelemetrySdkComponentLoader openTelemetrySdkComponentLoader(
