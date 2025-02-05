@@ -29,7 +29,7 @@ jobs:
       - name: create working branch
         run: git checkout -b opentelemetrybot/cloudfoundry-${{ github.run_number }}-${{ github.run_attempt }}
 
-      - name: install xq
+      - name: install xq (which is part of yq)
       - run: |
           sudo apt-get install jq python3-pip
           pip install yq==3.4.2
