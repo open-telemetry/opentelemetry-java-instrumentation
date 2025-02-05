@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.runtimemetrics;
 
 import io.opentelemetry.api.OpenTelemetry;
