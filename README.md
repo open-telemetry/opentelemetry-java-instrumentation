@@ -1,9 +1,6 @@
+[![Release](https://img.shields.io/github/v/release/open-telemetry/opentelemetry-java-instrumentation?include_prereleases&style=)](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/open-telemetry/opentelemetry-java-instrumentation/badge)](https://scorecard.dev/viewer/?uri=github.com/open-telemetry/opentelemetry-java-instrumentation)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/9977/badge)](https://www.bestpractices.dev/projects/9977)
-[![Reproducible Builds](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/jvm-repo-rebuild/reproducible-central/master/content/io/opentelemetry/instrumentation/badge.json)](https://github.com/jvm-repo-rebuild/reproducible-central/blob/master/content/io/opentelemetry/instrumentation/README.md)
-[![CodeQL](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/codeql-daily.yml/badge.svg)](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/codeql-daily.yml)
-[![Build Status](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/build.yml)
-[![Release](https://img.shields.io/github/v/release/open-telemetry/opentelemetry-java-instrumentation?include_prereleases&style=)](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/)
 [![Slack](https://img.shields.io/badge/slack-@cncf/otel--java-blue.svg?logo=slack)](https://cloud-native.slack.com/archives/C014L2KCTE3)
 
 # OpenTelemetry Instrumentation for Java
