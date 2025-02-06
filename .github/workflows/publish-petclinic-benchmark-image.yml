@@ -2,17 +2,20 @@ name: Publish PetClinic benchmark image
 on:
   push:
     paths:
-      - "benchmark-overhead/Dockerfile-petclinic-base"
+      - "benchmark-overhead/Dockerfile.petclinic"
     branches:
       - main
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     permissions:
-      packages: write
       contents: read
+      packages: write
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
@@ -32,5 +35,16 @@ jobs:
         uses: docker/build-push-action@ca877d9245402d1537745e0e356eab47c3520991 # v6.13.0
         with:
           push: true
-          file: benchmark-overhead/Dockerfile-petclinic-base
+          file: benchmark-overhead/Dockerfile.petclinic
           tags: ghcr.io/open-telemetry/opentelemetry-java-instrumentation/petclinic-rest-base:${{ env.TS }}
+
+  workflow-notification:
+    permissions:
+      contents: read
+      issues: write
+    needs:
+      - publish
+    if: always()
+    uses: ./.github/workflows/reusable-workflow-notification.yml
+    with:
+      success: ${{ needs.publish.result == 'success' }}

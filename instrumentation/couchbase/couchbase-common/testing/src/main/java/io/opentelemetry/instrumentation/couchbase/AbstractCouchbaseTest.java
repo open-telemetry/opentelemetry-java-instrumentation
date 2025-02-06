@@ -125,7 +125,8 @@ public abstract class AbstractCouchbaseTest {
     span.hasName(spanName).hasKind(SpanKind.CLIENT);
 
     List<AttributeAssertion> assertions = new ArrayList<>();
-    assertions.add(equalTo(DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE));
+    assertions.add(
+        equalTo(maybeStable(DB_SYSTEM), DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE));
     if (operation != null) {
       assertions.add(equalTo(maybeStable(DB_OPERATION), operation));
     }

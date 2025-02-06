@@ -338,6 +338,7 @@ class PowerJobBasicProcessorTest {
     return taskContext;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> attributeAssertions(
       String codeNamespace, long jobId, String jobParam, String jobType) {
     List<AttributeAssertion> attributeAssertions =

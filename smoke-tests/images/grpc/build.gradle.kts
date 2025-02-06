@@ -36,7 +36,9 @@ java {
   targetCompatibility = JavaVersion.VERSION_1_8
 }
 
+val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
+
 jib {
   from.image = "eclipse-temurin:$targetJDK"
-  to.image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-grpc:jdk$targetJDK-$tag"
+  to.image = "ghcr.io/$repo/smoke-test-grpc:jdk$targetJDK-$tag"
 }

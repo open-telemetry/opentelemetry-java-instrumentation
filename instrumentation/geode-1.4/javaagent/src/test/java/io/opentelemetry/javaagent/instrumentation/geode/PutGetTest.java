@@ -137,21 +137,21 @@ class PutGetTest {
                     span.hasName("clear test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "geode"),
+                            equalTo(maybeStable(DB_SYSTEM), "geode"),
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "clear")),
                 span ->
                     span.hasName("put test-region")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "geode"),
+                            equalTo(maybeStable(DB_SYSTEM), "geode"),
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), "put")),
                 span ->
                     span.hasName(verb.concat(" test-region"))
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "geode"),
+                            equalTo(maybeStable(DB_SYSTEM), "geode"),
                             equalTo(maybeStable(DB_NAME), "test-region"),
                             equalTo(maybeStable(DB_OPERATION), verb),
                             equalTo(maybeStable(DB_STATEMENT), query))));

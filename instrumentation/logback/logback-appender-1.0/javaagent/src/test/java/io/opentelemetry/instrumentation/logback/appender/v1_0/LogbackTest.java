@@ -115,6 +115,7 @@ class LogbackTest {
     testing.clearData();
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static void test(
       Logger logger,
       OneArgLoggerMethod oneArgLoggerMethod,
@@ -184,6 +185,7 @@ class LogbackTest {
     }
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testMdc() {
     MDC.put("key1", "val1");
@@ -213,6 +215,7 @@ class LogbackTest {
                     equalTo(CodeIncubatingAttributes.CODE_FILEPATH, "LogbackTest.java")));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   public void testMarker() {
 

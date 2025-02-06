@@ -29,6 +29,7 @@ import org.springframework.aop.aspectj.annotation.AspectJProxyFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.annotation.Schedules;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class SchedulingInstrumentationAspectTest {
 
   @RegisterExtension

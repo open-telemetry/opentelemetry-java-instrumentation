@@ -41,16 +41,17 @@ val DEPENDENCY_BOMS = listOf(
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
 val errorProneVersion = "2.36.0"
-val byteBuddyVersion = "1.16.1"
+val byteBuddyVersion = "1.17.0"
 val asmVersion = "9.7.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.16"
-val semConvVersion = "1.29.0-alpha"
+val semConvVersion = "1.30.0-rc.1"
+val semConvAlphaVersion =  semConvVersion.replaceFirst("(-rc.*)?$".toRegex(), "-alpha$1")
 
 val CORE_DEPENDENCIES = listOf(
   "io.opentelemetry.semconv:opentelemetry-semconv:${semConvVersion}",
-  "io.opentelemetry.semconv:opentelemetry-semconv-incubating:${semConvVersion}",
+  "io.opentelemetry.semconv:opentelemetry-semconv-incubating:${semConvAlphaVersion}",
   "com.google.auto.service:auto-service:${autoServiceVersion}",
   "com.google.auto.service:auto-service-annotations:${autoServiceVersion}",
   "com.google.auto.value:auto-value:${autoValueVersion}",

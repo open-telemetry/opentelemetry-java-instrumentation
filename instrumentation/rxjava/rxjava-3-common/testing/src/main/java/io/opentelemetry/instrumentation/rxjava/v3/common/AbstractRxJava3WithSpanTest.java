@@ -34,6 +34,7 @@ import org.reactivestreams.Publisher;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractRxJava3WithSpanTest {
   private static final AttributeKey<Boolean> RXJAVA_CANCELED =
       AttributeKey.booleanKey("rxjava.canceled");

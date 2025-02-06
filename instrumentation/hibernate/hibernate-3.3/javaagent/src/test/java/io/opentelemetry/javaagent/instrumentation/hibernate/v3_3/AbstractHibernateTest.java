@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -69,7 +70,7 @@ abstract class AbstractHibernateTest {
     return span.hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            equalTo(DB_SYSTEM, "h2"),
+            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
             equalTo(maybeStable(DB_NAME), "db1"),
             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "h2:mem:"),
@@ -84,7 +85,7 @@ abstract class AbstractHibernateTest {
         .hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            equalTo(DB_SYSTEM, "h2"),
+            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
             equalTo(maybeStable(DB_NAME), "db1"),
             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "h2:mem:"),
