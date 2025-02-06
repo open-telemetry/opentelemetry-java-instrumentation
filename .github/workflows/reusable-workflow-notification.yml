@@ -15,7 +15,6 @@ permissions:
 jobs:
   workflow-notification:
     permissions:
-      contents: read
       issues: write
     runs-on: ubuntu-latest
     steps:

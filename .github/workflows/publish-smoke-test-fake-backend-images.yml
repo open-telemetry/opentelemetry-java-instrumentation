@@ -15,7 +15,6 @@ permissions:
 jobs:
   publishLinux:
     permissions:
-      contents: read
       packages: write
     runs-on: ubuntu-latest
     steps:
@@ -48,7 +47,6 @@ jobs:
 
   publishWindows:
     permissions:
-      contents: read
       packages: write
     runs-on: windows-latest
     defaults:
@@ -84,7 +82,6 @@ jobs:
 
   workflow-notification:
     permissions:
-      contents: read
       issues: write
     needs:
       - publishLinux
