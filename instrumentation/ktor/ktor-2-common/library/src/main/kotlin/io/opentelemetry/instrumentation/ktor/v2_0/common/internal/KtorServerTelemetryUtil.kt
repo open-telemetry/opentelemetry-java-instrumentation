@@ -33,7 +33,7 @@ object KtorServerTelemetryUtil {
     val tracer = KtorServerTracer(instrumenter)
     val startPhase = PipelinePhase("OpenTelemetry")
 
-    application.insertPhaseBefore(ApplicationCallPipeline.Monitoring, startPhase)
+    application.insertPhaseBefore(ApplicationCallPipeline.Setup, startPhase)
     application.intercept(startPhase) {
       val context = tracer.start(call)
 
