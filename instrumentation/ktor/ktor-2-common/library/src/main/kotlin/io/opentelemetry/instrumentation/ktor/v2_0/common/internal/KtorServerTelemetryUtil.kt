@@ -40,16 +40,22 @@ object KtorServerTelemetryUtil {
       if (context != null) {
         call.attributes.put(contextKey, context)
         withContext(context.asContextElement()) {
-          try {
-            proceed()
-          } catch (err: Throwable) {
-            // Stash error for reporting later since need ktor to finish setting up the response
-            call.attributes.put(errorKey, err)
-            throw err
-          }
+          proceed()
         }
       } else {
         proceed()
+      }
+    }
+
+    val errorPhase = PipelinePhase("OpenTelemetryError")
+    application.insertPhaseBefore(ApplicationCallPipeline.Monitoring, errorPhase)
+    application.intercept(errorPhase) {
+      try {
+        proceed()
+      } catch (err: Throwable) {
+        // Stash error for reporting later since need ktor to finish setting up the response
+        call.attributes.put(errorKey, err)
+        throw err
       }
     }
 
