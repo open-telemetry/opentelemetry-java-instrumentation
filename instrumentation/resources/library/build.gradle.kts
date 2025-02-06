@@ -87,7 +87,7 @@ tasks {
   test {
     dependsOn(jar)
     doFirst {
-      // use test the final jar instead of directories with built classes to test the mrjar functionality
+      // use the final jar instead of directories with built classes to test the mrjar functionality
       classpath = jar.get().outputs.files + classpath
     }
     systemProperty("testSecret", "test")
