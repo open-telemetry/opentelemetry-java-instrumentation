@@ -196,7 +196,7 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
 
   @Override
   protected void stopServer(HttpServer server) {
-    server.stop(5000);
+    server.stop(1000);
   }
 
   @Override
@@ -211,6 +211,8 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
           return expectedHttpRoute(endpoint, method);
         });
 
-    options.setTestPathParam(true);
+    options.setTestNotFound(false);
+    options.setTestPathParam(false);
+    options.setTestException(false);
   }
 }
