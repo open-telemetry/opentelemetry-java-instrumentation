@@ -33,7 +33,7 @@ final class OpenTelemetryService extends Filter {
     try (Scope ignored = context.makeCurrent()) {
       chain.doFilter(exchange);
     } finally {
-      instrumenter.end(context, exchange, exchange, null);
+      instrumenter.end(context, exchange, null, null);
     }
   }
 
