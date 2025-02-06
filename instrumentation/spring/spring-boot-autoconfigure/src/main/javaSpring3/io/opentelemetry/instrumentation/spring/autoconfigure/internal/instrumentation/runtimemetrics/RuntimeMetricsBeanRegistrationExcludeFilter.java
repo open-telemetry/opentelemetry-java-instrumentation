@@ -17,7 +17,8 @@ import org.springframework.beans.factory.support.RegisteredBean;
 public class RuntimeMetricsBeanRegistrationExcludeFilter implements BeanRegistrationExcludeFilter {
   @Override
   public boolean isExcludedFromAotProcessing(RegisteredBean registeredBean) {
-    // GraalVM native image does not support JFR, so we exclude Java 17+ runtime metrics provider
+    // The JFR-based runtime metric code is exlcuded from the Spring AOT processing step. So, this code is not included in a Spring native image application.
+
     return "io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.runtimemetrics.Java17RuntimeMetricsProvider"
         .equals(registeredBean.getBeanName());
   }
