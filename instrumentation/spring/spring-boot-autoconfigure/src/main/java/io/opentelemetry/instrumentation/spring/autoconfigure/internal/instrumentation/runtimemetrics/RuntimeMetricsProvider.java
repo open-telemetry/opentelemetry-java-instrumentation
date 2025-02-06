@@ -16,7 +16,6 @@ import java.util.function.Consumer;
  * at any time.
  */
 public interface RuntimeMetricsProvider {
-  int minJavaVersion();
 
   void start(
       OpenTelemetry openTelemetry, Consumer<Runnable> shutdownHook, InstrumentationConfig config);
