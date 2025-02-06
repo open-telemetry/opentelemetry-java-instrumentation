@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Configuration;
 // an additional feature - which enables JFR metrics
 @ConditionalOnEnabledInstrumentation(module = "runtime-telemetry")
 @Configuration
-@ConditionalOnJava(value = JavaVersion.SEVENTEEN)
+`@ConditionalOnJava(value = JavaVersion.SEVENTEEN, range = ConditionalOnJava.Range.EQUAL_OR_NEWER)`
 public class Java17RuntimeMetricsAutoConfiguration {
   private static final Logger logger =
       LoggerFactory.getLogger(Java17RuntimeMetricsAutoConfiguration.class);
