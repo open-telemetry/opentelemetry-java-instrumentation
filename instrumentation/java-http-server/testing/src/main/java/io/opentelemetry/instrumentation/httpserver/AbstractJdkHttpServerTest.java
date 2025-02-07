@@ -20,7 +20,6 @@ import com.sun.net.httpserver.HttpServer;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
-import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.testing.internal.armeria.common.QueryParams;
 import java.io.IOException;
 import java.io.OutputStream;
