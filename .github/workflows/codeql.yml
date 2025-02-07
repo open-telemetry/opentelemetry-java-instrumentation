@@ -5,16 +5,12 @@ on:
     branches:
       - main
       - release/*
-      - v0.*
-      - v1.*
       - cloudfoundry
       - gh-pages
   push:
     branches:
       - main
       - release/*
-      - v0.*
-      - v1.*
       - cloudfoundry
       - gh-pages
   schedule:
