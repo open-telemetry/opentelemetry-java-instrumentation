@@ -21,5 +21,6 @@ class JdkHttpServerTest extends AbstractJdkHttpServerTest {
     super.configure(options);
     // library instrumentation does not create a span at all
     options.disableTestNonStandardHttpMethod();
+    options.setTestHttpPipelining(false);
   }
 }
