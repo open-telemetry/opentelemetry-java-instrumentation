@@ -48,16 +48,13 @@ if (!latestDepTest) {
       force("org.slf4j:slf4j-api:1.7.36")
     }
   }
-}
 
-if (latestDepTest) {
-  // this dependency adds the new io.micrometer.prometheusmetrics.PrometheusMeterRegistry,
-  // not the old io.micrometer.prometheus.PrometheusMeterRegistry,
-  // which is required in older versions of spring that we use in this test project
+  // this dependency adds the old io.micrometer.prometheus.PrometheusMeterRegistry,
+  // which is not supported by the latest version of spring boot
   tasks {
     val testPrometheus by registering(Test::class) {
       dependencies {
-        runtimeOnly("io.micrometer:micrometer-registry-prometheus:1.14.3")
+        runtimeOnly("io.micrometer:micrometer-registry-prometheus:1.0.1")
       }
     }
 
