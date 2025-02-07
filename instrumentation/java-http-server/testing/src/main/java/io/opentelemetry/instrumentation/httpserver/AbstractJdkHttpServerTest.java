@@ -10,7 +10,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
 import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -33,7 +33,9 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
 
   List<HttpContext> contexts = new ArrayList<>();
 
-  protected abstract Filter customFilter();
+  protected Filter customFilter() {
+    return null;
+  }
 
   void sendResponse(HttpExchange exchange, int status, String response) throws IOException {
     sendResponse(exchange, status, Collections.emptyMap(), response);
@@ -50,10 +52,10 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
     byte[] bytes = response.getBytes(Charset.defaultCharset());
 
     // -1 means no content, 0 means unknown content length
-    var contentLength = bytes.length == 0 ? -1 : bytes.length;
+    long contentLength = bytes.length == 0 ? -1 : bytes.length;
     exchange.getResponseHeaders().set("Content-Type", "text/plain");
     headers.forEach(exchange.getResponseHeaders()::set);
-    try (var os = exchange.getResponseBody()) {
+    try (OutputStream os = exchange.getResponseBody()) {
       exchange.sendResponseHeaders(status, contentLength);
       os.write(bytes);
     }
@@ -67,9 +69,9 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
 
   @Override
   protected HttpServer setupServer() throws IOException {
-    var server = HttpServer.create(new InetSocketAddress(port), 0);
+    HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
 
-    var context =
+    HttpContext context =
         server.createContext(
             SUCCESS.getPath(),
             ctx ->
@@ -90,7 +92,7 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
                             sendResponse(
                                 ctx,
                                 REDIRECT.getStatus(),
-                                Map.of("Location", REDIRECT.getBody()))));
+                                Collections.singletonMap("Location", REDIRECT.getBody()))));
 
     contexts.add(context);
     context =
@@ -160,34 +162,39 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
                             sendResponse(
                                 ctx,
                                 CAPTURE_HEADERS.getStatus(),
-                                Map.of(
+                                Collections.singletonMap(
                                     "X-Test-Response",
                                     ctx.getRequestHeaders().getFirst("X-Test-Request")),
                                 CAPTURE_HEADERS.getBody())));
 
     contexts.add(context);
 
-    var customFilter = customFilter();
-    contexts.forEach(ctx -> ctx.getFilters().add(customFilter));
+    Filter customFilter = customFilter();
+    if (customFilter != null) {
+      contexts.forEach(ctx -> ctx.getFilters().add(customFilter));
+    }
 
     // Make sure user decorators see spans.
+    Filter spanFilter =
+        new Filter() {
 
-    var spanFilter =
-        Filter.beforeHandler(
-            "filter",
-            ex -> {
-              if (!Span.current().getSpanContext().isValid()) {
-                // Return an invalid code to fail any assertion
-                try {
-                  ex.sendResponseHeaders(601, -1);
-                } catch (IOException e) {
-                  throw new UncheckedIOException(e);
-                }
-                return;
-              }
-              ex.getResponseHeaders().set("decoratingfunction", "ok");
-              ex.getResponseHeaders().set("decoratinghttpservicefunction", "ok");
-            });
+          @Override
+          public void doFilter(HttpExchange exchange, Chain chain) throws IOException {
+
+            if (!Span.current().getSpanContext().isValid()) {
+              // Return an invalid code to fail any assertion
+
+              exchange.sendResponseHeaders(601, -1);
+            }
+            exchange.getResponseHeaders().set("decoratingfunction", "ok");
+            exchange.getResponseHeaders().set("decoratinghttpservicefunction", "ok");
+          }
+
+          @Override
+          public String description() {
+            return "test";
+          }
+        };
     contexts.forEach(ctx -> ctx.getFilters().add(spanFilter));
     server.start();
 

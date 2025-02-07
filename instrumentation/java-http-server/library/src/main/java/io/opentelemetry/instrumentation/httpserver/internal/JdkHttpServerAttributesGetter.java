@@ -1,6 +1,7 @@
 package io.opentelemetry.instrumentation.httpserver.internal;
 
 import java.net.InetSocketAddress;
+import java.util.Collections;
 import java.util.List;
 
 import com.sun.net.httpserver.HttpExchange;
@@ -40,7 +41,7 @@ enum JdkHttpServerAttributesGetter
 
   @Override
   public List<String> getHttpRequestHeader(HttpExchange exchange, String name) {
-    return exchange.getRequestHeaders().getOrDefault(name, List.of());
+    return exchange.getRequestHeaders().getOrDefault(name, Collections.emptyList());
   }
 
   @Nullable
@@ -56,7 +57,7 @@ enum JdkHttpServerAttributesGetter
 
   @Override
   public List<String> getHttpResponseHeader(HttpExchange exchange, @Nullable HttpExchange res, String name) {
-    return exchange.getResponseHeaders().getOrDefault(name, List.of());
+    return exchange.getResponseHeaders().getOrDefault(name, Collections.emptyList());
   }
 
   @Override

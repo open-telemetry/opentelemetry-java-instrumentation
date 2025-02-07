@@ -3,6 +3,7 @@ package io.opentelemetry.instrumentation.httpserver.internal;
 import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
@@ -25,7 +26,7 @@ enum ExchangeContextGetter implements ExtendedTextMapGetter<HttpExchange> {
     if (carrier == null) {
       return null;
     }
-    var list = carrier.getRequestHeaders().get(key);
+    List<String> list = carrier.getRequestHeaders().get(key);
 
     return list != null ? list.get(0) : null;
   }
@@ -35,7 +36,7 @@ enum ExchangeContextGetter implements ExtendedTextMapGetter<HttpExchange> {
     if (carrier == null) {
       return Collections.emptyIterator();
     }
-    var list = carrier.getRequestHeaders().get(key);
+    List<String> list = carrier.getRequestHeaders().get(key);
 
     return list != null ? list.iterator() : Collections.emptyIterator();
   }
