@@ -30,8 +30,6 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
 - Targeted branches:
   - `main`
   - `release/*`
-  - `v0.*`
-  - `v1.*`
 - Branch rules
   - Restrict deletions: CHECKED
   - Require linear history: CHECKED
@@ -44,6 +42,10 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
     - `required-status-check`
     - `gradle-wrapper-validation`
   - Block force pushes: CHECKED
+  - Require code scanning results: CHECKED
+    - CodeQL
+      - Security alerts: High or higher
+      - Alerts: Errors
 
 ### `cloudfoundry` branch
 
@@ -68,6 +70,16 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
   - Restrict deletions: CHECKED
   - Require linear history: CHECKED
   - Block force pushes: CHECKED
+
+### Old-style release branches
+
+- Targeted branches:
+  - `v0.*`
+  - `v1.*`
+- Branch rules
+  - Restrict creations: CHECKED
+  - Restrict updates: CHECKED
+  - Restrict deletions: CHECKED
 
 ### Restrict branch creation
 
