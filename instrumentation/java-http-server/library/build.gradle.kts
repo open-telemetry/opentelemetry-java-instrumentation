@@ -6,9 +6,3 @@ plugins {
 dependencies {
   testImplementation(project(":instrumentation:java-http-server:testing"))
 }
-
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-  }
-}

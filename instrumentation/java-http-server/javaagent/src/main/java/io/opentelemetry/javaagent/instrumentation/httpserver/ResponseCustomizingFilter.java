@@ -17,7 +17,6 @@ class ResponseCustomizingFilter extends Filter {
 
   @Override
   public void doFilter(HttpExchange exchange, Chain chain) throws IOException {
-
     Context context = Context.current();
     HttpServerResponseCustomizerHolder.getCustomizer()
         .customize(context, exchange.getResponseHeaders(), JavaHttpResponseMutator.INSTANCE);

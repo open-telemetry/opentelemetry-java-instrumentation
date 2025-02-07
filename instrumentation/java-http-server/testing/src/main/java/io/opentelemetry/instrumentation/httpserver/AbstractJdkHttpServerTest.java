@@ -61,7 +61,7 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
     }
   }
 
-  public String getUrlQuery(HttpExchange exchange) {
+  private static String getUrlQuery(HttpExchange exchange) {
     return exchange.getRequestURI().getQuery();
   }
 
@@ -195,8 +195,6 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
 
         exchange.sendResponseHeaders(601, -1);
       }
-      exchange.getResponseHeaders().set("decoratingfunction", "ok");
-      exchange.getResponseHeaders().set("decoratinghttpservicefunction", "ok");
 
       try {
         chain.doFilter(exchange);

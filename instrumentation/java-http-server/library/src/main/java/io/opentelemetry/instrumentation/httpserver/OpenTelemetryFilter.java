@@ -18,13 +18,11 @@ final class OpenTelemetryFilter extends Filter {
   private final Instrumenter<HttpExchange, HttpExchange> instrumenter;
 
   OpenTelemetryFilter(Instrumenter<HttpExchange, HttpExchange> instrumenter) {
-
     this.instrumenter = instrumenter;
   }
 
   @Override
   public void doFilter(HttpExchange exchange, Chain chain) throws IOException {
-
     Context parentContext = Context.current();
     if (!instrumenter.shouldStart(parentContext, exchange)) {
       chain.doFilter(exchange);
