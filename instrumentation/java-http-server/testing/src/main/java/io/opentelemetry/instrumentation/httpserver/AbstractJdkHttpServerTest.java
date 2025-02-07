@@ -191,6 +191,7 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
             }
             exchange.getResponseHeaders().set("decoratingfunction", "ok");
             exchange.getResponseHeaders().set("decoratinghttpservicefunction", "ok");
+            chain.doFilter(exchange);
           }
 
           @Override
