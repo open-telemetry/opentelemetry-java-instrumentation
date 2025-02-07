@@ -40,16 +40,17 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
     return null;
   }
 
-  void sendResponse(HttpExchange exchange, int status, String response) throws IOException {
+  static void sendResponse(HttpExchange exchange, int status, String response) throws IOException {
     sendResponse(exchange, status, Collections.emptyMap(), response);
   }
 
-  void sendResponse(HttpExchange exchange, int status, Map<String, String> headers)
+  static void sendResponse(HttpExchange exchange, int status, Map<String, String> headers)
       throws IOException {
     sendResponse(exchange, status, headers, "");
   }
 
-  void sendResponse(HttpExchange exchange, int status, Map<String, String> headers, String response)
+  static void sendResponse(
+      HttpExchange exchange, int status, Map<String, String> headers, String response)
       throws IOException {
 
     byte[] bytes = response.getBytes(Charset.defaultCharset());
@@ -178,27 +179,8 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
     }
 
     // Make sure user decorators see spans.
-    Filter spanFilter =
-        new Filter() {
+    Filter spanFilter = new SpanFilter();
 
-          @Override
-          public void doFilter(HttpExchange exchange, Chain chain) throws IOException {
-
-            if (!Span.current().getSpanContext().isValid()) {
-              // Return an invalid code to fail any assertion
-
-              exchange.sendResponseHeaders(601, -1);
-            }
-            exchange.getResponseHeaders().set("decoratingfunction", "ok");
-            exchange.getResponseHeaders().set("decoratinghttpservicefunction", "ok");
-            chain.doFilter(exchange);
-          }
-
-          @Override
-          public String description() {
-            return "test";
-          }
-        };
     contexts.forEach(ctx -> ctx.getFilters().add(spanFilter));
     server.start();
 
@@ -225,5 +207,31 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
     options.setTestNotFound(false);
     options.setTestPathParam(false);
     options.setTestException(false);
+  }
+
+  static class SpanFilter extends Filter {
+
+    @Override
+    public void doFilter(HttpExchange exchange, Chain chain) throws IOException {
+
+      if (!Span.current().getSpanContext().isValid()) {
+        // Return an invalid code to fail any assertion
+
+        exchange.sendResponseHeaders(601, -1);
+      }
+      exchange.getResponseHeaders().set("decoratingfunction", "ok");
+      exchange.getResponseHeaders().set("decoratinghttpservicefunction", "ok");
+      chain.doFilter(exchange);
+
+      // server will hang if nothing is sent
+      if (exchange.getResponseCode() == -1) {
+        sendResponse(exchange, 500, "nothing");
+      }
+    }
+
+    @Override
+    public String description() {
+      return "test";
+    }
   }
 }
