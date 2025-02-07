@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.httpserver;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
@@ -107,17 +106,6 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
                     .runWithSpan(
                         "controller", () -> sendResponse(ctx, ERROR.getStatus(), ERROR.getBody())));
 
-    contexts.add(context);
-    context =
-        server.createContext(
-            EXCEPTION.getPath(),
-            ctx ->
-                testing()
-                    .runWithSpan(
-                        "controller",
-                        () -> {
-                          throw new IllegalStateException(EXCEPTION.getBody());
-                        }));
     contexts.add(context);
     context =
         server.createContext(
@@ -221,10 +209,15 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
       }
       exchange.getResponseHeaders().set("decoratingfunction", "ok");
       exchange.getResponseHeaders().set("decoratinghttpservicefunction", "ok");
-      chain.doFilter(exchange);
 
-      // server will hang if nothing is sent
+      try {
+        chain.doFilter(exchange);
+      } catch (Exception e) {
+        sendResponse(exchange, 500, e.getMessage());
+      }
+
       if (exchange.getResponseCode() == -1) {
+
         sendResponse(exchange, 500, "nothing");
       }
     }
