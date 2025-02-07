@@ -45,7 +45,8 @@ public class Java8RuntimeMetricsAutoConfiguration {
   }
 
   @Bean
-  CommandLineRunner startMetrics(OpenTelemetry openTelemetry, ConfigProperties configProperties) {
+  CommandLineRunner startMetricsForJava8(
+      OpenTelemetry openTelemetry, ConfigProperties configProperties) {
     return (args) -> {
       logger.debug("Use runtime metrics instrumentation for Java 8");
       RuntimeMetrics.builder(openTelemetry)

@@ -44,7 +44,8 @@ public class Java17RuntimeMetricsAutoConfiguration {
   }
 
   @Bean
-  CommandLineRunner startMetrics(OpenTelemetry openTelemetry, ConfigProperties configProperties) {
+  CommandLineRunner startMetricsForJava17(
+      OpenTelemetry openTelemetry, ConfigProperties configProperties) {
     return (args) -> {
       logger.debug("Use runtime metrics instrumentation for Java 17+");
       RuntimeMetrics.builder(openTelemetry)

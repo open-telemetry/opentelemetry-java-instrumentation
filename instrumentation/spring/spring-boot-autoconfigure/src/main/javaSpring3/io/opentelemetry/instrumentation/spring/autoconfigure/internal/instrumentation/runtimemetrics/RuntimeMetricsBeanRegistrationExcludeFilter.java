@@ -20,6 +20,6 @@ public class RuntimeMetricsBeanRegistrationExcludeFilter implements BeanRegistra
     // The JFR-based runtime metric code is excluded from the Spring AOT processing step.
     // That way, this code is not included in a Spring native image application.
 
-    return Java17RuntimeMetricsAutoConfiguration.class.equals(registeredBean.getBeanClass());
+    return "startMetricsForJava17".equals(registeredBean.getBeanName());
   }
 }
