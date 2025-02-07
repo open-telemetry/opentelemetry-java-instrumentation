@@ -24,6 +24,7 @@ jobs:
 
   publish:
     permissions:
+      contents: read
       packages: write
     needs: prepare
     runs-on: ${{ matrix.os }}
@@ -87,6 +88,7 @@ jobs:
 
   workflow-notification:
     permissions:
+      contents: read
       issues: write
     needs:
       - publish
