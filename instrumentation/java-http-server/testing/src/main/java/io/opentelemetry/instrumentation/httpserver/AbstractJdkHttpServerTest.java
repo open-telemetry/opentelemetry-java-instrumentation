@@ -182,16 +182,6 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
 
   @Override
   protected void configure(HttpServerTestOptions options) {
-    options.setExpectedHttpRoute(
-        (endpoint, method) -> {
-          if (endpoint == ServerEndpoint.NOT_FOUND) {
-            // TODO: Revisit this when applying instrumenters to more libraries, Armeria currently
-            // reports '/*' which is a fallback route.
-            return "/*";
-          }
-          return expectedHttpRoute(endpoint, method);
-        });
-
     options.setTestNotFound(false);
     options.setTestPathParam(false);
     options.setTestException(false);
