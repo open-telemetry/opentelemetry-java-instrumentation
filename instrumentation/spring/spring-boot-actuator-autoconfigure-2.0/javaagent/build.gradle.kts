@@ -50,14 +50,19 @@ if (!latestDepTest) {
   }
 }
 
-tasks {
-  val testPrometheus by registering(Test::class) {
-    dependencies {
-      runtimeOnly("io.micrometer:micrometer-registry-prometheus:1.14.3")
+if (latestDepTest) {
+  // this dependency adds the new io.micrometer.prometheusmetrics.PrometheusMeterRegistry,
+  // not the old io.micrometer.prometheus.PrometheusMeterRegistry,
+  // which is required in older versions of spring that we use in this test project
+  tasks {
+    val testPrometheus by registering(Test::class) {
+      dependencies {
+        runtimeOnly("io.micrometer:micrometer-registry-prometheus:1.14.3")
+      }
     }
-  }
 
-  check {
-    dependsOn(testPrometheus)
+    check {
+      dependsOn(testPrometheus)
+    }
   }
 }
