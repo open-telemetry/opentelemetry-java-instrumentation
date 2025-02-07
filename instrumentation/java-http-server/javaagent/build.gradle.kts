@@ -8,7 +8,6 @@ muzzle {
   }
 }
 
-
 dependencies {
   implementation(project(":instrumentation:java-http-server:library"))
   testImplementation(project(":instrumentation:java-http-server:testing"))

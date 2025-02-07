@@ -5,13 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpserver;
 
-import java.io.IOException;
-
 import com.sun.net.httpserver.Filter;
 import com.sun.net.httpserver.HttpExchange;
-
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
+import java.io.IOException;
 
 class ResponseCustomizingFilter extends Filter {
 

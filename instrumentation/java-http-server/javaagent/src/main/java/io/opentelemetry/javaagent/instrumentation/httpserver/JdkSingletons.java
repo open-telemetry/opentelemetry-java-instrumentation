@@ -5,17 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpserver;
 
-import java.util.Arrays;
-import java.util.List;
-
 import com.sun.net.httpserver.Filter;
-
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.httpserver.JdkServerTelemetry;
 import io.opentelemetry.instrumentation.httpserver.JdkServerTelemetryBuilder;
 import io.opentelemetry.instrumentation.httpserver.internal.JdkInstrumenterBuilderUtil;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import java.util.Arrays;
+import java.util.List;
 
 // Holds singleton references to decorators to match against during suppression.
 // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/903

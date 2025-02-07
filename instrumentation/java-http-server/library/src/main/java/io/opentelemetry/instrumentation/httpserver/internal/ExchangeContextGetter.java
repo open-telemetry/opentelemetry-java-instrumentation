@@ -1,13 +1,17 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.httpserver.internal;
 
+import com.sun.net.httpserver.HttpExchange;
 import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-
-import com.sun.net.httpserver.HttpExchange;
 
 enum ExchangeContextGetter implements ExtendedTextMapGetter<HttpExchange> {
   INSTANCE;

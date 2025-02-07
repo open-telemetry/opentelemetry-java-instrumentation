@@ -1,15 +1,17 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.httpserver;
 
-import java.util.Collections;
-
-import org.junit.jupiter.api.extension.RegisterExtension;
-
 import com.sun.net.httpserver.Filter;
-
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
+import java.util.Collections;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JdkHttpServerTest extends AbstractJdkHttpServerTest {
 

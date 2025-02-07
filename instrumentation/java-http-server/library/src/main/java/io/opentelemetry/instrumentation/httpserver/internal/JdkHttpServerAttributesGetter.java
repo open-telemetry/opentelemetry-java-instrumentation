@@ -1,13 +1,16 @@
-package io.opentelemetry.instrumentation.httpserver.internal;
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-import java.net.InetSocketAddress;
-import java.util.Collections;
-import java.util.List;
+package io.opentelemetry.instrumentation.httpserver.internal;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpsExchange;
-
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
+import java.net.InetSocketAddress;
+import java.util.Collections;
+import java.util.List;
 import javax.annotation.Nullable;
 
 enum JdkHttpServerAttributesGetter
@@ -56,7 +59,8 @@ enum JdkHttpServerAttributesGetter
   }
 
   @Override
-  public List<String> getHttpResponseHeader(HttpExchange exchange, @Nullable HttpExchange res, String name) {
+  public List<String> getHttpResponseHeader(
+      HttpExchange exchange, @Nullable HttpExchange res, String name) {
     return exchange.getResponseHeaders().getOrDefault(name, Collections.emptyList());
   }
 

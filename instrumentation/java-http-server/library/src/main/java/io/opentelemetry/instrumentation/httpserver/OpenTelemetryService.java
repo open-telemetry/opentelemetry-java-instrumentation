@@ -1,13 +1,16 @@
-package io.opentelemetry.instrumentation.httpserver;
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-import java.io.IOException;
+package io.opentelemetry.instrumentation.httpserver;
 
 import com.sun.net.httpserver.Filter;
 import com.sun.net.httpserver.HttpExchange;
-
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import java.io.IOException;
 
 /** Decorates an {@link HttpServer} to trace inbound {@link HttpExchange}s. */
 final class OpenTelemetryService extends Filter {

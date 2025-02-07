@@ -1,11 +1,12 @@
-package io.opentelemetry.instrumentation.httpserver;
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-import java.util.Collection;
-import java.util.function.Function;
+package io.opentelemetry.instrumentation.httpserver;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.sun.net.httpserver.HttpExchange;
-
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -14,6 +15,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.httpserver.internal.JdkInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.httpserver.internal.JdkInstrumenterBuilderUtil;
+import java.util.Collection;
+import java.util.function.Function;
 
 public final class JdkServerTelemetryBuilder {
 
@@ -55,8 +58,7 @@ public final class JdkServerTelemetryBuilder {
    * @param requestHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public JdkServerTelemetryBuilder setCapturedRequestHeaders(
-      Collection<String> requestHeaders) {
+  public JdkServerTelemetryBuilder setCapturedRequestHeaders(Collection<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
@@ -67,8 +69,7 @@ public final class JdkServerTelemetryBuilder {
    * @param responseHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public JdkServerTelemetryBuilder setCapturedResponseHeaders(
-      Collection<String> responseHeaders) {
+  public JdkServerTelemetryBuilder setCapturedResponseHeaders(Collection<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
