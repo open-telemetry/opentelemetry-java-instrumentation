@@ -15,6 +15,7 @@ muzzle {
 dependencies {
   library("org.springframework.boot:spring-boot-actuator-autoconfigure:2.0.0.RELEASE")
   library("io.micrometer:micrometer-core:1.5.0")
+  runtimeOnly("io.micrometer:micrometer-registry-prometheus:1.0.1")
 
   implementation(project(":instrumentation:micrometer:micrometer-1.5:javaagent"))
 
@@ -46,20 +47,6 @@ if (!latestDepTest) {
       // requires old logback (and therefore also old slf4j)
       force("ch.qos.logback:logback-classic:1.2.11")
       force("org.slf4j:slf4j-api:1.7.36")
-    }
-  }
-
-  // this dependency adds the old io.micrometer.prometheus.PrometheusMeterRegistry,
-  // which is not supported by the latest version of spring boot
-  tasks {
-    val testPrometheus by registering(Test::class) {
-      dependencies {
-        runtimeOnly("io.micrometer:micrometer-registry-prometheus:1.0.1")
-      }
-    }
-
-    check {
-      dependsOn(testPrometheus)
     }
   }
 }

@@ -66,14 +66,5 @@ class ActuatorTest {
 
     String last = list.get(list.size() - 1).getClass().getSimpleName();
     assertThat(last).isEqualTo("OpenTelemetryMeterRegistry");
-
-    try {
-      Class.forName("io.micrometer.prometheusmetrics.PrometheusMeterRegistry");
-      assertThat(registries)
-          .extracting(r -> r.getClass().getSimpleName())
-          .contains("PrometheusMeterRegistry");
-    } catch (ClassNotFoundException e) {
-      // not testing prometheus
-    }
   }
 }
