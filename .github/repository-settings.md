@@ -74,8 +74,9 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
 - Targeted branches
   - Exclude:
     - `release/*`
-    - `renovate/**/**`
-    - `opentelemetrybot/**/**`
+    - `renovate/**/*`
+    - `opentelemetrybot/**/*`
+    - `revert-*/**/*` (these are created when using the GitHub UI to revert a PR)
 - Restrict creations: CHECKED
 
 ### Restrict updating tags
