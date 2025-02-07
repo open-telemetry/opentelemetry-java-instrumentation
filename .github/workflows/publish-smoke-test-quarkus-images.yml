@@ -15,7 +15,6 @@ permissions:
 jobs:
   publish:
     permissions:
-      contents: read
       packages: write
     uses: ./.github/workflows/reusable-publish-smoke-test-images.yml
     with:
@@ -26,7 +25,6 @@ jobs:
 
   workflow-notification:
     permissions:
-      contents: read
       issues: write
     needs:
       - publish
