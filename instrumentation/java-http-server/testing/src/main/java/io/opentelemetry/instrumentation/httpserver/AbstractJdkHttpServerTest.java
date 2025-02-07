@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Executors;
 
 public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<HttpServer> {
 
@@ -71,6 +72,7 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
     List<HttpContext> contexts = new ArrayList<>();
     HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
 
+    server.setExecutor(Executors.newCachedThreadPool());
     HttpContext context =
         server.createContext(
             SUCCESS.getPath(),
