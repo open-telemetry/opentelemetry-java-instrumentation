@@ -22,16 +22,6 @@ dependencies {
   latestDepTestLibrary("ch.qos.logback:logback-classic:+")
 }
 
-testing {
-  suites {
-    val testPrometheus by registering(JvmTestSuite::class) {
-      dependencies {
-        runtimeOnly("io.micrometer:micrometer-registry-prometheus:1.14.3")
-      }
-    }
-  }
-}
-
 tasks.withType<Test>().configureEach {
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
@@ -61,7 +51,13 @@ if (!latestDepTest) {
 }
 
 tasks {
+  val testPrometheus by registering(Test::class) {
+    dependencies {
+      runtimeOnly("io.micrometer:micrometer-registry-prometheus:1.14.3")
+    }
+  }
+
   check {
-    dependsOn(testing.suites)
+    dependsOn(testPrometheus)
   }
 }
