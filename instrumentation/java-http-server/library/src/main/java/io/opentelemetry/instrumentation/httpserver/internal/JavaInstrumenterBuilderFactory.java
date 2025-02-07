@@ -13,8 +13,8 @@ import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHt
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class JdkInstrumenterBuilderFactory {
-  private JdkInstrumenterBuilderFactory() {}
+public final class JavaInstrumenterBuilderFactory {
+  private JavaInstrumenterBuilderFactory() {}
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.java-http-server";
 
@@ -23,7 +23,7 @@ public final class JdkInstrumenterBuilderFactory {
     return DefaultHttpServerInstrumenterBuilder.create(
         INSTRUMENTATION_NAME,
         openTelemetry,
-        JdkHttpServerAttributesGetter.INSTANCE,
+        JavaHttpServerAttributesGetter.INSTANCE,
         ExchangeContextGetter.INSTANCE);
   }
 }

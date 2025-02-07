@@ -19,6 +19,7 @@ class JdkHttpServerTest extends AbstractJdkHttpServerTest {
   @Override
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
-    options.setTestHttpPipelining(false);
+    // library instrumentation does not create a span at all
+    options.disableTestNonStandardHttpMethod();
   }
 }

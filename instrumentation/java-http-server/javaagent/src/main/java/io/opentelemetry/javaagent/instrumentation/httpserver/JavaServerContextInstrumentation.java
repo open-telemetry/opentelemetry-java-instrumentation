@@ -5,37 +5,38 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpserver;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.sun.net.httpserver.HttpContext;
-import com.sun.net.httpserver.HttpServer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class JdkServerContextInstrumentation implements TypeInstrumentation {
+public class JavaServerContextInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named(HttpServer.class.getName());
+    return extendsClass(named("com.sun.net.httpserver.HttpServer"));
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isMethod().and(isPublic()).and(named("createContext")),
-        this.getClass().getName() + "$BuildAdvice");
+        JavaServerContextInstrumentation.class.getName() + "$BuildAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class BuildAdvice {
 
     @Advice.OnMethodExit
     public static void onExit(@Advice.Return HttpContext ctx) {
-      ctx.getFilters().addAll(JdkSingletons.SERVER_DECORATOR);
+      ctx.getFilters().addAll(JavaSingletons.FILTERS);
     }
   }
 }

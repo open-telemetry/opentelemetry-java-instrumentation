@@ -24,15 +24,13 @@ import io.opentelemetry.testing.internal.armeria.common.QueryParams;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<HttpServer> {
-
-  List<HttpContext> contexts = new ArrayList<>();
 
   protected Filter customFilter() {
     return null;
@@ -51,7 +49,7 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
       HttpExchange exchange, int status, Map<String, String> headers, String response)
       throws IOException {
 
-    byte[] bytes = response.getBytes(Charset.defaultCharset());
+    byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
 
     // -1 means no content, 0 means unknown content length
     long contentLength = bytes.length == 0 ? -1 : bytes.length;
@@ -64,13 +62,13 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
   }
 
   public String getUrlQuery(HttpExchange exchange) {
-    String fullPath = exchange.getRequestURI().toString();
-    int separatorPos = fullPath.indexOf('?');
-    return separatorPos == -1 ? null : fullPath.substring(separatorPos + 1);
+    return exchange.getRequestURI().getQuery();
   }
 
   @Override
   protected HttpServer setupServer() throws IOException {
+
+    List<HttpContext> contexts = new ArrayList<>();
     HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
 
     HttpContext context =
@@ -181,6 +179,7 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
 
   @Override
   protected void configure(HttpServerTestOptions options) {
+
     options.setTestNotFound(false);
     options.setTestPathParam(false);
     options.setTestException(false);

@@ -13,11 +13,11 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.io.IOException;
 
 /** Decorates an {@link HttpServer} to trace inbound {@link HttpExchange}s. */
-final class OpenTelemetryService extends Filter {
+final class OpenTelemetryFilter extends Filter {
 
   private final Instrumenter<HttpExchange, HttpExchange> instrumenter;
 
-  OpenTelemetryService(Instrumenter<HttpExchange, HttpExchange> instrumenter) {
+  OpenTelemetryFilter(Instrumenter<HttpExchange, HttpExchange> instrumenter) {
 
     this.instrumenter = instrumenter;
   }
@@ -30,13 +30,16 @@ final class OpenTelemetryService extends Filter {
       chain.doFilter(exchange);
       return;
     }
-
+    Throwable error = null;
     Context context = instrumenter.start(parentContext, exchange);
 
     try (Scope ignored = context.makeCurrent()) {
       chain.doFilter(exchange);
+    } catch (Throwable t) {
+      error = t;
+      throw t;
     } finally {
-      instrumenter.end(context, exchange, null, null);
+      instrumenter.end(context, exchange, exchange, error);
     }
   }
 

@@ -20,7 +20,7 @@ class JdkHttpServerTest extends AbstractJdkHttpServerTest {
 
   @Override
   protected Filter customFilter() {
-    return JdkServerTelemetry.builder(testing.getOpenTelemetry())
+    return JavaServerTelemetry.builder(testing.getOpenTelemetry())
         .setCapturedRequestHeaders(
             Collections.singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
         .setCapturedResponseHeaders(

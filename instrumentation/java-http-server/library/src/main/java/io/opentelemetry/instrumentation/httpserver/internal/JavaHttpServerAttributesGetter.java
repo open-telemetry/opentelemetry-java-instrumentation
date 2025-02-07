@@ -7,13 +7,14 @@ package io.opentelemetry.instrumentation.httpserver.internal;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpsExchange;
+import io.opentelemetry.instrumentation.api.internal.HttpProtocolUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum JdkHttpServerAttributesGetter
+enum JavaHttpServerAttributesGetter
     implements HttpServerAttributesGetter<HttpExchange, HttpExchange> {
   INSTANCE;
 
@@ -29,17 +30,13 @@ enum JdkHttpServerAttributesGetter
 
   @Override
   public String getUrlPath(HttpExchange exchange) {
-    String fullPath = exchange.getRequestURI().toString();
-    int separatorPos = fullPath.indexOf('?');
-    return separatorPos == -1 ? fullPath : fullPath.substring(0, separatorPos);
+    return exchange.getRequestURI().getPath();
   }
 
   @Nullable
   @Override
   public String getUrlQuery(HttpExchange exchange) {
-    String fullPath = exchange.getRequestURI().toString();
-    int separatorPos = fullPath.indexOf('?');
-    return separatorPos == -1 ? null : fullPath.substring(separatorPos + 1);
+    return exchange.getRequestURI().getQuery();
   }
 
   @Override
@@ -71,13 +68,13 @@ enum JdkHttpServerAttributesGetter
 
   @Override
   public String getNetworkProtocolName(HttpExchange exchange, @Nullable HttpExchange res) {
-    return exchange instanceof HttpsExchange ? "https" : "http";
+    return HttpProtocolUtil.getProtocol(exchange.getProtocol());
   }
 
   @Override
   public String getNetworkProtocolVersion(HttpExchange exchange, @Nullable HttpExchange res) {
 
-    return "1.1";
+    return HttpProtocolUtil.getVersion(exchange.getProtocol());
   }
 
   @Override
