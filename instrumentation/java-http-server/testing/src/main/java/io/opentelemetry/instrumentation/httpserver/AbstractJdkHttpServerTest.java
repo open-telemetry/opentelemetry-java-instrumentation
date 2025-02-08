@@ -177,7 +177,7 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
 
   @Override
   protected void stopServer(HttpServer server) {
-    //I guess the server has trouble stopping?
+    // I guess the server has trouble stopping?
     CompletableFuture.runAsync(() -> server.stop(1000));
   }
 
