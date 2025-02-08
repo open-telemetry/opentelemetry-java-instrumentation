@@ -125,6 +125,7 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
 
 ### Organization secrets
 
+- `FOSSA_API_KEY`
 - `OPENTELEMETRYBOT_GITHUB_TOKEN`
 - `OTELBOT_CLIENT_ID`
 - `OTELBOT_PRIVATE_KEY`
