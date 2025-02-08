@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.CompletableFuture;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -176,7 +177,7 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
 
   @Override
   protected void stopServer(HttpServer server) {
-    server.stop(1000);
+    CompletableFuture.runAsync(() -> server.stop(1000));
   }
 
   @Override
