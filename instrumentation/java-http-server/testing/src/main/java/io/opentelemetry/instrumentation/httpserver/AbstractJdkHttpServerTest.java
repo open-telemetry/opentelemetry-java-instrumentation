@@ -177,6 +177,7 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
 
   @Override
   protected void stopServer(HttpServer server) {
+    //I guess the server has trouble stopping?
     CompletableFuture.runAsync(() -> server.stop(1000));
   }
 
@@ -195,7 +196,6 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
 
       if (!Span.current().getSpanContext().isValid()) {
         // Return an invalid code to fail any assertion
-
         exchange.sendResponseHeaders(601, -1);
       }
 
