@@ -24,9 +24,11 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SE
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.HttpData;
@@ -56,6 +58,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.async.AsyncResponseTransformer;
 import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.retry.RetryPolicy;
 import software.amazon.awssdk.http.apache.ApacheHttpClient;
 import software.amazon.awssdk.regions.Region;
@@ -695,5 +698,25 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                                 equalTo(RPC_METHOD, "GetObject"),
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(stringKey("aws.bucket.name"), "somebucket"))));
+  }
+
+  // regression test for
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13124
+  // verify that scope is not leaked on exception
+  @Test
+  void testS3ListNullBucket() {
+    S3ClientBuilder builder = S3Client.builder();
+    configureSdkClient(builder);
+    S3Client client =
+        builder
+            .endpointOverride(clientUri)
+            .region(Region.AP_NORTHEAST_1)
+            .credentialsProvider(CREDENTIALS_PROVIDER)
+            .build();
+
+    assertThatThrownBy(() -> client.listObjectsV2(b -> b.bucket(null)))
+        .isInstanceOf(SdkException.class);
+
+    assertThat(Context.current()).isEqualTo(Context.root());
   }
 }

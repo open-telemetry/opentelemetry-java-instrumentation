@@ -25,6 +25,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServerUsingTest<SERVER> {
 
   protected static class TestResponse {

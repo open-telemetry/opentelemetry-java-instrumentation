@@ -84,6 +84,7 @@ class DbClientAttributesExtractorTest {
       assertThat(startAttributes.build())
           .containsOnly(
               entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
+              entry(DbIncubatingAttributes.DB_SYSTEM_NAME, "myDb"),
               entry(DbIncubatingAttributes.DB_USER, "username"),
               entry(DbIncubatingAttributes.DB_NAME, "potatoes"),
               entry(DbIncubatingAttributes.DB_CONNECTION_STRING, "mydb:///potatoes"),
@@ -104,7 +105,7 @@ class DbClientAttributesExtractorTest {
     } else if (SemconvStability.emitStableDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
-              entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
+              entry(DbIncubatingAttributes.DB_SYSTEM_NAME, "myDb"),
               entry(DbIncubatingAttributes.DB_NAMESPACE, "potatoes"),
               entry(DbIncubatingAttributes.DB_QUERY_TEXT, "SELECT * FROM potato"),
               entry(DbIncubatingAttributes.DB_OPERATION_NAME, "SELECT"));

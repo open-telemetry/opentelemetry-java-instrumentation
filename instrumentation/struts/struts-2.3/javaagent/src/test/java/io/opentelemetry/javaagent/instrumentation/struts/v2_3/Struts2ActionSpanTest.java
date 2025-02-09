@@ -132,6 +132,7 @@ class Struts2ActionSpanTest extends AbstractHttpServerTest<Server> {
     return span;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   protected SpanDataAssert assertHandlerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {

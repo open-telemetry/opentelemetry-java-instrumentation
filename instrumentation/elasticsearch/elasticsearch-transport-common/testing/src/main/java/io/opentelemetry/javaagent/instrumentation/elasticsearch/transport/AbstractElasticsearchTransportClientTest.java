@@ -86,7 +86,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                                 equalTo(NETWORK_PEER_ADDRESS, getAddress()),
                                 equalTo(NETWORK_PEER_PORT, getPort()),
                                 equalTo(
-                                    DB_SYSTEM,
+                                    maybeStable(DB_SYSTEM),
                                     DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "ClusterHealthAction"),
                                 equalTo(ELASTICSEARCH_ACTION, "ClusterHealthAction"),
@@ -142,7 +142,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                                             RemoteTransportException.class.getName())))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DB_SYSTEM,
+                                maybeStable(DB_SYSTEM),
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "GetAction"),
                             equalTo(ELASTICSEARCH_ACTION, "GetAction"),
@@ -203,7 +203,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                                 equalTo(NETWORK_PEER_ADDRESS, getAddress()),
                                 equalTo(NETWORK_PEER_PORT, getPort()),
                                 equalTo(
-                                    DB_SYSTEM,
+                                    maybeStable(DB_SYSTEM),
                                     DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "CreateIndexAction"),
                                 equalTo(ELASTICSEARCH_ACTION, "CreateIndexAction"),
@@ -217,7 +217,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DB_SYSTEM,
+                                maybeStable(DB_SYSTEM),
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), getPutMappingActionName()),
                             equalTo(ELASTICSEARCH_ACTION, getPutMappingActionName()),
@@ -233,7 +233,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                                 equalTo(NETWORK_PEER_ADDRESS, getAddress()),
                                 equalTo(NETWORK_PEER_PORT, getPort()),
                                 equalTo(
-                                    DB_SYSTEM,
+                                    maybeStable(DB_SYSTEM),
                                     DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "IndexAction"),
                                 equalTo(ELASTICSEARCH_ACTION, "IndexAction"),
@@ -256,7 +256,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                                 equalTo(NETWORK_PEER_ADDRESS, getAddress()),
                                 equalTo(NETWORK_PEER_PORT, getPort()),
                                 equalTo(
-                                    DB_SYSTEM,
+                                    maybeStable(DB_SYSTEM),
                                     DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "GetAction"),
                                 equalTo(ELASTICSEARCH_ACTION, "GetAction"),
@@ -276,7 +276,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                                 equalTo(NETWORK_PEER_ADDRESS, getAddress()),
                                 equalTo(NETWORK_PEER_PORT, getPort()),
                                 equalTo(
-                                    DB_SYSTEM,
+                                    maybeStable(DB_SYSTEM),
                                     DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "GetAction"),
                                 equalTo(ELASTICSEARCH_ACTION, "GetAction"),

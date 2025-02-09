@@ -10,6 +10,9 @@ on:
         type: boolean
         required: false
 
+permissions:
+  contents: read
+
 jobs:
   graalvm-native-tests:
     if: "!inputs.skip-native-tests"

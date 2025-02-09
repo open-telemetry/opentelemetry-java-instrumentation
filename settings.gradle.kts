@@ -2,13 +2,13 @@ pluginManagement {
   plugins {
     id("com.github.jk1.dependency-license-report") version "2.9"
     id("com.google.cloud.tools.jib") version "3.4.4"
-    id("com.gradle.plugin-publish") version "1.3.0"
+    id("com.gradle.plugin-publish") version "1.3.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
     id("org.jetbrains.kotlin.jvm") version "2.1.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("org.unbroken-dome.xjc") version "2.0.0"
     // See https://github.com/graalvm/native-build-tools/issues/626
-    id("org.graalvm.buildtools.native") version "0.10.4"
+    id("org.graalvm.buildtools.native") version "0.10.5"
   }
 }
 
@@ -260,7 +260,6 @@ include(":instrumentation:internal:internal-class-loader:javaagent")
 include(":instrumentation:internal:internal-class-loader:javaagent-integration-tests")
 include(":instrumentation:internal:internal-eclipse-osgi-3.6:javaagent")
 include(":instrumentation:internal:internal-lambda:javaagent")
-include(":instrumentation:internal:internal-lambda-java9:javaagent")
 include(":instrumentation:internal:internal-reflection:javaagent")
 include(":instrumentation:internal:internal-reflection:javaagent-integration-tests")
 include(":instrumentation:internal:internal-url-class-loader:javaagent")

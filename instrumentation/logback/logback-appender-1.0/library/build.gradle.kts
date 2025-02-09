@@ -112,8 +112,9 @@ testing {
         } else {
           implementation("ch.qos.logback:logback-classic") {
             version {
-              // first version that has ch.qos.logback.classic.AsyncAppender
-              strictly("1.0.4")
+              // 1.0.4 is the first version that has ch.qos.logback.classic.AsyncAppender
+              // we are using 1.0.7 because of https://jira.qos.ch/browse/LOGBACK-720
+              strictly("1.0.7")
             }
           }
           implementation("org.slf4j:slf4j-api") {

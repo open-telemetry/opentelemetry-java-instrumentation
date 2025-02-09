@@ -9,12 +9,12 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 jobs:
-
   update-cloudfoundry-index-yml:
+    permissions:
+      contents: write # for git push to PR branch
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -29,8 +29,10 @@ jobs:
       - name: create working branch
         run: git checkout -b opentelemetrybot/cloudfoundry-${{ github.run_number }}-${{ github.run_attempt }}
 
-      - run: sudo apt-get install jq python3-pip
-      - run: pip install yq
+      - name: install xq (which is part of yq)
+        run: |
+          sudo apt-get install jq python3-pip
+          pip install yq==3.4.3
 
       - name: update index.yml
         run: |

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.netty.v4_1;
 
-import static io.opentelemetry.instrumentation.test.base.HttpClientTest.getPort;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 
@@ -135,6 +134,18 @@ public abstract class AbstractNetty41ClientTest
         return "CONNECT";
       default:
         return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(uri, method);
+    }
+  }
+
+  private static int getPort(URI uri) {
+    if (uri.getPort() != -1) {
+      return uri.getPort();
+    } else if ("http".equals(uri.getScheme())) {
+      return 80;
+    } else if ("https".equals(uri.getScheme())) {
+      return 443;
+    } else {
+      throw new IllegalArgumentException("Unexpected uri: " + uri);
     }
   }
 

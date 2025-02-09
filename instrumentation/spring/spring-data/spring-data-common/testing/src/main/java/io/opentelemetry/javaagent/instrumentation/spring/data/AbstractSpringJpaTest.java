@@ -90,7 +90,7 @@ public abstract class AbstractSpringJpaTest<
                 .hasKind(SpanKind.CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
-                    equalTo(DB_SYSTEM, "hsqldb"),
+                    equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
                     equalTo(maybeStable(DB_NAME), "test"),
                     equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                     equalTo(
@@ -113,7 +113,7 @@ public abstract class AbstractSpringJpaTest<
             span.hasName("CALL test")
                 .hasKind(SpanKind.CLIENT)
                 .hasAttributesSatisfyingExactly(
-                    equalTo(DB_SYSTEM, "hsqldb"),
+                    equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
                     equalTo(maybeStable(DB_NAME), "test"),
                     equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                     equalTo(
@@ -126,7 +126,7 @@ public abstract class AbstractSpringJpaTest<
                 .hasKind(SpanKind.CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
-                    equalTo(DB_SYSTEM, "hsqldb"),
+                    equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
                     equalTo(maybeStable(DB_NAME), "test"),
                     equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                     equalTo(
@@ -162,7 +162,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -200,7 +200,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -214,7 +214,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -240,7 +240,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -266,7 +266,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -280,7 +280,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -315,7 +315,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(
@@ -362,7 +362,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "hsqldb"),
+                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
                             equalTo(

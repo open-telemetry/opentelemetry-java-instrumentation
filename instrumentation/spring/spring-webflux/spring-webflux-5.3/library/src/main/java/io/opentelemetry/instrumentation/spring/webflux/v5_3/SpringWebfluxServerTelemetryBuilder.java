@@ -106,7 +106,7 @@ public final class SpringWebfluxServerTelemetryBuilder {
   }
 
   /**
-   * Returns a new {@link SpringWebfluxTelemetry} with the settings of this {@link
+   * Returns a new {@link SpringWebfluxServerTelemetry} with the settings of this {@link
    * SpringWebfluxServerTelemetryBuilder}.
    */
   public SpringWebfluxServerTelemetry build() {

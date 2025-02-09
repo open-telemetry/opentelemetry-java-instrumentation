@@ -1,0 +1,86 @@
+# Every workflow that includes this must also include the following to make sure that it
+# is triggered when a new JDK is added to the matrix:
+#on:
+#  push:
+#    paths:
+#      - ".github/workflows/reusable-publish-smoke-test-images.yml"
+
+name: PR build fake backend images for smoke tests
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        type: string
+        required: true
+      cache-read-only:
+        type: boolean
+        required: false
+      skip-java-8:
+        type: boolean
+        required: false
+      skip-java-11:
+        type: boolean
+        required: false
+      skip-java-17:
+        type: boolean
+        required: false
+      skip-java-21:
+        type: boolean
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
+
+      - name: Set up JDK for running Gradle
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+
+      - name: Login to GitHub package registry
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set tag
+        run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
+
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
+        with:
+          cache-read-only: ${{ inputs.cache-read-only }}
+
+      - name: Build Java 8 Docker image
+        if: "!inputs.skip-java-8"
+        run: ./gradlew ${{ inputs.project }}:jib -Ptag=${{ env.TAG }} -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain
+
+      - name: Build Java 11 Docker image
+        if: "!inputs.skip-java-11"
+        run: ./gradlew ${{ inputs.project }}:jib -Ptag=${{ env.TAG }} -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain
+
+      - name: Build Java 17 Docker image
+        if: "!inputs.skip-java-17"
+        run: ./gradlew ${{ inputs.project }}:jib -Ptag=${{ env.TAG }} -PtargetJDK=17 -Djib.httpTimeout=120000 -Djib.console=plain
+
+      - name: Build Java 21 Docker image
+        if: "!inputs.skip-java-21"
+        run: ./gradlew ${{ inputs.project }}:jib -Ptag=${{ env.TAG }} -PtargetJDK=21 -Djib.httpTimeout=120000 -Djib.console=plain
+
+      - name: Build Java 23 Docker image
+        if: "!inputs.skip-java-23"
+        run: ./gradlew ${{ inputs.project }}:jib -Ptag=${{ env.TAG }} -PtargetJDK=23 -Djib.httpTimeout=120000 -Djib.console=plain

@@ -104,6 +104,7 @@ class JaxRs3AnnotationsInstrumentationTest {
         Arguments.of("/child/call", new JavaInterfaces.DefaultChildClassOnInterface()));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
   @MethodSource("provideArguments")
   void createSpanForAnnotatedMethod(String path, Jax action) {

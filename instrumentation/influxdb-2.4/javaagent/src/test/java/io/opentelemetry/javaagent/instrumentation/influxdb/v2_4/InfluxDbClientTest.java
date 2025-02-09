@@ -323,7 +323,7 @@ class InfluxDbClientTest {
     List<AttributeAssertion> result = new ArrayList<>();
     result.addAll(
         asList(
-            equalTo(DB_SYSTEM, "influxdb"),
+            equalTo(maybeStable(DB_SYSTEM), "influxdb"),
             equalTo(maybeStable(DB_NAME), databaseName),
             equalTo(SERVER_ADDRESS, host),
             equalTo(SERVER_PORT, port),

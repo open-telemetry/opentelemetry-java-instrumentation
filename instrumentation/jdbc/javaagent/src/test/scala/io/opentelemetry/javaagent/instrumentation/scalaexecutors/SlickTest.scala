@@ -7,7 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.scalaexecutors
 
 import io.opentelemetry.api.trace.{SpanKind, Tracer}
 import io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv
-import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable
+import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.{
+  maybeStable,
+  maybeStableDbSystemName
+}
 import io.opentelemetry.instrumentation.testing.junit.{
   AgentInstrumentationExtension,
   InstrumentationExtension
@@ -81,7 +84,10 @@ class SlickTest {
                   .hasKind(SpanKind.CLIENT)
                   .hasParent(trace.getSpan(0))
                   .hasAttributesSatisfyingExactly(
-                    equalTo(DB_SYSTEM, DbSystemIncubatingValues.H2),
+                    equalTo(
+                      maybeStable(DB_SYSTEM),
+                      maybeStableDbSystemName(DbSystemIncubatingValues.H2)
+                    ),
                     equalTo(maybeStable(DB_NAME), Db),
                     equalTo(
                       DB_USER,

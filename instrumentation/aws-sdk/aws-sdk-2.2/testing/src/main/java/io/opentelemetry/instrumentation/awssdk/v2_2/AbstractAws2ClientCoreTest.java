@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -170,7 +171,7 @@ public abstract class AbstractAws2ClientCoreTest {
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
             equalTo(AWS_REQUEST_ID, "UNKNOWN"),
             equalTo(stringKey("aws.table.name"), "sometable"),
-            equalTo(DB_SYSTEM, "dynamodb"),
+            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("dynamodb")),
             equalTo(maybeStable(DB_OPERATION), "CreateTable"),
             equalTo(
                 stringKey("aws.dynamodb.global_secondary_indexes"),
@@ -196,7 +197,7 @@ public abstract class AbstractAws2ClientCoreTest {
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
             equalTo(AWS_REQUEST_ID, "UNKNOWN"),
             equalTo(stringKey("aws.table.name"), "sometable"),
-            equalTo(DB_SYSTEM, "dynamodb"),
+            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("dynamodb")),
             equalTo(maybeStable(DB_OPERATION), "Query"),
             equalTo(stringKey("aws.dynamodb.limit"), "10"),
             equalTo(stringKey("aws.dynamodb.select"), "ALL_ATTRIBUTES"));
@@ -219,7 +220,7 @@ public abstract class AbstractAws2ClientCoreTest {
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
             equalTo(AWS_REQUEST_ID, "UNKNOWN"),
             equalTo(stringKey("aws.table.name"), "sometable"),
-            equalTo(DB_SYSTEM, "dynamodb"),
+            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("dynamodb")),
             equalTo(maybeStable(DB_OPERATION), operation));
   }
 
