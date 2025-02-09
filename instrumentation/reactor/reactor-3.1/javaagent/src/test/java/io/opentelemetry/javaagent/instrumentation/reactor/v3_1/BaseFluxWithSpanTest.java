@@ -18,6 +18,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.UnicastProcessor;
 import reactor.test.StepVerifier;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 abstract class BaseFluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, Flux<String>> {
 
   @Override

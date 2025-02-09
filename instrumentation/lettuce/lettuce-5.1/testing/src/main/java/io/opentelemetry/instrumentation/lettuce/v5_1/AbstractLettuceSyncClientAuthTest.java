@@ -81,7 +81,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(NETWORK_PEER_PORT, port),
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
-                                      equalTo(DB_SYSTEM, "redis"),
+                                      equalTo(maybeStable(DB_SYSTEM), "redis"),
                                       equalTo(
                                           maybeStable(DB_STATEMENT),
                                           "CLIENT SETINFO lib-name Lettuce")))),
@@ -97,7 +97,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(NETWORK_PEER_PORT, port),
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
-                                      equalTo(DB_SYSTEM, "redis"),
+                                      equalTo(maybeStable(DB_SYSTEM), "redis"),
                                       satisfies(
                                           maybeStable(DB_STATEMENT),
                                           stringAssert ->
@@ -114,7 +114,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(NETWORK_PEER_PORT, port),
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
-                                      equalTo(DB_SYSTEM, "redis"),
+                                      equalTo(maybeStable(DB_SYSTEM), "redis"),
                                       equalTo(maybeStable(DB_STATEMENT), "AUTH ?")))
                               .hasEventsSatisfyingExactly(
                                   event -> event.hasName("redis.encode.start"),
@@ -135,7 +135,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(NETWORK_PEER_PORT, port),
                                       equalTo(SERVER_ADDRESS, host),
                                       equalTo(SERVER_PORT, port),
-                                      equalTo(DB_SYSTEM, "redis"),
+                                      equalTo(maybeStable(DB_SYSTEM), "redis"),
                                       equalTo(maybeStable(DB_STATEMENT), "AUTH ?")))
                               .hasEventsSatisfyingExactly(
                                   event -> event.hasName("redis.encode.start"),

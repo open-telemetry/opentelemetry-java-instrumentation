@@ -68,6 +68,7 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
     return context;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   protected SpanDataAssert assertHandlerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {

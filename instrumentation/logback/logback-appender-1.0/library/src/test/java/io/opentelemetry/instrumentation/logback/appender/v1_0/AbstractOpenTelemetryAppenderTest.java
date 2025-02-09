@@ -92,6 +92,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasTotalAttributeCount(4));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void logWithExtras() {
     Instant start = Instant.now();

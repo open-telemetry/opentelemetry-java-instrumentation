@@ -104,7 +104,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM, "redis"),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
@@ -143,7 +143,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM, "redis"),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
@@ -193,7 +193,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM, "redis"),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
@@ -231,7 +231,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM, "redis"),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
@@ -256,7 +256,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM, "redis"),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(maybeStable(DB_STATEMENT), "COMMAND")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
@@ -302,7 +302,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM, "redis"),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(maybeStable(DB_STATEMENT), "SET a ?")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
@@ -318,7 +318,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM, "redis"),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(maybeStable(DB_STATEMENT), "GET a")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
@@ -348,7 +348,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM, "redis"),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(maybeStable(DB_STATEMENT), "SET a ?")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
@@ -364,7 +364,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(NETWORK_PEER_PORT, port),
                                     equalTo(SERVER_ADDRESS, host),
                                     equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM, "redis"),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(maybeStable(DB_STATEMENT), "GET a")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),

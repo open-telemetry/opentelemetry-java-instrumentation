@@ -12,9 +12,6 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Install mardkdownlint
-        run: npm install -g markdownlint-cli
-
       - name: Run markdownlint
         run: |
-          markdownlint -c .markdownlint.yml -p .gitignore **/*.md -i licenses/licenses.md
+          npx markdownlint-cli@0.44.0 -c .github/config/markdownlint.yml -p .gitignore **/*.md -i licenses/licenses.md

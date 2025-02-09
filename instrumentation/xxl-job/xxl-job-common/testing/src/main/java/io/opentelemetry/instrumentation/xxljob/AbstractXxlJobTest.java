@@ -140,6 +140,7 @@ public abstract class AbstractXxlJobTest {
                         .hasAttributesSatisfyingExactly(assertions)));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static void checkXxlJob(
       String spanName,
       StatusData statusData,

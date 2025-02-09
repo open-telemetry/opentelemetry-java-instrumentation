@@ -94,7 +94,7 @@ class ElasticsearchClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "elasticsearch"),
+                            equalTo(maybeStable(DB_SYSTEM), "elasticsearch"),
                             equalTo(maybeStable(DB_OPERATION), "info"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(URL_FULL, httpHost.toURI() + "/"),
@@ -130,7 +130,7 @@ class ElasticsearchClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "elasticsearch"),
+                            equalTo(maybeStable(DB_SYSTEM), "elasticsearch"),
                             equalTo(maybeStable(DB_OPERATION), "index"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),
@@ -188,7 +188,7 @@ class ElasticsearchClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, "elasticsearch"),
+                            equalTo(maybeStable(DB_SYSTEM), "elasticsearch"),
                             equalTo(maybeStable(DB_OPERATION), "info"),
                             equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                             equalTo(SERVER_PORT, httpHost.getPort()),

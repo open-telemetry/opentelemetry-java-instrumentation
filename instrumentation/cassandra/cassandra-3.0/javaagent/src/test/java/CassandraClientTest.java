@@ -107,7 +107,7 @@ class CassandraClientTest {
                               equalTo(SERVER_PORT, cassandraPort),
                               equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
-                              equalTo(DB_SYSTEM, "cassandra"),
+                              equalTo(maybeStable(DB_SYSTEM), "cassandra"),
                               equalTo(maybeStable(DB_STATEMENT), "USE " + parameter.keyspace))),
           trace ->
               trace.hasSpansSatisfyingExactly(
@@ -121,7 +121,7 @@ class CassandraClientTest {
                               equalTo(SERVER_PORT, cassandraPort),
                               equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
-                              equalTo(DB_SYSTEM, "cassandra"),
+                              equalTo(maybeStable(DB_SYSTEM), "cassandra"),
                               equalTo(maybeStable(DB_NAME), parameter.keyspace),
                               equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
                               equalTo(maybeStable(DB_OPERATION), parameter.operation),
@@ -140,7 +140,7 @@ class CassandraClientTest {
                               equalTo(SERVER_PORT, cassandraPort),
                               equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
-                              equalTo(DB_SYSTEM, "cassandra"),
+                              equalTo(maybeStable(DB_SYSTEM), "cassandra"),
                               equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
                               equalTo(maybeStable(DB_OPERATION), parameter.operation),
                               equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table))));
@@ -179,7 +179,7 @@ class CassandraClientTest {
                               equalTo(SERVER_PORT, cassandraPort),
                               equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
-                              equalTo(DB_SYSTEM, "cassandra"),
+                              equalTo(maybeStable(DB_SYSTEM), "cassandra"),
                               equalTo(maybeStable(DB_STATEMENT), "USE " + parameter.keyspace))),
           trace ->
               trace.hasSpansSatisfyingExactly(
@@ -194,7 +194,7 @@ class CassandraClientTest {
                               equalTo(SERVER_PORT, cassandraPort),
                               equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
-                              equalTo(DB_SYSTEM, "cassandra"),
+                              equalTo(maybeStable(DB_SYSTEM), "cassandra"),
                               equalTo(maybeStable(DB_NAME), parameter.keyspace),
                               equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
                               equalTo(maybeStable(DB_OPERATION), parameter.operation),
@@ -218,7 +218,7 @@ class CassandraClientTest {
                               equalTo(SERVER_PORT, cassandraPort),
                               equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                               equalTo(NETWORK_PEER_PORT, cassandraPort),
-                              equalTo(DB_SYSTEM, "cassandra"),
+                              equalTo(maybeStable(DB_SYSTEM), "cassandra"),
                               equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
                               equalTo(maybeStable(DB_OPERATION), parameter.operation),
                               equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table)),

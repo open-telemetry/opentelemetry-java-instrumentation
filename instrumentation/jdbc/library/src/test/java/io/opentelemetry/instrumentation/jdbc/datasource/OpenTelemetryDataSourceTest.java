@@ -37,7 +37,7 @@ class OpenTelemetryDataSourceTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
   @ArgumentsSource(GetConnectionMethods.class)
   void shouldEmitGetConnectionSpans(GetConnectionFunction getConnection) throws SQLException {
@@ -59,7 +59,7 @@ class OpenTelemetryDataSourceTest {
                                 CodeIncubatingAttributes.CODE_NAMESPACE,
                                 TestDataSource.class.getName()),
                             equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "getConnection"),
-                            equalTo(DB_SYSTEM, "postgresql"),
+                            equalTo(maybeStable(DB_SYSTEM), "postgresql"),
                             equalTo(maybeStable(DB_NAME), "dbname"),
                             equalTo(
                                 DB_CONNECTION_STRING,

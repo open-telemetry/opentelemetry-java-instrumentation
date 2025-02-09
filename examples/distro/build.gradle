@@ -13,7 +13,7 @@ buildscript {
   }
   dependencies {
     classpath "com.diffplug.spotless:spotless-plugin-gradle:7.0.2"
-    classpath "com.gradleup.shadow:shadow-gradle-plugin:8.3.5"
+    classpath "com.gradleup.shadow:shadow-gradle-plugin:8.3.6"
     classpath "io.opentelemetry.instrumentation:gradle-plugins:2.13.0-alpha-SNAPSHOT"
   }
 }
