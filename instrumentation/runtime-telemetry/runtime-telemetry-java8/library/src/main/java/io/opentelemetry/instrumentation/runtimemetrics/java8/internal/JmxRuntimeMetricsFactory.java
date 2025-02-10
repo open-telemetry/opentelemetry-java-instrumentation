@@ -22,23 +22,19 @@ public class JmxRuntimeMetricsFactory {
   @SuppressWarnings("CatchingUnchecked")
   public static List<AutoCloseable> buildObservables(
       OpenTelemetry openTelemetry, boolean enableExperimentalJmxTelemetry) {
-    try {
-      // Set up metrics gathered by JMX
-      List<AutoCloseable> observables = new ArrayList<>();
-      observables.addAll(Classes.registerObservers(openTelemetry));
-      observables.addAll(Cpu.registerObservers(openTelemetry));
-      observables.addAll(GarbageCollector.registerObservers(openTelemetry));
-      observables.addAll(MemoryPools.registerObservers(openTelemetry));
-      observables.addAll(Threads.registerObservers(openTelemetry));
-      if (enableExperimentalJmxTelemetry) {
-        observables.addAll(ExperimentalBufferPools.registerObservers(openTelemetry));
-        observables.addAll(ExperimentalCpu.registerObservers(openTelemetry));
-        observables.addAll(ExperimentalMemoryPools.registerObservers(openTelemetry));
-      }
-      return observables;
-    } catch (Exception e) {
-      throw new IllegalStateException("Error building RuntimeMetrics", e);
+    // Set up metrics gathered by JMX
+    List<AutoCloseable> observables = new ArrayList<>();
+    observables.addAll(Classes.registerObservers(openTelemetry));
+    observables.addAll(Cpu.registerObservers(openTelemetry));
+    observables.addAll(GarbageCollector.registerObservers(openTelemetry));
+    observables.addAll(MemoryPools.registerObservers(openTelemetry));
+    observables.addAll(Threads.registerObservers(openTelemetry));
+    if (enableExperimentalJmxTelemetry) {
+      observables.addAll(ExperimentalBufferPools.registerObservers(openTelemetry));
+      observables.addAll(ExperimentalCpu.registerObservers(openTelemetry));
+      observables.addAll(ExperimentalMemoryPools.registerObservers(openTelemetry));
     }
+    return observables;
   }
 
   private JmxRuntimeMetricsFactory() {}
