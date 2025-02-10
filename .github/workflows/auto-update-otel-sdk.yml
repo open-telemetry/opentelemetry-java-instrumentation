@@ -33,7 +33,7 @@ jobs:
                              | sed 's/^v//')
 
           matches=$(gh pr list \
-                        --author otelbot \
+                        --author app/otelbot \
                         --state open \
                         --search "in:title \"Update the OpenTelemetry SDK version to $latest_version\"")
           if [ ! -z "$matches" ]
