@@ -184,6 +184,7 @@ jobs:
                             opentelemetry-javaagent.asc.jar \
                             opentelemetry-java-instrumentation-SBOM.zip
 
+          # these are used as job outputs
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "prior-version=$PRIOR_VERSION" >> $GITHUB_OUTPUT
 
