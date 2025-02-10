@@ -119,7 +119,8 @@ public final class Threads {
   private static boolean useThreads() {
     // GraalVM native image does not support ThreadMXBean yet
     // see https://github.com/oracle/graal/issues/6101
-    return !isJava9OrNewer() || System.getProperty("org.graalvm.nativeimage.imagecode") != null;
+    boolean isNativeExecution = System.getProperty("org.graalvm.nativeimage.imagecode") != null;
+    return !isJava9OrNewer() || isNativeExecution;
   }
 
   private static Consumer<ObservableLongMeasurement> java8Callback(ThreadMXBean threadBean) {
