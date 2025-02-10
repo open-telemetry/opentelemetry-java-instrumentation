@@ -215,14 +215,20 @@ jobs:
           release_date=$(gh release view v$VERSION --json publishedAt --jq .publishedAt | sed 's/T.*//')
           RELEASE_DATE=$release_date .github/scripts/merge-change-log-after-release.sh
 
-      - name: Use CLA approved github bot
-        run: .github/scripts/use-cla-approved-github-bot.sh
+      - name: Use CLA approved bot
+        run: .github/scripts/use-cla-approved-bot.sh
+
+      - uses: actions/create-github-app-token@67e27a7eb7db372a1c61a7f9bdab8699e9ee57f7 # v1.11.3
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
 
       - name: Create pull request against main
         env:
           VERSION: ${{ needs.release.outputs.version }}
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GH_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           if git diff --quiet; then
             if [[ $VERSION == *.0 ]]; then
@@ -236,7 +242,7 @@ jobs:
 
           message="Merge change log updates from $GITHUB_REF_NAME"
           body="Merge change log updates from \`$GITHUB_REF_NAME\`."
-          branch="opentelemetrybot/merge-change-log-updates-from-${GITHUB_REF_NAME//\//-}"
+          branch="otelbot/merge-change-log-updates-from-${GITHUB_REF_NAME//\//-}"
 
           git checkout -b $branch
           git commit -a -m "$message"
@@ -253,9 +259,6 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: main
-
-      - name: Use CLA approved github bot
-        run: .github/scripts/use-cla-approved-github-bot.sh
 
       - name: Wait for release to be available in maven central
         env:
@@ -279,15 +282,24 @@ jobs:
           ./gradlew japicmp -PapiBaseVersion=$PRIOR_VERSION -PapiNewVersion=$VERSION
           ./gradlew --refresh-dependencies japicmp
 
+      - name: Use CLA approved bot
+        run: .github/scripts/use-cla-approved-bot.sh
+
+      - uses: actions/create-github-app-token@67e27a7eb7db372a1c61a7f9bdab8699e9ee57f7 # v1.11.3
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+
       - name: Create pull request against main
         env:
           VERSION: ${{ needs.release.outputs.version }}
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GH_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           message="Update apidiff baseline to released version $VERSION"
           body="Update apidiff baseline to released version \`$version\`."
-          branch="opentelemetrybot/update-apidiff-baseline-to-released-version-${VERSION}"
+          branch="otelbot/update-apidiff-baseline-to-released-version-${VERSION}"
 
           git checkout -b $branch
           git add docs/apidiffs

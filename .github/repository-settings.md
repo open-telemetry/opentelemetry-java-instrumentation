@@ -87,7 +87,7 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
   - Exclude:
     - `release/*`
     - `renovate/**/*`
-    - `opentelemetrybot/**/*`
+    - `otelbot/**/*`
     - `revert-*/**/*` (these are created when using the GitHub UI to revert a PR)
 - Restrict creations: CHECKED
 
@@ -126,6 +126,8 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
 ### Organization secrets
 
 - `FOSSA_API_KEY`
-- `OPENTELEMETRYBOT_GITHUB_TOKEN`
-- `OTELBOT_CLIENT_ID`
 - `OTELBOT_PRIVATE_KEY`
+
+### Organization variables
+
+- `OTELBOT_APP_ID`
