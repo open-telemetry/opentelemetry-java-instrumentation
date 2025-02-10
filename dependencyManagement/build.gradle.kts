@@ -8,7 +8,7 @@ val dependencyVersions = hashMapOf<String, String>()
 rootProject.extra["versions"] = dependencyVersions
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.46.0"
+val otelSdkVersion = "1.47.0"
 val otelContribVersion = "1.43.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
