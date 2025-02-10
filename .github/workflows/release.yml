@@ -184,6 +184,9 @@ jobs:
                             opentelemetry-javaagent.asc.jar \
                             opentelemetry-java-instrumentation-SBOM.zip
 
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "prior-version=$PRIOR_VERSION" >> $GITHUB_OUTPUT
+
   merge-change-log-to-main:
     permissions:
       contents: write # for git push to PR branch
