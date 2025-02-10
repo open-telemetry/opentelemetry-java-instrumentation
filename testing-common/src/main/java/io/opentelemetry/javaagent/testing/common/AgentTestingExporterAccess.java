@@ -41,7 +41,7 @@ import io.opentelemetry.sdk.metrics.internal.data.ImmutableSumData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableSummaryData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableSummaryPointData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableValueAtQuantile;
-import io.opentelemetry.sdk.testing.logs.TestLogRecordData;
+import io.opentelemetry.sdk.testing.logs.internal.TestExtendedLogRecordData;
 import io.opentelemetry.sdk.testing.trace.TestSpanData;
 import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -416,8 +416,8 @@ public final class AgentTestingExporterAccess {
       LogRecord logRecord,
       io.opentelemetry.sdk.resources.Resource resource,
       InstrumentationScopeInfo instrumentationScopeInfo) {
-    TestLogRecordData.Builder builder =
-        TestLogRecordData.builder()
+    TestExtendedLogRecordData.Builder builder =
+        TestExtendedLogRecordData.builder()
             .setResource(resource)
             .setInstrumentationScopeInfo(instrumentationScopeInfo)
             .setTimestamp(logRecord.getTimeUnixNano(), TimeUnit.NANOSECONDS)
@@ -429,7 +429,8 @@ public final class AgentTestingExporterAccess {
                     TraceState.getDefault()))
             .setSeverity(fromProto(logRecord.getSeverityNumber()))
             .setSeverityText(logRecord.getSeverityText())
-            .setAttributes(fromProto(logRecord.getAttributesList()));
+            .setAttributes(fromProto(logRecord.getAttributesList()))
+            .setEventName(logRecord.getEventName());
     if (canUseValue) {
       builder.setBodyValue(getBodyValue(logRecord.getBody()));
     } else {
