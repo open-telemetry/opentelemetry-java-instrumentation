@@ -62,7 +62,7 @@ public class RuntimeMetricsAutoConfiguration {
     }
   }
 
-  private int javaVersion() {
+  private static int javaVersion() {
     try {
       return Integer.parseInt(System.getProperty("java.specification.version"));
     } catch (NumberFormatException nfe) {
