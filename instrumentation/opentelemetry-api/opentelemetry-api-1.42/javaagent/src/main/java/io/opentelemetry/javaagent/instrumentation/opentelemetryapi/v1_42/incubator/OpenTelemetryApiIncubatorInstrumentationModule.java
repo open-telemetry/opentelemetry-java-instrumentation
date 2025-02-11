@@ -28,7 +28,7 @@ public class OpenTelemetryApiIncubatorInstrumentationModule extends Instrumentat
     // to 1.47
     return hasClassesNamed(
         "application.io.opentelemetry.api.incubator.logs.ExtendedLogger",
-        "io.opentelemetry.api.incubator.events.EventLogger");
+        "application.io.opentelemetry.api.incubator.events.EventLogger");
   }
 
   @Override
