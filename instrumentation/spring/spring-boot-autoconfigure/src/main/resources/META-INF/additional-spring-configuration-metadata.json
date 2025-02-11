@@ -312,7 +312,7 @@
       "defaultValue": false
     },
     {
-      "name": "otel.instrumentation.http.client.experimental.redact-sensitive-parameters",
+      "name": "otel.instrumentation.http.client.experimental.redact-sensitive-url-parameters",
       "type": "java.lang.Boolean",
       "description": "Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.",
       "defaultValue": false
