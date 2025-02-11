@@ -61,7 +61,7 @@ abstract class WithSpanAspect {
 
   private static Context parentContext(
       Context parentContext, JoinPointRequest request, Attributes unused) {
-    return request.withParent() ? parentContext : Context.root();
+    return request.inheritContext() ? parentContext : Context.root();
   }
 
   public Object traceMethod(ProceedingJoinPoint pjp) throws Throwable {

@@ -22,10 +22,14 @@ final class JoinPointRequest {
   private final Method method;
   private final String spanName;
   private final SpanKind spanKind;
-  private final boolean withParent;
+  private final boolean inheritContext;
 
   private JoinPointRequest(
-      JoinPoint joinPoint, Method method, String spanName, SpanKind spanKind, boolean withParent) {
+      JoinPoint joinPoint,
+      Method method,
+      String spanName,
+      SpanKind spanKind,
+      boolean inheritContext) {
     if (spanName.isEmpty()) {
       spanName = SpanNames.fromMethod(method);
     }
@@ -34,7 +38,7 @@ final class JoinPointRequest {
     this.method = method;
     this.spanName = spanName;
     this.spanKind = spanKind;
-    this.withParent = withParent;
+    this.inheritContext = inheritContext;
   }
 
   String spanName() {
@@ -53,8 +57,8 @@ final class JoinPointRequest {
     return joinPoint.getArgs();
   }
 
-  boolean withParent() {
-    return withParent;
+  boolean inheritContext() {
+    return inheritContext;
   }
 
   interface Factory {
@@ -65,15 +69,16 @@ final class JoinPointRequest {
   static final class InstrumentationAnnotationFactory implements Factory {
 
     // The reason for using reflection here is that it needs to be compatible with the old version
-    // of @WithSpan annotation that does not include the withParent option to avoid failing the
+    // of @WithSpan annotation that does not include the inheritContext option to avoid failing the
     // muzzle check.
-    private static MethodHandle withParentMethodHandle = null;
+    private static MethodHandle inheritContextMethodHandle = null;
 
     static {
       try {
-        withParentMethodHandle =
+        inheritContextMethodHandle =
             MethodHandles.publicLookup()
-                .findVirtual(WithSpan.class, "withParent", MethodType.methodType(boolean.class));
+                .findVirtual(
+                    WithSpan.class, "inheritContext", MethodType.methodType(boolean.class));
       } catch (NoSuchMethodException | IllegalAccessException ignore) {
         // ignore
       }
@@ -93,16 +98,16 @@ final class JoinPointRequest {
       SpanKind spanKind = annotation != null ? annotation.kind() : SpanKind.INTERNAL;
 
       return new JoinPointRequest(
-          joinPoint, method, spanName, spanKind, withParentValueFrom(annotation));
+          joinPoint, method, spanName, spanKind, inheritContextValueFrom(annotation));
     }
 
-    private static boolean withParentValueFrom(@Nullable WithSpan annotation) {
-      if (annotation == null || withParentMethodHandle == null) {
+    private static boolean inheritContextValueFrom(@Nullable WithSpan annotation) {
+      if (annotation == null || inheritContextMethodHandle == null) {
         return true;
       }
 
       try {
-        return (boolean) withParentMethodHandle.invoke(annotation);
+        return (boolean) inheritContextMethodHandle.invoke(annotation);
       } catch (Throwable ignore) {
         return true;
       }

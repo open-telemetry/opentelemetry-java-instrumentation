@@ -183,7 +183,7 @@ class InstrumentationWithSpanAspectTest {
 
   @Test
   @DisplayName(
-      "when method is annotated with @WithSpan(withParent=false) should build span without parent")
+      "when method is annotated with @WithSpan(inheritContext=false) should build span without parent")
   void withSpanWithoutParent() {
     // when
     testing.runWithSpan("parent", withSpanTester::testWithoutParentSpan);
@@ -244,7 +244,7 @@ class InstrumentationWithSpanAspectTest {
       return "hello!";
     }
 
-    @WithSpan(withParent = false)
+    @WithSpan(inheritContext = false)
     public String testWithoutParentSpan() {
       return "Span without parent span was created";
     }

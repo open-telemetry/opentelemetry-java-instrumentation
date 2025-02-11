@@ -58,7 +58,7 @@ public class TracedWithSpan {
     return future;
   }
 
-  @WithSpan(withParent = false)
+  @WithSpan(inheritContext = false)
   public String withoutParent() {
     return "hello!";
   }

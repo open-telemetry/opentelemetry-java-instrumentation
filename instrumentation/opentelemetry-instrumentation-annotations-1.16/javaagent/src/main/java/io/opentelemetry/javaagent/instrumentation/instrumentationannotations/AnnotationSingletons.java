@@ -35,15 +35,15 @@ public final class AnnotationSingletons {
   private static final SpanAttributesExtractor ATTRIBUTES = createAttributesExtractor();
 
   // The reason for using reflection here is that it needs to be compatible with the old version of
-  // @WithSpan annotation that does not include the withParent option to avoid failing the muzzle
-  // check.
-  private static MethodHandle withParentMethodHandle = null;
+  // @WithSpan annotation that does not include the inheritContext option to avoid failing the
+  // muzzle check.
+  private static MethodHandle inheritContextMethodHandle = null;
 
   static {
     try {
-      withParentMethodHandle =
+      inheritContextMethodHandle =
           MethodHandles.publicLookup()
-              .findVirtual(WithSpan.class, "withParent", MethodType.methodType(boolean.class));
+              .findVirtual(WithSpan.class, "inheritContext", MethodType.methodType(boolean.class));
     } catch (NoSuchMethodException | IllegalAccessException ignore) {
       // ignore
     }
@@ -133,7 +133,7 @@ public final class AnnotationSingletons {
 
   private static Context parentContextFromMethod(
       Context context, Method method, Attributes attributes) {
-    if (withParentMethodHandle == null) {
+    if (inheritContextMethodHandle == null) {
       return context;
     }
 
@@ -141,7 +141,7 @@ public final class AnnotationSingletons {
 
     boolean withParent = true;
     try {
-      withParent = (boolean) withParentMethodHandle.invoke(annotation);
+      withParent = (boolean) inheritContextMethodHandle.invoke(annotation);
     } catch (Throwable ignore) {
       // ignore
     }

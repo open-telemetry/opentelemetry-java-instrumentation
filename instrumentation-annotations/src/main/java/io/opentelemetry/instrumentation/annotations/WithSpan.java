@@ -37,7 +37,7 @@ public @interface WithSpan {
   SpanKind kind() default SpanKind.INTERNAL;
 
   /**
-   * Specifies whether to use the current context as the parent when creating a Span.
+   * Specifies whether to inherit the current context when creating a span.
    *
    * <p>If set to {@code true} (default), the created span will use the current context as its
    * parent, remaining within the same trace.
@@ -45,5 +45,5 @@ public @interface WithSpan {
    * <p>If set to {@code false}, the created span will use {@link Context#root()} as its parent,
    * starting a new, independent trace.
    */
-  boolean withParent() default true;
+  boolean inheritContext() default true;
 }
