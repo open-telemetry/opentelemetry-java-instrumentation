@@ -40,7 +40,9 @@ jobs:
 
       - name: Increase gradle daemon heap size
         run: |
-          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
+          # increasing more than other workflows since this is running on a large runner
+          # and so it uses more parallelism which uses more memory
+          sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx8g /" gradle.properties
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
