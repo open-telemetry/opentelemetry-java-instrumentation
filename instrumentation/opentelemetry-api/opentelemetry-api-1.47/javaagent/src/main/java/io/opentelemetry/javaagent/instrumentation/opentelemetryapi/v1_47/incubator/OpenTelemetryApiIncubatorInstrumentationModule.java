@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_42.incubator;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_47.incubator;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
@@ -19,16 +19,12 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class OpenTelemetryApiIncubatorInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public OpenTelemetryApiIncubatorInstrumentationModule() {
-    super("opentelemetry-api", "opentelemetry-api-1.42", "opentelemetry-api-incubator-1.42");
+    super("opentelemetry-api", "opentelemetry-api-1.47", "opentelemetry-api-incubator-1.47");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // EventLogger was removed in 1.47, including it here prevents the instrumentation from applying
-    // to 1.47
-    return hasClassesNamed(
-        "application.io.opentelemetry.api.incubator.logs.ExtendedLogger",
-        "io.opentelemetry.api.incubator.events.EventLogger");
+    return hasClassesNamed("application.io.opentelemetry.api.incubator.logs.ExtendedLogger");
   }
 
   @Override
