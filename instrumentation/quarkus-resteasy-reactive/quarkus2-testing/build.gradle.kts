@@ -1,7 +1,7 @@
 plugins {
   id("otel.javaagent-testing")
 
-  id("io.quarkus") version "2.16.7.Final"
+  id("io.quarkus") version "2.16.12.Final"
 }
 
 otelJava {
@@ -9,7 +9,7 @@ otelJava {
 }
 
 dependencies {
-  implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:2.16.7.Final"))
+  implementation(enforcedPlatform("io.quarkus.platform:quarkus-bom:2.16.12.Final"))
   // fails with junit 5.11.+
   implementation(enforcedPlatform("org.junit:junit-bom:5.10.3"))
   implementation("io.quarkus:quarkus-resteasy-reactive")
