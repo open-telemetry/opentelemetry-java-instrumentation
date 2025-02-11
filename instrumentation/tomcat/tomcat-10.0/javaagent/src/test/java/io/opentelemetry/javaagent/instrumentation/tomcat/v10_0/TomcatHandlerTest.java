@@ -115,6 +115,7 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
         });
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {

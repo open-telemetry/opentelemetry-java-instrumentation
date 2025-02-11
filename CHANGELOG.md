@@ -6,6 +6,8 @@
 
 - `io.opentelemetry.instrumentation.api.incubator.semconv.util.SpanNames` has been deprecated,
   replaced by the stable `io.opentelemetry.instrumentation.api.semconv.util.SpanNames`
+- In preparation for stabilizing HTTP library instrumentation, the classes and methods
+  that were deprecated in the prior two releases have now been removed
 
 ## Version 2.12.0 (2025-01-17)
 

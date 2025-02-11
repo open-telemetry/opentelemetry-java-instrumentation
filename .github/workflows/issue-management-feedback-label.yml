@@ -4,8 +4,14 @@ on:
   issue_comment:
     types: [created]
 
+permissions:
+  contents: read
+
 jobs:
   issue_comment:
+    permissions:
+      contents: read
+      issues: write
     if: >
       contains(github.event.issue.labels.*.name, 'needs author feedback') &&
       github.event.comment.user.login == github.event.issue.user.login

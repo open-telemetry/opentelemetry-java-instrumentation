@@ -173,7 +173,7 @@ public abstract class AbstractR2dbcStatementTest {
                                     emitStableDatabaseSemconv()
                                         ? null
                                         : parameter.system + "://localhost:" + port),
-                                equalTo(DB_SYSTEM, parameter.system),
+                                equalTo(maybeStable(DB_SYSTEM), parameter.system),
                                 equalTo(maybeStable(DB_NAME), DB),
                                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
                                 equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),

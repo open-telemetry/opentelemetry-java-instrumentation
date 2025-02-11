@@ -2,8 +2,13 @@ name: Prepare patch release
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   prepare-patch-release:
+    permissions:
+      contents: write  # for git push to PR branch
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -43,16 +48,22 @@ jobs:
           date=$(date "+%Y-%m-%d")
           sed -Ei "s/^## Unreleased$/## Version $VERSION ($date)/" CHANGELOG.md
 
-      - name: Use CLA approved github bot
-        run: .github/scripts/use-cla-approved-github-bot.sh
+      - name: Use CLA approved bot
+        run: .github/scripts/use-cla-approved-bot.sh
+
+      - uses: actions/create-github-app-token@67e27a7eb7db372a1c61a7f9bdab8699e9ee57f7 # v1.11.3
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
 
       - name: Create pull request
         env:
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GH_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           message="Prepare release $VERSION"
-          branch="opentelemetrybot/prepare-release-${VERSION}"
+          branch="otelbot/prepare-release-${VERSION}"
 
           git checkout -b $branch
           git commit -a -m "$message"

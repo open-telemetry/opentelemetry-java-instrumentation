@@ -13,7 +13,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.instrumentation.ktor.v2_0.server.KtorServerTracing
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension
@@ -57,7 +56,7 @@ class KtorServerSpanKindExtractorTest : AbstractHttpServerUsingTest<ApplicationE
   override fun getContextPath() = ""
 
   override fun setupServer(): ApplicationEngine = embeddedServer(Netty, port = port) {
-    install(KtorServerTracing) {
+    install(KtorServerTelemetry) {
       setOpenTelemetry(testing.openTelemetry)
       spanKindExtractor {
         if (uri.startsWith("/from-pubsub/")) {

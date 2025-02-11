@@ -38,21 +38,6 @@ public final class ApacheHttpClientTelemetryBuilder {
   /**
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items. The {@link AttributesExtractor} will be executed after all default extractors.
-   *
-   * @deprecated Use {@link #addAttributesExtractor(AttributesExtractor)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public ApacheHttpClientTelemetryBuilder addAttributeExtractor(
-      AttributesExtractor<? super ApacheHttpClientRequest, ? super HttpResponse>
-          attributesExtractor) {
-    builder.addAttributesExtractor(attributesExtractor);
-    return this;
-  }
-
-  /**
-   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
-   * items. The {@link AttributesExtractor} will be executed after all default extractors.
    */
   @CanIgnoreReturnValue
   public ApacheHttpClientTelemetryBuilder addAttributesExtractor(
@@ -102,23 +87,6 @@ public final class ApacheHttpClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public ApacheHttpClientTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
-    return this;
-  }
-
-  /**
-   * Configures the instrumentation to emit experimental HTTP client metrics.
-   *
-   * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
-   *     are to be emitted.
-   * @deprecated Use {@link
-   *     Experimental#setEmitExperimentalTelemetry(ApacheHttpClientTelemetryBuilder, boolean)}
-   *     instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public ApacheHttpClientTelemetryBuilder setEmitExperimentalHttpClientMetrics(
-      boolean emitExperimentalHttpClientMetrics) {
-    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
     return this;
   }
 

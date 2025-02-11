@@ -40,6 +40,7 @@ import org.springframework.util.ClassUtils;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.soap.client.SoapFaultClientException;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public class AbstractJaxWs2Test extends AbstractHttpServerUsingTest<Server> {
   @RegisterExtension
   public static final InstrumentationExtension testing =

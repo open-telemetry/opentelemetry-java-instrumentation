@@ -47,19 +47,8 @@ public class FlakyTestReporter {
   private int errorCount;
   private final List<FlakyTest> flakyTests = new ArrayList<>();
 
-  private static class FlakyTest {
-    final String testClassName;
-    final String testName;
-    final String timestamp;
-    final String message;
-
-    FlakyTest(String testClassName, String testName, String timestamp, String message) {
-      this.testClassName = testClassName;
-      this.testName = testName;
-      this.timestamp = timestamp;
-      this.message = message;
-    }
-  }
+  private record FlakyTest(
+      String testClassName, String testName, String timestamp, String message) {}
 
   private void addFlakyTest(
       String testClassName, String testName, String timestamp, String message) {
@@ -160,6 +149,15 @@ public class FlakyTestReporter {
     return value != null ? value.getNodeValue() : null;
   }
 
+  private static class BaseFileVisitor<T> extends SimpleFileVisitor<T> {
+    @Override
+    public FileVisitResult visitFileFailed(T file, IOException exception) {
+      System.err.println("Failed to visit " + file.toString());
+      exception.printStackTrace();
+      return CONTINUE;
+    }
+  }
+
   private void scanTestResults(Path buildDir) throws IOException {
     Path testResults = buildDir.resolve("test-results");
     if (!Files.exists(testResults)) {
@@ -168,7 +166,7 @@ public class FlakyTestReporter {
 
     Files.walkFileTree(
         testResults,
-        new SimpleFileVisitor<>() {
+        new BaseFileVisitor<>() {
           @Override
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
             String name = file.getFileName().toString();
@@ -185,7 +183,7 @@ public class FlakyTestReporter {
     FlakyTestReporter reporter = new FlakyTestReporter();
     Files.walkFileTree(
         path,
-        new SimpleFileVisitor<>() {
+        new BaseFileVisitor<>() {
           @Override
           public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
               throws IOException {

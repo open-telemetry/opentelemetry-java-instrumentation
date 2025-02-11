@@ -4,9 +4,6 @@ plugins {
 
 data class DependencySet(val group: String, val version: String, val modules: List<String>)
 
-val dependencyVersions = hashMapOf<String, String>()
-rootProject.extra["versions"] = dependencyVersions
-
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.46.0"
 val otelContribVersion = "1.43.0-alpha"
@@ -27,30 +24,32 @@ val groovyVersion = "4.0.25"
 // configurations.testRuntimeClasspath.resolutionStrategy.force "com.google.guava:guava:19.0"
 
 val DEPENDENCY_BOMS = listOf(
+  // for some reason boms show up as runtime dependencies in license and vulnerability scans
+  // even if they are only used by test dependencies, so not using junit bom since it is LGPL
+
   "com.fasterxml.jackson:jackson-bom:2.18.2",
   "com.squareup.okio:okio-bom:3.10.2", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
   "com.google.guava:guava-bom:33.4.0-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
-  "org.junit:junit-bom:5.11.4",
-  "org.testcontainers:testcontainers-bom:1.20.4",
-  "org.spockframework:spock-bom:2.4-M5-groovy-4.0"
+  "org.testcontainers:testcontainers-bom:1.20.4"
 )
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
 val errorProneVersion = "2.36.0"
-val byteBuddyVersion = "1.16.1"
+val byteBuddyVersion = "1.17.0"
 val asmVersion = "9.7.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.16"
-val semConvVersion = "1.29.0-alpha"
+val semConvVersion = "1.30.0-rc.1"
+val semConvAlphaVersion =  semConvVersion.replaceFirst("(-rc.*)?$".toRegex(), "-alpha$1")
 
 val CORE_DEPENDENCIES = listOf(
   "io.opentelemetry.semconv:opentelemetry-semconv:${semConvVersion}",
-  "io.opentelemetry.semconv:opentelemetry-semconv-incubating:${semConvVersion}",
+  "io.opentelemetry.semconv:opentelemetry-semconv-incubating:${semConvAlphaVersion}",
   "com.google.auto.service:auto-service:${autoServiceVersion}",
   "com.google.auto.service:auto-service-annotations:${autoServiceVersion}",
   "com.google.auto.value:auto-value:${autoValueVersion}",
@@ -82,6 +81,10 @@ val CORE_DEPENDENCIES = listOf(
 // There are dependencies included here that appear to have no usages, but are maintained at
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
+  "org.junit.jupiter:junit-jupiter-api:5.11.4",
+  "org.spockframework:spock-core:2.4-M5-groovy-4.0",
+  "org.spockframework:spock-junit4:2.4-M5-groovy-4.0",
+
   "io.r2dbc:r2dbc-proxy:1.1.5.RELEASE",
   "ch.qos.logback:logback-classic:1.3.15", // 1.4+ requires Java 11+
   "com.github.stefanbirkner:system-lambda:1.2.1",
@@ -96,7 +99,7 @@ val DEPENDENCIES = listOf(
   "commons-fileupload:commons-fileupload:1.5",
   "commons-io:commons-io:2.18.0",
   "commons-lang:commons-lang:2.6",
-  "commons-logging:commons-logging:1.3.4",
+  "commons-logging:commons-logging:1.3.5",
   "commons-validator:commons-validator:1.9.0",
   "io.netty:netty:3.10.6.Final",
   "io.opentelemetry.contrib:opentelemetry-aws-resources:${otelContribVersion}",
@@ -126,19 +129,13 @@ javaPlatform {
 dependencies {
   for (bom in DEPENDENCY_BOMS) {
     api(enforcedPlatform(bom))
-    val split = bom.split(':')
-    dependencyVersions[split[0]] = split[2]
   }
   constraints {
     for (dependency in CORE_DEPENDENCIES) {
       api(dependency)
-      val split = dependency.split(':')
-      dependencyVersions[split[0]] = split[2]
     }
     for (dependency in DEPENDENCIES) {
       api(dependency)
-      val split = dependency.split(':')
-      dependencyVersions[split[0]] = split[2]
     }
   }
 }

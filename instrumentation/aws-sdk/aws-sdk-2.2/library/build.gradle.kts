@@ -27,12 +27,6 @@ dependencies {
 testing {
   suites {
     val testCoreOnly by registering(JvmTestSuite::class) {
-      sources {
-        groovy {
-          setSrcDirs(listOf("src/testCoreOnly/groovy"))
-        }
-      }
-
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))

@@ -1,7 +1,9 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base"
+    "config:recommended",
+    "docker:pinDigests",
+    "helpers:pinGitHubActionDigests"
   ],
   "ignorePaths": ["instrumentation/**"],
   // needed in order to get patch-only updates in package rules below
@@ -34,24 +36,12 @@
       "allowedVersions": "!/\\-SNAPSHOT$/"
     },
     {
-      "matchPackagePrefixes": ["ch.qos.logback:"],
-      "groupName": "logback packages"
-    },
-    {
-      "matchPackagePrefixes": ["com.google.guava:"],
-      "groupName": "guava packages"
-    },
-    {
       "matchPackagePrefixes": ["io.quarkus"],
       "groupName": "quarkus packages"
     },
     {
       "matchPackagePrefixes": ["com.gradle.develocity"],
       "groupName": "gradle develocity packages"
-    },
-    {
-      "matchPackagePrefixes": ["org.eclipse.jetty:"],
-      "groupName": "jetty packages"
     },
     {
       "matchPackagePrefixes": ["com.linecorp.armeria:"],
@@ -66,16 +56,12 @@
       "groupName": "byte buddy packages"
     },
     {
-      "matchPackagePrefixes": ["com.fasterxml.jackson"],
-      "groupName": "jackson packages"
-    },
-    {
       "matchPackagePrefixes": ["com.gradleup.shadow"],
       "groupName": "gradle shadow packages"
     },
     {
       // prevent update to 2.4-groovy-4.0-SNAPSHOT
-      "matchPackageNames": ["org.spockframework:spock-bom"],
+      "matchPackagePrefixes": ["org.spockframework:"],
       "allowedVersions": "!/\\-SNAPSHOT$/"
     },
     {
@@ -173,8 +159,8 @@
     },
     {
       // intentionally using Java 11 in some examples
-      // not using matchUpdateTypes "major", because renovate wants to bump "11-jre" to "11.0.19_7-jre"
       "matchPackageNames": ["eclipse-temurin"],
+      "matchUpdateTypes": ["major"],
       "enabled": false
     },
     {
@@ -215,6 +201,28 @@
       "matchPackagePrefixes": ["org.eclipse.jetty:"],
       "matchUpdateTypes": ["major"],
       "enabled": false
+    }
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "datasourceTemplate": "pypi",
+      "fileMatch": [
+        "^.github/workflows/"
+      ],
+      "matchStrings": [
+        "pip install (?<depName>[^=]+)==(?<currentValue>[^\\s]+)"
+      ]
+    },
+    {
+      "customType": "regex",
+      "datasourceTemplate": "npm",
+      "fileMatch": [
+        "^.github/workflows/"
+      ],
+      "matchStrings": [
+        "npx (?<depName>[^@]+)@(?<currentValue>[^\\s]+)"
+      ]
     }
   ]
 }

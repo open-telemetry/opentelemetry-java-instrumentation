@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createStatementInstrumenter;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -196,7 +197,9 @@ class OpenTelemetryConnectionTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM, dbInfo.getSystem()),
+                            equalTo(
+                                maybeStable(DB_SYSTEM),
+                                maybeStableDbSystemName(dbInfo.getSystem())),
                             equalTo(maybeStable(DB_NAME), dbInfo.getName()),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : dbInfo.getUser()),
                             equalTo(

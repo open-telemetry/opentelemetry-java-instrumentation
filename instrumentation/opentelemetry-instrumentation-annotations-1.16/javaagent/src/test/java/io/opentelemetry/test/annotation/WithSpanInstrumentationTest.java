@@ -30,6 +30,7 @@ import net.bytebuddy.matcher.ElementMatchers;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class WithSpanInstrumentationTest {
 
   @RegisterExtension

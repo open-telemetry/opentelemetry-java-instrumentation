@@ -33,6 +33,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.aop.aspectj.annotation.AspectJProxyFactory;
 import org.springframework.core.ParameterNameDiscoverer;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class InstrumentationWithSpanAspectTest {
 
   @RegisterExtension

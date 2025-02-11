@@ -110,7 +110,7 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DB_SYSTEM,
+                                maybeStable(DB_SYSTEM),
                                 DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"))),
         trace ->
@@ -146,7 +146,7 @@ public abstract class AbstractCouchbaseClientTest extends AbstractCouchbaseTest 
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DB_SYSTEM,
+                                maybeStable(DB_SYSTEM),
                                 DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE),
                             equalTo(maybeStable(DB_OPERATION), "Cluster.openBucket"))),
         trace ->

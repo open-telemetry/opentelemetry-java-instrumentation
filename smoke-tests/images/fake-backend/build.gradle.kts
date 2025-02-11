@@ -19,9 +19,11 @@ dependencies {
 val extraTag = findProperty("extraTag")
   ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
+val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
+
 jib {
   from.image = "gcr.io/distroless/java-debian10:11"
-  to.image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend:$extraTag"
+  to.image = "ghcr.io/$repo/smoke-test-fake-backend:$extraTag"
 }
 
 // windows containers are built manually since jib does not support windows containers yet
@@ -53,11 +55,13 @@ tasks {
     }
   }
 
+  val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
+
   val windowsBackendImageBuild by registering(DockerBuildImage::class) {
     dependsOn(windowsBackendImagePrepare)
     inputDir.set(backendDockerBuildDir)
 
-    images.add("ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend-windows:$extraTag")
+    images.add("ghcr.io/$repo/smoke-test-fake-backend-windows:$extraTag")
     dockerFile.set(File(backendDockerBuildDir.get().asFile, "windows.dockerfile"))
   }
 
@@ -65,6 +69,6 @@ tasks {
     group = "publishing"
     description = "Push all Docker images for the test backend"
     dependsOn(windowsBackendImageBuild)
-    images.add("ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend-windows:$extraTag")
+    images.add("ghcr.io/$repo/smoke-test-fake-backend-windows:$extraTag")
   }
 }

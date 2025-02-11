@@ -42,6 +42,8 @@ final class OpenTelemetryTracing implements Tracing {
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
+  private static final AttributeKey<String> DB_SYSTEM_NAME =
+      AttributeKey.stringKey("db.system.name");
   private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
   private static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.query.text");
   private static final AttributeKey<Long> DB_REDIS_DATABASE_INDEX =
@@ -171,11 +173,13 @@ final class OpenTelemetryTracing implements Tracing {
       // Name will be updated later, we create with an arbitrary one here to store other data before
       // the span starts.
       SpanBuilder spanBuilder =
-          tracer
-              .spanBuilder("redis")
-              .setSpanKind(SpanKind.CLIENT)
-              .setParent(context)
-              .setAttribute(DB_SYSTEM, REDIS);
+          tracer.spanBuilder("redis").setSpanKind(SpanKind.CLIENT).setParent(context);
+      if (SemconvStability.emitStableDatabaseSemconv()) {
+        spanBuilder.setAttribute(DB_SYSTEM_NAME, REDIS);
+      }
+      if (SemconvStability.emitOldDatabaseSemconv()) {
+        spanBuilder.setAttribute(DB_SYSTEM, REDIS);
+      }
       return new OpenTelemetrySpan(context, spanBuilder, sanitizer, metrics);
     }
   }
@@ -196,7 +200,7 @@ final class OpenTelemetryTracing implements Tracing {
     @Nullable private Throwable error;
     @Nullable private Span span;
     private long spanStartNanos;
-    private final AttributesBuilder attributesBuilder = Attributes.builder().put(DB_SYSTEM, REDIS);
+    private final AttributesBuilder attributesBuilder;
     @Nullable private List<String> argsList;
     @Nullable private String argsString;
 
@@ -209,6 +213,13 @@ final class OpenTelemetryTracing implements Tracing {
       this.spanBuilder = spanBuilder;
       this.sanitizer = sanitizer;
       this.metrics = metrics;
+      this.attributesBuilder = Attributes.builder();
+      if (SemconvStability.emitStableDatabaseSemconv()) {
+        attributesBuilder.put(DB_SYSTEM_NAME, REDIS);
+      }
+      if (SemconvStability.emitOldDatabaseSemconv()) {
+        attributesBuilder.put(DB_SYSTEM, REDIS);
+      }
     }
 
     @Override

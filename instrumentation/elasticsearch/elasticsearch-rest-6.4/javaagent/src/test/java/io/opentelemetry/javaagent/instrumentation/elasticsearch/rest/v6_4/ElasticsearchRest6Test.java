@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v6_4;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -89,7 +90,7 @@ class ElasticsearchRest6Test {
                     .hasKind(SpanKind.CLIENT)
                     .hasNoParent()
                     .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM, "elasticsearch"),
+                        equalTo(maybeStable(DB_SYSTEM), "elasticsearch"),
                         equalTo(HTTP_REQUEST_METHOD, "GET"),
                         equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                         equalTo(SERVER_PORT, httpHost.getPort()),
@@ -164,7 +165,7 @@ class ElasticsearchRest6Test {
                     .hasKind(SpanKind.CLIENT)
                     .hasParent(trace.getSpan(0))
                     .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM, "elasticsearch"),
+                        equalTo(maybeStable(DB_SYSTEM), "elasticsearch"),
                         equalTo(HTTP_REQUEST_METHOD, "GET"),
                         equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                         equalTo(SERVER_PORT, httpHost.getPort()),

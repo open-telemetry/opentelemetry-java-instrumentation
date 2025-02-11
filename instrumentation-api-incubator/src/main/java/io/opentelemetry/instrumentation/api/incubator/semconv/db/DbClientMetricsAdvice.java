@@ -28,7 +28,7 @@ final class DbClientMetricsAdvice {
     ((ExtendedDoubleHistogramBuilder) builder)
         .setAttributesAdvice(
             asList(
-                DbClientCommonAttributesExtractor.DB_SYSTEM,
+                DbClientCommonAttributesExtractor.DB_SYSTEM_NAME,
                 SqlClientAttributesExtractor.DB_COLLECTION_NAME,
                 DbClientCommonAttributesExtractor.DB_NAMESPACE,
                 DbClientAttributesExtractor.DB_OPERATION_NAME,
