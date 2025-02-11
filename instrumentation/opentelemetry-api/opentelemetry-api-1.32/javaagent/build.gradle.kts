@@ -21,6 +21,9 @@ configurations.configureEach {
     resolutionStrategy {
       force("io.opentelemetry:opentelemetry-api:1.32.0")
     }
+    if (name.equals("testRuntimeClasspath")) {
+      exclude(group = "io.opentelemetry", module = "opentelemetry-api-incubator")
+    }
   }
 }
 

@@ -41,6 +41,7 @@ import io.opentelemetry.sdk.metrics.internal.data.ImmutableSumData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableSummaryData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableSummaryPointData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableValueAtQuantile;
+import io.opentelemetry.sdk.testing.logs.TestLogRecordData;
 import io.opentelemetry.sdk.testing.logs.internal.TestExtendedLogRecordData;
 import io.opentelemetry.sdk.testing.trace.TestSpanData;
 import io.opentelemetry.sdk.trace.data.EventData;
@@ -96,6 +97,8 @@ public final class AgentTestingExporterAccess {
   // opentelemetry-api-1.27:javaagent tests use an older version of opentelemetry-api where Value
   // class is missing
   private static final boolean canUseValue = classAvailable("io.opentelemetry.api.common.Value");
+  private static final boolean hasExtendedLogRecordData =
+      classAvailable("io.opentelemetry.sdk.logs.data.internal.ExtendedLogRecordData");
 
   static {
     try {
@@ -416,6 +419,35 @@ public final class AgentTestingExporterAccess {
       LogRecord logRecord,
       io.opentelemetry.sdk.resources.Resource resource,
       InstrumentationScopeInfo instrumentationScopeInfo) {
+    if (hasExtendedLogRecordData) {
+      return createExtendedLogData(logRecord, resource, instrumentationScopeInfo);
+    }
+    TestLogRecordData.Builder builder =
+        TestLogRecordData.builder()
+            .setResource(resource)
+            .setInstrumentationScopeInfo(instrumentationScopeInfo)
+            .setTimestamp(logRecord.getTimeUnixNano(), TimeUnit.NANOSECONDS)
+            .setSpanContext(
+                SpanContext.create(
+                    bytesToHex(logRecord.getTraceId().toByteArray()),
+                    bytesToHex(logRecord.getSpanId().toByteArray()),
+                    TraceFlags.getDefault(),
+                    TraceState.getDefault()))
+            .setSeverity(fromProto(logRecord.getSeverityNumber()))
+            .setSeverityText(logRecord.getSeverityText())
+            .setAttributes(fromProto(logRecord.getAttributesList()));
+    if (canUseValue) {
+      builder.setBodyValue(getBodyValue(logRecord.getBody()));
+    } else {
+      builder.setBody(logRecord.getBody().getStringValue());
+    }
+    return builder.build();
+  }
+
+  private static LogRecordData createExtendedLogData(
+      LogRecord logRecord,
+      io.opentelemetry.sdk.resources.Resource resource,
+      InstrumentationScopeInfo instrumentationScopeInfo) {
     TestExtendedLogRecordData.Builder builder =
         TestExtendedLogRecordData.builder()
             .setResource(resource)
@@ -430,12 +462,8 @@ public final class AgentTestingExporterAccess {
             .setSeverity(fromProto(logRecord.getSeverityNumber()))
             .setSeverityText(logRecord.getSeverityText())
             .setAttributes(fromProto(logRecord.getAttributesList()))
-            .setEventName(logRecord.getEventName());
-    if (canUseValue) {
-      builder.setBodyValue(getBodyValue(logRecord.getBody()));
-    } else {
-      builder.setBody(logRecord.getBody().getStringValue());
-    }
+            .setEventName(logRecord.getEventName())
+            .setBodyValue(getBodyValue(logRecord.getBody()));
     return builder.build();
   }
 
