@@ -33,7 +33,7 @@ jobs:
                              | sed 's/^v//')
 
           matches=$(gh pr list \
-                        --author opentelemetrybot \
+                        --author app/otelbot \
                         --state open \
                         --search "in:title \"Update the OpenTelemetry SDK version to $latest_version\"")
           if [ ! -z "$matches" ]
@@ -62,9 +62,6 @@ jobs:
           VERSION: ${{ needs.check-versions.outputs.latest-version }}
         run: ./.github/scripts/update-sdk-version.sh $VERSION
 
-      - name: Use CLA approved github bot
-        run: .github/scripts/use-cla-approved-github-bot.sh
-
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
 
@@ -84,16 +81,25 @@ jobs:
         if: failure()
         run: git checkout -- licenses
 
+      - name: Use CLA approved bot
+        run: .github/scripts/use-cla-approved-bot.sh
+
+      - uses: actions/create-github-app-token@67e27a7eb7db372a1c61a7f9bdab8699e9ee57f7 # v1.11.3
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+
       - name: Create pull request against main
         if: success() || failure()
         env:
           VERSION: ${{ needs.check-versions.outputs.latest-version }}
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GH_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           message="Update the OpenTelemetry SDK version to $VERSION"
           body="Update the OpenTelemetry SDK version to \`$VERSION\`."
-          branch="opentelemetrybot/update-opentelemetry-sdk-to-${VERSION}"
+          branch="otelbot/update-opentelemetry-sdk-to-${VERSION}"
 
           git checkout -b $branch
           git add -u
