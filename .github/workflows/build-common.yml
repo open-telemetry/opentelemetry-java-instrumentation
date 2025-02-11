@@ -68,7 +68,8 @@ jobs:
           cache-read-only: ${{ inputs.cache-read-only }}
 
       - name: Generate license report
-        run: ./gradlew generateLicenseReport ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
+        # with the build cache enabled occasionally produces outdated results
+        run: ./gradlew generateLicenseReport --no-build-cache
 
       - name: Check licenses
         run: |
