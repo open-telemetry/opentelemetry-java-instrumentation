@@ -61,7 +61,7 @@
     },
     {
       // prevent update to 2.4-groovy-4.0-SNAPSHOT
-      "matchPackageNames": ["org.spockframework:spock-bom"],
+      "matchPackagePrefixes": ["org.spockframework:"],
       "allowedVersions": "!/\\-SNAPSHOT$/"
     },
     {
