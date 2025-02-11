@@ -38,10 +38,16 @@ public final class MessagingNetworkAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     attributes.put(NETWORK_PEER_ADDRESS, getter.getNetworkPeerAddress(request, null));
-    attributes.put(NETWORK_PEER_PORT, getter.getNetworkPeerPort(request, null));
+    Integer networkPeerPort = getter.getNetworkPeerPort(request, null);
+    if (networkPeerPort != null) {
+      attributes.put(NETWORK_PEER_PORT, networkPeerPort);
+    }
 
     attributes.put(SERVER_ADDRESS, getter.getServerAddress(request));
-    attributes.put(SERVER_PORT, getter.getServerPort(request));
+    Integer serverPort = getter.getServerPort(request);
+    if (serverPort != null) {
+      attributes.put(SERVER_PORT, serverPort);
+    }
   }
 
   @Override
