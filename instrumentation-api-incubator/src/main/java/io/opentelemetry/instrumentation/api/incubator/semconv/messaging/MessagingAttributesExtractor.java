@@ -125,7 +125,8 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     if (SemconvStability.emitStableMessagingSemconv()) {
       internalSet(attributes, MESSAGING_CLIENT_ID_STABLE, getter.getClientId(request));
       internalSet(attributes, MESSAGING_OPERATION_TYPE, operation.operationType());
-      internalSet(attributes, MESSAGING_OPERATION_NAME, getter.getOperationName(request));
+      internalSet(
+          attributes, MESSAGING_OPERATION_NAME, getter.getOperationName(request, operation));
       internalSet(attributes, MESSAGING_CONSUMER_GROUP_NAME, getter.getConsumerGroupName(request));
       internalSet(
           attributes,

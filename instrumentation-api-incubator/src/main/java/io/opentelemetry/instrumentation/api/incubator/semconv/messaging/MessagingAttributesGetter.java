@@ -49,8 +49,8 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
   boolean isTemporaryDestination(REQUEST request);
 
   @Nullable
-  default String getOperationName(REQUEST request) {
-    return null;
+  default String getOperationName(REQUEST request, MessageOperation operation) {
+    return operation.operationType();
   }
 
   @Nullable

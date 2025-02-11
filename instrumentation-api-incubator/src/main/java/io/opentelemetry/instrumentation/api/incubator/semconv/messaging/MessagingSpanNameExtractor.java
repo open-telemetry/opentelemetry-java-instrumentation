@@ -49,9 +49,9 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
     if (SemconvStability.emitStableMessagingSemconv()) {
       String destination = getDestination(request);
       if (destination == null) {
-        return getter.getOperationName(request);
+        return getter.getOperationName(request, this.operation);
       }
-      return getter.getOperationName(request) + " " + destination;
+      return getter.getOperationName(request, this.operation) + " " + destination;
     }
     String destinationName =
         getter.isTemporaryDestination(request)
