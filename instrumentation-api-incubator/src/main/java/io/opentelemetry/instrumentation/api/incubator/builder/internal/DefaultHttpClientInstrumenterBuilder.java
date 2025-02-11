@@ -10,6 +10,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalHttpParamsRedactionExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
@@ -63,6 +64,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   private Function<SpanNameExtractor<? super REQUEST>, ? extends SpanNameExtractor<? super REQUEST>>
       spanNameExtractorTransformer = Function.identity();
   private boolean emitExperimentalHttpClientMetrics = false;
+  private boolean redactSensitiveUrlParameters = false;
   private Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer = b -> {};
 
   private DefaultHttpClientInstrumenterBuilder(
@@ -177,6 +179,19 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
+  /**
+   * Configures the instrumentation to redact sensitive URL parameters.
+   *
+   * @param redactSensitiveUrlParameters {@code true} if the sensitive URL parameters have to be
+   *     redacted.
+   */
+  @CanIgnoreReturnValue
+  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setRedactSensitiveUrlParameters(
+      boolean redactSensitiveUrlParameters) {
+    this.redactSensitiveUrlParameters = redactSensitiveUrlParameters;
+    return this;
+  }
+
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setSpanNameExtractor(
@@ -225,6 +240,10 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
           .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(attributesGetter))
           .addOperationMetrics(HttpClientExperimentalMetrics.get());
     }
+    if (redactSensitiveUrlParameters) {
+      builder.addAttributesExtractor(
+          HttpClientExperimentalHttpParamsRedactionExtractor.create(attributesGetter));
+    }
     builderCustomizer.accept(builder);
 
     if (headerSetter != null) {
@@ -248,6 +267,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     set(
         config::shouldEmitExperimentalHttpClientTelemetry,
         this::setEmitExperimentalHttpClientMetrics);
+    set(config::shouldRedactSensitiveUrlParameters, this::setRedactSensitiveUrlParameters);
     return this;
   }
 

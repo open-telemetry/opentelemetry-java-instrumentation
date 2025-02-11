@@ -11,6 +11,8 @@ otel:
     http:
       client:
         emit-experimental-telemetry: true
+        experimental:
+          redact-sensitive-url-parameters: true
       server:
         emit-experimental-telemetry: true
         capture-request-headers: [key]
