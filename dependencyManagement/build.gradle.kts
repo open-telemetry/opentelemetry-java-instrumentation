@@ -82,8 +82,8 @@ val CORE_DEPENDENCIES = listOf(
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
   "org.junit.jupiter:junit-jupiter-api:5.11.4",
-  "org.spockframework:spock-core:2.4-M5-groovy-4.0",
-  "org.spockframework:spock-junit4:2.4-M5-groovy-4.0",
+  "org.spockframework:spock-core:2.4-groovy-4.0-SNAPSHOT",
+  "org.spockframework:spock-junit4:2.4-groovy-4.0-SNAPSHOT",
 
   "io.r2dbc:r2dbc-proxy:1.1.5.RELEASE",
   "ch.qos.logback:logback-classic:1.3.15", // 1.4+ requires Java 11+
