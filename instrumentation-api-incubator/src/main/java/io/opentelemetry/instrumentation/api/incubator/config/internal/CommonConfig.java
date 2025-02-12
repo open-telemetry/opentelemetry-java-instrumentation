@@ -60,7 +60,7 @@ public final class CommonConfig {
         config.getBoolean("otel.instrumentation.http.client.emit-experimental-telemetry", false);
     redactQueryParameters =
         config.getBoolean(
-            "otel.instrumentation.http.client.experimental.redact-query-parameters", false);
+            "otel.instrumentation.http.client.experimental.redact-query-parameters", true);
     emitExperimentalHttpServerTelemetry =
         config.getBoolean("otel.instrumentation.http.server.emit-experimental-telemetry", false);
     enduserConfig = new EnduserConfig(config);
