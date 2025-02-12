@@ -112,20 +112,20 @@ public abstract class AbstractCassandraTest {
                                 equalTo(SERVER_PORT, cassandraPort),
                                 equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                                 equalTo(NETWORK_PEER_PORT, cassandraPort),
-                                equalTo(DB_SYSTEM, "cassandra"),
+                                equalTo(maybeStable(DB_SYSTEM), "cassandra"),
                                 equalTo(maybeStable(DB_NAME), parameter.keyspace),
                                 equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
                                 equalTo(maybeStable(DB_OPERATION), parameter.operation),
-                                equalTo(DB_CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
-                                equalTo(DB_CASSANDRA_COORDINATOR_DC, "datacenter1"),
+                                equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
+                                equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
                                 satisfies(
-                                    DB_CASSANDRA_COORDINATOR_ID,
+                                    maybeStable(DB_CASSANDRA_COORDINATOR_ID),
                                     val -> val.isInstanceOf(String.class)),
                                 satisfies(
-                                    DB_CASSANDRA_IDEMPOTENCE,
+                                    maybeStable(DB_CASSANDRA_IDEMPOTENCE),
                                     val -> val.isInstanceOf(Boolean.class)),
-                                equalTo(DB_CASSANDRA_PAGE_SIZE, 5000),
-                                equalTo(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
+                                equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
+                                equalTo(maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT), 0),
                                 equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table))));
 
     session.close();
@@ -166,20 +166,20 @@ public abstract class AbstractCassandraTest {
                                 equalTo(SERVER_PORT, cassandraPort),
                                 equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
                                 equalTo(NETWORK_PEER_PORT, cassandraPort),
-                                equalTo(DB_SYSTEM, "cassandra"),
+                                equalTo(maybeStable(DB_SYSTEM), "cassandra"),
                                 equalTo(maybeStable(DB_NAME), parameter.keyspace),
                                 equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
                                 equalTo(maybeStable(DB_OPERATION), parameter.operation),
-                                equalTo(DB_CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
-                                equalTo(DB_CASSANDRA_COORDINATOR_DC, "datacenter1"),
+                                equalTo(maybeStable(DB_CASSANDRA_CONSISTENCY_LEVEL), "LOCAL_ONE"),
+                                equalTo(maybeStable(DB_CASSANDRA_COORDINATOR_DC), "datacenter1"),
                                 satisfies(
-                                    DB_CASSANDRA_COORDINATOR_ID,
+                                    maybeStable(DB_CASSANDRA_COORDINATOR_ID),
                                     val -> val.isInstanceOf(String.class)),
                                 satisfies(
-                                    DB_CASSANDRA_IDEMPOTENCE,
+                                    maybeStable(DB_CASSANDRA_IDEMPOTENCE),
                                     val -> val.isInstanceOf(Boolean.class)),
-                                equalTo(DB_CASSANDRA_PAGE_SIZE, 5000),
-                                equalTo(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
+                                equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
+                                equalTo(maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT), 0),
                                 equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table)),
                     span ->
                         span.hasName("child")

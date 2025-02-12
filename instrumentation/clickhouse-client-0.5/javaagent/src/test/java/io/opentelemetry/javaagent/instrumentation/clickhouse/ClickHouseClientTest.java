@@ -377,7 +377,7 @@ class ClickHouseClientTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> attributeAssertions(String statement, String operation) {
     return asList(
-        equalTo(DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.CLICKHOUSE),
+        equalTo(maybeStable(DB_SYSTEM), DbIncubatingAttributes.DbSystemIncubatingValues.CLICKHOUSE),
         equalTo(maybeStable(DB_NAME), dbName),
         equalTo(SERVER_ADDRESS, host),
         equalTo(SERVER_PORT, port),

@@ -62,6 +62,7 @@ class HttpServletResponseTest {
     assertThat(testing.spans()).isEmpty();
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testSendWithParent() throws IOException {
     runWithSpan(

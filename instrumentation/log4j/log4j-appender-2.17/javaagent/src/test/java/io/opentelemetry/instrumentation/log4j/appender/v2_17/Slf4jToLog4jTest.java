@@ -41,6 +41,7 @@ import org.slf4j.MDC;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class Slf4jToLog4jTest {
 
   @RegisterExtension

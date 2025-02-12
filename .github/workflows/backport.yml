@@ -12,7 +12,7 @@ permissions:
 jobs:
   backport:
     permissions:
-      contents: write  # for Git to git push
+      contents: write  # for git push to PR branch
     runs-on: ubuntu-latest
     steps:
       - run: |
@@ -26,19 +26,25 @@ jobs:
           # history is needed to run git cherry-pick below
           fetch-depth: 0
 
-      - name: Use CLA approved github bot
-        run: .github/scripts/use-cla-approved-github-bot.sh
+      - name: Use CLA approved bot
+        run: .github/scripts/use-cla-approved-bot.sh
+
+      - uses: actions/create-github-app-token@67e27a7eb7db372a1c61a7f9bdab8699e9ee57f7 # v1.11.3
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
 
       - name: Create pull request
         env:
           NUMBER: ${{ github.event.inputs.number }}
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GH_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           commit=$(gh pr view $NUMBER --json mergeCommit --jq .mergeCommit.oid)
           title=$(gh pr view $NUMBER --json title --jq .title)
 
-          branch="opentelemetrybot/backport-${NUMBER}-to-${GITHUB_REF_NAME//\//-}"
+          branch="otelbot/backport-${NUMBER}-to-${GITHUB_REF_NAME//\//-}"
 
           git checkout -b $branch
           git cherry-pick $commit

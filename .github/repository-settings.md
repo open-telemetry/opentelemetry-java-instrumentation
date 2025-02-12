@@ -18,45 +18,91 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
   (To reduce friction for new contributors,
   as the default is "Require approval for first-time contributors")
 
+- Workflow permissions
+  - Default permissions granted to the `GITHUB_TOKEN` when running workflows in this repository:
+    Read repository contents and packages permissions
+  - Allow GitHub Actions to create and approve pull requests: UNCHECKED
+
+## Rules > Rulesets
+
+### `main` and release branches
+
+- Targeted branches:
+  - `main`
+  - `release/*`
+- Branch rules
+  - Restrict deletions: CHECKED
+  - Require linear history: CHECKED
+  - Require a pull request before merging: CHECKED
+    - Required approvals: 1
+    - Require review from Code Owners: CHECKED
+    - Allowed merge methods: Squash
+  - Require status checks to pass
+    - EasyCLA
+    - `required-status-check`
+    - `gradle-wrapper-validation`
+  - Block force pushes: CHECKED
+  - Require code scanning results: CHECKED
+    - CodeQL
+      - Security alerts: High or higher
+      - Alerts: Errors
+
+### `cloudfoundry` branch
+
+- Targeted branches:
+  - `cloudfoundry`
+- Branch rules
+  - Restrict deletions: CHECKED
+  - Require linear history: CHECKED
+  - Require a pull request before merging: CHECKED
+    - Required approvals: 1
+    - Require review from Code Owners: CHECKED
+    - Allowed merge methods: Squash
+  - Require status checks to pass
+    - EasyCLA
+  - Block force pushes: CHECKED
+
+### `gh-pages` branch
+
+- Targeted branches:
+  - `gh-pages`
+- Branch rules
+  - Restrict deletions: CHECKED
+  - Require linear history: CHECKED
+  - Block force pushes: CHECKED
+
+### Old-style release branches
+
+- Targeted branches:
+  - `v0.*`
+  - `v1.*`
+- Branch rules
+  - Restrict creations: CHECKED
+  - Restrict updates: CHECKED
+  - Restrict deletions: CHECKED
+
+### Restrict branch creation
+
+- Targeted branches
+  - Exclude:
+    - `release/*`
+    - `renovate/**/*`
+    - `otelbot/**/*`
+    - `revert-*/**/*` (these are created when using the GitHub UI to revert a PR)
+- Restrict creations: CHECKED
+
+### Restrict updating tags
+
+- Targeted tags
+  - All tags
+- Restrict updates: CHECKED
+- Restrict deletions: CHECKED
+
 ## Branch protections
 
-The order of branch protection rules
-[can be important](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/defining-the-mergeability-of-pull-requests/managing-a-branch-protection-rule#about-branch-protection-rules).
-The branch protection rules below should be added before the `**/**` branch protection rule
-(this may require deleting the `**/**` rule and recreating it at the end).
+### `main`, `release/*`, `cloudfoundry`
 
-### `main`
-
-- Require branches to be up to date before merging: UNCHECKED
-
-  (PR jobs take too long, and leaving this unchecked has not been a significant problem)
-
-- Status checks that are required:
-
-  - EasyCLA
-  - required-status-check
-
-### `release/*`
-
-Same settings as above for [`main`](#main).
-
-### `cloudfoundry`
-
-Same settings as above for [`main`](#main),
-except for the `required-status-check` required status check.
-
-### `renovate/**/**` and `opentelemetrybot/**/**`
-
-Same settings as
-for [`dependabot/**/**`](https://github.com/open-telemetry/community/blob/main/docs/how-to-configure-new-repository.md#branch-protection-rule-dependabot)
-
-### `gh-pages`
-
-- Everything UNCHECKED
-
-  (This branch is currently only used for directly pushing benchmarking results from the
-  [Nightly overhead benchmark](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/nightly-benchmark-overhead.yml)
-  job)
+- Restrict who can push to matching branches: CHECKED
 
 ## Code security and analysis
 
@@ -75,7 +121,13 @@ for [`dependabot/**/**`](https://github.com/open-telemetry/community/blob/main/d
   - Key is associated with [@trask](https://github.com/trask)'s gmail address
 - `SONATYPE_KEY` - owned by [@trask](https://github.com/trask)
 - `SONATYPE_USER` - owned by [@trask](https://github.com/trask)
+- `FLAKY_TEST_REPORTER_ACCESS_KEY` - owned by [@laurit](https://github.com/laurit)
 
 ### Organization secrets
 
-- `OPENTELEMETRYBOT_GITHUB_TOKEN`
+- `FOSSA_API_KEY`
+- `OTELBOT_PRIVATE_KEY`
+
+### Organization variables
+
+- `OTELBOT_APP_ID`

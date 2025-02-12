@@ -11,6 +11,7 @@ import javax.annotation.Nullable;
 
 final class RedissonDbAttributesGetter implements DbClientAttributesGetter<RedissonRequest> {
 
+  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
   public String getDbSystem(RedissonRequest request) {
     return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;

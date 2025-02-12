@@ -275,6 +275,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
     return addLocationAttributes(AbstractOpenTelemetryAppenderTest.class, methodName, assertions);
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> addLocationAttributes(
       Class<?> testClass, String methodName, AttributeAssertion... assertions) {
     String selector = System.getProperty("Log4j2.contextSelector");

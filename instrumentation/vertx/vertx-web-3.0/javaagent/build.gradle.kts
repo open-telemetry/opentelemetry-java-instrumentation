@@ -53,9 +53,6 @@ tasks {
     named("test") {
       enabled = false
     }
-    named("compileTestGroovy") {
-      enabled = false
-    }
   }
 
   named("latestDepTest") {

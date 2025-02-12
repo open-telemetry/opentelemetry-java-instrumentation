@@ -51,6 +51,7 @@ public abstract class AbstractQuartzTest {
     scheduler.shutdown();
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void successfulJob() throws Exception {
     Trigger trigger = newTrigger().build();
@@ -80,6 +81,7 @@ public abstract class AbstractQuartzTest {
                             .hasParent(trace.getSpan(0))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void failingJob() throws Exception {
     Trigger trigger = newTrigger().build();

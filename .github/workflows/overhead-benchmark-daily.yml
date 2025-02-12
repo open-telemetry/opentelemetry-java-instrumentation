@@ -5,8 +5,13 @@ on:
     - cron: "0 5 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   run-overhead-tests:
+    permissions:
+      contents: write # for git push to gh-pages branch
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -24,7 +29,7 @@ jobs:
           rsync -avv gh-pages/benchmark-overhead/results/ benchmark-overhead/results/
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
+        uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
 
       - name: Run tests
         working-directory: benchmark-overhead
@@ -44,12 +49,15 @@ jobs:
           cwd: "./gh-pages"
           branch: "gh-pages"
           message: "update test result data"
-          author_name: opentelemetrybot
-          author_email: 107717825+opentelemetrybot@users.noreply.github.com
-          committer_name: opentelemetrybot
-          committer_email: 107717825+opentelemetrybot@users.noreply.github.com
+          author_name: otelbot
+          author_email: 197425009+otelbot@users.noreply.github.com
+          committer_name: otelbot
+          committer_email: 197425009+otelbot@users.noreply.github.com
 
   workflow-notification:
+    permissions:
+      contents: read
+      issues: write
     needs:
       - run-overhead-tests
     if: always()

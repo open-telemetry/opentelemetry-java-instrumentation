@@ -20,6 +20,7 @@ class TracedMethodsExclusionTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testCallingTheseMethodsShouldBeTraced() {
     // Baseline and assumption validation

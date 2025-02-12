@@ -161,6 +161,7 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
     return span;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   public SpanDataAssert assertResponseSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
@@ -180,6 +181,7 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
     return span;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   public List<Consumer<SpanDataAssert>> errorPageSpanAssertions(
       String method, ServerEndpoint endpoint) {
