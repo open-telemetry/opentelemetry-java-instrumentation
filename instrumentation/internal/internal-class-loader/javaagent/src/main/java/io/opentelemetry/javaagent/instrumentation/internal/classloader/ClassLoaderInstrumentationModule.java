@@ -16,8 +16,8 @@ import java.util.Arrays;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ClassLoaderInstrumentationModule extends InstrumentationModule implements
-    ExperimentalInstrumentationModule {
+public class ClassLoaderInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public ClassLoaderInstrumentationModule() {
     super("internal-class-loader");
   }
@@ -46,7 +46,6 @@ public class ClassLoaderInstrumentationModule extends InstrumentationModule impl
         new BootDelegationInstrumentation(),
         new LoadInjectedClassInstrumentation(),
         new ResourceInjectionInstrumentation(),
-        new DefineClassInstrumentation()
-      );
+        new DefineClassInstrumentation());
   }
 }

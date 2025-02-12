@@ -49,24 +49,25 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    ElementMatcher.Junction<MethodDescription> methodMatcher = isMethod()
-        .and(named("loadClass"))
-        .and(
-            takesArguments(1)
-                .and(takesArgument(0, String.class))
-                .or(
-                    takesArguments(2)
-                        .and(takesArgument(0, String.class))
-                        .and(takesArgument(1, boolean.class))))
-        .and(isPublic().or(isProtected()))
-        .and(not(isStatic()));
+    ElementMatcher.Junction<MethodDescription> methodMatcher =
+        isMethod()
+            .and(named("loadClass"))
+            .and(
+                takesArguments(1)
+                    .and(takesArgument(0, String.class))
+                    .or(
+                        takesArguments(2)
+                            .and(takesArgument(0, String.class))
+                            .and(takesArgument(1, boolean.class))))
+            .and(isPublic().or(isProtected()))
+            .and(not(isStatic()));
 
     transformer.applyTransformer(
         new AgentBuilder.Transformer.ForAdvice()
             .include(Utils.getBootstrapProxy(), Utils.getAgentClassLoader())
             .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
-            .advice(methodMatcher, BootDelegationInstrumentation.class.getName() + "$LoadClassAdvice")
-    );
+            .advice(
+                methodMatcher, BootDelegationInstrumentation.class.getName() + "$LoadClassAdvice"));
   }
 
   @SuppressWarnings("unused")
@@ -107,7 +108,8 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Return(readOnly = false) Class<?> result, @Advice.Enter Class<?> resultFromBootstrapLoader) {
+        @Advice.Return(readOnly = false) Class<?> result,
+        @Advice.Enter Class<?> resultFromBootstrapLoader) {
       if (resultFromBootstrapLoader != null) {
         result = resultFromBootstrapLoader;
       }
