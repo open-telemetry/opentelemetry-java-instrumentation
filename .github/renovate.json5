@@ -13,10 +13,13 @@
   "separateMinorPatch": true,
   "packageRules": [
     {
-      // this is to reduce the number of renovate PRs by consolidating them into a weekly batch
-      "matchManagers": ["github-actions"],
+      // this is to reduce the number of renovate PRs
+      "matchManagers": [
+        "github-actions",
+        "dockerfile"
+      ],
       "extends": ["schedule:weekly"],
-      "groupName": "github actions",
+      "groupName": "weekly update",
       "separateMinorPatch": false // overrides separateMinorPatch specified above
     },
     {
