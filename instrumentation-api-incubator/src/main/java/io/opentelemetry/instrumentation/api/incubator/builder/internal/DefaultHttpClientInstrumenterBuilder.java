@@ -10,7 +10,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalHttpParamsRedactionExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
@@ -21,6 +20,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.internal.ExperimentalParameterUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
@@ -64,7 +64,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   private Function<SpanNameExtractor<? super REQUEST>, ? extends SpanNameExtractor<? super REQUEST>>
       spanNameExtractorTransformer = Function.identity();
   private boolean emitExperimentalHttpClientMetrics = false;
-  private boolean redactSensitiveUrlParameters = false;
+  private boolean redactQueryParameters = false;
   private Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer = b -> {};
 
   private DefaultHttpClientInstrumenterBuilder(
@@ -182,13 +182,12 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   /**
    * Configures the instrumentation to redact sensitive URL parameters.
    *
-   * @param redactSensitiveUrlParameters {@code true} if the sensitive URL parameters have to be
-   *     redacted.
+   * @param redactQueryParameters {@code true} if the sensitive URL parameters have to be redacted.
    */
   @CanIgnoreReturnValue
-  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setRedactSensitiveUrlParameters(
-      boolean redactSensitiveUrlParameters) {
-    this.redactSensitiveUrlParameters = redactSensitiveUrlParameters;
+  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setRedactQueryParameters(
+      boolean redactQueryParameters) {
+    this.redactQueryParameters = redactQueryParameters;
     return this;
   }
 
@@ -227,6 +226,10 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     SpanNameExtractor<? super REQUEST> spanNameExtractor =
         spanNameExtractorTransformer.apply(httpSpanNameExtractorBuilder.build());
 
+    if (redactQueryParameters) {
+      ExperimentalParameterUtil.setRedactQueryParameters(redactQueryParameters);
+    }
+
     InstrumenterBuilder<REQUEST, RESPONSE> builder =
         Instrumenter.<REQUEST, RESPONSE>builder(
                 openTelemetry, instrumentationName, spanNameExtractor)
@@ -240,10 +243,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
           .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(attributesGetter))
           .addOperationMetrics(HttpClientExperimentalMetrics.get());
     }
-    if (redactSensitiveUrlParameters) {
-      builder.addAttributesExtractor(
-          HttpClientExperimentalHttpParamsRedactionExtractor.create(attributesGetter));
-    }
+
     builderCustomizer.accept(builder);
 
     if (headerSetter != null) {
@@ -267,7 +267,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     set(
         config::shouldEmitExperimentalHttpClientTelemetry,
         this::setEmitExperimentalHttpClientMetrics);
-    set(config::shouldRedactSensitiveUrlParameters, this::setRedactSensitiveUrlParameters);
+    set(config::redactQueryParameters, this::setRedactQueryParameters);
     return this;
   }
 

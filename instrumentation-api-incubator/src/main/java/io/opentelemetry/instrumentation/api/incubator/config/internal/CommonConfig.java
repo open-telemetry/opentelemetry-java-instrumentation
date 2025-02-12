@@ -31,7 +31,7 @@ public final class CommonConfig {
   private final boolean statementSanitizationEnabled;
   private final boolean emitExperimentalHttpClientTelemetry;
   private final boolean emitExperimentalHttpServerTelemetry;
-  private final boolean redactSensitiveUrlParameters;
+  private final boolean redactQueryParameters;
   private final String loggingTraceIdKey;
   private final String loggingSpanIdKey;
   private final String loggingTraceFlagsKey;
@@ -58,9 +58,9 @@ public final class CommonConfig {
         config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true);
     emitExperimentalHttpClientTelemetry =
         config.getBoolean("otel.instrumentation.http.client.emit-experimental-telemetry", false);
-    redactSensitiveUrlParameters =
+    redactQueryParameters =
         config.getBoolean(
-            "otel.instrumentation.http.client.experimental.redact-sensitive-url-parameters", false);
+            "otel.instrumentation.http.client.experimental.redact-query-parameters", false);
     emitExperimentalHttpServerTelemetry =
         config.getBoolean("otel.instrumentation.http.server.emit-experimental-telemetry", false);
     enduserConfig = new EnduserConfig(config);
@@ -115,8 +115,8 @@ public final class CommonConfig {
     return emitExperimentalHttpServerTelemetry;
   }
 
-  public boolean shouldRedactSensitiveUrlParameters() {
-    return redactSensitiveUrlParameters;
+  public boolean redactQueryParameters() {
+    return redactQueryParameters;
   }
 
   public String getTraceIdKey() {

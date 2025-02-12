@@ -30,6 +30,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.ExperimentalParameterUtil;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.net.ConnectException;
 import java.util.HashMap;
@@ -211,6 +212,8 @@ class HttpClientAttributesExtractorTest {
     Map<String, String> request = new HashMap<>();
     request.put("urlFull", url);
 
+    ExperimentalParameterUtil.setRedactQueryParameters(true);
+
     AttributesExtractor<Map<String, String>, Map<String, String>> extractor =
         HttpClientAttributesExtractor.create(new TestHttpClientAttributesGetter());
 
@@ -241,7 +244,37 @@ class HttpClientAttributesExtractorTest {
           arguments("https://github.com/p@th?foo=b@r", "https://github.com/p@th?foo=b@r"),
           arguments("https://github.com#t@st.html", "https://github.com#t@st.html"),
           arguments("user1:secret@github.com", "user1:secret@github.com"),
-          arguments("https://github.com@", "https://github.com@"));
+          arguments("https://github.com@", "https://github.com@"),
+          arguments(
+              "https://service.com?paramA=valA&paramB=valB",
+              "https://service.com?paramA=valA&paramB=valB"),
+          arguments(
+              "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7",
+              "https://service.com?AWSAccessKeyId=REDACTED"),
+          arguments(
+              "https://service.com?Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0%3A377",
+              "https://service.com?Signature=REDACTED"),
+          arguments(
+              "https://service.com?sig=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0",
+              "https://service.com?sig=REDACTED"),
+          arguments(
+              "https://service.com?X-Goog-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0",
+              "https://service.com?X-Goog-Signature=REDACTED"),
+          arguments(
+              "https://service.com?paramA=valA&AWSAccessKeyId=AKIAIOSFODNN7&paramB=valB",
+              "https://service.com?paramA=valA&AWSAccessKeyId=REDACTED&paramB=valB"),
+          arguments(
+              "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&paramA=valA",
+              "https://service.com?AWSAccessKeyId=REDACTED&paramA=valA"),
+          arguments(
+              "https://service.com?paramA=valA&AWSAccessKeyId=AKIAIOSFODNN7",
+              "https://service.com?paramA=valA&AWSAccessKeyId=REDACTED"),
+          arguments(
+              "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&AWSAccessKeyId=ZGIAIOSFODNN7",
+              "https://service.com?AWSAccessKeyId=REDACTED&AWSAccessKeyId=REDACTED"),
+          arguments(
+              "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7#ref",
+              "https://service.com?AWSAccessKeyId=REDACTED#ref"));
     }
   }
 
