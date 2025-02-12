@@ -50,7 +50,8 @@ public class OpenTelemetryMeterRegistryAutoConfiguration {
         if (bean instanceof CompositeMeterRegistry) {
           CompositeMeterRegistry original = (CompositeMeterRegistry) bean;
           List<MeterRegistry> list = new ArrayList<>(original.getRegistries());
-          // sort otel registry last
+          // sort otel registry last since it doesn't support reading metric values
+          // and the actuator endpoint reads metrics from the first registry
           list.sort(
               Comparator.comparingInt(
                   value -> value == MicrometerSingletons.meterRegistry() ? 1 : 0));
