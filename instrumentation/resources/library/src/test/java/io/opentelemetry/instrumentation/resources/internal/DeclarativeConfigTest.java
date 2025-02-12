@@ -31,6 +31,7 @@ class DeclarativeConfigTest {
             + "      value: my-service\n"
             + "tracer_provider:\n";
 
+    boolean java8 = "1.8".equals(System.getProperty("java.specification.version"));
     OpenTelemetrySdk openTelemetrySdk =
         FileConfiguration.parseAndCreate(
             new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)));
@@ -56,7 +57,8 @@ class DeclarativeConfigTest {
               assertThat(attributeKeys).contains("os.description");
               assertThat(attributeKeys).contains("os.type");
               // ProcessResourceComponentProvider
-              assertThat(attributeKeys).contains("process.command_line");
+              assertThat(attributeKeys)
+                  .contains(java8 ? "process.command_line" : "process.command_args");
               assertThat(attributeKeys).contains("process.executable.path");
               assertThat(attributeKeys).contains("process.pid");
               // ProcessRuntimeResourceComponentProvider
