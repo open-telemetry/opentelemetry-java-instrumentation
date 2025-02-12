@@ -18,7 +18,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.tooling.Utils;
+import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
+import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -35,19 +39,23 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("loadClass"))
-            .and(
-                takesArguments(1)
-                    .and(takesArgument(0, String.class))
-                    .or(
-                        takesArguments(2)
-                            .and(takesArgument(0, String.class))
-                            .and(takesArgument(1, boolean.class))))
-            .and(isPublic().or(isProtected()))
-            .and(not(isStatic())),
-        LoadInjectedClassInstrumentation.class.getName() + "$LoadClassAdvice");
+    ElementMatcher.Junction<MethodDescription> methodMatcher = isMethod()
+        .and(named("loadClass"))
+        .and(
+            takesArguments(1)
+                .and(takesArgument(0, String.class))
+                .or(
+                    takesArguments(2)
+                        .and(takesArgument(0, String.class))
+                        .and(takesArgument(1, boolean.class))))
+        .and(isPublic().or(isProtected()))
+        .and(not(isStatic()));
+    transformer.applyTransformer(
+        new AgentBuilder.Transformer.ForAdvice()
+            .include(Utils.getBootstrapProxy(), Utils.getAgentClassLoader())
+            .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
+            .advice(methodMatcher, LoadInjectedClassInstrumentation.class.getName() + "$LoadClassAdvice")
+    );
   }
 
   @SuppressWarnings("unused")
@@ -65,13 +73,11 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class)
-    @Advice.AssignReturned.ToReturned
-    public static Class<?> onExit(
-        @Advice.Return Class<?> result, @Advice.Enter Class<?> loadedClass) {
+    public static void onExit(
+        @Advice.Return(readOnly = false) Class<?> result, @Advice.Enter Class<?> loadedClass) {
       if (loadedClass != null) {
-        return loadedClass;
+        result = loadedClass;
       }
-      return result;
     }
   }
 }
