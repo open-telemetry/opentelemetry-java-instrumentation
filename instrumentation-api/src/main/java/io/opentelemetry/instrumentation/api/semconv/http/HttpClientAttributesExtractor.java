@@ -167,20 +167,17 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   private static String redactQueryParameters(String url) {
 
     int questionMarkIndex = url.indexOf('?');
-
-    if (questionMarkIndex == -1) {
-      return url;
-    }
-
-    if (!containsParamToRedact(url)) {
+    if (questionMarkIndex == -1 || !containsParamToRedact(url)) {
       return url;
     }
 
     StringBuilder redactedParameters = new StringBuilder();
-    boolean paramToRedact = false;
+    boolean paramToRedact = false; // To be able to skip the characters of the parameters to redact
     boolean paramNameDetected = false;
     boolean reference = false;
 
+    // To build a parameter name until we reach the '=' character
+    // If the parameter name is a one to redact, we will redact the value
     StringBuilder currentParamName = new StringBuilder();
 
     for (int i = questionMarkIndex + 1; i < url.length(); i++) {
@@ -193,12 +190,13 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
           redactedParameters.append("REDACTED");
           paramToRedact = true;
         }
-      } else if (currentChar == '&') {
+      } else if (currentChar == '&') { // New parameter delimiter
         redactedParameters.append('&');
         paramNameDetected = false;
         paramToRedact = false;
-        currentParamName.setLength(0);
-      } else if (currentChar == '#') {
+        currentParamName.setLength(
+            0); // To avoid creating a new StringBuilder for each new parameter
+      } else if (currentChar == '#') { // Reference delimiter
         reference = true;
         redactedParameters.append('#');
       } else if (!paramNameDetected) {
