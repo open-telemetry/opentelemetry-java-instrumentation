@@ -150,6 +150,12 @@ targets:
       target: ':instrumentation:java-http-client:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:java-http-server:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:java-http-server:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:java-util-logging:javaagent'
     - type: gradle
       path: ./
