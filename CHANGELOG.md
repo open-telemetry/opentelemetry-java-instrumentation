@@ -15,7 +15,7 @@
 
 ### 📈 Enhancements
 
-- Add Lettuce metrics
+- Add database client metrics to Lettuce instrumentation
   ([#13032](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13032))
 - Stabilize io.opentelemetry.instrumentation.api.semconv.util.SpanNames
   ([#12487](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/12487))
