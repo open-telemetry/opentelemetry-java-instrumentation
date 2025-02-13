@@ -13,6 +13,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
@@ -27,6 +28,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExt
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
@@ -204,6 +206,19 @@ public final class AwsSdkInstrumenterFactory {
         true);
   }
 
+  public Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter() {
+    return createInstrumenter(
+        openTelemetry,
+        AwsSdkInstrumenterFactory::spanName,
+        SpanKindExtractor.alwaysClient(),
+        attributesExtractors(),
+        builder ->
+            builder
+                .addAttributesExtractor(new DynamoDbAttributesExtractor())
+                .addOperationMetrics(DbClientMetrics.get()),
+        true);
+  }
+
   private static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> createInstrumenter(
       OpenTelemetry openTelemetry,
       SpanNameExtractor<REQUEST> spanNameExtractor,
@@ -212,12 +227,31 @@ public final class AwsSdkInstrumenterFactory {
       List<AttributesExtractor<REQUEST, RESPONSE>> additionalAttributeExtractors,
       boolean enabled) {
 
-    return Instrumenter.<REQUEST, RESPONSE>builder(
-            openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
-        .addAttributesExtractors(attributeExtractors)
-        .addAttributesExtractors(additionalAttributeExtractors)
-        .setEnabled(enabled)
-        .buildInstrumenter(spanKindExtractor);
+    return createInstrumenter(
+        openTelemetry,
+        spanNameExtractor,
+        spanKindExtractor,
+        attributeExtractors,
+        builder -> builder.addAttributesExtractors(additionalAttributeExtractors),
+        enabled);
+  }
+
+  private static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> createInstrumenter(
+      OpenTelemetry openTelemetry,
+      SpanNameExtractor<REQUEST> spanNameExtractor,
+      SpanKindExtractor<REQUEST> spanKindExtractor,
+      List<? extends AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributeExtractors,
+      Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> customizer,
+      boolean enabled) {
+
+    InstrumenterBuilder<REQUEST, RESPONSE> builder =
+        Instrumenter.<REQUEST, RESPONSE>builder(
+                openTelemetry, INSTRUMENTATION_NAME, spanNameExtractor)
+            .addAttributesExtractors(attributeExtractors)
+            .setEnabled(enabled);
+    customizer.accept(builder);
+
+    return builder.buildInstrumenter(spanKindExtractor);
   }
 
   private static String spanName(ExecutionAttributes attributes) {
