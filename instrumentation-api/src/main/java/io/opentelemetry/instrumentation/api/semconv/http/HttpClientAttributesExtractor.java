@@ -175,7 +175,6 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     boolean inRedactedParamValue =
         false; // To be able to skip the characters of the parameters to redact
     boolean inParamValue = false;
-    boolean inReference = false;
 
     // To build a parameter name until we reach the '=' character
     // If the parameter name is a one to redact, we will redact the value
@@ -198,11 +197,11 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
         currentParamName.setLength(
             0); // To avoid creating a new StringBuilder for each new parameter
       } else if (currentChar == '#') { // Reference delimiter
-        inReference = true;
-        redactedParameters.append('#');
+        redactedParameters.append(url.substring(i));
+        break;
       } else if (!inParamValue) {
         currentParamName.append(currentChar);
-      } else if (!inRedactedParamValue || inReference) {
+      } else if (!inRedactedParamValue) {
         redactedParameters.append(currentChar);
       }
     }
