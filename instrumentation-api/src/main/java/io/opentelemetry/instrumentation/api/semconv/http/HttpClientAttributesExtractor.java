@@ -172,9 +172,10 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     }
 
     StringBuilder redactedParameters = new StringBuilder();
-    boolean paramToRedact = false; // To be able to skip the characters of the parameters to redact
-    boolean paramNameDetected = false;
-    boolean reference = false;
+    boolean inRedactedParamValue =
+        false; // To be able to skip the characters of the parameters to redact
+    boolean inParamValue = false;
+    boolean inReference = false;
 
     // To build a parameter name until we reach the '=' character
     // If the parameter name is a one to redact, we will redact the value
@@ -183,25 +184,25 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     for (int i = questionMarkIndex + 1; i < url.length(); i++) {
       char currentChar = url.charAt(i);
       if (currentChar == '=') {
-        paramNameDetected = true;
+        inParamValue = true;
         redactedParameters.append(currentParamName);
         redactedParameters.append('=');
         if (PARAMS_TO_REDACT.contains(currentParamName.toString())) {
           redactedParameters.append("REDACTED");
-          paramToRedact = true;
+          inRedactedParamValue = true;
         }
       } else if (currentChar == '&') { // New parameter delimiter
         redactedParameters.append('&');
-        paramNameDetected = false;
-        paramToRedact = false;
+        inParamValue = false;
+        inRedactedParamValue = false;
         currentParamName.setLength(
             0); // To avoid creating a new StringBuilder for each new parameter
       } else if (currentChar == '#') { // Reference delimiter
-        reference = true;
+        inReference = true;
         redactedParameters.append('#');
-      } else if (!paramNameDetected) {
+      } else if (!inParamValue) {
         currentParamName.append(currentChar);
-      } else if (!paramToRedact || reference) {
+      } else if (!inRedactedParamValue || inReference) {
         redactedParameters.append(currentChar);
       }
     }
