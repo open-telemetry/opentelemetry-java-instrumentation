@@ -67,7 +67,7 @@ public final class AnnotationSingletons {
             INSTRUMENTATION_NAME,
             AnnotationSingletons::spanNameFromMethod)
         .addAttributesExtractor(CodeAttributesExtractor.create(MethodCodeAttributesGetter.INSTANCE))
-        .addContextCustomizer(AnnotationSingletons::parentContextFromMethod)
+        .addContextCustomizer(AnnotationSingletons::inheritContextFromMethod)
         .buildInstrumenter(AnnotationSingletons::spanKindFromMethod);
   }
 
@@ -83,7 +83,7 @@ public final class AnnotationSingletons {
                 MethodRequest::method,
                 WithSpanParameterAttributeNamesExtractor.INSTANCE,
                 MethodRequest::args))
-        .addContextCustomizer(AnnotationSingletons::parentContextFromMethodRequest)
+        .addContextCustomizer(AnnotationSingletons::inheritContextFromMethodRequest)
         .buildInstrumenter(AnnotationSingletons::spanKindFromMethodRequest);
   }
 
@@ -126,12 +126,12 @@ public final class AnnotationSingletons {
     return spanName;
   }
 
-  private static Context parentContextFromMethodRequest(
+  private static Context inheritContextFromMethodRequest(
       Context context, MethodRequest request, Attributes attributes) {
-    return parentContextFromMethod(context, request.method(), attributes);
+    return inheritContextFromMethod(context, request.method(), attributes);
   }
 
-  private static Context parentContextFromMethod(
+  private static Context inheritContextFromMethod(
       Context context, Method method, Attributes attributes) {
     if (inheritContextMethodHandle == null) {
       return context;
@@ -139,14 +139,14 @@ public final class AnnotationSingletons {
 
     WithSpan annotation = method.getDeclaredAnnotation(WithSpan.class);
 
-    boolean withParent = true;
+    boolean inheritContext = true;
     try {
-      withParent = (boolean) inheritContextMethodHandle.invoke(annotation);
+      inheritContext = (boolean) inheritContextMethodHandle.invoke(annotation);
     } catch (Throwable ignore) {
       // ignore
     }
 
-    return withParent ? context : Context.root();
+    return inheritContext ? context : Context.root();
   }
 
   private AnnotationSingletons() {}
