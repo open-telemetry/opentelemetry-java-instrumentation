@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.httpserver;
 
 import com.sun.net.httpserver.Filter;
 import com.sun.net.httpserver.HttpExchange;
+import com.sun.net.httpserver.HttpServer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -28,9 +29,10 @@ final class OpenTelemetryFilter extends Filter {
       chain.doFilter(exchange);
       return;
     }
-    Throwable error = null;
+
     Context context = instrumenter.start(parentContext, exchange);
 
+    Throwable error = null;
     try (Scope ignored = context.makeCurrent()) {
       chain.doFilter(exchange);
     } catch (Throwable t) {
@@ -43,6 +45,6 @@ final class OpenTelemetryFilter extends Filter {
 
   @Override
   public String description() {
-    return "OpenTelemetry";
+    return "OpenTelemetry tracing filter";
   }
 }

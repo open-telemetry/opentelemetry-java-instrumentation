@@ -29,10 +29,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 
-public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<HttpServer> {
+public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<HttpServer> {
 
   protected Filter customFilter() {
     return null;
@@ -69,7 +68,6 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
 
   @Override
   protected HttpServer setupServer() throws IOException {
-
     List<HttpContext> contexts = new ArrayList<>();
     HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
 
@@ -168,7 +166,6 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
 
     // Make sure user decorators see spans.
     Filter spanFilter = new SpanFilter();
-
     contexts.forEach(ctx -> ctx.getFilters().add(spanFilter));
     server.start();
 
@@ -177,23 +174,24 @@ public abstract class AbstractJdkHttpServerTest extends AbstractHttpServerTest<H
 
   @Override
   protected void stopServer(HttpServer server) {
-    // I guess the server has trouble stopping?
-    CompletableFuture.runAsync(() -> server.stop(1000));
+    server.stop(0);
   }
 
   @Override
   protected void configure(HttpServerTestOptions options) {
-
     options.setTestNotFound(false);
     options.setTestPathParam(false);
     options.setTestException(false);
+    // filter isn't called for non-standard method
+    options.disableTestNonStandardHttpMethod();
+    options.setTestHttpPipelining(
+        Double.parseDouble(System.getProperty("java.specification.version")) >= 21);
   }
 
   static class SpanFilter extends Filter {
 
     @Override
     public void doFilter(HttpExchange exchange, Chain chain) throws IOException {
-
       if (!Span.current().getSpanContext().isValid()) {
         // Return an invalid code to fail any assertion
         exchange.sendResponseHeaders(601, -1);

@@ -19,12 +19,12 @@ class ResponseCustomizingFilter extends Filter {
   public void doFilter(HttpExchange exchange, Chain chain) throws IOException {
     Context context = Context.current();
     HttpServerResponseCustomizerHolder.getCustomizer()
-        .customize(context, exchange.getResponseHeaders(), JavaHttpResponseMutator.INSTANCE);
+        .customize(context, exchange.getResponseHeaders(), JavaHttpServerResponseMutator.INSTANCE);
     chain.doFilter(exchange);
   }
 
   @Override
   public String description() {
-    return "ResponseCustomizingFilter";
+    return "OpenTelemetry response customizing filter";
   }
 }

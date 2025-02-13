@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.httpserver;
 import com.sun.net.httpserver.Headers;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 
-enum JavaHttpResponseMutator implements HttpServerResponseMutator<Headers> {
+enum JavaHttpServerResponseMutator implements HttpServerResponseMutator<Headers> {
   INSTANCE;
 
   @Override

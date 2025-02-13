@@ -13,26 +13,35 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.httpserver.internal.JavaInstrumenterBuilderFactory;
-import io.opentelemetry.instrumentation.httpserver.internal.JavaInstrumenterBuilderUtil;
+import io.opentelemetry.instrumentation.httpserver.internal.Experimental;
+import io.opentelemetry.instrumentation.httpserver.internal.JavaHttpServerInstrumenterBuilderUtil;
 import java.util.Collection;
 import java.util.function.Function;
 
-public final class JavaServerTelemetryBuilder {
+public final class JavaHttpServerTelemetryBuilder {
+
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.java-http-server";
 
   private final DefaultHttpServerInstrumenterBuilder<HttpExchange, HttpExchange> builder;
 
   static {
-    JavaInstrumenterBuilderUtil.setServerBuilderExtractor(builder -> builder.builder);
+    JavaHttpServerInstrumenterBuilderUtil.setServerBuilderExtractor(builder -> builder.builder);
+    Experimental.internalSetEmitExperimentalTelemetry(
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpServerMetrics(emit));
   }
 
-  JavaServerTelemetryBuilder(OpenTelemetry openTelemetry) {
-    builder = JavaInstrumenterBuilderFactory.getServerBuilder(openTelemetry);
+  JavaHttpServerTelemetryBuilder(OpenTelemetry openTelemetry) {
+    builder =
+        DefaultHttpServerInstrumenterBuilder.create(
+            INSTRUMENTATION_NAME,
+            openTelemetry,
+            JavaHttpServerAttributesGetter.INSTANCE,
+            JavaHttpServerExchangeGetter.INSTANCE);
   }
 
   /** Sets the status extractor for server spans. */
   @CanIgnoreReturnValue
-  public JavaServerTelemetryBuilder setStatusExtractor(
+  public JavaHttpServerTelemetryBuilder setStatusExtractor(
       Function<
               SpanStatusExtractor<? super HttpExchange, ? super HttpExchange>,
               ? extends SpanStatusExtractor<? super HttpExchange, ? super HttpExchange>>
@@ -46,7 +55,7 @@ public final class JavaServerTelemetryBuilder {
    * The {@link AttributesExtractor} will be executed after all default extractors.
    */
   @CanIgnoreReturnValue
-  public JavaServerTelemetryBuilder addAttributesExtractor(
+  public JavaHttpServerTelemetryBuilder addAttributesExtractor(
       AttributesExtractor<HttpExchange, HttpExchange> attributesExtractor) {
     builder.addAttributesExtractor(attributesExtractor);
     return this;
@@ -58,7 +67,8 @@ public final class JavaServerTelemetryBuilder {
    * @param requestHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public JavaServerTelemetryBuilder setCapturedRequestHeaders(Collection<String> requestHeaders) {
+  public JavaHttpServerTelemetryBuilder setCapturedRequestHeaders(
+      Collection<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
@@ -69,7 +79,8 @@ public final class JavaServerTelemetryBuilder {
    * @param responseHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public JavaServerTelemetryBuilder setCapturedResponseHeaders(Collection<String> responseHeaders) {
+  public JavaHttpServerTelemetryBuilder setCapturedResponseHeaders(
+      Collection<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
@@ -88,14 +99,14 @@ public final class JavaServerTelemetryBuilder {
    * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
-  public JavaServerTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
+  public JavaHttpServerTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
   }
 
   /** Sets custom server {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
-  public JavaServerTelemetryBuilder setSpanNameExtractor(
+  public JavaHttpServerTelemetryBuilder setSpanNameExtractor(
       Function<
               SpanNameExtractor<? super HttpExchange>,
               ? extends SpanNameExtractor<? super HttpExchange>>
@@ -104,7 +115,7 @@ public final class JavaServerTelemetryBuilder {
     return this;
   }
 
-  public JavaServerTelemetry build() {
-    return new JavaServerTelemetry(builder.build());
+  public JavaHttpServerTelemetry build() {
+    return new JavaHttpServerTelemetry(builder.build());
   }
 }

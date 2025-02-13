@@ -19,6 +19,6 @@ public class JavaHttpServerInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Collections.singletonList(new JavaServerContextInstrumentation());
+    return Collections.singletonList(new HttpServerInstrumentation());
   }
 }

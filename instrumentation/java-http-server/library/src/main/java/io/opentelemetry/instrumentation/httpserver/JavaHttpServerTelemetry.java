@@ -10,26 +10,28 @@ import com.sun.net.httpserver.HttpExchange;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
-/** Entrypoint for instrumenting the jdk.httpserver services. */
-public final class JavaServerTelemetry {
+/** Entrypoint for instrumenting Java HTTP Server services. */
+public final class JavaHttpServerTelemetry {
 
-  /** Returns a new {@link JavaServerTelemetry} configured with the given {@link OpenTelemetry}. */
-  public static JavaServerTelemetry create(OpenTelemetry openTelemetry) {
+  /**
+   * Returns a new {@link JavaHttpServerTelemetry} configured with the given {@link OpenTelemetry}.
+   */
+  public static JavaHttpServerTelemetry create(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).build();
   }
 
-  public static JavaServerTelemetryBuilder builder(OpenTelemetry openTelemetry) {
-    return new JavaServerTelemetryBuilder(openTelemetry);
+  public static JavaHttpServerTelemetryBuilder builder(OpenTelemetry openTelemetry) {
+    return new JavaHttpServerTelemetryBuilder(openTelemetry);
   }
 
   private final Instrumenter<HttpExchange, HttpExchange> instrumenter;
 
-  JavaServerTelemetry(Instrumenter<HttpExchange, HttpExchange> instrumenter) {
+  JavaHttpServerTelemetry(Instrumenter<HttpExchange, HttpExchange> instrumenter) {
     this.instrumenter = instrumenter;
   }
 
   /** Returns a new {@link Filter} for telemetry usage */
-  public Filter otelFilter() {
+  public Filter newFilter() {
     return new OpenTelemetryFilter(instrumenter);
   }
 }

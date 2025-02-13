@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.httpserver.internal;
+package io.opentelemetry.instrumentation.httpserver;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpsExchange;
@@ -49,10 +49,7 @@ enum JavaHttpServerAttributesGetter
   public Integer getHttpResponseStatusCode(
       HttpExchange exchange, @Nullable HttpExchange res, @Nullable Throwable error) {
     int status = exchange.getResponseCode();
-    if (status > 1) {
-      return status;
-    }
-    return null;
+    return status != -1 ? status : null;
   }
 
   @Override
@@ -73,7 +70,6 @@ enum JavaHttpServerAttributesGetter
 
   @Override
   public String getNetworkProtocolVersion(HttpExchange exchange, @Nullable HttpExchange res) {
-
     return HttpProtocolUtil.getVersion(exchange.getProtocol());
   }
 
