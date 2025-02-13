@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.httpserver;
 
 import com.sun.net.httpserver.Filter;
+import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -33,5 +34,10 @@ public final class JavaHttpServerTelemetry {
   /** Returns a new {@link Filter} for telemetry usage */
   public Filter newFilter() {
     return new OpenTelemetryFilter(instrumenter);
+  }
+
+  /** Configures the {@link HttpContext} with OpenTelemetry. */
+  public void configure(HttpContext httpContext) {
+    httpContext.getFilters().add(0, newFilter());
   }
 }

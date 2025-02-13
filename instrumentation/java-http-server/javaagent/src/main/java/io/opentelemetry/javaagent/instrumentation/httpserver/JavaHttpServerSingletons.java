@@ -24,7 +24,9 @@ public final class JavaHttpServerSingletons {
 
     JavaHttpServerTelemetryBuilder serverBuilder =
         JavaHttpServerTelemetry.builder(GlobalOpenTelemetry.get());
-    JavaHttpServerInstrumenterBuilderUtil.getServerBuilderExtractor().apply(serverBuilder).configure(config);
+    JavaHttpServerInstrumenterBuilderUtil.getServerBuilderExtractor()
+        .apply(serverBuilder)
+        .configure(config);
     JavaHttpServerTelemetry serverTelemetry = serverBuilder.build();
 
     FILTERS = Arrays.asList(serverTelemetry.newFilter(), new ResponseCustomizingFilter());

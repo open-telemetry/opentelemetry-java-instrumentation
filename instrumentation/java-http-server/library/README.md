@@ -55,9 +55,9 @@ public class Application {
               // http logic
             });
 
-    OpenTelemetry otel = //...
-
-    context.getFilters().add(JavaHttpServerTelemetry.create(otel).newFilter());
+    OpenTelemetry openTelemetry = //...
+        
+    JavaHttpServerTelemetry.create(openTelemetry).configure(context);
   }
 }
 ```

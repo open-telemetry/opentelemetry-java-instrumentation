@@ -7,17 +7,16 @@ package io.opentelemetry.instrumentation.httpserver;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
-import com.sun.net.httpserver.Filter;
 import com.sun.net.httpserver.HttpContext;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.testing.internal.armeria.common.QueryParams;
@@ -33,9 +32,7 @@ import java.util.concurrent.Executors;
 
 public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<HttpServer> {
 
-  protected Filter customFilter() {
-    return null;
-  }
+  protected void configureContexts(List<HttpContext> contexts) {}
 
   static void sendResponse(HttpExchange exchange, int status, String response) throws IOException {
     sendResponse(exchange, status, Collections.emptyMap(), response);
@@ -56,9 +53,13 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
     long contentLength = bytes.length == 0 ? -1 : bytes.length;
     exchange.getResponseHeaders().set("Content-Type", "text/plain");
     headers.forEach(exchange.getResponseHeaders()::set);
-    try (OutputStream os = exchange.getResponseBody()) {
-      exchange.sendResponseHeaders(status, contentLength);
-      os.write(bytes);
+    exchange.sendResponseHeaders(status, contentLength);
+    if (bytes.length != 0) {
+      try (OutputStream os = exchange.getResponseBody()) {
+        os.write(bytes);
+      }
+    } else {
+      exchange.getResponseBody().close();
     }
   }
 
@@ -107,7 +108,7 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
     contexts.add(context);
     context =
         server.createContext(
-            "/query",
+            QUERY_PARAM.getPath(),
             ctx ->
                 testing()
                     .runWithSpan(
@@ -121,15 +122,7 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
     contexts.add(context);
     context =
         server.createContext(
-            "/path/:id/param",
-            ctx ->
-                testing()
-                    .runWithSpan(
-                        "controller", () -> sendResponse(ctx, PATH_PARAM.getStatus(), "id")));
-    contexts.add(context);
-    context =
-        server.createContext(
-            "/child",
+            INDEXED_CHILD.getPath(),
             ctx ->
                 testing()
                     .runWithSpan(
@@ -156,17 +149,25 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
                                     "X-Test-Response",
                                     ctx.getRequestHeaders().getFirst("X-Test-Request")),
                                 CAPTURE_HEADERS.getBody())));
-
+    contexts.add(context);
+    context =
+        server.createContext(
+            EXCEPTION.getPath(),
+            ctx ->
+                testing()
+                    .runWithSpan(
+                        "controller",
+                        () -> {
+                          sendResponse(ctx, EXCEPTION.getStatus(), EXCEPTION.getBody());
+                          throw new IllegalStateException(EXCEPTION.getBody());
+                        }));
+    contexts.add(context);
+    context =
+        server.createContext(
+            "/", ctx -> sendResponse(ctx, NOT_FOUND.getStatus(), NOT_FOUND.getBody()));
     contexts.add(context);
 
-    Filter customFilter = customFilter();
-    if (customFilter != null) {
-      contexts.forEach(ctx -> ctx.getFilters().add(customFilter));
-    }
-
-    // Make sure user decorators see spans.
-    Filter spanFilter = new SpanFilter();
-    contexts.forEach(ctx -> ctx.getFilters().add(spanFilter));
+    configureContexts(contexts);
     server.start();
 
     return server;
@@ -179,39 +180,16 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
 
   @Override
   protected void configure(HttpServerTestOptions options) {
-    options.setTestNotFound(false);
-    options.setTestPathParam(false);
-    options.setTestException(false);
     // filter isn't called for non-standard method
     options.disableTestNonStandardHttpMethod();
     options.setTestHttpPipelining(
         Double.parseDouble(System.getProperty("java.specification.version")) >= 21);
-  }
-
-  static class SpanFilter extends Filter {
-
-    @Override
-    public void doFilter(HttpExchange exchange, Chain chain) throws IOException {
-      if (!Span.current().getSpanContext().isValid()) {
-        // Return an invalid code to fail any assertion
-        exchange.sendResponseHeaders(601, -1);
-      }
-
-      try {
-        chain.doFilter(exchange);
-      } catch (Exception e) {
-        sendResponse(exchange, 500, e.getMessage());
-      }
-
-      if (exchange.getResponseCode() == -1) {
-
-        sendResponse(exchange, 500, "nothing");
-      }
-    }
-
-    @Override
-    public String description() {
-      return "test";
-    }
+    options.setExpectedHttpRoute(
+        (endpoint, method) -> {
+          if (NOT_FOUND.equals(endpoint)) {
+            return "/";
+          }
+          return expectedHttpRoute(endpoint, method);
+        });
   }
 }
