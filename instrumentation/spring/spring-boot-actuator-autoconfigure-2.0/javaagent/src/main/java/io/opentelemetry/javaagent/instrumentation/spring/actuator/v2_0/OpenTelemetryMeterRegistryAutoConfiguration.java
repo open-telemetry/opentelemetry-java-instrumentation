@@ -43,7 +43,7 @@ public class OpenTelemetryMeterRegistryAutoConfiguration {
 
   @Bean
   // static to avoid "is not eligible for getting processed by all BeanPostProcessors" warning
-  static BeanPostProcessor postProcessCompositeMeterRegistry() {
+  public static BeanPostProcessor postProcessCompositeMeterRegistry() {
     return new BeanPostProcessor() {
       @Override
       public Object postProcessAfterInitialization(Object bean, String beanName) {
