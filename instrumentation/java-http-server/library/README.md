@@ -56,7 +56,7 @@ public class Application {
             });
 
     OpenTelemetry openTelemetry = //...
-        
+
     JavaHttpServerTelemetry.create(openTelemetry).configure(context);
   }
 }
