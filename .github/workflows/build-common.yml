@@ -328,15 +328,22 @@ jobs:
         with:
           result-encoding: string
           script: |
-            const { data: workflow_run } = await github.rest.actions.listJobsForWorkflowRun({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: context.runId,
-              per_page: 200
-            });
             const matrix = JSON.parse(process.env.matrix);
             const job_name = `common / test${ matrix['test-partition'] } (${ matrix['test-java-version'] }, ${ matrix.vm }, indy ${ matrix['test-indy'] })`;
-            return workflow_run.jobs.find((job) => job.name === job_name).html_url;
+            
+            const workflow_jobs_nested = await github.paginate(
+              github.rest.actions.listJobsForWorkflowRun,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: context.runId,
+                per_page: 100
+              },
+              (response) => {
+                return response.data.workflow_run.jobs;
+              },
+            );
+            return workflow_jobs_nested.flat().find((job) => job.name === job_name).html_url;
 
       - name: Flaky test report
         if: ${{ !cancelled() }}
