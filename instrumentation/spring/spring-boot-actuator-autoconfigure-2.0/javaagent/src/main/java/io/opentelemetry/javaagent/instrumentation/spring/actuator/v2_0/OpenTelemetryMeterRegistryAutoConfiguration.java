@@ -43,6 +43,8 @@ public class OpenTelemetryMeterRegistryAutoConfiguration {
 
   @Bean
   // static to avoid "is not eligible for getting processed by all BeanPostProcessors" warning
+  // must be public because this class is injected as a proxy when using non-inlined advice and that
+  // proxy contains only public methods
   public static BeanPostProcessor postProcessCompositeMeterRegistry() {
     return new BeanPostProcessor() {
       @Override
