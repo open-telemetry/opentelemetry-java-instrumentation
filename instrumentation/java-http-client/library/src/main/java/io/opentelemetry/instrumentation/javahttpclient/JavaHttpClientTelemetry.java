@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.httpclient;
+package io.opentelemetry.instrumentation.javahttpclient;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -13,13 +13,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-/**
- * Entrypoint for instrumenting Java HTTP Client.
- *
- * @deprecated Use {@link
- *     io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetry} instead.
- */
-@Deprecated
+/** Entrypoint for instrumenting Java HTTP Client. */
 public final class JavaHttpClientTelemetry {
 
   /**

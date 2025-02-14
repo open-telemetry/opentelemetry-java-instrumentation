@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.httpclient;
+package io.opentelemetry.instrumentation.javahttpclient;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHt
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.httpclient.internal.Experimental;
+import io.opentelemetry.instrumentation.javahttpclient.internal.Experimental;
 import io.opentelemetry.instrumentation.javahttpclient.internal.HttpHeadersSetter;
 import io.opentelemetry.instrumentation.javahttpclient.internal.JavaHttpClientInstrumenterBuilderFactory;
 import java.net.http.HttpRequest;
@@ -19,11 +19,6 @@ import java.net.http.HttpResponse;
 import java.util.Collection;
 import java.util.function.Function;
 
-/**
- * @deprecated Use {@link io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetryBuilder}
- *     instead.
- */
-@Deprecated
 public final class JavaHttpClientTelemetryBuilder {
 
   private final DefaultHttpClientInstrumenterBuilder<HttpRequest, HttpResponse<?>> builder;
