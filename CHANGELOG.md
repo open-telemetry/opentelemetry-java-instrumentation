@@ -25,6 +25,10 @@
   ([#13068](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13068))
 - Scrub system property secrets from process resource attribute values
   ([#13225](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13225))
+- Add database client metrics to AWS SDK 2.x DynamoDB instrumentation
+  ([#13283](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13283))
+- Add runtime metrics to Spring boot starter
+  ([#13173](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13173))
 
 ### 🛠️ Bug fixes
 
