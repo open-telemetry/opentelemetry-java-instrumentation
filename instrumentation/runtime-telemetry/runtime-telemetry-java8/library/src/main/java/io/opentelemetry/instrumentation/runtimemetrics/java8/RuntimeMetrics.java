@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.runtimemetrics.java8;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
-import java.io.Closeable;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -15,7 +14,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /** The entry point class for runtime metrics support using JMX. */
-public final class RuntimeMetrics implements Closeable {
+public final class RuntimeMetrics implements AutoCloseable {
 
   private static final Logger logger = Logger.getLogger(RuntimeMetrics.class.getName());
 

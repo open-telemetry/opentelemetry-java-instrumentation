@@ -21,7 +21,7 @@ import jdk.jfr.FlightRecorder;
 import jdk.jfr.consumer.RecordingStream;
 
 /** The entry point class for runtime metrics support using JFR and JMX. */
-public final class RuntimeMetrics implements Closeable {
+public final class RuntimeMetrics implements AutoCloseable {
 
   private static final Logger logger = Logger.getLogger(RuntimeMetrics.class.getName());
 

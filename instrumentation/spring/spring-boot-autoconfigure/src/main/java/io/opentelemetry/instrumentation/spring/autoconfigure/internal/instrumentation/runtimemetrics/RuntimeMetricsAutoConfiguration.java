@@ -32,12 +32,12 @@ public class RuntimeMetricsAutoConfiguration {
   private static final Logger logger =
       LoggerFactory.getLogger(RuntimeMetricsAutoConfiguration.class);
 
-  private Runnable shutdownHook;
+  private AutoCloseable closeable;
 
   @PreDestroy
-  public void stopMetrics() {
-    if (shutdownHook != null) {
-      shutdownHook.run();
+  public void stopMetrics() throws Exception {
+    if (closeable != null) {
+      closeable.close();
     }
   }
 
@@ -48,7 +48,8 @@ public class RuntimeMetricsAutoConfiguration {
     ConfigPropertiesBridge config =
         new ConfigPropertiesBridge(applicationContext.getBean(ConfigProperties.class));
 
-    double version = Double.parseDouble(System.getProperty("java.specification.version"));
+    double version =
+        Math.max(8, Double.parseDouble(System.getProperty("java.specification.version")));
     Optional<RuntimeMetricsProvider> metricsProvider =
         applicationContext.getBeanProvider(RuntimeMetricsProvider.class).stream()
             .sorted(Comparator.comparing(RuntimeMetricsProvider::minJavaVersion).reversed())
@@ -56,7 +57,7 @@ public class RuntimeMetricsAutoConfiguration {
             .findFirst();
 
     if (metricsProvider.isPresent()) {
-      metricsProvider.get().start(openTelemetry, runnable -> shutdownHook = runnable, config);
+      this.closeable = metricsProvider.get().start(openTelemetry, config);
     } else {
       logger.debug("No runtime metrics instrumentation available for Java {}", version);
     }

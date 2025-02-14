@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
-import java.util.function.Consumer;
+import javax.annotation.Nullable;
 
 /**
  * Configures runtime metrics collection.
@@ -18,6 +18,6 @@ import java.util.function.Consumer;
 public interface RuntimeMetricsProvider {
   int minJavaVersion();
 
-  void start(
-      OpenTelemetry openTelemetry, Consumer<Runnable> shutdownHook, InstrumentationConfig config);
+  @Nullable
+  AutoCloseable start(OpenTelemetry openTelemetry, InstrumentationConfig config);
 }

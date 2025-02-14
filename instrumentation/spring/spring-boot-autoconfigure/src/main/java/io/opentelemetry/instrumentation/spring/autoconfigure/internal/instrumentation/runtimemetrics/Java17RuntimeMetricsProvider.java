@@ -9,7 +9,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.RuntimeMetrics;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.RuntimeMetricsConfigUtil;
-import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,13 +27,8 @@ public class Java17RuntimeMetricsProvider implements RuntimeMetricsProvider {
   }
 
   @Override
-  public void start(
-      OpenTelemetry openTelemetry, Consumer<Runnable> shutdownHook, InstrumentationConfig config) {
+  public AutoCloseable start(OpenTelemetry openTelemetry, InstrumentationConfig config) {
     logger.debug("Use runtime metrics instrumentation for Java 17+");
-    RuntimeMetrics runtimeMetrics =
-        RuntimeMetricsConfigUtil.configure(RuntimeMetrics.builder(openTelemetry), config);
-    if (runtimeMetrics != null) {
-      shutdownHook.accept(runtimeMetrics::close);
-    }
+    return RuntimeMetricsConfigUtil.configure(RuntimeMetrics.builder(openTelemetry), config);
   }
 }
