@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.RuntimeMetrics;
+import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.RuntimeMetricsConfigUtil;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,8 +31,10 @@ public class Java8RuntimeMetricsProvider implements RuntimeMetricsProvider {
   public void start(
       OpenTelemetry openTelemetry, Consumer<Runnable> shutdownHook, InstrumentationConfig config) {
     logger.debug("Use runtime metrics instrumentation for Java 8");
-    RuntimeMetrics.builder(openTelemetry)
-        .setShutdownHook(shutdownHook)
-        .startFromInstrumentationConfig(config);
+    RuntimeMetrics runtimeMetrics =
+        RuntimeMetricsConfigUtil.configure(RuntimeMetrics.builder(openTelemetry), config);
+    if (runtimeMetrics != null) {
+      shutdownHook.accept(runtimeMetrics::close);
+    }
   }
 }
