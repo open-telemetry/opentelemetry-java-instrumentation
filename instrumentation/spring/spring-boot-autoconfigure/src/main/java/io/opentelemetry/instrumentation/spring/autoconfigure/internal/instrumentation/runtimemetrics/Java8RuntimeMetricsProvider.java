@@ -24,7 +24,7 @@ public class Java8RuntimeMetricsProvider implements RuntimeMetricsProvider {
 
   @Override
   public int minJavaVersion() {
-    return 8;
+    return 1;
   }
 
   @Override

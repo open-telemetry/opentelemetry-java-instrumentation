@@ -48,7 +48,7 @@ public class RuntimeMetricsAutoConfiguration {
     ConfigPropertiesBridge config =
         new ConfigPropertiesBridge(applicationContext.getBean(ConfigProperties.class));
 
-    double version = javaVersion();
+    double version = Double.parseDouble(System.getProperty("java.specification.version"));
     Optional<RuntimeMetricsProvider> metricsProvider =
         applicationContext.getBeanProvider(RuntimeMetricsProvider.class).stream()
             .sorted(Comparator.comparing(RuntimeMetricsProvider::minJavaVersion).reversed())
@@ -59,15 +59,6 @@ public class RuntimeMetricsAutoConfiguration {
       metricsProvider.get().start(openTelemetry, runnable -> shutdownHook = runnable, config);
     } else {
       logger.debug("No runtime metrics instrumentation available for Java {}", version);
-    }
-  }
-
-  private static int javaVersion() {
-    try {
-      return Integer.parseInt(System.getProperty("java.specification.version"));
-    } catch (NumberFormatException nfe) {
-      // The value of the java.specification.version property is 1.8 with a Java 8 runtime.
-      return 8;
     }
   }
 }
