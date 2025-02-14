@@ -8,6 +8,9 @@
   replaced by the stable `io.opentelemetry.instrumentation.api.semconv.util.SpanNames`
 - In preparation for stabilizing HTTP library instrumentation, the classes and methods
   that were deprecated in the prior two releases have now been removed
+- The `java.net.http.HttpClient` instrumentation package
+  `io.opentelemetry.instrumentation.httpclient` was deprecated in favor of the new package name
+  `io.opentelemetry.instrumentation.javahttpclient`
 
 ## Version 2.12.0 (2025-01-17)
 
