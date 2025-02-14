@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.httpserver;
+package io.opentelemetry.instrumentation.javahttpserver;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.sun.net.httpserver.HttpExchange;
@@ -13,8 +13,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.httpserver.internal.Experimental;
-import io.opentelemetry.instrumentation.httpserver.internal.JavaHttpServerInstrumenterBuilderUtil;
+import io.opentelemetry.instrumentation.javahttpserver.internal.Experimental;
+import io.opentelemetry.instrumentation.javahttpserver.internal.JavaHttpServerInstrumenterBuilderUtil;
+
 import java.util.Collection;
 import java.util.function.Function;
 

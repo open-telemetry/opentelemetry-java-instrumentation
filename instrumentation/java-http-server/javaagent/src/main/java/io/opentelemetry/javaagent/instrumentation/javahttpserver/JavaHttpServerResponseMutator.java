@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.httpserver;
+package io.opentelemetry.javaagent.instrumentation.javahttpserver;
 
 import com.sun.net.httpserver.Headers;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;

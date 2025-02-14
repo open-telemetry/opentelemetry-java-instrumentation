@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.httpserver;
+package io.opentelemetry.javaagent.instrumentation.javahttpserver;
 
 import com.sun.net.httpserver.Filter;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
-import io.opentelemetry.instrumentation.httpserver.JavaHttpServerTelemetry;
-import io.opentelemetry.instrumentation.httpserver.JavaHttpServerTelemetryBuilder;
-import io.opentelemetry.instrumentation.httpserver.internal.JavaHttpServerInstrumenterBuilderUtil;
+import io.opentelemetry.instrumentation.javahttpserver.JavaHttpServerTelemetry;
+import io.opentelemetry.instrumentation.javahttpserver.JavaHttpServerTelemetryBuilder;
+import io.opentelemetry.instrumentation.javahttpserver.internal.JavaHttpServerInstrumenterBuilderUtil;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.Arrays;
 import java.util.List;
