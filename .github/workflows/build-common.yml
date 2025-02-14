@@ -335,7 +335,7 @@ jobs:
               per_page: 100
             });
             const matrix = JSON.parse(process.env.matrix);
-            const job_name = `common / test${ matrix['test-partition'] } (${ matrix['test-java-version'] }, ${ matrix.vm }, indy ${ matrix.test-indy })`;
+            const job_name = `common / test${ matrix['test-partition'] } (${ matrix['test-java-version'] }, ${ matrix.vm }, indy ${ matrix['test-indy'] })`;
             return workflow_run.jobs.find((job) => job.name === job_name).html_url;
 
       - name: Flaky test report
