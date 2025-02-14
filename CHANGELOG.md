@@ -13,6 +13,16 @@
 - Deprecated Dubbo instrumentation method was removed
   ([#13076](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13076))
 
+### 🌟 New javaagent instrumentation
+
+- `jdk.httpserver` instrumentation
+  ([#13243](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13243))
+
+### 🌟 New library instrumentation
+
+- `jdk.httpserver` instrumentation
+  ([#13243](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13243))
+
 ### 📈 Enhancements
 
 - Add database client metrics to Lettuce instrumentation
