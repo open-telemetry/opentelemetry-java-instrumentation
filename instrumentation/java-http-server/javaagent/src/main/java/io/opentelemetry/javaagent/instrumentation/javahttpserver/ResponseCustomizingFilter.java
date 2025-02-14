@@ -11,7 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import java.io.IOException;
 
-class ResponseCustomizingFilter extends Filter {
+final class ResponseCustomizingFilter extends Filter {
 
   ResponseCustomizingFilter() {}
 

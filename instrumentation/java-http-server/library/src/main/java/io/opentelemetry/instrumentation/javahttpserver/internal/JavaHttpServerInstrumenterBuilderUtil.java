@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.javahttpserver.internal;
 import com.sun.net.httpserver.HttpExchange;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.javahttpserver.JavaHttpServerTelemetryBuilder;
-
 import java.util.function.Function;
 import javax.annotation.Nullable;
 

@@ -5,10 +5,9 @@
 
 package io.opentelemetry.instrumentation.javahttpserver.internal;
 
+import io.opentelemetry.instrumentation.javahttpserver.JavaHttpServerTelemetryBuilder;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
-
-import io.opentelemetry.instrumentation.javahttpserver.JavaHttpServerTelemetryBuilder;
 
 /**
  * This class is internal and experimental. Its APIs are unstable and can change at any time. Its
