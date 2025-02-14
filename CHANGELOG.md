@@ -10,7 +10,7 @@
   that were deprecated in the prior two releases have now been removed
   ([#13135](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13135),
    [#13150](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13150))
-- Deprecated Dubbo instrumentation methods were removed
+- Deprecated Dubbo instrumentation method was removed
   ([#13076](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13076))
 
 ### 📈 Enhancements
