@@ -8,11 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.instrumentation.api.semconv.util.SpanNames;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
-import javax.annotation.Nullable;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
 
@@ -68,22 +64,6 @@ final class JoinPointRequest {
 
   static final class InstrumentationAnnotationFactory implements Factory {
 
-    // The reason for using reflection here is that it needs to be compatible with the old version
-    // of @WithSpan annotation that does not include the inheritContext option to avoid
-    // NoSuchMethodError
-    private static MethodHandle inheritContextMethodHandle = null;
-
-    static {
-      try {
-        inheritContextMethodHandle =
-            MethodHandles.publicLookup()
-                .findVirtual(
-                    WithSpan.class, "inheritContext", MethodType.methodType(boolean.class));
-      } catch (NoSuchMethodException | IllegalAccessException ignore) {
-        // ignore
-      }
-    }
-
     @Override
     public JoinPointRequest create(JoinPoint joinPoint) {
       MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
@@ -96,21 +76,9 @@ final class JoinPointRequest {
       WithSpan annotation = method.getDeclaredAnnotation(WithSpan.class);
       String spanName = annotation != null ? annotation.value() : "";
       SpanKind spanKind = annotation != null ? annotation.kind() : SpanKind.INTERNAL;
+      boolean inheritContext = annotation == null || annotation.inheritContext();
 
-      return new JoinPointRequest(
-          joinPoint, method, spanName, spanKind, inheritContextValueFrom(annotation));
-    }
-
-    private static boolean inheritContextValueFrom(@Nullable WithSpan annotation) {
-      if (annotation == null || inheritContextMethodHandle == null) {
-        return true;
-      }
-
-      try {
-        return (boolean) inheritContextMethodHandle.invoke(annotation);
-      } catch (Throwable ignore) {
-        return true;
-      }
+      return new JoinPointRequest(joinPoint, method, spanName, spanKind, inheritContext);
     }
   }
 }
