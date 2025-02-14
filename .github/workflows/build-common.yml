@@ -340,7 +340,7 @@ jobs:
                 per_page: 100
               },
               (response) => {
-                return response.data.workflow_run.jobs;
+                return response.data.jobs;
               },
             );
             return workflow_jobs_nested.flat().find((job) => job.name === job_name).html_url;
