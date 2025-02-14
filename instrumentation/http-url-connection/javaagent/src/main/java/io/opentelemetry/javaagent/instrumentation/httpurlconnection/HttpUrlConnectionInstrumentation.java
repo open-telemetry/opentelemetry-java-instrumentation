@@ -26,6 +26,8 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
+import io.opentelemetry.javaagent.bootstrap.context.TraceContext;
+import io.opentelemetry.javaagent.bootstrap.context.TraceContextHolder;
 
 public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
   @Override
@@ -62,6 +64,19 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelHttpUrlState") HttpUrlState httpUrlState,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      if (!connection.getDoOutput() && TraceContext.currentTraceContext() != null) {
+        TraceContextHolder traceContextHolder = TraceContext.currentTraceContext();
+        if (traceContextHolder.getTraceIdKey() != null && !traceContextHolder.getTraceIdKey()
+            .isEmpty()) {
+          connection.setRequestProperty(traceContextHolder.getTraceIdKey(),
+              traceContextHolder.getTraceId());
+        }
+        if (traceContextHolder.getSpanIdKey() != null && !traceContextHolder.getSpanIdKey()
+            .isEmpty()) {
+          connection.setRequestProperty(traceContextHolder.getSpanIdKey(),
+              traceContextHolder.getSpanId());
+        }
+      }
 
       callDepth = CallDepth.forClass(HttpURLConnection.class);
       if (callDepth.getAndIncrement() > 0) {
