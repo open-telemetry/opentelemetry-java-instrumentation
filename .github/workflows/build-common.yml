@@ -222,7 +222,7 @@ jobs:
           path: "sboms/*.json"
 
   test:
-    name: test${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }}), indy ${{ matrix.test-indy }})
+    name: test${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }}, indy ${{ matrix.test-indy }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
