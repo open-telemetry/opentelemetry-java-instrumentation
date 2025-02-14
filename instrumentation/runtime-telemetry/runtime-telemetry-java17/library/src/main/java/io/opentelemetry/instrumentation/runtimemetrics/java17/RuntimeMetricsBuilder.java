@@ -7,17 +7,8 @@ package io.opentelemetry.instrumentation.runtimemetrics.java17;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.Classes;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.Cpu;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.GarbageCollector;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.MemoryPools;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.Threads;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.ExperimentalBufferPools;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.ExperimentalCpu;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.ExperimentalMemoryPools;
-import java.util.ArrayList;
+import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsFactory;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -83,7 +74,7 @@ public final class RuntimeMetricsBuilder {
     return this;
   }
 
-  /** Disable telemetry collection associated with the {@link JfrFeature}. */
+  /** Enable experimental JMX telemetry collection. */
   @CanIgnoreReturnValue
   public RuntimeMetricsBuilder enableExperimentalJmxTelemetry() {
     enableExperimentalJmxTelemetry = true;
@@ -92,33 +83,13 @@ public final class RuntimeMetricsBuilder {
 
   /** Build and start an {@link RuntimeMetrics} with the config from this builder. */
   public RuntimeMetrics build() {
-    List<AutoCloseable> observables = buildObservables();
+    List<AutoCloseable> observables =
+        disableJmx
+            ? List.of()
+            : JmxRuntimeMetricsFactory.buildObservables(
+                openTelemetry, enableExperimentalJmxTelemetry);
     RuntimeMetrics.JfrRuntimeMetrics jfrRuntimeMetrics = buildJfrMetrics();
     return new RuntimeMetrics(openTelemetry, observables, jfrRuntimeMetrics);
-  }
-
-  @SuppressWarnings("CatchingUnchecked")
-  private List<AutoCloseable> buildObservables() {
-    if (disableJmx) {
-      return Collections.emptyList();
-    }
-    try {
-      // Set up metrics gathered by JMX
-      List<AutoCloseable> observables = new ArrayList<>();
-      observables.addAll(Classes.registerObservers(openTelemetry));
-      observables.addAll(Cpu.registerObservers(openTelemetry));
-      observables.addAll(GarbageCollector.registerObservers(openTelemetry));
-      observables.addAll(MemoryPools.registerObservers(openTelemetry));
-      observables.addAll(Threads.registerObservers(openTelemetry));
-      if (enableExperimentalJmxTelemetry) {
-        observables.addAll(ExperimentalBufferPools.registerObservers(openTelemetry));
-        observables.addAll(ExperimentalCpu.registerObservers(openTelemetry));
-        observables.addAll(ExperimentalMemoryPools.registerObservers(openTelemetry));
-      }
-      return observables;
-    } catch (Exception e) {
-      throw new IllegalStateException("Error building RuntimeMetrics", e);
-    }
   }
 
   @Nullable
