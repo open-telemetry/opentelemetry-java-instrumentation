@@ -332,11 +332,10 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               run_id: context.runId,
-              per_page: 100
+              per_page: 200
             });
             const matrix = JSON.parse(process.env.matrix);
             const job_name = `common / test${ matrix['test-partition'] } (${ matrix['test-java-version'] }, ${ matrix.vm }, indy ${ matrix['test-indy'] })`;
-            console.log(job_name);
             return workflow_run.jobs.find((job) => job.name === job_name).html_url;
 
       - name: Flaky test report
