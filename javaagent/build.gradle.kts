@@ -253,6 +253,9 @@ tasks {
     dependsOn(shadowJar)
 
     jvmArgs("-Dotel.javaagent.debug=true")
+    jvmArgs("-Dotel.traces.exporter=none")
+    jvmArgs("-Dotel.metrics.exporter=none")
+    jvmArgs("-Dotel.logs.exporter=none")
 
     jvmArgumentProviders.add(JavaagentProvider(shadowJar.flatMap { it.archiveFile }))
 
