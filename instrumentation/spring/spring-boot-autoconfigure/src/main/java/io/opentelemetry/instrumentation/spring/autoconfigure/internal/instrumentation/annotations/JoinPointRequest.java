@@ -69,8 +69,8 @@ final class JoinPointRequest {
   static final class InstrumentationAnnotationFactory implements Factory {
 
     // The reason for using reflection here is that it needs to be compatible with the old version
-    // of @WithSpan annotation that does not include the inheritContext option to avoid failing the
-    // muzzle check.
+    // of @WithSpan annotation that does not include the inheritContext option to avoid
+    // NoSuchMethodError
     private static MethodHandle inheritContextMethodHandle = null;
 
     static {
