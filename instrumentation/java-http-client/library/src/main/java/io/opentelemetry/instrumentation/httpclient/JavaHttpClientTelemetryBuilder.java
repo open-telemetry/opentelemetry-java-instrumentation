@@ -20,8 +20,8 @@ import java.util.Collection;
 import java.util.function.Function;
 
 /**
- * @deprecated Use {@link io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetryBuilder}
- *     instead.
+ * @deprecated Use {@link
+ *     io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetryBuilder} instead.
  */
 @Deprecated
 public final class JavaHttpClientTelemetryBuilder {

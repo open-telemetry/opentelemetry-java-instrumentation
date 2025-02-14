@@ -16,8 +16,8 @@ import java.net.http.HttpResponse;
 /**
  * Entrypoint for instrumenting Java HTTP Client.
  *
- * @deprecated Use {@link
- *     io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetry} instead.
+ * @deprecated Use {@link io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetry}
+ *     instead.
  */
 @Deprecated
 public final class JavaHttpClientTelemetry {
