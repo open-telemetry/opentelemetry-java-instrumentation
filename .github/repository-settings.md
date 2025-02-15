@@ -46,7 +46,7 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
       - Security alerts: High or higher
       - Alerts: Errors
 
-> [!NOTE]  
+> [!NOTE]
 > This repository can't "require linear history" because there is an old merge commit on `main`
 > (and so also on the release branches).
 
