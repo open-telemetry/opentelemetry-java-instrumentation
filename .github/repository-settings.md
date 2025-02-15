@@ -37,9 +37,11 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
     - Require review from Code Owners: CHECKED
     - Allowed merge methods: Squash
   - Require status checks to pass
-    - EasyCLA
-    - `required-status-check`
-    - `gradle-wrapper-validation`
+    - Do not require status checks on creation: CHECKED
+    - Status checks that are required
+      - EasyCLA
+      - `required-status-check`
+      - `gradle-wrapper-validation`
   - Block force pushes: CHECKED
   - Require code scanning results: CHECKED
     - CodeQL
