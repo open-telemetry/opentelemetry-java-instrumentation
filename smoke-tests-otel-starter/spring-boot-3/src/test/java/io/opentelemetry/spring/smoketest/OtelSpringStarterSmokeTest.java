@@ -26,7 +26,7 @@ class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {
 
   @Override
   protected void assertAdditionalMetrics() {
-    if (!isJfrAvailable()) {
+    if (!isFlightRecorderAvailable()) {
       return;
     }
 
@@ -50,11 +50,11 @@ class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {
     }
   }
 
-  private static boolean isJfrAvailable() {
+  private static boolean isFlightRecorderAvailable() {
     try {
-      Class.forName("jdk.jfr.FlightRecorder");
-      return true;
-    } catch (ClassNotFoundException exception) {
+      return (boolean)
+          Class.forName("jdk.jfr.FlightRecorder").getMethod("isAvailable").invoke(null);
+    } catch (ReflectiveOperationException exception) {
       return false;
     }
   }
