@@ -6,7 +6,7 @@ permissions:
   contents: read
 
 jobs:
-  required-jobs:
+  common:
     uses: ./.github/workflows/build-common.yml
 
   # test-latest-deps is intentionally not included in the release workflows
@@ -23,7 +23,7 @@ jobs:
       contents: write # for creating the release
     runs-on: ubuntu-latest
     needs:
-      - required-jobs
+      - common
     outputs:
       version: ${{ steps.create-github-release.outputs.version }}
       prior-version: ${{ steps.create-github-release.outputs.prior-version }}
