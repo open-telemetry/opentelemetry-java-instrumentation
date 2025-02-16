@@ -181,7 +181,7 @@ jobs:
                             --notes-file /tmp/release-notes.txt \
                             v$VERSION \
                             opentelemetry-javaagent.jar \
-                            opentelemetry-javaagent.asc.jar \
+                            opentelemetry-javaagent.jar.asc \
                             opentelemetry-java-instrumentation-SBOM.zip
 
           # these are used as job outputs
