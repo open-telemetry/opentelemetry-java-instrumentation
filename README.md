@@ -72,19 +72,52 @@ java -javaagent:path/to/opentelemetry-javaagent.jar \
 
 ## Configuring the Agent
 
-The agent is highly configurable! Many aspects of the agent's behavior can be
-configured for your needs, such as exporter choice, exporter config (like where
-data is sent), trace context propagation headers, and much more.
+### 2️⃣ **Configuration Parameters**
 
-For a detailed list of agent configuration options, see the [agent configuration docs][config-agent].
+| Parameter                                                                                        | Description                                                 |
+|--------------------------------------------------------------------------------------------------|-------------------------------------------------------------|
+| `-Dotel.metrics.exporter=none`                                                                   | Disables metric collection.                                 |
+| `-Dotel.logs.exporter=none`                                                                      | Disables log collection.                                    |
+| `-Dotel.exporter.otlp.traces.endpoint="{host}}/v1/apiwiz-runtime-agent/api-visualiser/otel/traces"` | Specifies the OTLP (OpenTelemetry Protocol) endpoint for trace data. |
+| `-Dotel.exporter.otlp.traces.headers="x-tenant={workspaceName},apikey={apikey}"`                         | Adds authentication headers for the OTLP trace exporter. |
+| `-Dotel.exporter.otlp.traces.timeout=600000`                                                     | Sets the trace export timeout (600,000 ms = 10 minutes). |
+| `-Dapi.compliance.tracing.traceId=traceid`                                                       | Defines the trace ID key for API compliance tracing. |
+| `-Dapi.compliance.tracing.spanId=spanid`                                                         | Defines the span ID key for API compliance tracing. |
+| `-Dapi.compliance.tracing.parentSpanId=parentspanid`                                             | Defines the parent span ID key. |
+| `-Dapi.compliance.tracing.requestTimeStamp=request-timestamp`                                    | Defines the request timestamp key. |
+| `-Dapi.compliance.tracing.responseTimeStamp=response-timestamp`                                  | Defines the response timestamp key. |
+| `-Dapi.compliance.tracing.gatewayType=gateway-type`                                              | Defines the gateway type key. |
+| `-Dapi.compliance.detect.api={host}}/v1/apiwiz-runtime-agent/compliance/detect`                  | Sets the API endpoint for compliance detection. |
+| `-Dworkspace-id=stage-data`                                                                      | Sets the workspace ID. |
+| `-Dapi.compliance.tracing.enable-tracing=true`                                                   | Enables API compliance tracing. |
+| `-Dx-apikey={apikey}`                                                                            | Specifies an API key for authentication. |
+| `-Dserver-ip={your_server_ip}`                                                                   | Sets the server's IP address. |
 
-For a detailed list of additional SDK configuration environment variables and system properties,
-see the [SDK configuration docs][config-sdk].
+## Example
 
-*Note: Config parameter names are very likely to change over time, so please check
-back here when trying out a new version!
-Please [report any bugs](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues)
-or unexpected behavior you find.*
+```bash
+java -javaagent:/path/to/opentelemetry-javaagent.jar \
+     -Dotel.metrics.exporter=none \
+     -Dotel.logs.exporter=none \
+     -Dotel.exporter.otlp.traces.endpoint="https://dev-api.apiwiz.io/v1/apiwiz-runtime-agent/api-visualiser/otel/traces" \
+     -Dotel.exporter.otlp.traces.headers="x-tenant=stage-data,x-apikey=E5KAHRATn8kjWZbdAVaXTD7FVtCsdXuijm9dRpatlBLJ4gOplbGSMWSOlcn8x1lwyJLgzug1UVfmF%2FduXtk1oa9oG5%2BS6iDGA9zWpTjafpy4U0OT9kBiA5r%2FnDb55MzE4qfKfWXlpAqtEZrDiwtOlR1tjjzdCTEYmqPEfjYgQr7%2FWjIUBU2UQdB6zg2oQUWKBbPf1NY%2BF%2BTZiVcbhbwHibM7%2ByTSeLydksCElDo84GEb06QyoHxkXbB%2BQLWBdw9PvShGJr1e3xnIcf1MupyIPDVfB1WjwqNPSUD%2BKKqtKI%2FOSjQGR4x%2F6ov8zESd1nGQAiEKCvAW5%2FuhF5uVv0A70w%3D%3D" \
+     -Dotel.exporter.otlp.traces.timeout=600000 \
+     -Dspring.datasource.url=jdbc:postgresql://localhost:5432/apiwiz \
+     -Dspring.datasource.username=postgres \
+     -Dspring.datasource.password=apiwiz \
+     -Dapi.compliance.tracing.traceId=traceid \
+     -Dapi.compliance.tracing.spanId=spanid \
+     -Dapi.compliance.tracing.parentSpanId=parentspanid \
+     -Dapi.compliance.tracing.requestTimeStamp=request-timestamp \
+     -Dapi.compliance.tracing.responseTimeStamp=response-timestamp \
+     -Dapi.compliance.tracing.gatewayType=gateway-type \
+     -Dapi.compliance.detect.api=https://dev-api.apiwiz.io/v1/apiwiz-runtime-agent/compliance/detect \
+     -Dworkspace-id=stage-data \
+     -Dapi.compliance.tracing.enable-tracing=true \
+     -Dx-apikey=E5KAHRATn8kjWZbdAVaXTD7FVtCsdXuijm9dRpatlBLJ4gOplbGSMWSOlcn8x1lwyJLgzug1UVfmF%2FduXtk1oa9oG5%2BS6iDGA9zWpTjafpy4U0OT9kBiA5r%2FnDb55MzE4qfKfWXlpAqtEZrDiwtOlR1tjjzdCTEYmqPEfjYgQr7%2FWjIUBU2UQdB6zg2oQUWKBbPf1NY%2BF%2BTZiVcbhbwHibM7%2ByTSeLydksCElDo84GEb06QyoHxkXbB%2BQLWBdw9PvShGJr1e3xnIcf1MupyIPDVfB1WjwqNPSUD%2BKKqtKI%2FOSjQGR4x%2F6ov8zESd1nGQAiEKCvAW5%2FuhF5uVv0A70w%3D%3D" \
+     -Dserver-ip=8.8.8.8 \
+     -jar my-application.jar
+```
 
 ## Supported libraries, frameworks, and application servers
 
