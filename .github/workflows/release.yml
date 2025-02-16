@@ -1,11 +1,11 @@
 name: Release
 on:
   workflow_dispatch:
-      inputs:
-        already_published:
-          description: 'Has the release already been published to maven central?'
-          type: boolean
-          default: false
+    inputs:
+      already_published:
+        description: 'Has the release already been published to maven central?'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
