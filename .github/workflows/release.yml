@@ -1,6 +1,11 @@
 name: Release
 on:
   workflow_dispatch:
+      inputs:
+        already_published:
+          description: 'Has the release already been published to maven central?'
+          type: boolean
+          default: false
 
 permissions:
   contents: read
@@ -95,6 +100,7 @@ jobs:
         uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
 
       - name: Build and publish artifacts
+        if: ${{ !inputs.already_published }}
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
@@ -103,6 +109,7 @@ jobs:
         run: ./gradlew assemble spdxSbom publishToSonatype closeAndReleaseSonatypeStagingRepository
 
       - name: Build and publish gradle plugins
+        if: ${{ !inputs.already_published }}
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
@@ -115,12 +122,14 @@ jobs:
         working-directory: gradle-plugins
 
       - name: Collect SBOMs
+        if: ${{ !inputs.already_published }}
         run: |
           mkdir sboms
           cp javaagent/build/spdx/*.spdx.json sboms
           zip opentelemetry-java-instrumentation-SBOM.zip sboms/*
 
       - uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        if: ${{ !inputs.already_published }}
         name: Upload SBOMs
         with:
           name: opentelemetry-java-instrumentation-SBOM
@@ -174,15 +183,22 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          cp javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar opentelemetry-javaagent.jar
-          cp javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar.asc opentelemetry-javaagent.jar.asc
-          gh release create --target $GITHUB_REF_NAME \
-                            --title "Version $VERSION" \
-                            --notes-file /tmp/release-notes.txt \
-                            v$VERSION \
-                            opentelemetry-javaagent.jar \
-                            opentelemetry-javaagent.asc.jar \
-                            opentelemetry-java-instrumentation-SBOM.zip
+          if [[ "${{ inputs.already_published }}" == "true" ]]; then
+            gh release create --target $GITHUB_REF_NAME \
+                              --title "Version $VERSION" \
+                              --notes-file /tmp/release-notes.txt \
+                              v$VERSION
+          else
+            cp javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar opentelemetry-javaagent.jar
+            cp javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar.asc opentelemetry-javaagent.jar.asc
+            gh release create --target $GITHUB_REF_NAME \
+                              --title "Version $VERSION" \
+                              --notes-file /tmp/release-notes.txt \
+                              v$VERSION \
+                              opentelemetry-javaagent.jar \
+                              opentelemetry-javaagent.jar.asc \
+                              opentelemetry-java-instrumentation-SBOM.zip
+          fi
 
           # these are used as job outputs
           echo "version=$VERSION" >> $GITHUB_OUTPUT
