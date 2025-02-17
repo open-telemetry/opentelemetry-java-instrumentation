@@ -7,7 +7,6 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "2.1.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("org.unbroken-dome.xjc") version "2.0.0"
-    // See https://github.com/graalvm/native-build-tools/issues/626
     id("org.graalvm.buildtools.native") version "0.10.5"
   }
 }
