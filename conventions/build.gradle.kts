@@ -69,7 +69,7 @@ dependencies {
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.3")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:4.1.0")
   implementation("net.ltgt.gradle:gradle-nullaway-plugin:2.2.0")
-  implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.5")
+  implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.6")
 
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.11.4"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
