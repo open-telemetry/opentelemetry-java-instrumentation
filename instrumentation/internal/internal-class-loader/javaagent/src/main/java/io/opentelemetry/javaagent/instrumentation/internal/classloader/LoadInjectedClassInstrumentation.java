@@ -51,6 +51,7 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
                             .and(takesArgument(1, boolean.class))))
             .and(isPublic().or(isProtected()))
             .and(not(isStatic()));
+    // Inline instrumentation to prevent problems with invokedynamic-recursion
     transformer.applyTransformer(
         new AgentBuilder.Transformer.ForAdvice()
             .include(Utils.getBootstrapProxy(), Utils.getAgentClassLoader())
