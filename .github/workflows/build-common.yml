@@ -343,7 +343,8 @@ jobs:
                 return response.data.jobs;
               },
             );
-            return workflow_jobs_nested.flat().find((job) => job.name === job_name).html_url;
+            console.log(workflow_jobs_nested);
+            return workflow_jobs_nested.flat().find((job) => job && job.name === job_name).html_url;
 
       - name: Flaky test report
         if: ${{ !cancelled() }}
