@@ -208,7 +208,7 @@ class HttpClientAttributesExtractorTest {
 
   @ParameterizedTest
   @ArgumentsSource(StripUrlArgumentSource.class)
-  void stripBasicAuthTest(String url, String expectedResult) {
+  void shouldRedactUserInfoAndQueryParameters(String url, String expectedResult) {
     Map<String, String> request = new HashMap<>();
     request.put("urlFull", url);
 
