@@ -26,8 +26,7 @@ class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {
 
   @Override
   protected void assertAdditionalMetrics() {
-    if (System.getProperty("org.graalvm.nativeimage.imagecode") != null) {
-      // GraalVM native image does not support JFR
+    if (!isFlightRecorderAvailable()) {
       return;
     }
 
@@ -48,6 +47,15 @@ class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {
             "jvm.thread.count")) {
       testing.waitAndAssertMetrics(
           "io.opentelemetry.runtime-telemetry-java17", metric, AbstractIterableAssert::isNotEmpty);
+    }
+  }
+
+  private static boolean isFlightRecorderAvailable() {
+    try {
+      return (boolean)
+          Class.forName("jdk.jfr.FlightRecorder").getMethod("isAvailable").invoke(null);
+    } catch (ReflectiveOperationException exception) {
+      return false;
     }
   }
 }

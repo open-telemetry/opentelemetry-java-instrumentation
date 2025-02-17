@@ -191,6 +191,8 @@ jobs:
         run: ./gradlew check spdxSbom -x javadoc -x spotlessCheck -PskipTests=true ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
 
       - name: Check for jApiCmp diffs
+        # The jApiCmp diff compares current to latest, which isn't appropriate for release branches
+        if: ${{ !startsWith(github.ref_name, 'release/') && !startsWith(github.base_ref, 'release/') }}
         run: |
           # need to "git add" in case any generated files did not already exist
           git add docs/apidiffs
