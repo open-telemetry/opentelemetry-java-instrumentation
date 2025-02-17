@@ -150,6 +150,12 @@ targets:
       target: ':instrumentation:java-http-client:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:java-http-server:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:java-http-server:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:java-util-logging:javaagent'
     - type: gradle
       path: ./
@@ -751,6 +757,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.42:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.47:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:pekko:pekko-actor-1.0:javaagent'

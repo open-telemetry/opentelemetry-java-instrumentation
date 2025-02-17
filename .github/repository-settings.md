@@ -32,20 +32,25 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
   - `release/*`
 - Branch rules
   - Restrict deletions: CHECKED
-  - Require linear history: CHECKED
   - Require a pull request before merging: CHECKED
     - Required approvals: 1
     - Require review from Code Owners: CHECKED
     - Allowed merge methods: Squash
   - Require status checks to pass
-    - EasyCLA
-    - `required-status-check`
-    - `gradle-wrapper-validation`
+    - Do not require status checks on creation: CHECKED
+    - Status checks that are required
+      - EasyCLA
+      - `required-status-check`
+      - `gradle-wrapper-validation`
   - Block force pushes: CHECKED
   - Require code scanning results: CHECKED
     - CodeQL
       - Security alerts: High or higher
       - Alerts: Errors
+
+> [!NOTE]
+> This repository can't "require linear history" because there is an old merge commit on `main`
+> (and so also on the release branches).
 
 ### `cloudfoundry` branch
 

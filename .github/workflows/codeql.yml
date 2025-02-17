@@ -61,7 +61,8 @@ jobs:
         # --no-build-cache is required for codeql to analyze all modules
         # --no-daemon is required for codeql to observe the compilation
         # (see https://docs.github.com/en/code-security/codeql-cli/getting-started-with-the-codeql-cli/preparing-your-code-for-codeql-analysis#specifying-build-commands)
-        run: ./gradlew assemble -x javadoc --no-build-cache --no-daemon
+        # quarkus tasks are disabled because they often cause the build to fail (see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13284)
+        run: ./gradlew assemble -x javadoc -x :instrumentation:quarkus-resteasy-reactive:quarkus3-testing:quarkusGenerateCodeDev -x :instrumentation:quarkus-resteasy-reactive:quarkus2-testing:quarkusGenerateCodeDev --no-build-cache --no-daemon
 
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@9e8d0789d4a0fa9ceb6b1738f7e269594bdd67f0 # v3.28.9

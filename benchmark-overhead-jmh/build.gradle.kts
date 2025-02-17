@@ -53,6 +53,7 @@ tasks {
       "-javaagent:${shadowTask.archiveFile.get()}",
       "-Dotel.traces.exporter=none",
       "-Dotel.metrics.exporter=none",
+      "-Dotel.logs.exporter=none",
       // avoid instrumenting HttpURLConnection for now since it is used to make the requests
       // and this benchmark is focused on servlet overhead for now
       "-Dotel.instrumentation.http-url-connection.enabled=false",
