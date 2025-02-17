@@ -165,7 +165,6 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   private static String redactQueryParameters(String url) {
-
     int questionMarkIndex = url.indexOf('?');
     if (questionMarkIndex == -1 || !containsParamToRedact(url)) {
       return url;
