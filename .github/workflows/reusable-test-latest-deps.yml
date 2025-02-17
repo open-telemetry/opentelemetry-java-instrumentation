@@ -9,9 +9,6 @@ on:
       no-build-cache:
         type: boolean
         required: false
-      max-test-retries:
-        type: string
-        required: false
     secrets:
       FLAKY_TEST_REPORTER_ACCESS_KEY:
         required: false
@@ -80,7 +77,6 @@ jobs:
           ${{ env.test-tasks }}
           -PtestLatestDeps=true
           ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
-          ${{ inputs.max-test-retries && format(' -PmaxTestRetries={0}', inputs.max-test-retries) || '' }}
 
       - name: Build scan
         if: ${{ !cancelled() && hashFiles('build-scan.txt') != '' }}

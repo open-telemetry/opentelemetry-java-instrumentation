@@ -160,7 +160,7 @@ dependencies {
   compileOnly("com.google.code.findbugs:jsr305")
   compileOnly("com.google.errorprone:error_prone_annotations")
 
-  codenarc("org.codenarc:CodeNarc:3.5.0")
+  codenarc("org.codenarc:CodeNarc:3.6.0")
   codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.23"))
 
   modules {
