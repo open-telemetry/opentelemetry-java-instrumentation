@@ -17,7 +17,7 @@ import java.util.List;
 public class ActiveJHttpServerConnectionInstrumentationModule extends InstrumentationModule {
 
   public ActiveJHttpServerConnectionInstrumentationModule() {
-    super("activej-http", "activej-http-server");
+    super("activej-http-6.0", "activej-http-server");
   }
 
   @Override
