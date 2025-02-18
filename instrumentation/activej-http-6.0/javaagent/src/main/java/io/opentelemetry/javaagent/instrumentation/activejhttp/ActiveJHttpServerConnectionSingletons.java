@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrume
 
 public class ActiveJHttpServerConnectionSingletons {
 
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.activej-http";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.activej-http-6.0";
 
   private static final Instrumenter<HttpRequest, HttpResponse> INSTRUMENTER;
 
