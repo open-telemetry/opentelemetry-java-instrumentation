@@ -301,7 +301,7 @@ jobs:
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           message="Update apidiff baseline to released version $VERSION"
-          body="Update apidiff baseline to released version \`$version\`."
+          body="Update apidiff baseline to released version \`$VERSION\`."
           branch="otelbot/update-apidiff-baseline-to-released-version-${VERSION}"
 
           git checkout -b $branch
