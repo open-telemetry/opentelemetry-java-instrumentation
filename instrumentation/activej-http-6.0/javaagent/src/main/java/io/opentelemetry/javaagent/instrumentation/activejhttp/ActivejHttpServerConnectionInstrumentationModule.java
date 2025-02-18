@@ -13,21 +13,20 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
-@SuppressWarnings("AbbreviationAsWordInName")
 @AutoService(InstrumentationModule.class)
-public class ActiveJHttpServerConnectionInstrumentationModule extends InstrumentationModule {
+public class ActivejHttpServerConnectionInstrumentationModule extends InstrumentationModule {
 
-  public ActiveJHttpServerConnectionInstrumentationModule() {
+  public ActivejHttpServerConnectionInstrumentationModule() {
     super("activej-http", "activej-http-6.0");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new ActiveJHttpServerConnectionInstrumentation());
+    return singletonList(new ActivejHttpServerConnectionInstrumentation());
   }
 
   @Override
   public void registerHelperResources(HelperResourceBuilder helperResourceBuilder) {
-    helperResourceBuilder.register(ActiveJHttpServerHelper.class.getName());
+    helperResourceBuilder.register(ActivejHttpServerHelper.class.getName());
   }
 }

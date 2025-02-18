@@ -12,10 +12,9 @@ import io.activej.http.HttpHeaders;
 import io.activej.http.HttpResponse;
 import java.util.Map;
 
-@SuppressWarnings("AbbreviationAsWordInName")
-public final class ActiveJHttpServerHelper {
+public final class ActivejHttpServerHelper {
 
-  private ActiveJHttpServerHelper() {
+  private ActivejHttpServerHelper() {
     throw new UnsupportedOperationException();
   }
 

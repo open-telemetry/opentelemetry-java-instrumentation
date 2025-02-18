@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.activejhttp;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
-import static io.opentelemetry.javaagent.instrumentation.activejhttp.ActiveJHttpServerConnectionSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.activejhttp.ActivejHttpServerConnectionSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -29,8 +29,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@SuppressWarnings("AbbreviationAsWordInName")
-public class ActiveJHttpServerConnectionInstrumentation implements TypeInstrumentation {
+public class ActivejHttpServerConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
@@ -90,7 +89,7 @@ public class ActiveJHttpServerConnectionInstrumentation implements TypeInstrumen
         if (responsePromise.isException()) {
           error = responsePromise.getException();
         }
-        httpResponse = ActiveJHttpServerHelper.createResponse(error, traceparent, httpResponse);
+        httpResponse = ActivejHttpServerHelper.createResponse(error, traceparent, httpResponse);
         instrumenter().end(context, httpRequest, httpResponse, error);
         responsePromise = Promise.of(httpResponse);
       } else if (throwable != null) {

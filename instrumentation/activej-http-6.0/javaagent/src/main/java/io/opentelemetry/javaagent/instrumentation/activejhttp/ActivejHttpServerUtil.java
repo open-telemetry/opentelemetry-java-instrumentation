@@ -15,10 +15,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
-@SuppressWarnings("AbbreviationAsWordInName")
-public final class ActiveJHttpServerUtil {
+public final class ActivejHttpServerUtil {
 
-  private ActiveJHttpServerUtil() {
+  private ActivejHttpServerUtil() {
     throw new UnsupportedOperationException();
   }
 

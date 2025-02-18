@@ -16,8 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@SuppressWarnings("AbbreviationAsWordInName")
-enum ActiveJHttpServerHeaders implements ExtendedTextMapGetter<HttpRequest> {
+enum ActivejHttpServerHeaders implements ExtendedTextMapGetter<HttpRequest> {
   INSTANCE;
 
   @Override

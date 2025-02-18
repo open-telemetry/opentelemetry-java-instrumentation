@@ -12,30 +12,29 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGet
 import java.util.List;
 import javax.annotation.Nullable;
 
-@SuppressWarnings("AbbreviationAsWordInName")
-final class ActiveJHttpServerHttpAttributesGetter
+final class ActivejHttpServerHttpAttributesGetter
     implements HttpServerAttributesGetter<HttpRequest, HttpResponse> {
 
   @Override
   public String getHttpRequestMethod(HttpRequest request) {
-    return ActiveJHttpServerUtil.getHttpRequestMethod(request);
+    return ActivejHttpServerUtil.getHttpRequestMethod(request);
   }
 
   @Override
   public List<String> getHttpRequestHeader(HttpRequest request, String name) {
-    return ActiveJHttpServerUtil.requestHeader(request, name);
+    return ActivejHttpServerUtil.requestHeader(request, name);
   }
 
   @Override
   public Integer getHttpResponseStatusCode(
       HttpRequest request, HttpResponse httpResponse, @Nullable Throwable error) {
-    return ActiveJHttpServerUtil.getHttpResponseStatusCode(request, httpResponse, error);
+    return ActivejHttpServerUtil.getHttpResponseStatusCode(request, httpResponse, error);
   }
 
   @Override
   public List<String> getHttpResponseHeader(
       HttpRequest request, HttpResponse httpResponse, String name) {
-    return ActiveJHttpServerUtil.getHttpResponseHeader(request, httpResponse, name);
+    return ActivejHttpServerUtil.getHttpResponseHeader(request, httpResponse, name);
   }
 
   @Override
