@@ -173,7 +173,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     StringBuilder redactedParameters = new StringBuilder();
     boolean inRedactedParamValue =
         false; // To be able to skip the characters of the parameters to redact
-    boolean inParamValue = false;
+    boolean paramWithValue = false;
 
     // To build a parameter name until we reach the '=' character
     // If the parameter name is a one to redact, we will redact the value
@@ -182,7 +182,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
     for (int i = questionMarkIndex + 1; i < url.length(); i++) {
       char currentChar = url.charAt(i);
       if (currentChar == '=') {
-        inParamValue = true;
+        paramWithValue = true;
         redactedParameters.append(currentParamName);
         redactedParameters.append('=');
         if (PARAMS_TO_REDACT.contains(currentParamName.toString())) {
@@ -190,16 +190,26 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
           inRedactedParamValue = true;
         }
       } else if (currentChar == '&') { // New parameter delimiter
+        if (!paramWithValue) { // Example: https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&a&
+          redactedParameters.append(currentParamName);
+        }
         redactedParameters.append('&');
-        inParamValue = false;
+        paramWithValue = false;
         inRedactedParamValue = false;
         currentParamName.setLength(
             0); // To avoid creating a new StringBuilder for each new parameter
       } else if (currentChar == '#') { // Reference delimiter
+        if (!paramWithValue) { // Example:
+          // https://service.com?&&AWSAccessKeyId=AKIAIOSFODNN7&a&b#fragment
+          redactedParameters.append(currentParamName);
+        }
         redactedParameters.append(url.substring(i));
         break;
-      } else if (!inParamValue) {
+      } else if (!paramWithValue) {
         currentParamName.append(currentChar);
+        if (i == url.length() - 1) { // Example: https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&a
+          redactedParameters.append(currentParamName);
+        }
       } else if (!inRedactedParamValue) {
         redactedParameters.append(currentChar);
       }

@@ -207,7 +207,7 @@ class HttpClientAttributesExtractorTest {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(StripUrlArgumentSource.class)
+  @ArgumentsSource(UrlSourceToRedact.class)
   void shouldRedactUserInfoAndQueryParameters(String url, String expectedResult) {
     Map<String, String> request = new HashMap<>();
     request.put("urlFull", url);
@@ -223,7 +223,7 @@ class HttpClientAttributesExtractorTest {
     assertThat(attributes.build()).containsOnly(entry(URL_FULL, expectedResult));
   }
 
-  static final class StripUrlArgumentSource implements ArgumentsProvider {
+  static final class UrlSourceToRedact implements ArgumentsProvider {
 
     @Override
     public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
@@ -274,7 +274,22 @@ class HttpClientAttributesExtractorTest {
               "https://service.com?AWSAccessKeyId=REDACTED&AWSAccessKeyId=REDACTED"),
           arguments(
               "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7#ref",
-              "https://service.com?AWSAccessKeyId=REDACTED#ref"));
+              "https://service.com?AWSAccessKeyId=REDACTED#ref"),
+          arguments(
+              "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&aa&bb",
+              "https://service.com?AWSAccessKeyId=REDACTED&aa&bb"),
+          arguments(
+              "https://service.com?aa&bb&AWSAccessKeyId=AKIAIOSFODNN7",
+              "https://service.com?aa&bb&AWSAccessKeyId=REDACTED"),
+          arguments(
+              "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&&",
+              "https://service.com?AWSAccessKeyId=REDACTED&&"),
+          arguments(
+              "https://service.com?&&AWSAccessKeyId=AKIAIOSFODNN7",
+              "https://service.com?&&AWSAccessKeyId=REDACTED"),
+          arguments(
+              "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&a&b#fragment",
+              "https://service.com?AWSAccessKeyId=REDACTED&a&b#fragment"));
     }
   }
 
