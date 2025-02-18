@@ -7,10 +7,10 @@ muzzle {
     group.set("io.activej:activej-http")
     module.set("activej-http")
 
-    versions.set("[1.0,)")
+    versions.set("[6.0,)")
   }
 }
 
 dependencies {
-  library("io.activej:activej-http:6.0-beta2")
+  library("io.activej:activej-http:6.0-rc2")
 }

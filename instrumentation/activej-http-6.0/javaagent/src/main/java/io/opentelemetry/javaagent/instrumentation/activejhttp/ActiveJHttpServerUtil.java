@@ -15,14 +15,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
-/**
- * This utility class provides helper methods for extracting and manipulating HTTP-related
- * attributes from ActiveJ {@code HttpRequest} and {@code HttpResponse} objects. It is designed to
- * simplify the process of retrieving information such as HTTP methods, headers, status codes, and
- * other metadata, which are essential for OpenTelemetry instrumentation and distributed tracing.
- *
- * @author Krishna Chaitanya Surapaneni
- */
 public final class ActiveJHttpServerUtil {
 
   private ActiveJHttpServerUtil() {

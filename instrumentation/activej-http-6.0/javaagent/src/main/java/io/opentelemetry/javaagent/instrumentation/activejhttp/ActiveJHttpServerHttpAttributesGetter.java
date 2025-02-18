@@ -12,14 +12,6 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGet
 import java.util.List;
 import javax.annotation.Nullable;
 
-/**
- * This class implements the {@code HttpServerAttributesGetter<HttpRequest, HttpResponse>} interface
- * and provides methods for extracting HTTP-related attributes from ActiveJ {@code HttpRequest} and
- * {@code HttpResponse} objects. These attributes are used by OpenTelemetry to enrich telemetry
- * data, such as spans, with detailed information about HTTP requests and responses.
- *
- * @author Krishna Chaitanya Surapaneni
- */
 final class ActiveJHttpServerHttpAttributesGetter
     implements HttpServerAttributesGetter<HttpRequest, HttpResponse> {
 

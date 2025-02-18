@@ -34,27 +34,14 @@ import net.bytebuddy.matcher.ElementMatcher;
  * {@code serve} method of classes that extend {@code io.activej.http.AsyncServlet}. The
  * instrumentation is designed to integrate with OpenTelemetry for distributed tracing, capturing
  * and propagating trace context through HTTP requests and responses.
- *
- * @author Krishna Chaitanya Surapaneni
  */
 public class ActiveJHttpServerConnectionInstrumentation implements TypeInstrumentation {
 
-  /**
-   * Matches classes that extend {@code io.activej.http.AsyncServlet} but are not interfaces.
-   *
-   * @return An {@code ElementMatcher} that identifies target classes for instrumentation.
-   */
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return hasSuperType(named("io.activej.http.AsyncServlet")).and(not(isInterface()));
   }
 
-  /**
-   * Applies advice to the {@code serve} method of the matched classes. The advice captures trace
-   * context at the start of the method and propagates it through the response.
-   *
-   * @param transformer The {@code TypeTransformer} used to apply the advice.
-   */
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
@@ -64,28 +51,9 @@ public class ActiveJHttpServerConnectionInstrumentation implements TypeInstrumen
         this.getClass().getName() + "$ServeAdvice");
   }
 
-  /**
-   * Inner class containing the advice logic for the {@code serve} method. This class defines two
-   * methods:
-   *
-   * <ul>
-   *   <li>{@code methodEnter}: Captures the trace context at the start of the method.
-   *   <li>{@code methodExit}: Propagates the trace context to the response and ends the span.
-   * </ul>
-   */
   @SuppressWarnings("unused")
   public static class ServeAdvice {
 
-    /**
-     * Advice executed at the start of the {@code serve} method. Captures the current trace context
-     * and starts a new span if tracing is enabled for the request.
-     *
-     * @param asyncServlet The {@code AsyncServlet} instance handling the request.
-     * @param request The incoming HTTP request.
-     * @param context Local variable to store the OpenTelemetry context.
-     * @param scope Local variable to store the OpenTelemetry scope.
-     * @param httpRequest Local variable to store the HTTP request.
-     */
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.This AsyncServlet asyncServlet,
@@ -102,17 +70,6 @@ public class ActiveJHttpServerConnectionInstrumentation implements TypeInstrumen
       scope = context.makeCurrent();
     }
 
-    /**
-     * Advice executed at the end of the {@code serve} method. Propagates the trace context to the
-     * response, handles exceptions, and ends the span.
-     *
-     * @param asyncServlet The {@code AsyncServlet} instance handling the request.
-     * @param responsePromise The promise representing the HTTP response.
-     * @param throwable Any exception thrown during the execution of the method.
-     * @param context Local variable storing the OpenTelemetry context.
-     * @param scope Local variable storing the OpenTelemetry scope.
-     * @param httpRequest Local variable storing the HTTP request.
-     */
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.This AsyncServlet asyncServlet,

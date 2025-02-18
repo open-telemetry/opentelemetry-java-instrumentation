@@ -16,13 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * This enum implements the {@code ExtendedTextMapGetter<HttpRequest>} interface and provides
- * methods for extracting HTTP headers from an ActiveJ {@code HttpRequest}. It is used in the
- * context of OpenTelemetry instrumentation to propagate trace context across service boundaries.
- *
- * @author Krishna Chaitanya Surapaneni
- */
 enum ActiveJHttpServerHeaders implements ExtendedTextMapGetter<HttpRequest> {
   INSTANCE;
 
