@@ -8,6 +8,13 @@
   `io.opentelemetry.instrumentation.httpclient` was deprecated in favor of the new package name
   `io.opentelemetry.instrumentation.javahttpclient`
 
+## Version 2.13.1 (2025-02-18)
+
+### 🛠️ Bug fixes
+
+- Backport: Fix double instrumentation of Java runtime metrics
+  ([#13339](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13339))
+
 ## Version 2.13.0 (2025-02-17)
 
 ### Migration notes
