@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGet
 import java.util.List;
 import javax.annotation.Nullable;
 
+@SuppressWarnings("AbbreviationAsWordInName")
 final class ActiveJHttpServerHttpAttributesGetter
     implements HttpServerAttributesGetter<HttpRequest, HttpResponse> {
 

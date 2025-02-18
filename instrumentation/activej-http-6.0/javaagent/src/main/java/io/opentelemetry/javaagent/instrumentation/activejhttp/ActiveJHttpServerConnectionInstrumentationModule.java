@@ -13,6 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
+@SuppressWarnings("AbbreviationAsWordInName")
 @AutoService(InstrumentationModule.class)
 public class ActiveJHttpServerConnectionInstrumentationModule extends InstrumentationModule {
 

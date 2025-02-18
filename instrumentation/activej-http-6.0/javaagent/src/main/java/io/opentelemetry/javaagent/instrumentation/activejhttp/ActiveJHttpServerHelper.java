@@ -12,6 +12,7 @@ import io.activej.http.HttpHeaders;
 import io.activej.http.HttpResponse;
 import java.util.Map;
 
+@SuppressWarnings("AbbreviationAsWordInName")
 public final class ActiveJHttpServerHelper {
 
   private ActiveJHttpServerHelper() {

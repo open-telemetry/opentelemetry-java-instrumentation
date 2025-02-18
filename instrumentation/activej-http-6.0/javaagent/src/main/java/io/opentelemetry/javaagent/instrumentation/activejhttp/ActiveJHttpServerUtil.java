@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
+@SuppressWarnings("AbbreviationAsWordInName")
 public final class ActiveJHttpServerUtil {
 
   private ActiveJHttpServerUtil() {

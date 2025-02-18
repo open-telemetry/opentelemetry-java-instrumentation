@@ -29,12 +29,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-/**
- * This class provides instrumentation for ActiveJ HTTP server connections by applying advice to the
- * {@code serve} method of classes that extend {@code io.activej.http.AsyncServlet}. The
- * instrumentation is designed to integrate with OpenTelemetry for distributed tracing, capturing
- * and propagating trace context through HTTP requests and responses.
- */
+@SuppressWarnings("AbbreviationAsWordInName")
 public class ActiveJHttpServerConnectionInstrumentation implements TypeInstrumentation {
 
   @Override
