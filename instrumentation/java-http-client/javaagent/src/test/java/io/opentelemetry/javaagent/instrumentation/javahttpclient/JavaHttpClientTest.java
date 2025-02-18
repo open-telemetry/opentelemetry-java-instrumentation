@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.httpclient;
+package io.opentelemetry.javaagent.instrumentation.javahttpclient;
 
-import io.opentelemetry.instrumentation.httpclient.AbstractJavaHttpClientTest;
+import io.opentelemetry.instrumentation.javahttpclient.AbstractJavaHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;

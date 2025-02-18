@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Migration notes
+
+- The `java.net.http.HttpClient` instrumentation package
+  `io.opentelemetry.instrumentation.httpclient` was deprecated in favor of the new package name
+  `io.opentelemetry.instrumentation.javahttpclient`
+
 ## Version 2.13.0 (2025-02-17)
 
 ### Migration notes

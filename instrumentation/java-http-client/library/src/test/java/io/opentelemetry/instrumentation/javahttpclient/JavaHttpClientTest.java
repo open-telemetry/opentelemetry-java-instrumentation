@@ -3,9 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.httpclient;
+package io.opentelemetry.instrumentation.javahttpclient;
 
-import io.opentelemetry.instrumentation.javahttpclient.AbstractJavaHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
@@ -15,7 +14,6 @@ import java.util.Collections;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // testing deprecated classes
 public abstract class JavaHttpClientTest extends AbstractJavaHttpClientTest {
 
   @RegisterExtension
