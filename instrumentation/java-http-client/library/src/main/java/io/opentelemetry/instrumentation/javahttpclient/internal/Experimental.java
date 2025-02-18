@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.httpclient.internal;
+package io.opentelemetry.instrumentation.javahttpclient.internal;
 
-import io.opentelemetry.instrumentation.httpclient.JavaHttpClientTelemetryBuilder;
+import io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetryBuilder;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
 
@@ -13,11 +13,7 @@ import javax.annotation.Nullable;
  * This class is internal and experimental. Its APIs are unstable and can change at any time. Its
  * APIs (or a version of them) may be promoted to the public stable API in the future, but no
  * guarantees are made.
- *
- * @deprecated Use {@link io.opentelemetry.instrumentation.javahttpclient.internal.Experimental}
- *     instead.
  */
-@Deprecated
 public final class Experimental {
 
   @Nullable
