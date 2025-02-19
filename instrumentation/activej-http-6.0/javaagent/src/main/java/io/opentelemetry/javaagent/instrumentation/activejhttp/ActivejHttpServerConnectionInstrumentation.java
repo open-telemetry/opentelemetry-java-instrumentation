@@ -68,7 +68,7 @@ public class ActivejHttpServerConnectionInstrumentation implements TypeInstrumen
     public static void methodExit(
         @Advice.This AsyncServlet asyncServlet,
         @Advice.Return(readOnly = false) Promise<HttpResponse> responsePromise,
-        @Advice.Thrown(readOnly = false) Throwable throwable,
+        @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("httpRequest") HttpRequest httpRequest) {
@@ -101,7 +101,6 @@ public class ActivejHttpServerConnectionInstrumentation implements TypeInstrumen
                 .build();
         instrumenter().end(context, httpRequest, httpResponse, throwable);
         responsePromise = Promise.of(httpResponse);
-        throwable = null;
       } else {
         HttpResponse httpResponse =
             HttpResponse.notFound404()
