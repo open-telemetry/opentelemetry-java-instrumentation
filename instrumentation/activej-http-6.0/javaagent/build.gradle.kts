@@ -12,5 +12,8 @@ muzzle {
 }
 
 dependencies {
-  library("io.activej:activej-http:6.0-rc2")
+  constraints {
+    implementation("io.activej:activej-http:6.0-rc2")
+  }
+  implementation("io.activej:activej-http")
 }
