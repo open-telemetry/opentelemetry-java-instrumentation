@@ -17,3 +17,7 @@ dependencies {
   }
   implementation("io.activej:activej-http")
 }
+
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_17)
+}
