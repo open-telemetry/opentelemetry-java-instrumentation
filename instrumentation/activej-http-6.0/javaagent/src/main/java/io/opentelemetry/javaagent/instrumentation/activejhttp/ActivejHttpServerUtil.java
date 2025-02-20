@@ -9,6 +9,7 @@ import io.activej.http.HttpError;
 import io.activej.http.HttpHeaders;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;
+import io.activej.http.HttpVersion;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -47,6 +48,30 @@ public final class ActivejHttpServerUtil {
     if (headerValue == null) {
       return Collections.emptyList();
     }
-    return Arrays.stream(headerValue.split(",")).collect(Collectors.toList());
+    return Arrays.stream(headerValue.split(",")).toList();
+  }
+
+  static String getNetworkProtocolVersion(HttpVersion version) {
+    switch (version) {
+      case HTTP_0_9:
+        return "0.9";
+      case HTTP_1_0:
+        return "1.0";
+      case HTTP_1_1:
+        return "1.1";
+      case HTTP_2_0:
+        return "2.0";
+    }
+    return "unknown";
+  }
+
+  static String getNetworkProtocolName(HttpRequest request) {
+    if (request.getVersion() == HttpVersion.HTTP_0_9
+        || request.getVersion() == HttpVersion.HTTP_1_0
+        || request.getVersion() == HttpVersion.HTTP_1_1
+        || request.getVersion() == HttpVersion.HTTP_2_0) {
+      return "http";
+    }
+    return null;
   }
 }

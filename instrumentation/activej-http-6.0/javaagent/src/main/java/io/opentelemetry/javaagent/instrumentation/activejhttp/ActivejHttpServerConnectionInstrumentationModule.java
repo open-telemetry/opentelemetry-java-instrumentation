@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.activejhttp;
 import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
@@ -23,10 +22,5 @@ public class ActivejHttpServerConnectionInstrumentationModule extends Instrument
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new ActivejHttpServerConnectionInstrumentation());
-  }
-
-  @Override
-  public void registerHelperResources(HelperResourceBuilder helperResourceBuilder) {
-    helperResourceBuilder.register(ActivejHttpServerHelper.class.getName());
   }
 }

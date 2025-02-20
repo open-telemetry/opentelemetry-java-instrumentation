@@ -44,7 +44,7 @@ final class ActivejHttpServerHttpAttributesGetter
 
   @Override
   public String getUrlPath(HttpRequest request) {
-    return UrlParser.of(request.getFullUrl()).getPath();
+    return request.getPath();
   }
 
   @Override
@@ -54,13 +54,13 @@ final class ActivejHttpServerHttpAttributesGetter
 
   @Override
   public String getNetworkProtocolName(HttpRequest request, @Nullable HttpResponse httpResponse) {
-    return UrlParser.of(request.getFullUrl()).getProtocol().name();
+    return ActivejHttpServerUtil.getNetworkProtocolName(request);
   }
 
   @Override
   public String getNetworkProtocolVersion(
       HttpRequest request, @Nullable HttpResponse httpResponse) {
-    return request.getVersion().name();
+    return ActivejHttpServerUtil.getNetworkProtocolVersion(request.getVersion());
   }
 
   @Override

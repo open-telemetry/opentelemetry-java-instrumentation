@@ -8,14 +8,12 @@ muzzle {
     module.set("activej-http")
 
     versions.set("[6.0,)")
+    assertInverse.set(true)
   }
 }
 
 dependencies {
-  constraints {
-    implementation("io.activej:activej-http:6.0-rc2")
-  }
-  implementation("io.activej:activej-http")
+  library("io.activej:activej-http:6.0-rc2")
 }
 
 otelJava {

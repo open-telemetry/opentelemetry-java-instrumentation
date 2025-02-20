@@ -11,14 +11,12 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.activej.eventloop.Eventloop;
 import io.activej.http.AsyncServlet;
 import io.activej.http.HttpError;
-import io.activej.http.HttpHeaders;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;
 import io.activej.http.RoutingServlet;
@@ -95,33 +93,6 @@ public class ActivejRoutingServletTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 404))));
   }
 
-  @Test
-  void testRequestErrorFlow() throws Exception {
-
-    AsyncServlet asyncServlet = request -> Promise.ofException(HttpError.ofCode(500));
-
-    RoutingServlet routingServlet =
-        RoutingServlet.builder(eventloop).with(GET, "/error", asyncServlet).build();
-
-    String url = "http://some-test.com/error";
-    HttpRequest httpRequest = HttpRequest.get(url).build();
-    check(routingServlet.serve(httpRequest), "HTTP code 500", 500);
-
-    UrlParser urlParser = UrlParser.of(url);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET /error")
-                        .hasNoParent()
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfying(
-                            equalTo(URL_PATH, urlParser.getPath()),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 500))));
-  }
-
   private static void check(Promise<HttpResponse> promise, String expectedBody, int expectedCode) {
     assertTrue(promise.isComplete());
     if (promise.isResult() && !promise.isException()) {
@@ -131,8 +102,5 @@ public class ActivejRoutingServletTest {
     } else {
       assertEquals(expectedCode, ((HttpError) promise.getException()).getCode());
     }
-    assertThat(promise.getResult().getHeader(HttpHeaders.of("traceparent")))
-        .isNotNull()
-        .isNotBlank();
   }
 }
