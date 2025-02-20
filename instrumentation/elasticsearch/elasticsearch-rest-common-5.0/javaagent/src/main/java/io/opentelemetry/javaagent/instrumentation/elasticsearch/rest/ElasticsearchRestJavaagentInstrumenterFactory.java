@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.elasticsearch.rest.internal.ElasticsearchRestInstrumenterFactory;
-import io.opentelemetry.instrumentation.elasticsearch.rest.internal.ElasticsearchRestRequest;
+import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchRestInstrumenterFactory;
+import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchRestRequest;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.util.Collections;

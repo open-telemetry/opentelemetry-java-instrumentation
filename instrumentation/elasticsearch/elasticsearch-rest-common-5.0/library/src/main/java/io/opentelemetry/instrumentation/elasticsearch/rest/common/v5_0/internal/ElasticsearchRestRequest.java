@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.elasticsearch.rest.internal;
+package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
 
 import com.google.auto.value.AutoValue;
 import javax.annotation.Nullable;
