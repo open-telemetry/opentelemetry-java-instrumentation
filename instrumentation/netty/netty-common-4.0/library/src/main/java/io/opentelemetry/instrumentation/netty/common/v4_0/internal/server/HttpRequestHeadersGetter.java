@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.netty.v4.common.internal.server;
+package io.opentelemetry.instrumentation.netty.common.v4_0.internal.server;
 
 import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
-import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;

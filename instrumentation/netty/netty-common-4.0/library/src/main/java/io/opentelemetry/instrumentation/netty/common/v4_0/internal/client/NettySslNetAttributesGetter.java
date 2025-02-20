@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.netty.v4.common.internal.client;
+package io.opentelemetry.instrumentation.netty.common.v4_0.internal.client;
 
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
-import io.opentelemetry.instrumentation.netty.v4.common.internal.ChannelUtil;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.ChannelUtil;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 

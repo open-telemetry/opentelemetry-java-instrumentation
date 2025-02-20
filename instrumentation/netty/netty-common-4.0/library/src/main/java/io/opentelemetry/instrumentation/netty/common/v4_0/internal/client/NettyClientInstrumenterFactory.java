@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.netty.v4.common.internal.client;
+package io.opentelemetry.instrumentation.netty.common.v4_0.internal.client;
 
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpResponse;
@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExt
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
-import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at

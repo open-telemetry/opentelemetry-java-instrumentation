@@ -9,8 +9,8 @@ import io.netty.channel.ChannelPromise;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
-import io.opentelemetry.instrumentation.netty.v4.common.internal.client.ConnectionCompleteListener;
-import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumenter;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.ConnectionCompleteListener;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyConnectionInstrumenter;
 
 /** Container used to carry state between enter and exit advices */
 public class NettyScope {

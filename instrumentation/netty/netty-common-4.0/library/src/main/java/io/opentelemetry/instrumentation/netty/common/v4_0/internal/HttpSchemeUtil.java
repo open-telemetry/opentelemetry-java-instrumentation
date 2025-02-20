@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.netty.v4.common.internal;
+package io.opentelemetry.instrumentation.netty.common.v4_0.internal;
 
 import io.netty.channel.ChannelHandler;
-import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at

@@ -35,9 +35,9 @@ for dir in $(cat out); do
   fi
 
   # some common modules don't have any base version
-  # - netty-common
   # - lettuce-common
-  if [[ ! "$module_name" =~ [0-9]$ && ! "$module_name" == "netty-common" ]]; then
+  # - netty-common
+  if [[ ! "$module_name" =~ [0-9]$ && "$module_name" != "lettuce-common" && "$module_name" != "netty-common" ]]; then
     echo "module name doesn't have a base version: $dir"
     # exit 1
   fi
@@ -45,7 +45,11 @@ for dir in $(cat out); do
   simple_module_name=$(echo "$module_name" | sed 's/-[0-9.]*$//' | sed 's/-//g')
   base_version=$(echo "$module_name" | sed 's/.*-\([0-9.]*\)$/\1/' | sed 's/\./_/')
 
-  expected_package_name="io/opentelemetry/instrumentation/$simple_module_name/v$base_version"
+  if [[ ! "$module_name" =~ [0-9]$ && "$module_name" != "lettuce-common" && "$module_name" != "netty-common" ]]; then
+    expected_package_name="io/opentelemetry/instrumentation/$simple_module_name/v$base_version"
+  else
+    expected_package_name="io/opentelemetry/instrumentation/$simple_module_name"
+  fi
 
   package_name=$(echo "$dir" | sed 's#.*/src/main/java/##')
 
