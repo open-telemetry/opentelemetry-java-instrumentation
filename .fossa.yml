@@ -693,12 +693,6 @@ targets:
       target: ':instrumentation:netty:netty-3.8:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:netty:netty-common-4.0:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:netty:netty-common-4.0:library'
-    - type: gradle
-      path: ./
       target: ':instrumentation:netty:netty-4.0:javaagent'
     - type: gradle
       path: ./
@@ -709,6 +703,12 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:netty:netty-common:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:netty:netty-common-4.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:netty:netty-common-4.0:library'
     - type: gradle
       path: ./
       target: ':instrumentation:okhttp:okhttp-2.2:javaagent'
