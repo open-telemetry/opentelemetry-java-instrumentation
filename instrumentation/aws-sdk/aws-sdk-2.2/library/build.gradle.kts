@@ -14,9 +14,10 @@ dependencies {
   compileOnly("software.amazon.awssdk:json-utils:2.17.0")
   compileOnly(project(":muzzle")) // For @NoMuzzle
 
-  // don't use library to make sure base test is run with the floor version.
-  // bedrock runtime is tested separately with newer versions.
-  compileOnly("software.amazon.awssdk:bedrockruntime:2.26.0")
+  // Don't use library to make sure base test is run with the floor version.
+  // bedrock runtime is tested separately in testBedrockRuntime.
+  // First release with Converse API
+  compileOnly("software.amazon.awssdk:bedrockruntime:2.25.63")
 
   testImplementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
 
@@ -68,8 +69,7 @@ testing {
         if (findProperty("testLatestDeps") as Boolean) {
           implementation("software.amazon.awssdk:bedrockruntime:+")
         } else {
-          // First .0 release with Converse API
-          implementation("software.amazon.awssdk:bedrockruntime:2.26.0")
+          implementation("software.amazon.awssdk:bedrockruntime:2.25.63")
         }
       }
     }

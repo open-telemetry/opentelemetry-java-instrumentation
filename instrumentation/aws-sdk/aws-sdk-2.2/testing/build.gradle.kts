@@ -11,7 +11,7 @@ dependencies {
 
   // compileOnly because we never want to pin the low version implicitly; need to add dependencies
   // explicitly in user projects, e.g. using testLatestDeps.
-  compileOnly("software.amazon.awssdk:bedrockruntime:2.26.0")
+  compileOnly("software.amazon.awssdk:bedrockruntime:2.25.63")
   compileOnly("software.amazon.awssdk:dynamodb:2.2.0")
   compileOnly("software.amazon.awssdk:ec2:2.2.0")
   compileOnly("software.amazon.awssdk:kinesis:2.2.0")
