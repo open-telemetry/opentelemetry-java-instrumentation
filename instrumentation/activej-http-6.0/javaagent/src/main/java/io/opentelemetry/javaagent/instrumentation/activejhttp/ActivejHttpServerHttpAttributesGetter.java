@@ -62,5 +62,4 @@ final class ActivejHttpServerHttpAttributesGetter
       HttpRequest request, @Nullable HttpResponse httpResponse) {
     return ActivejHttpServerUtil.getNetworkProtocolVersion(request.getVersion());
   }
-
 }
