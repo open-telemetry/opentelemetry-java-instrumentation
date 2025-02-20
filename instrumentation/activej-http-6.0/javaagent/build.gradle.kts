@@ -6,7 +6,6 @@ muzzle {
   pass {
     group.set("io.activej:activej-http")
     module.set("activej-http")
-
     versions.set("[6.0,)")
     assertInverse.set(true)
   }

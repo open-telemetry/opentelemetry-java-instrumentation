@@ -14,16 +14,13 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 enum ActivejHttpServerHeaders implements ExtendedTextMapGetter<HttpRequest> {
   INSTANCE;
 
   @Override
   public Iterable<String> keys(HttpRequest httpRequest) {
-    return httpRequest.getHeaders().stream()
-        .map(h -> h.getKey().toString())
-        .collect(Collectors.toList());
+    return httpRequest.getHeaders().stream().map(h -> h.getKey().toString()).toList();
   }
 
   @Override

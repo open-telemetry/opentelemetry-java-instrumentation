@@ -5,13 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.activejhttp;
 
-import io.activej.http.HttpError;
+import static io.activej.http.HttpError.internalServerError500;
+import static java.util.Collections.emptyList;
+
 import io.activej.http.HttpHeaders;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;
 import io.activej.http.HttpVersion;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -29,7 +30,7 @@ public final class ActivejHttpServerUtil {
   static List<String> requestHeader(HttpRequest request, String name) {
     String headerValue = request.getHeader(HttpHeaders.of(name));
     if (headerValue == null) {
-      return Collections.emptyList();
+      return emptyList();
     }
     return Arrays.stream(headerValue.split(",")).collect(Collectors.toList());
   }
@@ -37,7 +38,7 @@ public final class ActivejHttpServerUtil {
   static Integer getHttpResponseStatusCode(
       HttpRequest request, HttpResponse httpResponse, @Nullable Throwable error) {
     if (error != null && httpResponse.getCode() <= 0) {
-      return HttpError.internalServerError500().getCode();
+      return internalServerError500().getCode();
     }
     return httpResponse.getCode();
   }
@@ -46,7 +47,7 @@ public final class ActivejHttpServerUtil {
       HttpRequest request, HttpResponse httpResponse, String name) {
     String headerValue = httpResponse.getHeader(HttpHeaders.of(name));
     if (headerValue == null) {
-      return Collections.emptyList();
+      return emptyList();
     }
     return Arrays.stream(headerValue.split(",")).toList();
   }
