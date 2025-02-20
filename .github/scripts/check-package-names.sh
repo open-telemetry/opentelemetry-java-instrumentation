@@ -34,9 +34,10 @@ for dir in $(cat out); do
     continue
   fi
 
-
-
-  if [[ ! "$module_name" =~ [0-9]$ ]]; then
+  # some common modules don't have any base version
+  # - netty-common
+  # - lettuce-common
+  if [[ ! "$module_name" =~ [0-9]$ && ! "$module_name" == "netty-common" ]]; then
     echo "module name doesn't have a base version: $dir"
     # exit 1
   fi

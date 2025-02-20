@@ -693,10 +693,10 @@ targets:
       target: ':instrumentation:netty:netty-3.8:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:netty:netty-4-common:javaagent'
+      target: ':instrumentation:netty:netty-common-4.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:netty:netty-4-common:library'
+      target: ':instrumentation:netty:netty-common-4.0:library'
     - type: gradle
       path: ./
       target: ':instrumentation:netty:netty-4.0:javaagent'
