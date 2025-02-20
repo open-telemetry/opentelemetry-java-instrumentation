@@ -120,6 +120,18 @@ testing {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
       }
     }
+
+    val testBedrockRuntime by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
+        if (findProperty("testLatestDeps") as Boolean) {
+          implementation("software.amazon.awssdk:bedrockruntime:+")
+        } else {
+          // First .0 release with Converse API
+          implementation("software.amazon.awssdk:bedrockruntime:2.26.0")
+        }
+      }
+    }
   }
 }
 

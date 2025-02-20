@@ -10,7 +10,7 @@ import javax.annotation.Nullable;
 /**
  * An interface for getting RPC attributes.
  *
- * <p>Instrumentation authors will create implementations of this interface for their specific
+ * <p>Instrumentation authors will create implementations of this interface for their specific *
  * library/framework. It will be used by the {@link RpcClientAttributesExtractor} or {@link
  * RpcServerAttributesExtractor} to obtain the various RPC attributes in a type-generic way.
  */
