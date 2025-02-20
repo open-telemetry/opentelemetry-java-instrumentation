@@ -4,7 +4,7 @@
 
 ## Apache License, Version 2.0
 
-**1** **Group:** `codes.rafael.asmjdkbridge` **Name:** `asm-jdk-bridge` **Version:** `0.0.2`
+**1** **Group:** `codes.rafael.asmjdkbridge` **Name:** `asm-jdk-bridge` **Version:** `0.0.4`
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
 **2** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18`
@@ -166,11 +166,11 @@
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java-contrib](https://github.com/open-telemetry/opentelemetry-java-contrib)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**38** **Group:** `io.opentelemetry.semconv` **Name:** `opentelemetry-semconv` **Version:** `1.30.0-rc.1`
+**38** **Group:** `io.opentelemetry.semconv` **Name:** `opentelemetry-semconv` **Version:** `1.30.0`
 > - **POM Project URL**: [https://github.com/open-telemetry/semantic-conventions-java](https://github.com/open-telemetry/semantic-conventions-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**39** **Group:** `io.opentelemetry.semconv` **Name:** `opentelemetry-semconv-incubating` **Version:** `1.30.0-alpha-rc.1`
+**39** **Group:** `io.opentelemetry.semconv` **Name:** `opentelemetry-semconv-incubating` **Version:** `1.30.0-alpha`
 > - **POM Project URL**: [https://github.com/open-telemetry/semantic-conventions-java](https://github.com/open-telemetry/semantic-conventions-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
@@ -216,10 +216,10 @@
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [zipkin-2.27.1.jar/META-INF/LICENSE](zipkin-2.27.1.jar/META-INF/LICENSE)
 
-**49** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.17.0`
+**49** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.17.1`
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [byte-buddy-dep-1.17.0.jar/META-INF/LICENSE](byte-buddy-dep-1.17.0.jar/META-INF/LICENSE)
-    - [byte-buddy-dep-1.17.0.jar/META-INF/NOTICE](byte-buddy-dep-1.17.0.jar/META-INF/NOTICE)
+> - **Embedded license files**: [byte-buddy-dep-1.17.1.jar/META-INF/LICENSE](byte-buddy-dep-1.17.1.jar/META-INF/LICENSE)
+    - [byte-buddy-dep-1.17.1.jar/META-INF/NOTICE](byte-buddy-dep-1.17.1.jar/META-INF/NOTICE)
 
 **50** **Group:** `org.jetbrains` **Name:** `annotations` **Version:** `13.0`
 > - **POM Project URL**: [http://www.jetbrains.org](http://www.jetbrains.org)
