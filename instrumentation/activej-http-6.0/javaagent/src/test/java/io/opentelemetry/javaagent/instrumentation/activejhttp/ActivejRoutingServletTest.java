@@ -57,7 +57,7 @@ public class ActivejRoutingServletTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GET /success")
+                    span.hasName("GET")
                         .hasNoParent()
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfying(
@@ -84,7 +84,7 @@ public class ActivejRoutingServletTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GET /notfound")
+                    span.hasName("GET")
                         .hasNoParent()
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfying(

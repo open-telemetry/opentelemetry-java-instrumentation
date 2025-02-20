@@ -63,8 +63,4 @@ final class ActivejHttpServerHttpAttributesGetter
     return ActivejHttpServerUtil.getNetworkProtocolVersion(request.getVersion());
   }
 
-  @Override
-  public String getHttpRoute(HttpRequest request) {
-    return request.getPath();
-  }
 }
