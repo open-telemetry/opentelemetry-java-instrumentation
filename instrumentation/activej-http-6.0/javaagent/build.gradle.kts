@@ -13,6 +13,7 @@ muzzle {
 
 dependencies {
   library("io.activej:activej-http:6.0-rc2")
+  latestDepTestLibrary("io.activej:activej-http:6.0-rc2")
 }
 
 otelJava {
