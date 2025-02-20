@@ -2,11 +2,7 @@
 
 # shellcheck disable=SC2001
 
-# find instrumentation -type d -name "*-common*"
-
-# TODO javaagent modules?
-#for file in $(find instrumentation/aws-sdk -name "*.java" | grep library/src/main/java | sed 's#/[^/]*$##' | sort -u); do
-for dir in $(cat out); do
+for dir in $(find instrumentation -name "*.java" | grep library/src/main/java | sed 's#/[^/]*$##' | sort -u); do
 
   module_name=$(echo "$dir" | sed 's#.*/\([^/]*\)/library/src/main/java/.*#\1#')
 
@@ -39,7 +35,7 @@ for dir in $(cat out); do
   # - netty-common
   if [[ ! "$module_name" =~ [0-9]$ && "$module_name" != "lettuce-common" && "$module_name" != "netty-common" ]]; then
     echo "module name doesn't have a base version: $dir"
-    # exit 1
+    exit 1
   fi
 
   simple_module_name=$(echo "$module_name" | sed 's/-[0-9.]*$//' | sed 's/-//g')
@@ -59,7 +55,7 @@ for dir in $(cat out); do
 
   if [[ "$package_name_normalized" != "$expected_package_name_normalized"* ]]; then
     echo "ERROR: $dir"
-    # exit 1
+    exit 1
   fi
 
 done
