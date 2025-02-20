@@ -12,6 +12,12 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.pekko.http.javadsl.server.RouteResult;
+import org.apache.pekko.http.scaladsl.server.RequestContext;
+import scala.PartialFunction;
+import scala.Unit;
+import scala.concurrent.Future;
+import scala.util.Try;
 
 public class RouteConcatenationInstrumentation implements TypeInstrumentation {
   @Override
@@ -27,6 +33,19 @@ public class RouteConcatenationInstrumentation implements TypeInstrumentation {
         named("$anonfun$$tilde$2"), this.getClass().getName() + "$Apply2Advice");
   }
 
+  public static class OnExitFinalizer implements PartialFunction<Try<RouteResult>, Unit> {
+    @Override
+    public boolean isDefinedAt(Try<RouteResult> x) {
+      return true;
+    }
+
+    @Override
+    public Unit apply(Try<RouteResult> v1) {
+      PekkoRouteHolder.restore();
+      return null;
+    }
+  }
+
   @SuppressWarnings("unused")
   public static class ApplyAdvice {
 
@@ -39,8 +58,10 @@ public class RouteConcatenationInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit() {
-      PekkoRouteHolder.restore();
+    public static void onExit(
+        @Advice.Argument(value = 2) RequestContext ctx,
+        @Advice.Return(readOnly = false) Future<RouteResult> fut) {
+      fut = fut.andThen(new OnExitFinalizer(), ctx.executionContext());
     }
   }
 
