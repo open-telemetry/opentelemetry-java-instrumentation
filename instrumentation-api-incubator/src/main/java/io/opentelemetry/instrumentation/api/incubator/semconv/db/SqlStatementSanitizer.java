@@ -56,6 +56,11 @@ public final class SqlStatementSanitizer {
     return AutoSqlSanitizer.sanitize(statement, dialect);
   }
 
+  // visible for tests
+  static boolean isCached(String statement) {
+    return sqlToStatementInfoCache.get(CacheKey.create(statement, SqlDialect.DEFAULT)) != null;
+  }
+
   @AutoValue
   abstract static class CacheKey {
 
