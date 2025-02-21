@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.activejhttp;
 
+import static io.opentelemetry.testing.internal.armeria.internal.shaded.guava.base.Ascii.toLowerCase;
+
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;
-import io.activej.http.UrlParser;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -39,7 +40,7 @@ final class ActivejHttpServerHttpAttributesGetter
 
   @Override
   public String getUrlScheme(HttpRequest request) {
-    return UrlParser.of(request.getFullUrl()).getProtocol().name();
+    return toLowerCase(request.getProtocol().name());
   }
 
   @Override
