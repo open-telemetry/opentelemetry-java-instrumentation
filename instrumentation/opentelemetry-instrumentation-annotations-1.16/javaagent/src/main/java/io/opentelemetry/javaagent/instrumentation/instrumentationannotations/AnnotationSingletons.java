@@ -9,7 +9,6 @@ import static java.util.logging.Level.FINE;
 
 import application.io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.annotation.support.MethodSpanAttributesExtractor;
@@ -67,7 +66,6 @@ public final class AnnotationSingletons {
             INSTRUMENTATION_NAME,
             AnnotationSingletons::spanNameFromMethod)
         .addAttributesExtractor(CodeAttributesExtractor.create(MethodCodeAttributesGetter.INSTANCE))
-        .addContextCustomizer(AnnotationSingletons::inheritContextFromMethod)
         .buildInstrumenter(AnnotationSingletons::spanKindFromMethod);
   }
 
@@ -83,7 +81,6 @@ public final class AnnotationSingletons {
                 MethodRequest::method,
                 WithSpanParameterAttributeNamesExtractor.INSTANCE,
                 MethodRequest::args))
-        .addContextCustomizer(AnnotationSingletons::inheritContextFromMethodRequest)
         .buildInstrumenter(AnnotationSingletons::spanKindFromMethodRequest);
   }
 
@@ -126,27 +123,23 @@ public final class AnnotationSingletons {
     return spanName;
   }
 
-  private static Context inheritContextFromMethodRequest(
-      Context context, MethodRequest request, Attributes attributes) {
-    return inheritContextFromMethod(context, request.method(), attributes);
+  public static Context getContextForMethod(Method method) {
+    return inheritContextFromMethod(method) ? Context.current() : Context.root();
   }
 
-  private static Context inheritContextFromMethod(
-      Context context, Method method, Attributes attributes) {
+  private static boolean inheritContextFromMethod(Method method) {
     if (inheritContextMethodHandle == null) {
-      return context;
+      return true;
     }
 
     WithSpan annotation = method.getDeclaredAnnotation(WithSpan.class);
-
-    boolean inheritContext = true;
     try {
-      inheritContext = (boolean) inheritContextMethodHandle.invoke(annotation);
+      return (boolean) inheritContextMethodHandle.invoke(annotation);
     } catch (Throwable ignore) {
       // ignore
     }
 
-    return inheritContext ? context : Context.root();
+    return true;
   }
 
   private AnnotationSingletons() {}
