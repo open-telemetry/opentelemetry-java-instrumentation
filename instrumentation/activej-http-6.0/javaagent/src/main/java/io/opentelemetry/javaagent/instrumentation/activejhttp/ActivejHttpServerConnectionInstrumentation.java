@@ -71,7 +71,7 @@ public class ActivejHttpServerConnectionInstrumentation implements TypeInstrumen
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.This AsyncServlet asyncServlet,
-        @Advice.Return Promise<HttpResponse> responsePromise,
+        @Advice.Return(readOnly = false) Promise<HttpResponse> responsePromise,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
@@ -80,12 +80,11 @@ public class ActivejHttpServerConnectionInstrumentation implements TypeInstrumen
         return;
       }
       scope.close();
-      instrumenter()
-          .end(
-              context,
-              httpRequest,
-              responsePromise == null ? null : responsePromise.getResult(),
-              throwable);
+      if (throwable != null) {
+        instrumenter().end(context, httpRequest, null, throwable);
+      } else {
+        responsePromise = PromiseWrapper.wrap(responsePromise, httpRequest, context);
+      }
     }
   }
 }
