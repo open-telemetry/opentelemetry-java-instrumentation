@@ -8,11 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
+import io.vertx.pgclient.PgException;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
 public enum VertxSqlClientAttributesGetter
-    implements SqlClientAttributesGetter<VertxSqlClientRequest> {
+    implements SqlClientAttributesGetter<VertxSqlClientRequest, Void> {
   INSTANCE;
 
   @Override
@@ -43,5 +44,14 @@ public enum VertxSqlClientAttributesGetter
   @Override
   public Collection<String> getRawQueryTexts(VertxSqlClientRequest request) {
     return singleton(request.getQueryText());
+  }
+
+  @Nullable
+  @Override
+  public String getResponseStatusFromException(Throwable throwable) {
+    if (throwable instanceof PgException) {
+      return ((PgException) throwable).getCode();
+    }
+    return null;
   }
 }
