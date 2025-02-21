@@ -7,13 +7,19 @@ package io.opentelemetry.instrumentation.httpclient;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.httpclient.internal.HttpHeadersSetter;
-import io.opentelemetry.instrumentation.httpclient.internal.OpenTelemetryHttpClient;
+import io.opentelemetry.instrumentation.javahttpclient.internal.HttpHeadersSetter;
+import io.opentelemetry.instrumentation.javahttpclient.internal.OpenTelemetryHttpClient;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-/** Entrypoint for instrumenting Java HTTP Client. */
+/**
+ * Entrypoint for instrumenting Java HTTP Client.
+ *
+ * @deprecated Use {@link io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetry}
+ *     instead.
+ */
+@Deprecated
 public final class JavaHttpClientTelemetry {
 
   /**

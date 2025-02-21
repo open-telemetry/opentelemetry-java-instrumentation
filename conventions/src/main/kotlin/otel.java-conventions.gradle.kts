@@ -160,7 +160,7 @@ dependencies {
   compileOnly("com.google.code.findbugs:jsr305")
   compileOnly("com.google.errorprone:error_prone_annotations")
 
-  codenarc("org.codenarc:CodeNarc:3.5.0")
+  codenarc("org.codenarc:CodeNarc:3.6.0")
   codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.23"))
 
   modules {
@@ -439,7 +439,6 @@ dependencyCheck {
   suppressionFile = "buildscripts/dependency-check-suppressions.xml"
   failBuildOnCVSS = 7.0f // fail on high or critical CVE
   nvd.apiKey = System.getenv("NVD_API_KEY")
-  nvd.delay = 3500 // until next dependency check release (https://github.com/jeremylong/DependencyCheck/pull/6333)
 }
 
 idea {
