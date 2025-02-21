@@ -24,6 +24,7 @@ public class TaskSchedulerInstrumentation implements TypeInstrumentation {
     return namedOneOf(
         "org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler",
         "org.springframework.scheduling.concurrent.ConcurrentTaskScheduler",
+        "org.springframework.scheduling.concurrent.SimpleAsyncTaskScheduler",
         "org.springframework.scheduling.commonj.TimerManagerTaskScheduler");
   }
 
