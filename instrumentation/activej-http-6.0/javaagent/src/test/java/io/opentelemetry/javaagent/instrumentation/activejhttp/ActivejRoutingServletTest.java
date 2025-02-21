@@ -26,13 +26,12 @@ import io.activej.reactor.Reactor;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import org.junit.ClassRule;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class ActivejRoutingServletTest {
+class ActivejRoutingServletTest {
 
-  @ClassRule public static final EventloopRule eventloopRule = new EventloopRule();
+  @RegisterExtension static final EventloopExtension eventloopExtension = new EventloopExtension();
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

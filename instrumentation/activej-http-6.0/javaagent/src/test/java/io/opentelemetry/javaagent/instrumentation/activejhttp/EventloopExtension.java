@@ -9,11 +9,11 @@ import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 
 import io.activej.eventloop.Eventloop;
 import io.activej.reactor.Reactor;
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+import org.junit.jupiter.api.extension.AfterAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
-public final class EventloopRule implements TestRule {
+public class EventloopExtension implements BeforeEachCallback, AfterAllCallback {
 
   static {
     createEventloop();
@@ -24,11 +24,15 @@ public final class EventloopRule implements TestRule {
   }
 
   @Override
-  public Statement apply(Statement base, Description description) {
+  public void beforeEach(ExtensionContext context) {
     Reactor currentReactor = Reactor.getCurrentReactor();
     if (!(currentReactor instanceof Eventloop) || !currentReactor.inReactorThread()) {
       createEventloop();
     }
-    return base;
+  }
+
+  @Override
+  public void afterAll(ExtensionContext context) {
+    //
   }
 }

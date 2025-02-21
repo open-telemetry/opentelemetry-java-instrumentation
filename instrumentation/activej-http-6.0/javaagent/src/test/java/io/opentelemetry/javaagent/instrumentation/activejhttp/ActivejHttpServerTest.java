@@ -9,6 +9,8 @@ import static io.activej.http.HttpMethod.GET;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ID_PARAMETER_NAME;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
@@ -31,12 +33,11 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.testing.internal.armeria.internal.shaded.guava.collect.ImmutableSet;
-import org.junit.ClassRule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class ActivejHttpServerTest extends AbstractHttpServerTest<HttpServer> {
 
-  @ClassRule public static final EventloopRule eventloopRule = new EventloopRule();
+  @RegisterExtension static final EventloopExtension eventloopExtension = new EventloopExtension();
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
@@ -58,6 +59,30 @@ public class ActivejHttpServerTest extends AbstractHttpServerTest<HttpServer> {
           controller(CAPTURE_HEADERS, () -> httpResponse);
           return httpResponse.toPromise();
         };
+    AsyncServlet indexChildAsyncServlet =
+        request -> {
+          HttpResponse httpResponse =
+              HttpResponse.builder()
+                  .withBody(INDEXED_CHILD.getBody())
+                  .withCode(INDEXED_CHILD.getStatus())
+                  .build();
+          INDEXED_CHILD.collectSpanAttributes(
+              id ->
+                  id.equals(ID_PARAMETER_NAME)
+                      ? request.getQueryParameter(ID_PARAMETER_NAME)
+                      : null);
+          controller(
+              INDEXED_CHILD,
+              () -> {
+                INDEXED_CHILD.collectSpanAttributes(
+                    id ->
+                        id.equals(ID_PARAMETER_NAME)
+                            ? request.getQueryParameter(ID_PARAMETER_NAME)
+                            : null);
+                return httpResponse;
+              });
+          return httpResponse.toPromise();
+        };
 
     RoutingServlet routingServlet =
         RoutingServlet.builder(eventloop)
@@ -68,6 +93,7 @@ public class ActivejHttpServerTest extends AbstractHttpServerTest<HttpServer> {
             .with(GET, EXCEPTION.getPath(), request -> prepareResponse(EXCEPTION))
             .with(GET, REDIRECT.getPath(), request -> prepareResponse(REDIRECT))
             .with(GET, CAPTURE_HEADERS.getPath(), captureHttpHeadersAsyncServlet)
+            .with(GET, INDEXED_CHILD.getPath(), indexChildAsyncServlet)
             .build();
 
     HttpServer server = HttpServer.builder(eventloop, routingServlet).withListenPort(port).build();
@@ -82,11 +108,6 @@ public class ActivejHttpServerTest extends AbstractHttpServerTest<HttpServer> {
   protected void stopServer(HttpServer server) throws Exception {
     server.closeFuture().get();
     thread.join();
-  }
-
-  @Override
-  protected void assertHighConcurrency(int count) {
-    //
   }
 
   @Override
