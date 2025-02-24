@@ -170,10 +170,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       return url;
     }
 
-    StringBuilder redactedParameters = new StringBuilder();
-    boolean inRedactedParamValue =
-        false; // To be able to skip the characters of the parameters to redact
-    boolean paramWithValue = false;
+    StringBuilder urAfterQuestionMark = new StringBuilder();
 
     // To build a parameter name until we reach the '=' character
     // If the parameter name is a one to redact, we will redact the value
@@ -181,40 +178,35 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
 
     for (int i = questionMarkIndex + 1; i < url.length(); i++) {
       char currentChar = url.charAt(i);
+
       if (currentChar == '=') {
-        paramWithValue = true;
-        redactedParameters.append(currentParamName);
-        redactedParameters.append('=');
+        urAfterQuestionMark.append('=');
         if (PARAMS_TO_REDACT.contains(currentParamName.toString())) {
-          redactedParameters.append("REDACTED");
-          inRedactedParamValue = true;
+          urAfterQuestionMark.append("REDACTED");
+          // skip over parameter value
+          for (; i + 1 < url.length(); i++) {
+            char c = url.charAt(i + 1);
+            if (c == '&' || c == '#') {
+              break;
+            }
+          }
         }
       } else if (currentChar == '&') { // New parameter delimiter
-        if (!paramWithValue) { // Example: https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&a&
-          redactedParameters.append(currentParamName);
-        }
-        redactedParameters.append('&');
-        paramWithValue = false;
-        inRedactedParamValue = false;
-        currentParamName.setLength(
-            0); // To avoid creating a new StringBuilder for each new parameter
+        urAfterQuestionMark.append(currentChar);
+        // To avoid creating a new StringBuilder for each new parameter
+        currentParamName.setLength(0);
       } else if (currentChar == '#') { // Reference delimiter
-        if (!paramWithValue) { // Example:
-          // https://service.com?&&AWSAccessKeyId=AKIAIOSFODNN7&a&b#fragment
-          redactedParameters.append(currentParamName);
-        }
-        redactedParameters.append(url.substring(i));
+        urAfterQuestionMark.append(url.substring(i));
         break;
-      } else if (!paramWithValue) {
-        currentParamName.append(currentChar);
-        if (i == url.length() - 1) { // Example: https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&a
-          redactedParameters.append(currentParamName);
-        }
-      } else if (!inRedactedParamValue) {
-        redactedParameters.append(currentChar);
+      } else {
+        currentParamName.append(
+            currentChar); // param values can be appended to currentParamName here but it's not an
+        // issue
+        urAfterQuestionMark.append(currentChar);
       }
     }
-    return url.substring(0, questionMarkIndex) + "?" + redactedParameters;
+
+    return url.substring(0, questionMarkIndex) + "?" + urAfterQuestionMark;
   }
 
   private static boolean containsParamToRedact(String urlpart) {
