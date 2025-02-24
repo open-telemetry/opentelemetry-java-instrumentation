@@ -32,7 +32,7 @@ jobs:
         run: echo "TS=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
 
       - name: Push to GitHub packages
-        uses: docker/build-push-action@ca877d9245402d1537745e0e356eab47c3520991 # v6.13.0
+        uses: docker/build-push-action@0adf9959216b96bec444f325f1e493d4aa344497 # v6.14.0
         with:
           push: true
           file: benchmark-overhead/Dockerfile.petclinic
