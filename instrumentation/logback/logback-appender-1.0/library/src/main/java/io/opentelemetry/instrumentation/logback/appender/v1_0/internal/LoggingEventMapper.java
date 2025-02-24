@@ -70,14 +70,6 @@ public final class LoggingEventMapper {
   private static final AttributeKey<List<String>> LOG_BODY_PARAMETERS =
       AttributeKey.stringArrayKey("log.body.parameters");
 
-  private static final ClassValue<FieldReader> valueField =
-      new ClassValue<FieldReader>() {
-        @Override
-        protected FieldReader computeValue(Class<?> type) {
-          return createFieldReader(type);
-        }
-      };
-
   private final boolean captureExperimentalAttributes;
   private final List<String> captureMdcAttributes;
   private final boolean captureAllMdcAttributes;
@@ -496,7 +488,7 @@ public final class LoggingEventMapper {
 
   private static void captureLogstashMarkerAttributes(
       AttributesBuilder attributes, Object logstashMarker) {
-    FieldReader fieldReader = valueField.get(logstashMarker.getClass());
+    FieldReader fieldReader = LogstashFieldReaderHolder.valueField.get(logstashMarker.getClass());
     if (fieldReader != null) {
       fieldReader.read(attributes, logstashMarker);
     }
@@ -591,6 +583,8 @@ public final class LoggingEventMapper {
       Class.forName("net.logstash.logback.marker.LogstashMarker");
       Class.forName("net.logstash.logback.marker.SingleFieldAppendingMarker");
       Class.forName("net.logstash.logback.marker.MapEntriesAppendingMarker");
+      // missing in some android versions, used for capturing logstash attributes
+      Class.forName("java.lang.ClassValue");
     } catch (ClassNotFoundException e) {
       return false;
     }
@@ -600,6 +594,17 @@ public final class LoggingEventMapper {
 
   private interface FieldReader {
     void read(AttributesBuilder attributes, Object logstashMarker);
+  }
+
+  private static class LogstashFieldReaderHolder {
+    // keeping this field in a separate class because ClassValue is missing in some android versions
+    static final ClassValue<FieldReader> valueField =
+        new ClassValue<FieldReader>() {
+          @Override
+          protected FieldReader computeValue(Class<?> type) {
+            return createFieldReader(type);
+          }
+        };
   }
 
   /**

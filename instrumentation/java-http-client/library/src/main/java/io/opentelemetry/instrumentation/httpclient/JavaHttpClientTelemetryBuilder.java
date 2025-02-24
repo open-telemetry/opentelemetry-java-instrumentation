@@ -12,13 +12,18 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.httpclient.internal.Experimental;
-import io.opentelemetry.instrumentation.httpclient.internal.HttpHeadersSetter;
-import io.opentelemetry.instrumentation.httpclient.internal.JavaHttpClientInstrumenterBuilderFactory;
+import io.opentelemetry.instrumentation.javahttpclient.internal.HttpHeadersSetter;
+import io.opentelemetry.instrumentation.javahttpclient.internal.JavaHttpClientInstrumenterBuilderFactory;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Collection;
 import java.util.function.Function;
 
+/**
+ * @deprecated Use {@link
+ *     io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetryBuilder} instead.
+ */
+@Deprecated
 public final class JavaHttpClientTelemetryBuilder {
 
   private final DefaultHttpClientInstrumenterBuilder<HttpRequest, HttpResponse<?>> builder;

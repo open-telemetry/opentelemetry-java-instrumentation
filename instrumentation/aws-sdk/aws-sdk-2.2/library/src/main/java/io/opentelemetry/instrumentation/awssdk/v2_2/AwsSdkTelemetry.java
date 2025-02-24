@@ -54,6 +54,7 @@ public class AwsSdkTelemetry {
   private final Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter;
   private final Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> producerInstrumenter;
+  private final Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter;
   private final boolean captureExperimentalSpanAttributes;
   @Nullable private final TextMapPropagator messagingPropagator;
   private final boolean useXrayPropagator;
@@ -84,6 +85,7 @@ public class AwsSdkTelemetry {
     this.consumerReceiveInstrumenter = instrumenterFactory.consumerReceiveInstrumenter();
     this.consumerProcessInstrumenter = instrumenterFactory.consumerProcessInstrumenter();
     this.producerInstrumenter = instrumenterFactory.producerInstrumenter();
+    this.dynamoDbInstrumenter = instrumenterFactory.dynamoDbInstrumenter();
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.recordIndividualHttpError = recordIndividualHttpError;
   }
@@ -98,6 +100,7 @@ public class AwsSdkTelemetry {
         consumerReceiveInstrumenter,
         consumerProcessInstrumenter,
         producerInstrumenter,
+        dynamoDbInstrumenter,
         captureExperimentalSpanAttributes,
         messagingPropagator,
         useXrayPropagator,

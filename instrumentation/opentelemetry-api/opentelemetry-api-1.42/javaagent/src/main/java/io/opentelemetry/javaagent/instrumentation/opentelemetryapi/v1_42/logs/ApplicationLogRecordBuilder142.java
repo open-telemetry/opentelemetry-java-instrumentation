@@ -13,12 +13,13 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-class ApplicationLogRecordBuilder142 extends ApplicationLogRecordBuilder
+public class ApplicationLogRecordBuilder142 extends ApplicationLogRecordBuilder
     implements LogRecordBuilder {
 
   private final io.opentelemetry.api.logs.LogRecordBuilder agentLogRecordBuilder;
 
-  ApplicationLogRecordBuilder142(io.opentelemetry.api.logs.LogRecordBuilder agentLogRecordBuilder) {
+  public ApplicationLogRecordBuilder142(
+      io.opentelemetry.api.logs.LogRecordBuilder agentLogRecordBuilder) {
     super(agentLogRecordBuilder);
     this.agentLogRecordBuilder = agentLogRecordBuilder;
   }

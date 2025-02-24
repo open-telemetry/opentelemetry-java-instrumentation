@@ -143,7 +143,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.117.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.118.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -160,7 +160,7 @@ dependencies {
   compileOnly("com.google.code.findbugs:jsr305")
   compileOnly("com.google.errorprone:error_prone_annotations")
 
-  codenarc("org.codenarc:CodeNarc:3.5.0")
+  codenarc("org.codenarc:CodeNarc:3.6.0")
   codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.23"))
 
   modules {
@@ -430,7 +430,7 @@ codenarc {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "10.21.2"
+  toolVersion = "10.21.3"
   maxWarnings = 0
 }
 
@@ -439,7 +439,6 @@ dependencyCheck {
   suppressionFile = "buildscripts/dependency-check-suppressions.xml"
   failBuildOnCVSS = 7.0f // fail on high or critical CVE
   nvd.apiKey = System.getenv("NVD_API_KEY")
-  nvd.delay = 3500 // until next dependency check release (https://github.com/jeremylong/DependencyCheck/pull/6333)
 }
 
 idea {

@@ -60,16 +60,22 @@ jobs:
           date=$(date "+%Y-%m-%d")
           sed -Ei "s/^## Unreleased$/## Version $VERSION ($date)/" CHANGELOG.md
 
-      - name: Use CLA approved github bot
-        run: .github/scripts/use-cla-approved-github-bot.sh
+      - name: Use CLA approved bot
+        run: .github/scripts/use-cla-approved-bot.sh
+
+      - uses: actions/create-github-app-token@0d564482f06ca65fa9e77e2510873638c82206f2 # v1.11.5
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
 
       - name: Create pull request against the release branch
         env:
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GH_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           message="Prepare release $VERSION"
-          branch="opentelemetrybot/prepare-release-${VERSION}"
+          branch="otelbot/prepare-release-${VERSION}"
 
           git checkout -b $branch
           git commit -a -m "$message"
@@ -111,17 +117,23 @@ jobs:
           date=$(date "+%Y-%m-%d")
           sed -Ei "s/^## Unreleased$/## Unreleased\n\n## Version $VERSION ($date)/" CHANGELOG.md
 
-      - name: Use CLA approved github bot
-        run: .github/scripts/use-cla-approved-github-bot.sh
+      - name: Use CLA approved bot
+        run: .github/scripts/use-cla-approved-bot.sh
+
+      - uses: actions/create-github-app-token@0d564482f06ca65fa9e77e2510873638c82206f2 # v1.11.5
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
 
       - name: Create pull request against main
         env:
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GH_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           message="Update version to $NEXT_VERSION"
           body="Update version to \`$NEXT_VERSION\`."
-          branch="opentelemetrybot/update-version-to-${NEXT_VERSION}"
+          branch="otelbot/update-version-to-${NEXT_VERSION}"
 
           git checkout -b $branch
           git commit -a -m "$message"
