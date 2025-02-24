@@ -379,7 +379,6 @@ class RuleParserTest {
   @Test
   void testStateMetricConf() throws Exception {
     JmxConfig config = parseConf(CONF9);
-    assertThat(config).isNotNull();
 
     List<JmxRule> rules = config.getRules();
     assertThat(rules).hasSize(1);

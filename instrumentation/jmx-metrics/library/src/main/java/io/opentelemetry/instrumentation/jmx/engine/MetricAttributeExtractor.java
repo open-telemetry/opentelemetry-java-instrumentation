@@ -35,7 +35,12 @@ public interface MetricAttributeExtractor {
     if (parameterKey.isEmpty()) {
       throw new IllegalArgumentException("Empty parameter name");
     }
-    return (dummy, objectName) -> objectName.getKeyProperty(parameterKey);
+    return (dummy, objectName) -> {
+      if (objectName == null) {
+        throw new IllegalArgumentException("missing object name");
+      }
+      return objectName.getKeyProperty(parameterKey);
+    };
   }
 
   static MetricAttributeExtractor fromBeanAttribute(String attributeName) {
