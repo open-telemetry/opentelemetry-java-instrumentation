@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.engine;
 
+import java.util.Locale;
 import javax.annotation.Nullable;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
@@ -45,5 +46,21 @@ public interface MetricAttributeExtractor {
 
   static MetricAttributeExtractor fromBeanAttribute(String attributeName) {
     return BeanAttributeExtractor.fromName(attributeName);
+  }
+
+  /**
+   * Provides an extractor that will transform provided string value in lower-case
+   *
+   * @param extractor extractor to wrap
+   * @return lower-case extractor
+   */
+  static MetricAttributeExtractor toLowerCase(MetricAttributeExtractor extractor) {
+    return (a, b) -> {
+      String value = extractor.extractValue(a, b);
+      if (value != null) {
+        value = value.toLowerCase(Locale.ROOT);
+      }
+      return value;
+    };
   }
 }
