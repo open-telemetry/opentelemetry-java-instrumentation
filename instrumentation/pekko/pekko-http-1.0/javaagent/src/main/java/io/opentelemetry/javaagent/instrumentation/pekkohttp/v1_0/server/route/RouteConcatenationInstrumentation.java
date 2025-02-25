@@ -44,8 +44,13 @@ public class RouteConcatenationInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Argument(value = 2) RequestContext ctx,
-        @Advice.Return(readOnly = false) Future<RouteResult> fut) {
-      fut = fut.andThen(new RestoreOnExit(), ctx.executionContext());
+        @Advice.Return(readOnly = false) Future<RouteResult> future,
+        @Advice.Thrown Throwable throwable) {
+      if (throwable != null) {
+        PekkoRouteHolder.restore();
+      } else {
+        future = future.andThen(new RestoreOnExit(), ctx.executionContext());
+      }
     }
   }
 
