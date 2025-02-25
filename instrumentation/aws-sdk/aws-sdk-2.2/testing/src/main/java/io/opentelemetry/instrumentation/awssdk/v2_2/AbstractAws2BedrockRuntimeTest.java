@@ -17,14 +17,15 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_SYSTEM;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_USAGE_INPUT_TOKENS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_USAGE_OUTPUT_TOKENS;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.awssdk.v2_2.recording.RecordingExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes;
 import java.net.URI;
-import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -90,6 +91,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 trace.hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("chat amazon.titan-text-lite-v1")
+                            .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(
                                     GEN_AI_SYSTEM,
@@ -102,8 +104,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 8),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 14),
-                                equalTo(
-                                    GEN_AI_RESPONSE_FINISH_REASONS, Arrays.asList("end_turn")))));
+                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
   }
 
   @Test
@@ -140,6 +141,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                 trace.hasSpansSatisfyingExactly(
                     span ->
                         span.hasName("chat amazon.titan-text-lite-v1")
+                            .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(
                                     GEN_AI_SYSTEM,
@@ -155,10 +157,9 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                     GEN_AI_REQUEST_TEMPERATURE,
                                     temp -> temp.isCloseTo(0.8, within(0.0001))),
                                 equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
-                                equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, Arrays.asList("|")),
+                                equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, asList("|")),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 8),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 10),
-                                equalTo(
-                                    GEN_AI_RESPONSE_FINISH_REASONS, Arrays.asList("max_tokens")))));
+                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("max_tokens")))));
   }
 }

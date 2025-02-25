@@ -121,8 +121,7 @@ enum AwsSdkRequest {
       request(
           "aws.dynamodb.provisioned_throughput.write_capacity_units",
           "ProvisionedThroughput.WriteCapacityUnits")),
-  ConverseRequest(BEDROCK_RUNTIME, "ConverseRequest", request("gen_ai.request.model", "modelId")),
-  ;
+  ConverseRequest(BEDROCK_RUNTIME, "ConverseRequest", request("gen_ai.request.model", "modelId"));
 
   private final AwsSdkRequestType type;
   private final String requestClass;
