@@ -1,6 +1,6 @@
 # JVM Metrics
 
-Here is the list of metrics based on MBeans exposed by the JVM and that are defined in [`jvm.yaml`](./resources/jmx/rules/jvm.yaml).
+Here is the list of metrics based on MBeans exposed by the JVM and that are defined in [`jvm.yaml`](./src/main/resources/jmx/rules/jvm.yaml).
 
 Those metrics are defined in the [JVM runtime metrics semantic conventions](https://opentelemetry.io/docs/specs/semconv/runtime/jvm-metrics/).
 
