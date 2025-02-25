@@ -26,7 +26,7 @@ Those metrics are defined in the [JVM runtime metrics semantic conventions](http
 ## Limitations and unsupported metrics
 
 There are a few limitations to the JVM metrics that are captured through the JMX interface with declarative YAML.
-Using the [instrumentation/runtime-telemetry](./instrumentation/runtime-telemetry) modules with instrumentation allow to capture metrics without those limitations. 
+Using the [instrumentation/runtime-telemetry](./instrumentation/runtime-telemetry) modules with instrumentation allow to capture metrics without those limitations.
 
 [^1]: `jvm.memory.type` attribute is not supported yet due to [#13361](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13361)
 [^2]: `jvm.thread.daemon` and `jvm.thread.state` attributes are not supported.
