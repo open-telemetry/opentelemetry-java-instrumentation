@@ -170,7 +170,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       return url;
     }
 
-    StringBuilder urAfterQuestionMark = new StringBuilder();
+    StringBuilder urlAfterQuestionMark = new StringBuilder();
 
     // To build a parameter name until we reach the '=' character
     // If the parameter name is a one to redact, we will redact the value
@@ -180,9 +180,9 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
       char currentChar = url.charAt(i);
 
       if (currentChar == '=') {
-        urAfterQuestionMark.append('=');
+        urlAfterQuestionMark.append('=');
         if (PARAMS_TO_REDACT.contains(currentParamName.toString())) {
-          urAfterQuestionMark.append("REDACTED");
+          urlAfterQuestionMark.append("REDACTED");
           // skip over parameter value
           for (; i + 1 < url.length(); i++) {
             char c = url.charAt(i + 1);
@@ -192,21 +192,21 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
           }
         }
       } else if (currentChar == '&') { // New parameter delimiter
-        urAfterQuestionMark.append(currentChar);
+        urlAfterQuestionMark.append(currentChar);
         // To avoid creating a new StringBuilder for each new parameter
         currentParamName.setLength(0);
       } else if (currentChar == '#') { // Reference delimiter
-        urAfterQuestionMark.append(url.substring(i));
+        urlAfterQuestionMark.append(url.substring(i));
         break;
       } else {
         currentParamName.append(
             currentChar); // param values can be appended to currentParamName here but it's not an
         // issue
-        urAfterQuestionMark.append(currentChar);
+        urlAfterQuestionMark.append(currentChar);
       }
     }
 
-    return url.substring(0, questionMarkIndex) + "?" + urAfterQuestionMark;
+    return url.substring(0, questionMarkIndex) + "?" + urlAfterQuestionMark;
   }
 
   private static boolean containsParamToRedact(String urlpart) {
