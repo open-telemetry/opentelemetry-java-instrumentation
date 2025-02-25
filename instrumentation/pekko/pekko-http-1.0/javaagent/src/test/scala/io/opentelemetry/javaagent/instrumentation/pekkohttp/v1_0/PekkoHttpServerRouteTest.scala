@@ -96,7 +96,7 @@ class PekkoHttpServerRouteTest {
       concat(makeRoute("test" / "3"), makeRoute("test" / "4"))
     )
 
-    test(routes, "/test/4", "GET")
+    test(routes, "/test/4", "GET /test/4")
   }
 
   def test(route: Route, path: String, spanName: String): Unit = {
