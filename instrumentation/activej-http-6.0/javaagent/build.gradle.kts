@@ -4,7 +4,7 @@ plugins {
 
 muzzle {
   pass {
-    group.set("io.activej:activej-http")
+    group.set("io.activej")
     module.set("activej-http")
     versions.set("[6.0,)")
     assertInverse.set(true)
