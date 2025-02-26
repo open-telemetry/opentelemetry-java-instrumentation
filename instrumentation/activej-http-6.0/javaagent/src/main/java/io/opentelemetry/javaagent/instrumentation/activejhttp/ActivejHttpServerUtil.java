@@ -19,13 +19,7 @@ import javax.annotation.Nullable;
 
 public final class ActivejHttpServerUtil {
 
-  private ActivejHttpServerUtil() {
-    throw new UnsupportedOperationException();
-  }
-
-  static String getHttpRequestMethod(HttpRequest request) {
-    return request.getMethod().name();
-  }
+  private ActivejHttpServerUtil() {}
 
   static List<String> requestHeader(HttpRequest request, String name) {
     String headerValue = request.getHeader(HttpHeaders.of(name));

@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.activejhttp;
 
-import static io.opentelemetry.testing.internal.armeria.internal.shaded.guava.base.Ascii.toLowerCase;
-
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
@@ -18,7 +16,7 @@ final class ActivejHttpServerHttpAttributesGetter
 
   @Override
   public String getHttpRequestMethod(HttpRequest request) {
-    return ActivejHttpServerUtil.getHttpRequestMethod(request);
+    return request.getMethod().name();
   }
 
   @Override
@@ -40,7 +38,7 @@ final class ActivejHttpServerHttpAttributesGetter
 
   @Override
   public String getUrlScheme(HttpRequest request) {
-    return toLowerCase(request.getProtocol().name());
+    return request.getProtocol().lowercase();
   }
 
   @Override

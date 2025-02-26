@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.activejhttp;
 
+import static io.activej.common.exception.FatalErrorHandlers.rethrow;
 import static io.activej.http.HttpMethod.GET;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -25,7 +26,6 @@ import io.activej.http.HttpResponse;
 import io.activej.http.HttpServer;
 import io.activej.http.RoutingServlet;
 import io.activej.promise.Promise;
-import io.activej.reactor.Reactor;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
@@ -37,12 +37,11 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ActivejHttpServerTest extends AbstractHttpServerTest<HttpServer> {
 
-  @RegisterExtension static final EventloopExtension eventloopExtension = new EventloopExtension();
-
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
-  private static final Eventloop eventloop = Reactor.getCurrentReactor();
+  private static final Eventloop eventloop =
+      Eventloop.builder().withCurrentThread().withFatalErrorHandler(rethrow()).build();
   private Thread thread;
 
   @Override

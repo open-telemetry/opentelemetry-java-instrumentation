@@ -33,10 +33,11 @@ enum ActivejHttpServerHeaders implements ExtendedTextMapGetter<HttpRequest> {
 
   @Override
   public Iterator<String> getAll(HttpRequest carrier, String key) {
+    HttpHeader httpHeader = HttpHeaders.of(key);
     List<String> values = new ArrayList<>();
     if (carrier != null) {
       for (Map.Entry<HttpHeader, HttpHeaderValue> entry : carrier.getHeaders()) {
-        if (entry.getKey().toString().equalsIgnoreCase(key)) {
+        if (httpHeader.equals(entry.getKey())) {
           values.add(entry.getValue().toString());
         }
       }
