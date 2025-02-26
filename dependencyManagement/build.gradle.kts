@@ -43,7 +43,7 @@ val byteBuddyVersion = "1.17.1"
 val asmVersion = "9.7.1"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
-val slf4jVersion = "2.0.16"
+val slf4jVersion = "2.0.17"
 val semConvVersion = "1.30.0"
 val semConvAlphaVersion =  semConvVersion.replaceFirst("(-rc.*)?$".toRegex(), "-alpha$1")
 
@@ -81,7 +81,7 @@ val CORE_DEPENDENCIES = listOf(
 // There are dependencies included here that appear to have no usages, but are maintained at
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
-  "org.junit.jupiter:junit-jupiter-api:5.11.4",
+  "org.junit.jupiter:junit-jupiter-api:5.12.0",
   "org.spockframework:spock-core:2.4-M5-groovy-4.0",
   "org.spockframework:spock-junit4:2.4-M5-groovy-4.0",
 

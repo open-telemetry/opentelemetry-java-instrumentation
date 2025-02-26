@@ -31,8 +31,10 @@ import org.junit.jupiter.api.{AfterAll, Test, TestInstance}
 
 import java.net.{URI, URISyntaxException}
 import java.util.function.Consumer
-import scala.concurrent.Await
+import scala.concurrent.{Await, ExecutionContext, Future}
 import scala.concurrent.duration.DurationInt
+import sttp.tapir._
+import sttp.tapir.server.pekkohttp.PekkoHttpServerInterpreter
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PekkoHttpServerRouteTest {
@@ -75,6 +77,26 @@ class PekkoHttpServerRouteTest {
     )
 
     test(route, "/test/1", "GET /test/*")
+  }
+
+  @Test def testTapirRoutes(): Unit = {
+    val interpreter = PekkoHttpServerInterpreter()(system.dispatcher)
+    def makeRoute(input: EndpointInput[Unit]) = {
+      interpreter.toRoute(
+        endpoint.get
+          .in(input)
+          .errorOut(stringBody)
+          .out(stringBody)
+          .serverLogicPure[Future](_ => Right("ok"))
+      )
+    }
+
+    val routes = concat(
+      concat(makeRoute("test" / "1"), makeRoute("test" / "2")),
+      concat(makeRoute("test" / "3"), makeRoute("test" / "4"))
+    )
+
+    test(routes, "/test/4", "GET")
   }
 
   def test(route: Route, path: String, spanName: String): Unit = {
