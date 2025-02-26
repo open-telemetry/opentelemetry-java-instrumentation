@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### 🛠️ Bug fixes
+
+- Backport: Fix Spring boot starter dependency resolution failure with Gradle and Java 11
+  ([#13402](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13402))
+
 ## Version 2.13.1 (2025-02-18)
 
 ### 🛠️ Bug fixes
