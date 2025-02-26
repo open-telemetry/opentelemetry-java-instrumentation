@@ -9,7 +9,9 @@ import static io.activej.http.HttpMethod.GET;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -59,7 +61,9 @@ class ActivejRoutingServletTest {
                     span.hasName("GET")
                         .hasNoParent()
                         .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(URL_SCHEME, "http"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(URL_PATH, urlParser.getPath()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200))));
@@ -86,7 +90,9 @@ class ActivejRoutingServletTest {
                     span.hasName("GET")
                         .hasNoParent()
                         .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(URL_SCHEME, "http"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(URL_PATH, urlParser.getPath()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 404))));

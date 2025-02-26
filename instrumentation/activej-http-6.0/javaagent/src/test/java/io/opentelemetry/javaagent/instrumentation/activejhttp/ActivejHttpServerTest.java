@@ -35,7 +35,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.testing.internal.armeria.internal.shaded.guava.collect.ImmutableSet;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class ActivejHttpServerTest extends AbstractHttpServerTest<HttpServer> {
+class ActivejHttpServerTest extends AbstractHttpServerTest<HttpServer> {
 
   @RegisterExtension static final EventloopExtension eventloopExtension = new EventloopExtension();
 
