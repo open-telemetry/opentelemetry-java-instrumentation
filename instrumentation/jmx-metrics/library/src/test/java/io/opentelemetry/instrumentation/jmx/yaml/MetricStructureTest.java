@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jmx.yaml;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -16,6 +17,7 @@ import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class MetricStructureTest {
 
@@ -69,5 +71,25 @@ public class MetricStructureTest {
     MBeanServerConnection mockConnection = mock(MBeanServerConnection.class);
 
     assertThat(ma.acquireAttributeValue(mockConnection, objectName)).isEqualTo(expectedValue);
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "missing(name)", // non-existing target
+        "param()", // missing parameter
+        "param(name)a", // something after parenthesis
+        "lowercase()", // misng target in modifier
+        "lowercase(param(name)", // missing parenthesis for modifier
+        "lowercase(missing(name))", // non-existing target within modifier
+        "lowercase(param())", // missing parameter in modifier
+        "lowercase(param))", // missing parenthesis within modifier
+      })
+  void invalidTargetSyntax(String target) {
+    assertThatThrownBy(() -> MetricStructure.buildMetricAttribute("metric_attribute", target))
+        .isInstanceOf(IllegalArgumentException.class)
+        .describedAs(
+            "exception should be thrown with original expression to help end-user understand the syntax error")
+        .hasMessageContaining(target);
   }
 }
