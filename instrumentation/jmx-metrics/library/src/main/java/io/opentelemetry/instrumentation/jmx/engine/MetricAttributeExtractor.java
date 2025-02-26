@@ -38,7 +38,7 @@ public interface MetricAttributeExtractor {
     }
     return (dummy, objectName) -> {
       if (objectName == null) {
-        throw new IllegalArgumentException("missing object name");
+        throw new IllegalArgumentException("Missing object name");
       }
       return objectName.getKeyProperty(parameterKey);
     };
@@ -55,8 +55,8 @@ public interface MetricAttributeExtractor {
    * @return lower-case extractor
    */
   static MetricAttributeExtractor toLowerCase(MetricAttributeExtractor extractor) {
-    return (a, b) -> {
-      String value = extractor.extractValue(a, b);
+    return (connection, objectName) -> {
+      String value = extractor.extractValue(connection, objectName);
       if (value != null) {
         value = value.toLowerCase(Locale.ROOT);
       }
