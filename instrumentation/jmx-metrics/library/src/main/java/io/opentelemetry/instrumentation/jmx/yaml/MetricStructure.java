@@ -205,15 +205,15 @@ abstract class MetricStructure {
     if (!expression.startsWith(function)) {
       return null;
     }
-    String expr = expression.substring(function.length());
+    String expr = expression.substring(function.length()).trim();
     if (expr.charAt(0) != '(' || expr.charAt(expr.length() - 1) != ')') {
       throw new IllegalArgumentException(errorMsg);
     }
-    expr = expr.substring(1, expr.length() - 1);
+    expr = expr.substring(1, expr.length() - 1).trim();
     if (expr.isEmpty()) {
       throw new IllegalArgumentException(errorMsg);
     }
-    return expr;
+    return expr.trim();
   }
 
   private MetricAttribute buildStateMetricAttribute(String key, Map<?, ?> stateMap) {
