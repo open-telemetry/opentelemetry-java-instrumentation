@@ -31,11 +31,14 @@ dependencies {
   library("org.apache.pekko:pekko-http_2.12:1.0.0")
   library("org.apache.pekko:pekko-stream_2.12:1.0.1")
 
+  testImplementation("com.softwaremill.sttp.tapir:tapir-pekko-http-server_2.12:1.7.0")
+
   testInstrumentation(project(":instrumentation:pekko:pekko-actor-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:executors:javaagent"))
 
-  latestDepTestLibrary("org.apache.pekko:pekko-http_2.13:+")
-  latestDepTestLibrary("org.apache.pekko:pekko-stream_2.13:+")
+  latestDepTestLibrary("org.apache.pekko:pekko-http_2.13:latest.release")
+  latestDepTestLibrary("org.apache.pekko:pekko-stream_2.13:latest.release")
+  latestDepTestLibrary("com.softwaremill.sttp.tapir:tapir-pekko-http-server_2.13:latest.release")
 }
 
 tasks {
@@ -56,6 +59,7 @@ if (findProperty("testLatestDeps") as Boolean) {
     testImplementation {
       exclude("org.apache.pekko", "pekko-http_2.12")
       exclude("org.apache.pekko", "pekko-stream_2.12")
+      exclude("com.softwaremill.sttp.tapir", "tapir-pekko-http-server_2.12")
     }
   }
 }
