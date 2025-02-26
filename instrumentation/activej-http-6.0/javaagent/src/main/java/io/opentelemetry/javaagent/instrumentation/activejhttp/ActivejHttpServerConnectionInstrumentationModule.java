@@ -28,6 +28,7 @@ public class ActivejHttpServerConnectionInstrumentationModule extends Instrument
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("io.activej.reactor.schedule.ScheduledPriorityQueue");
+    // class which was added in 6.0, the minimum version we support.
+    return hasClassesNamed("io.activej.http.HttpServer");
   }
 }
