@@ -5,10 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.activejhttp;
 
+import io.activej.http.HttpHeader;
+import io.activej.http.HttpHeaderValue;
+import io.activej.http.HttpHeaders;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
+import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 final class ActivejHttpServerHttpAttributesGetter
@@ -21,19 +27,35 @@ final class ActivejHttpServerHttpAttributesGetter
 
   @Override
   public List<String> getHttpRequestHeader(HttpRequest request, String name) {
-    return ActivejHttpServerUtil.requestHeader(request, name);
+    HttpHeader httpHeader = HttpHeaders.of(name);
+    List<String> values = new ArrayList<>();
+    for (Map.Entry<HttpHeader, HttpHeaderValue> entry : request.getHeaders()) {
+      if (httpHeader.equals(entry.getKey())) {
+        values.add(entry.getValue().toString());
+      }
+    }
+
+    return values;
   }
 
   @Override
   public Integer getHttpResponseStatusCode(
       HttpRequest request, HttpResponse httpResponse, @Nullable Throwable error) {
-    return ActivejHttpServerUtil.getHttpResponseStatusCode(request, httpResponse, error);
+    return httpResponse.getCode();
   }
 
   @Override
   public List<String> getHttpResponseHeader(
       HttpRequest request, HttpResponse httpResponse, String name) {
-    return ActivejHttpServerUtil.getHttpResponseHeader(request, httpResponse, name);
+    HttpHeader httpHeader = HttpHeaders.of(name);
+    List<String> values = new ArrayList<>();
+    for (Map.Entry<HttpHeader, HttpHeaderValue> entry : httpResponse.getHeaders()) {
+      if (httpHeader.equals(entry.getKey())) {
+        values.add(entry.getValue().toString());
+      }
+    }
+
+    return values;
   }
 
   @Override
@@ -53,12 +75,28 @@ final class ActivejHttpServerHttpAttributesGetter
 
   @Override
   public String getNetworkProtocolName(HttpRequest request, @Nullable HttpResponse httpResponse) {
-    return ActivejHttpServerUtil.getNetworkProtocolName(request);
+    return switch (request.getVersion()) {
+      case HTTP_0_9, HTTP_1_0, HTTP_1_1, HTTP_2_0 -> "http";
+      default -> null;
+    };
   }
 
   @Override
   public String getNetworkProtocolVersion(
       HttpRequest request, @Nullable HttpResponse httpResponse) {
-    return ActivejHttpServerUtil.getNetworkProtocolVersion(request.getVersion());
+    return switch (request.getVersion()) {
+      case HTTP_0_9 -> "0.9";
+      case HTTP_1_0 -> "1.0";
+      case HTTP_1_1 -> "1.1";
+      case HTTP_2_0 -> "2";
+      default -> null;
+    };
+  }
+
+  @Nullable
+  @Override
+  public String getNetworkPeerAddress(HttpRequest request, @Nullable HttpResponse httpResponse) {
+    InetAddress remoteAddress = request.getConnection().getRemoteAddress();
+    return remoteAddress != null ? remoteAddress.getHostAddress() : null;
   }
 }

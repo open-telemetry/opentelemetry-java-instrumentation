@@ -11,11 +11,12 @@ import io.activej.http.HttpHeaders;
 import io.activej.http.HttpRequest;
 import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-enum ActivejHttpServerHeaders implements ExtendedTextMapGetter<HttpRequest> {
+enum ActivejHttpServerRequestGetter implements ExtendedTextMapGetter<HttpRequest> {
   INSTANCE;
 
   @Override
@@ -28,18 +29,21 @@ enum ActivejHttpServerHeaders implements ExtendedTextMapGetter<HttpRequest> {
     if (carrier == null) {
       return null;
     }
+
     return carrier.getHeader(HttpHeaders.of(key));
   }
 
   @Override
   public Iterator<String> getAll(HttpRequest carrier, String key) {
+    if (carrier == null) {
+      return Collections.emptyIterator();
+    }
+
     HttpHeader httpHeader = HttpHeaders.of(key);
     List<String> values = new ArrayList<>();
-    if (carrier != null) {
-      for (Map.Entry<HttpHeader, HttpHeaderValue> entry : carrier.getHeaders()) {
-        if (httpHeader.equals(entry.getKey())) {
-          values.add(entry.getValue().toString());
-        }
+    for (Map.Entry<HttpHeader, HttpHeaderValue> entry : carrier.getHeaders()) {
+      if (httpHeader.equals(entry.getKey())) {
+        values.add(entry.getValue().toString());
       }
     }
     return values.iterator();

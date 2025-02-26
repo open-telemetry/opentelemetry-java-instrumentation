@@ -12,7 +12,7 @@ import io.activej.http.HttpResponse;
 import io.activej.promise.Promise;
 import io.opentelemetry.context.Context;
 
-public class PromiseWrapper {
+public final class PromiseWrapper {
 
   public static Promise<HttpResponse> wrap(
       Promise<HttpResponse> promise, HttpRequest httpRequest, Context context) {

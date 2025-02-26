@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.activejhttp;
 
-import static io.activej.common.exception.FatalErrorHandlers.rethrow;
+import static io.activej.common.exception.FatalErrorHandlers.logging;
 import static io.activej.http.HttpMethod.GET;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -26,7 +26,6 @@ import io.activej.http.HttpResponse;
 import io.activej.http.HttpServer;
 import io.activej.http.RoutingServlet;
 import io.activej.promise.Promise;
-import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
@@ -41,12 +40,11 @@ class ActivejHttpServerTest extends AbstractHttpServerTest<HttpServer> {
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   private static final Eventloop eventloop =
-      Eventloop.builder().withCurrentThread().withFatalErrorHandler(rethrow()).build();
+      Eventloop.builder().withCurrentThread().withFatalErrorHandler(logging()).build();
   private Thread thread;
 
   @Override
   protected HttpServer setupServer() throws Exception {
-
     AsyncServlet captureHttpHeadersAsyncServlet =
         request -> {
           HttpResponse httpResponse =
@@ -65,11 +63,6 @@ class ActivejHttpServerTest extends AbstractHttpServerTest<HttpServer> {
                   .withBody(INDEXED_CHILD.getBody())
                   .withCode(INDEXED_CHILD.getStatus())
                   .build();
-          INDEXED_CHILD.collectSpanAttributes(
-              id ->
-                  id.equals(ID_PARAMETER_NAME)
-                      ? request.getQueryParameter(ID_PARAMETER_NAME)
-                      : null);
           controller(
               INDEXED_CHILD,
               () -> {
@@ -89,8 +82,21 @@ class ActivejHttpServerTest extends AbstractHttpServerTest<HttpServer> {
             .with(GET, QUERY_PARAM.getPath(), request -> prepareResponse(QUERY_PARAM))
             .with(GET, ERROR.getPath(), request -> prepareResponse(ERROR))
             .with(GET, NOT_FOUND.getPath(), request -> prepareResponse(NOT_FOUND))
-            .with(GET, EXCEPTION.getPath(), request -> prepareResponse(EXCEPTION))
-            .with(GET, REDIRECT.getPath(), request -> prepareResponse(REDIRECT))
+            .with(
+                GET,
+                EXCEPTION.getPath(),
+                request ->
+                    controller(
+                        EXCEPTION,
+                        () -> {
+                          throw new IllegalStateException(EXCEPTION.getBody());
+                        }))
+            .with(
+                GET,
+                REDIRECT.getPath(),
+                request ->
+                    controller(
+                        REDIRECT, () -> HttpResponse.redirect302(REDIRECT.getBody()).toPromise()))
             .with(GET, CAPTURE_HEADERS.getPath(), captureHttpHeadersAsyncServlet)
             .with(GET, INDEXED_CHILD.getPath(), indexChildAsyncServlet)
             .build();
@@ -111,21 +117,12 @@ class ActivejHttpServerTest extends AbstractHttpServerTest<HttpServer> {
 
   @Override
   protected void configure(HttpServerTestOptions options) {
-    options.setTestHttpPipelining(false);
-    options.setTestRedirect(false);
     options.setTestException(false);
     options.disableTestNonStandardHttpMethod();
-    options.setExpectedServerSpanNameMapper(
-        (uri, method, route) -> {
-          if (HttpConstants._OTHER.equals(method)) {
-            method = "HTTP";
-          }
-          return method;
-        });
     options.setHttpAttributes(endpoint -> ImmutableSet.of(NETWORK_PEER_PORT));
   }
 
-  Promise<HttpResponse> prepareResponse(ServerEndpoint endpoint) {
+  private static Promise<HttpResponse> prepareResponse(ServerEndpoint endpoint) {
     HttpResponse httpResponse =
         HttpResponse.builder().withBody(endpoint.getBody()).withCode(endpoint.getStatus()).build();
     controller(endpoint, () -> httpResponse);
