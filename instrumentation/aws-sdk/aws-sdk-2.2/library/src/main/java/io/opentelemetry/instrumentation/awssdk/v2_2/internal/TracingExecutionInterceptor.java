@@ -16,7 +16,6 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.awsxray.propagator.AwsXrayPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.semconv.HttpAttributes;
 import java.io.BufferedReader;
@@ -28,7 +27,6 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import software.amazon.awssdk.auth.signer.AwsSignerExecutionAttribute;
 import software.amazon.awssdk.awscore.AwsResponse;
 import software.amazon.awssdk.core.ClientType;
 import software.amazon.awssdk.core.SdkRequest;
@@ -49,17 +47,6 @@ import software.amazon.awssdk.http.SdkHttpResponse;
  */
 public final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
-  // copied from DbIncubatingAttributes
-  private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
-  private static final AttributeKey<String> DB_OPERATION_NAME =
-      AttributeKey.stringKey("db.operation.name");
-  private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
-  private static final AttributeKey<String> DB_SYSTEM_NAME =
-      AttributeKey.stringKey("db.system.name");
-  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
-  private static final String DB_SYSTEM_DYNAMODB = "dynamodb";
-  // copied from DbIncubatingAttributes.DbSystemNameIncubatingValues
-  private static final String DB_SYSTEM_AWS_DYNAMODB = "aws.dynamodb";
   // copied from AwsIncubatingAttributes
   private static final AttributeKey<String> AWS_REQUEST_ID =
       AttributeKey.stringKey("aws.request_id");
@@ -88,6 +75,8 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
   private final Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter;
   private final Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> producerInstrumenter;
+  private final Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter;
+  private final Instrumenter<ExecutionAttributes, Response> bedrockRuntimeInstrumenter;
   private final boolean captureExperimentalSpanAttributes;
 
   static final AttributeKey<String> HTTP_ERROR_MSG =
@@ -116,11 +105,14 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
   private final boolean recordIndividualHttpError;
   private final FieldMapper fieldMapper;
 
+  @SuppressWarnings("TooManyParameters") // internal method
   public TracingExecutionInterceptor(
       Instrumenter<ExecutionAttributes, Response> requestInstrumenter,
       Instrumenter<SqsReceiveRequest, Response> consumerReceiveInstrumenter,
       Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter,
       Instrumenter<ExecutionAttributes, Response> producerInstrumenter,
+      Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter,
+      Instrumenter<ExecutionAttributes, Response> bedrockRuntimeInstrumenter,
       boolean captureExperimentalSpanAttributes,
       TextMapPropagator messagingPropagator,
       boolean useXrayPropagator,
@@ -129,6 +121,8 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
     this.producerInstrumenter = producerInstrumenter;
+    this.dynamoDbInstrumenter = dynamoDbInstrumenter;
+    this.bedrockRuntimeInstrumenter = bedrockRuntimeInstrumenter;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.messagingPropagator = messagingPropagator;
     this.useXrayPropagator = useXrayPropagator;
@@ -137,6 +131,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
   }
 
   @Override
+  @SuppressWarnings("deprecation") // need to access deprecated signer
   public SdkRequest modifyRequest(
       Context.ModifyRequest context, ExecutionAttributes executionAttributes) {
 
@@ -153,13 +148,17 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
     // Ignore presign request. These requests don't run all interceptor methods and the span created
     // here would never be ended and scope closed.
-    if (executionAttributes.getAttribute(AwsSignerExecutionAttribute.PRESIGNER_EXPIRATION)
+    if (executionAttributes.getAttribute(
+            software.amazon.awssdk.auth.signer.AwsSignerExecutionAttribute.PRESIGNER_EXPIRATION)
         != null) {
       return request;
     }
 
     executionAttributes.putAttribute(SDK_REQUEST_ATTRIBUTE, request);
-    Instrumenter<ExecutionAttributes, Response> instrumenter = getInstrumenter(request);
+    AwsSdkRequest awsSdkRequest = AwsSdkRequest.ofSdkRequest(request);
+    executionAttributes.putAttribute(AWS_SDK_REQUEST_ATTRIBUTE, awsSdkRequest);
+    Instrumenter<ExecutionAttributes, Response> instrumenter =
+        getInstrumenter(request, awsSdkRequest);
 
     if (!instrumenter.shouldStart(parentOtelContext, executionAttributes)) {
       // NB: We also skip injection in case we don't start.
@@ -205,10 +204,9 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     Span span = Span.fromContext(otelContext);
 
     try {
-      AwsSdkRequest awsSdkRequest = AwsSdkRequest.ofSdkRequest(context.request());
       if (awsSdkRequest != null) {
         executionAttributes.putAttribute(AWS_SDK_REQUEST_ATTRIBUTE, awsSdkRequest);
-        populateRequestAttributes(span, awsSdkRequest, context.request(), executionAttributes);
+        fieldMapper.mapToAttributes(request, awsSdkRequest, span);
       }
     } catch (Throwable throwable) {
       requestFinisher.finish(otelContext, executionAttributes, null, throwable);
@@ -343,33 +341,6 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     return responseBody;
   }
 
-  private void populateRequestAttributes(
-      Span span,
-      AwsSdkRequest awsSdkRequest,
-      SdkRequest sdkRequest,
-      ExecutionAttributes attributes) {
-
-    fieldMapper.mapToAttributes(sdkRequest, awsSdkRequest, span);
-
-    if (awsSdkRequest.type() == DYNAMODB) {
-      if (SemconvStability.emitStableDatabaseSemconv()) {
-        span.setAttribute(DB_SYSTEM_NAME, DB_SYSTEM_AWS_DYNAMODB);
-      }
-      if (SemconvStability.emitOldDatabaseSemconv()) {
-        span.setAttribute(DB_SYSTEM, DB_SYSTEM_DYNAMODB);
-      }
-      String operation = attributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
-      if (operation != null) {
-        if (SemconvStability.emitStableDatabaseSemconv()) {
-          span.setAttribute(DB_OPERATION_NAME, operation);
-        }
-        if (SemconvStability.emitOldDatabaseSemconv()) {
-          span.setAttribute(DB_OPERATION, operation);
-        }
-      }
-    }
-  }
-
   @Override
   public void afterExecution(
       Context.AfterExecution context, ExecutionAttributes executionAttributes) {
@@ -480,8 +451,18 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     return attributes.getAttribute(PARENT_CONTEXT_ATTRIBUTE);
   }
 
-  private Instrumenter<ExecutionAttributes, Response> getInstrumenter(SdkRequest request) {
-    return SqsAccess.isSqsProducerRequest(request) ? producerInstrumenter : requestInstrumenter;
+  private Instrumenter<ExecutionAttributes, Response> getInstrumenter(
+      SdkRequest request, AwsSdkRequest awsSdkRequest) {
+    if (SqsAccess.isSqsProducerRequest(request)) {
+      return producerInstrumenter;
+    }
+    if (BedrockRuntimeAccess.isBedrockRuntimeRequest(request)) {
+      return bedrockRuntimeInstrumenter;
+    }
+    if (awsSdkRequest != null && awsSdkRequest.type() == DYNAMODB) {
+      return dynamoDbInstrumenter;
+    }
+    return requestInstrumenter;
   }
 
   private interface RequestSpanFinisher {

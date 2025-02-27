@@ -20,11 +20,10 @@ configurations.configureEach {
   if (name.endsWith("testRuntimeClasspath", true) || name.endsWith("testCompileClasspath", true)) {
     resolutionStrategy {
       force("io.opentelemetry:opentelemetry-api:1.38.0")
+      force("io.opentelemetry:opentelemetry-api-incubator:1.38.0-alpha")
     }
-    if (name.startsWith("incubatorTest") || name.startsWith("noopTest")) {
-      resolutionStrategy {
-        force("io.opentelemetry:opentelemetry-api-incubator:1.38.0-alpha")
-      }
+    if (name.equals("testRuntimeClasspath")) {
+      exclude(group = "io.opentelemetry", module = "opentelemetry-api-incubator")
     }
   }
 }

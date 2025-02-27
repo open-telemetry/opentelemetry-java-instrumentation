@@ -106,3 +106,36 @@ if (gradle.startParameter.taskNames.contains("listTestsInPartition")) {
     }
   }
 }
+
+tasks {
+  val generateFossaConfiguration by registering {
+    group = "Help"
+    description = "Generate .fossa.yml configuration file"
+
+    doLast {
+      File(".fossa.yml").printWriter().use { writer ->
+        writer.println("version: 3")
+        writer.println()
+        writer.println("targets:")
+        writer.println("  only:")
+        writer.println("    # only scanning the modules which are published")
+        writer.println("    # (as opposed to internal testing modules")
+        rootProject.subprojects
+          .sortedBy { it.findProperty("archivesName") as String? }
+          .filter { !it.name.startsWith("bom") }
+          .filter { it.plugins.hasPlugin("maven-publish") }
+          .forEach {
+            writer.println("    - type: gradle")
+            writer.println("      path: ./")
+            writer.println("      target: '${it.path}'")
+          }
+        writer.println()
+        writer.println("experimental:")
+        writer.println("  gradle:")
+        writer.println("    configurations-only:")
+        writer.println("      # consumer will only be exposed to these dependencies")
+        writer.println("      - runtimeClasspath")
+      }
+    }
+  }
+}
