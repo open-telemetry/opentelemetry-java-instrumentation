@@ -200,7 +200,7 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
         break;
       } else {
         // param values can be appended to currentParamName here but it's not an issue
-        currentParamName.append(currentChar); 
+        currentParamName.append(currentChar);
         urlAfterQuestionMark.append(currentChar);
       }
     }
