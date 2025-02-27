@@ -43,6 +43,5 @@ class AgentForTestingTest {
     List<MetricData> metrics = AgentTestingExporterAccess.getExportedMetrics();
     assertEquals(1, metrics.size());
     assertEquals("test", metrics.get(0).getName());
-
   }
 }
