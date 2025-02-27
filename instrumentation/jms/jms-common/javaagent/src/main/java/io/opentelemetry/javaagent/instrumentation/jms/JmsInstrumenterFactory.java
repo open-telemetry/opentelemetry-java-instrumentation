@@ -5,17 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.PropagatorBasedBaggageExtractor;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -46,15 +49,18 @@ public final class JmsInstrumenterFactory {
     return this;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   public Instrumenter<MessageWithDestination, Void> createProducerInstrumenter() {
     JmsMessageAttributesGetter getter = JmsMessageAttributesGetter.INSTANCE;
-    MessageOperation operation = MessageOperation.PUBLISH;
+    MessageOperation operation =
+        emitStableMessagingSemconv() ? MessageOperation.SEND : MessageOperation.PUBLISH;
 
     return Instrumenter.<MessageWithDestination, Void>builder(
             openTelemetry,
             instrumentationName,
-            MessagingSpanNameExtractor.create(getter, operation))
+            MessagingSpanNameExtractor.create(getter, operation, getter))
         .addAttributesExtractor(createMessagingAttributesExtractor(operation))
+        .addAttributesExtractor(MessagingNetworkAttributesExtractor.create(getter))
         .buildProducerInstrumenter(MessagePropertySetter.INSTANCE);
   }
 
@@ -66,11 +72,16 @@ public final class JmsInstrumenterFactory {
         Instrumenter.<MessageWithDestination, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.create(getter, operation))
-            .addAttributesExtractor(createMessagingAttributesExtractor(operation));
-    if (messagingReceiveInstrumentationEnabled) {
+                MessagingSpanNameExtractor.create(getter, operation, getter))
+            .addAttributesExtractor(createMessagingAttributesExtractor(operation))
+            .addAttributesExtractor(MessagingNetworkAttributesExtractor.create(getter));
+    if (messagingReceiveInstrumentationEnabled || emitStableMessagingSemconv()) {
       builder.addSpanLinksExtractor(
           new PropagatorBasedSpanLinksExtractor<>(
+              openTelemetry.getPropagators().getTextMapPropagator(),
+              MessagePropertyGetter.INSTANCE));
+      builder.addContextCustomizer(
+          new PropagatorBasedBaggageExtractor<>(
               openTelemetry.getPropagators().getTextMapPropagator(),
               MessagePropertyGetter.INSTANCE));
     }
@@ -86,11 +97,17 @@ public final class JmsInstrumenterFactory {
         Instrumenter.<MessageWithDestination, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.create(getter, operation))
-            .addAttributesExtractor(createMessagingAttributesExtractor(operation));
-    if (canHaveReceiveInstrumentation && messagingReceiveInstrumentationEnabled) {
+                MessagingSpanNameExtractor.create(getter, operation, getter))
+            .addAttributesExtractor(createMessagingAttributesExtractor(operation))
+            .addAttributesExtractor(MessagingNetworkAttributesExtractor.create(getter));
+    if (canHaveReceiveInstrumentation
+        && (messagingReceiveInstrumentationEnabled || emitStableMessagingSemconv())) {
       builder.addSpanLinksExtractor(
           new PropagatorBasedSpanLinksExtractor<>(
+              openTelemetry.getPropagators().getTextMapPropagator(),
+              MessagePropertyGetter.INSTANCE));
+      builder.addContextCustomizer(
+          new PropagatorBasedBaggageExtractor<>(
               openTelemetry.getPropagators().getTextMapPropagator(),
               MessagePropertyGetter.INSTANCE));
       return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
