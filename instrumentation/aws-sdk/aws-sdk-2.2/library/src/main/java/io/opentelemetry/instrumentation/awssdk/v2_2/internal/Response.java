@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import io.opentelemetry.context.Context;
 import software.amazon.awssdk.core.SdkResponse;
 import software.amazon.awssdk.http.SdkHttpResponse;
 
@@ -15,14 +16,20 @@ import software.amazon.awssdk.http.SdkHttpResponse;
 public final class Response {
   private final SdkHttpResponse sdkHttpResponse;
   private final SdkResponse sdkResponse;
+  private final Context otelContext;
 
   Response(SdkHttpResponse sdkHttpResponse) {
     this(sdkHttpResponse, null);
   }
 
   Response(SdkHttpResponse sdkHttpResponse, SdkResponse sdkResponse) {
+    this(sdkHttpResponse, sdkResponse, null);
+  }
+
+  Response(SdkHttpResponse sdkHttpResponse, SdkResponse sdkResponse, Context otelContext) {
     this.sdkHttpResponse = sdkHttpResponse;
     this.sdkResponse = sdkResponse;
+    this.otelContext = otelContext;
   }
 
   public SdkHttpResponse getSdkHttpResponse() {
@@ -31,5 +38,9 @@ public final class Response {
 
   public SdkResponse getSdkResponse() {
     return sdkResponse;
+  }
+
+  public Context otelContext() {
+    return otelContext;
   }
 }

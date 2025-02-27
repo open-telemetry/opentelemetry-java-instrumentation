@@ -103,6 +103,11 @@ dependencies {
   library("software.amazon.awssdk:aws-core:2.2.0")
   library("software.amazon.awssdk:sqs:2.2.0")
 
+  // Don't use library to make sure base test is run with the floor version.
+  // bedrock runtime is tested separately in testBedrockRuntime.
+  // First release with Converse API
+  compileOnly("software.amazon.awssdk:bedrockruntime:2.25.63")
+
   testImplementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
   testImplementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
 
