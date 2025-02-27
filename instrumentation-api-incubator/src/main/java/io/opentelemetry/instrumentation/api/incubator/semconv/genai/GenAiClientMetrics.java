@@ -59,7 +59,8 @@ public final class GenAiClientMetrics implements OperationListener {
   private final DoubleHistogram operationDuration;
 
   private GenAiClientMetrics(Meter meter) {
-    LongHistogramBuilder tokenUsageBuilder = meter
+    LongHistogramBuilder tokenUsageBuilder =
+        meter
             .histogramBuilder("gen_ai.client.token.usage")
             .ofLongs()
             .setUnit("{token}")
@@ -72,7 +73,8 @@ public final class GenAiClientMetrics implements OperationListener {
             .histogramBuilder("gen_ai.client.operation.duration")
             .setUnit("s")
             .setDescription("GenAI operation duration")
-            .setExplicitBucketBoundariesAdvice(GenAiMetricsAdvice.CLIENT_OPERATION_DURATION_BUCKETS);
+            .setExplicitBucketBoundariesAdvice(
+                GenAiMetricsAdvice.CLIENT_OPERATION_DURATION_BUCKETS);
     GenAiMetricsAdvice.applyClientOperationDurationAdvice(operationDurationBuilder);
     this.operationDuration = operationDurationBuilder.build();
   }
