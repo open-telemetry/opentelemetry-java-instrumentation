@@ -27,11 +27,21 @@ class AgentForTestingTest {
   }
 
   @Test
-  void exportAndRetrieve() {
+  void exportAndRetrieveSpans() {
     GlobalOpenTelemetry.getTracer("test").spanBuilder("test").startSpan().end();
 
     List<SpanData> spans = AgentTestingExporterAccess.getExportedSpans();
     assertEquals(1, spans.size());
     assertEquals("test", spans.get(0).getName());
+  }
+
+  @Test
+  void exportAndRetrieveMetrics() {
+    GlobalOpenTelemetry.getMeter("test").upDownCounterBuilder("test").build().add(1);
+
+    List<MetricData> metrics = AgentTestingExporterAccess.getExportedMetrics();
+    assertEquals(1, metrics.size());
+    assertEquals("test", metrics.get(0).getName());
+
   }
 }
