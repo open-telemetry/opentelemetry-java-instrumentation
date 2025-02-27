@@ -199,9 +199,8 @@ public final class HttpClientAttributesExtractor<REQUEST, RESPONSE>
         urlAfterQuestionMark.append(url.substring(i));
         break;
       } else {
-        currentParamName.append(
-            currentChar); // param values can be appended to currentParamName here but it's not an
-        // issue
+        // param values can be appended to currentParamName here but it's not an issue
+        currentParamName.append(currentChar); 
         urlAfterQuestionMark.append(currentChar);
       }
     }
