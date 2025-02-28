@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### 🛠️ Bug fixes
+
+- Backport: Fix failure to start when AWS Resource Provider is enabled
+  ([#13420](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13420))
+
 ## Version 2.13.2 (2025-02-26)
 
 ### 🛠️ Bug fixes
