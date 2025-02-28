@@ -27,6 +27,7 @@ public class OpenTelemetryApiIncubatorInstrumentationModule extends Instrumentat
     // skip instrumentation when opentelemetry-api-incubator is not present, instrumentation
     // is handled by OpenTelemetryApiInstrumentationModule
     return hasClassesNamed(
+        "application.io.opentelemetry.api.metrics.LongGauge",
         "application.io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder");
   }
 
