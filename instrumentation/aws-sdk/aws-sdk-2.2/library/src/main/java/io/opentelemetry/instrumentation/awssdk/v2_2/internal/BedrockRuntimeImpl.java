@@ -53,8 +53,7 @@ public final class BedrockRuntimeImpl {
   static String getModelId(SdkRequest request) {
     if (request instanceof ConverseRequest) {
       return ((ConverseRequest) request).modelId();
-    }
-    if (request instanceof ConverseStreamRequest) {
+    } else if (request instanceof ConverseStreamRequest) {
       return ((ConverseStreamRequest) request).modelId();
     }
     return null;
@@ -65,8 +64,7 @@ public final class BedrockRuntimeImpl {
     InferenceConfiguration config = null;
     if (request instanceof ConverseRequest) {
       config = ((ConverseRequest) request).inferenceConfig();
-    }
-    if (request instanceof ConverseStreamRequest) {
+    } else if (request instanceof ConverseStreamRequest) {
       config = ((ConverseStreamRequest) request).inferenceConfig();
     }
     if (config != null) {
@@ -80,8 +78,7 @@ public final class BedrockRuntimeImpl {
     InferenceConfiguration config = null;
     if (request instanceof ConverseRequest) {
       config = ((ConverseRequest) request).inferenceConfig();
-    }
-    if (request instanceof ConverseStreamRequest) {
+    } else if (request instanceof ConverseStreamRequest) {
       config = ((ConverseStreamRequest) request).inferenceConfig();
     }
     if (config != null) {
@@ -95,8 +92,7 @@ public final class BedrockRuntimeImpl {
     InferenceConfiguration config = null;
     if (request instanceof ConverseRequest) {
       config = ((ConverseRequest) request).inferenceConfig();
-    }
-    if (request instanceof ConverseStreamRequest) {
+    } else if (request instanceof ConverseStreamRequest) {
       config = ((ConverseStreamRequest) request).inferenceConfig();
     }
     if (config != null) {
@@ -110,8 +106,7 @@ public final class BedrockRuntimeImpl {
     InferenceConfiguration config = null;
     if (request instanceof ConverseRequest) {
       config = ((ConverseRequest) request).inferenceConfig();
-    }
-    if (request instanceof ConverseStreamRequest) {
+    } else if (request instanceof ConverseStreamRequest) {
       config = ((ConverseStreamRequest) request).inferenceConfig();
     }
     if (config != null) {
@@ -128,11 +123,12 @@ public final class BedrockRuntimeImpl {
       if (reason != null) {
         return Collections.singletonList(reason.toString());
       }
-    }
-    TracingConverseStreamResponseHandler streamHandler =
-        TracingConverseStreamResponseHandler.fromContext(response.otelContext());
-    if (streamHandler != null) {
-      return streamHandler.stopReasons;
+    } else {
+      TracingConverseStreamResponseHandler streamHandler =
+          TracingConverseStreamResponseHandler.fromContext(response.otelContext());
+      if (streamHandler != null) {
+        return streamHandler.stopReasons;
+      }
     }
     return null;
   }
@@ -143,11 +139,12 @@ public final class BedrockRuntimeImpl {
     TokenUsage usage = null;
     if (sdkResponse instanceof ConverseResponse) {
       usage = ((ConverseResponse) sdkResponse).usage();
-    }
-    TracingConverseStreamResponseHandler streamHandler =
-        TracingConverseStreamResponseHandler.fromContext(response.otelContext());
-    if (streamHandler != null) {
-      usage = streamHandler.usage;
+    } else {
+      TracingConverseStreamResponseHandler streamHandler =
+          TracingConverseStreamResponseHandler.fromContext(response.otelContext());
+      if (streamHandler != null) {
+        usage = streamHandler.usage;
+      }
     }
     if (usage != null) {
       return integerToLong(usage.inputTokens());
@@ -161,11 +158,12 @@ public final class BedrockRuntimeImpl {
     TokenUsage usage = null;
     if (sdkResponse instanceof ConverseResponse) {
       usage = ((ConverseResponse) sdkResponse).usage();
-    }
-    TracingConverseStreamResponseHandler streamHandler =
-        TracingConverseStreamResponseHandler.fromContext(response.otelContext());
-    if (streamHandler != null) {
-      usage = streamHandler.usage;
+    } else {
+      TracingConverseStreamResponseHandler streamHandler =
+          TracingConverseStreamResponseHandler.fromContext(response.otelContext());
+      if (streamHandler != null) {
+        usage = streamHandler.usage;
+      }
     }
     if (usage != null) {
       return integerToLong(usage.outputTokens());
