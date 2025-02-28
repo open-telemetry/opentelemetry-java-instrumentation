@@ -1,3 +1,5 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+
 plugins {
   id("java")
   id("com.diffplug.spotless") version "7.0.2"
