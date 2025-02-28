@@ -13,15 +13,12 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
-/**
- * This instrumentation applies to classes in pekko-http.jar while
- * PekkoHttpServerInstrumentationModule applies to classes in pekko-http-core.jar
- */
 @AutoService(InstrumentationModule.class)
-public class PekkoHttpServerRouteInstrumentationModule extends InstrumentationModule
+public class TapirPekkoHttpServerRouteInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
-  public PekkoHttpServerRouteInstrumentationModule() {
-    super("pekko-http", "pekko-http-1.0", "pekko-http-server", "pekko-http-server-route");
+  public TapirPekkoHttpServerRouteInstrumentationModule() {
+    super(
+        "pekko-http", "pekko-http-1.0", "tapir-pekko-http-server", "tapir-pekko-http-server-route");
   }
 
   @Override
@@ -31,10 +28,6 @@ public class PekkoHttpServerRouteInstrumentationModule extends InstrumentationMo
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(
-        new PathMatcherInstrumentation(),
-        new PathMatcherStaticInstrumentation(),
-        new RouteConcatenationInstrumentation(),
-        new PathConcatenationInstrumentation());
+    return asList(new TapirPathInstrumentation(), new RouteConcatenationInstrumentation());
   }
 }
