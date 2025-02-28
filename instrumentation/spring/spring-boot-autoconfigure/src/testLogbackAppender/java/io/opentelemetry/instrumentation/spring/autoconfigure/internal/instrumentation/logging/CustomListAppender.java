@@ -8,10 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
+@SuppressWarnings("OtelInternalJavadoc")
 public class CustomListAppender extends ListAppender<ILoggingEvent> {
   public static boolean lastLogHadTraceId;
 
