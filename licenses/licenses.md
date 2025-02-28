@@ -284,15 +284,15 @@
 
 ## MIT License
 
-**61** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.16`
+**61** **Group:** `org.slf4j` **Name:** `slf4j-api` **Version:** `2.0.17`
 > - **Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
-> - **Embedded license files**: [slf4j-api-2.0.16.jar/META-INF/LICENSE.txt](slf4j-api-2.0.16.jar/META-INF/LICENSE.txt)
+> - **Embedded license files**: [slf4j-api-2.0.17.jar/META-INF/LICENSE.txt](slf4j-api-2.0.17.jar/META-INF/LICENSE.txt)
 
-**62** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.16`
+**62** **Group:** `org.slf4j` **Name:** `slf4j-simple` **Version:** `2.0.17`
 > - **Project URL**: [http://www.slf4j.org](http://www.slf4j.org)
 > - **POM License**: MIT License - [https://opensource.org/licenses/MIT](https://opensource.org/licenses/MIT)
-> - **Embedded license files**: [slf4j-simple-2.0.16.jar/META-INF/LICENSE.txt](slf4j-simple-2.0.16.jar/META-INF/LICENSE.txt)
+> - **Embedded license files**: [slf4j-simple-2.0.17.jar/META-INF/LICENSE.txt](slf4j-simple-2.0.17.jar/META-INF/LICENSE.txt)
 
 ## The 3-Clause BSD License
 
