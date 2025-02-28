@@ -415,7 +415,7 @@ jobs:
         run: ./gradlew :smoke-tests:test -PsmokeTestSuite=none --no-daemon ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Test
-        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }} ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Upload jvm crash dump files if any
         if: failure()
@@ -489,12 +489,16 @@ jobs:
         working-directory: gradle-plugins
 
       - name: Build distro
-        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
         working-directory: examples/distro
 
       - name: Build extension
-        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
         working-directory: examples/extension
+
+      - name: Build benchmark-overhead
+        run: ./gradlew assemble ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+        working-directory: benchmark-overhead
 
       - name: Run muzzle check against extension
         run: ./gradlew muzzle --init-script ../../.github/scripts/local.init.gradle.kts
