@@ -8,6 +8,13 @@
   `io.opentelemetry.instrumentation.httpclient` was deprecated in favor of the new package name
   `io.opentelemetry.instrumentation.javahttpclient`
 
+## Version 2.13.3 (2025-02-28)
+
+### 🛠️ Bug fixes
+
+- Backport: Fix failure to start when AWS Resource Provider is enabled
+  ([#13420](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13420))
+
 ## Version 2.13.2 (2025-02-27)
 
 ### 🛠️ Bug fixes
