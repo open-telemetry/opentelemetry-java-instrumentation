@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import static org.assertj.core.api.Assertions.assertThat;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.read.ListAppender;
 import ch.qos.logback.core.spi.AppenderAttachable;
 import io.opentelemetry.api.OpenTelemetry;
@@ -22,6 +23,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
@@ -191,6 +193,7 @@ class LogbackAppenderTest {
     }
 
     assertThat(testing.logRecords()).isEmpty();
+    assertThat(CustomListAppender.lastLogHadTraceId).isTrue();
     assertThat(listAppender.list)
         .satisfiesExactly(
             event ->
@@ -238,13 +241,26 @@ class LogbackAppenderTest {
   private static ListAppender<ILoggingEvent> getListAppender() {
     Logger logger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
     ch.qos.logback.classic.Logger logbackLogger = (ch.qos.logback.classic.Logger) logger;
+
     ListAppender<ILoggingEvent> listAppender =
         (ListAppender<ILoggingEvent>) logbackLogger.getAppender("List");
     if (listAppender != null) {
       return listAppender;
     }
+
     AppenderAttachable<?> mdcAppender =
         (AppenderAttachable<?>) logbackLogger.getAppender("OpenTelemetryMdc");
+    if (mdcAppender == null) {
+      for (Iterator<Appender<ILoggingEvent>> i = logbackLogger.iteratorForAppenders();
+          i.hasNext(); ) {
+        Appender<ILoggingEvent> appender = i.next();
+        if (appender
+            instanceof io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender) {
+          mdcAppender = (AppenderAttachable<?>) appender;
+          break;
+        }
+      }
+    }
     return (ListAppender<ILoggingEvent>) mdcAppender.getAppender("List");
   }
 }

@@ -132,6 +132,7 @@ testing {
         implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
 
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
+        implementation(project(":instrumentation:logback:logback-mdc-1.0:library"))
         // using the same versions as in the spring-boot-autoconfigure
         implementation("ch.qos.logback:logback-classic") {
           version {
