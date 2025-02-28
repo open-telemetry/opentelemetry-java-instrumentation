@@ -15,6 +15,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
@@ -228,8 +229,10 @@ public final class AwsSdkInstrumenterFactory {
         SpanKindExtractor.alwaysClient(),
         attributesExtractors(),
         builder ->
-            builder.addAttributesExtractor(
-                GenAiAttributesExtractor.create(BedrockRuntimeAttributesGetter.INSTANCE)),
+            builder
+                .addAttributesExtractor(
+                    GenAiAttributesExtractor.create(BedrockRuntimeAttributesGetter.INSTANCE))
+                .addOperationMetrics(GenAiClientMetrics.get()),
         true);
   }
 
