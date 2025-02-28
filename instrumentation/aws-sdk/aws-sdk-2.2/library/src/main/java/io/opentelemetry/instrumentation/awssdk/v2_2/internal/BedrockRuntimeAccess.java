@@ -9,7 +9,6 @@ import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.util.List;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
-import software.amazon.awssdk.core.SdkResponse;
 
 final class BedrockRuntimeAccess {
   private BedrockRuntimeAccess() {}
@@ -69,19 +68,19 @@ final class BedrockRuntimeAccess {
 
   @Nullable
   @NoMuzzle
-  static String getStopReason(SdkResponse response) {
-    return enabled ? BedrockRuntimeImpl.getStopReason(response) : null;
+  static List<String> getStopReasons(Response response) {
+    return enabled ? BedrockRuntimeImpl.getStopReasons(response) : null;
   }
 
   @Nullable
   @NoMuzzle
-  static Long getUsageInputTokens(SdkResponse response) {
+  static Long getUsageInputTokens(Response response) {
     return enabled ? BedrockRuntimeImpl.getUsageInputTokens(response) : null;
   }
 
   @Nullable
   @NoMuzzle
-  static Long getUsageOutputTokens(SdkResponse response) {
+  static Long getUsageOutputTokens(Response response) {
     return enabled ? BedrockRuntimeImpl.getUsageOutputTokens(response) : null;
   }
 }

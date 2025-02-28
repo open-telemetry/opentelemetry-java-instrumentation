@@ -366,7 +366,10 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
           executionAttributes, otelContext, Span.fromContext(otelContext), httpResponse);
       RequestSpanFinisher finisher = executionAttributes.getAttribute(REQUEST_FINISHER_ATTRIBUTE);
       finisher.finish(
-          otelContext, executionAttributes, new Response(httpResponse, context.response()), null);
+          otelContext,
+          executionAttributes,
+          new Response(httpResponse, context.response(), otelContext),
+          null);
     }
     clearAttributes(executionAttributes);
   }
