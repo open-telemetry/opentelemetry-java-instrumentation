@@ -30,14 +30,11 @@ dependencies {
   testImplementation("org.slf4j:slf4j-simple:2.0.17")
 
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 tasks {
   test {
     useJUnitPlatform()
-    testLogging {
-      exceptionFormat = TestExceptionFormat.FULL
-      showStandardStreams = true
-    }
   }
 }

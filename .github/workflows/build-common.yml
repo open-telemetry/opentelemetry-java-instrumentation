@@ -497,7 +497,7 @@ jobs:
         working-directory: examples/extension
 
       - name: Build benchmark-overhead
-        run: ./gradlew build ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+        run: ./gradlew assemble ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
         working-directory: benchmark-overhead
 
       - name: Run muzzle check against extension
