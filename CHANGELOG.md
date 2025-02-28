@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Version 2.13.3 (2025-02-28)
 
 ### 🛠️ Bug fixes
 
