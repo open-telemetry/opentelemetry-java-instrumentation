@@ -6,12 +6,22 @@
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0
 
 import io.opentelemetry.api.common.AttributeKey
-import io.opentelemetry.instrumentation.testing.junit.http.{AbstractHttpServerTest, HttpServerTestOptions, ServerEndpoint}
+import io.opentelemetry.instrumentation.testing.junit.http.{
+  AbstractHttpServerTest,
+  HttpServerTestOptions,
+  ServerEndpoint
+}
 import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.AbstractHttpServerInstrumentationTest.TIMEOUT
-import io.opentelemetry.sdk.testing.assertj.{OpenTelemetryAssertions, TraceAssert}
+import io.opentelemetry.sdk.testing.assertj.{
+  OpenTelemetryAssertions,
+  TraceAssert
+}
 import io.opentelemetry.sdk.trace.data.SpanData
 import io.opentelemetry.semconv.HttpAttributes
-import io.opentelemetry.testing.internal.armeria.common.{AggregatedHttpRequest, HttpMethod}
+import io.opentelemetry.testing.internal.armeria.common.{
+  AggregatedHttpRequest,
+  HttpMethod
+}
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
@@ -60,10 +70,14 @@ abstract class AbstractHttpServerInstrumentationTest
 
     testing.waitAndAssertTraces(new Consumer[TraceAssert] {
       override def accept(trace: TraceAssert): Unit = {
-        trace.anySatisfy(
-          new Consumer[SpanData] {
-            override def accept(t: SpanData): Unit = assertServerSpan(OpenTelemetryAssertions.assertThat(t), "GET", TIMEOUT, TIMEOUT.getStatus)
-          })
+        trace.anySatisfy(new Consumer[SpanData] {
+          override def accept(t: SpanData): Unit = assertServerSpan(
+            OpenTelemetryAssertions.assertThat(t),
+            "GET",
+            TIMEOUT,
+            TIMEOUT.getStatus
+          )
+        })
       }
     })
   }

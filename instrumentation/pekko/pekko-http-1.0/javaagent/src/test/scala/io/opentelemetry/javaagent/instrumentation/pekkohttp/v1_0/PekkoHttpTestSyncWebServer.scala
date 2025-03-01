@@ -10,7 +10,10 @@ import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.Http.ServerBinding
 import org.apache.pekko.http.scaladsl.model.HttpMethods.GET
 import org.apache.pekko.http.scaladsl.model._
-import io.opentelemetry.instrumentation.testing.junit.http.{AbstractHttpServerTest, ServerEndpoint}
+import io.opentelemetry.instrumentation.testing.junit.http.{
+  AbstractHttpServerTest,
+  ServerEndpoint
+}
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint._
 import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.AbstractHttpServerInstrumentationTest.TIMEOUT
 
@@ -40,7 +43,7 @@ object PekkoHttpTestSyncWebServer {
             case REDIRECT =>
               resp.withHeaders(headers.Location(endpoint.getBody))
             case ERROR     => resp.withEntity(endpoint.getBody)
-            case TIMEOUT => resp.withEntity(endpoint.getBody)
+            case TIMEOUT   => resp.withEntity(endpoint.getBody)
             case EXCEPTION => throw new IllegalStateException(endpoint.getBody)
             case _ =>
               HttpResponse(status = NOT_FOUND.getStatus)

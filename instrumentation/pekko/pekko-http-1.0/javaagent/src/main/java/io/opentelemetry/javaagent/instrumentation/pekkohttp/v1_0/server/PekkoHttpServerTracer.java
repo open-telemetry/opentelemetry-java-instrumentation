@@ -102,7 +102,9 @@ public class PekkoHttpServerTracer
                     PekkoHttpServerSingletons.instrumenter().start(parentContext, request);
                 context = PekkoRouteHolder.init(context);
                 tracingRequest = new PekkoTracingRequest(context, request);
-                request = (HttpRequest) request.addAttribute(PekkoTracingRequest.ATTR_KEY, tracingRequest);
+                request =
+                    (HttpRequest)
+                        request.addAttribute(PekkoTracingRequest.ATTR_KEY, tracingRequest);
               }
               // event if span wasn't started we need to push TracingRequest to match response
               // with request
@@ -177,5 +179,4 @@ public class PekkoHttpServerTracer
           });
     }
   }
-
 }

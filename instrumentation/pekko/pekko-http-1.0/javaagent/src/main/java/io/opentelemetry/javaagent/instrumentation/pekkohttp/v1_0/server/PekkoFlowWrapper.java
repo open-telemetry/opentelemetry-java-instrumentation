@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 
 import io.opentelemetry.context.Context;
 import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.Queue;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
 import org.apache.pekko.stream.Attributes;
@@ -63,7 +63,7 @@ public class PekkoFlowWrapper
   }
 
   private class TracingLogic extends GraphStageLogic {
-    private final Deque<PekkoTracingRequest> requests = new ArrayDeque<>();
+    private final Queue<PekkoTracingRequest> requests = new ArrayDeque<>();
 
     public TracingLogic() {
       super(shape);
@@ -106,14 +106,16 @@ public class PekkoFlowWrapper
             @Override
             public void onPush() {
               HttpRequest request = grab(requestIn);
-              PekkoTracingRequest tracingRequest = request.getAttribute(PekkoTracingRequest.ATTR_KEY)
-                  .orElse(PekkoTracingRequest.EMPTY);
+              PekkoTracingRequest tracingRequest =
+                  request
+                      .getAttribute(PekkoTracingRequest.ATTR_KEY)
+                      .orElse(PekkoTracingRequest.EMPTY);
               if (tracingRequest == PekkoTracingRequest.EMPTY) {
                 request = (HttpRequest) request.removeAttribute(PekkoTracingRequest.ATTR_KEY);
               }
               // event if span wasn't started we need to push TracingRequest to match response
               // with request
-              requests.push(tracingRequest);
+              requests.add(tracingRequest);
 
               push(requestOut, request);
             }
@@ -155,10 +157,9 @@ public class PekkoFlowWrapper
     }
 
     abstract class ApplicationOutHandler extends AbstractOutHandler {
-      Deque<PekkoTracingRequest> getRequests() {
+      Queue<PekkoTracingRequest> getRequests() {
         return requests;
       }
     }
   }
-
 }
