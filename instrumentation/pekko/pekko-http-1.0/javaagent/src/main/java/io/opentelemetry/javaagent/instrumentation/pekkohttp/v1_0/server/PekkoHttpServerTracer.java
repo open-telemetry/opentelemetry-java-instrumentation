@@ -5,23 +5,28 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
+import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.PekkoRouteHolder;
 import java.util.ArrayDeque;
-import java.util.Deque;
+import java.util.List;
+import java.util.Queue;
+import org.apache.pekko.http.javadsl.model.HttpHeader;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
 import org.apache.pekko.stream.Attributes;
 import org.apache.pekko.stream.BidiShape;
 import org.apache.pekko.stream.Inlet;
 import org.apache.pekko.stream.Outlet;
-import org.apache.pekko.stream.scaladsl.Flow;
+import org.apache.pekko.stream.scaladsl.BidiFlow;
 import org.apache.pekko.stream.stage.AbstractInHandler;
 import org.apache.pekko.stream.stage.AbstractOutHandler;
 import org.apache.pekko.stream.stage.GraphStage;
 import org.apache.pekko.stream.stage.GraphStageLogic;
-import org.apache.pekko.stream.stage.OutHandler;
 
-public class PekkoFlowWrapper
+public class PekkoHttpServerTracer
     extends GraphStage<BidiShape<HttpResponse, HttpResponse, HttpRequest, HttpRequest>> {
   private final Inlet<HttpRequest> requestIn = Inlet.create("otel.requestIn");
   private final Outlet<HttpRequest> requestOut = Outlet.create("otel.requestOut");
@@ -31,25 +36,9 @@ public class PekkoFlowWrapper
   private final BidiShape<HttpResponse, HttpResponse, HttpRequest, HttpRequest> shape =
       BidiShape.of(responseIn, responseOut, requestIn, requestOut);
 
-  public static Flow<HttpRequest, HttpResponse, ?> wrap(
-      Flow<HttpRequest, HttpResponse, ?> handler) {
-    return handler.join(new PekkoFlowWrapper());
-  }
-
-  public static Context getContext(OutHandler outHandler) {
-    if (outHandler instanceof TracingLogic.ApplicationOutHandler) {
-      // We have multiple requests here only when requests are pipelined on the same connection.
-      // It appears that these requests are processed one by one so processing next request won't
-      // be started before the first one has returned a response, because of this the first request
-      // in the queue is always the one that is currently being processed.
-      PekkoTracingRequest request =
-          ((TracingLogic.ApplicationOutHandler) outHandler).getRequests().peek();
-      if (request != null) {
-        return request.context;
-      }
-    }
-
-    return null;
+  public static BidiFlow<HttpResponse, ?, ?, HttpRequest, ?> wrap(
+      BidiFlow<HttpResponse, ?, ?, HttpRequest, ?> handler) {
+    return BidiFlow.fromGraph(new PekkoHttpServerTracer()).atopMat(handler, (a, b) -> b);
   }
 
   @Override
@@ -63,7 +52,7 @@ public class PekkoFlowWrapper
   }
 
   private class TracingLogic extends GraphStageLogic {
-    private final Deque<PekkoTracingRequest> requests = new ArrayDeque<>();
+    private final Queue<PekkoTracingRequest> requests = new ArrayDeque<>();
 
     public TracingLogic() {
       super(shape);
@@ -86,7 +75,7 @@ public class PekkoFlowWrapper
       // user code pulls request, pass request from server to user code
       setHandler(
           requestOut,
-          new ApplicationOutHandler() {
+          new AbstractOutHandler() {
             @Override
             public void onPull() {
               pull(requestIn);
@@ -106,14 +95,18 @@ public class PekkoFlowWrapper
             @Override
             public void onPush() {
               HttpRequest request = grab(requestIn);
-              PekkoTracingRequest tracingRequest = request.getAttribute(PekkoTracingRequest.ATTR_KEY)
-                  .orElse(PekkoTracingRequest.EMPTY);
-              if (tracingRequest == PekkoTracingRequest.EMPTY) {
-                request = (HttpRequest) request.removeAttribute(PekkoTracingRequest.ATTR_KEY);
+              PekkoTracingRequest tracingRequest = PekkoTracingRequest.EMPTY;
+              Context parentContext = currentContext();
+              if (PekkoHttpServerSingletons.instrumenter().shouldStart(parentContext, request)) {
+                Context context =
+                    PekkoHttpServerSingletons.instrumenter().start(parentContext, request);
+                context = PekkoRouteHolder.init(context);
+                tracingRequest = new PekkoTracingRequest(context, request);
+                request = (HttpRequest) request.addAttribute(PekkoTracingRequest.ATTR_KEY, tracingRequest);
               }
               // event if span wasn't started we need to push TracingRequest to match response
               // with request
-              requests.push(tracingRequest);
+              requests.add(tracingRequest);
 
               push(requestOut, request);
             }
@@ -136,28 +129,52 @@ public class PekkoFlowWrapper
             @Override
             public void onPush() {
               HttpResponse response = grab(responseIn);
-              requests.poll();
+
+              PekkoTracingRequest tracingRequest = requests.poll();
+              if (tracingRequest != null && tracingRequest != PekkoTracingRequest.EMPTY) {
+                // pekko response is immutable so the customizer just captures the added headers
+                PekkoHttpResponseMutator responseMutator = new PekkoHttpResponseMutator();
+                HttpServerResponseCustomizerHolder.getCustomizer()
+                    .customize(tracingRequest.context, response, responseMutator);
+                // build a new response with the added headers
+                List<HttpHeader> headers = responseMutator.getHeaders();
+                if (!headers.isEmpty()) {
+                  response = (HttpResponse) response.addHeaders(headers);
+                }
+
+                PekkoHttpServerSingletons.instrumenter()
+                    .end(tracingRequest.context, tracingRequest.request, response, null);
+              }
               push(responseOut, response);
             }
 
             @Override
             public void onUpstreamFailure(Throwable exception) {
-              requests.clear();
+              endOngoingSpans(exception);
               fail(responseOut, exception);
             }
 
             @Override
             public void onUpstreamFinish() {
-              requests.clear();
+              endOngoingSpans(null);
               completeStage();
             }
-          });
-    }
 
-    abstract class ApplicationOutHandler extends AbstractOutHandler {
-      Deque<PekkoTracingRequest> getRequests() {
-        return requests;
-      }
+            private void endOngoingSpans(Throwable exception) {
+              PekkoTracingRequest tracingRequest;
+              while ((tracingRequest = requests.poll()) != null) {
+                if (tracingRequest == PekkoTracingRequest.EMPTY) {
+                  continue;
+                }
+                PekkoHttpServerSingletons.instrumenter()
+                    .end(
+                        tracingRequest.context,
+                        tracingRequest.request,
+                        PekkoHttpServerSingletons.errorResponse(),
+                        exception);
+              }
+            }
+          });
     }
   }
 
