@@ -143,7 +143,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.118.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.119.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -160,8 +160,8 @@ dependencies {
   compileOnly("com.google.code.findbugs:jsr305")
   compileOnly("com.google.errorprone:error_prone_annotations")
 
-  codenarc("org.codenarc:CodeNarc:3.5.0")
-  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.23"))
+  codenarc("org.codenarc:CodeNarc:3.6.0")
+  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.24"))
 
   modules {
     // checkstyle uses the very old google-collections which causes Java 9 module conflict with
@@ -356,9 +356,10 @@ tasks.withType<Test>().configureEach {
   val trustStore = project(":testing-common").file("src/misc/testing-keystore.p12")
   // Work around payara not working when this is set for some reason.
   // Don't set for:
+  // - aws-sdk as we have tests that interact with AWS and need normal trustStore
   // - camel as we have tests that interact with AWS and need normal trustStore
   // - vaadin as tests need to be able to download nodejs when not cached in ~/.vaadin/
-  if (project.name != "jaxrs-2.0-payara-testing" && !project.path.contains("vaadin") && project.description != "camel-2-20") {
+  if (project.name != "jaxrs-2.0-payara-testing" && !project.path.contains("vaadin") && project.description != "camel-2-20" && !project.path.contains("aws-sdk")) {
     jvmArgumentProviders.add(KeystoreArgumentsProvider(trustStore))
   }
 
@@ -430,7 +431,7 @@ codenarc {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "10.21.2"
+  toolVersion = "10.21.3"
   maxWarnings = 0
 }
 
@@ -439,7 +440,6 @@ dependencyCheck {
   suppressionFile = "buildscripts/dependency-check-suppressions.xml"
   failBuildOnCVSS = 7.0f // fail on high or critical CVE
   nvd.apiKey = System.getenv("NVD_API_KEY")
-  nvd.delay = 3500 // until next dependency check release (https://github.com/jeremylong/DependencyCheck/pull/6333)
 }
 
 idea {
