@@ -79,6 +79,12 @@
       ],
     },
     {
+      groupName: 'jackson packages',
+      matchPackageNames: [
+        'com.fasterxml.jackson{/,}**',
+      ],
+    },
+    {
       // prevent update to 2.4-groovy-4.0-SNAPSHOT
       allowedVersions: '!/\\-SNAPSHOT$/',
       matchPackageNames: [
