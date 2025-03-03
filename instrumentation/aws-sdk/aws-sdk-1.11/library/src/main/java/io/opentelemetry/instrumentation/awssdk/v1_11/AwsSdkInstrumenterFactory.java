@@ -19,7 +19,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -47,9 +46,6 @@ final class AwsSdkInstrumenterFactory {
   private static final AwsSdkAttributesExtractor sdkAttributesExtractor =
       new AwsSdkAttributesExtractor();
   private static final SnsAttributesExtractor snsAttributesExtractor = new SnsAttributesExtractor();
-  private static final MessagingNetworkAttributesExtractor<Request<?>, Response<?>>
-      messagingNetworkAttributesExtractor =
-          MessagingNetworkAttributesExtractor.create(SqsAttributesGetter.INSTANCE);
 
   private static final List<AttributesExtractor<Request<?>, Response<?>>>
       defaultAttributesExtractors = createAttributesExtractors(false);
@@ -81,8 +77,7 @@ final class AwsSdkInstrumenterFactory {
                 httpAttributesExtractor,
                 rpcAttributesExtractor,
                 snsAttributesExtractor,
-                sdkAttributesExtractor,
-                messagingNetworkAttributesExtractor));
+                sdkAttributesExtractor));
     if (includeExperimental) {
       extractors.add(experimentalAttributesExtractor);
     }
