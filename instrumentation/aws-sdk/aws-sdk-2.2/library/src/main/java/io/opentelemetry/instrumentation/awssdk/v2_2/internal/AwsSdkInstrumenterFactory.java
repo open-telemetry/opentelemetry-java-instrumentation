@@ -20,7 +20,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiSpanNam
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -58,10 +57,6 @@ public final class AwsSdkInstrumenterFactory {
       httpClientSuppressionAttributesExtractor =
           new AwsSdkHttpClientSuppressionAttributesExtractor();
 
-  private static final MessagingNetworkAttributesExtractor<ExecutionAttributes, Response>
-      messagingNetworkAttributesExtractor =
-          MessagingNetworkAttributesExtractor.create(SqsAttributesGetter.INSTANCE);
-
   private static final List<AttributesExtractor<ExecutionAttributes, Response>>
       defaultAttributesExtractors =
           Arrays.asList(rpcAttributesExtractor, httpClientSuppressionAttributesExtractor);
@@ -71,8 +66,7 @@ public final class AwsSdkInstrumenterFactory {
           Arrays.asList(
               rpcAttributesExtractor,
               experimentalAttributesExtractor,
-              httpClientSuppressionAttributesExtractor,
-              messagingNetworkAttributesExtractor);
+              httpClientSuppressionAttributesExtractor);
 
   private static final List<AttributesExtractor<ExecutionAttributes, Response>>
       defaultConsumerAttributesExtractors =
