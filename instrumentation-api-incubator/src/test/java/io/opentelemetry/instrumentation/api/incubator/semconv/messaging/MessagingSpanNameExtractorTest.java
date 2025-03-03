@@ -48,7 +48,7 @@ class MessagingSpanNameExtractorTest {
     } else {
       lenient().when(getter.getDestination(message)).thenReturn(destinationName);
     }
-    when(getter.getOperationName(message)).thenReturn(operation.operationType());
+    when(getter.getOperationName(message, operation)).thenReturn(operation.operationType());
 
     lenient().when(serverAttributesGetter.getServerPort(message)).thenReturn(1234);
     lenient().when(serverAttributesGetter.getServerAddress(message)).thenReturn("127.0.0.1");
