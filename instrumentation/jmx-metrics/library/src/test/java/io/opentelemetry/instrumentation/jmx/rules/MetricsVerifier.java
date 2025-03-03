@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.jmx.rules;
 
-import static io.opentelemetry.instrumentation.jmx.rules.assertions.Assertions.assertThat;
+import static io.opentelemetry.instrumentation.jmx.rules.assertions.JmxAssertj.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;

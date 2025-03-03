@@ -85,7 +85,7 @@ public class TargetSystemTest {
   }
 
   @AfterEach
-  void afterEAch() {
+  void afterEach() {
     stop(targetSystem);
     targetSystem = null;
 
