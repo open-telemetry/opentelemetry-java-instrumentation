@@ -34,16 +34,27 @@ final class TracingClientInterceptor implements ClientInterceptor {
   private static final String RECEIVED = "RECEIVED";
 
   @SuppressWarnings("rawtypes")
-  private static final AtomicLongFieldUpdater<TracingClientCall> MESSAGE_ID_UPDATER =
-      AtomicLongFieldUpdater.newUpdater(TracingClientCall.class, "messageId");
+  private static final AtomicLongFieldUpdater<TracingClientCall> SENT_MESSAGE_ID_UPDATER =
+      AtomicLongFieldUpdater.newUpdater(TracingClientCall.class, "sentMessageId");
+
+  @SuppressWarnings("rawtypes")
+  private static final AtomicLongFieldUpdater<TracingClientCall> RECEIVED_MESSAGE_ID_UPDATER =
+      AtomicLongFieldUpdater.newUpdater(TracingClientCall.class, "receivedMessageId");
 
   private final Instrumenter<GrpcRequest, Status> instrumenter;
   private final ContextPropagators propagators;
+  private final boolean captureExperimentalSpanAttributes;
+  private final boolean addMessageEvents;
 
   TracingClientInterceptor(
-      Instrumenter<GrpcRequest, Status> instrumenter, ContextPropagators propagators) {
+      Instrumenter<GrpcRequest, Status> instrumenter,
+      ContextPropagators propagators,
+      boolean captureExperimentalSpanAttributes,
+      boolean addMessageEvents) {
     this.instrumenter = instrumenter;
     this.propagators = propagators;
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+    this.addMessageEvents = addMessageEvents;
   }
 
   @Override
@@ -75,9 +86,13 @@ final class TracingClientInterceptor implements ClientInterceptor {
     private final Context context;
     private final GrpcRequest request;
 
-    // Used by MESSAGE_ID_UPDATER
+    // Used by SENT_MESSAGE_ID_UPDATER
     @SuppressWarnings("UnusedVariable")
-    volatile long messageId;
+    volatile long sentMessageId;
+
+    // Used by RECEIVED_MESSAGE_ID_UPDATER
+    @SuppressWarnings("UnusedVariable")
+    volatile long receivedMessageId;
 
     TracingClientCall(
         ClientCall<REQUEST, RESPONSE> delegate,
@@ -113,10 +128,11 @@ final class TracingClientInterceptor implements ClientInterceptor {
         instrumenter.end(context, request, Status.UNKNOWN, e);
         throw e;
       }
-      Span span = Span.fromContext(context);
-      Attributes attributes =
-          Attributes.of(MESSAGE_TYPE, SENT, MESSAGE_ID, MESSAGE_ID_UPDATER.incrementAndGet(this));
-      span.addEvent("message", attributes);
+      long messageId = SENT_MESSAGE_ID_UPDATER.incrementAndGet(this);
+      if (addMessageEvents) {
+        Attributes attributes = Attributes.of(MESSAGE_TYPE, SENT, MESSAGE_ID, messageId);
+        Span.fromContext(context).addEvent("message", attributes);
+      }
     }
 
     final class TracingClientCallListener
@@ -139,14 +155,11 @@ final class TracingClientInterceptor implements ClientInterceptor {
 
       @Override
       public void onMessage(RESPONSE message) {
-        Span span = Span.fromContext(context);
-        Attributes attributes =
-            Attributes.of(
-                MESSAGE_TYPE,
-                RECEIVED,
-                MESSAGE_ID,
-                MESSAGE_ID_UPDATER.incrementAndGet(TracingClientCall.this));
-        span.addEvent("message", attributes);
+        long messageId = RECEIVED_MESSAGE_ID_UPDATER.incrementAndGet(TracingClientCall.this);
+        if (addMessageEvents) {
+          Attributes attributes = Attributes.of(MESSAGE_TYPE, RECEIVED, MESSAGE_ID, messageId);
+          Span.fromContext(context).addEvent("message", attributes);
+        }
         try (Scope ignored = context.makeCurrent()) {
           delegate().onMessage(message);
         }
@@ -155,6 +168,13 @@ final class TracingClientInterceptor implements ClientInterceptor {
       @Override
       public void onClose(Status status, Metadata trailers) {
         request.setPeerSocketAddress(getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR));
+        if (captureExperimentalSpanAttributes) {
+          Span span = Span.fromContext(context);
+          span.setAttribute(
+              "grpc.messages.received", RECEIVED_MESSAGE_ID_UPDATER.get(TracingClientCall.this));
+          span.setAttribute(
+              "grpc.messages.sent", SENT_MESSAGE_ID_UPDATER.get(TracingClientCall.this));
+        }
         instrumenter.end(context, request, status, status.getCause());
         try (Scope ignored = parentContext.makeCurrent()) {
           delegate().onClose(status, trailers);

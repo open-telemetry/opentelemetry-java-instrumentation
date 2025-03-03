@@ -27,6 +27,10 @@ public final class GrpcSingletons {
   private static final AtomicReference<Context.Storage> STORAGE_REFERENCE = new AtomicReference<>();
 
   static {
+    boolean addMessageEvents =
+        AgentInstrumentationConfig.get()
+            .getBoolean("otel.instrumentation.grpc.message-events", true);
+
     boolean experimentalSpanAttributes =
         AgentInstrumentationConfig.get()
             .getBoolean("otel.instrumentation.grpc.experimental-span-attributes", false);
@@ -40,6 +44,7 @@ public final class GrpcSingletons {
 
     GrpcTelemetry telemetry =
         GrpcTelemetry.builder(GlobalOpenTelemetry.get())
+            .setAddMessageEvents(addMessageEvents)
             .setCaptureExperimentalSpanAttributes(experimentalSpanAttributes)
             .setCapturedClientRequestMetadata(clientRequestMetadata)
             .setCapturedServerRequestMetadata(serverRequestMetadata)
