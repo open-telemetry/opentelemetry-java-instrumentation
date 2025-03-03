@@ -233,7 +233,7 @@ class MessagingAttributesExtractorTest {
 
     @Nullable
     @Override
-    public String getOperationName(Map<String, String> request) {
+    public String getOperationName(Map<String, String> request, MessageOperation operation) {
       return request.get("operationName");
     }
   }
