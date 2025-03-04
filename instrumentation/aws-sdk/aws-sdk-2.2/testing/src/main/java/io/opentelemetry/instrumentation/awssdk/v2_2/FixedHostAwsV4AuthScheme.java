@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
+import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.auth.aws.internal.scheme.DefaultAwsV4AuthScheme;
@@ -49,7 +50,7 @@ final class FixedHostAwsV4AuthScheme implements AwsV4AuthScheme {
     private final String apiUrl;
 
     FixedHostAwsV4HttpSigner(String apiUrl) {
-      this.apiUrl = apiUrl;
+      this.apiUrl = URI.create(apiUrl).getHost();
     }
 
     @Override
@@ -74,8 +75,24 @@ final class FixedHostAwsV4AuthScheme implements AwsV4AuthScheme {
     @Override
     public CompletableFuture<AsyncSignedRequest> signAsync(
         AsyncSignRequest<? extends AwsCredentialsIdentity> request) {
-      // TODO: Implement
-      return null;
+      SdkHttpRequest original = request.request();
+      AsyncSignRequest<? extends AwsCredentialsIdentity> override =
+          request.toBuilder()
+              .request(
+                  request.request().toBuilder().port(443).protocol("https").host(apiUrl).build())
+              .build();
+      return DEFAULT
+          .signAsync(override)
+          .thenApply(
+              signed ->
+                  signed.toBuilder()
+                      .request(
+                          signed.request().toBuilder()
+                              .protocol(original.protocol())
+                              .host(original.host())
+                              .port(original.port())
+                              .build())
+                      .build());
     }
   }
 }

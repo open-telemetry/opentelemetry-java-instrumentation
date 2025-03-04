@@ -26,18 +26,26 @@ import io.opentelemetry.instrumentation.awssdk.v2_2.recording.RecordingExtension
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.awscore.client.builder.AwsClientBuilder;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeAsyncClient;
+import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeAsyncClientBuilder;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClientBuilder;
 import software.amazon.awssdk.services.bedrockruntime.model.ContentBlock;
 import software.amazon.awssdk.services.bedrockruntime.model.ConversationRole;
 import software.amazon.awssdk.services.bedrockruntime.model.ConverseRequest;
 import software.amazon.awssdk.services.bedrockruntime.model.ConverseResponse;
+import software.amazon.awssdk.services.bedrockruntime.model.ConverseStreamRequest;
+import software.amazon.awssdk.services.bedrockruntime.model.ConverseStreamResponseHandler;
 import software.amazon.awssdk.services.bedrockruntime.model.InferenceConfiguration;
 import software.amazon.awssdk.services.bedrockruntime.model.Message;
 
@@ -51,7 +59,10 @@ public abstract class AbstractAws2BedrockRuntimeTest {
 
   protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
 
-  private static void configureClient(BedrockRuntimeClientBuilder builder) {
+  protected abstract BedrockRuntimeAsyncClient configureBedrockRuntimeClient(
+      BedrockRuntimeAsyncClient client);
+
+  private static void configureClient(AwsClientBuilder<?, ?> builder) {
     builder
         .region(Region.US_EAST_1)
         .endpointOverride(URI.create("http://localhost:" + recording.getPort()));
@@ -160,6 +171,137 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, asList("|")),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 8),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 10),
+                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("max_tokens")))));
+  }
+
+  @Test
+  void testConverseStream() throws InterruptedException, ExecutionException {
+    BedrockRuntimeAsyncClientBuilder builder = BedrockRuntimeAsyncClient.builder();
+    builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
+    configureClient(builder);
+    BedrockRuntimeAsyncClient client = configureBedrockRuntimeClient(builder.build());
+
+    String modelId = "amazon.titan-text-lite-v1";
+
+    List<String> responseChunks = new ArrayList<>();
+
+    ConverseStreamResponseHandler responseHandler =
+        ConverseStreamResponseHandler.builder()
+            .subscriber(
+                ConverseStreamResponseHandler.Visitor.builder()
+                    .onContentBlockDelta(
+                        chunk -> {
+                          responseChunks.add(chunk.delta().text());
+                        })
+                    .build())
+            .build();
+
+    client
+        .converseStream(
+            ConverseStreamRequest.builder()
+                .modelId(modelId)
+                .messages(
+                    Message.builder()
+                        .role(ConversationRole.USER)
+                        .content(ContentBlock.fromText("Say this is a test"))
+                        .build())
+                .build(),
+            responseHandler)
+        .get();
+
+    assertThat(String.join("", responseChunks)).isEqualTo("\"Test, test\"");
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("chat amazon.titan-text-lite-v1")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfying(
+                                equalTo(
+                                    GEN_AI_SYSTEM,
+                                    GenAiIncubatingAttributes.GenAiSystemIncubatingValues
+                                        .AWS_BEDROCK),
+                                equalTo(
+                                    GEN_AI_OPERATION_NAME,
+                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
+                                        .CHAT),
+                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 8),
+                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 10),
+                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
+  }
+
+  @Test
+  void testConverseStreamOptions() throws InterruptedException, ExecutionException {
+    BedrockRuntimeAsyncClientBuilder builder = BedrockRuntimeAsyncClient.builder();
+    builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
+    configureClient(builder);
+    BedrockRuntimeAsyncClient client = configureBedrockRuntimeClient(builder.build());
+
+    String modelId = "amazon.titan-text-lite-v1";
+
+    List<String> responseChunks = new ArrayList<>();
+
+    ConverseStreamResponseHandler responseHandler =
+        ConverseStreamResponseHandler.builder()
+            .subscriber(
+                ConverseStreamResponseHandler.Visitor.builder()
+                    .onContentBlockDelta(
+                        chunk -> {
+                          responseChunks.add(chunk.delta().text());
+                        })
+                    .build())
+            .build();
+
+    client
+        .converseStream(
+            ConverseStreamRequest.builder()
+                .modelId(modelId)
+                .messages(
+                    Message.builder()
+                        .role(ConversationRole.USER)
+                        .content(ContentBlock.fromText("Say this is a test"))
+                        .build())
+                .inferenceConfig(
+                    InferenceConfiguration.builder()
+                        .maxTokens(5)
+                        .temperature(0.8f)
+                        .topP(1f)
+                        .stopSequences("|")
+                        .build())
+                .build(),
+            responseHandler)
+        .get();
+
+    assertThat(String.join("", responseChunks)).isEqualTo("This model");
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("chat amazon.titan-text-lite-v1")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfying(
+                                equalTo(
+                                    GEN_AI_SYSTEM,
+                                    GenAiIncubatingAttributes.GenAiSystemIncubatingValues
+                                        .AWS_BEDROCK),
+                                equalTo(
+                                    GEN_AI_OPERATION_NAME,
+                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
+                                        .CHAT),
+                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_MAX_TOKENS, 5),
+                                satisfies(
+                                    GEN_AI_REQUEST_TEMPERATURE,
+                                    temp -> temp.isCloseTo(0.8, within(0.0001))),
+                                equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
+                                equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, asList("|")),
+                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 8),
+                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 5),
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("max_tokens")))));
   }
 }
