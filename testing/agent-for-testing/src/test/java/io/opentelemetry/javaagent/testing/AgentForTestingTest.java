@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
+import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -27,11 +28,20 @@ class AgentForTestingTest {
   }
 
   @Test
-  void exportAndRetrieve() {
+  void exportAndRetrieveSpans() {
     GlobalOpenTelemetry.getTracer("test").spanBuilder("test").startSpan().end();
 
     List<SpanData> spans = AgentTestingExporterAccess.getExportedSpans();
     assertEquals(1, spans.size());
     assertEquals("test", spans.get(0).getName());
+  }
+
+  @Test
+  void exportAndRetrieveMetrics() {
+    GlobalOpenTelemetry.getMeter("test").upDownCounterBuilder("test").build().add(1);
+
+    List<MetricData> metrics = AgentTestingExporterAccess.getExportedMetrics();
+    assertEquals(1, metrics.size());
+    assertEquals("test", metrics.get(0).getName());
   }
 }
