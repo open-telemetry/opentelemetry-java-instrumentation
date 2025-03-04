@@ -12,11 +12,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class FileManager {
-
+  private static final Logger logger = Logger.getLogger(FileManager.class.getName());
   private final String rootDir;
 
   public FileManager(String rootDir) {
@@ -33,7 +34,7 @@ public class FileManager {
           .map(dir -> parseInstrumentationPath(dir.toString()))
           .collect(Collectors.toList());
     } catch (IOException e) {
-      System.out.println("Error traversing directory: " + e.getMessage());
+      logger.severe("Error traversing directory: " + e.getMessage());
       return new ArrayList<>();
     }
   }
@@ -96,7 +97,7 @@ public class FileManager {
           .map(Path::toString)
           .collect(Collectors.toList());
     } catch (IOException e) {
-      System.out.println("Error traversing directory: " + e.getMessage());
+      logger.severe("Error traversing directory: " + e.getMessage());
       return new ArrayList<>();
     }
   }
@@ -105,7 +106,7 @@ public class FileManager {
     try {
       return Files.readString(Paths.get(filePath));
     } catch (IOException e) {
-      System.out.println("Error reading file: " + e.getMessage());
+      logger.severe("Error reading file: " + e.getMessage());
       return null;
     }
   }

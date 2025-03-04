@@ -41,7 +41,6 @@ public class DocGeneratorApplication {
           (group, entities) -> {
             try {
               String groupHeader = group + ":\n  instrumentations:\n";
-              System.out.print(groupHeader);
               writer.write(groupHeader);
 
               for (InstrumentationEntity entity : entities) {
@@ -49,26 +48,21 @@ public class DocGeneratorApplication {
                     String.format(
                         "    - name: %s\n      srcPath: %s\n      types:\n",
                         entity.getInstrumentationName(), entity.getSrcPath());
-                System.out.print(entityDetails);
                 writer.write(entityDetails);
 
                 for (InstrumentationType type : entity.getTypes()) {
                   String typeDetail = "        - " + type + "\n";
-                  System.out.print(typeDetail);
                   writer.write(typeDetail);
                 }
 
                 if (entity.getTargetVersions() == null || entity.getTargetVersions().isEmpty()) {
                   String targetVersions = "      target_versions: []\n";
-                  System.out.print(targetVersions);
                   writer.write(targetVersions);
                 } else {
                   String targetVersions = "      target_versions:\n";
-                  System.out.print(targetVersions);
                   writer.write(targetVersions);
                   for (String version : entity.getTargetVersions()) {
                     String versionDetail = "        - " + version + "\n";
-                    System.out.print(versionDetail);
                     writer.write(versionDetail);
                   }
                 }
