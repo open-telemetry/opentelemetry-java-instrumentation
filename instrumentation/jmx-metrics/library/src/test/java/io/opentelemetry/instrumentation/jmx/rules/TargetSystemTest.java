@@ -89,8 +89,10 @@ public class TargetSystemTest {
     stop(targetSystem);
     targetSystem = null;
 
-    for (GenericContainer<?> targetDependency : targetDependencies) {
-      stop(targetDependency);
+    if (targetDependencies != null) {
+      for (GenericContainer<?> targetDependency : targetDependencies) {
+        stop(targetDependency);
+      }
     }
     targetDependencies = Collections.emptyList();
   }

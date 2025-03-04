@@ -8,9 +8,7 @@ rules:
     unit: By
     metricAttribute:
       jvm.memory.pool.name: param(name)
-      # TODO: here the value should be lower-cased https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13361
-      # for now attribute is omitted to remain compliant with semconv
-      # jvm.memory.type: attribute(name)
+      jvm.memory.type: lowercase(beanattr(Type))
     mapping:
       # jvm.memory.used
       Usage.used:

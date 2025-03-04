@@ -5,9 +5,12 @@
 
 package io.opentelemetry.instrumentation.jmx.rules;
 
+import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
+import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
+import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,7 +51,14 @@ public class JvmTargetSystemTest extends TargetSystemTest {
 
     startTarget(target);
 
-    AttributeMatcher jvmPoolName = attributeWithAnyValue("jvm.memory.pool.name");
+    AttributeMatcher poolNameAttribute = attributeWithAnyValue("jvm.memory.pool.name");
+
+    AttributeMatcherGroup heapPoolAttributes =
+        attributeGroup(attribute("jvm.memory.type", "heap"), poolNameAttribute);
+
+    AttributeMatcherGroup nonHeapPoolAttributes =
+        attributeGroup(attribute("jvm.memory.type", "non_heap"), poolNameAttribute);
+
     AttributeMatcher bufferPoolName = attributeWithAnyValue("jvm.buffer.pool.name");
     verifyMetrics(
         MetricsVerifier.create()
@@ -59,7 +69,7 @@ public class JvmTargetSystemTest extends TargetSystemTest {
                         .hasDescription("Measure of memory used.")
                         .hasUnit("By")
                         .isUpDownCounter()
-                        .hasDataPointsWithOneAttribute(jvmPoolName))
+                        .hasDataPointsWithAttributes(heapPoolAttributes, nonHeapPoolAttributes))
             .add(
                 "jvm.memory.committed",
                 metric ->
@@ -67,7 +77,7 @@ public class JvmTargetSystemTest extends TargetSystemTest {
                         .hasDescription("Measure of memory committed.")
                         .hasUnit("By")
                         .isUpDownCounter()
-                        .hasDataPointsWithOneAttribute(jvmPoolName))
+                        .hasDataPointsWithAttributes(heapPoolAttributes, nonHeapPoolAttributes))
             .add(
                 "jvm.memory.limit",
                 metric ->
@@ -75,7 +85,7 @@ public class JvmTargetSystemTest extends TargetSystemTest {
                         .hasDescription("Measure of max obtainable memory.")
                         .hasUnit("By")
                         .isUpDownCounter()
-                        .hasDataPointsWithOneAttribute(jvmPoolName))
+                        .hasDataPointsWithAttributes(heapPoolAttributes, nonHeapPoolAttributes))
             .add(
                 "jvm.memory.init",
                 metric ->
@@ -83,7 +93,7 @@ public class JvmTargetSystemTest extends TargetSystemTest {
                         .hasDescription("Measure of initial memory requested.")
                         .hasUnit("By")
                         .isUpDownCounter()
-                        .hasDataPointsWithOneAttribute(jvmPoolName))
+                        .hasDataPointsWithAttributes(heapPoolAttributes, nonHeapPoolAttributes))
             .add(
                 "jvm.memory.used_after_last_gc",
                 metric ->
@@ -92,7 +102,8 @@ public class JvmTargetSystemTest extends TargetSystemTest {
                             "Measure of memory used, as measured after the most recent garbage collection event on this pool.")
                         .hasUnit("By")
                         .isUpDownCounter()
-                        .hasDataPointsWithOneAttribute(jvmPoolName))
+                        // note: there is no GC for non-heap memory
+                        .hasDataPointsWithAttributes(heapPoolAttributes))
             .add(
                 "jvm.thread.count",
                 metric ->
