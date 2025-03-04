@@ -142,6 +142,10 @@ public class RuleParser {
     if (unit != null) {
       out.setUnit(unit);
     }
+    String sourceUnit = (String) metricStructureYaml.remove("sourceUnit");
+    if (sourceUnit != null) {
+      out.setSourceUnit(sourceUnit);
+    }
   }
 
   private static void failOnExtraKeys(Map<String, Object> yaml) {

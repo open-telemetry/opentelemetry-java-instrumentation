@@ -16,10 +16,13 @@ import io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
+import io.opentelemetry.instrumentation.jmx.engine.unit.UnitConverter;
+import io.opentelemetry.instrumentation.jmx.engine.unit.UnitConverterFactory;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 
@@ -61,6 +64,7 @@ class MetricRegistrar {
       return;
     }
 
+    boolean recordDoubleValue = attributeInfo.usesDoubleValues();
     MetricInfo metricInfo = extractor.getInfo();
     String metricName = metricInfo.getMetricName();
     MetricInfo.Type instrumentType = metricInfo.getType();
@@ -69,6 +73,12 @@ class MetricRegistrar {
             ? metricInfo.getDescription()
             : attributeInfo.getDescription();
     String unit = metricInfo.getUnit();
+    String sourceUnit = metricInfo.getSourceUnit();
+
+    UnitConverter unitConverter = UnitConverterFactory.getConverter(sourceUnit, unit);
+    if (unitConverter != null) {
+      recordDoubleValue = unitConverter.isConvertingToDouble();
+    }
 
     switch (instrumentType) {
       // CHECKSTYLE:OFF
@@ -79,10 +89,10 @@ class MetricRegistrar {
           Optional.ofNullable(description).ifPresent(builder::setDescription);
           Optional.ofNullable(unit).ifPresent(builder::setUnit);
 
-          if (attributeInfo.usesDoubleValues()) {
-            builder.ofDoubles().buildWithCallback(doubleTypeCallback(extractor));
+          if (recordDoubleValue) {
+            builder.ofDoubles().buildWithCallback(doubleTypeCallback(extractor, unitConverter));
           } else {
-            builder.buildWithCallback(longTypeCallback(extractor));
+            builder.buildWithCallback(longTypeCallback(extractor, unitConverter));
           }
           logger.log(INFO, "Created Counter for {0}", metricName);
         }
@@ -96,10 +106,10 @@ class MetricRegistrar {
           Optional.ofNullable(description).ifPresent(builder::setDescription);
           Optional.ofNullable(unit).ifPresent(builder::setUnit);
 
-          if (attributeInfo.usesDoubleValues()) {
-            builder.ofDoubles().buildWithCallback(doubleTypeCallback(extractor));
+          if (recordDoubleValue) {
+            builder.ofDoubles().buildWithCallback(doubleTypeCallback(extractor, unitConverter));
           } else {
-            builder.buildWithCallback(longTypeCallback(extractor));
+            builder.buildWithCallback(longTypeCallback(extractor, unitConverter));
           }
           logger.log(INFO, "Created UpDownCounter for {0}", metricName);
         }
@@ -113,10 +123,10 @@ class MetricRegistrar {
           Optional.ofNullable(description).ifPresent(builder::setDescription);
           Optional.ofNullable(unit).ifPresent(builder::setUnit);
 
-          if (attributeInfo.usesDoubleValues()) {
-            builder.buildWithCallback(doubleTypeCallback(extractor));
+          if (recordDoubleValue) {
+            builder.buildWithCallback(doubleTypeCallback(extractor, unitConverter));
           } else {
-            builder.ofLongs().buildWithCallback(longTypeCallback(extractor));
+            builder.ofLongs().buildWithCallback(longTypeCallback(extractor, unitConverter));
           }
           logger.log(INFO, "Created Gauge for {0}", metricName);
         }
@@ -133,8 +143,10 @@ class MetricRegistrar {
   /*
    * A method generating metric collection callback for asynchronous Measurement
    * of Double type.
+   * If unit converter is provided then conversion is applied before metric is recorded.
    */
-  static Consumer<ObservableDoubleMeasurement> doubleTypeCallback(MetricExtractor extractor) {
+  static Consumer<ObservableDoubleMeasurement> doubleTypeCallback(
+      MetricExtractor extractor, @Nullable UnitConverter unitConverter) {
     return measurement -> {
       DetectionStatus status = extractor.getStatus();
       if (status != null) {
@@ -145,6 +157,10 @@ class MetricRegistrar {
           if (metricValue != null) {
             // get the metric attributes
             Attributes attr = createMetricAttributes(connection, objectName, extractor);
+
+            if (unitConverter != null) {
+              metricValue = unitConverter.convert(metricValue);
+            }
             measurement.record(metricValue.doubleValue(), attr);
           }
         }
@@ -155,8 +171,10 @@ class MetricRegistrar {
   /*
    * A method generating metric collection callback for asynchronous Measurement
    * of Long type.
+   * If unit converter is provided then conversion is applied before metric is recorded.
    */
-  static Consumer<ObservableLongMeasurement> longTypeCallback(MetricExtractor extractor) {
+  static Consumer<ObservableLongMeasurement> longTypeCallback(
+      MetricExtractor extractor, @Nullable UnitConverter unitConverter) {
     return measurement -> {
       DetectionStatus status = extractor.getStatus();
       if (status != null) {
@@ -167,6 +185,10 @@ class MetricRegistrar {
           if (metricValue != null) {
             // get the metric attributes
             Attributes attr = createMetricAttributes(connection, objectName, extractor);
+
+            if (unitConverter != null) {
+              metricValue = unitConverter.convert(metricValue);
+            }
             measurement.record(metricValue.longValue(), attr);
           }
         }
