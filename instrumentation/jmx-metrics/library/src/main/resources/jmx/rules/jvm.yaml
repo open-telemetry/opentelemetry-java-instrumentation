@@ -27,6 +27,7 @@ rules:
         metric: init
         desc: Measure of initial memory requested.
       # jvm.memory.used_after_last_gc
+      # note: metric attribute "jvm.memory.type" will always be "heap" as GC only manages heap
       CollectionUsage.used:
         metric: used_after_last_gc
         desc: Measure of memory used, as measured after the most recent garbage collection event on this pool.
