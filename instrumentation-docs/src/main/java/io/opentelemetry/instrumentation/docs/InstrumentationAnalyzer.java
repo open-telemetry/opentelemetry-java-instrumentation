@@ -11,8 +11,10 @@ import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import io.opentelemetry.instrumentation.docs.utils.InstrumentationPath;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 class InstrumentationAnalyzer {
 
@@ -70,10 +72,19 @@ class InstrumentationAnalyzer {
   }
 
   void analyzeVersions(List<String> files, InstrumentationEntity entity) {
-    List<String> versions = new ArrayList<>();
+    Map<InstrumentationType, Set<String>> versions = new HashMap<>();
     for (String file : files) {
       String fileContents = fileSearch.readFileToString(file);
-      versions.addAll(parseMuzzleBlock(fileContents));
+
+      if (file.contains("/javaagent/")) {
+        Set<String> results = parseMuzzleBlock(fileContents, InstrumentationType.JAVAAGENT);
+        versions
+            .computeIfAbsent(InstrumentationType.JAVAAGENT, k -> new HashSet<>())
+            .addAll(results);
+      } else if (file.contains("/library/")) {
+        Set<String> results = parseMuzzleBlock(fileContents, InstrumentationType.LIBRARY);
+        versions.computeIfAbsent(InstrumentationType.LIBRARY, k -> new HashSet<>()).addAll(results);
+      }
     }
     entity.setTargetVersions(versions);
   }

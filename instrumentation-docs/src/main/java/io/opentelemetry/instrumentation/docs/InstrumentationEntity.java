@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.docs;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 class InstrumentationEntity {
   private final String srcPath;
@@ -13,7 +15,7 @@ class InstrumentationEntity {
   private final String namespace;
   private final String group;
   private final List<InstrumentationType> types;
-  private List<String> targetVersions;
+  private Map<InstrumentationType, Set<String>> targetVersions;
 
   public InstrumentationEntity(
       String srcPath,
@@ -48,11 +50,11 @@ class InstrumentationEntity {
     return types;
   }
 
-  public List<String> getTargetVersions() {
+  public Map<InstrumentationType, Set<String>> getTargetVersions() {
     return targetVersions;
   }
 
-  public void setTargetVersions(List<String> targetVersions) {
+  public void setTargetVersions(Map<InstrumentationType, Set<String>> targetVersions) {
     this.targetVersions = targetVersions;
   }
 }

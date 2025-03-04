@@ -29,30 +29,31 @@ class GradleParser {
    * @param gradleFileContents Contents of a Gradle build file as a String
    * @return A set of strings summarizing the group, module, and version ranges
    */
-  public static Set<String> parseMuzzleBlock(String gradleFileContents) {
+  public static Set<String> parseMuzzleBlock(String gradleFileContents, InstrumentationType type) {
     Set<String> results = new HashSet<>();
     Map<String, String> variables = extractVariables(gradleFileContents);
 
-    Matcher passBlockMatcher = passBlockPattern.matcher(gradleFileContents);
+    if (type.equals(InstrumentationType.JAVAAGENT)) {
+      Matcher passBlockMatcher = passBlockPattern.matcher(gradleFileContents);
 
-    while (passBlockMatcher.find()) {
-      String passBlock = passBlockMatcher.group(1);
+      while (passBlockMatcher.find()) {
+        String passBlock = passBlockMatcher.group(1);
 
-      String group = extractValue(passBlock, "group\\.set\\(\"([^\"]+)\"\\)");
-      String module = extractValue(passBlock, "module\\.set\\(\"([^\"]+)\"\\)");
-      String versionRange = extractValue(passBlock, "versions\\.set\\(\"([^\"]+)\"\\)");
+        String group = extractValue(passBlock, "group\\.set\\(\"([^\"]+)\"\\)");
+        String module = extractValue(passBlock, "module\\.set\\(\"([^\"]+)\"\\)");
+        String versionRange = extractValue(passBlock, "versions\\.set\\(\"([^\"]+)\"\\)");
 
-      if (group != null && module != null && versionRange != null) {
-        String summary = group + ":" + module + ":" + interpolate(versionRange, variables);
-        results.add(summary);
+        if (group != null && module != null && versionRange != null) {
+          String summary = group + ":" + module + ":" + interpolate(versionRange, variables);
+          results.add(summary);
+        }
       }
-    }
-
-    Matcher dependencyMatcher = libraryPattern.matcher(gradleFileContents);
-
-    while (dependencyMatcher.find()) {
-      String dependency = dependencyMatcher.group(1);
-      results.add(interpolate(dependency, variables));
+    } else {
+      Matcher dependencyMatcher = libraryPattern.matcher(gradleFileContents);
+      while (dependencyMatcher.find()) {
+        String dependency = dependencyMatcher.group(1);
+        results.add(interpolate(dependency, variables));
+      }
     }
 
     return results;

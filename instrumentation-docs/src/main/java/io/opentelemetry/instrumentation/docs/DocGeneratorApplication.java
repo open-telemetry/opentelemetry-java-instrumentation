@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -46,24 +47,24 @@ public class DocGeneratorApplication {
               for (InstrumentationEntity entity : entities) {
                 String entityDetails =
                     String.format(
-                        "    - name: %s\n      srcPath: %s\n      types:\n",
+                        "    - name: %s\n      srcPath: %s\n",
                         entity.getInstrumentationName(), entity.getSrcPath());
                 writer.write(entityDetails);
 
-                for (InstrumentationType type : entity.getTypes()) {
-                  String typeDetail = "        - " + type + "\n";
-                  writer.write(typeDetail);
-                }
-
                 if (entity.getTargetVersions() == null || entity.getTargetVersions().isEmpty()) {
-                  String targetVersions = "      target_versions: []\n";
+                  String targetVersions = "      target_versions: {}\n";
                   writer.write(targetVersions);
                 } else {
                   String targetVersions = "      target_versions:\n";
                   writer.write(targetVersions);
-                  for (String version : entity.getTargetVersions()) {
-                    String versionDetail = "        - " + version + "\n";
-                    writer.write(versionDetail);
+                  for (Map.Entry<InstrumentationType, Set<String>> entry :
+                      entity.getTargetVersions().entrySet()) {
+                    String typeHeader = "        " + entry.getKey() + ":\n";
+                    writer.write(typeHeader);
+                    for (String version : entry.getValue()) {
+                      String versionDetail = "          - " + version + "\n";
+                      writer.write(versionDetail);
+                    }
                   }
                 }
               }
