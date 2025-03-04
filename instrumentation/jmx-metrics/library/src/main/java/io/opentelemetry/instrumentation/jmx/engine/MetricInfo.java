@@ -27,6 +27,7 @@ public class MetricInfo {
   // How to report the metric using OpenTelemetry API
   private final String metricName; // used as Instrument name
   @Nullable private final String description;
+  @Nullable private final String sourceUnit;
   @Nullable private final String unit;
   private final Type type;
 
@@ -35,13 +36,19 @@ public class MetricInfo {
    *
    * @param metricName a String that will be used as a metric name, it should be unique
    * @param description a human readable description of the metric
+   * @param sourceUnit a human readable unit of measurement that is received from metric source
    * @param unit a human readable unit of measurement
    * @param type the instrument typ to be used for the metric
    */
   public MetricInfo(
-      String metricName, @Nullable String description, String unit, @Nullable Type type) {
+      String metricName,
+      @Nullable String description,
+      @Nullable String sourceUnit,
+      @Nullable String unit,
+      @Nullable Type type) {
     this.metricName = metricName;
     this.description = description;
+    this.sourceUnit = sourceUnit;
     this.unit = unit;
     this.type = type == null ? Type.GAUGE : type;
   }
@@ -53,6 +60,11 @@ public class MetricInfo {
   @Nullable
   public String getDescription() {
     return description;
+  }
+
+  @Nullable
+  public String getSourceUnit() {
+    return sourceUnit;
   }
 
   @Nullable

@@ -152,6 +152,7 @@ public class JmxRule extends MetricStructure {
             new MetricInfo(
                 prefix == null ? niceAttributeName : (prefix + niceAttributeName),
                 null,
+                getSourceUnit(),
                 getUnit(),
                 getMetricType());
       } else {
@@ -226,6 +227,7 @@ public class JmxRule extends MetricStructure {
           new MetricInfo(
               metricInfo.getMetricName(),
               metricInfo.getDescription(),
+              metricInfo.getSourceUnit(),
               metricInfo.getUnit(),
               MetricInfo.Type.UPDOWNCOUNTER);
 

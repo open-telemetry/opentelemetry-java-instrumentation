@@ -61,11 +61,13 @@ public class Metric extends MetricStructure {
       metricType = defaultType;
     }
 
+    String sourceUnit = getSourceUnit();
+
     String unit = getUnit();
     if (unit == null) {
       unit = defaultUnit;
     }
 
-    return new MetricInfo(metricName, desc, unit, metricType);
+    return new MetricInfo(metricName, desc, sourceUnit, unit, metricType);
   }
 }

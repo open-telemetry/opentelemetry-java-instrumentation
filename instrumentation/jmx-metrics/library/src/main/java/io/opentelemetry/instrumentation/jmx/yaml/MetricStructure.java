@@ -45,6 +45,7 @@ abstract class MetricStructure {
   private Map<String, Object> metricAttribute;
   private StateMapping stateMapping = StateMapping.empty();
   private static final String STATE_MAPPING_DEFAULT = "*";
+  private String sourcetUnit;
   private String unit;
 
   private MetricInfo.Type metricType;
@@ -56,6 +57,14 @@ abstract class MetricStructure {
     // Do not complain about case variations
     t = t.trim().toUpperCase(Locale.ROOT);
     this.metricType = MetricInfo.Type.valueOf(t);
+  }
+
+  public String getSourceUnit() {
+    return sourcetUnit;
+  }
+
+  public void setSourceUnit(String unit) {
+    this.sourcetUnit = validateUnit(unit.trim());
   }
 
   public String getUnit() {
