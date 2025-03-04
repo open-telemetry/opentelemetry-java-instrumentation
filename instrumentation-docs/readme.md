@@ -2,7 +2,6 @@
 
 Runs analysis on instrumentation modules in order to generate documentation.
 
-
 ## Instrumentation Hierarchy
 
 An "InstrumentationEntity" represents a module that that targets specific code in a framework/library/technology.
@@ -40,7 +39,7 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
   }
 ```
 
-## Instrumentation meta-data:
+## Instrumentation meta-data
 
 * name
   * Identifier for instrumentation module, used to enable/disable
@@ -57,7 +56,6 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 Javaagent versions are determined by the `muzzle` plugin, so we can attempt to parse the gradle files
 
 Library versions are determined by the library versions used in the gradle files.
-
 
 ### TODO / Notes
 
