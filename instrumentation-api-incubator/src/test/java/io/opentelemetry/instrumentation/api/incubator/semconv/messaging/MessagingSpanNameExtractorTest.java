@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -23,8 +22,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class MessagingSpanNameExtractorTest {
 
-  @Mock MessagingAttributesGetter<Message, Void> getter;
-  @Mock ServerAttributesGetter<Message> serverAttributesGetter;
+  // This test is executed in 2 modes with old and new semantic conventions
+  // Due to that some methods are not invoked that ofter
+  // Mockito can complain about that in strict mode, Lenient mode helps to run both modes
+  @Mock(strictness = Mock.Strictness.LENIENT)
+  MessagingAttributesGetter<Message, Void> getter;
+
+  @Mock(strictness = Mock.Strictness.LENIENT)
+  ServerAttributesGetter<Message> serverAttributesGetter;
 
   @ParameterizedTest
   @MethodSource("spanNameParams")
@@ -40,18 +45,18 @@ class MessagingSpanNameExtractorTest {
 
     when(getter.getDestinationTemplate(message)).thenReturn(destinationTemplate);
     if (isAnonymous) {
-      lenient().when(getter.isAnonymousDestination(message)).thenReturn(true);
+      when(getter.isAnonymousDestination(message)).thenReturn(true);
     }
 
     if (isTemporaryQueue) {
-      lenient().when(getter.isTemporaryDestination(message)).thenReturn(true);
+      when(getter.isTemporaryDestination(message)).thenReturn(true);
     } else {
-      lenient().when(getter.getDestination(message)).thenReturn(destinationName);
+      when(getter.getDestination(message)).thenReturn(destinationName);
     }
     when(getter.getOperationName(message, operation)).thenReturn(operation.operationType());
 
-    lenient().when(serverAttributesGetter.getServerPort(message)).thenReturn(1234);
-    lenient().when(serverAttributesGetter.getServerAddress(message)).thenReturn("127.0.0.1");
+    when(serverAttributesGetter.getServerPort(message)).thenReturn(1234);
+    when(serverAttributesGetter.getServerAddress(message)).thenReturn("127.0.0.1");
 
     SpanNameExtractor<Message> underTest =
         MessagingSpanNameExtractor.create(getter, operation, serverAttributesGetter);
