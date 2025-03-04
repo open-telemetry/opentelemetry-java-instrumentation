@@ -47,6 +47,7 @@ public class JmxRule extends MetricStructure {
   @Nullable private String prefix;
   private Map<String, Metric> mapping;
 
+  @Nullable
   public String getBean() {
     return bean;
   }
@@ -90,6 +91,7 @@ public class JmxRule extends MetricStructure {
     return prefix;
   }
 
+  @Nullable
   public String getPrefix() {
     return prefix;
   }
