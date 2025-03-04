@@ -59,7 +59,5 @@ Library versions are determined by the library versions used in the gradle files
 
 ### TODO / Notes
 
-- Is there a better way to summarize/present the `target_version` information?
-  - Should it specify which are for javaagent and which are for library?
-- Is the `library` dependency actually the target version?
+- Is the `library` dependency actually the target version? Is there a better way to present the information?
 - How to handle oshi target version with a conditional?

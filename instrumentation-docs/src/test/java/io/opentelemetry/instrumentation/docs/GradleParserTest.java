@@ -22,7 +22,8 @@ class GradleParserTest {
             + "    versions.set(\"[5.0,6.4)\")\n"
             + "  }\n"
             + "}";
-    Set<String> versions = GradleParser.parseMuzzleBlock(gradleBuildFileContent);
+    Set<String> versions =
+        GradleParser.parseMuzzleBlock(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
     assertThat(versions.size()).isEqualTo(1);
     assertThat(versions.stream().findFirst().get())
         .isEqualTo("org.elasticsearch.client:rest:[5.0,6.4)");
@@ -36,7 +37,8 @@ class GradleParserTest {
             + "  testImplementation(project(\":instrumentation:apache-httpclient:apache-httpclient-4.3:testing\"))\n"
             + "  latestDepTestLibrary(\"org.apache.httpcomponents:httpclient:4.+\") // see apache-httpclient-5.0 module\n"
             + "}";
-    Set<String> versions = GradleParser.parseMuzzleBlock(gradleBuildFileContent);
+    Set<String> versions =
+        GradleParser.parseMuzzleBlock(gradleBuildFileContent, InstrumentationType.LIBRARY);
     assertThat(versions.size()).isEqualTo(1);
     assertThat(versions.stream().findFirst().get())
         .isEqualTo("org.apache.httpcomponents:httpclient:4.3");
@@ -75,7 +77,8 @@ class GradleParserTest {
             + "  }\n"
             + "}\n";
 
-    Set<String> versions = GradleParser.parseMuzzleBlock(gradleBuildFileContent);
+    Set<String> versions =
+        GradleParser.parseMuzzleBlock(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
     assertThat(versions)
         .containsExactlyInAnyOrder(
             "dev.zio:zio_2.12:[2.0.0,)", "dev.zio:zio_2.13:[2.0.0,)", "dev.zio:zio_3:[2.0.0,)");
