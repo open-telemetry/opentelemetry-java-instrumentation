@@ -59,7 +59,9 @@ Javaagent versions are determined by the `muzzle` plugin, so we can attempt to p
 Library versions are determined by the library versions used in the gradle files.
 
 
-### TODO
+### TODO / Notes
 
-- [ ] Is there a better way to summarize/present the `target_version` information?
-- [ ] Fix target_version when a variable is used, (example: zio - `dev.zio:zio_2.12:[$zioVersion,)`)
+- Is there a better way to summarize/present the `target_version` information?
+  - Should it specify which are for javaagent and which are for library?
+- Is the `library` dependency actually the target version?
+- How to handle oshi target version with a conditional?
