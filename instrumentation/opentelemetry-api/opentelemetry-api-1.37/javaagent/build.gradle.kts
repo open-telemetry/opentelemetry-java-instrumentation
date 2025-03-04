@@ -7,12 +7,8 @@ dependencies {
   compileOnly("io.opentelemetry:opentelemetry-api-incubator")
 
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
-  implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent"))
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.10:javaagent"))
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.15:javaagent"))
-  implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.27:javaagent"))
-  implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.31:javaagent"))
-  implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.32:javaagent"))
 }
 
 configurations.configureEach {
@@ -27,9 +23,9 @@ configurations.configureEach {
         force("io.opentelemetry:opentelemetry-extension-incubator:1.32.0-alpha")
       }
     }
-    if (name.equals("testRuntimeClasspath")) {
-      exclude(group = "io.opentelemetry", module = "opentelemetry-api-incubator")
-    }
+  }
+  if (name == "testRuntimeClasspath") {
+    exclude(group = "io.opentelemetry", module = "opentelemetry-api-incubator")
   }
 }
 
