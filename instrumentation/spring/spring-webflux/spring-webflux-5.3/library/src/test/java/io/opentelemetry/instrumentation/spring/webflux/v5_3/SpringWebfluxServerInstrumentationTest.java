@@ -41,7 +41,6 @@ public final class SpringWebfluxServerInstrumentationTest
   protected void configure(HttpServerTestOptions options) {
     options.setContextPath(CONTEXT_PATH);
     options.setTestPathParam(true);
-    options.setExpectedException(new RuntimeException(ServerEndpoint.EXCEPTION.getBody()));
 
     options.setExpectedHttpRoute(
         (endpoint, method) -> {

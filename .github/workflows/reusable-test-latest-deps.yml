@@ -9,9 +9,6 @@ on:
       no-build-cache:
         type: boolean
         required: false
-      max-test-retries:
-        type: string
-        required: false
     secrets:
       FLAKY_TEST_REPORTER_ACCESS_KEY:
         required: false
@@ -49,7 +46,7 @@ jobs:
 
       # vaadin tests use pnpm
       - name: Cache pnpm modules
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
         with:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-test-latest-cache-pnpm-modules
@@ -80,7 +77,6 @@ jobs:
           ${{ env.test-tasks }}
           -PtestLatestDeps=true
           ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
-          ${{ inputs.max-test-retries && format(' -PmaxTestRetries={0}', inputs.max-test-retries) || '' }}
 
       - name: Build scan
         if: ${{ !cancelled() && hashFiles('build-scan.txt') != '' }}
@@ -118,7 +114,7 @@ jobs:
 
       - name: Upload deadlock detector artifacts if any
         if: failure()
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
         with:
           name: deadlock-detector-test-latest-${{ matrix.test-java-version }}-${{ matrix.vm }}-${{ matrix.test-partition }}
           path: /tmp/deadlock-detector-*
@@ -126,7 +122,7 @@ jobs:
 
       - name: Upload jvm crash dump files if any
         if: failure()
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
         with:
           name: javacore-test-latest-${{ matrix.test-java-version }}-${{ matrix.test-partition }}
           path: |

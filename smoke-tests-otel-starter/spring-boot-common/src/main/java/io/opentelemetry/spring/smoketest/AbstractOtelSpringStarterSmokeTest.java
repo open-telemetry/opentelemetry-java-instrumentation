@@ -29,6 +29,8 @@ import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.assertj.core.api.AbstractCharSequenceAssert;
@@ -210,10 +212,33 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
         OtelSpringStarterSmokeTestController.TEST_HISTOGRAM,
         AbstractIterableAssert::isNotEmpty);
 
+    // JMX based metrics - test one per JMX bean
+    List<String> jmxMetrics =
+        new ArrayList<>(
+            Arrays.asList(
+                "jvm.thread.count",
+                "jvm.memory.used",
+                "jvm.system.cpu.load_1m",
+                "jvm.memory.init"));
+
+    boolean noNative = System.getProperty("org.graalvm.nativeimage.imagecode") == null;
+    if (noNative) {
+      // GraalVM native image does not support buffer pools - have to investigate why
+      jmxMetrics.add("jvm.buffer.memory.used");
+    }
+    jmxMetrics.forEach(
+        metricName ->
+            testing.waitAndAssertMetrics(
+                "io.opentelemetry.runtime-telemetry-java8",
+                metricName,
+                AbstractIterableAssert::isNotEmpty));
+
+    assertAdditionalMetrics();
+
     // Log
     List<LogRecordData> exportedLogRecords = testing.getExportedLogRecords();
     assertThat(exportedLogRecords).as("No log record exported.").isNotEmpty();
-    if (System.getProperty("org.graalvm.nativeimage.imagecode") == null) {
+    if (noNative) {
       // log records differ in native image mode due to different startup timing
       LogRecordData firstLog = exportedLogRecords.get(0);
       assertThat(firstLog.getBodyValue().asString())
@@ -227,6 +252,8 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
               "org.springframework.boot.StartupInfoLogger");
     }
   }
+
+  protected void assertAdditionalMetrics() {}
 
   @Test
   void databaseQuery() {
@@ -265,5 +292,24 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                 span ->
                     span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"),
                 span -> withSpanAssert(span)));
+  }
+
+  @Test
+  void shouldRedactSomeUrlParameters() {
+    testing.clearAllExportedData();
+
+    RestTemplate restTemplate = restTemplateBuilder.rootUri("http://localhost:" + port).build();
+    restTemplate.getForObject(
+        "/test?X-Goog-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0", String.class);
+
+    testing.waitAndAssertTraces(
+        traceAssert ->
+            traceAssert.hasSpansSatisfyingExactly(
+                span ->
+                    HttpSpanDataAssert.create(span)
+                        .assertClientGetRequest("/test?X-Goog-Signature=REDACTED"),
+                span ->
+                    span.hasKind(SpanKind.SERVER)
+                        .hasAttribute(HttpAttributes.HTTP_ROUTE, "/test")));
   }
 }

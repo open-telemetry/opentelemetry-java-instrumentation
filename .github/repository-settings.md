@@ -32,20 +32,25 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
   - `release/*`
 - Branch rules
   - Restrict deletions: CHECKED
-  - Require linear history: CHECKED
   - Require a pull request before merging: CHECKED
     - Required approvals: 1
     - Require review from Code Owners: CHECKED
     - Allowed merge methods: Squash
   - Require status checks to pass
-    - EasyCLA
-    - `required-status-check`
-    - `gradle-wrapper-validation`
+    - Do not require status checks on creation: CHECKED
+    - Status checks that are required
+      - EasyCLA
+      - `required-status-check`
+      - `gradle-wrapper-validation`
   - Block force pushes: CHECKED
   - Require code scanning results: CHECKED
     - CodeQL
       - Security alerts: High or higher
       - Alerts: Errors
+
+> [!NOTE]
+> This repository can't "require linear history" because there is an old merge commit on `main`
+> (and so also on the release branches).
 
 ### `cloudfoundry` branch
 
@@ -87,7 +92,7 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
   - Exclude:
     - `release/*`
     - `renovate/**/*`
-    - `opentelemetrybot/**/*`
+    - `otelbot/**/*`
     - `revert-*/**/*` (these are created when using the GitHub UI to revert a PR)
 - Restrict creations: CHECKED
 
@@ -125,6 +130,9 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
 
 ### Organization secrets
 
-- `OPENTELEMETRYBOT_GITHUB_TOKEN`
-- `OTELBOT_CLIENT_ID`
+- `FOSSA_API_KEY`
 - `OTELBOT_PRIVATE_KEY`
+
+### Organization variables
+
+- `OTELBOT_APP_ID`

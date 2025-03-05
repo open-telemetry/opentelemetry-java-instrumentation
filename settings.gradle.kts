@@ -7,7 +7,6 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "2.1.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("org.unbroken-dome.xjc") version "2.0.0"
-    // See https://github.com/graalvm/native-build-tools/issues/626
     id("org.graalvm.buildtools.native") version "0.10.5"
   }
 }
@@ -21,7 +20,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "9.4.0" apply false
-  id("com.gradle.develocity") version "3.19.1"
+  id("com.gradle.develocity") version "3.19.2"
 }
 
 dependencyResolutionManagement {
@@ -130,6 +129,7 @@ include(":smoke-tests-otel-starter:spring-boot-reactive-2")
 include(":smoke-tests-otel-starter:spring-boot-reactive-3")
 include(":smoke-tests-otel-starter:spring-boot-reactive-common")
 
+include(":instrumentation:activej-http-6.0:javaagent")
 include(":instrumentation:akka:akka-actor-2.3:javaagent")
 include(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent")
 include(":instrumentation:akka:akka-http-10.0:javaagent")
@@ -267,6 +267,9 @@ include(":instrumentation:internal:internal-url-class-loader:javaagent-integrati
 include(":instrumentation:java-http-client:javaagent")
 include(":instrumentation:java-http-client:library")
 include(":instrumentation:java-http-client:testing")
+include(":instrumentation:java-http-server:javaagent")
+include(":instrumentation:java-http-server:library")
+include(":instrumentation:java-http-server:testing")
 include(":instrumentation:java-util-logging:javaagent")
 include(":instrumentation:java-util-logging:shaded-stub-for-instrumenting")
 include(":instrumentation:javalin-5.0:javaagent")
@@ -427,6 +430,7 @@ include(":instrumentation:opentelemetry-api:opentelemetry-api-1.37:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.38:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.40:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.42:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.47:javaagent")
 include(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 include(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-annotations:opentelemetry-instrumentation-annotations-1.16:javaagent")

@@ -13,7 +13,11 @@ import javax.annotation.Nullable;
  * This class is internal and experimental. Its APIs are unstable and can change at any time. Its
  * APIs (or a version of them) may be promoted to the public stable API in the future, but no
  * guarantees are made.
+ *
+ * @deprecated Use {@link io.opentelemetry.instrumentation.javahttpclient.internal.Experimental}
+ *     instead.
  */
+@Deprecated
 public final class Experimental {
 
   @Nullable

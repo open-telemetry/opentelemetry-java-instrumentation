@@ -1,9 +1,8 @@
+# OpenTelemetry Instrumentation for Java
+
 [![Release](https://img.shields.io/github/v/release/open-telemetry/opentelemetry-java-instrumentation?include_prereleases&style=)](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/open-telemetry/opentelemetry-java-instrumentation/badge)](https://scorecard.dev/viewer/?uri=github.com/open-telemetry/opentelemetry-java-instrumentation)
-[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/9977/badge)](https://www.bestpractices.dev/projects/9977)
 [![Slack](https://img.shields.io/badge/slack-@cncf/otel--java-blue.svg?logo=slack)](https://cloud-native.slack.com/archives/C014L2KCTE3)
-
-# OpenTelemetry Instrumentation for Java
 
 * [About](#about)
 * [Getting Started](#getting-started)
