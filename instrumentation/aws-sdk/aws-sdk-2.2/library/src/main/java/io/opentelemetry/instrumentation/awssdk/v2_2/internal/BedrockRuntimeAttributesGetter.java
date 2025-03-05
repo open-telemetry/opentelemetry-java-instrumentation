@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesGetter;
+import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
@@ -120,7 +121,7 @@ enum BedrockRuntimeAttributesGetter
       ExecutionAttributes executionAttributes, Response response) {
     List<String> stopReasons = BedrockRuntimeAccess.getStopReasons(response);
     if (stopReasons == null) {
-      return null;
+      return Collections.emptyList();
     }
     return stopReasons;
   }
