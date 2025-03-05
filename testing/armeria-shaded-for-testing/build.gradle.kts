@@ -19,6 +19,8 @@ tasks {
     relocate("com.linecorp.armeria", "io.opentelemetry.testing.internal.armeria")
     relocate("com.fasterxml.jackson", "io.opentelemetry.testing.internal.jackson")
     relocate("net.bytebuddy", "io.opentelemetry.testing.internal.bytebuddy")
+    relocate("reactor", "io.opentelemetry.testing.internal.reactor")
+    relocate("com.aayushatharva.brotli4j", "io.opentelemetry.testing.internal.brotli4j")
 
     // Allows tests of Netty instrumentations which would otherwise conflict.
     // The relocation must end with io.netty to allow Netty to detect shaded native libraries.
