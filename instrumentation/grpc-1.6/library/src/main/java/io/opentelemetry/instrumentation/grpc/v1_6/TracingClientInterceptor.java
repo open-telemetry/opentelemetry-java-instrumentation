@@ -26,6 +26,10 @@ import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 final class TracingClientInterceptor implements ClientInterceptor {
 
+  private static final AttributeKey<Long> GRPC_MESSAGES_RECEIVED =
+      AttributeKey.longKey("grpc.messages.received");
+  private static final AttributeKey<Long> GRPC_MESSAGES_SENT =
+      AttributeKey.longKey("grpc.messages.sent");
   // copied from MessageIncubatingAttributes
   private static final AttributeKey<Long> MESSAGE_ID = AttributeKey.longKey("message.id");
   private static final AttributeKey<String> MESSAGE_TYPE = AttributeKey.stringKey("message.type");
@@ -171,9 +175,9 @@ final class TracingClientInterceptor implements ClientInterceptor {
         if (captureExperimentalSpanAttributes) {
           Span span = Span.fromContext(context);
           span.setAttribute(
-              "grpc.messages.received", RECEIVED_MESSAGE_ID_UPDATER.get(TracingClientCall.this));
+              GRPC_MESSAGES_RECEIVED, RECEIVED_MESSAGE_ID_UPDATER.get(TracingClientCall.this));
           span.setAttribute(
-              "grpc.messages.sent", SENT_MESSAGE_ID_UPDATER.get(TracingClientCall.this));
+              GRPC_MESSAGES_SENT, SENT_MESSAGE_ID_UPDATER.get(TracingClientCall.this));
         }
         instrumenter.end(context, request, status, status.getCause());
         try (Scope ignored = parentContext.makeCurrent()) {
