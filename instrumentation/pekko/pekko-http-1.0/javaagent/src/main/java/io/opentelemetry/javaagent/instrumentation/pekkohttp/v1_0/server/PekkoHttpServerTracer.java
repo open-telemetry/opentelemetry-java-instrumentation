@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.PekkoHttpServerSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
@@ -97,9 +98,8 @@ public class PekkoHttpServerTracer
               HttpRequest request = grab(requestIn);
               PekkoTracingRequest tracingRequest = PekkoTracingRequest.EMPTY;
               Context parentContext = currentContext();
-              if (PekkoHttpServerSingletons.instrumenter().shouldStart(parentContext, request)) {
-                Context context =
-                    PekkoHttpServerSingletons.instrumenter().start(parentContext, request);
+              if (instrumenter().shouldStart(parentContext, request)) {
+                Context context = instrumenter().start(parentContext, request);
                 context = PekkoRouteHolder.init(context);
                 tracingRequest = new PekkoTracingRequest(context, request);
                 request =
@@ -144,8 +144,7 @@ public class PekkoHttpServerTracer
                   response = (HttpResponse) response.addHeaders(headers);
                 }
 
-                PekkoHttpServerSingletons.instrumenter()
-                    .end(tracingRequest.context, tracingRequest.request, response, null);
+                instrumenter().end(tracingRequest.context, tracingRequest.request, response, null);
               }
               push(responseOut, response);
             }
@@ -168,7 +167,7 @@ public class PekkoHttpServerTracer
                 if (tracingRequest == PekkoTracingRequest.EMPTY) {
                   continue;
                 }
-                PekkoHttpServerSingletons.instrumenter()
+                instrumenter()
                     .end(
                         tracingRequest.context,
                         tracingRequest.request,

@@ -34,10 +34,10 @@ public class HttpServerBluePrintInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class PekkoBindAndHandleAdvice {
 
-    @Advice.AssignReturned.ToReturned()
+    @Advice.AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static BidiFlow<HttpResponse, ?, ?, HttpRequest, ?> wrapHandler(
-        @Advice.Return(readOnly = true) BidiFlow<HttpResponse, ?, ?, HttpRequest, ?> handler) {
+        @Advice.Return BidiFlow<HttpResponse, ?, ?, HttpRequest, ?> handler) {
 
       return PekkoHttpServerTracer.wrap(handler);
     }
