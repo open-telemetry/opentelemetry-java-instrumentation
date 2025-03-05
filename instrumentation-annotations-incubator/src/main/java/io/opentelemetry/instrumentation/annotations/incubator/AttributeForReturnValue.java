@@ -26,7 +26,7 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface MetricAttributeForReturnValue {
+public @interface AttributeForReturnValue {
 
   /**
    * Attribute name for the return value.

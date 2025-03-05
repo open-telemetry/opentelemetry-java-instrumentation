@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.incubator.timed;
 
-import io.opentelemetry.instrumentation.annotations.incubator.MetricAttributeForReturnValue;
-import io.opentelemetry.instrumentation.annotations.incubator.StaticMetricAttribute;
+import io.opentelemetry.instrumentation.annotations.incubator.AttributeForReturnValue;
+import io.opentelemetry.instrumentation.annotations.incubator.StaticAttribute;
 import io.opentelemetry.instrumentation.annotations.incubator.Timed;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -28,8 +28,8 @@ public class TimedExample {
   }
 
   @Timed("example.with.attributes.duration")
-  @StaticMetricAttribute(name = "key1", value = "value1")
-  @StaticMetricAttribute(name = "key2", value = "value2")
+  @StaticAttribute(name = "key1", value = "value1")
+  @StaticAttribute(name = "key2", value = "value2")
   public void exampleWithAdditionalAttributes1() {}
 
   @Timed("example.ignore.duration")
@@ -41,13 +41,13 @@ public class TimedExample {
   }
 
   @Timed(value = "example.with.return.duration")
-  @MetricAttributeForReturnValue("returnValue")
+  @AttributeForReturnValue("returnValue")
   public ReturnObject exampleWithReturnValueAttribute() {
     return new ReturnObject();
   }
 
   @Timed(value = "example.completable.future.duration")
-  @MetricAttributeForReturnValue("returnValue")
+  @AttributeForReturnValue("returnValue")
   public CompletableFuture<String> completableFuture(CompletableFuture<String> future) {
     return future;
   }

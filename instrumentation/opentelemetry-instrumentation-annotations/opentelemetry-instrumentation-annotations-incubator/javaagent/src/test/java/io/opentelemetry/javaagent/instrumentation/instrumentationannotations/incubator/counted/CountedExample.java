@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.incubator.counted;
 
+import io.opentelemetry.instrumentation.annotations.incubator.AttributeForReturnValue;
 import io.opentelemetry.instrumentation.annotations.incubator.Counted;
-import io.opentelemetry.instrumentation.annotations.incubator.MetricAttributeForReturnValue;
-import io.opentelemetry.instrumentation.annotations.incubator.StaticMetricAttribute;
+import io.opentelemetry.instrumentation.annotations.incubator.StaticAttribute;
 import java.util.concurrent.CompletableFuture;
 
 public class CountedExample {
@@ -27,13 +27,13 @@ public class CountedExample {
   public void exampleWithUnit() {}
 
   @Counted("example.with.attributes.count")
-  @StaticMetricAttribute(name = "key1", value = "value1")
-  @StaticMetricAttribute(name = "key2", value = "value2")
-  @StaticMetricAttribute(name = "key2", value = "value2")
+  @StaticAttribute(name = "key1", value = "value1")
+  @StaticAttribute(name = "key2", value = "value2")
+  @StaticAttribute(name = "key2", value = "value2")
   public void exampleWithAdditionalAttributes1() {}
 
   @Counted(value = "example.with.return.count")
-  @MetricAttributeForReturnValue("returnValue")
+  @AttributeForReturnValue("returnValue")
   public ReturnObject exampleWithReturnValueAttribute() {
     return new ReturnObject();
   }
@@ -47,7 +47,7 @@ public class CountedExample {
   public void exampleIgnore() {}
 
   @Counted(value = "example.completable.future.count")
-  @MetricAttributeForReturnValue("returnValue")
+  @AttributeForReturnValue("returnValue")
   public CompletableFuture<String> completableFuture(CompletableFuture<String> future) {
     return future;
   }

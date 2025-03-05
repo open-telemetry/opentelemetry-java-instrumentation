@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.incubator;
 
-import application.io.opentelemetry.instrumentation.annotations.incubator.MetricAttribute;
-import application.io.opentelemetry.instrumentation.annotations.incubator.MetricAttributeForReturnValue;
-import application.io.opentelemetry.instrumentation.annotations.incubator.StaticMetricAttribute;
+import application.io.opentelemetry.instrumentation.annotations.incubator.Attribute;
+import application.io.opentelemetry.instrumentation.annotations.incubator.AttributeForReturnValue;
+import application.io.opentelemetry.instrumentation.annotations.incubator.StaticAttribute;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -38,16 +38,15 @@ public abstract class MetricsAnnotationHelper {
         CodeIncubatingAttributes.CODE_NAMESPACE, method.getDeclaringClass().getName());
     attributesBuilder.put(CodeIncubatingAttributes.CODE_FUNCTION_NAME, method.getName());
 
-    StaticMetricAttribute[] staticMetricAttributes =
-        method.getDeclaredAnnotationsByType(StaticMetricAttribute.class);
-    for (StaticMetricAttribute staticMetricAttribute : staticMetricAttributes) {
-      attributesBuilder.put(staticMetricAttribute.name(), staticMetricAttribute.value());
+    StaticAttribute[] staticAttributes = method.getDeclaredAnnotationsByType(StaticAttribute.class);
+    for (StaticAttribute staticAttribute : staticAttributes) {
+      attributesBuilder.put(staticAttribute.name(), staticAttribute.value());
     }
   }
 
   @Nullable
   private static String attributeName(Parameter parameter) {
-    MetricAttribute annotation = parameter.getDeclaredAnnotation(MetricAttribute.class);
+    Attribute annotation = parameter.getDeclaredAnnotation(Attribute.class);
     if (annotation == null) {
       return null;
     }
@@ -68,8 +67,8 @@ public abstract class MetricsAnnotationHelper {
 
     MetricAttributeHelper(Method method) {
       bindParameters = MethodBinder.bindParameters(method, PARAMETER_ATTRIBUTE_NAMES_EXTRACTOR);
-      MetricAttributeForReturnValue returnValueAttribute =
-          method.getAnnotation(MetricAttributeForReturnValue.class);
+      AttributeForReturnValue returnValueAttribute =
+          method.getAnnotation(AttributeForReturnValue.class);
       bindReturn =
           returnValueAttribute != null
               ? MethodBinder.bindReturnValue(method, returnValueAttribute.value())

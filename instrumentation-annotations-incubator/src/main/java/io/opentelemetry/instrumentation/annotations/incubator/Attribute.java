@@ -6,14 +6,13 @@
 package io.opentelemetry.instrumentation.annotations.incubator;
 
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * This annotation allows for adding attributes to the metrics recorded using {@link Timed} and
- * {@link Counted} annotations.
+ * This annotation marks that a parameter of a method or constructor annotated with {@link Timed} or
+ * {@link Counted} should be added as an attribute to the instrument.
  *
  * <p>Application developers can use this annotation to signal OpenTelemetry auto-instrumentation
  * that the attribute should be created.
@@ -21,15 +20,20 @@ import java.lang.annotation.Target;
  * <p>If you are a library developer, then probably you should NOT use this annotation, because it
  * is non-functional without the OpenTelemetry auto-instrumentation agent, or some other annotation
  * processor.
+ *
+ * <p>Warning: be careful using this because it might cause an explosion of the cardinality on your
+ * metric.
  */
-@Target(ElementType.METHOD)
+@Target(ElementType.PARAMETER)
 @Retention(RetentionPolicy.RUNTIME)
-@Repeatable(StaticMetricAttributes.class)
-public @interface StaticMetricAttribute {
+public @interface Attribute {
 
-  /** Name of the attribute. */
-  String name();
-
-  /** Value of the attribute. */
-  String value();
+  /**
+   * Optional name of the attribute.
+   *
+   * <p>If not specified and the code is compiled using the `{@code -parameters}` argument to
+   * `javac`, the parameter name will be used instead. If the parameter name is not available, e.g.,
+   * because the code was not compiled with that flag, the attribute will be ignored.
+   */
+  String value() default "";
 }

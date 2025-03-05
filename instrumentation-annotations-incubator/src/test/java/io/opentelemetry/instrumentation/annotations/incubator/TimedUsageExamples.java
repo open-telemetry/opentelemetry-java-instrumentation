@@ -11,6 +11,5 @@ public class TimedUsageExamples {
   public void method() {}
 
   @Timed("methodWithAttributes")
-  public void attributes(
-      @MetricAttribute String attribute1, @MetricAttribute("attribute2") long attribute2) {}
+  public void attributes(@Attribute String attribute1, @Attribute("attribute2") long attribute2) {}
 }

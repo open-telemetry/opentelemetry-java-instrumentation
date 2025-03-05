@@ -23,8 +23,8 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface StaticMetricAttributes {
+public @interface StaticAttributes {
 
-  /** Array of {@link StaticMetricAttribute} annotations describing the added attributes. */
-  StaticMetricAttribute[] value();
+  /** Array of {@link StaticAttribute} annotations describing the added attributes. */
+  StaticAttribute[] value();
 }

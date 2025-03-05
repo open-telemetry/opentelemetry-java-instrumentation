@@ -11,6 +11,5 @@ public class CountedUsageExamples {
   public void method() {}
 
   @Counted("methodWithAttributes")
-  public void attributes(
-      @MetricAttribute String attribute1, @MetricAttribute("attribute2") long attribute2) {}
+  public void attributes(@Attribute String attribute1, @Attribute("attribute2") long attribute2) {}
 }

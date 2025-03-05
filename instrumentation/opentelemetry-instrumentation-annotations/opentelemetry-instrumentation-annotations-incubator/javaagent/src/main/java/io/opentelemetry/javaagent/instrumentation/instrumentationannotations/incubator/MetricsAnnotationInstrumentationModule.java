@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.in
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
 
+import application.io.opentelemetry.instrumentation.annotations.incubator.Attribute;
 import application.io.opentelemetry.instrumentation.annotations.incubator.Counted;
-import application.io.opentelemetry.instrumentation.annotations.incubator.MetricAttribute;
 import application.io.opentelemetry.instrumentation.annotations.incubator.Timed;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -18,8 +18,8 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
- * Instrumentation for methods annotated with {@link Counted}, {@link Timed} and {@link
- * MetricAttribute} annotations.
+ * Instrumentation for methods annotated with {@link Counted}, {@link Timed} and {@link Attribute}
+ * annotations.
  */
 @AutoService(InstrumentationModule.class)
 public class MetricsAnnotationInstrumentationModule extends InstrumentationModule {
