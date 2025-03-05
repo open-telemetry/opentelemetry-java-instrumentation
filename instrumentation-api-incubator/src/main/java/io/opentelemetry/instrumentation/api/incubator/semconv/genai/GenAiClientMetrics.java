@@ -92,7 +92,7 @@ public final class GenAiClientMetrics implements OperationListener {
     if (state == null) {
       logger.log(
           FINE,
-          "No state present when ending context {0}. Cannot record database operation metrics.",
+          "No state present when ending context {0}. Cannot record gen_ai operation metrics.",
           context);
       return;
     }
