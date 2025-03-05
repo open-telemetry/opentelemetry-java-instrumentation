@@ -44,17 +44,17 @@ final class TracingClientInterceptor implements ClientInterceptor {
   private final Instrumenter<GrpcRequest, Status> instrumenter;
   private final ContextPropagators propagators;
   private final boolean captureExperimentalSpanAttributes;
-  private final boolean addMessageEvents;
+  private final boolean emitMessageEvents;
 
   TracingClientInterceptor(
       Instrumenter<GrpcRequest, Status> instrumenter,
       ContextPropagators propagators,
       boolean captureExperimentalSpanAttributes,
-      boolean addMessageEvents) {
+      boolean emitMessageEvents) {
     this.instrumenter = instrumenter;
     this.propagators = propagators;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
-    this.addMessageEvents = addMessageEvents;
+    this.emitMessageEvents = emitMessageEvents;
   }
 
   @Override
@@ -129,7 +129,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
         throw e;
       }
       long messageId = SENT_MESSAGE_ID_UPDATER.incrementAndGet(this);
-      if (addMessageEvents) {
+      if (emitMessageEvents) {
         Attributes attributes = Attributes.of(MESSAGE_TYPE, SENT, MESSAGE_ID, messageId);
         Span.fromContext(context).addEvent("message", attributes);
       }
@@ -156,7 +156,7 @@ final class TracingClientInterceptor implements ClientInterceptor {
       @Override
       public void onMessage(RESPONSE message) {
         long messageId = RECEIVED_MESSAGE_ID_UPDATER.incrementAndGet(TracingClientCall.this);
-        if (addMessageEvents) {
+        if (emitMessageEvents) {
           Attributes attributes = Attributes.of(MESSAGE_TYPE, RECEIVED, MESSAGE_ID, messageId);
           Span.fromContext(context).addEvent("message", attributes);
         }

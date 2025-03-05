@@ -49,7 +49,7 @@ public final class GrpcTelemetryBuilder {
       additionalServerExtractors = new ArrayList<>();
 
   private boolean captureExperimentalSpanAttributes;
-  private boolean addMessageEvents = true;
+  private boolean emitMessageEvents = true;
   private List<String> capturedClientRequestMetadata = Collections.emptyList();
   private List<String> capturedServerRequestMetadata = Collections.emptyList();
 
@@ -136,8 +136,8 @@ public final class GrpcTelemetryBuilder {
    * is true. Set this to false in case of streaming large volumes of messages.
    */
   @CanIgnoreReturnValue
-  public GrpcTelemetryBuilder setAddMessageEvents(boolean addMessageEvents) {
-    this.addMessageEvents = addMessageEvents;
+  public GrpcTelemetryBuilder setEmitMessageEvents(boolean emitMessageEvents) {
+    this.emitMessageEvents = emitMessageEvents;
     return this;
   }
 
@@ -223,6 +223,6 @@ public final class GrpcTelemetryBuilder {
         clientInstrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient()),
         openTelemetry.getPropagators(),
         captureExperimentalSpanAttributes,
-        addMessageEvents);
+        emitMessageEvents);
   }
 }

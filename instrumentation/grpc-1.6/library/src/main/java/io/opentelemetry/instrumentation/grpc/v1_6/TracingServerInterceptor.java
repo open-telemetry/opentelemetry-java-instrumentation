@@ -45,15 +45,15 @@ final class TracingServerInterceptor implements ServerInterceptor {
 
   private final Instrumenter<GrpcRequest, Status> instrumenter;
   private final boolean captureExperimentalSpanAttributes;
-  private final boolean addMessageEvents;
+  private final boolean emitMessageEvents;
 
   TracingServerInterceptor(
       Instrumenter<GrpcRequest, Status> instrumenter,
       boolean captureExperimentalSpanAttributes,
-      boolean addMessageEvents) {
+      boolean emitMessageEvents) {
     this.instrumenter = instrumenter;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
-    this.addMessageEvents = addMessageEvents;
+    this.emitMessageEvents = emitMessageEvents;
   }
 
   @Override
@@ -119,7 +119,7 @@ final class TracingServerInterceptor implements ServerInterceptor {
         super.sendMessage(message);
       }
       long messageId = SENT_MESSAGE_ID_UPDATER.incrementAndGet(this);
-      if (addMessageEvents) {
+      if (emitMessageEvents) {
         Attributes attributes = Attributes.of(MESSAGE_TYPE, SENT, MESSAGE_ID, messageId);
         Span.fromContext(context).addEvent("message", attributes);
       }
@@ -164,7 +164,7 @@ final class TracingServerInterceptor implements ServerInterceptor {
       @Override
       public void onMessage(REQUEST message) {
         long messageId = RECEIVED_MESSAGE_ID_UPDATER.incrementAndGet(TracingServerCall.this);
-        if (addMessageEvents) {
+        if (emitMessageEvents) {
           Attributes attributes = Attributes.of(MESSAGE_TYPE, RECEIVED, MESSAGE_ID, messageId);
           Span.fromContext(context).addEvent("message", attributes);
         }
