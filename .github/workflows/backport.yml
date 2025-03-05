@@ -29,7 +29,7 @@ jobs:
       - name: Use CLA approved bot
         run: .github/scripts/use-cla-approved-bot.sh
 
-      - uses: actions/create-github-app-token@67e27a7eb7db372a1c61a7f9bdab8699e9ee57f7 # v1.11.3
+      - uses: actions/create-github-app-token@21cfef2b496dd8ef5b904c159339626a10ad380e # v1.11.6
         id: otelbot-token
         with:
           app-id: ${{ vars.OTELBOT_APP_ID }}
@@ -48,7 +48,14 @@ jobs:
 
           git checkout -b $branch
           git cherry-pick $commit
+
+          # note this push will fail if the backport contains any workflow files
+          # because secrets.GITHUB_TOKEN doesn't have this permission
+          # supporting this would require another access token with content write
+          # and workflow write permissions
+          # so for now at least PRs that update workflow files need to be backported manually
           git push --set-upstream origin $branch
+
           gh pr create --title "[$GITHUB_REF_NAME] $title" \
                        --body "Clean cherry-pick of #$NUMBER to the \`$GITHUB_REF_NAME\` branch." \
                        --base $GITHUB_REF_NAME

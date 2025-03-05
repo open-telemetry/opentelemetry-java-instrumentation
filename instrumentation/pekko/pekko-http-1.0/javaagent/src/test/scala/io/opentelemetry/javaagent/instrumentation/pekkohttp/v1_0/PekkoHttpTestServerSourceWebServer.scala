@@ -47,7 +47,7 @@ object PekkoHttpTestServerSourceWebServer {
         extractUri { uri =>
           complete(
             AbstractHttpServerTest
-              .controller(INDEXED_CHILD, supplier(uri.queryString().orNull))
+              .controller(QUERY_PARAM, supplier(uri.queryString().orNull))
           )
         }
       },
