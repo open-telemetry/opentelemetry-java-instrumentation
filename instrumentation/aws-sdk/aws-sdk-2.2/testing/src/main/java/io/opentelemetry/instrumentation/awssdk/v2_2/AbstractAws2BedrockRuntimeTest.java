@@ -15,6 +15,7 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_TOP_P;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_RESPONSE_FINISH_REASONS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_SYSTEM;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_TOKEN_TYPE;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_USAGE_INPUT_TOKENS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_USAGE_OUTPUT_TOKENS;
 import static java.util.Arrays.asList;
@@ -42,6 +43,7 @@ import software.amazon.awssdk.services.bedrockruntime.model.InferenceConfigurati
 import software.amazon.awssdk.services.bedrockruntime.model.Message;
 
 public abstract class AbstractAws2BedrockRuntimeTest {
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-2.2";
 
   private static final String API_URL = "https://bedrock-runtime.us-east-1.amazonaws.com";
 
@@ -105,6 +107,75 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 8),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 14),
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
+
+    getTesting()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            metric ->
+                metric
+                    .hasName("gen_ai.client.token.usage")
+                    .hasUnit("{token}")
+                    .hasDescription("Measures number of input and output tokens used")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(8)
+                                        .hasCount(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(
+                                                GEN_AI_SYSTEM,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiSystemIncubatingValues.AWS_BEDROCK),
+                                            equalTo(
+                                                GEN_AI_TOKEN_TYPE,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiTokenTypeIncubatingValues.INPUT),
+                                            equalTo(
+                                                GEN_AI_OPERATION_NAME,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)),
+                                point ->
+                                    point
+                                        .hasSum(14)
+                                        .hasCount(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(
+                                                GEN_AI_SYSTEM,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiSystemIncubatingValues.AWS_BEDROCK),
+                                            equalTo(
+                                                GEN_AI_TOKEN_TYPE,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiTokenTypeIncubatingValues.COMPLETION),
+                                            equalTo(
+                                                GEN_AI_OPERATION_NAME,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
+            metric ->
+                metric
+                    .hasName("gen_ai.client.operation.duration")
+                    .hasUnit("s")
+                    .hasDescription("GenAI operation duration")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(
+                                                GEN_AI_SYSTEM,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiSystemIncubatingValues.AWS_BEDROCK),
+                                            equalTo(
+                                                GEN_AI_OPERATION_NAME,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
   }
 
   @Test
@@ -161,5 +232,74 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 8),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 10),
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("max_tokens")))));
+
+    getTesting()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            metric ->
+                metric
+                    .hasName("gen_ai.client.token.usage")
+                    .hasUnit("{token}")
+                    .hasDescription("Measures number of input and output tokens used")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(8)
+                                        .hasCount(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(
+                                                GEN_AI_SYSTEM,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiSystemIncubatingValues.AWS_BEDROCK),
+                                            equalTo(
+                                                GEN_AI_TOKEN_TYPE,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiTokenTypeIncubatingValues.INPUT),
+                                            equalTo(
+                                                GEN_AI_OPERATION_NAME,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)),
+                                point ->
+                                    point
+                                        .hasSum(10)
+                                        .hasCount(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(
+                                                GEN_AI_SYSTEM,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiSystemIncubatingValues.AWS_BEDROCK),
+                                            equalTo(
+                                                GEN_AI_TOKEN_TYPE,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiTokenTypeIncubatingValues.COMPLETION),
+                                            equalTo(
+                                                GEN_AI_OPERATION_NAME,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
+            metric ->
+                metric
+                    .hasName("gen_ai.client.operation.duration")
+                    .hasUnit("s")
+                    .hasDescription("GenAI operation duration")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(
+                                                GEN_AI_SYSTEM,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiSystemIncubatingValues.AWS_BEDROCK),
+                                            equalTo(
+                                                GEN_AI_OPERATION_NAME,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
   }
 }
