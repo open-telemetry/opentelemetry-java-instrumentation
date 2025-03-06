@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route;
+package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.tapir;
 
+import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.PekkoRouteHolder;
 import org.apache.pekko.http.scaladsl.server.RequestContext;
 import org.apache.pekko.http.scaladsl.server.RouteResult;
 import scala.Function1;

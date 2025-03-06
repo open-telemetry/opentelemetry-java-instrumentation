@@ -54,14 +54,35 @@ muzzle {
 dependencies {
   library("org.apache.pekko:pekko-http_2.12:1.0.0")
   library("org.apache.pekko:pekko-stream_2.12:1.0.1")
-  library("com.softwaremill.sttp.tapir:tapir-pekko-http-server_2.12:1.7.0")
+  compileOnly("com.softwaremill.sttp.tapir:tapir-pekko-http-server_2.12:1.7.0")
 
   testInstrumentation(project(":instrumentation:pekko:pekko-actor-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:executors:javaagent"))
 
   latestDepTestLibrary("org.apache.pekko:pekko-http_2.13:latest.release")
   latestDepTestLibrary("org.apache.pekko:pekko-stream_2.13:latest.release")
-  latestDepTestLibrary("com.softwaremill.sttp.tapir:tapir-pekko-http-server_2.13:latest.release")
+}
+
+testing {
+  suites {
+    val tapirTest by registering(JvmTestSuite::class) {
+      dependencies {
+        // this only exists to make Intellij happy since it doesn't (currently at least) understand our
+        // inclusion of this artifact inside :testing-common
+        compileOnly(project.dependencies.project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
+
+        if (findProperty("testLatestDeps") as Boolean) {
+          implementation("com.typesafe.akka:akka-http_2.13:latest.release")
+          implementation("com.typesafe.akka:akka-stream_2.13:latest.release")
+          implementation("com.softwaremill.sttp.tapir:tapir-pekko-http-server_2.13:latest.release")
+        } else {
+          implementation("org.apache.pekko:pekko-http_2.12:1.0.0")
+          implementation("org.apache.pekko:pekko-stream_2.12:1.0.1")
+          implementation("com.softwaremill.sttp.tapir:tapir-pekko-http-server_2.12:1.7.0")
+        }
+      }
+    }
+  }
 }
 
 tasks {
@@ -74,6 +95,10 @@ tasks {
 
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   }
+
+  check {
+    dependsOn(testing.suites)
+  }
 }
 
 if (findProperty("testLatestDeps") as Boolean) {
@@ -82,7 +107,6 @@ if (findProperty("testLatestDeps") as Boolean) {
     testImplementation {
       exclude("org.apache.pekko", "pekko-http_2.12")
       exclude("org.apache.pekko", "pekko-stream_2.12")
-      exclude("com.softwaremill.sttp.tapir", "tapir-pekko-http-server_2.12")
     }
   }
 }

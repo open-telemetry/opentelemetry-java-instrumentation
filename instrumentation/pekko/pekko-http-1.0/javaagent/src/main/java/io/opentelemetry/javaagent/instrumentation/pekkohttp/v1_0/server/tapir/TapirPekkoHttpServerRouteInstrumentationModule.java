@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route;
+package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.tapir;
 
-import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -18,7 +18,12 @@ public class TapirPekkoHttpServerRouteInstrumentationModule extends Instrumentat
     implements ExperimentalInstrumentationModule {
   public TapirPekkoHttpServerRouteInstrumentationModule() {
     super(
-        "pekko-http", "pekko-http-1.0", "tapir-pekko-http-server", "tapir-pekko-http-server-route");
+        "pekko-http",
+        "pekko-http-1.0",
+        "pekko-http-server",
+        "pekko-http-server-route",
+        "tapir-pekko-http-server",
+        "tapir-pekko-http-server-route");
   }
 
   @Override
@@ -28,6 +33,6 @@ public class TapirPekkoHttpServerRouteInstrumentationModule extends Instrumentat
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new TapirPathInstrumentation(), new RouteConcatenationInstrumentation());
+    return singletonList(new TapirPathInstrumentation());
   }
 }

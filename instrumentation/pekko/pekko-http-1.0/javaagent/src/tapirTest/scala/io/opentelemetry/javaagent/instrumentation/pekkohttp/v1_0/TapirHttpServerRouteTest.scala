@@ -15,7 +15,6 @@ import io.opentelemetry.testing.internal.armeria.common.{
 }
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.Http
-import org.apache.pekko.http.scaladsl.server.Route
 import org.apache.pekko.http.scaladsl.server.Directives.{
   IntNumber,
   complete,
@@ -25,17 +24,20 @@ import org.apache.pekko.http.scaladsl.server.Directives.{
   pathPrefix,
   pathSingleSlash
 }
+import org.apache.pekko.http.scaladsl.server.Route
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.{AfterAll, Test, TestInstance}
+import sttp.tapir._
+import sttp.tapir.server.pekkohttp.PekkoHttpServerInterpreter
 
 import java.net.{URI, URISyntaxException}
 import java.util.function.Consumer
-import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
+import scala.concurrent.{Await, Future}
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class PekkoHttpServerRouteTest {
+class TapirHttpServerRouteTest {
   @RegisterExtension private val testing: AgentInstrumentationExtension =
     AgentInstrumentationExtension.create
   private val client: WebClient = WebClient.of()
@@ -75,6 +77,26 @@ class PekkoHttpServerRouteTest {
     )
 
     test(route, "/test/1", "GET /test/*")
+  }
+
+  @Test def testTapirRoutes(): Unit = {
+    val interpreter = PekkoHttpServerInterpreter()(system.dispatcher)
+    def makeRoute(input: EndpointInput[Unit]) = {
+      interpreter.toRoute(
+        endpoint.get
+          .in(input)
+          .errorOut(stringBody)
+          .out(stringBody)
+          .serverLogicPure[Future](_ => Right("ok"))
+      )
+    }
+
+    val routes = concat(
+      concat(makeRoute("test" / "1"), makeRoute("test" / "2")),
+      concat(makeRoute("test" / "3"), makeRoute("test" / "4"))
+    )
+
+    test(routes, "/test/4", "GET /test/4")
   }
 
   def test(route: Route, path: String, spanName: String): Unit = {
