@@ -147,8 +147,8 @@ public class PekkoHttpServerTracer
                 // When GraphInterpreterInstrumentation sets `tracingRequest.context` as the current
                 // context, the akka Envelope + Actor instrumentation propagates it all the way
                 // back to here and follows the HttpResponse up the stack of stages.
-                // If http-pipelining is enabled, it will also propagate this context to the handling
-                // of the next request, leading to context-leaking errors.
+                // If http-pipelining is enabled, it will also propagate this context to the
+                // handling of the next request, leading to context-leaking errors.
                 // To prevent this, we reset the context to what it was before creating it.
                 tracingRequest.parentContext.makeCurrent();
 
@@ -174,7 +174,6 @@ public class PekkoHttpServerTracer
 
               fail(responseOut, exception);
             }
-
 
             @Override
             public void onUpstreamFinish() {

@@ -14,7 +14,8 @@ import org.apache.pekko.http.scaladsl.model.AttributeKey;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 
 public class PekkoTracingRequest implements ImplicitContextKeyed {
-  private static final ContextKey<PekkoTracingRequest> CONTEXT_KEY = named("opentelemetry-pekko-tracing-request");
+  private static final ContextKey<PekkoTracingRequest> CONTEXT_KEY =
+      named("opentelemetry-pekko-tracing-request");
   static final AttributeKey<PekkoTracingRequest> ATTR_KEY =
       new AttributeKey<>("_otel_ctx", PekkoTracingRequest.class);
   static final PekkoTracingRequest EMPTY = new PekkoTracingRequest(null, null, null);
