@@ -8,6 +8,7 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-sdk-common")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   implementation("io.opentelemetry.semconv:opentelemetry-semconv")
+  compileOnly("io.opentelemetry:opentelemetry-api-incubator")
 
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service-annotations")
