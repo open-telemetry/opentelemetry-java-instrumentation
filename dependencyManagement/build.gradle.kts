@@ -33,7 +33,7 @@ val DEPENDENCY_BOMS = listOf(
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
-  "org.testcontainers:testcontainers-bom:1.20.5"
+  "org.testcontainers:testcontainers-bom:1.20.6"
 )
 
 val autoServiceVersion = "1.1.1"
