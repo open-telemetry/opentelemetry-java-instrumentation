@@ -28,7 +28,7 @@ public class MetricInfo {
   private final String metricName; // used as Instrument name
   @Nullable private final String description;
   @Nullable private final String sourceUnit;
-  @Nullable private final String unit;
+  private final String unit;
   private final Type type;
 
   /**
@@ -44,7 +44,7 @@ public class MetricInfo {
       String metricName,
       @Nullable String description,
       @Nullable String sourceUnit,
-      @Nullable String unit,
+      String unit,
       @Nullable Type type) {
     this.metricName = metricName;
     this.description = description;
@@ -67,7 +67,6 @@ public class MetricInfo {
     return sourceUnit;
   }
 
-  @Nullable
   public String getUnit() {
     return unit;
   }

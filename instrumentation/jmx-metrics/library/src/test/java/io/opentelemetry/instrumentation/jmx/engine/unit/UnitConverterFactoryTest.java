@@ -5,17 +5,16 @@
 
 package io.opentelemetry.instrumentation.jmx.engine.unit;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.MethodSource;
 
 class UnitConverterFactoryTest {
 
@@ -62,18 +61,51 @@ class UnitConverterFactoryTest {
   }
 
   @ParameterizedTest
-  @MethodSource("provideUnitsForMissingConverter")
-  void shouldHandleMissingConverter(String sourceUnit, String targetUnit) {
+  @CsvSource({
+    "--, --",
+    "ms, non-existing",
+    "non-existing, s",
+  })
+  void shouldHandleNonExistingConverter(String sourceUnit, String targetUnit) {
+    IllegalStateException exception =
+        assertThrows(
+            IllegalStateException.class,
+            () -> UnitConverterFactory.getConverter(sourceUnit, targetUnit));
+    assertEquals(
+        "No [" + sourceUnit + "] to [" + targetUnit + "] unit converter", exception.getMessage());
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    ", s", // null -> "s"
+    "'', s", // "" -> "s"
+  })
+  void shouldSkipConversionWhenSourceUnitNotSpecified(String sourceUnit, String targetUnit) {
     UnitConverter converter = UnitConverterFactory.getConverter(sourceUnit, targetUnit);
     assertNull(converter);
   }
 
-  private static Stream<Arguments> provideUnitsForMissingConverter() {
-    return Stream.of(
-        Arguments.of(null, null),
-        Arguments.of("ms", null),
-        Arguments.of("ms", ""),
-        Arguments.of("ms", "--"),
-        Arguments.of("--", "--"));
+  @ParameterizedTest
+  @CsvSource({
+    "'', By", "By, ''",
+  })
+  void shouldThrowExceptionWhenRegisteringConverterWithAnyUnitEmpty(
+      String sourceUnit, String targetUnit) {
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                UnitConverterFactory.registerConverter(
+                    sourceUnit, targetUnit, (value) -> 0, false));
+    assertThat(exception.getMessage()).matches("Non empty .+Unit must be provided");
+  }
+
+  @Test
+  void shouldNotAllowRegisteringAgainAlreadyExistingConverter() {
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> UnitConverterFactory.registerConverter("ms", "s", (v) -> 0, false));
+    assertEquals("Converter from [ms] to [s] already registered", exception.getMessage());
   }
 }

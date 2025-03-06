@@ -87,7 +87,7 @@ class MetricRegistrar {
           // CHECKSTYLE:ON
           LongCounterBuilder builder = meter.counterBuilder(metricName);
           Optional.ofNullable(description).ifPresent(builder::setDescription);
-          Optional.ofNullable(unit).ifPresent(builder::setUnit);
+          builder.setUnit(unit);
 
           if (recordDoubleValue) {
             builder.ofDoubles().buildWithCallback(doubleTypeCallback(extractor, unitConverter));
@@ -104,7 +104,7 @@ class MetricRegistrar {
           // CHECKSTYLE:ON
           LongUpDownCounterBuilder builder = meter.upDownCounterBuilder(metricName);
           Optional.ofNullable(description).ifPresent(builder::setDescription);
-          Optional.ofNullable(unit).ifPresent(builder::setUnit);
+          builder.setUnit(unit);
 
           if (recordDoubleValue) {
             builder.ofDoubles().buildWithCallback(doubleTypeCallback(extractor, unitConverter));
@@ -121,7 +121,7 @@ class MetricRegistrar {
           // CHECKSTYLE:ON
           DoubleGaugeBuilder builder = meter.gaugeBuilder(metricName);
           Optional.ofNullable(description).ifPresent(builder::setDescription);
-          Optional.ofNullable(unit).ifPresent(builder::setUnit);
+          builder.setUnit(unit);
 
           if (recordDoubleValue) {
             builder.buildWithCallback(doubleTypeCallback(extractor, unitConverter));
