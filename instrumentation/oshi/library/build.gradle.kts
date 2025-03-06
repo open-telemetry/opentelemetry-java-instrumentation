@@ -3,11 +3,9 @@ plugins {
   id("com.google.osdetector")
 }
 
-// 5.5.0 is the first version that works on arm mac
-val oshiVersion = if (osdetector.os == "osx" && osdetector.arch == "aarch_64") "5.5.0" else "5.3.1"
-
 dependencies {
-  library("com.github.oshi:oshi-core:$oshiVersion")
+  // 5.5.0 is the first version that works on arm mac
+  library("com.github.oshi:oshi-core:5.5.0")
 
   testImplementation(project(":instrumentation:oshi:testing"))
 }
