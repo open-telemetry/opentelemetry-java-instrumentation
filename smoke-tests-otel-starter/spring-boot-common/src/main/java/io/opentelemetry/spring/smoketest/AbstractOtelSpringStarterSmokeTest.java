@@ -224,7 +224,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
     boolean noNative = System.getProperty("org.graalvm.nativeimage.imagecode") == null;
     if (noNative) {
       // GraalVM native image does not support buffer pools - have to investigate why
-      jmxMetrics.add("jvm.buffer.memory.usage");
+      jmxMetrics.add("jvm.buffer.memory.used");
     }
     jmxMetrics.forEach(
         metricName ->
@@ -292,5 +292,24 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                 span ->
                     span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"),
                 span -> withSpanAssert(span)));
+  }
+
+  @Test
+  void shouldRedactSomeUrlParameters() {
+    testing.clearAllExportedData();
+
+    RestTemplate restTemplate = restTemplateBuilder.rootUri("http://localhost:" + port).build();
+    restTemplate.getForObject(
+        "/test?X-Goog-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0", String.class);
+
+    testing.waitAndAssertTraces(
+        traceAssert ->
+            traceAssert.hasSpansSatisfyingExactly(
+                span ->
+                    HttpSpanDataAssert.create(span)
+                        .assertClientGetRequest("/test?X-Goog-Signature=REDACTED"),
+                span ->
+                    span.hasKind(SpanKind.SERVER)
+                        .hasAttribute(HttpAttributes.HTTP_ROUTE, "/test")));
   }
 }

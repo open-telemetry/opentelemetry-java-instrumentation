@@ -97,12 +97,12 @@ class TestWebfluxSpringBootApp {
     }
 
     @RequestMapping("/exception")
-    Flux<ResponseEntity<String>> exception() throws Exception {
+    Flux<ResponseEntity<String>> exception() {
       return Flux.just(
           controller(
               EXCEPTION,
               () -> {
-                throw new RuntimeException(EXCEPTION.getBody());
+                throw new IllegalStateException(EXCEPTION.getBody());
               }));
     }
 

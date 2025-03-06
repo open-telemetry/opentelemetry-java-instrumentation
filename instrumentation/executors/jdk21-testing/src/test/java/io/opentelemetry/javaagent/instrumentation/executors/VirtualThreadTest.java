@@ -11,12 +11,17 @@ import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import java.lang.reflect.Method;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 class VirtualThreadTest {
 
   @Test
   void testDisableContextPropagation() throws Exception {
+    // VirtualThread does not have executeOnCarrierThread method in jdk24
+    Assumptions.assumeTrue(
+        Double.parseDouble(System.getProperty("java.specification.version")) < 24);
+
     TestRunnable testRunnable = new TestRunnable();
     Thread thread = Thread.ofVirtual().start(testRunnable);
     thread.join();
