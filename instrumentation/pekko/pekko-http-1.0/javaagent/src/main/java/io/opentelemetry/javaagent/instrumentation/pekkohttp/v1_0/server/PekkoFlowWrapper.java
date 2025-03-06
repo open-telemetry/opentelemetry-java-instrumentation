@@ -43,7 +43,7 @@ public class PekkoFlowWrapper
       // be started before the first one has returned a response, because of this the first request
       // in the queue is always the one that is currently being processed.
       PekkoTracingRequest request =
-          ((TracingLogic.ApplicationOutHandler) outHandler).getRequests().peek();
+          ((TracingLogic.ApplicationOutHandler) outHandler).getRequests().poll();
       if (request != null) {
         return request.context;
       }
@@ -110,7 +110,8 @@ public class PekkoFlowWrapper
                   request
                       .getAttribute(PekkoTracingRequest.ATTR_KEY)
                       .orElse(PekkoTracingRequest.EMPTY);
-              if (tracingRequest == PekkoTracingRequest.EMPTY) {
+              if (tracingRequest != PekkoTracingRequest.EMPTY) {
+                // Remove HttpRequest attribute before passing it to user code
                 request = (HttpRequest) request.removeAttribute(PekkoTracingRequest.ATTR_KEY);
               }
               // event if span wasn't started we need to push TracingRequest to match response
@@ -138,19 +139,16 @@ public class PekkoFlowWrapper
             @Override
             public void onPush() {
               HttpResponse response = grab(responseIn);
-              requests.poll();
               push(responseOut, response);
             }
 
             @Override
             public void onUpstreamFailure(Throwable exception) {
-              requests.clear();
               fail(responseOut, exception);
             }
 
             @Override
             public void onUpstreamFinish() {
-              requests.clear();
               completeStage();
             }
           });

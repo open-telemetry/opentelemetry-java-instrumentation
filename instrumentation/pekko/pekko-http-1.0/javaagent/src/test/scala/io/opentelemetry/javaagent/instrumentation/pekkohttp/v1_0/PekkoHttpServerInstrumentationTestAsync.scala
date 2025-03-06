@@ -25,11 +25,4 @@ class PekkoHttpServerInstrumentationTestAsync
 
   override protected def stopServer(server: Object): Unit =
     PekkoHttpTestAsyncWebServer.stop()
-
-  override protected def configure(
-      options: HttpServerTestOptions
-  ): Unit = {
-    super.configure(options)
-    options.setTestHttpPipelining(false)
-  }
 }
