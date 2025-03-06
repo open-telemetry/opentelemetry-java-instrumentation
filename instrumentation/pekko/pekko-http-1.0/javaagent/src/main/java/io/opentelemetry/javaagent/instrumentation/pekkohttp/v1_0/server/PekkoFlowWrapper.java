@@ -36,12 +36,10 @@ public class PekkoFlowWrapper
     return handler.join(new PekkoFlowWrapper());
   }
 
-  public static Context getContext(OutHandler outHandler) {
+  public static Context getAndRemoveContext(OutHandler outHandler) {
     if (outHandler instanceof TracingLogic.ApplicationOutHandler) {
       // We have multiple requests here only when requests are pipelined on the same connection.
-      // It appears that these requests are processed one by one so processing next request won't
-      // be started before the first one has returned a response, because of this the first request
-      // in the queue is always the one that is currently being processed.
+      // We remove the context off of the queue so that the next request can get its context.
       PekkoTracingRequest request =
           ((TracingLogic.ApplicationOutHandler) outHandler).getRequests().poll();
       if (request != null) {
