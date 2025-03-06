@@ -25,7 +25,7 @@ jobs:
       contents: read
       actions: read  # for github/codeql-action/init to get workflow details
       security-events: write  # for github/codeql-action/analyze to upload SARIF results
-    runs-on: otel-linux-latest-8-cores
+    runs-on: oracle-8cpu-32gb-x86-64
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
