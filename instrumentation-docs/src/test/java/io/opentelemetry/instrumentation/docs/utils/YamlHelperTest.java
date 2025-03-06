@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
-import org.yaml.snakeyaml.Yaml;
 
 class YamlHelperTest {
   @Test
@@ -61,20 +60,16 @@ class YamlHelperTest {
             + "  - name: spring-web-6.0\n"
             + "    srcPath: instrumentation/spring/spring-web/spring-web-6.0\n"
             + "    target_versions:\n"
-            + "      JAVAAGENT:\n"
+            + "      javaagent:\n"
             + "      - org.springframework:spring-web:[6.0.0,)\n"
             + "struts:\n"
             + "  instrumentations:\n"
             + "  - name: struts-2.3\n"
             + "    srcPath: instrumentation/struts/struts-2.3\n"
             + "    target_versions:\n"
-            + "      LIBRARY:\n"
+            + "      library:\n"
             + "      - org.apache.struts:struts2-core:2.1.0\n";
 
-    Yaml yaml = new Yaml();
-    Map<String, Object> expectedMap = yaml.load(expectedYaml);
-    Map<String, Object> actualMap = yaml.load(stringWriter.toString());
-
-    assertThat(actualMap).isEqualTo(expectedMap);
+    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
   }
 }

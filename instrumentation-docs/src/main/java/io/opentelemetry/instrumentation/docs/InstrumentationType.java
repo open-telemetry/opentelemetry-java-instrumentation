@@ -18,4 +18,9 @@ public enum InstrumentationType {
       default -> throw new IllegalArgumentException("Unknown instrumentation type: " + type);
     };
   }
+
+  @Override
+  public String toString() {
+    return name().toLowerCase(Locale.getDefault());
+  }
 }
