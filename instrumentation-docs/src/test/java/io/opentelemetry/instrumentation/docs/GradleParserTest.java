@@ -23,7 +23,7 @@ class GradleParserTest {
             + "  }\n"
             + "}";
     Set<String> versions =
-        GradleParser.parseMuzzleBlock(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
+        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
     assertThat(versions.size()).isEqualTo(1);
     assertThat(versions.stream().findFirst().get())
         .isEqualTo("org.elasticsearch.client:rest:[5.0,6.4)");
@@ -38,7 +38,7 @@ class GradleParserTest {
             + "  latestDepTestLibrary(\"org.apache.httpcomponents:httpclient:4.+\") // see apache-httpclient-5.0 module\n"
             + "}";
     Set<String> versions =
-        GradleParser.parseMuzzleBlock(gradleBuildFileContent, InstrumentationType.LIBRARY);
+        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.LIBRARY);
     assertThat(versions.size()).isEqualTo(1);
     assertThat(versions.stream().findFirst().get())
         .isEqualTo("org.apache.httpcomponents:httpclient:4.3");
@@ -78,9 +78,39 @@ class GradleParserTest {
             + "}\n";
 
     Set<String> versions =
-        GradleParser.parseMuzzleBlock(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
+        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
     assertThat(versions)
         .containsExactlyInAnyOrder(
             "dev.zio:zio_2.12:[2.0.0,)", "dev.zio:zio_2.13:[2.0.0,)", "dev.zio:zio_3:[2.0.0,)");
+  }
+
+  @Test
+  void testExtractLogbackLibrary() {
+    String gradleBuildFileContent =
+        "compileOnly(\"ch.qos.logback:logback-classic\") {\n"
+            + "  version {\n"
+            + "    // compiling against newer version than the earliest supported version (1.0.0) to support\n"
+            + "    // features added in 1.3.0\n"
+            + "    strictly(\"1.3.0\")\n"
+            + "  }\n"
+            + "}\n"
+            + "compileOnly(\"org.slf4j:slf4j-api\") {\n"
+            + "  version {\n"
+            + "    strictly(\"2.0.0\")\n"
+            + "  }\n"
+            + "}\n"
+            + "compileOnly(\"net.logstash.logback:logstash-logback-encoder\") {\n"
+            + "  version {\n"
+            + "    strictly(\"3.0\")\n"
+            + "  }\n"
+            + "}\n";
+
+    Set<String> versions =
+        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.LIBRARY);
+    assertThat(versions)
+        .containsExactlyInAnyOrder(
+            "ch.qos.logback:logback-classic:1.3.0",
+            "org.slf4j:slf4j-api:2.0.0",
+            "net.logstash.logback:logstash-logback-encoder:3.0");
   }
 }

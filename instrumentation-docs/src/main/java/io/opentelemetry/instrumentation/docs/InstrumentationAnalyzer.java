@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.docs;
 
-import static io.opentelemetry.instrumentation.docs.GradleParser.parseMuzzleBlock;
+import static io.opentelemetry.instrumentation.docs.GradleParser.parseGradleFile;
 
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import io.opentelemetry.instrumentation.docs.utils.InstrumentationPath;
@@ -45,10 +45,8 @@ class InstrumentationAnalyzer {
                 path.srcPath().replace("/javaagent", "").replace("/library", ""),
                 path.instrumentationName(),
                 path.namespace(),
-                path.group(),
-                new ArrayList<>()));
+                path.group()));
       }
-      entityMap.get(key).getTypes().add(path.type());
     }
 
     return new ArrayList<>(entityMap.values());
@@ -77,12 +75,12 @@ class InstrumentationAnalyzer {
       String fileContents = fileSearch.readFileToString(file);
 
       if (file.contains("/javaagent/")) {
-        Set<String> results = parseMuzzleBlock(fileContents, InstrumentationType.JAVAAGENT);
+        Set<String> results = parseGradleFile(fileContents, InstrumentationType.JAVAAGENT);
         versions
             .computeIfAbsent(InstrumentationType.JAVAAGENT, k -> new HashSet<>())
             .addAll(results);
       } else if (file.contains("/library/")) {
-        Set<String> results = parseMuzzleBlock(fileContents, InstrumentationType.LIBRARY);
+        Set<String> results = parseGradleFile(fileContents, InstrumentationType.LIBRARY);
         versions.computeIfAbsent(InstrumentationType.LIBRARY, k -> new HashSet<>()).addAll(results);
       }
     }

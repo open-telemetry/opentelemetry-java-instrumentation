@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 
 class GradleParser {
   private static final Pattern passBlockPattern =
-      Pattern.compile("pass\\s*\\{(.*?)\\}", Pattern.DOTALL);
+      Pattern.compile("pass\\s*\\{(.*?)}", Pattern.DOTALL);
 
   private static final Pattern libraryPattern =
       Pattern.compile("library\\(\"([^\"]+:[^\"]+:[^\"]+)\"\\)");
@@ -22,40 +22,78 @@ class GradleParser {
   private static final Pattern variablePattern =
       Pattern.compile("val\\s+(\\w+)\\s*=\\s*\"([^\"]+)\"");
 
+  private static final Pattern compileOnlyPattern =
+      Pattern.compile(
+          "compileOnly\\(\"([^\"]+)\"\\)\\s*\\{\\s*version\\s*\\{(?:\\s*//.*\\n)*\\s*strictly\\(\"([^\"]+)\"\\)\\s*}\\s*}");
+
+  /**
+   * Parses gradle files for muzzle and dependency information
+   *
+   * @param gradleFileContents Contents of a Gradle build file as a String
+   * @return A set of strings summarizing the group, module, and version ranges
+   */
+  public static Set<String> parseGradleFile(String gradleFileContents, InstrumentationType type) {
+    Set<String> results = new HashSet<>();
+    Map<String, String> variables = extractVariables(gradleFileContents);
+
+    if (type.equals(InstrumentationType.JAVAAGENT)) {
+      results.addAll(parseMuzzle(gradleFileContents, variables));
+    } else {
+      results.addAll(parseLibraryDependencies(gradleFileContents, variables));
+    }
+
+    return results;
+  }
+
   /**
    * Parses the "muzzle" block from the given Gradle file content and extracts information about
    * each "pass { ... }" entry, returning a set of version summary strings.
    *
    * @param gradleFileContents Contents of a Gradle build file as a String
+   * @param variables Map of variable names to their values
    * @return A set of strings summarizing the group, module, and version ranges
    */
-  public static Set<String> parseMuzzleBlock(String gradleFileContents, InstrumentationType type) {
+  private static Set<String> parseMuzzle(String gradleFileContents, Map<String, String> variables) {
     Set<String> results = new HashSet<>();
-    Map<String, String> variables = extractVariables(gradleFileContents);
+    Matcher passBlockMatcher = passBlockPattern.matcher(gradleFileContents);
 
-    if (type.equals(InstrumentationType.JAVAAGENT)) {
-      Matcher passBlockMatcher = passBlockPattern.matcher(gradleFileContents);
+    while (passBlockMatcher.find()) {
+      String passBlock = passBlockMatcher.group(1);
 
-      while (passBlockMatcher.find()) {
-        String passBlock = passBlockMatcher.group(1);
+      String group = extractValue(passBlock, "group\\.set\\(\"([^\"]+)\"\\)");
+      String module = extractValue(passBlock, "module\\.set\\(\"([^\"]+)\"\\)");
+      String versionRange = extractValue(passBlock, "versions\\.set\\(\"([^\"]+)\"\\)");
 
-        String group = extractValue(passBlock, "group\\.set\\(\"([^\"]+)\"\\)");
-        String module = extractValue(passBlock, "module\\.set\\(\"([^\"]+)\"\\)");
-        String versionRange = extractValue(passBlock, "versions\\.set\\(\"([^\"]+)\"\\)");
-
-        if (group != null && module != null && versionRange != null) {
-          String summary = group + ":" + module + ":" + interpolate(versionRange, variables);
-          results.add(summary);
-        }
-      }
-    } else {
-      Matcher dependencyMatcher = libraryPattern.matcher(gradleFileContents);
-      while (dependencyMatcher.find()) {
-        String dependency = dependencyMatcher.group(1);
-        results.add(interpolate(dependency, variables));
+      if (group != null && module != null && versionRange != null) {
+        String summary = group + ":" + module + ":" + interpolate(versionRange, variables);
+        results.add(summary);
       }
     }
+    return results;
+  }
 
+  /**
+   * Parses the "dependencies" block from the given Gradle file content and extracts information
+   * about what library versions are supported.
+   *
+   * @param gradleFileContents Contents of a Gradle build file as a String
+   * @param variables Map of variable names to their values
+   * @return A set of strings summarizing the group, module, and versions
+   */
+  private static Set<String> parseLibraryDependencies(
+      String gradleFileContents, Map<String, String> variables) {
+    Set<String> results = new HashSet<>();
+    Matcher libraryMatcher = libraryPattern.matcher(gradleFileContents);
+    while (libraryMatcher.find()) {
+      String dependency = libraryMatcher.group(1);
+      results.add(interpolate(dependency, variables));
+    }
+
+    Matcher compileOnlyMatcher = compileOnlyPattern.matcher(gradleFileContents);
+    while (compileOnlyMatcher.find()) {
+      String dependency = compileOnlyMatcher.group(1) + ":" + compileOnlyMatcher.group(2);
+      results.add(interpolate(dependency, variables));
+    }
     return results;
   }
 

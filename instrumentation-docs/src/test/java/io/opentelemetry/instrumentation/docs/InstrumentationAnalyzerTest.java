@@ -50,9 +50,6 @@ class InstrumentationAnalyzerTest {
     assertThat(log4jEntity.getNamespace()).isEqualTo("log4j");
     assertThat(log4jEntity.getGroup()).isEqualTo("log4j");
     assertThat(log4jEntity.getSrcPath()).isEqualTo("instrumentation/log4j/log4j-appender-2.17");
-    assertThat(log4jEntity.getTypes()).hasSize(2);
-    assertThat(log4jEntity.getTypes())
-        .containsExactly(InstrumentationType.LIBRARY, InstrumentationType.JAVAAGENT);
 
     InstrumentationEntity springEntity =
         entities.stream()
@@ -64,7 +61,5 @@ class InstrumentationAnalyzerTest {
     assertThat(springEntity.getNamespace()).isEqualTo("spring");
     assertThat(springEntity.getGroup()).isEqualTo("spring");
     assertThat(springEntity.getSrcPath()).isEqualTo("instrumentation/spring/spring-web");
-    assertThat(springEntity.getTypes()).hasSize(1);
-    assertThat(springEntity.getTypes()).containsExactly(InstrumentationType.LIBRARY);
   }
 }

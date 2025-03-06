@@ -1,1598 +1,1603 @@
 activej:
   instrumentations:
-    - name: activej-http-6.0
-      srcPath: instrumentation/activej-http-6.0
-      target_versions:
-        JAVAAGENT:
-          - io.activej:activej-http:[6.0,)
+  - name: activej-http-6.0
+    srcPath: instrumentation/activej-http-6.0
+    target_versions:
+      JAVAAGENT:
+      - io.activej:activej-http:[6.0,)
 akka:
   instrumentations:
-    - name: akka-http-10.0
-      srcPath: instrumentation/akka/akka-http-10.0
-      target_versions:
-        JAVAAGENT:
-          - com.typesafe.akka:akka-http_2.12:[10,)
-          - com.typesafe.akka:akka-http_2.13:[10,)
-          - com.typesafe.akka:akka-http_2.11:[10,)
-    - name: akka-actor-fork-join-2.5
-      srcPath: instrumentation/akka/akka-actor-fork-join-2.5
-      target_versions:
-        JAVAAGENT:
-          - com.typesafe.akka:akka-actor_2.12:[2.5,2.6)
-          - com.typesafe.akka:akka-actor_2.13:[2.5.23,2.6)
-          - com.typesafe.akka:akka-actor_2.11:[2.5,)
-    - name: akka-actor-2.3
-      srcPath: instrumentation/akka/akka-actor-2.3
-      target_versions:
-        JAVAAGENT:
-          - com.typesafe.akka:akka-actor_2.11:[2.3,)
-          - com.typesafe.akka:akka-actor_2.12:[2.3,)
-          - com.typesafe.akka:akka-actor_2.13:[2.3,)
+  - name: akka-http-10.0
+    srcPath: instrumentation/akka/akka-http-10.0
+    target_versions:
+      JAVAAGENT:
+      - com.typesafe.akka:akka-http_2.12:[10,)
+      - com.typesafe.akka:akka-http_2.13:[10,)
+      - com.typesafe.akka:akka-http_2.11:[10,)
+  - name: akka-actor-fork-join-2.5
+    srcPath: instrumentation/akka/akka-actor-fork-join-2.5
+    target_versions:
+      JAVAAGENT:
+      - com.typesafe.akka:akka-actor_2.12:[2.5,2.6)
+      - com.typesafe.akka:akka-actor_2.13:[2.5.23,2.6)
+      - com.typesafe.akka:akka-actor_2.11:[2.5,)
+  - name: akka-actor-2.3
+    srcPath: instrumentation/akka/akka-actor-2.3
+    target_versions:
+      JAVAAGENT:
+      - com.typesafe.akka:akka-actor_2.11:[2.3,)
+      - com.typesafe.akka:akka-actor_2.12:[2.3,)
+      - com.typesafe.akka:akka-actor_2.13:[2.3,)
 alibaba:
   instrumentations:
-    - name: alibaba-druid-1.0
-      srcPath: instrumentation/alibaba-druid-1.0
-      target_versions:
-        JAVAAGENT:
-          - com.alibaba:druid:(,)
-        LIBRARY:
-          - com.alibaba:druid:1.0.0
+  - name: alibaba-druid-1.0
+    srcPath: instrumentation/alibaba-druid-1.0
+    target_versions:
+      JAVAAGENT:
+      - com.alibaba:druid:(,)
+      LIBRARY:
+      - com.alibaba:druid:1.0.0
 apache:
   instrumentations:
-    - name: apache-shenyu-2.4
-      srcPath: instrumentation/apache-shenyu-2.4
-      target_versions:
-        JAVAAGENT:
-          - org.apache.shenyu:shenyu-web:[2.4.0,)
-    - name: apache-httpclient-2.0
-      srcPath: instrumentation/apache-httpclient/apache-httpclient-2.0
-      target_versions:
-        JAVAAGENT:
-          - commons-httpclient:commons-httpclient:[2.0,4.0)
-    - name: apache-httpasyncclient-4.1
-      srcPath: instrumentation/apache-httpasyncclient-4.1
-      target_versions:
-        JAVAAGENT:
-          - org.apache.httpcomponents:httpasyncclient:[4.1,)
-    - name: apache-httpclient-4.3
-      srcPath: instrumentation/apache-httpclient/apache-httpclient-4.3
-      target_versions:
-        LIBRARY:
-          - org.apache.httpcomponents:httpclient:4.3
-    - name: apache-httpclient-4.0
-      srcPath: instrumentation/apache-httpclient/apache-httpclient-4.0
-      target_versions:
-        JAVAAGENT:
-          - io.dropwizard:dropwizard-client:(,3.0.0)
-          - org.apache.httpcomponents:httpclient:[4.0,)
-    - name: apache-dubbo-2.7
-      srcPath: instrumentation/apache-dubbo-2.7
-      target_versions:
-        JAVAAGENT:
-          - org.apache.dubbo:dubbo:[2.7,)
-    - name: apache-httpclient-5.2
-      srcPath: instrumentation/apache-httpclient/apache-httpclient-5.2
-      target_versions:
-        LIBRARY:
-          - org.apache.httpcomponents.client5:httpclient5:5.2.1
-    - name: apache-httpclient-5.0
-      srcPath: instrumentation/apache-httpclient/apache-httpclient-5.0
-      target_versions:
-        JAVAAGENT:
-          - org.apache.httpcomponents.client5:httpclient5:[5.0,)
-    - name: apache-dbcp-2.0
-      srcPath: instrumentation/apache-dbcp-2.0
-      target_versions:
-        JAVAAGENT:
-          - org.apache.commons:commons-dbcp2:[2,)
-        LIBRARY:
-          - org.apache.commons:commons-dbcp2:2.0
+  - name: apache-shenyu-2.4
+    srcPath: instrumentation/apache-shenyu-2.4
+    target_versions:
+      JAVAAGENT:
+      - org.apache.shenyu:shenyu-web:[2.4.0,)
+  - name: apache-httpclient-2.0
+    srcPath: instrumentation/apache-httpclient/apache-httpclient-2.0
+    target_versions:
+      JAVAAGENT:
+      - commons-httpclient:commons-httpclient:[2.0,4.0)
+  - name: apache-httpasyncclient-4.1
+    srcPath: instrumentation/apache-httpasyncclient-4.1
+    target_versions:
+      JAVAAGENT:
+      - org.apache.httpcomponents:httpasyncclient:[4.1,)
+  - name: apache-httpclient-4.3
+    srcPath: instrumentation/apache-httpclient/apache-httpclient-4.3
+    target_versions:
+      LIBRARY:
+      - org.apache.httpcomponents:httpclient:4.3
+  - name: apache-httpclient-4.0
+    srcPath: instrumentation/apache-httpclient/apache-httpclient-4.0
+    target_versions:
+      JAVAAGENT:
+      - io.dropwizard:dropwizard-client:(,3.0.0)
+      - org.apache.httpcomponents:httpclient:[4.0,)
+  - name: apache-dubbo-2.7
+    srcPath: instrumentation/apache-dubbo-2.7
+    target_versions:
+      JAVAAGENT:
+      - org.apache.dubbo:dubbo:[2.7,)
+  - name: apache-httpclient-5.2
+    srcPath: instrumentation/apache-httpclient/apache-httpclient-5.2
+    target_versions:
+      LIBRARY:
+      - org.apache.httpcomponents.client5:httpclient5:5.2.1
+  - name: apache-httpclient-5.0
+    srcPath: instrumentation/apache-httpclient/apache-httpclient-5.0
+    target_versions:
+      JAVAAGENT:
+      - org.apache.httpcomponents.client5:httpclient5:[5.0,)
+  - name: apache-dbcp-2.0
+    srcPath: instrumentation/apache-dbcp-2.0
+    target_versions:
+      JAVAAGENT:
+      - org.apache.commons:commons-dbcp2:[2,)
+      LIBRARY:
+      - org.apache.commons:commons-dbcp2:2.0
 armeria:
   instrumentations:
-    - name: armeria-1.3
-      srcPath: instrumentation/armeria/armeria-1.3
-      target_versions:
-        JAVAAGENT:
-          - com.linecorp.armeria:armeria:[1.3.0,)
-        LIBRARY:
-          - com.linecorp.armeria:armeria:1.3.0
-    - name: armeria-grpc-1.14
-      srcPath: instrumentation/armeria/armeria-grpc-1.14
-      target_versions:
-        JAVAAGENT:
-          - com.linecorp.armeria:armeria-grpc:[1.14.0,)
+  - name: armeria-1.3
+    srcPath: instrumentation/armeria/armeria-1.3
+    target_versions:
+      JAVAAGENT:
+      - com.linecorp.armeria:armeria:[1.3.0,)
+      LIBRARY:
+      - com.linecorp.armeria:armeria:1.3.0
+  - name: armeria-grpc-1.14
+    srcPath: instrumentation/armeria/armeria-grpc-1.14
+    target_versions:
+      JAVAAGENT:
+      - com.linecorp.armeria:armeria-grpc:[1.14.0,)
 async:
   instrumentations:
-    - name: async-http-client-1.9
-      srcPath: instrumentation/async-http-client/async-http-client-1.9
-      target_versions:
-        JAVAAGENT:
-          - com.ning:async-http-client:[1.9.0,)
-    - name: async-http-client-2.0
-      srcPath: instrumentation/async-http-client/async-http-client-2.0
-      target_versions:
-        JAVAAGENT:
-          - org.asynchttpclient:async-http-client:[2.0.0,)
+  - name: async-http-client-1.9
+    srcPath: instrumentation/async-http-client/async-http-client-1.9
+    target_versions:
+      JAVAAGENT:
+      - com.ning:async-http-client:[1.9.0,)
+  - name: async-http-client-2.0
+    srcPath: instrumentation/async-http-client/async-http-client-2.0
+    target_versions:
+      JAVAAGENT:
+      - org.asynchttpclient:async-http-client:[2.0.0,)
 aws:
   instrumentations:
-    - name: aws-lambda-events-2.2
-      srcPath: instrumentation/aws-lambda/aws-lambda-events-2.2
-      target_versions:
-        JAVAAGENT:
-          - com.amazonaws:aws-lambda-java-core:[1.0.0,)
-        LIBRARY:
-          - com.amazonaws:aws-lambda-java-events:2.2.1
-          - com.amazonaws:aws-lambda-java-core:1.0.0
-    - name: aws-lambda-core-1.0
-      srcPath: instrumentation/aws-lambda/aws-lambda-core-1.0
-      target_versions:
-        JAVAAGENT:
-          - com.amazonaws:aws-lambda-java-core:[1.0.0,)
-        LIBRARY:
-          - com.amazonaws:aws-lambda-java-core:1.0.0
-    - name: aws-sdk-1.11
-      srcPath: instrumentation/aws-sdk/aws-sdk-1.11
-      target_versions:
-        JAVAAGENT:
-          - com.amazonaws:aws-java-sdk-sqs:[1.10.33,)
-          - com.amazonaws:aws-java-sdk-core:[1.10.33,)
-        LIBRARY:
-          - com.amazonaws:aws-java-sdk-sqs:1.11.106
-          - com.amazonaws:aws-java-sdk-core:1.11.0
-    - name: aws-sdk-2.2
-      srcPath: instrumentation/aws-sdk/aws-sdk-2.2
-      target_versions:
-        JAVAAGENT:
-          - software.amazon.awssdk:sns:[2.2.0,)
-          - software.amazon.awssdk:lambda:[2.17.0,)
-          - software.amazon.awssdk:bedrock-runtime:[2.25.63,)
-          - software.amazon.awssdk:aws-core:[2.2.0,)
-          - software.amazon.awssdk:sqs:[2.2.0,)
-        LIBRARY:
-          - software.amazon.awssdk:aws-core:2.2.0
-          - software.amazon.awssdk:aws-json-protocol:2.2.0
-          - software.amazon.awssdk:sqs:2.2.0
-          - software.amazon.awssdk:sns:2.2.0
-          - software.amazon.awssdk:lambda:2.2.0
+  - name: aws-lambda-events-2.2
+    srcPath: instrumentation/aws-lambda/aws-lambda-events-2.2
+    target_versions:
+      JAVAAGENT:
+      - com.amazonaws:aws-lambda-java-core:[1.0.0,)
+      LIBRARY:
+      - com.amazonaws:aws-lambda-java-events:2.2.1
+      - com.amazonaws:aws-lambda-java-core:1.0.0
+  - name: aws-lambda-core-1.0
+    srcPath: instrumentation/aws-lambda/aws-lambda-core-1.0
+    target_versions:
+      JAVAAGENT:
+      - com.amazonaws:aws-lambda-java-core:[1.0.0,)
+      LIBRARY:
+      - com.amazonaws:aws-lambda-java-core:1.0.0
+  - name: aws-sdk-1.11
+    srcPath: instrumentation/aws-sdk/aws-sdk-1.11
+    target_versions:
+      JAVAAGENT:
+      - com.amazonaws:aws-java-sdk-sqs:[1.10.33,)
+      - com.amazonaws:aws-java-sdk-core:[1.10.33,)
+      LIBRARY:
+      - com.amazonaws:aws-java-sdk-sqs:1.11.106
+      - com.amazonaws:aws-java-sdk-core:1.11.0
+  - name: aws-sdk-2.2
+    srcPath: instrumentation/aws-sdk/aws-sdk-2.2
+    target_versions:
+      JAVAAGENT:
+      - software.amazon.awssdk:sns:[2.2.0,)
+      - software.amazon.awssdk:lambda:[2.17.0,)
+      - software.amazon.awssdk:bedrock-runtime:[2.25.63,)
+      - software.amazon.awssdk:aws-core:[2.2.0,)
+      - software.amazon.awssdk:sqs:[2.2.0,)
+      LIBRARY:
+      - software.amazon.awssdk:aws-core:2.2.0
+      - software.amazon.awssdk:aws-json-protocol:2.2.0
+      - software.amazon.awssdk:sqs:2.2.0
+      - software.amazon.awssdk:sns:2.2.0
+      - software.amazon.awssdk:lambda:2.2.0
 azure:
   instrumentations:
-    - name: azure-core-1.36
-      srcPath: instrumentation/azure-core/azure-core-1.36
-      target_versions:
-        JAVAAGENT:
-          - com.azure:azure-core:[1.36.0,)
-    - name: azure-core-1.19
-      srcPath: instrumentation/azure-core/azure-core-1.19
-      target_versions:
-        JAVAAGENT:
-          - com.azure:azure-core:[1.19.0,1.36.0)
-    - name: azure-core-1.14
-      srcPath: instrumentation/azure-core/azure-core-1.14
-      target_versions:
-        JAVAAGENT:
-          - com.azure:azure-core:[1.14.0,1.19.0)
+  - name: azure-core-1.36
+    srcPath: instrumentation/azure-core/azure-core-1.36
+    target_versions:
+      JAVAAGENT:
+      - com.azure:azure-core:[1.36.0,)
+  - name: azure-core-1.19
+    srcPath: instrumentation/azure-core/azure-core-1.19
+    target_versions:
+      JAVAAGENT:
+      - com.azure:azure-core:[1.19.0,1.36.0)
+  - name: azure-core-1.14
+    srcPath: instrumentation/azure-core/azure-core-1.14
+    target_versions:
+      JAVAAGENT:
+      - com.azure:azure-core:[1.14.0,1.19.0)
 c3p0:
   instrumentations:
-    - name: c3p0-0.9
-      srcPath: instrumentation/c3p0-0.9
-      target_versions:
-        JAVAAGENT:
-          - com.mchange:c3p0:(,)
-        LIBRARY:
-          - com.mchange:c3p0:0.9.2
+  - name: c3p0-0.9
+    srcPath: instrumentation/c3p0-0.9
+    target_versions:
+      JAVAAGENT:
+      - com.mchange:c3p0:(,)
+      LIBRARY:
+      - com.mchange:c3p0:0.9.2
 camel:
   instrumentations:
-    - name: camel-2.20
-      srcPath: instrumentation/camel-2.20
-      target_versions:
-        JAVAAGENT:
-          - org.apache.camel:camel-core:[2.19,3)
+  - name: camel-2.20
+    srcPath: instrumentation/camel-2.20
+    target_versions:
+      JAVAAGENT:
+      - org.apache.camel:camel-core:[2.19,3)
 cassandra:
   instrumentations:
-    - name: cassandra-4.0
-      srcPath: instrumentation/cassandra/cassandra-4.0
-      target_versions:
-        JAVAAGENT:
-          - com.datastax.oss:java-driver-core:[4.0,4.4)
-    - name: cassandra-4.4
-      srcPath: instrumentation/cassandra/cassandra-4.4
-      target_versions:
-        JAVAAGENT:
-          - com.datastax.oss:java-driver-core:[4.4,]
-        LIBRARY:
-          - com.datastax.oss:java-driver-core:4.4.0
-    - name: cassandra-3.0
-      srcPath: instrumentation/cassandra/cassandra-3.0
-      target_versions:
-        JAVAAGENT:
+  - name: cassandra-4.0
+    srcPath: instrumentation/cassandra/cassandra-4.0
+    target_versions:
+      JAVAAGENT:
+      - com.datastax.oss:java-driver-core:[4.0,4.4)
+  - name: cassandra-4.4
+    srcPath: instrumentation/cassandra/cassandra-4.4
+    target_versions:
+      JAVAAGENT:
+      - com.datastax.oss:java-driver-core:[4.4,]
+      LIBRARY:
+      - com.datastax.oss:java-driver-core:4.4.0
+  - name: cassandra-3.0
+    srcPath: instrumentation/cassandra/cassandra-3.0
+    target_versions:
+      JAVAAGENT: []
 clickhouse:
   instrumentations:
-    - name: clickhouse-client-0.5
-      srcPath: instrumentation/clickhouse-client-0.5
-      target_versions:
-        JAVAAGENT:
-          - com.clickhouse.client:clickhouse-client:[0.5.0,)
+  - name: clickhouse-client-0.5
+    srcPath: instrumentation/clickhouse-client-0.5
+    target_versions:
+      JAVAAGENT:
+      - com.clickhouse.client:clickhouse-client:[0.5.0,)
 couchbase:
   instrumentations:
-    - name: couchbase-3.1.6
-      srcPath: instrumentation/couchbase/couchbase-3.1.6
-      target_versions:
-        JAVAAGENT:
-          - com.couchbase.client:java-client:[3.1.6,3.2.0)
-    - name: couchbase-2.6
-      srcPath: instrumentation/couchbase/couchbase-2.6
-      target_versions:
-        JAVAAGENT:
-          - com.couchbase.client:java-client:[2.6.0,3)
-    - name: couchbase-2.0
-      srcPath: instrumentation/couchbase/couchbase-2.0
-      target_versions:
-        JAVAAGENT:
-          - com.couchbase.client:java-client:[2,3)
-    - name: couchbase-3.2
-      srcPath: instrumentation/couchbase/couchbase-3.2
-      target_versions:
-        JAVAAGENT:
-          - com.couchbase.client:java-client:[3.2.0,)
-    - name: couchbase-3.1
-      srcPath: instrumentation/couchbase/couchbase-3.1
-      target_versions:
-        JAVAAGENT:
-          - com.couchbase.client:java-client:[3.1,3.1.6)
+  - name: couchbase-3.1.6
+    srcPath: instrumentation/couchbase/couchbase-3.1.6
+    target_versions:
+      JAVAAGENT:
+      - com.couchbase.client:java-client:[3.1.6,3.2.0)
+  - name: couchbase-2.6
+    srcPath: instrumentation/couchbase/couchbase-2.6
+    target_versions:
+      JAVAAGENT:
+      - com.couchbase.client:java-client:[2.6.0,3)
+  - name: couchbase-2.0
+    srcPath: instrumentation/couchbase/couchbase-2.0
+    target_versions:
+      JAVAAGENT:
+      - com.couchbase.client:java-client:[2,3)
+  - name: couchbase-3.2
+    srcPath: instrumentation/couchbase/couchbase-3.2
+    target_versions:
+      JAVAAGENT:
+      - com.couchbase.client:java-client:[3.2.0,)
+  - name: couchbase-3.1
+    srcPath: instrumentation/couchbase/couchbase-3.1
+    target_versions:
+      JAVAAGENT:
+      - com.couchbase.client:java-client:[3.1,3.1.6)
 dropwizard:
   instrumentations:
-    - name: dropwizard-metrics-4.0
-      srcPath: instrumentation/dropwizard/dropwizard-metrics-4.0
-      target_versions:
-        JAVAAGENT:
-          - io.dropwizard.metrics:metrics-core:[4.0.0,)
-    - name: dropwizard-views-0.7
-      srcPath: instrumentation/dropwizard/dropwizard-views-0.7
-      target_versions:
-        JAVAAGENT:
-          - io.dropwizard:dropwizard-views:(,3.0.0)
+  - name: dropwizard-metrics-4.0
+    srcPath: instrumentation/dropwizard/dropwizard-metrics-4.0
+    target_versions:
+      JAVAAGENT:
+      - io.dropwizard.metrics:metrics-core:[4.0.0,)
+  - name: dropwizard-views-0.7
+    srcPath: instrumentation/dropwizard/dropwizard-views-0.7
+    target_versions:
+      JAVAAGENT:
+      - io.dropwizard:dropwizard-views:(,3.0.0)
 elasticsearch:
   instrumentations:
-    - name: elasticsearch-rest-6.4
-      srcPath: instrumentation/elasticsearch/elasticsearch-rest-6.4
-      target_versions:
-        JAVAAGENT:
-          - org.elasticsearch.client:elasticsearch-rest-client:[6.4,7.0)
-    - name: elasticsearch-api-client-7.16
-      srcPath: instrumentation/elasticsearch/elasticsearch-api-client-7.16
-      target_versions:
-        JAVAAGENT:
-          - co.elastic.clients:elasticsearch-java:[7.16,7.17.20)
-          - co.elastic.clients:elasticsearch-java:[8.0.0,8.10)
-    - name: elasticsearch-rest-5.0
-      srcPath: instrumentation/elasticsearch/elasticsearch-rest-5.0
-      target_versions:
-        JAVAAGENT:
-          - org.elasticsearch.client:rest:[5.0,6.4)
-          - org.elasticsearch.client:elasticsearch-rest-client:[5.0,6.4)
-    - name: elasticsearch-rest-7.0
-      srcPath: instrumentation/elasticsearch/elasticsearch-rest-7.0
-      target_versions:
-        JAVAAGENT:
-          - org.elasticsearch.client:elasticsearch-rest-client:[7.0,)
-        LIBRARY:
-          - org.elasticsearch.client:elasticsearch-rest-client:7.0.0
-    - name: elasticsearch-transport-6.0
-      srcPath: instrumentation/elasticsearch/elasticsearch-transport-6.0
-      target_versions:
-        JAVAAGENT:
-          - org.elasticsearch:elasticsearch:[6.0.0,8.0.0)
-          - org.elasticsearch.client:transport:[6.0.0,)
-    - name: elasticsearch-transport-5.0
-      srcPath: instrumentation/elasticsearch/elasticsearch-transport-5.0
-      target_versions:
-        JAVAAGENT:
-          - org.elasticsearch.client:transport:[5.0.0,5.3.0)
-          - org.elasticsearch:elasticsearch:[5.0.0,5.3.0)
-    - name: elasticsearch-transport-5.3
-      srcPath: instrumentation/elasticsearch/elasticsearch-transport-5.3
-      target_versions:
-        JAVAAGENT:
-          - org.elasticsearch.client:transport:[5.3.0,6.0.0)
-          - org.elasticsearch:elasticsearch:[5.3.0,6.0.0)
+  - name: elasticsearch-rest-6.4
+    srcPath: instrumentation/elasticsearch/elasticsearch-rest-6.4
+    target_versions:
+      JAVAAGENT:
+      - org.elasticsearch.client:elasticsearch-rest-client:[6.4,7.0)
+  - name: elasticsearch-api-client-7.16
+    srcPath: instrumentation/elasticsearch/elasticsearch-api-client-7.16
+    target_versions:
+      JAVAAGENT:
+      - co.elastic.clients:elasticsearch-java:[7.16,7.17.20)
+      - co.elastic.clients:elasticsearch-java:[8.0.0,8.10)
+  - name: elasticsearch-rest-5.0
+    srcPath: instrumentation/elasticsearch/elasticsearch-rest-5.0
+    target_versions:
+      JAVAAGENT:
+      - org.elasticsearch.client:rest:[5.0,6.4)
+      - org.elasticsearch.client:elasticsearch-rest-client:[5.0,6.4)
+  - name: elasticsearch-rest-7.0
+    srcPath: instrumentation/elasticsearch/elasticsearch-rest-7.0
+    target_versions:
+      JAVAAGENT:
+      - org.elasticsearch.client:elasticsearch-rest-client:[7.0,)
+      LIBRARY:
+      - org.elasticsearch.client:elasticsearch-rest-client:7.0.0
+  - name: elasticsearch-transport-6.0
+    srcPath: instrumentation/elasticsearch/elasticsearch-transport-6.0
+    target_versions:
+      JAVAAGENT:
+      - org.elasticsearch:elasticsearch:[6.0.0,8.0.0)
+      - org.elasticsearch.client:transport:[6.0.0,)
+  - name: elasticsearch-transport-5.0
+    srcPath: instrumentation/elasticsearch/elasticsearch-transport-5.0
+    target_versions:
+      JAVAAGENT:
+      - org.elasticsearch.client:transport:[5.0.0,5.3.0)
+      - org.elasticsearch:elasticsearch:[5.0.0,5.3.0)
+  - name: elasticsearch-transport-5.3
+    srcPath: instrumentation/elasticsearch/elasticsearch-transport-5.3
+    target_versions:
+      JAVAAGENT:
+      - org.elasticsearch.client:transport:[5.3.0,6.0.0)
+      - org.elasticsearch:elasticsearch:[5.3.0,6.0.0)
 executors:
   instrumentations:
-    - name: executors
-      srcPath: instrumentation/executors
-      target_versions:
-        JAVAAGENT:
+  - name: executors
+    srcPath: instrumentation/executors
+    target_versions:
+      JAVAAGENT: []
 external:
   instrumentations:
-    - name: external-annotations
-      srcPath: instrumentation/external-annotations
-      target_versions:
-        JAVAAGENT:
+  - name: external-annotations
+    srcPath: instrumentation/external-annotations
+    target_versions:
+      JAVAAGENT: []
 finagle:
   instrumentations:
-    - name: finagle-http-23.11
-      srcPath: instrumentation/finagle-http-23.11
-      target_versions:
-        JAVAAGENT:
-          - com.twitter:finagle-http_2.13:[23.11.0,]
-          - com.twitter:finagle-http_2.12:[23.11.0,]
+  - name: finagle-http-23.11
+    srcPath: instrumentation/finagle-http-23.11
+    target_versions:
+      JAVAAGENT:
+      - com.twitter:finagle-http_2.13:[23.11.0,]
+      - com.twitter:finagle-http_2.12:[23.11.0,]
 finatra:
   instrumentations:
-    - name: finatra-2.9
-      srcPath: instrumentation/finatra-2.9
-      target_versions:
-        JAVAAGENT:
-          - com.twitter:finatra-http_2.11:[2.9.0,]
-          - com.twitter:finatra-http_2.12:[2.9.0,]
+  - name: finatra-2.9
+    srcPath: instrumentation/finatra-2.9
+    target_versions:
+      JAVAAGENT:
+      - com.twitter:finatra-http_2.11:[2.9.0,]
+      - com.twitter:finatra-http_2.12:[2.9.0,]
 geode:
   instrumentations:
-    - name: geode-1.4
-      srcPath: instrumentation/geode-1.4
-      target_versions:
-        JAVAAGENT:
-          - org.apache.geode:geode-core:[1.4.0,)
+  - name: geode-1.4
+    srcPath: instrumentation/geode-1.4
+    target_versions:
+      JAVAAGENT:
+      - org.apache.geode:geode-core:[1.4.0,)
 google:
   instrumentations:
-    - name: google-http-client-1.19
-      srcPath: instrumentation/google-http-client-1.19
-      target_versions:
-        JAVAAGENT:
-          - com.google.http-client:google-http-client:[1.19.0,)
+  - name: google-http-client-1.19
+    srcPath: instrumentation/google-http-client-1.19
+    target_versions:
+      JAVAAGENT:
+      - com.google.http-client:google-http-client:[1.19.0,)
 grails:
   instrumentations:
-    - name: grails-3.0
-      srcPath: instrumentation/grails-3.0
-      target_versions:
-        JAVAAGENT:
-          - org.grails:grails-web-url-mappings:[3.0,)
+  - name: grails-3.0
+    srcPath: instrumentation/grails-3.0
+    target_versions:
+      JAVAAGENT:
+      - org.grails:grails-web-url-mappings:[3.0,)
 graphql:
   instrumentations:
-    - name: graphql-java-12.0
-      srcPath: instrumentation/graphql-java/graphql-java-12.0
-      target_versions:
-        JAVAAGENT:
-          - com.graphql-java:graphql-java:[12,20)
-        LIBRARY:
-          - com.graphql-java:graphql-java:12.0
-    - name: graphql-java-20.0
-      srcPath: instrumentation/graphql-java/graphql-java-20.0
-      target_versions:
-        JAVAAGENT:
-          - com.graphql-java:graphql-java:[20,)
-        LIBRARY:
-          - com.graphql-java:graphql-java:20.0
+  - name: graphql-java-12.0
+    srcPath: instrumentation/graphql-java/graphql-java-12.0
+    target_versions:
+      JAVAAGENT:
+      - com.graphql-java:graphql-java:[12,20)
+      LIBRARY:
+      - com.graphql-java:graphql-java:12.0
+  - name: graphql-java-20.0
+    srcPath: instrumentation/graphql-java/graphql-java-20.0
+    target_versions:
+      JAVAAGENT:
+      - com.graphql-java:graphql-java:[20,)
+      LIBRARY:
+      - com.graphql-java:graphql-java:20.0
 grizzly:
   instrumentations:
-    - name: grizzly-2.3
-      srcPath: instrumentation/grizzly-2.3
-      target_versions:
-        JAVAAGENT:
-          - org.glassfish.grizzly:grizzly-http:[2.3,)
+  - name: grizzly-2.3
+    srcPath: instrumentation/grizzly-2.3
+    target_versions:
+      JAVAAGENT:
+      - org.glassfish.grizzly:grizzly-http:[2.3,)
 grpc:
   instrumentations:
-    - name: grpc-1.6
-      srcPath: instrumentation/grpc-1.6
-      target_versions:
-        JAVAAGENT:
-          - io.grpc:grpc-core:[1.6.0,)
-        LIBRARY:
-          - io.grpc:grpc-core:1.6.0
+  - name: grpc-1.6
+    srcPath: instrumentation/grpc-1.6
+    target_versions:
+      JAVAAGENT:
+      - io.grpc:grpc-core:[1.6.0,)
+      LIBRARY:
+      - io.grpc:grpc-core:1.6.0
 guava:
   instrumentations:
-    - name: guava-10.0
-      srcPath: instrumentation/guava-10.0
-      target_versions:
-        JAVAAGENT:
-          - com.google.guava:guava:[10.0,]
-        LIBRARY:
-          - com.google.guava:guava:10.0
+  - name: guava-10.0
+    srcPath: instrumentation/guava-10.0
+    target_versions:
+      JAVAAGENT:
+      - com.google.guava:guava:[10.0,]
+      LIBRARY:
+      - com.google.guava:guava:10.0
 gwt:
   instrumentations:
-    - name: gwt-2.0
-      srcPath: instrumentation/gwt-2.0
-      target_versions:
-        JAVAAGENT:
-          - com.google.gwt:gwt-servlet:[2.0.0,)
-          - org.gwtproject:gwt-servlet:[2.10.0,)
+  - name: gwt-2.0
+    srcPath: instrumentation/gwt-2.0
+    target_versions:
+      JAVAAGENT:
+      - com.google.gwt:gwt-servlet:[2.0.0,)
+      - org.gwtproject:gwt-servlet:[2.10.0,)
 hibernate:
   instrumentations:
-    - name: hibernate-4.0
-      srcPath: instrumentation/hibernate/hibernate-4.0
-      target_versions:
-        JAVAAGENT:
-          - org.hibernate:hibernate-core:[4.0.0.Final,6)
-    - name: hibernate-procedure-call-4.3
-      srcPath: instrumentation/hibernate/hibernate-procedure-call-4.3
-      target_versions:
-        JAVAAGENT:
-          - org.hibernate:hibernate-core:[4.3.0.Final,)
-    - name: hibernate-3.3
-      srcPath: instrumentation/hibernate/hibernate-3.3
-      target_versions:
-        JAVAAGENT:
-          - org.hibernate:hibernate-core:[3.3.0.GA,4.0.0.Final)
-    - name: hibernate-6.0
-      srcPath: instrumentation/hibernate/hibernate-6.0
-      target_versions:
-        JAVAAGENT:
-          - org.hibernate:hibernate-core:[6.0.0.Final,)
-    - name: hibernate-reactive-1.0
-      srcPath: instrumentation/hibernate/hibernate-reactive-1.0
-      target_versions:
-        JAVAAGENT:
-          - org.hibernate.reactive:hibernate-reactive-core:(,)
+  - name: hibernate-4.0
+    srcPath: instrumentation/hibernate/hibernate-4.0
+    target_versions:
+      JAVAAGENT:
+      - org.hibernate:hibernate-core:[4.0.0.Final,6)
+  - name: hibernate-procedure-call-4.3
+    srcPath: instrumentation/hibernate/hibernate-procedure-call-4.3
+    target_versions:
+      JAVAAGENT:
+      - org.hibernate:hibernate-core:[4.3.0.Final,)
+  - name: hibernate-3.3
+    srcPath: instrumentation/hibernate/hibernate-3.3
+    target_versions:
+      JAVAAGENT:
+      - org.hibernate:hibernate-core:[3.3.0.GA,4.0.0.Final)
+  - name: hibernate-6.0
+    srcPath: instrumentation/hibernate/hibernate-6.0
+    target_versions:
+      JAVAAGENT:
+      - org.hibernate:hibernate-core:[6.0.0.Final,)
+  - name: hibernate-reactive-1.0
+    srcPath: instrumentation/hibernate/hibernate-reactive-1.0
+    target_versions:
+      JAVAAGENT:
+      - org.hibernate.reactive:hibernate-reactive-core:(,)
 hikaricp:
   instrumentations:
-    - name: hikaricp-3.0
-      srcPath: instrumentation/hikaricp-3.0
-      target_versions:
-        JAVAAGENT:
-          - com.zaxxer:HikariCP:[3.0.0,)
-        LIBRARY:
-          - com.zaxxer:HikariCP:3.0.0
+  - name: hikaricp-3.0
+    srcPath: instrumentation/hikaricp-3.0
+    target_versions:
+      JAVAAGENT:
+      - com.zaxxer:HikariCP:[3.0.0,)
+      LIBRARY:
+      - com.zaxxer:HikariCP:3.0.0
 http:
   instrumentations:
-    - name: http-url-connection
-      srcPath: instrumentation/http-url-connection
-      target_versions:
-        JAVAAGENT:
+  - name: http-url-connection
+    srcPath: instrumentation/http-url-connection
+    target_versions:
+      JAVAAGENT: []
 hystrix:
   instrumentations:
-    - name: hystrix-1.4
-      srcPath: instrumentation/hystrix-1.4
-      target_versions:
-        JAVAAGENT:
-          - com.netflix.hystrix:hystrix-core:[1.4.0,)
+  - name: hystrix-1.4
+    srcPath: instrumentation/hystrix-1.4
+    target_versions:
+      JAVAAGENT:
+      - com.netflix.hystrix:hystrix-core:[1.4.0,)
 influxdb:
   instrumentations:
-    - name: influxdb-2.4
-      srcPath: instrumentation/influxdb-2.4
-      target_versions:
-        JAVAAGENT:
-          - org.influxdb:influxdb-java:[2.4,)
+  - name: influxdb-2.4
+    srcPath: instrumentation/influxdb-2.4
+    target_versions:
+      JAVAAGENT:
+      - org.influxdb:influxdb-java:[2.4,)
 internal:
   instrumentations:
-    - name: internal-application-logger
-      srcPath: instrumentation/internal/internal-application-logger
-      target_versions:
-        JAVAAGENT:
-          - org.springframework.boot:spring-boot:[1.2.0,)
-          - org.slf4j:slf4j-api:[1.4.0,)
-    - name: internal-class-loader
-      srcPath: instrumentation/internal/internal-class-loader
-      target_versions:
-        JAVAAGENT:
-    - name: internal-lambda-java9
-      srcPath: instrumentation/internal/internal-lambda-java9
-      target_versions: {}
-    - name: internal-reflection
-      srcPath: instrumentation/internal/internal-reflection
-      target_versions:
-        JAVAAGENT:
-    - name: internal-lambda
-      srcPath: instrumentation/internal/internal-lambda
-      target_versions:
-        JAVAAGENT:
-    - name: internal-eclipse-osgi-3.6
-      srcPath: instrumentation/internal/internal-eclipse-osgi-3.6
-      target_versions:
-        JAVAAGENT:
-    - name: internal-url-class-loader
-      srcPath: instrumentation/internal/internal-url-class-loader
-      target_versions:
-        JAVAAGENT:
+  - name: internal-application-logger
+    srcPath: instrumentation/internal/internal-application-logger
+    target_versions:
+      JAVAAGENT:
+      - org.springframework.boot:spring-boot:[1.2.0,)
+      - org.slf4j:slf4j-api:[1.4.0,)
+  - name: internal-class-loader
+    srcPath: instrumentation/internal/internal-class-loader
+    target_versions:
+      JAVAAGENT: []
+  - name: internal-lambda-java9
+    srcPath: instrumentation/internal/internal-lambda-java9
+    target_versions: {}
+  - name: internal-reflection
+    srcPath: instrumentation/internal/internal-reflection
+    target_versions:
+      JAVAAGENT: []
+  - name: internal-lambda
+    srcPath: instrumentation/internal/internal-lambda
+    target_versions:
+      JAVAAGENT: []
+  - name: internal-eclipse-osgi-3.6
+    srcPath: instrumentation/internal/internal-eclipse-osgi-3.6
+    target_versions:
+      JAVAAGENT: []
+  - name: internal-url-class-loader
+    srcPath: instrumentation/internal/internal-url-class-loader
+    target_versions:
+      JAVAAGENT: []
 java:
   instrumentations:
-    - name: java-util-logging
-      srcPath: instrumentation/java-util-logging
-      target_versions:
-        JAVAAGENT:
-    - name: java-http-server
-      srcPath: instrumentation/java-http-server
-      target_versions:
-        JAVAAGENT:
-        LIBRARY:
-    - name: java-http-client
-      srcPath: instrumentation/java-http-client
-      target_versions:
-        JAVAAGENT:
-        LIBRARY:
+  - name: java-util-logging
+    srcPath: instrumentation/java-util-logging
+    target_versions:
+      JAVAAGENT: []
+  - name: java-http-server
+    srcPath: instrumentation/java-http-server
+    target_versions:
+      JAVAAGENT: []
+      LIBRARY: []
+  - name: java-http-client
+    srcPath: instrumentation/java-http-client
+    target_versions:
+      JAVAAGENT: []
+      LIBRARY: []
 javalin:
   instrumentations:
-    - name: javalin-5.0
-      srcPath: instrumentation/javalin-5.0
-      target_versions:
-        JAVAAGENT:
-          - io.javalin:javalin:[5.0.0,)
+  - name: javalin-5.0
+    srcPath: instrumentation/javalin-5.0
+    target_versions:
+      JAVAAGENT:
+      - io.javalin:javalin:[5.0.0,)
 jaxrs:
   instrumentations:
-    - name: jaxrs-2.0-cxf-3.2
-      srcPath: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-cxf-3.2
-      target_versions:
-        JAVAAGENT:
-          - org.apache.tomee:openejb-cxf-rs:(8,)
-          - org.apache.cxf:cxf-rt-frontend-jaxrs:[3.2,4)
-    - name: jaxrs-3.0-annotations
-      srcPath: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-annotations
-      target_versions:
-        JAVAAGENT:
-          - jakarta.ws.rs:jakarta.ws.rs-api:[3.0.0,)
-    - name: jaxrs-2.0-jersey-2.0
-      srcPath: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-jersey-2.0
-      target_versions:
-        JAVAAGENT:
-          - org.glassfish.jersey.core:jersey-server:[2.0,3.0.0)
-          - org.glassfish.jersey.containers:jersey-container-servlet:[2.0,3.0.0)
-    - name: jaxrs-3.0-jersey-3.0
-      srcPath: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-jersey-3.0
-      target_versions:
-        JAVAAGENT:
-          - org.glassfish.jersey.core:jersey-server:[3.0.0,)
-    - name: jaxrs-2.0-resteasy-3.1
-      srcPath: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-resteasy-3.1
-      target_versions:
-        JAVAAGENT:
-          - org.jboss.resteasy:resteasy-jaxrs:[3.1.0.Final,3.5.0.Final)
-          - org.jboss.resteasy:resteasy-core:[4.0.0.Final,6)
-    - name: jaxrs-2.0-resteasy-3.0
-      srcPath: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-resteasy-3.0
-      target_versions:
-        JAVAAGENT:
-          - org.jboss.resteasy:resteasy-jaxrs:[3.0.0.Final,3.1.0.Final)
-          - org.jboss.resteasy:resteasy-jaxrs:[3.5.0.Final,4)
-    - name: jaxrs-2.0-annotations
-      srcPath: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-annotations
-      target_versions:
-        JAVAAGENT:
-          - javax.ws.rs:javax.ws.rs-api:[,]
-    - name: jaxrs-client-1.1
-      srcPath: instrumentation/jaxrs-client/jaxrs-client-1.1
-      target_versions: {}
-    - name: jaxrs-3.0-resteasy-6.0
-      srcPath: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-resteasy-6.0
-      target_versions:
-        JAVAAGENT:
-          - org.jboss.resteasy:resteasy-core:[6.0.0.Final,)
-    - name: jaxrs-1.0
-      srcPath: instrumentation/jaxrs/jaxrs-1.0
-      target_versions:
-        JAVAAGENT:
-          - javax.ws.rs:jsr311-api:[0.5,)
+  - name: jaxrs-2.0-cxf-3.2
+    srcPath: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-cxf-3.2
+    target_versions:
+      JAVAAGENT:
+      - org.apache.tomee:openejb-cxf-rs:(8,)
+      - org.apache.cxf:cxf-rt-frontend-jaxrs:[3.2,4)
+  - name: jaxrs-3.0-annotations
+    srcPath: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-annotations
+    target_versions:
+      JAVAAGENT:
+      - jakarta.ws.rs:jakarta.ws.rs-api:[3.0.0,)
+  - name: jaxrs-2.0-jersey-2.0
+    srcPath: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-jersey-2.0
+    target_versions:
+      JAVAAGENT:
+      - org.glassfish.jersey.core:jersey-server:[2.0,3.0.0)
+      - org.glassfish.jersey.containers:jersey-container-servlet:[2.0,3.0.0)
+  - name: jaxrs-3.0-jersey-3.0
+    srcPath: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-jersey-3.0
+    target_versions:
+      JAVAAGENT:
+      - org.glassfish.jersey.core:jersey-server:[3.0.0,)
+  - name: jaxrs-2.0-resteasy-3.1
+    srcPath: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-resteasy-3.1
+    target_versions:
+      JAVAAGENT:
+      - org.jboss.resteasy:resteasy-jaxrs:[3.1.0.Final,3.5.0.Final)
+      - org.jboss.resteasy:resteasy-core:[4.0.0.Final,6)
+  - name: jaxrs-2.0-resteasy-3.0
+    srcPath: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-resteasy-3.0
+    target_versions:
+      JAVAAGENT:
+      - org.jboss.resteasy:resteasy-jaxrs:[3.0.0.Final,3.1.0.Final)
+      - org.jboss.resteasy:resteasy-jaxrs:[3.5.0.Final,4)
+  - name: jaxrs-2.0-annotations
+    srcPath: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-annotations
+    target_versions:
+      JAVAAGENT:
+      - javax.ws.rs:javax.ws.rs-api:[,]
+  - name: jaxrs-client-1.1
+    srcPath: instrumentation/jaxrs-client/jaxrs-client-1.1
+    target_versions: {}
+  - name: jaxrs-3.0-resteasy-6.0
+    srcPath: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-resteasy-6.0
+    target_versions:
+      JAVAAGENT:
+      - org.jboss.resteasy:resteasy-core:[6.0.0.Final,)
+  - name: jaxrs-1.0
+    srcPath: instrumentation/jaxrs/jaxrs-1.0
+    target_versions:
+      JAVAAGENT:
+      - javax.ws.rs:jsr311-api:[0.5,)
 jaxws:
   instrumentations:
-    - name: jaxws-jws-api-1.1
-      srcPath: instrumentation/jaxws/jaxws-jws-api-1.1
-      target_versions:
-        JAVAAGENT:
-          - javax.jws:javax.jws-api:[1.1,]
-    - name: jaxws-2.0
-      srcPath: instrumentation/jaxws/jaxws-2.0
-      target_versions:
-        JAVAAGENT:
-          - javax.xml.ws:jaxws-api:[2.0,]
-    - name: jaxws-2.0-metro-2.2
-      srcPath: instrumentation/jaxws/jaxws-2.0-metro-2.2
-      target_versions: {}
-    - name: jaxws-cxf-3.0
-      srcPath: instrumentation/jaxws/jaxws-cxf-3.0
-      target_versions:
-        JAVAAGENT:
-          - org.apache.cxf:cxf-rt-frontend-jaxws:[3.0.0,)
-    - name: jaxws-2.0-axis2-1.6
-      srcPath: instrumentation/jaxws/jaxws-2.0-axis2-1.6
-      target_versions:
-        JAVAAGENT:
-          - org.apache.axis2:axis2-jaxws:[1.6.0,)
-    - name: jaxws-2.0-cxf-3.0
-      srcPath: instrumentation/jaxws/jaxws-2.0-cxf-3.0
-      target_versions: {}
-    - name: jaxws-metro-2.2
-      srcPath: instrumentation/jaxws/jaxws-metro-2.2
-      target_versions:
-        JAVAAGENT:
-          - com.sun.xml.ws:jaxws-rt:[2.2.0.1,)
+  - name: jaxws-jws-api-1.1
+    srcPath: instrumentation/jaxws/jaxws-jws-api-1.1
+    target_versions:
+      JAVAAGENT:
+      - javax.jws:javax.jws-api:[1.1,]
+  - name: jaxws-2.0
+    srcPath: instrumentation/jaxws/jaxws-2.0
+    target_versions:
+      JAVAAGENT:
+      - javax.xml.ws:jaxws-api:[2.0,]
+  - name: jaxws-2.0-metro-2.2
+    srcPath: instrumentation/jaxws/jaxws-2.0-metro-2.2
+    target_versions: {}
+  - name: jaxws-cxf-3.0
+    srcPath: instrumentation/jaxws/jaxws-cxf-3.0
+    target_versions:
+      JAVAAGENT:
+      - org.apache.cxf:cxf-rt-frontend-jaxws:[3.0.0,)
+  - name: jaxws-2.0-axis2-1.6
+    srcPath: instrumentation/jaxws/jaxws-2.0-axis2-1.6
+    target_versions:
+      JAVAAGENT:
+      - org.apache.axis2:axis2-jaxws:[1.6.0,)
+  - name: jaxws-2.0-cxf-3.0
+    srcPath: instrumentation/jaxws/jaxws-2.0-cxf-3.0
+    target_versions: {}
+  - name: jaxws-metro-2.2
+    srcPath: instrumentation/jaxws/jaxws-metro-2.2
+    target_versions:
+      JAVAAGENT:
+      - com.sun.xml.ws:jaxws-rt:[2.2.0.1,)
 jboss:
   instrumentations:
-    - name: jboss-logmanager-appender-1.1
-      srcPath: instrumentation/jboss-logmanager/jboss-logmanager-appender-1.1
-      target_versions:
-        JAVAAGENT:
-          - org.jboss.logmanager:jboss-logmanager:[1.1.0.GA,)
-    - name: jboss-logmanager-mdc-1.1
-      srcPath: instrumentation/jboss-logmanager/jboss-logmanager-mdc-1.1
-      target_versions:
-        JAVAAGENT:
-          - org.jboss.logmanager:jboss-logmanager:[1.1.0.GA,)
+  - name: jboss-logmanager-appender-1.1
+    srcPath: instrumentation/jboss-logmanager/jboss-logmanager-appender-1.1
+    target_versions:
+      JAVAAGENT:
+      - org.jboss.logmanager:jboss-logmanager:[1.1.0.GA,)
+  - name: jboss-logmanager-mdc-1.1
+    srcPath: instrumentation/jboss-logmanager/jboss-logmanager-mdc-1.1
+    target_versions:
+      JAVAAGENT:
+      - org.jboss.logmanager:jboss-logmanager:[1.1.0.GA,)
 jdbc:
   instrumentations:
-    - name: jdbc
-      srcPath: instrumentation/jdbc
-      target_versions:
-        JAVAAGENT:
-        LIBRARY:
+  - name: jdbc
+    srcPath: instrumentation/jdbc
+    target_versions:
+      JAVAAGENT: []
+      LIBRARY: []
 jedis:
   instrumentations:
-    - name: jedis-1.4
-      srcPath: instrumentation/jedis/jedis-1.4
-      target_versions:
-        JAVAAGENT:
-          - redis.clients:jedis:[1.4.0,3.0.0)
-    - name: jedis-4.0
-      srcPath: instrumentation/jedis/jedis-4.0
-      target_versions:
-        JAVAAGENT:
-          - redis.clients:jedis:[4.0.0-beta1,)
-    - name: jedis-3.0
-      srcPath: instrumentation/jedis/jedis-3.0
-      target_versions:
-        JAVAAGENT:
-          - redis.clients:jedis:[3.0.0,4)
+  - name: jedis-1.4
+    srcPath: instrumentation/jedis/jedis-1.4
+    target_versions:
+      JAVAAGENT:
+      - redis.clients:jedis:[1.4.0,3.0.0)
+  - name: jedis-4.0
+    srcPath: instrumentation/jedis/jedis-4.0
+    target_versions:
+      JAVAAGENT:
+      - redis.clients:jedis:[4.0.0-beta1,)
+  - name: jedis-3.0
+    srcPath: instrumentation/jedis/jedis-3.0
+    target_versions:
+      JAVAAGENT:
+      - redis.clients:jedis:[3.0.0,4)
 jetty:
   instrumentations:
-    - name: jetty-httpclient-12.0
-      srcPath: instrumentation/jetty-httpclient/jetty-httpclient-12.0
-      target_versions:
-        JAVAAGENT:
-          - org.eclipse.jetty:jetty-client:[12,)
-        LIBRARY:
-          - org.eclipse.jetty:jetty-client:12.0.0
-    - name: jetty-12.0
-      srcPath: instrumentation/jetty/jetty-12.0
-      target_versions:
-        JAVAAGENT:
-          - org.eclipse.jetty:jetty-server:[12,)
-    - name: jetty-8.0
-      srcPath: instrumentation/jetty/jetty-8.0
-      target_versions:
-        JAVAAGENT:
-          - org.eclipse.jetty:jetty-server:[8.0.0.v20110901,11)
-    - name: jetty-httpclient-9.2
-      srcPath: instrumentation/jetty-httpclient/jetty-httpclient-9.2
-      target_versions:
-        JAVAAGENT:
-          - org.eclipse.jetty:jetty-client:[9.2,10)
-        LIBRARY:
-          - org.eclipse.jetty:jetty-client:9.2.0.v20140526
-    - name: jetty-11.0
-      srcPath: instrumentation/jetty/jetty-11.0
-      target_versions:
-        JAVAAGENT:
-          - org.eclipse.jetty:jetty-server:[11, 12)
+  - name: jetty-httpclient-12.0
+    srcPath: instrumentation/jetty-httpclient/jetty-httpclient-12.0
+    target_versions:
+      JAVAAGENT:
+      - org.eclipse.jetty:jetty-client:[12,)
+      LIBRARY:
+      - org.eclipse.jetty:jetty-client:12.0.0
+  - name: jetty-12.0
+    srcPath: instrumentation/jetty/jetty-12.0
+    target_versions:
+      JAVAAGENT:
+      - org.eclipse.jetty:jetty-server:[12,)
+  - name: jetty-8.0
+    srcPath: instrumentation/jetty/jetty-8.0
+    target_versions:
+      JAVAAGENT:
+      - org.eclipse.jetty:jetty-server:[8.0.0.v20110901,11)
+  - name: jetty-httpclient-9.2
+    srcPath: instrumentation/jetty-httpclient/jetty-httpclient-9.2
+    target_versions:
+      JAVAAGENT:
+      - org.eclipse.jetty:jetty-client:[9.2,10)
+      LIBRARY:
+      - org.eclipse.jetty:jetty-client:9.2.0.v20140526
+  - name: jetty-11.0
+    srcPath: instrumentation/jetty/jetty-11.0
+    target_versions:
+      JAVAAGENT:
+      - org.eclipse.jetty:jetty-server:[11, 12)
 jms:
   instrumentations:
-    - name: jms-3.0
-      srcPath: instrumentation/jms/jms-3.0
-      target_versions:
-        JAVAAGENT:
-          - jakarta.jms:jakarta.jms-api:[3.0.0,)
-    - name: jms-1.1
-      srcPath: instrumentation/jms/jms-1.1
-      target_versions:
-        JAVAAGENT:
-          - javax.jms:javax.jms-api:(,)
-          - jakarta.jms:jakarta.jms-api:(,3)
-          - javax.jms:jms-api:(,)
+  - name: jms-3.0
+    srcPath: instrumentation/jms/jms-3.0
+    target_versions:
+      JAVAAGENT:
+      - jakarta.jms:jakarta.jms-api:[3.0.0,)
+  - name: jms-1.1
+    srcPath: instrumentation/jms/jms-1.1
+    target_versions:
+      JAVAAGENT:
+      - javax.jms:javax.jms-api:(,)
+      - jakarta.jms:jakarta.jms-api:(,3)
+      - javax.jms:jms-api:(,)
 jmx:
   instrumentations:
-    - name: jmx-metrics
-      srcPath: instrumentation/jmx-metrics
-      target_versions:
-        JAVAAGENT:
-        LIBRARY:
+  - name: jmx-metrics
+    srcPath: instrumentation/jmx-metrics
+    target_versions:
+      JAVAAGENT: []
+      LIBRARY: []
 jodd:
   instrumentations:
-    - name: jodd-http-4.2
-      srcPath: instrumentation/jodd-http-4.2
-      target_versions:
-        JAVAAGENT:
-          - org.jodd:jodd-http:[4.2.0,)
+  - name: jodd-http-4.2
+    srcPath: instrumentation/jodd-http-4.2
+    target_versions:
+      JAVAAGENT:
+      - org.jodd:jodd-http:[4.2.0,)
 jsf:
   instrumentations:
-    - name: jsf-myfaces-3.0
-      srcPath: instrumentation/jsf/jsf-myfaces-3.0
-      target_versions:
-        JAVAAGENT:
-          - org.apache.myfaces.core:myfaces-impl:[3,)
-    - name: jsf-mojarra-3.0
-      srcPath: instrumentation/jsf/jsf-mojarra-3.0
-      target_versions:
-        JAVAAGENT:
-          - org.glassfish:jakarta.faces:[3,)
-    - name: jsf-myfaces-1.2
-      srcPath: instrumentation/jsf/jsf-myfaces-1.2
-      target_versions:
-        JAVAAGENT:
-          - org.apache.myfaces.core:myfaces-impl:[1.2,3)
-    - name: jsf-mojarra-1.2
-      srcPath: instrumentation/jsf/jsf-mojarra-1.2
-      target_versions:
-        JAVAAGENT:
-          - com.sun.faces:jsf-impl:[2.1,2.2)
-          - org.glassfish:jakarta.faces:[2.3.9,3)
-          - com.sun.faces:jsf-impl:[2.0,2.1)
-          - org.glassfish:javax.faces:[2.0.7,3)
-          - javax.faces:jsf-impl:[1.2,2)
+  - name: jsf-myfaces-3.0
+    srcPath: instrumentation/jsf/jsf-myfaces-3.0
+    target_versions:
+      JAVAAGENT:
+      - org.apache.myfaces.core:myfaces-impl:[3,)
+  - name: jsf-mojarra-3.0
+    srcPath: instrumentation/jsf/jsf-mojarra-3.0
+    target_versions:
+      JAVAAGENT:
+      - org.glassfish:jakarta.faces:[3,)
+  - name: jsf-myfaces-1.2
+    srcPath: instrumentation/jsf/jsf-myfaces-1.2
+    target_versions:
+      JAVAAGENT:
+      - org.apache.myfaces.core:myfaces-impl:[1.2,3)
+  - name: jsf-mojarra-1.2
+    srcPath: instrumentation/jsf/jsf-mojarra-1.2
+    target_versions:
+      JAVAAGENT:
+      - com.sun.faces:jsf-impl:[2.1,2.2)
+      - org.glassfish:jakarta.faces:[2.3.9,3)
+      - com.sun.faces:jsf-impl:[2.0,2.1)
+      - org.glassfish:javax.faces:[2.0.7,3)
+      - javax.faces:jsf-impl:[1.2,2)
 jsp:
   instrumentations:
-    - name: jsp-2.3
-      srcPath: instrumentation/jsp-2.3
-      target_versions:
-        JAVAAGENT:
-          - org.apache.tomcat:tomcat-jasper:[7.0.19,10)
+  - name: jsp-2.3
+    srcPath: instrumentation/jsp-2.3
+    target_versions:
+      JAVAAGENT:
+      - org.apache.tomcat:tomcat-jasper:[7.0.19,10)
 kafka:
   instrumentations:
-    - name: kafka-streams-0.11
-      srcPath: instrumentation/kafka/kafka-streams-0.11
-      target_versions:
-        JAVAAGENT:
-          - org.apache.kafka:kafka-streams:[0.11.0.0,)
-    - name: kafka-clients-2.6
-      srcPath: instrumentation/kafka/kafka-clients/kafka-clients-2.6
-      target_versions:
-        LIBRARY:
-          - org.apache.kafka:kafka-clients:2.6.0
-    - name: kafka-clients-0.11
-      srcPath: instrumentation/kafka/kafka-clients/kafka-clients-0.11
-      target_versions:
-        JAVAAGENT:
-          - org.apache.kafka:kafka-clients:[0.11.0.0,)
+  - name: kafka-streams-0.11
+    srcPath: instrumentation/kafka/kafka-streams-0.11
+    target_versions:
+      JAVAAGENT:
+      - org.apache.kafka:kafka-streams:[0.11.0.0,)
+  - name: kafka-clients-2.6
+    srcPath: instrumentation/kafka/kafka-clients/kafka-clients-2.6
+    target_versions:
+      LIBRARY:
+      - org.apache.kafka:kafka-clients:2.6.0
+  - name: kafka-clients-0.11
+    srcPath: instrumentation/kafka/kafka-clients/kafka-clients-0.11
+    target_versions:
+      JAVAAGENT:
+      - org.apache.kafka:kafka-clients:[0.11.0.0,)
 kotlinx:
   instrumentations:
-    - name: kotlinx-coroutines
-      srcPath: instrumentation/kotlinx-coroutines
-      target_versions:
-        JAVAAGENT:
-          - org.jetbrains.kotlinx:kotlinx-coroutines-core:[1.3.0,1.3.8)
-          - org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:[1.3.9,)
-          - org.jetbrains.kotlinx:kotlinx-coroutines-core:[1.0.0,1.3.8)
-    - name: kotlinx-coroutines-1.0
-      srcPath: instrumentation/kotlinx-coroutines/kotlinx-coroutines-1.0
-      target_versions:
-        JAVAAGENT:
-          - org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:[1.3.9,)
-          - org.jetbrains.kotlinx:kotlinx-coroutines-core:[1.0.0,1.3.8)
-    - name: kotlinx-coroutines-flow-1.3
-      srcPath: instrumentation/kotlinx-coroutines/kotlinx-coroutines-flow-1.3
-      target_versions:
-        JAVAAGENT:
-          - org.jetbrains.kotlinx:kotlinx-coroutines-core:[1.3.0,1.3.8)
-          - org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:[1.3.9,)
+  - name: kotlinx-coroutines
+    srcPath: instrumentation/kotlinx-coroutines
+    target_versions:
+      JAVAAGENT:
+      - org.jetbrains.kotlinx:kotlinx-coroutines-core:[1.3.0,1.3.8)
+      - org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:[1.3.9,)
+      - org.jetbrains.kotlinx:kotlinx-coroutines-core:[1.0.0,1.3.8)
+  - name: kotlinx-coroutines-1.0
+    srcPath: instrumentation/kotlinx-coroutines/kotlinx-coroutines-1.0
+    target_versions:
+      JAVAAGENT:
+      - org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:[1.3.9,)
+      - org.jetbrains.kotlinx:kotlinx-coroutines-core:[1.0.0,1.3.8)
+  - name: kotlinx-coroutines-flow-1.3
+    srcPath: instrumentation/kotlinx-coroutines/kotlinx-coroutines-flow-1.3
+    target_versions:
+      JAVAAGENT:
+      - org.jetbrains.kotlinx:kotlinx-coroutines-core:[1.3.0,1.3.8)
+      - org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:[1.3.9,)
 ktor:
   instrumentations:
-    - name: ktor-2.0
-      srcPath: instrumentation/ktor/ktor-2.0
-      target_versions:
-        JAVAAGENT:
-          - io.ktor:ktor-client-core:[2.0.0,3.0.0)
-          - io.ktor:ktor-server-core:[2.0.0,3.0.0)
-        LIBRARY:
-          - io.ktor:ktor-server-core:2.0.0
-          - io.ktor:ktor-client-core:2.0.0
-    - name: ktor-3.0
-      srcPath: instrumentation/ktor/ktor-3.0
-      target_versions:
-        JAVAAGENT:
-          - io.ktor:ktor-server-core:[3.0.0,)
-          - io.ktor:ktor-client-core:[3.0.0,)
-        LIBRARY:
-          - io.ktor:ktor-server-core:3.0.0
-          - io.ktor:ktor-client-core:3.0.0
-    - name: ktor-1.0
-      srcPath: instrumentation/ktor/ktor-1.0
-      target_versions:
-        LIBRARY:
-          - io.ktor:ktor-server-core:1.0.0
+  - name: ktor-2.0
+    srcPath: instrumentation/ktor/ktor-2.0
+    target_versions:
+      JAVAAGENT:
+      - io.ktor:ktor-client-core:[2.0.0,3.0.0)
+      - io.ktor:ktor-server-core:[2.0.0,3.0.0)
+      LIBRARY:
+      - io.ktor:ktor-server-core:2.0.0
+      - io.ktor:ktor-client-core:2.0.0
+  - name: ktor-3.0
+    srcPath: instrumentation/ktor/ktor-3.0
+    target_versions:
+      JAVAAGENT:
+      - io.ktor:ktor-server-core:[3.0.0,)
+      - io.ktor:ktor-client-core:[3.0.0,)
+      LIBRARY:
+      - io.ktor:ktor-server-core:3.0.0
+      - io.ktor:ktor-client-core:3.0.0
+  - name: ktor-1.0
+    srcPath: instrumentation/ktor/ktor-1.0
+    target_versions:
+      LIBRARY:
+      - io.ktor:ktor-server-core:1.0.0
 kubernetes:
   instrumentations:
-    - name: kubernetes-client-7.0
-      srcPath: instrumentation/kubernetes-client-7.0
-      target_versions:
-        JAVAAGENT:
-          - io.kubernetes:client-java-api:[7.0.0,)
+  - name: kubernetes-client-7.0
+    srcPath: instrumentation/kubernetes-client-7.0
+    target_versions:
+      JAVAAGENT:
+      - io.kubernetes:client-java-api:[7.0.0,)
 lettuce:
   instrumentations:
-    - name: lettuce-5.1
-      srcPath: instrumentation/lettuce/lettuce-5.1
-      target_versions:
-        JAVAAGENT:
-          - io.lettuce:lettuce-core:[5.1.0.RELEASE,)
-        LIBRARY:
-          - io.lettuce:lettuce-core:5.1.0.RELEASE
-    - name: lettuce-5.0
-      srcPath: instrumentation/lettuce/lettuce-5.0
-      target_versions:
-        JAVAAGENT:
-          - io.lettuce:lettuce-core:[5.0.0.RELEASE,5.1.0.RELEASE)
-    - name: lettuce-4.0
-      srcPath: instrumentation/lettuce/lettuce-4.0
-      target_versions:
-        JAVAAGENT:
-          - biz.paluch.redis:lettuce:[4.0.Final,)
+  - name: lettuce-5.1
+    srcPath: instrumentation/lettuce/lettuce-5.1
+    target_versions:
+      JAVAAGENT:
+      - io.lettuce:lettuce-core:[5.1.0.RELEASE,)
+      LIBRARY:
+      - io.lettuce:lettuce-core:5.1.0.RELEASE
+  - name: lettuce-5.0
+    srcPath: instrumentation/lettuce/lettuce-5.0
+    target_versions:
+      JAVAAGENT:
+      - io.lettuce:lettuce-core:[5.0.0.RELEASE,5.1.0.RELEASE)
+  - name: lettuce-4.0
+    srcPath: instrumentation/lettuce/lettuce-4.0
+    target_versions:
+      JAVAAGENT:
+      - biz.paluch.redis:lettuce:[4.0.Final,)
 liberty:
   instrumentations:
-    - name: liberty-dispatcher-20.0
-      srcPath: instrumentation/liberty/liberty-dispatcher-20.0
-      target_versions:
-        JAVAAGENT:
-    - name: liberty-20.0
-      srcPath: instrumentation/liberty/liberty-20.0
-      target_versions:
-        JAVAAGENT:
+  - name: liberty-dispatcher-20.0
+    srcPath: instrumentation/liberty/liberty-dispatcher-20.0
+    target_versions:
+      JAVAAGENT: []
+  - name: liberty-20.0
+    srcPath: instrumentation/liberty/liberty-20.0
+    target_versions:
+      JAVAAGENT: []
 log4j:
   instrumentations:
-    - name: log4j-context-data-2.7
-      srcPath: instrumentation/log4j/log4j-context-data/log4j-context-data-2.7
-      target_versions:
-        JAVAAGENT:
-          - org.apache.logging.log4j:log4j-core:[2.7,2.17.0)
-    - name: log4j-appender-2.17
-      srcPath: instrumentation/log4j/log4j-appender-2.17
-      target_versions:
-        JAVAAGENT:
-          - org.apache.logging.log4j:log4j-core:[2.0,)
-        LIBRARY:
-          - org.apache.logging.log4j:log4j-core:2.17.0
-    - name: log4j-appender-1.2
-      srcPath: instrumentation/log4j/log4j-appender-1.2
-      target_versions:
-        JAVAAGENT:
-          - log4j:log4j:[1.2,)
-    - name: log4j-mdc-1.2
-      srcPath: instrumentation/log4j/log4j-mdc-1.2
-      target_versions:
-        JAVAAGENT:
-          - log4j:log4j:[1.2,)
-    - name: log4j-context-data-2.17
-      srcPath: instrumentation/log4j/log4j-context-data/log4j-context-data-2.17
-      target_versions:
-        JAVAAGENT:
-          - org.apache.logging.log4j:log4j-core:[2.17.0,)
+  - name: log4j-context-data-2.7
+    srcPath: instrumentation/log4j/log4j-context-data/log4j-context-data-2.7
+    target_versions:
+      JAVAAGENT:
+      - org.apache.logging.log4j:log4j-core:[2.7,2.17.0)
+  - name: log4j-appender-2.17
+    srcPath: instrumentation/log4j/log4j-appender-2.17
+    target_versions:
+      JAVAAGENT:
+      - org.apache.logging.log4j:log4j-core:[2.0,)
+      LIBRARY:
+      - org.apache.logging.log4j:log4j-core:2.17.0
+  - name: log4j-appender-1.2
+    srcPath: instrumentation/log4j/log4j-appender-1.2
+    target_versions:
+      JAVAAGENT:
+      - log4j:log4j:[1.2,)
+  - name: log4j-mdc-1.2
+    srcPath: instrumentation/log4j/log4j-mdc-1.2
+    target_versions:
+      JAVAAGENT:
+      - log4j:log4j:[1.2,)
+  - name: log4j-context-data-2.17
+    srcPath: instrumentation/log4j/log4j-context-data/log4j-context-data-2.17
+    target_versions:
+      JAVAAGENT:
+      - org.apache.logging.log4j:log4j-core:[2.17.0,)
 logback:
   instrumentations:
-    - name: logback-mdc-1.0
-      srcPath: instrumentation/logback/logback-mdc-1.0
-      target_versions:
-        JAVAAGENT:
-          - ch.qos.logback:logback-classic:[1.0.0,1.2.3]
-        LIBRARY:
-    - name: logback-appender-1.0
-      srcPath: instrumentation/logback/logback-appender-1.0
-      target_versions:
-        JAVAAGENT:
-          - ch.qos.logback:logback-classic:[0.9.16,)
-        LIBRARY:
+  - name: logback-mdc-1.0
+    srcPath: instrumentation/logback/logback-mdc-1.0
+    target_versions:
+      JAVAAGENT:
+      - ch.qos.logback:logback-classic:[1.0.0,1.2.3]
+      LIBRARY:
+      - ch.qos.logback:logback-classic:1.0.0
+      - org.slf4j:slf4j-api:1.6.4
+  - name: logback-appender-1.0
+    srcPath: instrumentation/logback/logback-appender-1.0
+    target_versions:
+      JAVAAGENT:
+      - ch.qos.logback:logback-classic:[0.9.16,)
+      LIBRARY:
+      - net.logstash.logback:logstash-logback-encoder:3.0
+      - org.slf4j:slf4j-api:2.0.0
+      - ch.qos.logback:logback-classic:1.3.0
 methods:
   instrumentations:
-    - name: methods
-      srcPath: instrumentation/methods
-      target_versions:
-        JAVAAGENT:
+  - name: methods
+    srcPath: instrumentation/methods
+    target_versions:
+      JAVAAGENT: []
 micrometer:
   instrumentations:
-    - name: micrometer-1.5
-      srcPath: instrumentation/micrometer/micrometer-1.5
-      target_versions:
-        JAVAAGENT:
-          - io.micrometer:micrometer-core:[1.5.0,)
-        LIBRARY:
-          - io.micrometer:micrometer-core:1.5.0
+  - name: micrometer-1.5
+    srcPath: instrumentation/micrometer/micrometer-1.5
+    target_versions:
+      JAVAAGENT:
+      - io.micrometer:micrometer-core:[1.5.0,)
+      LIBRARY:
+      - io.micrometer:micrometer-core:1.5.0
 mongo:
   instrumentations:
-    - name: mongo-4.0
-      srcPath: instrumentation/mongo/mongo-4.0
-      target_versions:
-        JAVAAGENT:
-          - org.mongodb:mongodb-driver-core:[4.0,)
-    - name: mongo-3.1
-      srcPath: instrumentation/mongo/mongo-3.1
-      target_versions:
-        JAVAAGENT:
-          - org.mongodb:mongo-java-driver:[3.1,)
-        LIBRARY:
-          - org.mongodb:mongo-java-driver:3.1.0
-    - name: mongo-3.7
-      srcPath: instrumentation/mongo/mongo-3.7
-      target_versions:
-        JAVAAGENT:
-          - org.mongodb:mongodb-driver-core:[3.7, 4.0)
-          - org.mongodb:mongo-java-driver:[3.7, 4.0)
-    - name: mongo-async-3.3
-      srcPath: instrumentation/mongo/mongo-async-3.3
-      target_versions:
-        JAVAAGENT:
-          - org.mongodb:mongodb-driver-async:[3.3,)
+  - name: mongo-4.0
+    srcPath: instrumentation/mongo/mongo-4.0
+    target_versions:
+      JAVAAGENT:
+      - org.mongodb:mongodb-driver-core:[4.0,)
+  - name: mongo-3.1
+    srcPath: instrumentation/mongo/mongo-3.1
+    target_versions:
+      JAVAAGENT:
+      - org.mongodb:mongo-java-driver:[3.1,)
+      LIBRARY:
+      - org.mongodb:mongo-java-driver:3.1.0
+  - name: mongo-3.7
+    srcPath: instrumentation/mongo/mongo-3.7
+    target_versions:
+      JAVAAGENT:
+      - org.mongodb:mongodb-driver-core:[3.7, 4.0)
+      - org.mongodb:mongo-java-driver:[3.7, 4.0)
+  - name: mongo-async-3.3
+    srcPath: instrumentation/mongo/mongo-async-3.3
+    target_versions:
+      JAVAAGENT:
+      - org.mongodb:mongodb-driver-async:[3.3,)
 mybatis:
   instrumentations:
-    - name: mybatis-3.2
-      srcPath: instrumentation/mybatis-3.2
-      target_versions:
-        JAVAAGENT:
-          - org.mybatis:mybatis:[3.2.0,)
+  - name: mybatis-3.2
+    srcPath: instrumentation/mybatis-3.2
+    target_versions:
+      JAVAAGENT:
+      - org.mybatis:mybatis:[3.2.0,)
 netty:
   instrumentations:
-    - name: netty-3.8
-      srcPath: instrumentation/netty/netty-3.8
-      target_versions:
-        JAVAAGENT:
-          - io.netty:netty:[3.8.0.Final,4)
-    - name: netty-4.0
-      srcPath: instrumentation/netty/netty-4.0
-      target_versions:
-        JAVAAGENT:
-          - io.netty:netty-all:[4.0.0.Final,4.1.0.Final)
-          - io.netty:netty-codec-http:[4.0.0.Final,4.1.0.Final)
-    - name: netty-4.1
-      srcPath: instrumentation/netty/netty-4.1
-      target_versions:
-        JAVAAGENT:
-          - io.netty:netty-codec-http:[4.1.0.Final,5.0.0)
-          - io.netty:netty-all:[4.1.0.Final,5.0.0)
-        LIBRARY:
-          - io.netty:netty-codec-http:4.1.0.Final
+  - name: netty-3.8
+    srcPath: instrumentation/netty/netty-3.8
+    target_versions:
+      JAVAAGENT:
+      - io.netty:netty:[3.8.0.Final,4)
+  - name: netty-4.0
+    srcPath: instrumentation/netty/netty-4.0
+    target_versions:
+      JAVAAGENT:
+      - io.netty:netty-all:[4.0.0.Final,4.1.0.Final)
+      - io.netty:netty-codec-http:[4.0.0.Final,4.1.0.Final)
+  - name: netty-4.1
+    srcPath: instrumentation/netty/netty-4.1
+    target_versions:
+      JAVAAGENT:
+      - io.netty:netty-codec-http:[4.1.0.Final,5.0.0)
+      - io.netty:netty-all:[4.1.0.Final,5.0.0)
+      LIBRARY:
+      - io.netty:netty-codec-http:4.1.0.Final
 okhttp:
   instrumentations:
-    - name: okhttp-3.0
-      srcPath: instrumentation/okhttp/okhttp-3.0
-      target_versions:
-        JAVAAGENT:
-          - com.squareup.okhttp3:okhttp:[3.0,)
-        LIBRARY:
-          - com.squareup.okhttp3:okhttp:3.0.0
-    - name: okhttp-2.2
-      srcPath: instrumentation/okhttp/okhttp-2.2
-      target_versions:
-        JAVAAGENT:
-          - com.squareup.okhttp:okhttp:[2.2,3)
+  - name: okhttp-3.0
+    srcPath: instrumentation/okhttp/okhttp-3.0
+    target_versions:
+      JAVAAGENT:
+      - com.squareup.okhttp3:okhttp:[3.0,)
+      LIBRARY:
+      - com.squareup.okhttp3:okhttp:3.0.0
+  - name: okhttp-2.2
+    srcPath: instrumentation/okhttp/okhttp-2.2
+    target_versions:
+      JAVAAGENT:
+      - com.squareup.okhttp:okhttp:[2.2,3)
 opensearch:
   instrumentations:
-    - name: opensearch-rest-1.0
-      srcPath: instrumentation/opensearch/opensearch-rest-1.0
-      target_versions:
-        JAVAAGENT:
-          - org.opensearch.client:opensearch-rest-client:[1.0,)
-    - name: opensearch-java-2.0
-      srcPath: instrumentation/opensearch/opensearch-java-2.0
-      target_versions: {}
+  - name: opensearch-rest-1.0
+    srcPath: instrumentation/opensearch/opensearch-rest-1.0
+    target_versions:
+      JAVAAGENT:
+      - org.opensearch.client:opensearch-rest-client:[1.0,)
+  - name: opensearch-java-2.0
+    srcPath: instrumentation/opensearch/opensearch-java-2.0
+    target_versions: {}
 opentelemetry:
   instrumentations:
-    - name: opentelemetry-api-1.15
-      srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.15
-      target_versions:
-        JAVAAGENT:
-    - name: opentelemetry-api-1.10
-      srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.10
-      target_versions:
-        JAVAAGENT:
-    - name: opentelemetry-api-1.27
-      srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.27
-      target_versions:
-        JAVAAGENT:
-    - name: opentelemetry-extension-annotations-1.0
-      srcPath: instrumentation/opentelemetry-extension-annotations-1.0
-      target_versions:
-        JAVAAGENT:
-          - io.opentelemetry:opentelemetry-extension-annotations:[0.16.0,)
-    - name: opentelemetry-instrumentation-annotations-1.16
-      srcPath: instrumentation/opentelemetry-instrumentation-annotations-1.16
-      target_versions:
-        JAVAAGENT:
-          - io.opentelemetry:opentelemetry-instrumentation-annotations:(,)
-    - name: opentelemetry-instrumentation-api
-      srcPath: instrumentation/opentelemetry-instrumentation-api
-      target_versions:
-        JAVAAGENT:
-          - io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:[1.14.0-alpha,)
-    - name: opentelemetry-api-1.37
-      srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.37
-      target_versions:
-        JAVAAGENT:
-    - name: opentelemetry-api-1.38
-      srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.38
-      target_versions:
-        JAVAAGENT:
-    - name: opentelemetry-api-1.31
-      srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.31
-      target_versions:
-        JAVAAGENT:
-    - name: opentelemetry-api-1.32
-      srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.32
-      target_versions:
-        JAVAAGENT:
-    - name: opentelemetry-api-1.42
-      srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.42
-      target_versions:
-        JAVAAGENT:
-    - name: opentelemetry-api-1.40
-      srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.40
-      target_versions:
-        JAVAAGENT:
-    - name: opentelemetry-api-1.47
-      srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.47
-      target_versions:
-        JAVAAGENT:
-    - name: opentelemetry
-      srcPath: instrumentation/wicket-8.0/common-testing/src/main/java/io/opentelemetry
-      target_versions: {}
-    - name: opentelemetry-extension-kotlin-1.0
-      srcPath: instrumentation/opentelemetry-extension-kotlin-1.0
-      target_versions:
-        JAVAAGENT:
-          - io.opentelemetry:opentelemetry-extension-kotlin:[0.17.0,)
-    - name: opentelemetry-api-1.4
-      srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.4
-      target_versions:
-        JAVAAGENT:
-    - name: opentelemetry-api-1.0
-      srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.0
-      target_versions:
-        JAVAAGENT:
-          - io.opentelemetry:opentelemetry-api:[0.17.0,)
+  - name: opentelemetry-api-1.15
+    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.15
+    target_versions:
+      JAVAAGENT: []
+  - name: opentelemetry-api-1.10
+    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.10
+    target_versions:
+      JAVAAGENT: []
+  - name: opentelemetry-api-1.27
+    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.27
+    target_versions:
+      JAVAAGENT: []
+  - name: opentelemetry-extension-annotations-1.0
+    srcPath: instrumentation/opentelemetry-extension-annotations-1.0
+    target_versions:
+      JAVAAGENT:
+      - io.opentelemetry:opentelemetry-extension-annotations:[0.16.0,)
+  - name: opentelemetry-instrumentation-annotations-1.16
+    srcPath: instrumentation/opentelemetry-instrumentation-annotations-1.16
+    target_versions:
+      JAVAAGENT:
+      - io.opentelemetry:opentelemetry-instrumentation-annotations:(,)
+  - name: opentelemetry-instrumentation-api
+    srcPath: instrumentation/opentelemetry-instrumentation-api
+    target_versions:
+      JAVAAGENT:
+      - io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:[1.14.0-alpha,)
+  - name: opentelemetry-api-1.37
+    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.37
+    target_versions:
+      JAVAAGENT: []
+  - name: opentelemetry-api-1.38
+    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.38
+    target_versions:
+      JAVAAGENT: []
+  - name: opentelemetry-api-1.31
+    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.31
+    target_versions:
+      JAVAAGENT: []
+  - name: opentelemetry-api-1.32
+    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.32
+    target_versions:
+      JAVAAGENT: []
+  - name: opentelemetry-api-1.42
+    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.42
+    target_versions:
+      JAVAAGENT: []
+  - name: opentelemetry-api-1.40
+    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.40
+    target_versions:
+      JAVAAGENT: []
+  - name: opentelemetry-api-1.47
+    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.47
+    target_versions:
+      JAVAAGENT: []
+  - name: opentelemetry
+    srcPath: instrumentation/wicket-8.0/common-testing/src/main/java/io/opentelemetry
+    target_versions: {}
+  - name: opentelemetry-extension-kotlin-1.0
+    srcPath: instrumentation/opentelemetry-extension-kotlin-1.0
+    target_versions:
+      JAVAAGENT:
+      - io.opentelemetry:opentelemetry-extension-kotlin:[0.17.0,)
+  - name: opentelemetry-api-1.4
+    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.4
+    target_versions:
+      JAVAAGENT: []
+  - name: opentelemetry-api-1.0
+    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.0
+    target_versions:
+      JAVAAGENT:
+      - io.opentelemetry:opentelemetry-api:[0.17.0,)
 oracle:
   instrumentations:
-    - name: oracle-ucp-11.2
-      srcPath: instrumentation/oracle-ucp-11.2
-      target_versions:
-        JAVAAGENT:
-          - com.oracle.database.jdbc:ucp:[,)
-        LIBRARY:
-          - com.oracle.database.jdbc:ucp:11.2.0.4
-          - com.oracle.database.jdbc:ojdbc8:12.2.0.1
+  - name: oracle-ucp-11.2
+    srcPath: instrumentation/oracle-ucp-11.2
+    target_versions:
+      JAVAAGENT:
+      - com.oracle.database.jdbc:ucp:[,)
+      LIBRARY:
+      - com.oracle.database.jdbc:ucp:11.2.0.4
+      - com.oracle.database.jdbc:ojdbc8:12.2.0.1
 oshi:
   instrumentations:
-    - name: oshi
-      srcPath: instrumentation/oshi
-      target_versions:
-        JAVAAGENT:
-          - com.github.oshi:oshi-core:[5.3.1,)
-        LIBRARY:
-          - com.github.oshi:oshi-core:$oshiVersion
+  - name: oshi
+    srcPath: instrumentation/oshi
+    target_versions:
+      JAVAAGENT:
+      - com.github.oshi:oshi-core:[5.3.1,)
+      LIBRARY:
+      - com.github.oshi:oshi-core:$oshiVersion
 payara:
   instrumentations:
-    - name: payara
-      srcPath: instrumentation/payara
-      target_versions:
-        JAVAAGENT:
+  - name: payara
+    srcPath: instrumentation/payara
+    target_versions:
+      JAVAAGENT: []
 pekko:
   instrumentations:
-    - name: pekko-actor-1.0
-      srcPath: instrumentation/pekko/pekko-actor-1.0
-      target_versions:
-        JAVAAGENT:
-          - org.apache.pekko:pekko-actor_3:[1.0,)
-          - org.apache.pekko:pekko-actor_2.12:[1.0,)
-          - org.apache.pekko:pekko-actor_2.13:[1.0,)
-    - name: pekko-http-1.0
-      srcPath: instrumentation/pekko/pekko-http-1.0
-      target_versions:
-        JAVAAGENT:
-          - org.apache.pekko:pekko-http_2.12:[1.0,)
-          - org.apache.pekko:pekko-http_3:[1.0,)
-          - org.apache.pekko:pekko-http_2.13:[1.0,)
+  - name: pekko-actor-1.0
+    srcPath: instrumentation/pekko/pekko-actor-1.0
+    target_versions:
+      JAVAAGENT:
+      - org.apache.pekko:pekko-actor_3:[1.0,)
+      - org.apache.pekko:pekko-actor_2.12:[1.0,)
+      - org.apache.pekko:pekko-actor_2.13:[1.0,)
+  - name: pekko-http-1.0
+    srcPath: instrumentation/pekko/pekko-http-1.0
+    target_versions:
+      JAVAAGENT:
+      - org.apache.pekko:pekko-http_2.12:[1.0,)
+      - org.apache.pekko:pekko-http_3:[1.0,)
+      - org.apache.pekko:pekko-http_2.13:[1.0,)
 play:
   instrumentations:
-    - name: play-ws-1.0
-      srcPath: instrumentation/play/play-ws/play-ws-1.0
-      target_versions:
-        JAVAAGENT:
-          - com.typesafe.play:play-ahc-ws-standalone_2.12:[1.0.0,2.0.0)
-          - com.typesafe.play:play-ahc-ws-standalone_2.11:[1.0.0,2.0.0)
-    - name: play-mvc-2.6
-      srcPath: instrumentation/play/play-mvc/play-mvc-2.6
-      target_versions:
-        JAVAAGENT:
-          - com.typesafe.play:play_$scalaVersion:[2.6.0,)
-          - com.typesafe.play:play_2.12:[2.6.0,)
-          - com.typesafe.play:play_2.13:[2.6.0,)
-    - name: play-mvc-2.4
-      srcPath: instrumentation/play/play-mvc/play-mvc-2.4
-      target_versions:
-        JAVAAGENT:
-          - com.typesafe.play:play_2.11:[2.4.0,2.6)
-    - name: play-ws-2.0
-      srcPath: instrumentation/play/play-ws/play-ws-2.0
-      target_versions:
-        JAVAAGENT:
-          - com.typesafe.play:play-ahc-ws-standalone_2.12:[2.0.0,2.1.0)
-          - com.typesafe.play:play-ahc-ws-standalone_2.13:[2.0.6,2.1.0)
-          - com.typesafe.play:play-ahc-ws-standalone_2.11:[2.0.0,]
-    - name: play-ws-2.1
-      srcPath: instrumentation/play/play-ws/play-ws-2.1
-      target_versions:
-        JAVAAGENT:
-          - com.typesafe.play:play-ahc-ws-standalone_2.13:[2.1.0,]
-          - com.typesafe.play:play-ahc-ws-standalone_2.12:[2.1.0,]
+  - name: play-ws-1.0
+    srcPath: instrumentation/play/play-ws/play-ws-1.0
+    target_versions:
+      JAVAAGENT:
+      - com.typesafe.play:play-ahc-ws-standalone_2.12:[1.0.0,2.0.0)
+      - com.typesafe.play:play-ahc-ws-standalone_2.11:[1.0.0,2.0.0)
+  - name: play-mvc-2.6
+    srcPath: instrumentation/play/play-mvc/play-mvc-2.6
+    target_versions:
+      JAVAAGENT:
+      - com.typesafe.play:play_$scalaVersion:[2.6.0,)
+      - com.typesafe.play:play_2.12:[2.6.0,)
+      - com.typesafe.play:play_2.13:[2.6.0,)
+  - name: play-mvc-2.4
+    srcPath: instrumentation/play/play-mvc/play-mvc-2.4
+    target_versions:
+      JAVAAGENT:
+      - com.typesafe.play:play_2.11:[2.4.0,2.6)
+  - name: play-ws-2.0
+    srcPath: instrumentation/play/play-ws/play-ws-2.0
+    target_versions:
+      JAVAAGENT:
+      - com.typesafe.play:play-ahc-ws-standalone_2.12:[2.0.0,2.1.0)
+      - com.typesafe.play:play-ahc-ws-standalone_2.13:[2.0.6,2.1.0)
+      - com.typesafe.play:play-ahc-ws-standalone_2.11:[2.0.0,]
+  - name: play-ws-2.1
+    srcPath: instrumentation/play/play-ws/play-ws-2.1
+    target_versions:
+      JAVAAGENT:
+      - com.typesafe.play:play-ahc-ws-standalone_2.13:[2.1.0,]
+      - com.typesafe.play:play-ahc-ws-standalone_2.12:[2.1.0,]
 powerjob:
   instrumentations:
-    - name: powerjob-4.0
-      srcPath: instrumentation/powerjob-4.0
-      target_versions:
-        JAVAAGENT:
-          - tech.powerjob:powerjob-worker:[4.0.0,)
+  - name: powerjob-4.0
+    srcPath: instrumentation/powerjob-4.0
+    target_versions:
+      JAVAAGENT:
+      - tech.powerjob:powerjob-worker:[4.0.0,)
 pulsar:
   instrumentations:
-    - name: pulsar-2.8
-      srcPath: instrumentation/pulsar/pulsar-2.8
-      target_versions:
-        JAVAAGENT:
-          - org.apache.pulsar:pulsar-client:[2.8.0,)
+  - name: pulsar-2.8
+    srcPath: instrumentation/pulsar/pulsar-2.8
+    target_versions:
+      JAVAAGENT:
+      - org.apache.pulsar:pulsar-client:[2.8.0,)
 quarkus:
   instrumentations:
-    - name: quarkus-resteasy-reactive
-      srcPath: instrumentation/quarkus-resteasy-reactive
-      target_versions:
-        JAVAAGENT:
-          - io.quarkus:quarkus-resteasy-reactive:(,3.9.0)
+  - name: quarkus-resteasy-reactive
+    srcPath: instrumentation/quarkus-resteasy-reactive
+    target_versions:
+      JAVAAGENT:
+      - io.quarkus:quarkus-resteasy-reactive:(,3.9.0)
 quartz:
   instrumentations:
-    - name: quartz-2.0
-      srcPath: instrumentation/quartz-2.0
-      target_versions:
-        JAVAAGENT:
-          - org.quartz-scheduler:quartz:[2.0.0,)
-        LIBRARY:
-          - org.quartz-scheduler:quartz:2.0.0
+  - name: quartz-2.0
+    srcPath: instrumentation/quartz-2.0
+    target_versions:
+      JAVAAGENT:
+      - org.quartz-scheduler:quartz:[2.0.0,)
+      LIBRARY:
+      - org.quartz-scheduler:quartz:2.0.0
 r2dbc:
   instrumentations:
-    - name: r2dbc-1.0
-      srcPath: instrumentation/r2dbc-1.0
-      target_versions:
-        JAVAAGENT:
-          - io.r2dbc:r2dbc-spi:[1.0.0.RELEASE,)
-        LIBRARY:
-          - io.r2dbc:r2dbc-spi:1.0.0.RELEASE
+  - name: r2dbc-1.0
+    srcPath: instrumentation/r2dbc-1.0
+    target_versions:
+      JAVAAGENT:
+      - io.r2dbc:r2dbc-spi:[1.0.0.RELEASE,)
+      LIBRARY:
+      - io.r2dbc:r2dbc-spi:1.0.0.RELEASE
 rabbitmq:
   instrumentations:
-    - name: rabbitmq-2.7
-      srcPath: instrumentation/rabbitmq-2.7
-      target_versions:
-        JAVAAGENT:
-          - com.rabbitmq:amqp-client:[2.7.0,)
+  - name: rabbitmq-2.7
+    srcPath: instrumentation/rabbitmq-2.7
+    target_versions:
+      JAVAAGENT:
+      - com.rabbitmq:amqp-client:[2.7.0,)
 ratpack:
   instrumentations:
-    - name: ratpack-1.4
-      srcPath: instrumentation/ratpack/ratpack-1.4
-      target_versions:
-        JAVAAGENT:
-          - io.ratpack:ratpack-core:[1.4.0,)
-    - name: ratpack-1.7
-      srcPath: instrumentation/ratpack/ratpack-1.7
-      target_versions:
-        JAVAAGENT:
-          - io.ratpack:ratpack-core:[1.7.0,)
-        LIBRARY:
-          - io.ratpack:ratpack-core:1.7.0
+  - name: ratpack-1.4
+    srcPath: instrumentation/ratpack/ratpack-1.4
+    target_versions:
+      JAVAAGENT:
+      - io.ratpack:ratpack-core:[1.4.0,)
+  - name: ratpack-1.7
+    srcPath: instrumentation/ratpack/ratpack-1.7
+    target_versions:
+      JAVAAGENT:
+      - io.ratpack:ratpack-core:[1.7.0,)
+      LIBRARY:
+      - io.ratpack:ratpack-core:1.7.0
 reactor:
   instrumentations:
-    - name: reactor-kafka-1.0
-      srcPath: instrumentation/reactor/reactor-kafka-1.0
-      target_versions:
-        JAVAAGENT:
-          - io.projectreactor.kafka:reactor-kafka:[1.0.0,)
-    - name: reactor-3.1
-      srcPath: instrumentation/reactor/reactor-3.1
-      target_versions:
-        JAVAAGENT:
-          - io.projectreactor:reactor-core:[3.1.0.RELEASE,)
-        LIBRARY:
-    - name: reactor-3.4
-      srcPath: instrumentation/reactor/reactor-3.4
-      target_versions:
-        JAVAAGENT:
-          - io.projectreactor:reactor-core:[3.4.0,)
-    - name: reactor-netty-0.9
-      srcPath: instrumentation/reactor/reactor-netty/reactor-netty-0.9
-      target_versions:
-        JAVAAGENT:
-          - io.projectreactor.netty:reactor-netty:[0.8.2.RELEASE,1.0.0)
-    - name: reactor-netty-1.0
-      srcPath: instrumentation/reactor/reactor-netty/reactor-netty-1.0
-      target_versions:
-        JAVAAGENT:
-          - io.projectreactor.netty:reactor-netty-http:[1.0.0,)
-          - io.projectreactor.netty:reactor-netty:[1.0.0,)
+  - name: reactor-kafka-1.0
+    srcPath: instrumentation/reactor/reactor-kafka-1.0
+    target_versions:
+      JAVAAGENT:
+      - io.projectreactor.kafka:reactor-kafka:[1.0.0,)
+  - name: reactor-3.1
+    srcPath: instrumentation/reactor/reactor-3.1
+    target_versions:
+      JAVAAGENT:
+      - io.projectreactor:reactor-core:[3.1.0.RELEASE,)
+      LIBRARY: []
+  - name: reactor-3.4
+    srcPath: instrumentation/reactor/reactor-3.4
+    target_versions:
+      JAVAAGENT:
+      - io.projectreactor:reactor-core:[3.4.0,)
+  - name: reactor-netty-0.9
+    srcPath: instrumentation/reactor/reactor-netty/reactor-netty-0.9
+    target_versions:
+      JAVAAGENT:
+      - io.projectreactor.netty:reactor-netty:[0.8.2.RELEASE,1.0.0)
+  - name: reactor-netty-1.0
+    srcPath: instrumentation/reactor/reactor-netty/reactor-netty-1.0
+    target_versions:
+      JAVAAGENT:
+      - io.projectreactor.netty:reactor-netty-http:[1.0.0,)
+      - io.projectreactor.netty:reactor-netty:[1.0.0,)
 rediscala:
   instrumentations:
-    - name: rediscala-1.8
-      srcPath: instrumentation/rediscala-1.8
-      target_versions:
-        JAVAAGENT:
-          - com.github.Ma27:rediscala_2.11:[1.8.1,)
-          - com.github.etaty:rediscala_2.11:[1.5.0,)
-          - com.github.etaty:rediscala_2.12:[1.8.0,)
-          - com.github.Ma27:rediscala_2.13:[1.9.0,)
-          - io.github.rediscala:rediscala_2.13:[1.10.0,)
-          - com.github.etaty:rediscala_2.13:[1.9.0,)
-          - com.github.Ma27:rediscala_2.12:[1.8.1,)
+  - name: rediscala-1.8
+    srcPath: instrumentation/rediscala-1.8
+    target_versions:
+      JAVAAGENT:
+      - com.github.Ma27:rediscala_2.11:[1.8.1,)
+      - com.github.etaty:rediscala_2.11:[1.5.0,)
+      - com.github.etaty:rediscala_2.12:[1.8.0,)
+      - com.github.Ma27:rediscala_2.13:[1.9.0,)
+      - io.github.rediscala:rediscala_2.13:[1.10.0,)
+      - com.github.etaty:rediscala_2.13:[1.9.0,)
+      - com.github.Ma27:rediscala_2.12:[1.8.1,)
 redisson:
   instrumentations:
-    - name: redisson-3.17
-      srcPath: instrumentation/redisson/redisson-3.17
-      target_versions:
-        JAVAAGENT:
-          - org.redisson:redisson:[3.17.0,)
-    - name: redisson-3.0
-      srcPath: instrumentation/redisson/redisson-3.0
-      target_versions:
-        JAVAAGENT:
-          - org.redisson:redisson:[3.0.0,3.17.0)
+  - name: redisson-3.17
+    srcPath: instrumentation/redisson/redisson-3.17
+    target_versions:
+      JAVAAGENT:
+      - org.redisson:redisson:[3.17.0,)
+  - name: redisson-3.0
+    srcPath: instrumentation/redisson/redisson-3.0
+    target_versions:
+      JAVAAGENT:
+      - org.redisson:redisson:[3.0.0,3.17.0)
 resources:
   instrumentations:
-    - name: resources
-      srcPath: instrumentation/resources
-      target_versions:
-        LIBRARY:
+  - name: resources
+    srcPath: instrumentation/resources
+    target_versions:
+      LIBRARY: []
 restlet:
   instrumentations:
-    - name: restlet-1.1
-      srcPath: instrumentation/restlet/restlet-1.1
-      target_versions:
-        JAVAAGENT:
-          - org.restlet:org.restlet:[1.1.0, 1.2-M1)
-        LIBRARY:
-          - org.restlet:org.restlet:1.1.5
-          - com.noelios.restlet:com.noelios.restlet:1.1.5
-    - name: restlet-2.0
-      srcPath: instrumentation/restlet/restlet-2.0
-      target_versions:
-        JAVAAGENT:
-          - org.restlet.jse:org.restlet:[2.0.0,)
-        LIBRARY:
-          - org.restlet.jse:org.restlet:2.0.2
+  - name: restlet-1.1
+    srcPath: instrumentation/restlet/restlet-1.1
+    target_versions:
+      JAVAAGENT:
+      - org.restlet:org.restlet:[1.1.0, 1.2-M1)
+      LIBRARY:
+      - org.restlet:org.restlet:1.1.5
+      - com.noelios.restlet:com.noelios.restlet:1.1.5
+  - name: restlet-2.0
+    srcPath: instrumentation/restlet/restlet-2.0
+    target_versions:
+      JAVAAGENT:
+      - org.restlet.jse:org.restlet:[2.0.0,)
+      LIBRARY:
+      - org.restlet.jse:org.restlet:2.0.2
 rmi:
   instrumentations:
-    - name: rmi
-      srcPath: instrumentation/rmi
-      target_versions:
-        JAVAAGENT:
+  - name: rmi
+    srcPath: instrumentation/rmi
+    target_versions:
+      JAVAAGENT: []
 rocketmq:
   instrumentations:
-    - name: rocketmq-client-5.0
-      srcPath: instrumentation/rocketmq/rocketmq-client/rocketmq-client-5.0
-      target_versions:
-        JAVAAGENT:
-          - org.apache.rocketmq:rocketmq-client-java:[5.0.0,)
-    - name: rocketmq-client-4.8
-      srcPath: instrumentation/rocketmq/rocketmq-client/rocketmq-client-4.8
-      target_versions:
-        JAVAAGENT:
-          - org.apache.rocketmq:rocketmq-client:[4.0.0,)
-        LIBRARY:
-          - org.apache.rocketmq:rocketmq-client:4.8.0
+  - name: rocketmq-client-5.0
+    srcPath: instrumentation/rocketmq/rocketmq-client/rocketmq-client-5.0
+    target_versions:
+      JAVAAGENT:
+      - org.apache.rocketmq:rocketmq-client-java:[5.0.0,)
+  - name: rocketmq-client-4.8
+    srcPath: instrumentation/rocketmq/rocketmq-client/rocketmq-client-4.8
+    target_versions:
+      JAVAAGENT:
+      - org.apache.rocketmq:rocketmq-client:[4.0.0,)
+      LIBRARY:
+      - org.apache.rocketmq:rocketmq-client:4.8.0
 runtime:
   instrumentations:
-    - name: runtime-telemetry-java17
-      srcPath: instrumentation/runtime-telemetry/runtime-telemetry-java17
-      target_versions:
-        JAVAAGENT:
-        LIBRARY:
-    - name: runtime-telemetry-java8
-      srcPath: instrumentation/runtime-telemetry/runtime-telemetry-java8
-      target_versions:
-        JAVAAGENT:
-        LIBRARY:
+  - name: runtime-telemetry-java17
+    srcPath: instrumentation/runtime-telemetry/runtime-telemetry-java17
+    target_versions:
+      JAVAAGENT: []
+      LIBRARY: []
+  - name: runtime-telemetry-java8
+    srcPath: instrumentation/runtime-telemetry/runtime-telemetry-java8
+    target_versions:
+      JAVAAGENT: []
+      LIBRARY: []
 rxjava:
   instrumentations:
-    - name: rxjava-1.0
-      srcPath: instrumentation/rxjava/rxjava-1.0
-      target_versions:
-        LIBRARY:
-          - io.reactivex:rxjava:1.0.7
-    - name: rxjava-3.1.1
-      srcPath: instrumentation/rxjava/rxjava-3.1.1
-      target_versions:
-        JAVAAGENT:
-          - io.reactivex.rxjava3:rxjava:[3.1.1,)
-        LIBRARY:
-          - io.reactivex.rxjava3:rxjava:3.1.1
-    - name: rxjava-2.0
-      srcPath: instrumentation/rxjava/rxjava-2.0
-      target_versions:
-        JAVAAGENT:
-          - io.reactivex.rxjava2:rxjava:[2.0.6,)
-        LIBRARY:
-          - io.reactivex.rxjava2:rxjava:2.1.3
-    - name: rxjava-3.0
-      srcPath: instrumentation/rxjava/rxjava-3.0
-      target_versions:
-        JAVAAGENT:
-          - io.reactivex.rxjava3:rxjava:[3.0.0,3.1.0]
-        LIBRARY:
-          - io.reactivex.rxjava3:rxjava:3.0.12
+  - name: rxjava-1.0
+    srcPath: instrumentation/rxjava/rxjava-1.0
+    target_versions:
+      LIBRARY:
+      - io.reactivex:rxjava:1.0.7
+  - name: rxjava-3.1.1
+    srcPath: instrumentation/rxjava/rxjava-3.1.1
+    target_versions:
+      JAVAAGENT:
+      - io.reactivex.rxjava3:rxjava:[3.1.1,)
+      LIBRARY:
+      - io.reactivex.rxjava3:rxjava:3.1.1
+  - name: rxjava-2.0
+    srcPath: instrumentation/rxjava/rxjava-2.0
+    target_versions:
+      JAVAAGENT:
+      - io.reactivex.rxjava2:rxjava:[2.0.6,)
+      LIBRARY:
+      - io.reactivex.rxjava2:rxjava:2.1.3
+  - name: rxjava-3.0
+    srcPath: instrumentation/rxjava/rxjava-3.0
+    target_versions:
+      JAVAAGENT:
+      - io.reactivex.rxjava3:rxjava:[3.0.0,3.1.0]
+      LIBRARY:
+      - io.reactivex.rxjava3:rxjava:3.0.12
 scala:
   instrumentations:
-    - name: scala-fork-join-2.8
-      srcPath: instrumentation/scala-fork-join-2.8
-      target_versions:
-        JAVAAGENT:
-          - org.scala-lang:scala-library:[2.8.0,2.12.0)
+  - name: scala-fork-join-2.8
+    srcPath: instrumentation/scala-fork-join-2.8
+    target_versions:
+      JAVAAGENT:
+      - org.scala-lang:scala-library:[2.8.0,2.12.0)
 servlet:
   instrumentations:
-    - name: servlet-5.0
-      srcPath: instrumentation/servlet/servlet-5.0
-      target_versions:
-        JAVAAGENT:
-          - jakarta.servlet:jakarta.servlet-api:[5.0.0,)
-    - name: servlet-2.2
-      srcPath: instrumentation/servlet/servlet-2.2
-      target_versions:
-        JAVAAGENT:
-          - javax.servlet:servlet-api:[2.2, 3.0)
-    - name: servlet-3.0
-      srcPath: instrumentation/servlet/servlet-3.0
-      target_versions:
-        JAVAAGENT:
-          - javax.servlet:javax.servlet-api:[3.0,)
+  - name: servlet-5.0
+    srcPath: instrumentation/servlet/servlet-5.0
+    target_versions:
+      JAVAAGENT:
+      - jakarta.servlet:jakarta.servlet-api:[5.0.0,)
+  - name: servlet-2.2
+    srcPath: instrumentation/servlet/servlet-2.2
+    target_versions:
+      JAVAAGENT:
+      - javax.servlet:servlet-api:[2.2, 3.0)
+  - name: servlet-3.0
+    srcPath: instrumentation/servlet/servlet-3.0
+    target_versions:
+      JAVAAGENT:
+      - javax.servlet:javax.servlet-api:[3.0,)
 spark:
   instrumentations:
-    - name: spark-2.3
-      srcPath: instrumentation/spark-2.3
-      target_versions:
-        JAVAAGENT:
-          - com.sparkjava:spark-core:[2.3,)
+  - name: spark-2.3
+    srcPath: instrumentation/spark-2.3
+    target_versions:
+      JAVAAGENT:
+      - com.sparkjava:spark-core:[2.3,)
 spring:
   instrumentations:
-    - name: spring-rabbit-1.0
-      srcPath: instrumentation/spring/spring-rabbit-1.0
-      target_versions:
-        JAVAAGENT:
-          - org.springframework.amqp:spring-rabbit:(,)
-    - name: spring-scheduling-3.1
-      srcPath: instrumentation/spring/spring-scheduling-3.1
-      target_versions:
-        JAVAAGENT:
-          - org.springframework:spring-context:[3.1.0.RELEASE,]
-    - name: spring-boot-resources
-      srcPath: instrumentation/spring/spring-boot-resources
-      target_versions:
-        JAVAAGENT:
-    - name: spring-batch-3.0
-      srcPath: instrumentation/spring/spring-batch-3.0
-      target_versions:
-        JAVAAGENT:
-          - org.springframework.batch:spring-batch-core:[3.0.0.RELEASE,5)
-    - name: spring-cloud-aws-3.0
-      srcPath: instrumentation/spring/spring-cloud-aws-3.0
-      target_versions:
-        JAVAAGENT:
-          - io.awspring.cloud:spring-cloud-aws-sqs:[3.0.0,)
-    - name: spring-webflux-5.0
-      srcPath: instrumentation/spring/spring-webflux/spring-webflux-5.0
-      target_versions:
-        JAVAAGENT:
-          - io.projectreactor.ipc:reactor-netty:[0.7.0.RELEASE,)
-          - org.springframework:spring-webflux:[5.0.0.RELEASE,)
-          - io.projectreactor.netty:reactor-netty:[0.8.0.RELEASE,)
-    - name: spring-webflux-5.3
-      srcPath: instrumentation/spring/spring-webflux/spring-webflux-5.3
-      target_versions:
-        LIBRARY:
-          - org.springframework:spring-webflux:5.3.0
-    - name: spring-jms-6.0
-      srcPath: instrumentation/spring/spring-jms/spring-jms-6.0
-      target_versions:
-        JAVAAGENT:
-          - org.springframework:spring-jms:[6.0.0,)
-    - name: spring-boot-actuator-autoconfigure-2.0
-      srcPath: instrumentation/spring/spring-boot-actuator-autoconfigure-2.0
-      target_versions:
-        JAVAAGENT:
-          - org.springframework.boot:spring-boot-actuator-autoconfigure:[2.0.0.RELEASE,)
-    - name: spring-rmi-4.0
-      srcPath: instrumentation/spring/spring-rmi-4.0
-      target_versions:
-        JAVAAGENT:
-          - org.springframework:spring-context:[4.0.0.RELEASE,6)
-    - name: spring-webmvc-3.1
-      srcPath: instrumentation/spring/spring-webmvc/spring-webmvc-3.1
-      target_versions:
-        JAVAAGENT:
-          - org.springframework:spring-webmvc:[3.1.0.RELEASE,6)
-    - name: spring-webmvc-6.0
-      srcPath: instrumentation/spring/spring-webmvc/spring-webmvc-6.0
-      target_versions:
-        JAVAAGENT:
-          - org.springframework:spring-webmvc:[6.0.0,)
-        LIBRARY:
-    - name: spring-data-1.8
-      srcPath: instrumentation/spring/spring-data/spring-data-1.8
-      target_versions:
-        JAVAAGENT:
-          - org.springframework:spring-aop:[1.2,]
-          - org.springframework.data:spring-data-commons:[1.8.0.RELEASE,]
-    - name: spring-web-3.1
-      srcPath: instrumentation/spring/spring-web/spring-web-3.1
-      target_versions:
-        JAVAAGENT:
-          - org.springframework:spring-web:[3.1.0.RELEASE,6)
-        LIBRARY:
-    - name: spring-kafka-2.7
-      srcPath: instrumentation/spring/spring-kafka-2.7
-      target_versions:
-        JAVAAGENT:
-          - org.springframework.kafka:spring-kafka:[2.7.0,)
-        LIBRARY:
-    - name: spring-webmvc-5.3
-      srcPath: instrumentation/spring/spring-webmvc/spring-webmvc-5.3
-      target_versions:
-        LIBRARY:
-    - name: spring-core-2.0
-      srcPath: instrumentation/spring/spring-core-2.0
-      target_versions:
-        JAVAAGENT:
-          - org.springframework:spring-core:[2.0,]
-    - name: spring-cloud-gateway-2.0
-      srcPath: instrumentation/spring/spring-cloud-gateway/spring-cloud-gateway-2.0
-      target_versions:
-        JAVAAGENT:
-          - org.springframework.cloud:spring-cloud-starter-gateway:[2.0.0.RELEASE,]
-    - name: spring-security-config-6.0
-      srcPath: instrumentation/spring/spring-security-config-6.0
-      target_versions:
-        JAVAAGENT:
-          - org.springframework.security:spring-security-config:[6.0.0,]
-        LIBRARY:
-          - io.projectreactor:reactor-core:3.5.0
-          - org.springframework.security:spring-security-config:6.0.0
-          - org.springframework:spring-web:6.0.0
-          - jakarta.servlet:jakarta.servlet-api:6.0.0
-          - org.springframework.security:spring-security-web:6.0.0
-    - name: spring-integration-4.1
-      srcPath: instrumentation/spring/spring-integration-4.1
-      target_versions:
-        JAVAAGENT:
-          - org.springframework.integration:spring-integration-core:[4.1.0.RELEASE,)
-        LIBRARY:
-          - org.springframework.integration:spring-integration-core:4.1.0.RELEASE
-    - name: spring-jms-2.0
-      srcPath: instrumentation/spring/spring-jms/spring-jms-2.0
-      target_versions:
-        JAVAAGENT:
-          - org.springframework:spring-jms:[2.0,6)
-    - name: spring-ws-2.0
-      srcPath: instrumentation/spring/spring-ws-2.0
-      target_versions:
-        JAVAAGENT:
-          - org.springframework.ws:spring-ws-core:[2.0.0.RELEASE,]
-    - name: spring-web-6.0
-      srcPath: instrumentation/spring/spring-web/spring-web-6.0
-      target_versions:
-        JAVAAGENT:
-          - org.springframework:spring-web:[6.0.0,)
+  - name: spring-rabbit-1.0
+    srcPath: instrumentation/spring/spring-rabbit-1.0
+    target_versions:
+      JAVAAGENT:
+      - org.springframework.amqp:spring-rabbit:(,)
+  - name: spring-scheduling-3.1
+    srcPath: instrumentation/spring/spring-scheduling-3.1
+    target_versions:
+      JAVAAGENT:
+      - org.springframework:spring-context:[3.1.0.RELEASE,]
+  - name: spring-boot-resources
+    srcPath: instrumentation/spring/spring-boot-resources
+    target_versions:
+      JAVAAGENT: []
+  - name: spring-batch-3.0
+    srcPath: instrumentation/spring/spring-batch-3.0
+    target_versions:
+      JAVAAGENT:
+      - org.springframework.batch:spring-batch-core:[3.0.0.RELEASE,5)
+  - name: spring-cloud-aws-3.0
+    srcPath: instrumentation/spring/spring-cloud-aws-3.0
+    target_versions:
+      JAVAAGENT:
+      - io.awspring.cloud:spring-cloud-aws-sqs:[3.0.0,)
+  - name: spring-webflux-5.0
+    srcPath: instrumentation/spring/spring-webflux/spring-webflux-5.0
+    target_versions:
+      JAVAAGENT:
+      - io.projectreactor.ipc:reactor-netty:[0.7.0.RELEASE,)
+      - org.springframework:spring-webflux:[5.0.0.RELEASE,)
+      - io.projectreactor.netty:reactor-netty:[0.8.0.RELEASE,)
+  - name: spring-webflux-5.3
+    srcPath: instrumentation/spring/spring-webflux/spring-webflux-5.3
+    target_versions:
+      LIBRARY:
+      - org.springframework:spring-webflux:5.3.0
+  - name: spring-jms-6.0
+    srcPath: instrumentation/spring/spring-jms/spring-jms-6.0
+    target_versions:
+      JAVAAGENT:
+      - org.springframework:spring-jms:[6.0.0,)
+  - name: spring-boot-actuator-autoconfigure-2.0
+    srcPath: instrumentation/spring/spring-boot-actuator-autoconfigure-2.0
+    target_versions:
+      JAVAAGENT:
+      - org.springframework.boot:spring-boot-actuator-autoconfigure:[2.0.0.RELEASE,)
+  - name: spring-rmi-4.0
+    srcPath: instrumentation/spring/spring-rmi-4.0
+    target_versions:
+      JAVAAGENT:
+      - org.springframework:spring-context:[4.0.0.RELEASE,6)
+  - name: spring-webmvc-3.1
+    srcPath: instrumentation/spring/spring-webmvc/spring-webmvc-3.1
+    target_versions:
+      JAVAAGENT:
+      - org.springframework:spring-webmvc:[3.1.0.RELEASE,6)
+  - name: spring-webmvc-6.0
+    srcPath: instrumentation/spring/spring-webmvc/spring-webmvc-6.0
+    target_versions:
+      JAVAAGENT:
+      - org.springframework:spring-webmvc:[6.0.0,)
+      LIBRARY: []
+  - name: spring-data-1.8
+    srcPath: instrumentation/spring/spring-data/spring-data-1.8
+    target_versions:
+      JAVAAGENT:
+      - org.springframework:spring-aop:[1.2,]
+      - org.springframework.data:spring-data-commons:[1.8.0.RELEASE,]
+  - name: spring-web-3.1
+    srcPath: instrumentation/spring/spring-web/spring-web-3.1
+    target_versions:
+      JAVAAGENT:
+      - org.springframework:spring-web:[3.1.0.RELEASE,6)
+      LIBRARY: []
+  - name: spring-kafka-2.7
+    srcPath: instrumentation/spring/spring-kafka-2.7
+    target_versions:
+      JAVAAGENT:
+      - org.springframework.kafka:spring-kafka:[2.7.0,)
+      LIBRARY: []
+  - name: spring-webmvc-5.3
+    srcPath: instrumentation/spring/spring-webmvc/spring-webmvc-5.3
+    target_versions:
+      LIBRARY: []
+  - name: spring-core-2.0
+    srcPath: instrumentation/spring/spring-core-2.0
+    target_versions:
+      JAVAAGENT:
+      - org.springframework:spring-core:[2.0,]
+  - name: spring-cloud-gateway-2.0
+    srcPath: instrumentation/spring/spring-cloud-gateway/spring-cloud-gateway-2.0
+    target_versions:
+      JAVAAGENT:
+      - org.springframework.cloud:spring-cloud-starter-gateway:[2.0.0.RELEASE,]
+  - name: spring-security-config-6.0
+    srcPath: instrumentation/spring/spring-security-config-6.0
+    target_versions:
+      JAVAAGENT:
+      - org.springframework.security:spring-security-config:[6.0.0,]
+      LIBRARY:
+      - io.projectreactor:reactor-core:3.5.0
+      - org.springframework.security:spring-security-config:6.0.0
+      - org.springframework:spring-web:6.0.0
+      - jakarta.servlet:jakarta.servlet-api:6.0.0
+      - org.springframework.security:spring-security-web:6.0.0
+  - name: spring-integration-4.1
+    srcPath: instrumentation/spring/spring-integration-4.1
+    target_versions:
+      JAVAAGENT:
+      - org.springframework.integration:spring-integration-core:[4.1.0.RELEASE,)
+      LIBRARY:
+      - org.springframework.integration:spring-integration-core:4.1.0.RELEASE
+  - name: spring-jms-2.0
+    srcPath: instrumentation/spring/spring-jms/spring-jms-2.0
+    target_versions:
+      JAVAAGENT:
+      - org.springframework:spring-jms:[2.0,6)
+  - name: spring-ws-2.0
+    srcPath: instrumentation/spring/spring-ws-2.0
+    target_versions:
+      JAVAAGENT:
+      - org.springframework.ws:spring-ws-core:[2.0.0.RELEASE,]
+  - name: spring-web-6.0
+    srcPath: instrumentation/spring/spring-web/spring-web-6.0
+    target_versions:
+      JAVAAGENT:
+      - org.springframework:spring-web:[6.0.0,)
 spymemcached:
   instrumentations:
-    - name: spymemcached-2.12
-      srcPath: instrumentation/spymemcached-2.12
-      target_versions:
-        JAVAAGENT:
-          - net.spy:spymemcached:[2.12.0,)
+  - name: spymemcached-2.12
+    srcPath: instrumentation/spymemcached-2.12
+    target_versions:
+      JAVAAGENT:
+      - net.spy:spymemcached:[2.12.0,)
 struts:
   instrumentations:
-    - name: struts-2.3
-      srcPath: instrumentation/struts/struts-2.3
-      target_versions:
-        JAVAAGENT:
-          - org.apache.struts:struts2-core:[2.1.0,7)
-    - name: struts-7.0
-      srcPath: instrumentation/struts/struts-7.0
-      target_versions:
-        JAVAAGENT:
-          - org.apache.struts:struts2-core:[7.0.0,)
+  - name: struts-2.3
+    srcPath: instrumentation/struts/struts-2.3
+    target_versions:
+      JAVAAGENT:
+      - org.apache.struts:struts2-core:[2.1.0,7)
+  - name: struts-7.0
+    srcPath: instrumentation/struts/struts-7.0
+    target_versions:
+      JAVAAGENT:
+      - org.apache.struts:struts2-core:[7.0.0,)
 tapestry:
   instrumentations:
-    - name: tapestry-5.4
-      srcPath: instrumentation/tapestry-5.4
-      target_versions:
-        JAVAAGENT:
-          - org.apache.tapestry:tapestry-core:[5.4.0,)
+  - name: tapestry-5.4
+    srcPath: instrumentation/tapestry-5.4
+    target_versions:
+      JAVAAGENT:
+      - org.apache.tapestry:tapestry-core:[5.4.0,)
 tomcat:
   instrumentations:
-    - name: tomcat-10.0
-      srcPath: instrumentation/tomcat/tomcat-10.0
-      target_versions:
-        JAVAAGENT:
-          - org.apache.tomcat.embed:tomcat-embed-core:[10,)
-    - name: tomcat-7.0
-      srcPath: instrumentation/tomcat/tomcat-7.0
-      target_versions:
-        JAVAAGENT:
-          - org.apache.tomcat.embed:tomcat-embed-core:[7.0.4, 10)
+  - name: tomcat-10.0
+    srcPath: instrumentation/tomcat/tomcat-10.0
+    target_versions:
+      JAVAAGENT:
+      - org.apache.tomcat.embed:tomcat-embed-core:[10,)
+  - name: tomcat-7.0
+    srcPath: instrumentation/tomcat/tomcat-7.0
+    target_versions:
+      JAVAAGENT:
+      - org.apache.tomcat.embed:tomcat-embed-core:[7.0.4, 10)
 twilio:
   instrumentations:
-    - name: twilio-6.6
-      srcPath: instrumentation/twilio-6.6
-      target_versions:
-        JAVAAGENT:
-          - com.twilio.sdk:twilio:(,8.0.0)
+  - name: twilio-6.6
+    srcPath: instrumentation/twilio-6.6
+    target_versions:
+      JAVAAGENT:
+      - com.twilio.sdk:twilio:(,8.0.0)
 undertow:
   instrumentations:
-    - name: undertow-1.4
-      srcPath: instrumentation/undertow-1.4
-      target_versions:
-        JAVAAGENT:
-          - io.undertow:undertow-core:[1.4.0.Final,)
+  - name: undertow-1.4
+    srcPath: instrumentation/undertow-1.4
+    target_versions:
+      JAVAAGENT:
+      - io.undertow:undertow-core:[1.4.0.Final,)
 vaadin:
   instrumentations:
-    - name: vaadin-14.2
-      srcPath: instrumentation/vaadin-14.2
-      target_versions:
-        JAVAAGENT:
-          - com.vaadin:flow-server:[2.2.0,3)
-          - com.vaadin:flow-server:[3.1.0,)
+  - name: vaadin-14.2
+    srcPath: instrumentation/vaadin-14.2
+    target_versions:
+      JAVAAGENT:
+      - com.vaadin:flow-server:[2.2.0,3)
+      - com.vaadin:flow-server:[3.1.0,)
 vertx:
   instrumentations:
-    - name: vertx-kafka-client-3.6
-      srcPath: instrumentation/vertx/vertx-kafka-client-3.6
-      target_versions:
-        JAVAAGENT:
-          - io.vertx:vertx-kafka-client:[3.5.1,)
-    - name: vertx-redis-client-4.0
-      srcPath: instrumentation/vertx/vertx-redis-client-4.0
-      target_versions:
-        JAVAAGENT:
-          - io.vertx:vertx-redis-client:[4.0.0,)
-    - name: vertx-web-3.0
-      srcPath: instrumentation/vertx/vertx-web-3.0
-      target_versions:
-        JAVAAGENT:
-          - io.vertx:vertx-web:[3.0.0,)
-    - name: vertx-sql-client-4.0
-      srcPath: instrumentation/vertx/vertx-sql-client-4.0
-      target_versions:
-        JAVAAGENT:
-          - io.vertx:vertx-sql-client:[4.0.0,)
-    - name: vertx-http-client-4.0
-      srcPath: instrumentation/vertx/vertx-http-client/vertx-http-client-4.0
-      target_versions:
-        JAVAAGENT:
-          - io.vertx:vertx-core:[4.0.0,)
-    - name: vertx-rx-java-3.5
-      srcPath: instrumentation/vertx/vertx-rx-java-3.5
-      target_versions:
-        JAVAAGENT:
-          - io.vertx:vertx-rx-java2:[3.5.0,)
-    - name: vertx-http-client-3.0
-      srcPath: instrumentation/vertx/vertx-http-client/vertx-http-client-3.0
-      target_versions:
-        JAVAAGENT:
-          - io.vertx:vertx-core:[3.0.0,4.0.0)
+  - name: vertx-kafka-client-3.6
+    srcPath: instrumentation/vertx/vertx-kafka-client-3.6
+    target_versions:
+      JAVAAGENT:
+      - io.vertx:vertx-kafka-client:[3.5.1,)
+  - name: vertx-redis-client-4.0
+    srcPath: instrumentation/vertx/vertx-redis-client-4.0
+    target_versions:
+      JAVAAGENT:
+      - io.vertx:vertx-redis-client:[4.0.0,)
+  - name: vertx-web-3.0
+    srcPath: instrumentation/vertx/vertx-web-3.0
+    target_versions:
+      JAVAAGENT:
+      - io.vertx:vertx-web:[3.0.0,)
+  - name: vertx-sql-client-4.0
+    srcPath: instrumentation/vertx/vertx-sql-client-4.0
+    target_versions:
+      JAVAAGENT:
+      - io.vertx:vertx-sql-client:[4.0.0,)
+  - name: vertx-http-client-4.0
+    srcPath: instrumentation/vertx/vertx-http-client/vertx-http-client-4.0
+    target_versions:
+      JAVAAGENT:
+      - io.vertx:vertx-core:[4.0.0,)
+  - name: vertx-rx-java-3.5
+    srcPath: instrumentation/vertx/vertx-rx-java-3.5
+    target_versions:
+      JAVAAGENT:
+      - io.vertx:vertx-rx-java2:[3.5.0,)
+  - name: vertx-http-client-3.0
+    srcPath: instrumentation/vertx/vertx-http-client/vertx-http-client-3.0
+    target_versions:
+      JAVAAGENT:
+      - io.vertx:vertx-core:[3.0.0,4.0.0)
 vibur:
   instrumentations:
-    - name: vibur-dbcp-11.0
-      srcPath: instrumentation/vibur-dbcp-11.0
-      target_versions:
-        JAVAAGENT:
-          - org.vibur:vibur-dbcp:[11.0,)
-        LIBRARY:
-          - org.vibur:vibur-dbcp:11.0
+  - name: vibur-dbcp-11.0
+    srcPath: instrumentation/vibur-dbcp-11.0
+    target_versions:
+      JAVAAGENT:
+      - org.vibur:vibur-dbcp:[11.0,)
+      LIBRARY:
+      - org.vibur:vibur-dbcp:11.0
 wicket:
   instrumentations:
-    - name: wicket-8.0
-      srcPath: instrumentation/wicket-8.0
-      target_versions:
-        JAVAAGENT:
-          - org.apache.wicket:wicket:[8.0.0,]
+  - name: wicket-8.0
+    srcPath: instrumentation/wicket-8.0
+    target_versions:
+      JAVAAGENT:
+      - org.apache.wicket:wicket:[8.0.0,]
 xxl:
   instrumentations:
-    - name: xxl-job-2.3.0
-      srcPath: instrumentation/xxl-job/xxl-job-2.3.0
-      target_versions:
-        JAVAAGENT:
-          - com.xuxueli:xxl-job-core:[2.3.0,)
-    - name: xxl-job-2.1.2
-      srcPath: instrumentation/xxl-job/xxl-job-2.1.2
-      target_versions:
-        JAVAAGENT:
-          - com.xuxueli:xxl-job-core:[2.1.2,2.3.0)
-    - name: xxl-job-1.9.2
-      srcPath: instrumentation/xxl-job/xxl-job-1.9.2
-      target_versions:
-        JAVAAGENT:
-          - com.xuxueli:xxl-job-core:[1.9.2, 2.1.2)
+  - name: xxl-job-2.3.0
+    srcPath: instrumentation/xxl-job/xxl-job-2.3.0
+    target_versions:
+      JAVAAGENT:
+      - com.xuxueli:xxl-job-core:[2.3.0,)
+  - name: xxl-job-2.1.2
+    srcPath: instrumentation/xxl-job/xxl-job-2.1.2
+    target_versions:
+      JAVAAGENT:
+      - com.xuxueli:xxl-job-core:[2.1.2,2.3.0)
+  - name: xxl-job-1.9.2
+    srcPath: instrumentation/xxl-job/xxl-job-1.9.2
+    target_versions:
+      JAVAAGENT:
+      - com.xuxueli:xxl-job-core:[1.9.2, 2.1.2)
 zio:
   instrumentations:
-    - name: zio-2.0
-      srcPath: instrumentation/zio/zio-2.0
-      target_versions:
-        JAVAAGENT:
-          - dev.zio:zio_2.13:[2.0.0,)
-          - dev.zio:zio_3:[2.0.0,)
-          - dev.zio:zio_2.12:[2.0.0,)
+  - name: zio-2.0
+    srcPath: instrumentation/zio/zio-2.0
+    target_versions:
+      JAVAAGENT:
+      - dev.zio:zio_2.13:[2.0.0,)
+      - dev.zio:zio_3:[2.0.0,)
+      - dev.zio:zio_2.12:[2.0.0,)
