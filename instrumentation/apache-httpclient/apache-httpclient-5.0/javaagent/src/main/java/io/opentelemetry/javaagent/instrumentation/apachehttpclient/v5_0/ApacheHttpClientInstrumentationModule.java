@@ -23,12 +23,12 @@ public class ApacheHttpClientInstrumentationModule extends InstrumentationModule
   public List<TypeInstrumentation> typeInstrumentations() {
     boolean debug =
         AgentInstrumentationConfig.get()
-            .getBoolean("otel.instrumentation.pache-httpclient-5.debug", false);
+            .getBoolean("otel.instrumentation.apache-httpclient-5.debug", false);
     if (debug) {
       return Arrays.asList(
           new ApacheHttpClientInstrumentation(),
           new ApacheHttpAsyncClientInstrumentation(),
-          new IoReactorInstrumentation());
+          new IoReactorDebugInstrumentation());
     }
     return Arrays.asList(
         new ApacheHttpClientInstrumentation(), new ApacheHttpAsyncClientInstrumentation());
