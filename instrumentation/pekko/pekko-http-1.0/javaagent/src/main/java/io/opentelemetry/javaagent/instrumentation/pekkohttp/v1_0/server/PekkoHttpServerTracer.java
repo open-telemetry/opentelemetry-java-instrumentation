@@ -101,7 +101,7 @@ public class PekkoHttpServerTracer
               if (instrumenter().shouldStart(parentContext, request)) {
                 Context context = instrumenter().start(parentContext, request);
                 context = PekkoRouteHolder.init(context);
-                tracingRequest = new PekkoTracingRequest(context, parentContext, request);
+                tracingRequest = new PekkoTracingRequest(context, request);
                 request =
                     (HttpRequest)
                         request.addAttribute(PekkoTracingRequest.ATTR_KEY, tracingRequest);
@@ -144,14 +144,6 @@ public class PekkoHttpServerTracer
                   response = (HttpResponse) response.addHeaders(headers);
                 }
 
-                // When GraphInterpreterInstrumentation sets `tracingRequest.context` as the current
-                // context, the akka Envelope + Actor instrumentation propagates it all the way
-                // back to here and follows the HttpResponse up the stack of stages.
-                // If http-pipelining is enabled, it will also propagate this context to the
-                // handling of the next request, leading to context-leaking errors.
-                // To prevent this, we reset the context to what it was before creating it.
-                tracingRequest.parentContext.makeCurrent();
-
                 instrumenter().end(tracingRequest.context, tracingRequest.request, response, null);
               }
               push(responseOut, response);
@@ -162,8 +154,6 @@ public class PekkoHttpServerTracer
               // End the span for the request that failed
               PekkoTracingRequest tracingRequest = requests.poll();
               if (tracingRequest != null && tracingRequest != PekkoTracingRequest.EMPTY) {
-                // see comment above
-                tracingRequest.parentContext.makeCurrent();
                 instrumenter()
                     .end(
                         tracingRequest.context,

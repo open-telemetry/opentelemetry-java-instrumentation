@@ -64,8 +64,7 @@ object PekkoHttpTestAsyncWebServer {
     if (null == binding) {
       import scala.concurrent.duration._
       binding = Await.result(
-        Http()
-          .bindAndHandleAsync(asyncHandler, "localhost", port, parallelism = 2),
+        Http().bindAndHandleAsync(asyncHandler, "localhost", port),
         10.seconds
       )
     }
