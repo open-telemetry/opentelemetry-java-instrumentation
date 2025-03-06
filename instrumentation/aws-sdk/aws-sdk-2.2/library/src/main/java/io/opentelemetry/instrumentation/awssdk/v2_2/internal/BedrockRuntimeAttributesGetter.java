@@ -115,7 +115,6 @@ enum BedrockRuntimeAttributesGetter
     return BedrockRuntimeAccess.getTopP(executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE));
   }
 
-  @Nullable
   @Override
   public List<String> getResponseFinishReasons(
       ExecutionAttributes executionAttributes, Response response) {
