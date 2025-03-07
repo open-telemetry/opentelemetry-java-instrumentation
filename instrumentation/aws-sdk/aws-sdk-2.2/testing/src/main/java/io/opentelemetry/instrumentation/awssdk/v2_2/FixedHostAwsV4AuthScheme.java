@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
+import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import software.amazon.awssdk.http.SdkHttpRequest;
 import software.amazon.awssdk.http.auth.aws.internal.scheme.DefaultAwsV4AuthScheme;
@@ -49,7 +50,7 @@ final class FixedHostAwsV4AuthScheme implements AwsV4AuthScheme {
     private final String apiUrl;
 
     FixedHostAwsV4HttpSigner(String apiUrl) {
-      this.apiUrl = apiUrl;
+      this.apiUrl = URI.create(apiUrl).getHost();
     }
 
     @Override
