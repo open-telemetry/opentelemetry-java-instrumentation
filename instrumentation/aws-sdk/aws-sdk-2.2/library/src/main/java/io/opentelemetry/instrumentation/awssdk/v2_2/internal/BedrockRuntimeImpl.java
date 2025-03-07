@@ -22,7 +22,6 @@ import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.SdkResponse;
 import software.amazon.awssdk.core.document.Document;
 import software.amazon.awssdk.protocols.json.SdkJsonGenerator;
-import software.amazon.awssdk.protocols.json.internal.marshall.DocumentTypeJsonMarshaller;
 import software.amazon.awssdk.services.bedrockruntime.model.ContentBlock;
 import software.amazon.awssdk.services.bedrockruntime.model.ConverseRequest;
 import software.amazon.awssdk.services.bedrockruntime.model.ConverseResponse;
