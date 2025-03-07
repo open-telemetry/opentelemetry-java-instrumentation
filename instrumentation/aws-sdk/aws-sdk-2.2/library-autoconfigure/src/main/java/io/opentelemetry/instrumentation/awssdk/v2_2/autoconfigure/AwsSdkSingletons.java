@@ -69,8 +69,7 @@ public final class AwsSdkSingletons {
   }
 
   private static boolean genaiCaptureMessageContent() {
-    return getBoolean(
-        "otel.instrumentation.genai.capture-message-content", false);
+    return getBoolean("otel.instrumentation.genai.capture-message-content", false);
   }
 
   private static boolean getBoolean(String name, boolean defaultValue) {
