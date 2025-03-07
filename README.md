@@ -105,6 +105,10 @@ having to create a separate distribution or to fork this repository. For example
 custom samplers or span exporters, set new defaults, and embed it all in the agent to obtain a
 single jar file.
 
+## Creating agent distribution
+
+[Distro](examples/distro/README.md) provides guidance on creating a separate distribution, serving as a collection of examples for extending the functionality of the OpenTelemetry Java instrumentation agent. It also demonstrates how to repackage the agent while incorporating custom features.
+
 ## Manually instrumenting
 
 For most users, the out-of-the-box instrumentation is completely sufficient and nothing more has to
