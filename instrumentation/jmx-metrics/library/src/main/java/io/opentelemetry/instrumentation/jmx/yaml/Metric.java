@@ -49,6 +49,7 @@ public class Metric extends MetricStructure {
   MetricInfo buildMetricInfo(
       @Nullable String prefix,
       String attributeName,
+      String defaultSourceUnit,
       String defaultUnit,
       MetricInfo.Type defaultType) {
     String metricName;
@@ -64,6 +65,9 @@ public class Metric extends MetricStructure {
     }
 
     String sourceUnit = getSourceUnit();
+    if (sourceUnit == null) {
+      sourceUnit = defaultSourceUnit;
+    }
 
     String unit = getUnit();
     if (unit == null) {

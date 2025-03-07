@@ -19,6 +19,7 @@ import java.util.Map;
  * <li>the metric type
  * <li>the metric attributes
  * <li>the unit
+ * <li>the sourceUnit
  *
  *     <p>Known subclasses are {@link JmxRule} and {@link Metric}.
  */
@@ -45,7 +46,7 @@ abstract class MetricStructure {
   private Map<String, Object> metricAttribute;
   private StateMapping stateMapping = StateMapping.empty();
   private static final String STATE_MAPPING_DEFAULT = "*";
-  private String sourcetUnit;
+  private String sourceUnit;
   private String unit;
 
   private MetricInfo.Type metricType;
@@ -60,11 +61,11 @@ abstract class MetricStructure {
   }
 
   public String getSourceUnit() {
-    return sourcetUnit;
+    return sourceUnit;
   }
 
   public void setSourceUnit(String unit) {
-    this.sourcetUnit = validateUnit(unit.trim());
+    this.sourceUnit = validateUnit(unit.trim());
   }
 
   public String getUnit() {
