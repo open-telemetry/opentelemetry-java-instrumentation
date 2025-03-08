@@ -163,7 +163,7 @@ public abstract class AbstractGrpcTest {
                                             equalTo(
                                                 MessageIncubatingAttributes.MESSAGE_TYPE,
                                                 "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L))),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -193,7 +193,7 @@ public abstract class AbstractGrpcTest {
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
                                                 MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L)))));
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",
@@ -316,7 +316,7 @@ public abstract class AbstractGrpcTest {
                                             equalTo(
                                                 MessageIncubatingAttributes.MESSAGE_TYPE,
                                                 "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L))),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -346,7 +346,7 @@ public abstract class AbstractGrpcTest {
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
                                                 MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L))),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -481,7 +481,7 @@ public abstract class AbstractGrpcTest {
                                             equalTo(
                                                 MessageIncubatingAttributes.MESSAGE_TYPE,
                                                 "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L))),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -511,7 +511,7 @@ public abstract class AbstractGrpcTest {
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
                                                 MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L))),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -993,7 +993,7 @@ public abstract class AbstractGrpcTest {
                                             equalTo(
                                                 MessageIncubatingAttributes.MESSAGE_TYPE,
                                                 "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L))),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -1023,7 +1023,7 @@ public abstract class AbstractGrpcTest {
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
                                                 MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L)))));
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
   }
 
   @Test
@@ -1109,7 +1109,7 @@ public abstract class AbstractGrpcTest {
                                       .hasAttributesSatisfyingExactly(
                                           equalTo(
                                               MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L));
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
                                   span.hasException(thrown);
                                 }),
                     span ->
@@ -1141,7 +1141,7 @@ public abstract class AbstractGrpcTest {
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
                                                 MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L)))));
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
   }
 
   @Test
@@ -1225,7 +1225,7 @@ public abstract class AbstractGrpcTest {
                                             equalTo(
                                                 MessageIncubatingAttributes.MESSAGE_TYPE,
                                                 "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L))),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
                     span ->
                         span.hasName(
                                 "grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo")
@@ -1256,7 +1256,7 @@ public abstract class AbstractGrpcTest {
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
                                                 MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L)))));
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
   }
 
   @Test
@@ -1327,7 +1327,7 @@ public abstract class AbstractGrpcTest {
                                             equalTo(
                                                 MessageIncubatingAttributes.MESSAGE_TYPE,
                                                 "RECEIVED"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L))),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
@@ -1357,7 +1357,7 @@ public abstract class AbstractGrpcTest {
                                         .hasAttributesSatisfyingExactly(
                                             equalTo(
                                                 MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L)))));
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
   }
 
   // Regression test for
