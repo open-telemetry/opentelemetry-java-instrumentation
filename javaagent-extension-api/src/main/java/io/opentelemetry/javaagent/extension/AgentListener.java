@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.extension;
 
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
@@ -37,10 +38,15 @@ public interface AgentListener extends Ordered {
     if (sdkConfigProperties != null) {
       return sdkConfigProperties;
     }
-    DeclarativeConfigProperties structuredConfigProperties =
-        AutoConfigureUtil.getStructuredConfig(autoConfiguredOpenTelemetrySdk);
-    if (structuredConfigProperties != null) {
-      return new StructuredConfigPropertiesBridge(structuredConfigProperties);
+    ConfigProvider configProvider =
+        AutoConfigureUtil.getConfigProvider(autoConfiguredOpenTelemetrySdk);
+    if (configProvider != null) {
+      DeclarativeConfigProperties structuredConfigProperties =
+          configProvider.getInstrumentationConfig();
+
+      if (structuredConfigProperties != null) {
+        return new StructuredConfigPropertiesBridge(structuredConfigProperties);
+      }
     }
     // Should never happen
     throw new IllegalStateException(
