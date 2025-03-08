@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.resources.internal;
 
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
-import io.opentelemetry.sdk.autoconfigure.spi.internal.StructuredConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
 import java.util.function.Supplier;
 
@@ -31,7 +31,7 @@ abstract class ResourceComponentProvider implements ComponentProvider<Resource> 
   }
 
   @Override
-  public Resource create(StructuredConfigProperties structuredConfigProperties) {
+  public Resource create(DeclarativeConfigProperties declarativeConfigProperties) {
     return supplier.get();
   }
 }
