@@ -71,6 +71,7 @@ public class FlakyTestReporter {
     }
   }
 
+  @SuppressWarnings("JavaTimeDefaultTimeZone")
   private void scanTestFile(Path testReport) {
     Document doc = parse(testReport);
     doc.getDocumentElement().normalize();
