@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.extension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import io.opentelemetry.sdk.autoconfigure.spi.internal.StructuredConfigProperties;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.FileConfiguration;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -42,14 +42,14 @@ class StructuredConfigPropertiesBridgeTest {
           + "        string_key2: value2\n"
           + "        bool_key: true\n";
 
-  private final StructuredConfigProperties structuredConfigProperties =
-      FileConfiguration.toConfigProperties(
+  private final DeclarativeConfigProperties structuredConfigProperties =
+      DeclarativeConfiguration.toConfigProperties(
           new ByteArrayInputStream(YAML.getBytes(StandardCharsets.UTF_8)));
   private final ConfigProperties bridge =
       new StructuredConfigPropertiesBridge(structuredConfigProperties);
   private final ConfigProperties emptyBridge =
       new StructuredConfigPropertiesBridge(
-          FileConfiguration.toConfigProperties(
+          DeclarativeConfiguration.toConfigProperties(
               new ByteArrayInputStream("file_format: 0.3\n".getBytes(StandardCharsets.UTF_8))));
 
   @Test

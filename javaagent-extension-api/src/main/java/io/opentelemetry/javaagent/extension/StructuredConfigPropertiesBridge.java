@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.extension;
 
-import static io.opentelemetry.sdk.autoconfigure.spi.internal.StructuredConfigProperties.empty;
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import io.opentelemetry.sdk.autoconfigure.spi.internal.StructuredConfigProperties;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
@@ -18,7 +18,8 @@ import java.util.function.BiFunction;
 import javax.annotation.Nullable;
 
 /**
- * A {@link ConfigProperties} which resolves properties based on {@link StructuredConfigProperties}.
+ * A {@link ConfigProperties} which resolves properties based on {@link
+ * DeclarativeConfigProperties}.
  *
  * <p>Only properties starting with "otel.instrumentation." are resolved. Others return null (or
  * default value if provided).
@@ -30,9 +31,9 @@ import javax.annotation.Nullable;
  *   <li>The portion of the property after "otel.instrumentation." is split into segments based on
  *       ".".
  *   <li>For each N-1 segment, we walk down the tree to find the relevant leaf {@link
- *       StructuredConfigProperties}.
- *   <li>We extract the property from the resolved {@link StructuredConfigProperties} using the last
- *       segment as the property key.
+ *       DeclarativeConfigProperties}.
+ *   <li>We extract the property from the resolved {@link DeclarativeConfigProperties} using the
+ *       last segment as the property key.
  * </ul>
  *
  * <p>For example, given the following YAML, asking for {@code
@@ -50,9 +51,9 @@ final class StructuredConfigPropertiesBridge implements ConfigProperties {
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
 
   // The node at .instrumentation.java
-  private final StructuredConfigProperties instrumentationJavaNode;
+  private final DeclarativeConfigProperties instrumentationJavaNode;
 
-  StructuredConfigPropertiesBridge(StructuredConfigProperties rootStructuredConfigProperties) {
+  StructuredConfigPropertiesBridge(DeclarativeConfigProperties rootStructuredConfigProperties) {
     instrumentationJavaNode =
         rootStructuredConfigProperties
             .getStructured("instrumentation", empty())
@@ -62,37 +63,37 @@ final class StructuredConfigPropertiesBridge implements ConfigProperties {
   @Nullable
   @Override
   public String getString(String propertyName) {
-    return getPropertyValue(propertyName, StructuredConfigProperties::getString);
+    return getPropertyValue(propertyName, DeclarativeConfigProperties::getString);
   }
 
   @Nullable
   @Override
   public Boolean getBoolean(String propertyName) {
-    return getPropertyValue(propertyName, StructuredConfigProperties::getBoolean);
+    return getPropertyValue(propertyName, DeclarativeConfigProperties::getBoolean);
   }
 
   @Nullable
   @Override
   public Integer getInt(String propertyName) {
-    return getPropertyValue(propertyName, StructuredConfigProperties::getInt);
+    return getPropertyValue(propertyName, DeclarativeConfigProperties::getInt);
   }
 
   @Nullable
   @Override
   public Long getLong(String propertyName) {
-    return getPropertyValue(propertyName, StructuredConfigProperties::getLong);
+    return getPropertyValue(propertyName, DeclarativeConfigProperties::getLong);
   }
 
   @Nullable
   @Override
   public Double getDouble(String propertyName) {
-    return getPropertyValue(propertyName, StructuredConfigProperties::getDouble);
+    return getPropertyValue(propertyName, DeclarativeConfigProperties::getDouble);
   }
 
   @Nullable
   @Override
   public Duration getDuration(String propertyName) {
-    Long millis = getPropertyValue(propertyName, StructuredConfigProperties::getLong);
+    Long millis = getPropertyValue(propertyName, DeclarativeConfigProperties::getLong);
     if (millis == null) {
       return null;
     }
@@ -110,8 +111,8 @@ final class StructuredConfigPropertiesBridge implements ConfigProperties {
 
   @Override
   public Map<String, String> getMap(String propertyName) {
-    StructuredConfigProperties propertyValue =
-        getPropertyValue(propertyName, StructuredConfigProperties::getStructured);
+    DeclarativeConfigProperties propertyValue =
+        getPropertyValue(propertyName, DeclarativeConfigProperties::getStructured);
     if (propertyValue == null) {
       return Collections.emptyMap();
     }
@@ -131,7 +132,7 @@ final class StructuredConfigPropertiesBridge implements ConfigProperties {
 
   @Nullable
   private <T> T getPropertyValue(
-      String property, BiFunction<StructuredConfigProperties, String, T> extractor) {
+      String property, BiFunction<DeclarativeConfigProperties, String, T> extractor) {
     if (!property.startsWith(OTEL_INSTRUMENTATION_PREFIX)) {
       return null;
     }
@@ -141,7 +142,7 @@ final class StructuredConfigPropertiesBridge implements ConfigProperties {
     if (segments.length == 0) {
       return null;
     }
-    StructuredConfigProperties target = instrumentationJavaNode;
+    DeclarativeConfigProperties target = instrumentationJavaNode;
     if (segments.length > 1) {
       for (int i = 0; i < segments.length - 1; i++) {
         target = target.getStructured(segments[i], empty());

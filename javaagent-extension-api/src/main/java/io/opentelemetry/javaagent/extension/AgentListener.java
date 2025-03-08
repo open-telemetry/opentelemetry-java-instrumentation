@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.extension;
 
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
-import io.opentelemetry.sdk.autoconfigure.spi.internal.StructuredConfigProperties;
 import java.lang.instrument.Instrumentation;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
@@ -37,7 +37,7 @@ public interface AgentListener extends Ordered {
     if (sdkConfigProperties != null) {
       return sdkConfigProperties;
     }
-    StructuredConfigProperties structuredConfigProperties =
+    DeclarativeConfigProperties structuredConfigProperties =
         AutoConfigureUtil.getStructuredConfig(autoConfiguredOpenTelemetrySdk);
     if (structuredConfigProperties != null) {
       return new StructuredConfigPropertiesBridge(structuredConfigProperties);
