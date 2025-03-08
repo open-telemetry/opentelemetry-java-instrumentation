@@ -32,16 +32,28 @@ class GradleParserTest {
   @Test
   void testExtractLibraryVersion() {
     String gradleBuildFileContent =
-        "dependencies {\n"
-            + "  library(\"org.apache.httpcomponents:httpclient:4.3\")\n"
-            + "  testImplementation(project(\":instrumentation:apache-httpclient:apache-httpclient-4.3:testing\"))\n"
-            + "  latestDepTestLibrary(\"org.apache.httpcomponents:httpclient:4.+\") // see apache-httpclient-5.0 module\n"
-            + "}";
+        "dependencies {\n" + "  library(\"org.apache.httpcomponents:httpclient:4.3\")\n" + "}";
     Set<String> versions =
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.LIBRARY);
     assertThat(versions.size()).isEqualTo(1);
     assertThat(versions.stream().findFirst().get())
         .isEqualTo("org.apache.httpcomponents:httpclient:4.3");
+  }
+
+  @Test
+  void testExtractLibraryUpperVersion() {
+    String gradleBuildFileContent =
+        "dependencies {\n"
+            + "  library(\"org.apache.httpcomponents:httpclient:4.3\")\n"
+            + "  testImplementation(project(\":instrumentation:apache-httpclient:apache-httpclient-4.3:testing\"))\n"
+            + "  latestDepTestLibrary(\"org.apache.httpcomponents:httpclient:4.+\") // see apache-httpclient-5.0 module\n"
+            + "}";
+
+    Set<String> versions =
+        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.LIBRARY);
+    assertThat(versions.size()).isEqualTo(1);
+    assertThat(versions.stream().findFirst().get())
+        .isEqualTo("org.apache.httpcomponents:httpclient:[4.3,4.+)");
   }
 
   @Test
