@@ -53,11 +53,7 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 
 ### Versions targeted
 
-Javaagent versions are determined by the `muzzle` plugin, so we can attempt to parse the gradle files
+We parse gradle files in order to determine the target versions.
 
-Library versions are determined by the library versions used in the gradle files.
-
-### TODO / Notes
-
-- Is the `library` dependency actually the target version? Is there a better way to present the information?
-- How to handle oshi target version with a conditional?
+- Javaagent versions are determined by the `muzzle` plugin configurations
+- Library versions are determined by the library dependency versions

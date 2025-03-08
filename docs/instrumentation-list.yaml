@@ -58,7 +58,7 @@ apache:
     srcPath: instrumentation/apache-httpclient/apache-httpclient-4.3
     target_versions:
       library:
-      - org.apache.httpcomponents:httpclient:4.3
+      - org.apache.httpcomponents:httpclient:[4.3,4.+)
   - name: apache-httpclient-4.0
     srcPath: instrumentation/apache-httpclient/apache-httpclient-4.0
     target_versions:
@@ -137,7 +137,7 @@ aws:
       - com.amazonaws:aws-java-sdk-sqs:[1.10.33,)
       - com.amazonaws:aws-java-sdk-core:[1.10.33,)
       library:
-      - com.amazonaws:aws-java-sdk-sqs:1.11.106
+      - com.amazonaws:aws-java-sdk-sqs:[1.11.106,1.12.583)
       - com.amazonaws:aws-java-sdk-core:1.11.0
   - name: aws-sdk-2.2
     srcPath: instrumentation/aws-sdk/aws-sdk-2.2
@@ -352,7 +352,7 @@ graphql:
       javaagent:
       - com.graphql-java:graphql-java:[12,20)
       library:
-      - com.graphql-java:graphql-java:12.0
+      - com.graphql-java:graphql-java:[12.0,19.+)
   - name: graphql-java-20.0
     srcPath: instrumentation/graphql-java/graphql-java-20.0
     target_versions:
@@ -651,7 +651,7 @@ jetty:
       javaagent:
       - org.eclipse.jetty:jetty-client:[9.2,10)
       library:
-      - org.eclipse.jetty:jetty-client:9.2.0.v20140526
+      - org.eclipse.jetty:jetty-client:[9.2.0.v20140526,9.+)
   - name: jetty-11.0
     srcPath: instrumentation/jetty/jetty-11.0
     target_versions:
@@ -765,8 +765,8 @@ ktor:
       - io.ktor:ktor-client-core:[2.0.0,3.0.0)
       - io.ktor:ktor-server-core:[2.0.0,3.0.0)
       library:
-      - io.ktor:ktor-server-core:2.0.0
-      - io.ktor:ktor-client-core:2.0.0
+      - io.ktor:ktor-client-core:[2.0.0,2.+)
+      - io.ktor:ktor-server-core:[2.0.0,2.+)
   - name: ktor-3.0
     srcPath: instrumentation/ktor/ktor-3.0
     target_versions:
@@ -780,7 +780,7 @@ ktor:
     srcPath: instrumentation/ktor/ktor-1.0
     target_versions:
       library:
-      - io.ktor:ktor-server-core:1.0.0
+      - io.ktor:ktor-server-core:[1.0.0,1.+)
 kubernetes:
   instrumentations:
   - name: kubernetes-client-7.0
@@ -1049,7 +1049,7 @@ oshi:
       javaagent:
       - com.github.oshi:oshi-core:[5.3.1,)
       library:
-      - com.github.oshi:oshi-core:$oshiVersion
+      - com.github.oshi:oshi-core:5.3.1
 payara:
   instrumentations:
   - name: payara
@@ -1069,8 +1069,11 @@ pekko:
     srcPath: instrumentation/pekko/pekko-http-1.0
     target_versions:
       javaagent:
+      - com.softwaremill.sttp.tapir:tapir-pekko-http-server_3:[1.7,)
+      - com.softwaremill.sttp.tapir:tapir-pekko-http-server_2.12:[1.7,)
       - org.apache.pekko:pekko-http_2.12:[1.0,)
       - org.apache.pekko:pekko-http_3:[1.0,)
+      - com.softwaremill.sttp.tapir:tapir-pekko-http-server_2.13:[1.7,)
       - org.apache.pekko:pekko-http_2.13:[1.0,)
 play:
   instrumentations:
@@ -1233,7 +1236,7 @@ restlet:
       javaagent:
       - org.restlet:org.restlet:[1.1.0, 1.2-M1)
       library:
-      - org.restlet:org.restlet:1.1.5
+      - org.restlet:org.restlet:[1.1.5,1.+)
       - com.noelios.restlet:com.noelios.restlet:1.1.5
   - name: restlet-2.0
     srcPath: instrumentation/restlet/restlet-2.0
@@ -1301,7 +1304,7 @@ rxjava:
       javaagent:
       - io.reactivex.rxjava3:rxjava:[3.0.0,3.1.0]
       library:
-      - io.reactivex.rxjava3:rxjava:3.0.12
+      - io.reactivex.rxjava3:rxjava:[3.0.12,3.1.0)
 scala:
   instrumentations:
   - name: scala-fork-join-2.8
@@ -1446,7 +1449,7 @@ spring:
       javaagent:
       - org.springframework.integration:spring-integration-core:[4.1.0.RELEASE,)
       library:
-      - org.springframework.integration:spring-integration-core:4.1.0.RELEASE
+      - org.springframework.integration:spring-integration-core:[4.1.0.RELEASE,5.+)
   - name: spring-jms-2.0
     srcPath: instrumentation/spring/spring-jms/spring-jms-2.0
     target_versions:
