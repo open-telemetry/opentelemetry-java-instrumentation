@@ -13,18 +13,23 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 class GradleParser {
-  private static final Pattern passBlockPattern =
-      Pattern.compile("pass\\s*\\{(.*?)}", Pattern.DOTALL);
-
-  private static final Pattern libraryPattern =
-      Pattern.compile("library\\(\"([^\"]+:[^\"]+:[^\"]+)\"\\)");
 
   private static final Pattern variablePattern =
       Pattern.compile("val\\s+(\\w+)\\s*=\\s*\"([^\"]+)\"");
 
+  private static final Pattern muzzlePassBlockPattern =
+      Pattern.compile("pass\\s*\\{(.*?)}", Pattern.DOTALL);
+
+  private static final Pattern libraryPattern =
+      Pattern.compile("library\\(\"([^\"]+:[^\"]+):([^\"]+)\"\\)");
+
   private static final Pattern compileOnlyPattern =
       Pattern.compile(
-          "compileOnly\\(\"([^\"]+)\"\\)\\s*\\{\\s*version\\s*\\{(?:\\s*//.*\\n)*\\s*strictly\\(\"([^\"]+)\"\\)\\s*}\\s*}");
+          "compileOnly\\(\"([^\"]+:[^\"]+)(?::[^\"]+)?\"\\)\\s*\\{\\s*version\\s*\\{.*?strictly\\(\"([^\"]+)\"\\).*?}\\s*",
+          Pattern.DOTALL);
+
+  private static final Pattern latestDepTestLibraryPattern =
+      Pattern.compile("latestDepTestLibrary\\(\"([^\"]+:[^\"]+):([^\"]+)\"\\)");
 
   /**
    * Parses gradle files for muzzle and dependency information
@@ -55,7 +60,7 @@ class GradleParser {
    */
   private static Set<String> parseMuzzle(String gradleFileContents, Map<String, String> variables) {
     Set<String> results = new HashSet<>();
-    Matcher passBlockMatcher = passBlockPattern.matcher(gradleFileContents);
+    Matcher passBlockMatcher = muzzlePassBlockPattern.matcher(gradleFileContents);
 
     while (passBlockMatcher.find()) {
       String passBlock = passBlockMatcher.group(1);
@@ -74,7 +79,8 @@ class GradleParser {
 
   /**
    * Parses the "dependencies" block from the given Gradle file content and extracts information
-   * about what library versions are supported.
+   * about what library versions are supported. Looks for library() and compileOnly() blocks for
+   * lower bounds, and latestDepTestLibrary() for upper bounds.
    *
    * @param gradleFileContents Contents of a Gradle build file as a String
    * @param variables Map of variable names to their values
@@ -82,18 +88,41 @@ class GradleParser {
    */
   private static Set<String> parseLibraryDependencies(
       String gradleFileContents, Map<String, String> variables) {
-    Set<String> results = new HashSet<>();
+    Map<String, String> versions = new HashMap<>();
+
     Matcher libraryMatcher = libraryPattern.matcher(gradleFileContents);
+
     while (libraryMatcher.find()) {
-      String dependency = libraryMatcher.group(1);
-      results.add(interpolate(dependency, variables));
+      String groupAndArtifact = libraryMatcher.group(1);
+      String version = libraryMatcher.group(2);
+      versions.put(groupAndArtifact, version);
     }
 
     Matcher compileOnlyMatcher = compileOnlyPattern.matcher(gradleFileContents);
     while (compileOnlyMatcher.find()) {
-      String dependency = compileOnlyMatcher.group(1) + ":" + compileOnlyMatcher.group(2);
-      results.add(interpolate(dependency, variables));
+      String groupAndArtifact = compileOnlyMatcher.group(1);
+      String version = compileOnlyMatcher.group(2);
+      versions.put(groupAndArtifact, version);
     }
+
+    Matcher latestDepTestLibraryMatcher = latestDepTestLibraryPattern.matcher(gradleFileContents);
+    while (latestDepTestLibraryMatcher.find()) {
+      String groupAndArtifact = latestDepTestLibraryMatcher.group(1);
+      String version = latestDepTestLibraryMatcher.group(2);
+      if (versions.containsKey(groupAndArtifact)) {
+        versions.put(groupAndArtifact, versions.get(groupAndArtifact) + "," + version);
+      }
+    }
+
+    Set<String> results = new HashSet<>();
+    for (Map.Entry<String, String> entry : versions.entrySet()) {
+      if (entry.getValue().contains(",")) {
+        results.add(interpolate(entry.getKey() + ":[" + entry.getValue() + ")", variables));
+      } else {
+        results.add(interpolate(entry.getKey() + ":" + entry.getValue(), variables));
+      }
+    }
+
     return results;
   }
 
