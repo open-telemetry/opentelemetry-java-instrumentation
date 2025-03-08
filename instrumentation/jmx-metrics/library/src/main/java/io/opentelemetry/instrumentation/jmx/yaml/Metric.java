@@ -21,6 +21,7 @@ public class Metric extends MetricStructure {
   @Nullable private String metric;
   @Nullable private String desc;
 
+  @Nullable
   public String getMetric() {
     return metric;
   }
@@ -35,6 +36,7 @@ public class Metric extends MetricStructure {
     return name;
   }
 
+  @Nullable
   public String getDesc() {
     return desc;
   }
@@ -61,11 +63,13 @@ public class Metric extends MetricStructure {
       metricType = defaultType;
     }
 
+    String sourceUnit = getSourceUnit();
+
     String unit = getUnit();
     if (unit == null) {
       unit = defaultUnit;
     }
 
-    return new MetricInfo(metricName, desc, unit, metricType);
+    return new MetricInfo(metricName, desc, sourceUnit, unit, metricType);
   }
 }
