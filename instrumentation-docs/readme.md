@@ -51,7 +51,6 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 * target_versions
   * List of supported versions by the module, broken down by `library` or `javaagent` support
 
-
 ## Methodology
 
 ### metadata.yaml file
