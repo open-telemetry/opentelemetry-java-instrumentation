@@ -204,10 +204,13 @@ cassandra:
   - name: cassandra-3.0
     srcPath: instrumentation/cassandra/cassandra-3.0
     target_versions:
-      javaagent: []
+      javaagent:
+      - com.datastax.cassandra:cassandra-driver-core:[3.0,4.0)
 clickhouse:
   instrumentations:
   - name: clickhouse-client-0.5
+    description: Instruments the V1 ClickHouseClient, providing database client spans
+      and metrics.
     srcPath: instrumentation/clickhouse-client-0.5
     target_versions:
       javaagent:

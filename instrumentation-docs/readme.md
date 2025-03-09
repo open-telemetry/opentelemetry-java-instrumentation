@@ -39,17 +39,30 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
   }
 ```
 
-## Instrumentation meta-data
+## Instrumentation metadata
 
 * name
   * Identifier for instrumentation module, used to enable/disable
   * Configured in `InstrumentationModule` code for each module
-* versions
-  * List of supported versions by the module
-* type
-  * List of instrumentation types, options of either `library` or `javaagent`
+* srcPath
+  * Path to the source code of the instrumentation module
+* description
+  * Short description of what the instrumentation does
+* target_versions
+  * List of supported versions by the module, broken down by `library` or `javaagent` support
 
 ## Methodology
+
+### metadata.yaml file
+
+Within each instrumentation source directory, a `metadata.yaml` file can be created to provide
+additional information about the instrumentation module.
+
+As of now, the following fields are supported:
+
+```yaml
+description: "Description of what the instrumentation does."
+```
 
 ### Versions targeted
 
@@ -57,3 +70,4 @@ We parse gradle files in order to determine the target versions.
 
 - Javaagent versions are determined by the `muzzle` plugin configurations
 - Library versions are determined by the library dependency versions
+  - when available, latestDepTestLibrary is used to determine the latest supported version
