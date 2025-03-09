@@ -11,6 +11,7 @@ dependencies {
   api("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   api("net.bytebuddy:byte-buddy-dep")
 
+  implementation("io.opentelemetry:opentelemetry-api-incubator")
   implementation(project(":instrumentation-api"))
   implementation(project(":instrumentation-api-incubator"))
 
