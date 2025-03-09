@@ -7,10 +7,6 @@ package io.opentelemetry.instrumentation.log4j.contextdata;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.baggage.Baggage;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
