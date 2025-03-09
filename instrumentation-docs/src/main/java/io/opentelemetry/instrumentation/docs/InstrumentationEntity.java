@@ -13,6 +13,8 @@ public class InstrumentationEntity {
   private final String instrumentationName;
   private final String namespace;
   private final String group;
+
+  private InstrumentationMetaData metadata;
   private Map<InstrumentationType, Set<String>> targetVersions;
 
   public InstrumentationEntity(
@@ -28,12 +30,22 @@ public class InstrumentationEntity {
       String instrumentationName,
       String namespace,
       String group,
-      Map<InstrumentationType, Set<String>> targetVersions) {
+      Map<InstrumentationType, Set<String>> targetVersions,
+      InstrumentationMetaData metadata) {
     this.srcPath = srcPath;
     this.instrumentationName = instrumentationName;
     this.namespace = namespace;
     this.group = group;
     this.targetVersions = targetVersions;
+    this.metadata = metadata;
+  }
+
+  public void setMetadata(InstrumentationMetaData metadata) {
+    this.metadata = metadata;
+  }
+
+  public InstrumentationMetaData getMetadata() {
+    return metadata;
   }
 
   public String getSrcPath() {
