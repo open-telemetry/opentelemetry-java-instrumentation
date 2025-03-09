@@ -24,6 +24,7 @@ public final class AwsSdkTelemetryBuilder {
   private boolean recordIndividualHttpError;
   private boolean useXrayPropagator = true;
   private boolean messagingReceiveInstrumentationEnabled;
+  private boolean genaiCaptureMessageContent;
 
   AwsSdkTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -116,6 +117,18 @@ public final class AwsSdkTelemetryBuilder {
   }
 
   /**
+   * Set whether Generative AI events include full content of user and assistant messages.
+   *
+   * <p>Note that full content can have data privacy and size concerns and care should be taken when
+   * enabling this.
+   */
+  @CanIgnoreReturnValue
+  public AwsSdkTelemetryBuilder setGenaiCaptureMessageContent(boolean genaiCaptureMessageContent) {
+    this.genaiCaptureMessageContent = genaiCaptureMessageContent;
+    return this;
+  }
+
+  /**
    * Returns a new {@link AwsSdkTelemetry} with the settings of this {@link AwsSdkTelemetryBuilder}.
    */
   public AwsSdkTelemetry build() {
@@ -126,6 +139,7 @@ public final class AwsSdkTelemetryBuilder {
         useMessagingPropagator,
         useXrayPropagator,
         recordIndividualHttpError,
-        messagingReceiveInstrumentationEnabled);
+        messagingReceiveInstrumentationEnabled,
+        genaiCaptureMessageContent);
   }
 }
