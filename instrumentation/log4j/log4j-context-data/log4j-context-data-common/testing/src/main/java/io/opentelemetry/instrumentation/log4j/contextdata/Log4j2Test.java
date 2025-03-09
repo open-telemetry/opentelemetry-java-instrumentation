@@ -7,6 +7,9 @@ package io.opentelemetry.instrumentation.log4j.contextdata;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.baggage.Baggage;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -153,6 +156,8 @@ public abstract class Log4j2Test {
         .isEqualTo("test_traceId");
     assertThat(events.get(0).getContextData().get(getLoggingKey("span_id")))
         .isEqualTo("test_spanId");
-    assertThat(events.get(0).getContextData().get(getLoggingKey("trace_flags"))).isEqualTo("test_traceFlag");
+    assertThat(events.get(0).getContextData().get(getLoggingKey("trace_flags")))
+        .isEqualTo("test_traceFlag");
+    ThreadContext.clearAll();
   }
 }
