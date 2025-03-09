@@ -108,6 +108,7 @@ public class FlakyTestReporter {
     if (testExecuted != null && reportModified.isAfter(testExecuted)) {
       System.err.println(
           "Ignoring " + testReport + " since it appears to be restored from gradle build cache");
+      return;
     }
 
     class TestCase {
