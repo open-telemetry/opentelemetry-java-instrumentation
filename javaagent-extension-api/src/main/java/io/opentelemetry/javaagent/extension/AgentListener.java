@@ -41,15 +41,14 @@ public interface AgentListener extends Ordered {
     ConfigProvider configProvider =
         AutoConfigureUtil.getConfigProvider(autoConfiguredOpenTelemetrySdk);
     if (configProvider != null) {
-      DeclarativeConfigProperties structuredConfigProperties =
-          configProvider.getInstrumentationConfig();
+      DeclarativeConfigProperties instrumentationConfig = configProvider.getInstrumentationConfig();
 
-      if (structuredConfigProperties != null) {
-        return new StructuredConfigPropertiesBridge(structuredConfigProperties);
+      if (instrumentationConfig != null) {
+        return new DeclarativeConfigPropertiesBridge(instrumentationConfig);
       }
     }
     // Should never happen
     throw new IllegalStateException(
-        "AutoConfiguredOpenTelemetrySdk does not have ConfigProperties or StructuredConfigProperties. This is likely a programming error in opentelemetry-java");
+        "AutoConfiguredOpenTelemetrySdk does not have ConfigProperties or DeclarativeConfigProperties. This is likely a programming error in opentelemetry-java");
   }
 }

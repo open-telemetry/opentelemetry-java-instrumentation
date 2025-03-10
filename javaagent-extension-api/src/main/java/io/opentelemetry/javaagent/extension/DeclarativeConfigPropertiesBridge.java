@@ -46,18 +46,15 @@ import javax.annotation.Nullable;
  *         string_key: value
  * </pre>
  */
-final class StructuredConfigPropertiesBridge implements ConfigProperties {
+final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
 
   // The node at .instrumentation.java
   private final DeclarativeConfigProperties instrumentationJavaNode;
 
-  StructuredConfigPropertiesBridge(DeclarativeConfigProperties rootStructuredConfigProperties) {
-    instrumentationJavaNode =
-        rootStructuredConfigProperties
-            .getStructured("instrumentation", empty())
-            .getStructured("java", empty());
+  DeclarativeConfigPropertiesBridge(DeclarativeConfigProperties rootStructuredConfigProperties) {
+    instrumentationJavaNode = rootStructuredConfigProperties.getStructured("java", empty());
   }
 
   @Nullable

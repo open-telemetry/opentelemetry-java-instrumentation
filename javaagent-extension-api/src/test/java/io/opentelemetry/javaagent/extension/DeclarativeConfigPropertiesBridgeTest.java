@@ -7,18 +7,22 @@ package io.opentelemetry.javaagent.extension;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.SdkConfigProvider;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.InstrumentationModel;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class StructuredConfigPropertiesBridgeTest {
+class DeclarativeConfigPropertiesBridgeTest {
 
   private static final String YAML =
       "file_format: 0.3\n"
@@ -42,15 +46,26 @@ class StructuredConfigPropertiesBridgeTest {
           + "        string_key2: value2\n"
           + "        bool_key: true\n";
 
-  private final DeclarativeConfigProperties structuredConfigProperties =
-      DeclarativeConfiguration.toConfigProperties(
-          new ByteArrayInputStream(YAML.getBytes(StandardCharsets.UTF_8)));
-  private final ConfigProperties bridge =
-      new StructuredConfigPropertiesBridge(structuredConfigProperties);
-  private final ConfigProperties emptyBridge =
-      new StructuredConfigPropertiesBridge(
-          DeclarativeConfiguration.toConfigProperties(
-              new ByteArrayInputStream("file_format: 0.3\n".getBytes(StandardCharsets.UTF_8))));
+  private ConfigProperties bridge;
+  private ConfigProperties emptyBridge;
+
+  @BeforeEach
+  void setup() {
+    OpenTelemetryConfigurationModel model =
+        DeclarativeConfiguration.parse(
+            new ByteArrayInputStream(YAML.getBytes(StandardCharsets.UTF_8)));
+    SdkConfigProvider configProvider = SdkConfigProvider.create(model);
+    bridge =
+        new DeclarativeConfigPropertiesBridge(
+            Objects.requireNonNull(configProvider.getInstrumentationConfig()));
+
+    OpenTelemetryConfigurationModel emptyModel =
+        new OpenTelemetryConfigurationModel().withInstrumentation(new InstrumentationModel());
+    SdkConfigProvider emptyConfigProvider = SdkConfigProvider.create(emptyModel);
+    emptyBridge =
+        new DeclarativeConfigPropertiesBridge(
+            Objects.requireNonNull(emptyConfigProvider.getInstrumentationConfig()));
+  }
 
   @Test
   void getProperties() {
