@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.docs.GradleParser.parseGradleFile
 
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import io.opentelemetry.instrumentation.docs.utils.InstrumentationPath;
+import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,8 +54,9 @@ class InstrumentationAnalyzer {
   }
 
   /**
-   * Analyzes the given root directory to find all instrumentation paths and then analyze them. -
-   * Extracts version information from each instrumentation's build.gradle file.
+   * Analyzes the given root directory to find all instrumentation paths and then analyze them.
+   * Extracts version information from each instrumentation's build.gradle file. Extracts
+   * information from metadata.yaml files.
    *
    * @return a list of InstrumentationEntity objects with target versions
    */
@@ -65,6 +67,11 @@ class InstrumentationAnalyzer {
     for (InstrumentationEntity entity : entities) {
       List<String> gradleFiles = fileSearch.findBuildGradleFiles(entity.getSrcPath());
       analyzeVersions(gradleFiles, entity);
+
+      String metadataFile = fileSearch.getMetaDataFile(entity.getSrcPath());
+      if (metadataFile != null) {
+        entity.setMetadata(YamlHelper.metaDataParser(metadataFile));
+      }
     }
     return entities;
   }
