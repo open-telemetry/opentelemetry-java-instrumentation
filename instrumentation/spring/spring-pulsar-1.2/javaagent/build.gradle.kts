@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("org.springframework.pulsar")
     module.set("spring-pulsar")
-    versions.set("[1.2.0,]")
+    versions.set("[1.2.0,)")
   }
 }
 
@@ -23,14 +23,23 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter:3.2.4")
 }
 
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
 testing {
   suites {
     val testReceiveSpansDisabled by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project(":instrumentation:spring:spring-pulsar-1.2:testing"))
-        implementation("org.springframework.pulsar:spring-pulsar:1.2.0")
-        implementation("org.springframework.boot:spring-boot-starter-test:3.2.4")
-        implementation("org.springframework.boot:spring-boot-starter:3.2.4")
+
+        if (latestDepTest) {
+          implementation("org.springframework.pulsar:spring-pulsar:latest.release")
+          implementation("org.springframework.boot:spring-boot-starter-test:latest.release")
+          implementation("org.springframework.boot:spring-boot-starter:latest.release")
+        } else {
+          implementation("org.springframework.pulsar:spring-pulsar:1.2.0")
+          implementation("org.springframework.boot:spring-boot-starter-test:3.2.4")
+          implementation("org.springframework.boot:spring-boot-starter:3.2.4")
+        }
       }
 
       targets {
