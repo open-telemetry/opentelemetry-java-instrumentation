@@ -53,8 +53,8 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
   // The node at .instrumentation.java
   private final DeclarativeConfigProperties instrumentationJavaNode;
 
-  DeclarativeConfigPropertiesBridge(DeclarativeConfigProperties rootStructuredConfigProperties) {
-    instrumentationJavaNode = rootStructuredConfigProperties.getStructured("java", empty());
+  DeclarativeConfigPropertiesBridge(DeclarativeConfigProperties instrumentationNode) {
+    instrumentationJavaNode = instrumentationNode.getStructured("java", empty());
   }
 
   @Nullable

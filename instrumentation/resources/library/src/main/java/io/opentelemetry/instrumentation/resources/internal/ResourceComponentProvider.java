@@ -31,7 +31,7 @@ abstract class ResourceComponentProvider implements ComponentProvider<Resource> 
   }
 
   @Override
-  public Resource create(DeclarativeConfigProperties structuredConfigProperties) {
+  public Resource create(DeclarativeConfigProperties declarativeConfigProperties) {
     return supplier.get();
   }
 }
