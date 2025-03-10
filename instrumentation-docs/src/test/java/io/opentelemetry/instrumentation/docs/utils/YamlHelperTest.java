@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.docs.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.docs.InstrumentationEntity;
+import io.opentelemetry.instrumentation.docs.InstrumentationMetaData;
 import io.opentelemetry.instrumentation.docs.InstrumentationType;
 import java.io.BufferedWriter;
 import java.io.StringWriter;
@@ -21,12 +22,15 @@ import org.junit.jupiter.api.Test;
 
 class YamlHelperTest {
   @Test
-  public void testPrintInstrumentationList() throws Exception {
+  void testPrintInstrumentationList() throws Exception {
     List<InstrumentationEntity> entities = new ArrayList<>();
     Map<InstrumentationType, Set<String>> targetVersions1 = new HashMap<>();
     targetVersions1.put(
         InstrumentationType.JAVAAGENT,
         new HashSet<>(List.of("org.springframework:spring-web:[6.0.0,)")));
+
+    InstrumentationMetaData metadata1 =
+        new InstrumentationMetaData("Spring Web 6.0 instrumentation");
 
     entities.add(
         new InstrumentationEntity(
@@ -34,7 +38,8 @@ class YamlHelperTest {
             "spring-web-6.0",
             "spring",
             "spring",
-            targetVersions1));
+            targetVersions1,
+            metadata1));
 
     Map<InstrumentationType, Set<String>> targetVersions2 = new HashMap<>();
     targetVersions2.put(
@@ -46,7 +51,8 @@ class YamlHelperTest {
             "struts-2.3",
             "struts",
             "struts",
-            targetVersions2));
+            targetVersions2,
+            null));
 
     StringWriter stringWriter = new StringWriter();
     BufferedWriter writer = new BufferedWriter(stringWriter);
@@ -58,6 +64,7 @@ class YamlHelperTest {
         "spring:\n"
             + "  instrumentations:\n"
             + "  - name: spring-web-6.0\n"
+            + "    description: Spring Web 6.0 instrumentation\n"
             + "    srcPath: instrumentation/spring/spring-web/spring-web-6.0\n"
             + "    target_versions:\n"
             + "      javaagent:\n"

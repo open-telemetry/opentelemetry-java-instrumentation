@@ -1,0 +1,1 @@
+description: Instruments the V1 ClickHouseClient, providing database client spans and metrics.
