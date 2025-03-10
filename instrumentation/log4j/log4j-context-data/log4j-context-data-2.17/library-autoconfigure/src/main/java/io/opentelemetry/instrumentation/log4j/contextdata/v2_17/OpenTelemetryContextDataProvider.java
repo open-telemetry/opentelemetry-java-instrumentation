@@ -16,6 +16,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttribute
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.core.util.ContextDataProvider;
 
 /**
@@ -64,6 +65,11 @@ public class OpenTelemetryContextDataProvider implements ContextDataProvider {
     Context context = Context.current();
     Span currentSpan = Span.fromContext(context);
     if (!currentSpan.getSpanContext().isValid()) {
+      return staticContextData;
+    }
+
+    if (ThreadContext.containsKey(ContextDataKeys.TRACE_ID_KEY)) {
+      // Assume already instrumented event if traceId is present.
       return staticContextData;
     }
 
