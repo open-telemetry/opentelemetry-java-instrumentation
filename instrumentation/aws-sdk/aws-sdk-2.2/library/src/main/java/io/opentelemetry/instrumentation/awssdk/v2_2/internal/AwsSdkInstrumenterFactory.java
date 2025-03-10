@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -27,6 +28,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -135,11 +137,11 @@ public final class AwsSdkInstrumenterFactory {
 
     return createInstrumenter(
         openTelemetry,
-        MessagingSpanNameExtractor.create(getter, operation),
+        MessagingSpanNameExtractor.create(getter, operation, getter),
         SpanKindExtractor.alwaysConsumer(),
         toSqsRequestExtractors(consumerAttributesExtractors()),
         singletonList(messagingAttributeExtractor),
-        messagingReceiveInstrumentationEnabled);
+        messagingReceiveInstrumentationEnabled || SemconvStability.emitStableMessagingSemconv());
   }
 
   public Instrumenter<SqsProcessRequest, Response> consumerProcessInstrumenter() {
@@ -150,11 +152,11 @@ public final class AwsSdkInstrumenterFactory {
         Instrumenter.<SqsProcessRequest, Response>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operation))
+                MessagingSpanNameExtractor.create(getter, operation, getter))
             .addAttributesExtractors(toSqsRequestExtractors(consumerAttributesExtractors()))
             .addAttributesExtractor(messagingAttributesExtractor(getter, operation));
 
-    if (messagingReceiveInstrumentationEnabled) {
+    if (messagingReceiveInstrumentationEnabled || SemconvStability.emitStableMessagingSemconv()) {
       builder.addSpanLinksExtractor(
           (spanLinks, parentContext, request) -> {
             Context extracted =
@@ -194,15 +196,17 @@ public final class AwsSdkInstrumenterFactory {
     return result;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   public Instrumenter<ExecutionAttributes, Response> producerInstrumenter() {
-    MessageOperation operation = MessageOperation.PUBLISH;
+    MessageOperation operation =
+        emitStableMessagingSemconv() ? MessageOperation.SEND : MessageOperation.PUBLISH;
     SqsAttributesGetter getter = SqsAttributesGetter.INSTANCE;
     AttributesExtractor<ExecutionAttributes, Response> messagingAttributeExtractor =
         messagingAttributesExtractor(getter, operation);
 
     return createInstrumenter(
         openTelemetry,
-        MessagingSpanNameExtractor.create(getter, operation),
+        MessagingSpanNameExtractor.create(getter, operation, getter),
         SpanKindExtractor.alwaysProducer(),
         attributesExtractors(),
         singletonList(messagingAttributeExtractor),
