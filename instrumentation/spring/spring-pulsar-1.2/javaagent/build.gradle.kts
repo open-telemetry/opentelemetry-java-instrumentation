@@ -12,11 +12,13 @@ muzzle {
 
 dependencies {
   library("org.springframework.pulsar:spring-pulsar:1.2.0")
+  implementation(project(":instrumentation:pulsar:pulsar-2.8:javaagent"))
 
   testInstrumentation(project(":instrumentation:pulsar:pulsar-2.8:javaagent"))
-  testImplementation(project(":instrumentation:spring:spring-pulsar-1.2:testing"))
-  testLibrary("org.springframework.pulsar:spring-pulsar:1.2.0")
 
+  testImplementation(project(":instrumentation:spring:spring-pulsar-1.2:testing"))
+
+  testLibrary("org.springframework.pulsar:spring-pulsar:1.2.0")
   testLibrary("org.springframework.boot:spring-boot-starter-test:3.2.4")
   testLibrary("org.springframework.boot:spring-boot-starter:3.2.4")
 }
@@ -30,15 +32,27 @@ testing {
         implementation("org.springframework.boot:spring-boot-starter-test:3.2.4")
         implementation("org.springframework.boot:spring-boot-starter:3.2.4")
       }
+
+      targets {
+        all {
+          testTask.configure {
+            usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+
+            jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=true")
+            jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+          }
+        }
+      }
     }
   }
 }
 
 tasks {
-  withType<Test>().configureEach {
+  test {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+
     jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
   check {

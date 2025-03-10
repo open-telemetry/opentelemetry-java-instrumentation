@@ -21,8 +21,6 @@ import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -59,7 +57,6 @@ public abstract class AbstractSpringPulsarTest {
   static ConfigurableApplicationContext applicationContext;
   static PulsarTemplate<String> pulsarTemplate;
   static PulsarClient client;
-  static String ip;
   static CountDownLatch latch = new CountDownLatch(1);
   static final String OTEL_SUBSCRIPTION = "otel-subscription";
   protected static String brokerHost;
@@ -68,7 +65,7 @@ public abstract class AbstractSpringPulsarTest {
 
   @BeforeAll
   @SuppressWarnings("unchecked")
-  static void setUp() throws PulsarClientException, UnknownHostException {
+  static void setUp() throws PulsarClientException {
     pulsarContainer =
         new PulsarContainer(DEFAULT_IMAGE_NAME)
             .withEnv("PULSAR_MEM", "-Xmx128m")
@@ -87,11 +84,10 @@ public abstract class AbstractSpringPulsarTest {
     pulsarTemplate = applicationContext.getBean(PulsarTemplate.class);
 
     client = PulsarClient.builder().serviceUrl(pulsarContainer.getPulsarBrokerUrl()).build();
-    ip = InetAddress.getByName(pulsarContainer.getHost()).getHostAddress();
   }
 
   @Test
-  void testSpringPulsar() throws PulsarClientException, InterruptedException {
+  void testSpringPulsar() throws InterruptedException {
     testing.runWithSpan(
         "parent",
         () -> {
@@ -103,11 +99,11 @@ public abstract class AbstractSpringPulsarTest {
 
   @AfterAll
   static void teardown() {
-    if (pulsarContainer != null) {
-      pulsarContainer.stop();
-    }
     if (applicationContext != null) {
       applicationContext.close();
+    }
+    if (pulsarContainer != null) {
+      pulsarContainer.stop();
     }
   }
 

@@ -12,9 +12,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.VirtualFieldStore;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -43,7 +43,7 @@ public class DefaultPulsarMessageListenerContainerInstrumentation implements Typ
         @Advice.Argument(0) Message<?> message,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = Java8BytecodeBridge.currentContext();
+      Context parentContext = VirtualFieldStore.extract(message);
       if (instrumenter().shouldStart(parentContext, message)) {
         context = instrumenter().start(parentContext, message);
         scope = context.makeCurrent();
