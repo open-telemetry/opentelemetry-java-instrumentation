@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE;
+import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesGetter;
 import java.util.Arrays;
@@ -25,7 +26,7 @@ enum BedrockRuntimeAttributesGetter
     private GenAiOperationNameIncubatingValues() {}
   }
 
-  private static final class GenAiSystemIncubatingValues {
+  static final class GenAiSystemIncubatingValues {
     static final String AWS_BEDROCK = "aws.bedrock";
 
     private GenAiSystemIncubatingValues() {}
@@ -113,13 +114,15 @@ enum BedrockRuntimeAttributesGetter
     return BedrockRuntimeAccess.getTopP(executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE));
   }
 
-  @Nullable
   @Override
   public List<String> getResponseFinishReasons(
-      ExecutionAttributes executionAttributes, Response response) {
+      ExecutionAttributes executionAttributes, @Nullable Response response) {
+    if (response == null) {
+      return emptyList();
+    }
     String stopReason = BedrockRuntimeAccess.getStopReason(response.getSdkResponse());
     if (stopReason == null) {
-      return null;
+      return emptyList();
     }
     return Arrays.asList(stopReason);
   }
@@ -138,13 +141,21 @@ enum BedrockRuntimeAttributesGetter
 
   @Nullable
   @Override
-  public Long getUsageInputTokens(ExecutionAttributes executionAttributes, Response response) {
+  public Long getUsageInputTokens(
+      ExecutionAttributes executionAttributes, @Nullable Response response) {
+    if (response == null) {
+      return null;
+    }
     return BedrockRuntimeAccess.getUsageInputTokens(response.getSdkResponse());
   }
 
   @Nullable
   @Override
-  public Long getUsageOutputTokens(ExecutionAttributes executionAttributes, Response response) {
+  public Long getUsageOutputTokens(
+      ExecutionAttributes executionAttributes, @Nullable Response response) {
+    if (response == null) {
+      return null;
+    }
     return BedrockRuntimeAccess.getUsageOutputTokens(response.getSdkResponse());
   }
 }
