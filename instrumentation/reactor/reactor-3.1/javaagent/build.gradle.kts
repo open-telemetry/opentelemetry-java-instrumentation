@@ -48,7 +48,7 @@ testing {
         implementation(project(":instrumentation:reactor:reactor-3.1:library"))
         implementation(project(":instrumentation-annotations"))
         if (findProperty("testLatestDeps") as Boolean) {
-          implementation("io.projectreactor:reactor-test:+")
+          implementation("io.projectreactor:reactor-test:latest.release")
         } else {
           implementation("io.projectreactor:reactor-test:3.1.0.RELEASE")
         }

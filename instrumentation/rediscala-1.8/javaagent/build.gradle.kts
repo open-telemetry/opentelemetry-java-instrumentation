@@ -57,7 +57,7 @@ muzzle {
 dependencies {
   library("com.github.etaty:rediscala_2.11:1.8.0")
 
-  latestDepTestLibrary("io.github.rediscala:rediscala_2.13:+")
+  latestDepTestLibrary("io.github.rediscala:rediscala_2.13:latest.release")
 }
 
 tasks {

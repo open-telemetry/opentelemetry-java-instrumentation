@@ -44,7 +44,7 @@ testing {
         implementation(project(":instrumentation:reactor:reactor-kafka-1.0:testing"))
 
         if (testLatestDeps) {
-          implementation("io.projectreactor.kafka:reactor-kafka:+")
+          implementation("io.projectreactor.kafka:reactor-kafka:latest.release")
           implementation("io.projectreactor:reactor-core:3.4.+")
         } else {
           implementation("io.projectreactor.kafka:reactor-kafka:1.3.3")
@@ -65,7 +65,7 @@ testing {
         implementation(project(":instrumentation:reactor:reactor-kafka-1.0:testing"))
 
         if (testLatestDeps) {
-          implementation("io.projectreactor.kafka:reactor-kafka:+")
+          implementation("io.projectreactor.kafka:reactor-kafka:latest.release")
           implementation("io.projectreactor:reactor-core:3.4.+")
         } else {
           implementation("io.projectreactor.kafka:reactor-kafka:1.3.21")
