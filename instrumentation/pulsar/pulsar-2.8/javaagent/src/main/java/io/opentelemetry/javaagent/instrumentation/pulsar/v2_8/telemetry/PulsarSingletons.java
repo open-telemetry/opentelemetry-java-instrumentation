@@ -263,6 +263,8 @@ public final class PulsarSingletons {
         (messages, throwable) -> {
           Context context =
               startAndEndConsumerReceive(parent, messages, timer, consumer, throwable);
+          // injected context is used in the spring-pulsar instrumentation
+          messages.forEach(message -> VirtualFieldStore.inject(message, context));
           runWithContext(
               context,
               () -> {
