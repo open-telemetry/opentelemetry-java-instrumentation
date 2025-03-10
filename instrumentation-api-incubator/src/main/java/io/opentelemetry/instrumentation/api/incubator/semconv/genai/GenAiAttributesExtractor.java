@@ -95,10 +95,10 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-    internalSet(
-        attributes,
-        GEN_AI_RESPONSE_FINISH_REASONS,
-        getter.getResponseFinishReasons(request, response));
+    List<String> finishReasons = getter.getResponseFinishReasons(request, response);
+    if (finishReasons != null && !finishReasons.isEmpty()) {
+      attributes.put(GEN_AI_RESPONSE_FINISH_REASONS, finishReasons);
+    }
     internalSet(attributes, GEN_AI_RESPONSE_ID, getter.getResponseId(request, response));
     internalSet(attributes, GEN_AI_RESPONSE_MODEL, getter.getResponseModel(request, response));
     internalSet(
