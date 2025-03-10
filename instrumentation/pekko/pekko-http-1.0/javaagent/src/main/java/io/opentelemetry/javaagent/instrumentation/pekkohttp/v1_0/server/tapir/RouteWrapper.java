@@ -5,7 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.tapir;
 
-import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.PekkoRouteHolder;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import org.apache.pekko.http.scaladsl.server.RequestContext;
 import org.apache.pekko.http.scaladsl.server.RouteResult;
 import scala.Function1;
@@ -36,6 +39,7 @@ public class RouteWrapper implements Function1<RequestContext, Future<RouteResul
 
     @Override
     public Unit apply(Try<RouteResult> tryResult) {
+      Context context = Java8BytecodeBridge.currentContext();
       if (tryResult.isSuccess()) {
         RouteResult result = tryResult.get();
         if (result.getClass() == RouteResult.Complete.class) {
@@ -50,9 +54,7 @@ public class RouteWrapper implements Function1<RequestContext, Future<RouteResul
                   "*",
                   Option.apply("*"),
                   Option.apply("*"));
-
-          PekkoRouteHolder.push(path);
-          PekkoRouteHolder.endMatched();
+          HttpServerRoute.update(context, HttpServerRouteSource.NESTED_CONTROLLER, path);
         }
       }
       return null;

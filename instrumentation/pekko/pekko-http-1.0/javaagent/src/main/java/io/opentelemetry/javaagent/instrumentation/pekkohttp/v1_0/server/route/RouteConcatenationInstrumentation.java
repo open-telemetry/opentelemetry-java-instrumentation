@@ -10,10 +10,12 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pekko.http.scaladsl.server.RequestContext;
 import org.apache.pekko.http.scaladsl.server.RouteResult;
+import scala.Function1;
 import scala.concurrent.Future;
 
 public class RouteConcatenationInstrumentation implements TypeInstrumentation {
@@ -25,41 +27,17 @@ public class RouteConcatenationInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("$anonfun$$tilde$1"), this.getClass().getName() + "$ApplyAdvice");
-    transformer.applyAdviceToMethod(
-        named("$anonfun$$tilde$2"), this.getClass().getName() + "$Apply2Advice");
+        MethodDescription::isConstructor, this.getClass().getName() + "$ApplyAdvice");
+    transformer.applyAdviceToMethod(named("$tilde"), this.getClass().getName() + "$ApplyAdvice");
   }
 
-  @SuppressWarnings("unused")
   public static class ApplyAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter() {
-      // when routing dsl uses concat(path(...) {...}, path(...) {...}) we'll restore the currently
-      // matched route after each matcher so that match attempts that failed wouldn't get recorded
-      // in the route
-      PekkoRouteHolder.save();
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(
-        @Advice.Argument(value = 2) RequestContext ctx,
-        @Advice.Return(readOnly = false) Future<RouteResult> future,
-        @Advice.Thrown Throwable throwable) {
-      if (throwable != null) {
-        PekkoRouteHolder.restore();
-      } else {
-        future = future.andThen(new RestoreOnExit(), ctx.executionContext());
-      }
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class Apply2Advice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter() {
-      PekkoRouteHolder.reset();
+    public static void onEnter(
+        @Advice.Argument(value = 0, readOnly = false)
+            Function1<RequestContext, Future<RouteResult>> route) {
+      route = new PekkoRouteWrapper(route);
     }
   }
 }
