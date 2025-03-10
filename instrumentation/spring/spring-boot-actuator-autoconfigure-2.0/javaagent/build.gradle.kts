@@ -20,7 +20,7 @@ dependencies {
   implementation(project(":instrumentation:micrometer:micrometer-1.5:javaagent"))
 
   // dependency management pins logback-classic to 1.3 which is the last release that supports java 8
-  latestDepTestLibrary("ch.qos.logback:logback-classic:+")
+  latestDepTestLibrary("ch.qos.logback:logback-classic:latest.release")
 }
 
 tasks.withType<Test>().configureEach {

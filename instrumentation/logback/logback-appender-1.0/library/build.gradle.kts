@@ -26,7 +26,7 @@ dependencies {
   }
 
   if (findProperty("testLatestDeps") as Boolean) {
-    testImplementation("ch.qos.logback:logback-classic:+")
+    testImplementation("ch.qos.logback:logback-classic:latest.release")
   } else {
     testImplementation("ch.qos.logback:logback-classic") {
       version {
@@ -78,9 +78,9 @@ testing {
         implementation(project(":testing-common"))
 
         if (latestDepTest) {
-          implementation("ch.qos.logback:logback-classic:+")
-          implementation("org.slf4j:slf4j-api:+")
-          implementation("net.logstash.logback:logstash-logback-encoder:+")
+          implementation("ch.qos.logback:logback-classic:latest.release")
+          implementation("org.slf4j:slf4j-api:latest.release")
+          implementation("net.logstash.logback:logstash-logback-encoder:latest.release")
         } else {
           implementation("ch.qos.logback:logback-classic") {
             version {
@@ -108,7 +108,7 @@ testing {
         implementation(project(":testing-common"))
 
         if (latestDepTest) {
-          implementation("ch.qos.logback:logback-classic:+")
+          implementation("ch.qos.logback:logback-classic:latest.release")
         } else {
           implementation("ch.qos.logback:logback-classic") {
             version {
