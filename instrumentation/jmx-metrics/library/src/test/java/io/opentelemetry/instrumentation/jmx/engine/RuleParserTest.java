@@ -63,6 +63,7 @@ class RuleParserTest {
           + "      ATTRIBUTE2:\n"
           + "        metric: METRIC_NAME2\n"
           + "        desc: DESCRIPTION2\n"
+          + "        sourceUnit: SOURCE_UNIT2\n"
           + "        unit: UNIT2\n"
           + "      ATTRIBUTE3:\n"
           + "      ATTRIBUTE4:\n"
@@ -95,6 +96,7 @@ class RuleParserTest {
     assertThat(m1).isNotNull();
     assertThat(m1.getMetric()).isEqualTo("METRIC_NAME1");
     assertThat(m1.getMetricType()).isEqualTo(MetricInfo.Type.GAUGE);
+    assertThat(m1.getSourceUnit()).isNull();
     assertThat(m1.getUnit()).isEqualTo("UNIT1");
     assertThat(m1.getMetricAttribute()).containsExactly(entry("LABEL_KEY3", "const(CONSTANT)"));
 
@@ -102,6 +104,7 @@ class RuleParserTest {
     assertThat(m2).isNotNull();
     assertThat(m2.getMetric()).isEqualTo("METRIC_NAME2");
     assertThat(m2.getDesc()).isEqualTo("DESCRIPTION2");
+    assertThat(m2.getSourceUnit()).isEqualTo("SOURCE_UNIT2");
     assertThat(m2.getUnit()).isEqualTo("UNIT2");
 
     JmxRule def2 = defs.get(1);

@@ -42,12 +42,14 @@ import java.util.List;
 //      new MetricInfo(
 //          "my.own.jvm.memory.pool.used",
 //          "Pool memory currently used",
+//          null,
 //          "By",
 //          MetricInfo.Type.UPDOWNCOUNTER);
 //  MetricInfo poolLimitInfo =
 //      new MetricInfo(
 //          "my.own.jvm.memory.pool.limit",
 //          "Maximum obtainable memory pool size",
+//          null,
 //          "By",
 //          MetricInfo.Type.UPDOWNCOUNTER);
 //
