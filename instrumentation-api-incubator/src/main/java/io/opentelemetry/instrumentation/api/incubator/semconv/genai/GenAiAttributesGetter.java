@@ -50,7 +50,6 @@ public interface GenAiAttributesGetter<REQUEST, RESPONSE> {
   @Nullable
   Double getRequestTopP(REQUEST request);
 
-  @Nullable
   List<String> getResponseFinishReasons(REQUEST request, RESPONSE response);
 
   @Nullable
