@@ -102,6 +102,14 @@ public class FileManager {
     }
   }
 
+  public String getMetaDataFile(String instrumentationDirectory) {
+    String metadataFile = instrumentationDirectory + "/metadata.yaml";
+    if (Files.exists(Paths.get(metadataFile))) {
+      return readFileToString(metadataFile);
+    }
+    return null;
+  }
+
   public String readFileToString(String filePath) {
     try {
       return Files.readString(Paths.get(filePath));
