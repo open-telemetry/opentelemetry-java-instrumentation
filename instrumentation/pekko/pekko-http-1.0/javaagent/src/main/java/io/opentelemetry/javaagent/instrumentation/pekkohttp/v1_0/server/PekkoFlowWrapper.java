@@ -5,15 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
-import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.PekkoRouteHolder;
 import java.util.ArrayDeque;
-import java.util.Deque;
-import java.util.List;
-import org.apache.pekko.http.javadsl.model.HttpHeader;
+import java.util.Queue;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
 import org.apache.pekko.stream.Attributes;
@@ -42,14 +36,12 @@ public class PekkoFlowWrapper
     return handler.join(new PekkoFlowWrapper());
   }
 
-  public static Context getContext(OutHandler outHandler) {
+  public static Context getAndRemoveContext(OutHandler outHandler) {
     if (outHandler instanceof TracingLogic.ApplicationOutHandler) {
       // We have multiple requests here only when requests are pipelined on the same connection.
-      // It appears that these requests are processed one by one so processing next request won't
-      // be started before the first one has returned a response, because of this the first request
-      // in the queue is always the one that is currently being processed.
-      TracingRequest request =
-          ((TracingLogic.ApplicationOutHandler) outHandler).getRequests().peek();
+      // We remove the context off of the queue so that the next request can get its context.
+      PekkoTracingRequest request =
+          ((TracingLogic.ApplicationOutHandler) outHandler).getRequests().poll();
       if (request != null) {
         return request.context;
       }
@@ -69,7 +61,7 @@ public class PekkoFlowWrapper
   }
 
   private class TracingLogic extends GraphStageLogic {
-    private final Deque<TracingRequest> requests = new ArrayDeque<>();
+    private final Queue<PekkoTracingRequest> requests = new ArrayDeque<>();
 
     public TracingLogic() {
       super(shape);
@@ -112,18 +104,17 @@ public class PekkoFlowWrapper
             @Override
             public void onPush() {
               HttpRequest request = grab(requestIn);
-
-              TracingRequest tracingRequest = TracingRequest.EMPTY;
-              Context parentContext = currentContext();
-              if (PekkoHttpServerSingletons.instrumenter().shouldStart(parentContext, request)) {
-                Context context =
-                    PekkoHttpServerSingletons.instrumenter().start(parentContext, request);
-                context = PekkoRouteHolder.init(context);
-                tracingRequest = new TracingRequest(context, request);
+              PekkoTracingRequest tracingRequest =
+                  request
+                      .getAttribute(PekkoTracingRequest.ATTR_KEY)
+                      .orElse(PekkoTracingRequest.EMPTY);
+              if (tracingRequest != PekkoTracingRequest.EMPTY) {
+                // Remove HttpRequest attribute before passing it to user code
+                request = (HttpRequest) request.removeAttribute(PekkoTracingRequest.ATTR_KEY);
               }
               // event if span wasn't started we need to push TracingRequest to match response
               // with request
-              requests.push(tracingRequest);
+              requests.add(tracingRequest);
 
               push(requestOut, request);
             }
@@ -146,40 +137,11 @@ public class PekkoFlowWrapper
             @Override
             public void onPush() {
               HttpResponse response = grab(responseIn);
-
-              TracingRequest tracingRequest = requests.poll();
-              if (tracingRequest != null && tracingRequest != TracingRequest.EMPTY) {
-                // pekko response is immutable so the customizer just captures the added headers
-                PekkoHttpResponseMutator responseMutator = new PekkoHttpResponseMutator();
-                HttpServerResponseCustomizerHolder.getCustomizer()
-                    .customize(tracingRequest.context, response, responseMutator);
-                // build a new response with the added headers
-                List<HttpHeader> headers = responseMutator.getHeaders();
-                if (!headers.isEmpty()) {
-                  response = (HttpResponse) response.addHeaders(headers);
-                }
-
-                PekkoHttpServerSingletons.instrumenter()
-                    .end(tracingRequest.context, tracingRequest.request, response, null);
-              }
               push(responseOut, response);
             }
 
             @Override
             public void onUpstreamFailure(Throwable exception) {
-              TracingRequest tracingRequest;
-              while ((tracingRequest = requests.poll()) != null) {
-                if (tracingRequest == TracingRequest.EMPTY) {
-                  continue;
-                }
-                PekkoHttpServerSingletons.instrumenter()
-                    .end(
-                        tracingRequest.context,
-                        tracingRequest.request,
-                        PekkoHttpServerSingletons.errorResponse(),
-                        exception);
-              }
-
               fail(responseOut, exception);
             }
 
@@ -191,20 +153,9 @@ public class PekkoFlowWrapper
     }
 
     abstract class ApplicationOutHandler extends AbstractOutHandler {
-      Deque<TracingRequest> getRequests() {
+      Queue<PekkoTracingRequest> getRequests() {
         return requests;
       }
-    }
-  }
-
-  private static class TracingRequest {
-    static final TracingRequest EMPTY = new TracingRequest(null, null);
-    final Context context;
-    final HttpRequest request;
-
-    TracingRequest(Context context, HttpRequest request) {
-      this.context = context;
-      this.request = request;
     }
   }
 }
