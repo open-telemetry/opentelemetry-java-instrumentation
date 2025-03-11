@@ -161,7 +161,7 @@ dependencies {
   compileOnly("com.google.errorprone:error_prone_annotations")
 
   codenarc("org.codenarc:CodeNarc:3.6.0")
-  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.23"))
+  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.24"))
 
   modules {
     // checkstyle uses the very old google-collections which causes Java 9 module conflict with
@@ -431,7 +431,7 @@ codenarc {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "10.21.3"
+  toolVersion = "10.21.4"
   maxWarnings = 0
 }
 

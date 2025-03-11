@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE;
+import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesGetter;
 import java.util.Collections;
@@ -25,7 +26,7 @@ enum BedrockRuntimeAttributesGetter
     private GenAiOperationNameIncubatingValues() {}
   }
 
-  private static final class GenAiSystemIncubatingValues {
+  static final class GenAiSystemIncubatingValues {
     static final String AWS_BEDROCK = "aws.bedrock";
 
     private GenAiSystemIncubatingValues() {}
@@ -117,7 +118,10 @@ enum BedrockRuntimeAttributesGetter
 
   @Override
   public List<String> getResponseFinishReasons(
-      ExecutionAttributes executionAttributes, Response response) {
+      ExecutionAttributes executionAttributes, @Nullable Response response) {
+    if (response == null) {
+      return emptyList();
+    }
     List<String> stopReasons = BedrockRuntimeAccess.getStopReasons(response);
     if (stopReasons == null) {
       return Collections.emptyList();
@@ -139,13 +143,21 @@ enum BedrockRuntimeAttributesGetter
 
   @Nullable
   @Override
-  public Long getUsageInputTokens(ExecutionAttributes executionAttributes, Response response) {
+  public Long getUsageInputTokens(
+      ExecutionAttributes executionAttributes, @Nullable Response response) {
+    if (response == null) {
+      return null;
+    }
     return BedrockRuntimeAccess.getUsageInputTokens(response);
   }
 
   @Nullable
   @Override
-  public Long getUsageOutputTokens(ExecutionAttributes executionAttributes, Response response) {
+  public Long getUsageOutputTokens(
+      ExecutionAttributes executionAttributes, @Nullable Response response) {
+    if (response == null) {
+      return null;
+    }
     return BedrockRuntimeAccess.getUsageOutputTokens(response);
   }
 }

@@ -18,8 +18,8 @@ repositories {
 dependencies {
   implementation(enforcedPlatform("org.junit:junit-bom:5.12.0"))
 
-  testImplementation("org.testcontainers:testcontainers:1.20.5")
-  testImplementation("org.testcontainers:postgresql:1.20.5")
+  testImplementation("org.testcontainers:testcontainers:1.20.6")
+  testImplementation("org.testcontainers:postgresql:1.20.6")
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testImplementation("org.junit.jupiter:junit-jupiter-params")
   testImplementation("com.squareup.okhttp3:okhttp:4.12.0")
@@ -28,6 +28,7 @@ dependencies {
   testImplementation("org.slf4j:slf4j-simple:2.0.17")
 
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 tasks {

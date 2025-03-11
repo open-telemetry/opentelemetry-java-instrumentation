@@ -152,6 +152,15 @@ testing {
           implementation("software.amazon.awssdk:bedrockruntime:2.25.63")
         }
       }
+
+      targets {
+        all {
+          testTask.configure {
+            // TODO run tests both with and without genai message capture
+            systemProperty("otel.instrumentation.genai.capture-message-content", "true")
+          }
+        }
+      }
     }
   }
 }

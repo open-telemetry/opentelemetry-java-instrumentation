@@ -27,6 +27,7 @@ public class OpenTelemetryApiIncubatorInstrumentationModule extends Instrumentat
     // EventLogger was removed in 1.47, including it here prevents the instrumentation from applying
     // to 1.47
     return hasClassesNamed(
+        "application.io.opentelemetry.api.common.Value",
         "application.io.opentelemetry.api.incubator.logs.ExtendedLogger",
         "application.io.opentelemetry.api.incubator.events.EventLogger");
   }

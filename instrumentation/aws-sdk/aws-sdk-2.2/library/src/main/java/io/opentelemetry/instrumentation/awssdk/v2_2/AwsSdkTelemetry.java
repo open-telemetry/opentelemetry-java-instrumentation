@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkInstrumenterFactory;
@@ -66,10 +67,12 @@ public class AwsSdkTelemetry {
   private final Instrumenter<ExecutionAttributes, Response> producerInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> dynamoDbInstrumenter;
   private final Instrumenter<ExecutionAttributes, Response> bedrockRuntimeInstrumenter;
+  private final Logger eventLogger;
   private final boolean captureExperimentalSpanAttributes;
   @Nullable private final TextMapPropagator messagingPropagator;
   private final boolean useXrayPropagator;
   private final boolean recordIndividualHttpError;
+  private final boolean genAiCaptureMessageContent;
 
   AwsSdkTelemetry(
       OpenTelemetry openTelemetry,
@@ -78,7 +81,8 @@ public class AwsSdkTelemetry {
       boolean useMessagingPropagator,
       boolean useXrayPropagator,
       boolean recordIndividualHttpError,
-      boolean messagingReceiveInstrumentationEnabled) {
+      boolean messagingReceiveInstrumentationEnabled,
+      boolean genAiCaptureMessageContent) {
     this.useXrayPropagator = useXrayPropagator;
     this.messagingPropagator =
         useMessagingPropagator ? openTelemetry.getPropagators().getTextMapPropagator() : null;
@@ -98,8 +102,10 @@ public class AwsSdkTelemetry {
     this.producerInstrumenter = instrumenterFactory.producerInstrumenter();
     this.dynamoDbInstrumenter = instrumenterFactory.dynamoDbInstrumenter();
     this.bedrockRuntimeInstrumenter = instrumenterFactory.bedrockRuntimeInstrumenter();
+    this.eventLogger = instrumenterFactory.eventLogger();
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.recordIndividualHttpError = recordIndividualHttpError;
+    this.genAiCaptureMessageContent = genAiCaptureMessageContent;
   }
 
   /**
@@ -114,10 +120,12 @@ public class AwsSdkTelemetry {
         producerInstrumenter,
         dynamoDbInstrumenter,
         bedrockRuntimeInstrumenter,
+        eventLogger,
         captureExperimentalSpanAttributes,
         messagingPropagator,
         useXrayPropagator,
-        recordIndividualHttpError);
+        recordIndividualHttpError,
+        genAiCaptureMessageContent);
   }
 
   /**
