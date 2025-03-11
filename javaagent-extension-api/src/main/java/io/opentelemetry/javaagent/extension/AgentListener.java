@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.extension;
 
+import io.opentelemetry.api.incubator.config.ConfigProvider;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
-import io.opentelemetry.sdk.autoconfigure.spi.internal.StructuredConfigProperties;
 import java.lang.instrument.Instrumentation;
 import net.bytebuddy.agent.builder.AgentBuilder;
 
@@ -37,13 +38,17 @@ public interface AgentListener extends Ordered {
     if (sdkConfigProperties != null) {
       return sdkConfigProperties;
     }
-    StructuredConfigProperties structuredConfigProperties =
-        AutoConfigureUtil.getStructuredConfig(autoConfiguredOpenTelemetrySdk);
-    if (structuredConfigProperties != null) {
-      return new StructuredConfigPropertiesBridge(structuredConfigProperties);
+    ConfigProvider configProvider =
+        AutoConfigureUtil.getConfigProvider(autoConfiguredOpenTelemetrySdk);
+    if (configProvider != null) {
+      DeclarativeConfigProperties instrumentationConfig = configProvider.getInstrumentationConfig();
+
+      if (instrumentationConfig != null) {
+        return new DeclarativeConfigPropertiesBridge(instrumentationConfig);
+      }
     }
     // Should never happen
     throw new IllegalStateException(
-        "AutoConfiguredOpenTelemetrySdk does not have ConfigProperties or StructuredConfigProperties. This is likely a programming error in opentelemetry-java");
+        "AutoConfiguredOpenTelemetrySdk does not have ConfigProperties or DeclarativeConfigProperties. This is likely a programming error in opentelemetry-java");
   }
 }
