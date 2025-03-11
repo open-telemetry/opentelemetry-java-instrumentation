@@ -229,7 +229,7 @@ These are the JVMs and operating systems that the integration tests are run agai
 
 ## Disabled instrumentations
 
-Some instrumentations can produce to many spans and metrics and thus create a lot of noise.
+Some instrumentations can produce too many spans and metrics and thus create a lot of noise.
 For this reason, the following instrumentations are disabled by default:
 
 - `jdbc-datasource` which creates spans whenever the `java.sql.DataSource#getConnection` method is called.
