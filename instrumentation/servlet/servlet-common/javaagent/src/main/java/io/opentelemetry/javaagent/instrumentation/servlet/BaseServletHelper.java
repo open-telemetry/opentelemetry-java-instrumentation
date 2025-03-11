@@ -5,12 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
+import static io.opentelemetry.context.ContextKey.named;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER_FILTER;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.context.ImplicitContextKeyed;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
@@ -21,6 +24,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import java.security.Principal;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class BaseServletHelper<REQUEST, RESPONSE> {
@@ -61,6 +65,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     accessor.setRequestAttribute(request, "span_id", spanContext.getSpanId());
 
     context = addServletContextPath(context, request);
+    context = addAsyncContext(context);
 
     attachServerContext(context, request);
 
@@ -69,6 +74,10 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
 
   protected Context addServletContextPath(Context context, REQUEST request) {
     return ServletContextPath.init(context, contextPathExtractor, request);
+  }
+
+  protected Context addAsyncContext(Context context) {
+    return ServletAsyncContext.init(context);
   }
 
   public Context getServerContext(REQUEST request) {
@@ -87,6 +96,8 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   public Context updateContext(
       Context context, REQUEST request, MappingResolver mappingResolver, boolean servlet) {
     Context result = addServletContextPath(context, request);
+    result = addAsyncContext(result);
+
     if (mappingResolver != null) {
       HttpServerRoute.update(
           result, servlet ? SERVER : SERVER_FILTER, spanNameProvider, mappingResolver, request);
@@ -125,7 +136,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
       return;
     }
 
-    parameterExtractor.setAttributes(request, (key, value) -> serverSpan.setAttribute(key, value));
+    parameterExtractor.setAttributes(request, serverSpan::setAttribute);
   }
 
   /**
@@ -168,5 +179,67 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
 
   private static boolean sameTrace(Span oneSpan, Span otherSpan) {
     return oneSpan.getSpanContext().getTraceId().equals(otherSpan.getSpanContext().getTraceId());
+  }
+
+  protected static class ServletAsyncContext implements ImplicitContextKeyed {
+    private static final ContextKey<ServletAsyncContext> CONTEXT_KEY =
+        named("opentelemetry-servlet-async-context");
+
+    private boolean isAsyncListenerAttached;
+    private Throwable throwable;
+    private Object response;
+
+    public static Context init(Context context) {
+      if (context.get(CONTEXT_KEY) != null) {
+        return context;
+      }
+      return context.with(new ServletAsyncContext());
+    }
+
+    @Nullable
+    public static ServletAsyncContext get(@Nullable Context context) {
+      return context != null ? context.get(CONTEXT_KEY) : null;
+    }
+
+    public static boolean isAsyncListenerAttached(@Nullable Context context) {
+      ServletAsyncContext servletAsyncContext = get(context);
+      return servletAsyncContext != null && servletAsyncContext.isAsyncListenerAttached;
+    }
+
+    public static void setAsyncListenerAttached(@Nullable Context context, boolean value) {
+      ServletAsyncContext servletAsyncContext = get(context);
+      if (servletAsyncContext != null) {
+        servletAsyncContext.isAsyncListenerAttached = value;
+      }
+    }
+
+    public static Throwable getAsyncException(@Nullable Context context) {
+      ServletAsyncContext servletAsyncContext = get(context);
+      return servletAsyncContext != null ? servletAsyncContext.throwable : null;
+    }
+
+    public static void recordAsyncException(@Nullable Context context, Throwable throwable) {
+      ServletAsyncContext servletAsyncContext = get(context);
+      if (servletAsyncContext != null) {
+        servletAsyncContext.throwable = throwable;
+      }
+    }
+
+    public static Object getAsyncListenerResponse(@Nullable Context context) {
+      ServletAsyncContext servletAsyncContext = get(context);
+      return servletAsyncContext != null ? servletAsyncContext.response : null;
+    }
+
+    public static void setAsyncListenerResponse(@Nullable Context context, Object response) {
+      ServletAsyncContext servletAsyncContext = get(context);
+      if (servletAsyncContext != null) {
+        servletAsyncContext.response = response;
+      }
+    }
+
+    @Override
+    public Context storeInContext(Context context) {
+      return context.with(CONTEXT_KEY, this);
+    }
   }
 }

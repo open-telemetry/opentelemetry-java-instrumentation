@@ -10,12 +10,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
 public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST, RESPONSE> {
-  private static final String ASYNC_LISTENER_ATTRIBUTE =
-      ServletHelper.class.getName() + ".AsyncListener";
-  private static final String ASYNC_LISTENER_RESPONSE_ATTRIBUTE =
-      ServletHelper.class.getName() + ".AsyncListenerResponse";
-  public static final String ASYNC_EXCEPTION_ATTRIBUTE =
-      ServletHelper.class.getName() + ".AsyncException";
   public static final String CONTEXT_ATTRIBUTE = ServletHelper.class.getName() + ".Context";
 
   public ServletHelper(
@@ -87,14 +81,14 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
    * is not possible to access response from async event in listeners.
    */
   public void setAsyncListenerResponse(REQUEST request, RESPONSE response) {
-    accessor.setRequestAttribute(request, ASYNC_LISTENER_RESPONSE_ATTRIBUTE, response);
+    Context context = getServerContext(request);
+    ServletAsyncContext.setAsyncListenerResponse(context, response);
   }
 
+  @SuppressWarnings("unchecked")
   public RESPONSE getAsyncListenerResponse(REQUEST request) {
-    @SuppressWarnings("unchecked")
-    RESPONSE response =
-        (RESPONSE) accessor.getRequestAttribute(request, ASYNC_LISTENER_RESPONSE_ATTRIBUTE);
-    return response;
+    Context context = getServerContext(request);
+    return (RESPONSE) ServletAsyncContext.getAsyncListenerResponse(context);
   }
 
   public void attachAsyncListener(REQUEST request) {
@@ -113,12 +107,13 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
           request,
           new AsyncRequestCompletionListener<>(this, instrumenter, requestContext, context),
           response);
-      accessor.setRequestAttribute(request, ASYNC_LISTENER_ATTRIBUTE, true);
+      ServletAsyncContext.setAsyncListenerAttached(context, true);
     }
   }
 
   public boolean isAsyncListenerAttached(REQUEST request) {
-    return accessor.getRequestAttribute(request, ASYNC_LISTENER_ATTRIBUTE) != null;
+    Context context = getServerContext(request);
+    return ServletAsyncContext.isAsyncListenerAttached(context);
   }
 
   public Runnable wrapAsyncRunnable(REQUEST request, Runnable runnable) {
@@ -126,10 +121,12 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
   }
 
   public void recordAsyncException(REQUEST request, Throwable throwable) {
-    accessor.setRequestAttribute(request, ASYNC_EXCEPTION_ATTRIBUTE, throwable);
+    Context context = getServerContext(request);
+    ServletAsyncContext.recordAsyncException(context, throwable);
   }
 
   public Throwable getAsyncException(REQUEST request) {
-    return (Throwable) accessor.getRequestAttribute(request, ASYNC_EXCEPTION_ATTRIBUTE);
+    Context context = getServerContext(request);
+    return ServletAsyncContext.getAsyncException(context);
   }
 }
