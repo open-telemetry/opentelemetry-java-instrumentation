@@ -238,6 +238,7 @@ For this reason, the following instrumentations are disabled by default:
 - `micrometer` which might create high number of metrics due to being broadly used in libraries.
 
 To enable them, add the `otel.instrumentation.<name>.enabled` system property:
+
 - `-Dotel.instrumentation.jdbc-datasource.enabled=true`
 - `-Dotel.instrumentation.dropwizard-metrics.enabled=true`
 - `-Dotel.instrumentation.micrometer.enabled=true`
