@@ -26,10 +26,10 @@ import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 final class TracingClientInterceptor implements ClientInterceptor {
 
-  private static final AttributeKey<Long> GRPC_MESSAGES_RECEIVED =
-      AttributeKey.longKey("grpc.messages.received");
-  private static final AttributeKey<Long> GRPC_MESSAGES_SENT =
-      AttributeKey.longKey("grpc.messages.sent");
+  private static final AttributeKey<Long> GRPC_RECEIVED_MESSAGE_COUNT =
+      AttributeKey.longKey("grpc.received.message_count");
+  private static final AttributeKey<Long> GRPC_SENT_MESSAGE_COUNT =
+      AttributeKey.longKey("grpc.sent.message_count");
   // copied from MessageIncubatingAttributes
   private static final AttributeKey<Long> MESSAGE_ID = AttributeKey.longKey("message.id");
   private static final AttributeKey<String> MESSAGE_TYPE = AttributeKey.stringKey("message.type");
@@ -175,9 +175,9 @@ final class TracingClientInterceptor implements ClientInterceptor {
         if (captureExperimentalSpanAttributes) {
           Span span = Span.fromContext(context);
           span.setAttribute(
-              GRPC_MESSAGES_RECEIVED, RECEIVED_MESSAGE_ID_UPDATER.get(TracingClientCall.this));
+              GRPC_RECEIVED_MESSAGE_COUNT, RECEIVED_MESSAGE_ID_UPDATER.get(TracingClientCall.this));
           span.setAttribute(
-              GRPC_MESSAGES_SENT, SENT_MESSAGE_ID_UPDATER.get(TracingClientCall.this));
+              GRPC_SENT_MESSAGE_COUNT, SENT_MESSAGE_ID_UPDATER.get(TracingClientCall.this));
         }
         instrumenter.end(context, request, status, status.getCause());
         try (Scope ignored = parentContext.makeCurrent()) {

@@ -27,10 +27,10 @@ final class TracingServerInterceptor implements ServerInterceptor {
 
   private static final AttributeKey<Boolean> GRPC_CANCELED =
       AttributeKey.booleanKey("grpc.canceled");
-  private static final AttributeKey<Long> GRPC_MESSAGES_RECEIVED =
-      AttributeKey.longKey("grpc.messages.received");
-  private static final AttributeKey<Long> GRPC_MESSAGES_SENT =
-      AttributeKey.longKey("grpc.messages.sent");
+  private static final AttributeKey<Long> GRPC_RECEIVED_MESSAGE_COUNT =
+      AttributeKey.longKey("grpc.received.message_count");
+  private static final AttributeKey<Long> GRPC_SENT_MESSAGE_COUNT =
+      AttributeKey.longKey("grpc.sent.message_count");
   // copied from MessageIncubatingAttributes
   private static final AttributeKey<Long> MESSAGE_ID = AttributeKey.longKey("message.id");
   private static final AttributeKey<String> MESSAGE_TYPE = AttributeKey.stringKey("message.type");
@@ -157,9 +157,9 @@ final class TracingServerInterceptor implements ServerInterceptor {
         if (captureExperimentalSpanAttributes) {
           Span span = Span.fromContext(context);
           span.setAttribute(
-              GRPC_MESSAGES_RECEIVED, RECEIVED_MESSAGE_ID_UPDATER.get(TracingServerCall.this));
+              GRPC_RECEIVED_MESSAGE_COUNT, RECEIVED_MESSAGE_ID_UPDATER.get(TracingServerCall.this));
           span.setAttribute(
-              GRPC_MESSAGES_SENT, SENT_MESSAGE_ID_UPDATER.get(TracingServerCall.this));
+              GRPC_SENT_MESSAGE_COUNT, SENT_MESSAGE_ID_UPDATER.get(TracingServerCall.this));
           if (Status.CANCELLED.equals(status)) {
             span.setAttribute(GRPC_CANCELED, true);
           }
