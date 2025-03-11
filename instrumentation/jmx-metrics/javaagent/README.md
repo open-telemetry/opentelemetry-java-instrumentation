@@ -338,7 +338,7 @@ rules:
         unit: s
         desc: The longest request processing time
 ```
-`sourceUnit` can also be defined on rule level (see [Making shortcuts](#making-shortcuts)) 
+`sourceUnit` can also be defined on rule level (see [Making shortcuts](#making-shortcuts))
 
 ### General Syntax
 

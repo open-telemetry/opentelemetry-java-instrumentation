@@ -158,7 +158,9 @@ public class JmxRule extends MetricStructure {
                 getUnit(),
                 getMetricType());
       } else {
-        metricInfo = m.buildMetricInfo(prefix, niceAttributeName, getSourceUnit(), getUnit(), getMetricType());
+        metricInfo =
+            m.buildMetricInfo(
+                prefix, niceAttributeName, getSourceUnit(), getUnit(), getMetricType());
       }
 
       List<MetricAttribute> ownAttributes = getAttributeList();
