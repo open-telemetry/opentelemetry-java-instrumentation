@@ -59,5 +59,6 @@ final class OpenSearchRestAttributesGetter
       return DbResponseStatusUtil.httpStatusToResponseStatus(
           response.getStatusLine().getStatusCode());
     }
+    return null;
   }
 }
