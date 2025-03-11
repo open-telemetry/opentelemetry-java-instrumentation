@@ -42,7 +42,8 @@ public class UnitConverterFactory {
     return converter;
   }
 
-  public static void registerConverter(
+  // visible for testing
+  static void registerConverter(
       String sourceUnit,
       String targetUnit,
       Function<Number, Number> convertingFunction,

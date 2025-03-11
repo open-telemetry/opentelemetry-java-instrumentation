@@ -307,6 +307,39 @@ rules:
 
 For now, only the `lowercase` transformation is supported, other additions might be added in the future if needed.
 
+### Unit conversions
+
+Sometimes JMX attributes values are reported in units not aligned with semantic conventions.
+For example duration values are usually reported as milliseconds while semantic conventions recommend using seconds.
+
+This issue can be solved by providing optional `sourceUnit` metric property together with `unit` metric property.
+`sourceUnit` defines native unit of value retrieved from JMX attribute, while `unit` defines a semantic convention compatible metric unit that will be reported to the backend.
+If conversion between `sourceUnit` and `unit` is available then it is automatically applied before reporting the metric.
+If such a conversion is not available then an error is reported during JMX metrics processing.
+
+Currently available unit conversions:
+
+| `sourceUnit` | `unit` |
+|-------------|-------|
+| ms          | s     |
+| ns          | s     |
+
+Example of defining unit conversion in yaml file:
+```yaml
+rules:
+  - beans:
+    - Catalina:type=GlobalRequestProcessor,name=*
+    prefix: http.server.tomcat.
+    mapping:
+      maxTime:
+        metric: maxTime
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: The longest request processing time
+```
+`sourceUnit` can also be defined on rule level (see [Making shortcuts](#making-shortcuts)) 
+
 ### General Syntax
 
 Here is the general description of the accepted configuration file syntax. The whole contents of the file is case-sensitive, with exception for `type` as described in the table below.
