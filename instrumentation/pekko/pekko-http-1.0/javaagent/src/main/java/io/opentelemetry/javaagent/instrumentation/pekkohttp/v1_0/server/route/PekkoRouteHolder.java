@@ -10,23 +10,27 @@ import static io.opentelemetry.context.ContextKey.named;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
+import java.util.ArrayDeque;
 import java.util.Deque;
-import java.util.LinkedList;
 import org.apache.pekko.http.scaladsl.model.Uri;
 
 public class PekkoRouteHolder implements ImplicitContextKeyed {
-  public static final ContextKey<PekkoRouteHolder> KEY = named("opentelemetry-pekko-route");
+  private static final ContextKey<PekkoRouteHolder> KEY = named("opentelemetry-pekko-route");
 
   private StringBuilder route = new StringBuilder();
   private Uri.Path lastUnmatchedPath = null;
   private boolean lastWasMatched = false;
-  private final Deque<State> savedStates = new LinkedList<>();
+  private final Deque<State> savedStates = new ArrayDeque<>();
 
   public static Context init(Context context) {
     if (context.get(KEY) != null) {
       return context;
     }
     return context.with(new PekkoRouteHolder());
+  }
+
+  public static PekkoRouteHolder get(Context context) {
+    return context.get(KEY);
   }
 
   public void push(Uri.Path beforeMatch, Uri.Path afterMatch, String pathToPush) {

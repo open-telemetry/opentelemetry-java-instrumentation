@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route;
 
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pekko.http.scaladsl.server.RequestContext;
@@ -26,11 +26,11 @@ public class RouteConcatenationInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        MethodDescription::isConstructor, this.getClass().getName() + "$ApplyAdvice");
+    transformer.applyAdviceToMethod(isConstructor(), this.getClass().getName() + "$ApplyAdvice");
     transformer.applyAdviceToMethod(named("$tilde"), this.getClass().getName() + "$ApplyAdvice");
   }
 
+  @SuppressWarnings("unused")
   public static class ApplyAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)

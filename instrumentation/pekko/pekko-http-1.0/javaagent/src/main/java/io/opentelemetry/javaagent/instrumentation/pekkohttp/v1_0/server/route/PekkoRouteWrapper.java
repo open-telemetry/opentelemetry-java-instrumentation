@@ -22,7 +22,7 @@ public class PekkoRouteWrapper implements Function1<RequestContext, Future<Route
   @Override
   public Future<RouteResult> apply(RequestContext ctx) {
     Context context = Java8BytecodeBridge.currentContext();
-    PekkoRouteHolder routeHolder = context.get(PekkoRouteHolder.KEY);
+    PekkoRouteHolder routeHolder = PekkoRouteHolder.get(context);
     if (routeHolder == null) {
       return route.apply(ctx);
     } else {

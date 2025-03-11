@@ -106,8 +106,8 @@ class PekkoHttpServerRouteTest {
 
   @Test def testNotMatch(): Unit = {
     val route = pathPrefix("foo" ~ not("bar")) { complete("ok") }
-    test(route, "/fooish", "GET /foo**")
-    test(route, "/fooish/123", "GET /foo**")
+    test(route, "/fooish", "GET /foo*")
+    test(route, "/fooish/123", "GET /foo*")
   }
 
   @Test def testProvide(): Unit = {

@@ -145,9 +145,9 @@ public class PekkoHttpServerTracer
                 if (!headers.isEmpty()) {
                   response = (HttpResponse) response.addHeaders(headers);
                 }
-                PekkoRouteHolder routeHolder = tracingRequest.context.get(PekkoRouteHolder.KEY);
+                PekkoRouteHolder routeHolder = PekkoRouteHolder.get(tracingRequest.context);
                 if (routeHolder != null) {
-                  routeHolder.pushIfNotCompletelyMatched("**");
+                  routeHolder.pushIfNotCompletelyMatched("*");
                   HttpServerRoute.update(
                       tracingRequest.context,
                       HttpServerRouteSource.CONTROLLER,

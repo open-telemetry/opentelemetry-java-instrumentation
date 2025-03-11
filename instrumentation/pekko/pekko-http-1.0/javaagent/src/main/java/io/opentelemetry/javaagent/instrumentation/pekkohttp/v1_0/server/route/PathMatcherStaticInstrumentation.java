@@ -45,7 +45,7 @@ public class PathMatcherStaticInstrumentation implements TypeInstrumentation {
         @Advice.Return PathMatcher.Matching<?> result) {
       // result is either matched or unmatched, we only care about the matches
       Context context = Java8BytecodeBridge.currentContext();
-      PekkoRouteHolder routeHolder = context.get(PekkoRouteHolder.KEY);
+      PekkoRouteHolder routeHolder = PekkoRouteHolder.get(context);
       if (routeHolder == null) {
         return;
       }
