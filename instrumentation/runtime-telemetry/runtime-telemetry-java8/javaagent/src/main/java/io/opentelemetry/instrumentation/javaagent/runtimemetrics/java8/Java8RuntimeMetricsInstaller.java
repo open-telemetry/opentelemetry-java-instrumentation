@@ -19,7 +19,7 @@ public class Java8RuntimeMetricsInstaller implements AgentListener {
 
   @Override
   public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
-    if (Double.parseDouble(System.getProperty("java.specification.version")) >= 17) {
+    if (getJavaVersion() >= 17) {
       return;
     }
 
@@ -31,5 +31,13 @@ public class Java8RuntimeMetricsInstaller implements AgentListener {
           .addShutdownHook(
               new Thread(runtimeMetrics::close, "OpenTelemetry RuntimeMetricsShutdownHook"));
     }
+  }
+
+  private static int getJavaVersion() {
+    String javaSpecVersion = System.getProperty("java.specification.version");
+    if ("1.8".equals(javaSpecVersion)) {
+      return 8;
+    }
+    return Integer.parseInt(javaSpecVersion);
   }
 }
