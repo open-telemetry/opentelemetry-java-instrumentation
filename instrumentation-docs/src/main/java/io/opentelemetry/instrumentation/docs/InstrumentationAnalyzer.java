@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.docs.GradleParser.parseGradleFile
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import io.opentelemetry.instrumentation.docs.utils.InstrumentationPath;
 import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -60,7 +61,7 @@ class InstrumentationAnalyzer {
    *
    * @return a list of InstrumentationEntity objects with target versions
    */
-  List<InstrumentationEntity> analyze() {
+  List<InstrumentationEntity> analyze() throws IOException {
     List<InstrumentationPath> paths = fileSearch.getInstrumentationPaths();
     List<InstrumentationEntity> entities = convertToEntities(paths);
 
@@ -71,6 +72,14 @@ class InstrumentationAnalyzer {
       String metadataFile = fileSearch.getMetaDataFile(entity.getSrcPath());
       if (metadataFile != null) {
         entity.setMetadata(YamlHelper.metaDataParser(metadataFile));
+      }
+
+      String emittedTelemetryMetadata = fileSearch.getEmittedTelemetryMetadata(entity.getSrcPath());
+      if (emittedTelemetryMetadata != null) {
+        EmittedTelemetry telemetry = YamlHelper.emittedTelemetryParser(emittedTelemetryMetadata);
+        if (telemetry != null && telemetry.getScope() != null) {
+          entity.setScope(telemetry.getScope());
+        }
       }
     }
     return entities;

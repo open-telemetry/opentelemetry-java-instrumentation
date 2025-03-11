@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.docs;
 
+import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import java.util.Map;
 import java.util.Set;
 
@@ -16,6 +17,8 @@ public class InstrumentationEntity {
 
   private InstrumentationMetaData metadata;
   private Map<InstrumentationType, Set<String>> targetVersions;
+
+  private InstrumentationScopeInfo scope;
 
   public InstrumentationEntity(
       String srcPath, String instrumentationName, String namespace, String group) {
@@ -31,13 +34,15 @@ public class InstrumentationEntity {
       String namespace,
       String group,
       Map<InstrumentationType, Set<String>> targetVersions,
-      InstrumentationMetaData metadata) {
+      InstrumentationMetaData metadata,
+      InstrumentationScopeInfo scope) {
     this.srcPath = srcPath;
     this.instrumentationName = instrumentationName;
     this.namespace = namespace;
     this.group = group;
     this.targetVersions = targetVersions;
     this.metadata = metadata;
+    this.scope = scope;
   }
 
   public void setMetadata(InstrumentationMetaData metadata) {
@@ -70,5 +75,13 @@ public class InstrumentationEntity {
 
   public void setTargetVersions(Map<InstrumentationType, Set<String>> targetVersions) {
     this.targetVersions = targetVersions;
+  }
+
+  public InstrumentationScopeInfo getScope() {
+    return scope;
+  }
+
+  public void setScope(InstrumentationScopeInfo scope) {
+    this.scope = scope;
   }
 }

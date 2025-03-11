@@ -12,18 +12,22 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
+import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
@@ -48,9 +52,11 @@ public abstract class InstrumentationTestRunner {
     testInstrumenters = new TestInstrumenters(openTelemetry);
   }
 
+  protected Set<InstrumentationScopeInfo> instrumentationScopes = new HashSet<>();
+
   public abstract void beforeTestClass();
 
-  public abstract void afterTestClass();
+  public abstract void afterTestClass() throws IOException;
 
   public abstract void clearAllExportedData();
 
@@ -131,10 +137,24 @@ public abstract class InstrumentationTestRunner {
     if (verifyScopeVersion) {
       TelemetryDataUtil.assertScopeVersion(traces);
     }
+
+    getScopeFromTraces(traces);
+
     if (traceComparator != null) {
       traces.sort(traceComparator);
     }
     TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(assertionsList);
+  }
+
+  public void getScopeFromTraces(List<List<SpanData>> traces) {
+    for (List<SpanData> trace : traces) {
+      for (SpanData span : trace) {
+        InstrumentationScopeInfo scopeInfo = span.getInstrumentationScopeInfo();
+        if (!scopeInfo.getName().equals("test")) {
+          instrumentationScopes.add(scopeInfo);
+        }
+      }
+    }
   }
 
   /**
@@ -155,6 +175,9 @@ public abstract class InstrumentationTestRunner {
                         data ->
                             data.getInstrumentationScopeInfo().getName().equals(instrumentationName)
                                 && data.getName().equals(metricName))));
+    if (instrumentationScopes.isEmpty()) {
+      getScopeFromMetrics(getExportedMetrics());
+    }
   }
 
   @SafeVarargs
@@ -172,6 +195,19 @@ public abstract class InstrumentationTestRunner {
                 .anySatisfy(metric -> assertions[index].accept(assertThat(metric)));
           }
         });
+
+    if (instrumentationScopes.isEmpty()) {
+      getScopeFromMetrics(getExportedMetrics());
+    }
+  }
+
+  public void getScopeFromMetrics(List<MetricData> metrics) {
+    for (MetricData metric : metrics) {
+      InstrumentationScopeInfo scopeInfo = metric.getInstrumentationScopeInfo();
+      if (!scopeInfo.getName().equals("test")) {
+        instrumentationScopes.add(scopeInfo);
+      }
+    }
   }
 
   public final List<LogRecordData> waitForLogRecords(int numberOfLogRecords) {

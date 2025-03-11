@@ -1,0 +1,5 @@
+scope:
+  name: io.opentelemetry.clickhouse-client-0.5
+  version: 2.14.0-alpha-SNAPSHOT
+  schemaUrl: null
+  attributes:

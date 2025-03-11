@@ -2,6 +2,28 @@
 
 Runs analysis on instrumentation modules in order to generate documentation.
 
+## How to use
+
+Until this process is ready for all instrumentations, each module will be modified to include a
+system property:
+
+```kotlin
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    ...
+  }
+}
+```
+
+Prior to running the DocGeneratorApplication, run the following command to collect metadata:
+
+* Run tests to collect metadata
+  * `./gradlew test -collectMetadata=true`
+* Run the doc generator
+  * `./gradlew :instrumentation-docs`
+
+
 ## Instrumentation Hierarchy
 
 An "InstrumentationEntity" represents a module that that targets specific code in a framework/library/technology.

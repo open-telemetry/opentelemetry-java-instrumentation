@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.instrumentation.docs.InstrumentationEntity;
 import io.opentelemetry.instrumentation.docs.InstrumentationMetaData;
 import io.opentelemetry.instrumentation.docs.InstrumentationType;
+import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import java.io.BufferedWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -39,9 +40,13 @@ class YamlHelperTest {
             "spring",
             "spring",
             targetVersions1,
-            metadata1));
+            metadata1,
+            null));
 
     Map<InstrumentationType, Set<String>> targetVersions2 = new HashMap<>();
+    InstrumentationScopeInfo scope =
+        InstrumentationScopeInfo.builder("struts-2.3").setVersion("2.14-ALPHA").build();
+
     targetVersions2.put(
         InstrumentationType.LIBRARY,
         new HashSet<>(List.of("org.apache.struts:struts2-core:2.1.0")));
@@ -52,7 +57,8 @@ class YamlHelperTest {
             "struts",
             "struts",
             targetVersions2,
-            null));
+            null,
+            scope));
 
     StringWriter stringWriter = new StringWriter();
     BufferedWriter writer = new BufferedWriter(stringWriter);
@@ -73,6 +79,11 @@ class YamlHelperTest {
             + "  instrumentations:\n"
             + "  - name: struts-2.3\n"
             + "    srcPath: instrumentation/struts/struts-2.3\n"
+            + "    scope:\n"
+            + "      name: struts-2.3\n"
+            + "      version: 2.14-ALPHA\n"
+            + "      schemaUrl: null\n"
+            + "      attributes: {}\n"
             + "    target_versions:\n"
             + "      library:\n"
             + "      - org.apache.struts:struts2-core:2.1.0\n";

@@ -212,6 +212,11 @@ clickhouse:
     description: Instruments the V1 ClickHouseClient, providing database client spans
       and metrics.
     srcPath: instrumentation/clickhouse-client-0.5
+    scope:
+      name: io.opentelemetry.clickhouse-client-0.5
+      version: 2.14.0-alpha-SNAPSHOT
+      schemaUrl: 'null'
+      attributes: {}
     target_versions:
       javaagent:
       - com.clickhouse.client:clickhouse-client:[0.5.0,)

@@ -110,6 +110,14 @@ public class FileManager {
     return null;
   }
 
+  public String getEmittedTelemetryMetadata(String instrumentationDirectory) {
+    String emittedTelemetry = instrumentationDirectory + "/emitted_telemetry.yaml";
+    if (Files.exists(Paths.get(emittedTelemetry))) {
+      return readFileToString(emittedTelemetry);
+    }
+    return null;
+  }
+
   public String readFileToString(String filePath) {
     try {
       return Files.readString(Paths.get(filePath));
