@@ -101,5 +101,6 @@ final class ElasticsearchDbAttributesGetter
       return DbResponseStatusUtil.httpStatusToResponseStatus(
           response.getStatusLine().getStatusCode());
     }
+    return null;
   }
 }
