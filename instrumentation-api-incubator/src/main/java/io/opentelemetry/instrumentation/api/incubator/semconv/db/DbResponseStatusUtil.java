@@ -1,14 +1,18 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import javax.annotation.Nullable;
 
 /** Utility class for database response status. */
 public class DbResponseStatusUtil {
-  private DbResponseStatusUtil() {
-  }
+  private DbResponseStatusUtil() {}
 
   @Nullable
   public static String httpStatusToResponseStatus(int httpStatus) {
-    return httpStatus >= 400 && httpStatus< 600 ? Integer.toString(httpStatus) : null;
+    return httpStatus >= 400 && httpStatus < 600 ? Integer.toString(httpStatus) : null;
   }
 }
