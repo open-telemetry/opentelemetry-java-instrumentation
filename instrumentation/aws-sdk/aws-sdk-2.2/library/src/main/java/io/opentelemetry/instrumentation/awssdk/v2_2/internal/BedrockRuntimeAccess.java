@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import io.opentelemetry.api.logs.Logger;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -35,6 +37,11 @@ final class BedrockRuntimeAccess {
   @NoMuzzle
   static boolean isBedrockRuntimeRequest(SdkRequest request) {
     return enabled && BedrockRuntimeImpl.isBedrockRuntimeRequest(request);
+  }
+
+  @NoMuzzle
+  static boolean isBedrockRuntimeResponse(SdkResponse response) {
+    return enabled && BedrockRuntimeImpl.isBedrockRuntimeResponse(response);
   }
 
   @Nullable
@@ -83,5 +90,26 @@ final class BedrockRuntimeAccess {
   @NoMuzzle
   static Long getUsageOutputTokens(SdkResponse response) {
     return enabled ? BedrockRuntimeImpl.getUsageOutputTokens(response) : null;
+  }
+
+  @NoMuzzle
+  static void recordRequestEvents(
+      Context otelContext, Logger eventLogger, SdkRequest request, boolean captureMessageContent) {
+    if (enabled) {
+      BedrockRuntimeImpl.recordRequestEvents(
+          otelContext, eventLogger, request, captureMessageContent);
+    }
+  }
+
+  @NoMuzzle
+  static void recordResponseEvents(
+      Context otelContext,
+      Logger eventLogger,
+      SdkResponse response,
+      boolean captureMessageContent) {
+    if (enabled) {
+      BedrockRuntimeImpl.recordResponseEvents(
+          otelContext, eventLogger, response, captureMessageContent);
+    }
   }
 }

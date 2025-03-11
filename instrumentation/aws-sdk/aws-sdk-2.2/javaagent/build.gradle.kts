@@ -129,7 +129,7 @@ testing {
     val s3PresignerTest by registering(JvmTestSuite::class) {
       dependencies {
         if (latestDepTest) {
-          implementation("software.amazon.awssdk:s3:+")
+          implementation("software.amazon.awssdk:s3:latest.release")
         } else {
           implementation("software.amazon.awssdk:s3:2.10.12")
         }
@@ -141,10 +141,19 @@ testing {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
         if (findProperty("testLatestDeps") as Boolean) {
-          implementation("software.amazon.awssdk:bedrockruntime:+")
+          implementation("software.amazon.awssdk:bedrockruntime:latest.release")
         } else {
           // First release with Converse API
           implementation("software.amazon.awssdk:bedrockruntime:2.25.63")
+        }
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            // TODO run tests both with and without genai message capture
+            systemProperty("otel.instrumentation.genai.capture-message-content", "true")
+          }
         }
       }
     }
