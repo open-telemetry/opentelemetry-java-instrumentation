@@ -51,9 +51,9 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
 
   @Nullable
   @Override
-  public String getResponseStatusFromException(Throwable throwable) {
-    if (throwable instanceof R2dbcException) {
-      return ((R2dbcException) throwable).getSqlState();
+  public String getResponseStatus(@Nullable Void response, @Nullable Throwable error) {
+    if (error instanceof R2dbcException) {
+      return ((R2dbcException) error).getSqlState();
     }
     return null;
   }

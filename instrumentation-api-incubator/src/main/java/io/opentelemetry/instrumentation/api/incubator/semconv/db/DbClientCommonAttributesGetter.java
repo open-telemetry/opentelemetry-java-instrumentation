@@ -46,12 +46,7 @@ public interface DbClientCommonAttributesGetter<REQUEST, RESPONSE> {
   String getConnectionString(REQUEST request);
 
   @Nullable
-  default String getResponseStatusFromException(Throwable throwable) {
-    return null;
-  }
-
-  @Nullable
-  default String getResponseStatus(RESPONSE response) {
+  default String getResponseStatus(@Nullable RESPONSE response, @Nullable Throwable error) {
     return null;
   }
 }
