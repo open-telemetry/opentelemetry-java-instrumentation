@@ -14,7 +14,6 @@ import java.util.regex.Pattern;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-// copied from io.opentelemetry.sdk.internal.GlobUtil except for isGlobString.
 public final class GlobUtil {
 
   private GlobUtil() {}
@@ -30,6 +29,7 @@ public final class GlobUtil {
    *   <li>{@code ?} matches exactly one instance of any character
    * </ul>
    */
+  // copied from io.opentelemetry.sdk.internal.GlobUtil
   public static Predicate<String> toGlobPatternPredicate(String globPattern) {
     // Match all
     if (globPattern.equals("*")) {
@@ -53,6 +53,7 @@ public final class GlobUtil {
    * Transform the {@code globPattern} to a regex by converting {@code *} to {@code .*}, {@code ?}
    * to {@code .}, and escaping other regex special characters.
    */
+  // copied from io.opentelemetry.sdk.internal.GlobUtil
   private static Pattern toRegexPattern(String globPattern) {
     int tokenStart = -1;
     StringBuilder patternBuilder = new StringBuilder();
