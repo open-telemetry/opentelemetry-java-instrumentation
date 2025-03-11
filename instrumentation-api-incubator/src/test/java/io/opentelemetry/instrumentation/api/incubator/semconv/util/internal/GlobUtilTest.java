@@ -5,11 +5,13 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.util.internal;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.util.internal.GlobUtil.isGlobPattern;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.util.internal.GlobUtil.toGlobPatternPredicate;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
+// copied from io.opentelemetry.sdk.internal.GlobUtilTest
 class GlobUtilTest {
 
   @Test
@@ -42,5 +44,21 @@ class GlobUtilTest {
     assertThat(toGlobPatternPredicate("f()[]$^.{}|").test("f()[]$^.{}|")).isTrue();
     assertThat(toGlobPatternPredicate("f()[]$^.{}|?").test("f()[]$^.{}|o")).isTrue();
     assertThat(toGlobPatternPredicate("f()[]$^.{}|*").test("f()[]$^.{}|ooo")).isTrue();
+  }
+
+  @Test
+  void testIsGlobPattern() {
+    assertThat(isGlobPattern("foo")).isFalse();
+    assertThat(isGlobPattern("fo?")).isTrue();
+    assertThat(isGlobPattern("fo??")).isTrue();
+    assertThat(isGlobPattern("*")).isTrue();
+    assertThat(isGlobPattern("fo*")).isTrue();
+    assertThat(isGlobPattern("*bar")).isTrue();
+    assertThat(isGlobPattern("fo*b*")).isTrue();
+    assertThat(isGlobPattern("fo? b??")).isTrue();
+    assertThat(isGlobPattern("fo* ba?")).isTrue();
+    assertThat(isGlobPattern("f()[]$^.{}|")).isFalse();
+    assertThat(isGlobPattern("f()[]$^.{}|?")).isTrue();
+    assertThat(isGlobPattern("f()[]$^.{}|*")).isTrue();
   }
 }

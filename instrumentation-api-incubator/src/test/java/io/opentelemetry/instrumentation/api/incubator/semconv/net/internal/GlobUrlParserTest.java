@@ -52,6 +52,7 @@ class GlobUrlParserTest {
         .isEqualTo("*.example.???");
   }
 
+  // Copied from UrlParserTest
   @Test
   void testGetHostWithNoAuthority() {
     assertThat(GlobUrlParser.getHost("https:")).isNull();
@@ -70,6 +71,7 @@ class GlobUrlParserTest {
     assertThat(GlobUrlParser.getHost("https:/#fragment")).isNull();
   }
 
+  // Copied from UrlParserTest
   @Test
   void testGetHostWithNoScheme() {
     assertThat(GlobUrlParser.getHost("")).isNull();
@@ -124,6 +126,7 @@ class GlobUrlParserTest {
     assertThat(GlobUrlParser.getPort("https://*.example.???:8080/#fragment")).isEqualTo(8080);
   }
 
+  // Copied from UrlParserTest
   @Test
   void testGetPortWithNoAuthority() {
     assertThat(GlobUrlParser.getPort("https:")).isNull();
@@ -142,6 +145,7 @@ class GlobUrlParserTest {
     assertThat(GlobUrlParser.getPort("https:/#fragment")).isNull();
   }
 
+  // Copied from UrlParserTest
   @Test
   void testGetPortWithNoScheme() {
     assertThat(GlobUrlParser.getPort("")).isNull();
@@ -208,6 +212,7 @@ class GlobUrlParserTest {
         .isEqualTo("/api/v1");
   }
 
+  // Copied from UrlParserTest
   @Test
   void testGetPathWithNoAuthority() {
     assertThat(GlobUrlParser.getPath("https:")).isNull();
@@ -231,6 +236,7 @@ class GlobUrlParserTest {
     assertThat(GlobUrlParser.getPath("https:/api/v1#fragment")).isNull();
   }
 
+  // Copied from UrlParserTest
   @Test
   void testGetPathWithNoScheme() {
     assertThat(GlobUrlParser.getPath("")).isNull();

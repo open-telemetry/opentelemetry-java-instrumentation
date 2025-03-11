@@ -12,6 +12,7 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
+// Copied from UrlParser except for getHostEndIndexExclusive.
 public final class GlobUrlParser {
 
   @Nullable
@@ -105,7 +106,7 @@ public final class GlobUrlParser {
   private static int getHostEndIndexExclusive(String url, int startIndex) {
     // look for the end of the host:
     //   ':' ==> start of port, or
-    //   '/', '?', '#' ==> start of path
+    //   '/', '#' ==> start of path
     return getEndIndexExclusive(url, startIndex, c -> (c == ':' || c == '/' || c == '#'));
   }
 

@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
+// copied from io.opentelemetry.sdk.internal.GlobUtil except for isGlobString.
 public final class GlobUtil {
 
   private GlobUtil() {}
@@ -78,5 +79,10 @@ public final class GlobUtil {
       patternBuilder.append(Pattern.quote(globPattern.substring(tokenStart)));
     }
     return Pattern.compile(patternBuilder.toString());
+  }
+
+  /** Returns true if the {@code string} contains {@code *} or {@code .*}. */
+  public static boolean isGlobPattern(String string) {
+    return string.contains("*") || string.contains("?");
   }
 }

@@ -49,7 +49,7 @@ class PeerServiceResolverImpl implements PeerServiceResolver {
                 return;
               }
 
-              if (host.contains("*") || host.contains("?")) {
+              if (GlobUtil.isGlobPattern(host)) {
                 ServiceMatcher serviceMatcher =
                     ServiceMatcher.create(GlobUrlParser.getPort(url), GlobUrlParser.getPath(url));
                 globMapping
@@ -70,22 +70,6 @@ class PeerServiceResolverImpl implements PeerServiceResolver {
   @Override
   public boolean isEmpty() {
     return mapping.isEmpty() && globMapping.isEmpty();
-  }
-
-  @Nullable
-  static String matchService(
-      @Nullable Map<ServiceMatcher, String> matchers,
-      @Nullable Integer port,
-      @Nullable Supplier<String> pathSupplier) {
-    if (matchers == null) {
-      return null;
-    }
-
-    return matchers.entrySet().stream()
-        .filter(entry -> entry.getKey().matches(port, pathSupplier))
-        .findFirst()
-        .map(Map.Entry::getValue)
-        .orElse(null);
   }
 
   @Override
@@ -110,6 +94,22 @@ class PeerServiceResolverImpl implements PeerServiceResolver {
     }
 
     return null;
+  }
+
+  @Nullable
+  static String matchService(
+      @Nullable Map<ServiceMatcher, String> matchers,
+      @Nullable Integer port,
+      @Nullable Supplier<String> pathSupplier) {
+    if (matchers == null) {
+      return null;
+    }
+
+    return matchers.entrySet().stream()
+        .filter(entry -> entry.getKey().matches(port, pathSupplier))
+        .findFirst()
+        .map(Map.Entry::getValue)
+        .orElse(null);
   }
 
   @AutoValue
