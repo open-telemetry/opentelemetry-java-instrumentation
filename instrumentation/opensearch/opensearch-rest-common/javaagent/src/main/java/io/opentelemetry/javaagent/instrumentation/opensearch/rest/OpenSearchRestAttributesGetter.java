@@ -54,6 +54,7 @@ final class OpenSearchRestAttributesGetter
 
   @Override
   public String getResponseStatus(Response response) {
-    return DbResponseStatusUtil.httpStatusToResponseStatus(response.getStatusLine().getStatusCode());
+    return DbResponseStatusUtil.httpStatusToResponseStatus(
+        response.getStatusLine().getStatusCode());
   }
 }
