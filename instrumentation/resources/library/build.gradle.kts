@@ -5,6 +5,7 @@ plugins {
 val mrJarVersions = listOf(9, 11)
 
 dependencies {
+  compileOnly("io.opentelemetry:opentelemetry-api-incubator")
   implementation("io.opentelemetry:opentelemetry-sdk-common")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   implementation("io.opentelemetry.semconv:opentelemetry-semconv")
