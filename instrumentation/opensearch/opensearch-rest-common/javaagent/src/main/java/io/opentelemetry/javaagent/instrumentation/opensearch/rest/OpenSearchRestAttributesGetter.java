@@ -52,9 +52,12 @@ final class OpenSearchRestAttributesGetter
     return request.getMethod();
   }
 
+  @Nullable
   @Override
-  public String getResponseStatus(Response response) {
-    return DbResponseStatusUtil.httpStatusToResponseStatus(
-        response.getStatusLine().getStatusCode());
+  public String getResponseStatus(@Nullable Response response, @Nullable Throwable error) {
+    if (response != null) {
+      return DbResponseStatusUtil.httpStatusToResponseStatus(
+          response.getStatusLine().getStatusCode());
+    }
   }
 }

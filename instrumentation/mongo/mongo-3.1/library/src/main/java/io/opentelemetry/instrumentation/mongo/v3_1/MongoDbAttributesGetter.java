@@ -100,9 +100,9 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
 
   @Nullable
   @Override
-  public String getResponseStatusFromException(Throwable throwable) {
-    if (throwable instanceof MongoException) {
-      return Integer.toString(((MongoException) throwable).getCode());
+  public String getResponseStatus(@Nullable Void response, @Nullable Throwable error) {
+    if (error instanceof MongoException) {
+      return Integer.toString(((MongoException) error).getCode());
     }
     return null;
   }

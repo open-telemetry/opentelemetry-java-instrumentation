@@ -63,9 +63,9 @@ final class ClickHouseAttributesGetter
 
   @Nullable
   @Override
-  public String getResponseStatusFromException(Throwable throwable) {
-    if (throwable instanceof ClickHouseException) {
-      return Integer.toString(((ClickHouseException) throwable).getErrorCode());
+  public String getResponseStatus(@Nullable Void response, @Nullable Throwable error) {
+    if (error instanceof ClickHouseException) {
+      return Integer.toString(((ClickHouseException) error).getErrorCode());
     }
     return null;
   }

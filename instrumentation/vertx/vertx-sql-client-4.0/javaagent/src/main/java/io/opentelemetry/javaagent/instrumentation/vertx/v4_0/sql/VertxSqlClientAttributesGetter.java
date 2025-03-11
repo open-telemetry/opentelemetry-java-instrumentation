@@ -48,11 +48,11 @@ public enum VertxSqlClientAttributesGetter
 
   @Nullable
   @Override
-  public String getResponseStatusFromException(Throwable throwable) {
+  public String getResponseStatus(@Nullable Void response, @Nullable Throwable error) {
     try {
       Class<?> ex = Class.forName("io.vertx.pgclient.PgException");
-      if (ex.isInstance(throwable)) {
-        return (String) ex.getMethod("getCode").invoke(throwable);
+      if (ex.isInstance(error)) {
+        return (String) ex.getMethod("getCode").invoke(error);
       }
     } catch (ClassNotFoundException
         | NoSuchMethodException

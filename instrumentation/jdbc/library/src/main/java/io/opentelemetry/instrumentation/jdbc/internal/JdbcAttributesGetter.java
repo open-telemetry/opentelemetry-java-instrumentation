@@ -54,10 +54,11 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
     return request.getBatchSize();
   }
 
+  @Nullable
   @Override
-  public String getResponseStatusFromException(Throwable throwable) {
-    if (throwable instanceof SQLException) {
-      return Integer.toString(((SQLException) throwable).getErrorCode());
+  public String getResponseStatus(@Nullable Void response, @Nullable Throwable error) {
+    if (error instanceof SQLException) {
+      return Integer.toString(((SQLException) error).getErrorCode());
     }
     return null;
   }
