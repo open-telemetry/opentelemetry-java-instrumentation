@@ -60,12 +60,6 @@ configurations.configureEach {
 }
 
 graalvmNative {
-  binaries.all {
-    // Workaround for https://github.com/junit-team/junit5/issues/3405
-    buildArgs.add("--initialize-at-build-time=org.junit.platform.launcher.core.LauncherConfig")
-    buildArgs.add("--initialize-at-build-time=org.junit.jupiter.engine.config.InstantiatingConfigurationParameterConverter")
-  }
-
   // See https://github.com/graalvm/native-build-tools/issues/572
   metadataRepository {
     enabled.set(false)
