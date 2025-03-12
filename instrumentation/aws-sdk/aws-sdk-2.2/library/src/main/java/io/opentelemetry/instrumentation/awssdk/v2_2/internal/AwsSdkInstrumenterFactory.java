@@ -10,10 +10,14 @@ import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
@@ -217,6 +221,24 @@ public final class AwsSdkInstrumenterFactory {
                 .addAttributesExtractor(new DynamoDbAttributesExtractor())
                 .addOperationMetrics(DbClientMetrics.get()),
         true);
+  }
+
+  public Instrumenter<ExecutionAttributes, Response> bedrockRuntimeInstrumenter() {
+    return createInstrumenter(
+        openTelemetry,
+        GenAiSpanNameExtractor.create(BedrockRuntimeAttributesGetter.INSTANCE),
+        SpanKindExtractor.alwaysClient(),
+        attributesExtractors(),
+        builder ->
+            builder
+                .addAttributesExtractor(
+                    GenAiAttributesExtractor.create(BedrockRuntimeAttributesGetter.INSTANCE))
+                .addOperationMetrics(GenAiClientMetrics.get()),
+        true);
+  }
+
+  public Logger eventLogger() {
+    return openTelemetry.getLogsBridge().get(INSTRUMENTATION_NAME);
   }
 
   private static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> createInstrumenter(
