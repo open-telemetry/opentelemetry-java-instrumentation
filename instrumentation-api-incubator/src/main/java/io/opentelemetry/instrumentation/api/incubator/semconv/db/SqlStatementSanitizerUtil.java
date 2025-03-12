@@ -18,10 +18,6 @@ class SqlStatementSanitizerUtil {
   private static final SqlStatementSanitizer sanitizer = SqlStatementSanitizer.create(true);
 
   static SqlStatementInfo sanitize(String queryText) {
-    if (!InstrumenterContext.isActive()) {
-      return sanitizer.sanitize(queryText);
-    }
-
     Map<String, SqlStatementInfo> map =
         InstrumenterContext.computeIfAbsent("sanitized-sql-map", unused -> new HashMap<>());
     return map.computeIfAbsent(queryText, sanitizer::sanitize);

@@ -165,7 +165,11 @@ public class Instrumenter<REQUEST, RESPONSE> {
   }
 
   private Context doStart(Context parentContext, REQUEST request, @Nullable Instant startTime) {
-    return InstrumenterContext.withContext(() -> doStartImpl(parentContext, request, startTime));
+    try {
+      return doStartImpl(parentContext, request, startTime);
+    } finally {
+      InstrumenterContext.reset();
+    }
   }
 
   private Context doStartImpl(Context parentContext, REQUEST request, @Nullable Instant startTime) {

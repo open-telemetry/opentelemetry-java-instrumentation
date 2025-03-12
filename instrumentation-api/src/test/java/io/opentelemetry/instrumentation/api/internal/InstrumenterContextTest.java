@@ -17,13 +17,16 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttrib
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class InstrumenterContextTest {
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @SuppressWarnings({"unchecked", "deprecation"}) // using deprecated DB_SQL_TABLE
   @Test
@@ -41,39 +44,35 @@ class InstrumenterContextTest {
     AttributesExtractor<Object, Void> attributesExtractor =
         SqlClientAttributesExtractor.create(getter);
 
-    assertThat(InstrumenterContext.isActive()).isFalse();
-    InstrumenterContext.withContext(
-        () -> {
-          assertThat(InstrumenterContext.isActive()).isTrue();
-          assertThat(InstrumenterContext.get()).isEmpty();
-          assertThat(spanNameExtractor.extract(null)).isEqualTo("SELECT test");
-          // verify that sanitized statement was cached, see SqlStatementSanitizerUtil
-          assertThat(InstrumenterContext.get()).containsKey("sanitized-sql-map");
-          Map<String, SqlStatementInfo> sanitizedMap =
-              (Map<String, SqlStatementInfo>) InstrumenterContext.get().get("sanitized-sql-map");
-          assertThat(sanitizedMap).containsKey(testQuery);
+    InstrumenterContext.reset();
+    cleanup.deferCleanup(InstrumenterContext::reset);
 
-          // replace cached sanitization result to verify it is used
-          sanitizedMap.put(
-              testQuery,
-              SqlStatementInfo.create("SELECT name2 FROM test2 WHERE id = ?", "SELECT", "test2"));
-          {
-            AttributesBuilder builder = Attributes.builder();
-            attributesExtractor.onStart(builder, Context.root(), null);
-            assertThat(builder.build().get(maybeStable(DbIncubatingAttributes.DB_SQL_TABLE)))
-                .isEqualTo("test2");
-          }
+    assertThat(InstrumenterContext.get()).isEmpty();
+    assertThat(spanNameExtractor.extract(null)).isEqualTo("SELECT test");
+    // verify that sanitized statement was cached, see SqlStatementSanitizerUtil
+    assertThat(InstrumenterContext.get()).containsKey("sanitized-sql-map");
+    Map<String, SqlStatementInfo> sanitizedMap =
+        (Map<String, SqlStatementInfo>) InstrumenterContext.get().get("sanitized-sql-map");
+    assertThat(sanitizedMap).containsKey(testQuery);
 
-          // clear cached value to see whether it gets recomputed correctly
-          sanitizedMap.clear();
-          {
-            AttributesBuilder builder = Attributes.builder();
-            attributesExtractor.onStart(builder, Context.root(), null);
-            assertThat(builder.build().get(maybeStable(DbIncubatingAttributes.DB_SQL_TABLE)))
-                .isEqualTo("test");
-          }
+    // replace cached sanitization result to verify it is used
+    sanitizedMap.put(
+        testQuery,
+        SqlStatementInfo.create("SELECT name2 FROM test2 WHERE id = ?", "SELECT", "test2"));
+    {
+      AttributesBuilder builder = Attributes.builder();
+      attributesExtractor.onStart(builder, Context.root(), null);
+      assertThat(builder.build().get(maybeStable(DbIncubatingAttributes.DB_SQL_TABLE)))
+          .isEqualTo("test2");
+    }
 
-          return null;
-        });
+    // clear cached value to see whether it gets recomputed correctly
+    sanitizedMap.clear();
+    {
+      AttributesBuilder builder = Attributes.builder();
+      attributesExtractor.onStart(builder, Context.root(), null);
+      assertThat(builder.build().get(maybeStable(DbIncubatingAttributes.DB_SQL_TABLE)))
+          .isEqualTo("test");
+    }
   }
 }
