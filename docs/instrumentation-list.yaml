@@ -1414,6 +1414,11 @@ spring:
       javaagent:
       - org.springframework:spring-aop:[1.2,]
       - org.springframework.data:spring-data-commons:[1.8.0.RELEASE,]
+  - name: spring-pulsar-1.0
+    srcPath: instrumentation/spring/spring-pulsar-1.0
+    target_versions:
+      javaagent:
+      - org.springframework.pulsar:spring-pulsar:[1.0.0,)
   - name: spring-web-3.1
     srcPath: instrumentation/spring/spring-web/spring-web-3.1
     target_versions:

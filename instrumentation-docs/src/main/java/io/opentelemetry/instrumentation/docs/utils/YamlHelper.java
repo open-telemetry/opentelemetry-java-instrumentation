@@ -107,9 +107,5 @@ public class YamlHelper {
     return new Yaml().loadAs(input, InstrumentationMetaData.class);
   }
 
-  //  public static EmittedTelemetry emittedTelemetryParser(String input) {
-  //    return new Yaml().loadAs(input, EmittedTelemetry.class);
-  //  }
-
   private YamlHelper() {}
 }

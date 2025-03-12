@@ -9,6 +9,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
@@ -25,8 +26,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -48,11 +50,14 @@ public abstract class InstrumentationTestRunner {
 
   private final TestInstrumenters testInstrumenters;
 
+  protected InstrumentationScopeInfo instrumentationScope;
+  protected Set<SpanKind> spanKinds;
+  protected Map<String, String> attributeKeys = new HashMap<>();
+  protected Map<String, MetricData> metrics = new HashMap<>();
+
   protected InstrumentationTestRunner(OpenTelemetry openTelemetry) {
     testInstrumenters = new TestInstrumenters(openTelemetry);
   }
-
-  protected Set<InstrumentationScopeInfo> instrumentationScopes = new HashSet<>();
 
   public abstract void beforeTestClass();
 
@@ -138,7 +143,7 @@ public abstract class InstrumentationTestRunner {
       TelemetryDataUtil.assertScopeVersion(traces);
     }
 
-    getScopeFromTraces(traces);
+    getMetadataFromTraces(traces);
 
     if (traceComparator != null) {
       traces.sort(traceComparator);
@@ -146,12 +151,19 @@ public abstract class InstrumentationTestRunner {
     TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(assertionsList);
   }
 
-  public void getScopeFromTraces(List<List<SpanData>> traces) {
+  public void getMetadataFromTraces(List<List<SpanData>> traces) {
     for (List<SpanData> trace : traces) {
       for (SpanData span : trace) {
+
+        if (spanKinds != null) {
+          spanKinds.add(span.getKind());
+        }
+        span.getAttributes()
+            .forEach((key, value) -> attributeKeys.put(key.getKey(), key.getType().name()));
+
         InstrumentationScopeInfo scopeInfo = span.getInstrumentationScopeInfo();
-        if (!scopeInfo.getName().equals("test")) {
-          instrumentationScopes.add(scopeInfo);
+        if (!scopeInfo.getName().equals("test") && instrumentationScope == null) {
+          instrumentationScope = scopeInfo;
         }
       }
     }
@@ -175,8 +187,8 @@ public abstract class InstrumentationTestRunner {
                         data ->
                             data.getInstrumentationScopeInfo().getName().equals(instrumentationName)
                                 && data.getName().equals(metricName))));
-    if (instrumentationScopes.isEmpty()) {
-      getScopeFromMetrics(getExportedMetrics());
+    if (instrumentationScope == null) {
+      getMetadataFromMetrics(getExportedMetrics());
     }
   }
 
@@ -196,16 +208,19 @@ public abstract class InstrumentationTestRunner {
           }
         });
 
-    if (instrumentationScopes.isEmpty()) {
-      getScopeFromMetrics(getExportedMetrics());
-    }
+    getMetadataFromMetrics(getExportedMetrics());
   }
 
-  public void getScopeFromMetrics(List<MetricData> metrics) {
+  public void getMetadataFromMetrics(List<MetricData> metrics) {
     for (MetricData metric : metrics) {
+
+      if (!this.metrics.containsKey(metric.getName())) {
+        this.metrics.put(metric.getName(), metric);
+      }
+
       InstrumentationScopeInfo scopeInfo = metric.getInstrumentationScopeInfo();
-      if (!scopeInfo.getName().equals("test")) {
-        instrumentationScopes.add(scopeInfo);
+      if (!scopeInfo.getName().equals("test") && instrumentationScope == null) {
+        instrumentationScope = scopeInfo;
       }
     }
   }

@@ -5,14 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.clickhouse;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -89,6 +93,7 @@ class ClickHouseClientTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void testConnectionStringWithoutDatabaseSpecifiedStillGeneratesSpans()
       throws ClickHouseException {
     ClickHouseNode server = ClickHouseNode.of("http://" + host + ":" + port + "?compress=0");
@@ -111,6 +116,15 @@ class ClickHouseClientTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             attributeAssertions("select * from " + tableName, "SELECT"))));
+
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.clickhouse-client-0.5",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        DB_NAMESPACE,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   @Test

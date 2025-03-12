@@ -1,0 +1,13 @@
+attributes:
+  - name: server.address
+    type: STRING
+  - name: server.port
+    type: LONG
+  - name: db.system.name
+    type: STRING
+  - name: db.query.text
+    type: STRING
+  - name: db.namespace
+    type: STRING
+  - name: db.operation.name
+    type: STRING

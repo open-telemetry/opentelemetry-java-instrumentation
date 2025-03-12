@@ -12,21 +12,23 @@ import ch.qos.logback.classic.Logger;
 import com.google.common.base.VerifyException;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.LoggerUtils;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
-import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.slf4j.LoggerFactory;
@@ -75,9 +77,9 @@ public final class AgentTestRunner extends InstrumentationTestRunner {
 
     // Generates emitted_telemetry.yaml file with all emitted telemetry to be used
     // by the instrumentation-docs Doc generator.
-    if (Boolean.getBoolean("collectMetadata")) {
-      writeInstrumentationScopesToFile(instrumentationScopes);
-    }
+    //    if (Boolean.getBoolean("collectMetadata")) {
+    writeInstrumentationScopesToFile();
+    //    }
 
     // additional library ignores are ignored during tests, because they can make it really
     // confusing for contributors wondering why their instrumentation is not applied
@@ -89,10 +91,9 @@ public final class AgentTestRunner extends InstrumentationTestRunner {
             + TestAgentListenerAccess.getIgnoredButTransformedClassNames();
   }
 
-  public void writeInstrumentationScopesToFile(Set<InstrumentationScopeInfo> instrumentationScopes)
-      throws IOException {
+  public void writeInstrumentationScopesToFile() throws IOException {
 
-    if (instrumentationScopes == null) {
+    if (instrumentationScope == null) {
       return;
     }
 
@@ -108,28 +109,85 @@ public final class AgentTestRunner extends InstrumentationTestRunner {
       throw new IllegalArgumentException("Invalid path: " + path);
     }
 
-    Path outputPath = Paths.get(instrumentationPath, "emitted_telemetry.yaml");
-    try (BufferedWriter writer = Files.newBufferedWriter(outputPath.toFile().toPath(), UTF_8)) {
-      writer.write("scope:\n");
-      for (InstrumentationScopeInfo scope : instrumentationScopes) {
-        writer.write("  name: " + scope.getName() + "\n");
-        writer.write("  version: " + scope.getVersion() + "\n");
-        writer.write("  schemaUrl: " + scope.getSchemaUrl() + "\n");
-        if (scope.getAttributes() == null) {
-          writer.write("  attributes: {}\n");
-        } else {
-          writer.write("  attributes:\n");
-          scope
+    String tmpFileLocation = ".telemetry";
+    Path telemetryDir = Paths.get(instrumentationPath, tmpFileLocation);
+
+    // Create the .telemetry directory if it doesn't exist
+    try {
+      Files.createDirectories(telemetryDir);
+    } catch (FileAlreadyExistsException e) {
+      // Directory already exists, no action needed
+    }
+
+    Path spansPath =
+        Paths.get(instrumentationPath, tmpFileLocation, "spans-" + UUID.randomUUID() + ".yaml");
+    try (BufferedWriter writer = Files.newBufferedWriter(spansPath.toFile().toPath(), UTF_8)) {
+
+      if (spanKinds != null) {
+        writer.write("span_kinds:\n");
+        for (SpanKind spanKind : spanKinds) {
+          writer.write("  - " + spanKind + "\n");
+        }
+      }
+
+      if (!attributeKeys.isEmpty()) {
+        writer.write("attributes:\n");
+        for (Map.Entry<String, String> entry : attributeKeys.entrySet()) {
+          writer.write("  - name: " + entry.getKey() + "\n");
+          writer.write("    type: " + entry.getValue() + "\n");
+        }
+      }
+    }
+
+    Path metricsPath =
+        Paths.get(instrumentationPath, tmpFileLocation, "metrics-" + UUID.randomUUID() + ".yaml");
+    try (BufferedWriter writer = Files.newBufferedWriter(metricsPath.toFile().toPath(), UTF_8)) {
+
+      if (!metrics.isEmpty()) {
+        writer.write("metrics:\n");
+        for (MetricData metric : metrics.values()) {
+          writer.write("  - name: " + metric.getName() + "\n");
+          writer.write("    description: " + metric.getDescription() + "\n");
+          writer.write("    type: " + metric.getType().toString() + "\n");
+          writer.write("    unit: " + metric.getUnit() + "\n");
+          writer.write("    attributes: \n");
+          metric.getData().getPoints().stream()
+              .findFirst()
+              .get()
               .getAttributes()
               .forEach(
                   (key, value) -> {
                     try {
-                      writer.write("      " + key + ": " + value + "\n");
+                      writer.write("      - name: " + key.getKey() + "\n");
+                      writer.write("        type: " + key.getType().toString() + "\n");
                     } catch (IOException e) {
                       throw new VerifyException(e);
                     }
                   });
         }
+      }
+    }
+
+    Path outputPath = Paths.get(instrumentationPath, tmpFileLocation, "scope.yaml");
+    try (BufferedWriter writer = Files.newBufferedWriter(outputPath.toFile().toPath(), UTF_8)) {
+      writer.write("scope:\n");
+      writer.write("  name: " + instrumentationScope.getName() + "\n");
+      writer.write("  version: " + instrumentationScope.getVersion() + "\n");
+      writer.write("  schemaUrl: " + instrumentationScope.getSchemaUrl() + "\n");
+      if (instrumentationScope.getAttributes() == null) {
+        writer.write("  attributes: {}\n");
+      } else {
+        writer.write("  attributes:\n");
+        instrumentationScope
+            .getAttributes()
+            .forEach(
+                (key, value) -> {
+                  try {
+                    writer.write("      " + key + ": " + value + "\n");
+                  } catch (IOException e) {
+                    throw new VerifyException(e);
+                  }
+                });
       }
     }
   }
