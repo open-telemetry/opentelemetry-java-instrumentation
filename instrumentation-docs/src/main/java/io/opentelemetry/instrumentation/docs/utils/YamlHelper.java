@@ -5,19 +5,12 @@
 
 package io.opentelemetry.instrumentation.docs.utils;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.internal.EmittedScope;
 import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationEntity;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
-import io.opentelemetry.instrumentation.docs.internal.InstrumentationScopeInfoDeserializer;
-import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import java.io.BufferedWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,23 +19,11 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.representer.Representer;
 
 public class YamlHelper {
 
-  private static final ObjectMapper mapper =
-      new ObjectMapper(new YAMLFactory())
-          .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-
-  static {
-    SimpleModule module = new SimpleModule();
-    module.addDeserializer(
-        InstrumentationScopeInfo.class, new InstrumentationScopeInfoDeserializer());
-    mapper.registerModule(module);
-  }
-
-  public static EmittedScope emittedScopeParser(String input) throws IOException {
-    return mapper.readValue(input, EmittedScope.class);
+  public static EmittedScope emittedScopeParser(String input) {
+    return new Yaml().loadAs(input, EmittedScope.class);
   }
 
   public static EmittedMetrics emittedMetricsParser(String input) {
@@ -82,12 +63,17 @@ public class YamlHelper {
               scopeMap.put("version", entity.getScope().getVersion());
               scopeMap.put("schemaUrl", entity.getScope().getSchemaUrl());
 
-              Map<String, Object> attributesMap = new LinkedHashMap<>();
-              entity
-                  .getScope()
-                  .getAttributes()
-                  .forEach((key, value) -> attributesMap.put(String.valueOf(key), value));
-              scopeMap.put("attributes", attributesMap);
+              if (entity.getScope().getAttributes() != null
+                  && !entity.getScope().getAttributes().isEmpty()) {
+
+                Map<String, Object> attributesMap = new LinkedHashMap<>();
+                entity
+                    .getScope()
+                    .getAttributes()
+                    .forEach((key, value) -> attributesMap.put(String.valueOf(key), value));
+                scopeMap.put("attributes", attributesMap);
+              }
+
               entityMap.put("scope", scopeMap);
             }
 
@@ -102,24 +88,7 @@ public class YamlHelper {
             entityMap.put("target_versions", targetVersions);
 
             if (entity.getMetrics() != null) {
-              List<Map<String, Object>> metricsList = new ArrayList<>();
-              for (EmittedMetrics.Metric metric : entity.getMetrics()) {
-                Map<String, Object> metricMap = new LinkedHashMap<>();
-                metricMap.put("name", metric.getName());
-                metricMap.put("description", metric.getDescription());
-                metricMap.put("type", metric.getType());
-                metricMap.put("unit", metric.getUnit());
-
-                List<Map<String, Object>> attributes = new ArrayList<>();
-                for (EmittedMetrics.Attribute attribute : metric.getAttributes()) {
-                  Map<String, Object> attributeMap = new LinkedHashMap<>();
-                  attributeMap.put("name", attribute.getName());
-                  attributeMap.put("type", attribute.getType());
-                  attributes.add(attributeMap);
-                }
-                metricMap.put("attributes", attributes);
-                metricsList.add(metricMap);
-              }
+              List<Map<String, Object>> metricsList = getMetricsList(entity);
               entityMap.put("metrics", metricsList);
             }
 
@@ -148,13 +117,34 @@ public class YamlHelper {
           output.put(group, groupMap);
         });
 
+    System.out.println(output);
     DumperOptions options = new DumperOptions();
     options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-    options.setDefaultScalarStyle(DumperOptions.ScalarStyle.PLAIN);
-    Representer representer = new Representer(options);
-    representer.getPropertyUtils().setSkipMissingProperties(true);
-    Yaml yaml = new Yaml(representer, options);
+
+    Yaml yaml = new Yaml(options);
     yaml.dump(output, writer);
+  }
+
+  private static List<Map<String, Object>> getMetricsList(InstrumentationEntity entity) {
+    List<Map<String, Object>> metricsList = new ArrayList<>();
+    for (EmittedMetrics.Metric metric : entity.getMetrics()) {
+      Map<String, Object> metricMap = new LinkedHashMap<>();
+      metricMap.put("name", metric.getName());
+      metricMap.put("description", metric.getDescription());
+      metricMap.put("type", metric.getType());
+      metricMap.put("unit", metric.getUnit());
+
+      List<Map<String, Object>> attributes = new ArrayList<>();
+      for (EmittedMetrics.Attribute attribute : metric.getAttributes()) {
+        Map<String, Object> attributeMap = new LinkedHashMap<>();
+        attributeMap.put("name", attribute.getName());
+        attributeMap.put("type", attribute.getType());
+        attributes.add(attributeMap);
+      }
+      metricMap.put("attributes", attributes);
+      metricsList.add(metricMap);
+    }
+    return metricsList;
   }
 
   public static InstrumentationMetaData metaDataParser(String input) {

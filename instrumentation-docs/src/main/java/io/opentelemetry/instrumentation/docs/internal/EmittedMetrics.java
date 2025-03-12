@@ -5,14 +5,12 @@
 
 package io.opentelemetry.instrumentation.docs.internal;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import java.util.List;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-@JsonDeserialize(using = EmittedMetricsDeserializer.class)
 public class EmittedMetrics {
   private List<Metric> metrics;
 

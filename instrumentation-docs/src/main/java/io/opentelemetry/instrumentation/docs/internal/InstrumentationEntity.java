@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.docs.internal;
 
-import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,13 +32,13 @@ public class InstrumentationEntity {
   private List<EmittedMetrics.Metric> metrics;
   private List<EmittedSpans.EmittedSpanAttribute> spanAttributes;
   private List<String> spanKinds;
-  private InstrumentationScopeInfo scope;
+  private EmittedScope.Scope scope;
 
   /**
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
    * any time.
    */
-  private InstrumentationEntity(Builder builder) {
+  public InstrumentationEntity(Builder builder) {
     this.srcPath = builder.srcPath;
     this.instrumentationName = builder.instrumentationName;
     this.namespace = builder.namespace;
@@ -64,8 +63,48 @@ public class InstrumentationEntity {
     this.spanKinds = spanKinds;
   }
 
-  public void setScope(InstrumentationScopeInfo scope) {
+  public void setScope(EmittedScope.Scope scope) {
     this.scope = scope;
+  }
+
+  public String getSrcPath() {
+    return srcPath;
+  }
+
+  public String getInstrumentationName() {
+    return instrumentationName;
+  }
+
+  public String getNamespace() {
+    return namespace;
+  }
+
+  public String getGroup() {
+    return group;
+  }
+
+  public InstrumentationMetaData getMetadata() {
+    return metadata;
+  }
+
+  public Map<InstrumentationType, Set<String>> getTargetVersions() {
+    return targetVersions;
+  }
+
+  public List<EmittedMetrics.Metric> getMetrics() {
+    return metrics;
+  }
+
+  public List<EmittedSpans.EmittedSpanAttribute> getSpanAttributes() {
+    return spanAttributes;
+  }
+
+  public List<String> getSpanKinds() {
+    return spanKinds;
+  }
+
+  public EmittedScope.Scope getScope() {
+    return scope;
   }
 
   /**
@@ -83,7 +122,7 @@ public class InstrumentationEntity {
     private List<EmittedMetrics.Metric> metrics;
     private List<EmittedSpans.EmittedSpanAttribute> spanAttributes;
     private List<String> spanKinds;
-    private InstrumentationScopeInfo scope;
+    private EmittedScope.Scope scope;
 
     public Builder srcPath(String srcPath) {
       this.srcPath = srcPath;
@@ -130,7 +169,7 @@ public class InstrumentationEntity {
       return this;
     }
 
-    public Builder scope(InstrumentationScopeInfo scope) {
+    public Builder scope(EmittedScope.Scope scope) {
       this.scope = scope;
       return this;
     }
@@ -138,45 +177,5 @@ public class InstrumentationEntity {
     public InstrumentationEntity build() {
       return new InstrumentationEntity(this);
     }
-  }
-
-  public String getSrcPath() {
-    return srcPath;
-  }
-
-  public String getInstrumentationName() {
-    return instrumentationName;
-  }
-
-  public String getNamespace() {
-    return namespace;
-  }
-
-  public String getGroup() {
-    return group;
-  }
-
-  public InstrumentationMetaData getMetadata() {
-    return metadata;
-  }
-
-  public Map<InstrumentationType, Set<String>> getTargetVersions() {
-    return targetVersions;
-  }
-
-  public List<EmittedMetrics.Metric> getMetrics() {
-    return metrics;
-  }
-
-  public List<EmittedSpans.EmittedSpanAttribute> getSpanAttributes() {
-    return spanAttributes;
-  }
-
-  public List<String> getSpanKinds() {
-    return spanKinds;
-  }
-
-  public InstrumentationScopeInfo getScope() {
-    return scope;
   }
 }

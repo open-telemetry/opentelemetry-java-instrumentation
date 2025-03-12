@@ -32,6 +32,10 @@ alibaba:
   instrumentations:
   - name: alibaba-druid-1.0
     srcPath: instrumentation/alibaba-druid-1.0
+    scope:
+      name: io.opentelemetry.alibaba-druid-1.0
+      version: 2.14.0-alpha-SNAPSHOT
+      schemaUrl: null
     target_versions:
       javaagent:
       - com.alibaba:druid:(,)
@@ -86,6 +90,10 @@ apache:
       - org.apache.shenyu:shenyu-web:[2.4.0,)
   - name: apache-httpclient-2.0
     srcPath: instrumentation/apache-httpclient/apache-httpclient-2.0
+    scope:
+      name: io.opentelemetry.apache-httpclient-2.0
+      version: 2.14.0-alpha-SNAPSHOT
+      schemaUrl: null
     target_versions:
       javaagent:
       - commons-httpclient:commons-httpclient:[2.0,4.0)
@@ -274,6 +282,10 @@ clickhouse:
     description: Instruments the V1 ClickHouseClient, providing database client spans
       and metrics.
     srcPath: instrumentation/clickhouse-client-0.5
+    scope:
+      name: io.opentelemetry.clickhouse-client-0.5
+      version: 2.14.0-alpha-SNAPSHOT
+      schemaUrl: null
     target_versions:
       javaagent:
       - com.clickhouse.client:clickhouse-client:[0.5.0,)

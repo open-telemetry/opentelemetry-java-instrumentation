@@ -80,11 +80,11 @@ class InstrumentationAnalyzer {
         entity.setMetadata(YamlHelper.metaDataParser(metadataFile));
       }
 
-      String emittedTelemetryMetadata = fileSearch.getScope(entity.getSrcPath());
-      if (emittedTelemetryMetadata != null) {
-        EmittedScope telemetry = YamlHelper.emittedScopeParser(emittedTelemetryMetadata);
-        if (telemetry != null && telemetry.getScope() != null) {
-          entity.setScope(telemetry.getScope());
+      String emittedScope = fileSearch.getScope(entity.getSrcPath());
+      if (emittedScope != null) {
+        EmittedScope scope = YamlHelper.emittedScopeParser(emittedScope);
+        if (scope != null && scope.getScope() != null) {
+          entity.setScope(scope.getScope());
         }
       }
 

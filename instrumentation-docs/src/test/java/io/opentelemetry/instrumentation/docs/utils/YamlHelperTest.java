@@ -6,14 +6,16 @@
 package io.opentelemetry.instrumentation.docs.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
+import io.opentelemetry.instrumentation.docs.internal.EmittedScope;
 import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationEntity;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
-import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import java.io.BufferedWriter;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -53,8 +55,8 @@ class YamlHelperTest {
             .build());
 
     Map<InstrumentationType, Set<String>> targetVersions2 = new HashMap<>();
-    InstrumentationScopeInfo scope =
-        InstrumentationScopeInfo.builder("struts-2.3").setVersion("2.14-ALPHA").build();
+
+    EmittedScope.Scope scope = new EmittedScope.Scope("struts-2.3", "2.14-ALPHA", null, null);
 
     EmittedMetrics.Metric metric =
         new EmittedMetrics.Metric(
@@ -91,55 +93,108 @@ class YamlHelperTest {
     writer.flush();
 
     String expectedYaml =
-        "spring:\n"
-            + "  instrumentations:\n"
-            + "  - name: spring-web-6.0\n"
-            + "    description: Spring Web 6.0 instrumentation\n"
-            + "    srcPath: instrumentation/spring/spring-web/spring-web-6.0\n"
-            + "    target_versions:\n"
-            + "      javaagent:\n"
-            + "      - org.springframework:spring-web:[6.0.0,)\n"
-            + "    span_data:\n"
-            + "      span_kinds:\n"
-            + "      - SERVER\n"
-            + "      attributes:\n"
-            + "      - name: db.namespace\n"
-            + "        type: STRING\n"
-            + "      - name: server.port\n"
-            + "        type: LONG\n"
-            + "struts:\n"
-            + "  instrumentations:\n"
-            + "  - name: struts-2.3\n"
-            + "    srcPath: instrumentation/struts/struts-2.3\n"
-            + "    scope:\n"
-            + "      name: struts-2.3\n"
-            + "      version: 2.14-ALPHA\n"
-            + "      schemaUrl: null\n"
-            + "      attributes: {}\n"
-            + "    target_versions:\n"
-            + "      library:\n"
-            + "      - org.apache.struts:struts2-core:2.1.0\n"
-            + "    metrics:\n"
-            + "    - name: db.client.operation.duration\n"
-            + "      description: Duration of database client operations.\n"
-            + "      type: HISTOGRAM\n"
-            + "      unit: s\n"
-            + "      attributes:\n"
-            + "      - name: db.namespace\n"
-            + "        type: STRING\n"
-            + "      - name: db.operation.name\n"
-            + "        type: STRING\n"
-            + "      - name: db.system.name\n"
-            + "        type: STRING\n"
-            + "      - name: server.address\n"
-            + "        type: STRING\n"
-            + "      - name: server.port\n"
-            + "        type: LONG\n"
-            + "    span_data:\n"
-            + "      span_kinds:\n"
-            + "      - SERVER\n"
-            + "      - CLIENT\n";
+        """
+        spring:
+          instrumentations:
+          - name: spring-web-6.0
+            description: Spring Web 6.0 instrumentation
+            srcPath: instrumentation/spring/spring-web/spring-web-6.0
+            target_versions:
+              javaagent:
+              - org.springframework:spring-web:[6.0.0,)
+            span_data:
+              span_kinds:
+              - SERVER
+              attributes:
+              - name: db.namespace
+                type: STRING
+              - name: server.port
+                type: LONG
+        struts:
+          instrumentations:
+          - name: struts-2.3
+            srcPath: instrumentation/struts/struts-2.3
+            scope:
+              name: struts-2.3
+              version: 2.14-ALPHA
+              schemaUrl: null
+            target_versions:
+              library:
+              - org.apache.struts:struts2-core:2.1.0
+            metrics:
+            - name: db.client.operation.duration
+              description: Duration of database client operations.
+              type: HISTOGRAM
+              unit: s
+              attributes:
+              - name: db.namespace
+                type: STRING
+              - name: db.operation.name
+                type: STRING
+              - name: db.system.name
+                type: STRING
+              - name: server.address
+                type: STRING
+              - name: server.port
+                type: LONG
+            span_data:
+              span_kinds:
+              - SERVER
+              - CLIENT
+        """;
 
     assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+  }
+
+  @Test
+  public void testEmittedScopeParser() throws IOException {
+    String yamlContent =
+        """
+        scope:
+          name: io.opentelemetry.alibaba-druid-1.0
+          version: 2.14.0-alpha-SNAPSHOT
+          schemaUrl: null
+          attributes:
+        """;
+
+    EmittedScope emittedScope = YamlHelper.emittedScopeParser(yamlContent);
+
+    assertNotNull(emittedScope.getScope());
+    assertThat(emittedScope.getScope().getName()).isEqualTo("io.opentelemetry.alibaba-druid-1.0");
+    assertThat(emittedScope.getScope().getVersion()).isEqualTo("2.14.0-alpha-SNAPSHOT");
+    assertThat(emittedScope.getScope().getSchemaUrl()).isNull();
+  }
+
+  @Test
+  public void testEmittedSpanParser() throws IOException {
+    String yamlContent =
+        """
+        attributes:
+          - name: server.address
+            type: STRING
+          - name: http.response.header.x-test-response
+            type: STRING_ARRAY
+          - name: error.type
+            type: STRING
+          - name: test.request.id
+            type: LONG
+          - name: http.request.method
+            type: STRING
+          - name: network.protocol.version
+            type: STRING
+          - name: server.port
+            type: LONG
+          - name: http.request.header.x-test-request
+            type: STRING_ARRAY
+          - name: http.response.status_code
+            type: LONG
+          - name: url.full
+            type: STRING
+        """;
+
+    EmittedSpans emittedSpans = YamlHelper.emittedSpansParser(yamlContent);
+
+    assertNotNull(emittedSpans.getAttributes());
+    assertThat(emittedSpans.getAttributes()).hasSize(10);
   }
 }
