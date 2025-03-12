@@ -214,12 +214,12 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
 
     // JMX based metrics - test one per JMX bean
     List<String> jmxMetrics =
-        new ArrayList<>(
-            Arrays.asList(
-                "jvm.thread.count",
-                "jvm.memory.used",
-                "jvm.system.cpu.load_1m",
-                "jvm.memory.init"));
+        new ArrayList<>(Arrays.asList("jvm.thread.count", "jvm.memory.used", "jvm.memory.init"));
+
+    double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
+    if (javaVersion < 23) {
+      jmxMetrics.add("jvm.system.cpu.load_1m");
+    }
 
     boolean noNative = System.getProperty("org.graalvm.nativeimage.imagecode") == null;
     if (noNative) {
