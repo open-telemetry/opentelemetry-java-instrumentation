@@ -217,6 +217,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
         new ArrayList<>(Arrays.asList("jvm.thread.count", "jvm.memory.used", "jvm.memory.init"));
 
     double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
+    // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13503
     if (javaVersion < 23) {
       jmxMetrics.add("jvm.system.cpu.load_1m");
     }
