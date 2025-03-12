@@ -143,18 +143,19 @@ public abstract class InstrumentationTestRunner {
       TelemetryDataUtil.assertScopeVersion(traces);
     }
 
-    getMetadataFromTraces(traces);
-
     if (traceComparator != null) {
       traces.sort(traceComparator);
     }
     TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(assertionsList);
+
+    if (Boolean.getBoolean("collectMetadata")) {
+      getMetadataFromTraces(traces);
+    }
   }
 
   public void getMetadataFromTraces(List<List<SpanData>> traces) {
     for (List<SpanData> trace : traces) {
       for (SpanData span : trace) {
-
         if (spanKinds != null) {
           spanKinds.add(span.getKind());
         }
@@ -208,12 +209,13 @@ public abstract class InstrumentationTestRunner {
           }
         });
 
-    getMetadataFromMetrics(getExportedMetrics());
+    if (Boolean.getBoolean("collectMetadata")) {
+      getMetadataFromMetrics(getExportedMetrics());
+    }
   }
 
   public void getMetadataFromMetrics(List<MetricData> metrics) {
     for (MetricData metric : metrics) {
-
       if (!this.metrics.containsKey(metric.getName())) {
         this.metrics.put(metric.getName(), metric);
       }

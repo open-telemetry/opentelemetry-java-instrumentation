@@ -1,0 +1,5 @@
+scope:
+  name: io.opentelemetry.alibaba-druid-1.0
+  version: 2.14.0-alpha-SNAPSHOT
+  schemaUrl: null
+  attributes:

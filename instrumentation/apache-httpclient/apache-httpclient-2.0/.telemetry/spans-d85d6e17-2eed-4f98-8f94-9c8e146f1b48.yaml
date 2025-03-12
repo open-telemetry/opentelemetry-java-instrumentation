@@ -1,0 +1,21 @@
+attributes:
+  - name: server.address
+    type: STRING
+  - name: http.response.header.x-test-response
+    type: STRING_ARRAY
+  - name: error.type
+    type: STRING
+  - name: test.request.id
+    type: LONG
+  - name: http.request.method
+    type: STRING
+  - name: network.protocol.version
+    type: STRING
+  - name: server.port
+    type: LONG
+  - name: http.request.header.x-test-request
+    type: STRING_ARRAY
+  - name: http.response.status_code
+    type: LONG
+  - name: url.full
+    type: STRING

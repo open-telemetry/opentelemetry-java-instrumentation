@@ -1,0 +1,38 @@
+metrics:
+  - name: db.client.connections.usage
+    description: The number of connections that are currently in state described by the state attribute.
+    type: LONG_SUM
+    unit: connections
+    attributes: 
+      - name: pool.name
+        type: STRING
+      - name: state
+        type: STRING
+  - name: db.client.connections.pending_requests
+    description: The number of pending requests for an open connection, cumulative for the entire pool.
+    type: LONG_SUM
+    unit: requests
+    attributes: 
+      - name: pool.name
+        type: STRING
+  - name: db.client.connections.max
+    description: The maximum number of open connections allowed.
+    type: LONG_SUM
+    unit: connections
+    attributes: 
+      - name: pool.name
+        type: STRING
+  - name: db.client.connections.idle.min
+    description: The minimum number of idle open connections allowed.
+    type: LONG_SUM
+    unit: connections
+    attributes: 
+      - name: pool.name
+        type: STRING
+  - name: db.client.connections.idle.max
+    description: The maximum number of idle open connections allowed.
+    type: LONG_SUM
+    unit: connections
+    attributes: 
+      - name: pool.name
+        type: STRING

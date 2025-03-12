@@ -18,3 +18,9 @@ dependencies {
 
   testImplementation(project(":instrumentation:alibaba-druid-1.0:testing"))
 }
+
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+}

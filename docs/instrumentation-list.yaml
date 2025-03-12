@@ -37,6 +37,46 @@ alibaba:
       - com.alibaba:druid:(,)
       library:
       - com.alibaba:druid:1.0.0
+    metrics:
+    - name: db.client.connections.usage
+      description: The number of connections that are currently in state described
+        by the state attribute.
+      type: LONG_SUM
+      unit: connections
+      attributes:
+      - name: pool.name
+        type: STRING
+      - name: state
+        type: STRING
+    - name: db.client.connections.pending_requests
+      description: The number of pending requests for an open connection, cumulative
+        for the entire pool.
+      type: LONG_SUM
+      unit: requests
+      attributes:
+      - name: pool.name
+        type: STRING
+    - name: db.client.connections.max
+      description: The maximum number of open connections allowed.
+      type: LONG_SUM
+      unit: connections
+      attributes:
+      - name: pool.name
+        type: STRING
+    - name: db.client.connections.idle.min
+      description: The minimum number of idle open connections allowed.
+      type: LONG_SUM
+      unit: connections
+      attributes:
+      - name: pool.name
+        type: STRING
+    - name: db.client.connections.idle.max
+      description: The maximum number of idle open connections allowed.
+      type: LONG_SUM
+      unit: connections
+      attributes:
+      - name: pool.name
+        type: STRING
 apache:
   instrumentations:
   - name: apache-shenyu-2.4
@@ -49,6 +89,28 @@ apache:
     target_versions:
       javaagent:
       - commons-httpclient:commons-httpclient:[2.0,4.0)
+    span_data:
+      attributes:
+      - name: server.address
+        type: STRING
+      - name: http.response.header.x-test-response
+        type: STRING_ARRAY
+      - name: error.type
+        type: STRING
+      - name: test.request.id
+        type: LONG
+      - name: http.request.method
+        type: STRING
+      - name: network.protocol.version
+        type: STRING
+      - name: server.port
+        type: LONG
+      - name: http.request.header.x-test-request
+        type: STRING_ARRAY
+      - name: http.response.status_code
+        type: LONG
+      - name: url.full
+        type: STRING
   - name: apache-httpasyncclient-4.1
     srcPath: instrumentation/apache-httpasyncclient-4.1
     target_versions:
