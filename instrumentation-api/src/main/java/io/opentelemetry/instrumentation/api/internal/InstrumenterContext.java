@@ -21,7 +21,12 @@ import java.util.function.Function;
  */
 public final class InstrumenterContext {
   private static final ThreadLocal<InstrumenterContext> instrumenterContext =
-      ThreadLocal.withInitial(InstrumenterContext::new);
+      new ThreadLocal<InstrumenterContext>() {
+        @Override
+        protected InstrumenterContext initialValue() {
+          return new InstrumenterContext();
+        }
+      };
 
   private final Map<String, Object> map = new HashMap<>();
 
