@@ -23,7 +23,6 @@ Prior to running the DocGeneratorApplication, run the following command to colle
 * Run the doc generator
   * `./gradlew :instrumentation-docs`
 
-
 ## Instrumentation Hierarchy
 
 An "InstrumentationEntity" represents a module that that targets specific code in a framework/library/technology.

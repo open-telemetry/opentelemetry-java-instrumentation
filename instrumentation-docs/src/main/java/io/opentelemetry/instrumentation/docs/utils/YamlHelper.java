@@ -92,7 +92,6 @@ public class YamlHelper {
               entityMap.put("metrics", metricsList);
             }
 
-            // Add span_data section
             Map<String, Object> spanDataMap = new LinkedHashMap<>();
             if (entity.getSpanKinds() != null && !entity.getSpanKinds().isEmpty()) {
               spanDataMap.put("span_kinds", entity.getSpanKinds());
@@ -117,7 +116,6 @@ public class YamlHelper {
           output.put(group, groupMap);
         });
 
-    System.out.println(output);
     DumperOptions options = new DumperOptions();
     options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
 
