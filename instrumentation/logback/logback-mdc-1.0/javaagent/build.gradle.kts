@@ -37,7 +37,7 @@ testing {
     withType(JvmTestSuite::class) {
       dependencies {
         if (findProperty("testLatestDeps") as Boolean) {
-          implementation("ch.qos.logback:logback-classic:+")
+          implementation("ch.qos.logback:logback-classic:latest.release")
         } else {
           implementation("ch.qos.logback:logback-classic") {
             version {

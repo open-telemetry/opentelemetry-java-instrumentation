@@ -3,12 +3,16 @@ plugins {
 }
 
 dependencies {
-  testLibrary("com.sun.xml.ws:jaxws-rt:3.0.0")
+  val axis2Version = "2.0.0"
+  testLibrary("org.apache.axis2:axis2-jaxws:$axis2Version") {
+    exclude(group = "org.eclipse.jetty.ee9")
+  }
+  testLibrary("org.apache.axis2:axis2-transport-http:$axis2Version")
+  testLibrary("org.apache.axis2:axis2-transport-local:$axis2Version")
 
-  testImplementation("jakarta.servlet:jakarta.servlet-api:5.0.0")
   testImplementation(project(":instrumentation:jaxws:jaxws-3.0-common-testing"))
 
-  testInstrumentation(project(":instrumentation:jaxws:jaxws-metro-2.2:javaagent"))
+  testInstrumentation(project(":instrumentation:jaxws:jaxws-2.0-axis2-1.6:javaagent"))
 
   testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
   testInstrumentation(project(":instrumentation:jetty:jetty-11.0:javaagent"))
@@ -19,10 +23,5 @@ otelJava {
 }
 
 tasks.withType<Test>().configureEach {
-  // required on jdk17
-  jvmArgs("--add-exports=java.xml/com.sun.org.apache.xerces.internal.dom=ALL-UNNAMED")
-  jvmArgs("--add-exports=java.xml/com.sun.org.apache.xerces.internal.jaxp=ALL-UNNAMED")
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }
