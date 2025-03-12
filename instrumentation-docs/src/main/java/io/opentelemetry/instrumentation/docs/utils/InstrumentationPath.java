@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.docs.utils;
 
-import io.opentelemetry.instrumentation.docs.InstrumentationType;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 
 public record InstrumentationPath(
     String instrumentationName,

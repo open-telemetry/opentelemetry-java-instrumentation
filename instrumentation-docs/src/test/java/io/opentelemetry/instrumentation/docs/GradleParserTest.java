@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.docs;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 

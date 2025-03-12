@@ -7,9 +7,11 @@ package io.opentelemetry.instrumentation.docs.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.docs.InstrumentationEntity;
-import io.opentelemetry.instrumentation.docs.InstrumentationMetaData;
-import io.opentelemetry.instrumentation.docs.InstrumentationType;
+import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
+import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationEntity;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import java.io.BufferedWriter;
 import java.io.StringWriter;
@@ -33,32 +35,54 @@ class YamlHelperTest {
     InstrumentationMetaData metadata1 =
         new InstrumentationMetaData("Spring Web 6.0 instrumentation");
 
+    List<EmittedSpans.EmittedSpanAttribute> spanAttributes =
+        List.of(
+            new EmittedSpans.EmittedSpanAttribute("db.namespace", "STRING"),
+            new EmittedSpans.EmittedSpanAttribute("server.port", "LONG"));
+
     entities.add(
-        new InstrumentationEntity(
-            "instrumentation/spring/spring-web/spring-web-6.0",
-            "spring-web-6.0",
-            "spring",
-            "spring",
-            targetVersions1,
-            metadata1,
-            null));
+        new InstrumentationEntity.Builder()
+            .srcPath("instrumentation/spring/spring-web/spring-web-6.0")
+            .instrumentationName("spring-web-6.0")
+            .namespace("spring")
+            .group("spring")
+            .targetVersions(targetVersions1)
+            .metadata(metadata1)
+            .spanAttributes(spanAttributes)
+            .spanKinds(List.of("SERVER"))
+            .build());
 
     Map<InstrumentationType, Set<String>> targetVersions2 = new HashMap<>();
     InstrumentationScopeInfo scope =
         InstrumentationScopeInfo.builder("struts-2.3").setVersion("2.14-ALPHA").build();
 
+    EmittedMetrics.Metric metric =
+        new EmittedMetrics.Metric(
+            "db.client.operation.duration",
+            "Duration of database client operations.",
+            "HISTOGRAM",
+            "s",
+            List.of(
+                new EmittedMetrics.Attribute("db.namespace", "STRING"),
+                new EmittedMetrics.Attribute("db.operation.name", "STRING"),
+                new EmittedMetrics.Attribute("db.system.name", "STRING"),
+                new EmittedMetrics.Attribute("server.address", "STRING"),
+                new EmittedMetrics.Attribute("server.port", "LONG")));
+
     targetVersions2.put(
         InstrumentationType.LIBRARY,
         new HashSet<>(List.of("org.apache.struts:struts2-core:2.1.0")));
     entities.add(
-        new InstrumentationEntity(
-            "instrumentation/struts/struts-2.3",
-            "struts-2.3",
-            "struts",
-            "struts",
-            targetVersions2,
-            null,
-            scope));
+        new InstrumentationEntity.Builder()
+            .srcPath("instrumentation/struts/struts-2.3")
+            .instrumentationName("struts-2.3")
+            .namespace("struts")
+            .group("struts")
+            .targetVersions(targetVersions2)
+            .scope(scope)
+            .metrics(List.of(metric))
+            .spanKinds(List.of("SERVER", "CLIENT"))
+            .build());
 
     StringWriter stringWriter = new StringWriter();
     BufferedWriter writer = new BufferedWriter(stringWriter);
@@ -75,6 +99,14 @@ class YamlHelperTest {
             + "    target_versions:\n"
             + "      javaagent:\n"
             + "      - org.springframework:spring-web:[6.0.0,)\n"
+            + "    span_data:\n"
+            + "      span_kinds:\n"
+            + "      - SERVER\n"
+            + "      attributes:\n"
+            + "      - name: db.namespace\n"
+            + "        type: STRING\n"
+            + "      - name: server.port\n"
+            + "        type: LONG\n"
             + "struts:\n"
             + "  instrumentations:\n"
             + "  - name: struts-2.3\n"
@@ -86,7 +118,27 @@ class YamlHelperTest {
             + "      attributes: {}\n"
             + "    target_versions:\n"
             + "      library:\n"
-            + "      - org.apache.struts:struts2-core:2.1.0\n";
+            + "      - org.apache.struts:struts2-core:2.1.0\n"
+            + "    metrics:\n"
+            + "    - name: db.client.operation.duration\n"
+            + "      description: Duration of database client operations.\n"
+            + "      type: HISTOGRAM\n"
+            + "      unit: s\n"
+            + "      attributes:\n"
+            + "      - name: db.namespace\n"
+            + "        type: STRING\n"
+            + "      - name: db.operation.name\n"
+            + "        type: STRING\n"
+            + "      - name: db.system.name\n"
+            + "        type: STRING\n"
+            + "      - name: server.address\n"
+            + "        type: STRING\n"
+            + "      - name: server.port\n"
+            + "        type: LONG\n"
+            + "    span_data:\n"
+            + "      span_kinds:\n"
+            + "      - SERVER\n"
+            + "      - CLIENT\n";
 
     assertThat(expectedYaml).isEqualTo(stringWriter.toString());
   }

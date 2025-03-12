@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.docs.utils;
 
-import io.opentelemetry.instrumentation.docs.InstrumentationType;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -110,12 +110,58 @@ public class FileManager {
     return null;
   }
 
-  public String getEmittedTelemetryMetadata(String instrumentationDirectory) {
-    String emittedTelemetry = instrumentationDirectory + "/emitted_telemetry.yaml";
-    if (Files.exists(Paths.get(emittedTelemetry))) {
-      return readFileToString(emittedTelemetry);
+  public String getScope(String instrumentationDirectory) {
+    String scopeYaml = instrumentationDirectory + "/.telemetry/scope.yaml";
+    if (Files.exists(Paths.get(scopeYaml))) {
+      return readFileToString(scopeYaml);
     }
     return null;
+  }
+
+  public String getMetrics(String instrumentationDirectory) {
+    StringBuilder metricsContent = new StringBuilder();
+    Path telemetryDir = Paths.get(instrumentationDirectory, ".telemetry");
+
+    if (Files.exists(telemetryDir) && Files.isDirectory(telemetryDir)) {
+      try (Stream<Path> files = Files.list(telemetryDir)) {
+        files
+            .filter(path -> path.getFileName().toString().startsWith("metrics-"))
+            .forEach(
+                path -> {
+                  String content = readFileToString(path.toString());
+                  if (content != null) {
+                    metricsContent.append(content).append("\n");
+                  }
+                });
+      } catch (IOException e) {
+        logger.severe("Error reading metrics files: " + e.getMessage());
+      }
+    }
+
+    return metricsContent.toString();
+  }
+
+  public String getSpans(String instrumentationDirectory) {
+    StringBuilder spansContent = new StringBuilder();
+    Path telemetryDir = Paths.get(instrumentationDirectory, ".telemetry");
+
+    if (Files.exists(telemetryDir) && Files.isDirectory(telemetryDir)) {
+      try (Stream<Path> files = Files.list(telemetryDir)) {
+        files
+            .filter(path -> path.getFileName().toString().startsWith("spans-"))
+            .forEach(
+                path -> {
+                  String content = readFileToString(path.toString());
+                  if (content != null) {
+                    spansContent.append(content).append("\n");
+                  }
+                });
+      } catch (IOException e) {
+        logger.severe("Error reading spans files: " + e.getMessage());
+      }
+    }
+
+    return spansContent.toString();
   }
 
   public String readFileToString(String filePath) {

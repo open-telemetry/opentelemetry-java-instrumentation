@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.docs;
 
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;

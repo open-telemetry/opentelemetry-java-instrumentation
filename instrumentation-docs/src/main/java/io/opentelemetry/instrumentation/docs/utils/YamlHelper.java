@@ -9,9 +9,12 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import io.opentelemetry.instrumentation.docs.EmittedTelemetry;
-import io.opentelemetry.instrumentation.docs.InstrumentationEntity;
-import io.opentelemetry.instrumentation.docs.InstrumentationMetaData;
+import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
+import io.opentelemetry.instrumentation.docs.internal.EmittedScope;
+import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationEntity;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationScopeInfoDeserializer;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -38,8 +41,16 @@ public class YamlHelper {
     mapper.registerModule(module);
   }
 
-  public static EmittedTelemetry emittedTelemetryParser(String input) throws IOException {
-    return mapper.readValue(input, EmittedTelemetry.class);
+  public static EmittedScope emittedScopeParser(String input) throws IOException {
+    return mapper.readValue(input, EmittedScope.class);
+  }
+
+  public static EmittedMetrics emittedMetricsParser(String input) {
+    return new Yaml().loadAs(input, EmittedMetrics.class);
+  }
+
+  public static EmittedSpans emittedSpansParser(String input) {
+    return new Yaml().loadAs(input, EmittedSpans.class);
   }
 
   public static void printInstrumentationList(
@@ -89,6 +100,48 @@ public class YamlHelper {
                           targetVersions.put(type.toString(), new ArrayList<>(versions)));
             }
             entityMap.put("target_versions", targetVersions);
+
+            if (entity.getMetrics() != null) {
+              List<Map<String, Object>> metricsList = new ArrayList<>();
+              for (EmittedMetrics.Metric metric : entity.getMetrics()) {
+                Map<String, Object> metricMap = new LinkedHashMap<>();
+                metricMap.put("name", metric.getName());
+                metricMap.put("description", metric.getDescription());
+                metricMap.put("type", metric.getType());
+                metricMap.put("unit", metric.getUnit());
+
+                List<Map<String, Object>> attributes = new ArrayList<>();
+                for (EmittedMetrics.Attribute attribute : metric.getAttributes()) {
+                  Map<String, Object> attributeMap = new LinkedHashMap<>();
+                  attributeMap.put("name", attribute.getName());
+                  attributeMap.put("type", attribute.getType());
+                  attributes.add(attributeMap);
+                }
+                metricMap.put("attributes", attributes);
+                metricsList.add(metricMap);
+              }
+              entityMap.put("metrics", metricsList);
+            }
+
+            // Add span_data section
+            Map<String, Object> spanDataMap = new LinkedHashMap<>();
+            if (entity.getSpanKinds() != null && !entity.getSpanKinds().isEmpty()) {
+              spanDataMap.put("span_kinds", entity.getSpanKinds());
+            }
+            if (entity.getSpanAttributes() != null && !entity.getSpanAttributes().isEmpty()) {
+              List<Map<String, Object>> attributesList = new ArrayList<>();
+              for (EmittedSpans.EmittedSpanAttribute attribute : entity.getSpanAttributes()) {
+                Map<String, Object> attributeMap = new LinkedHashMap<>();
+                attributeMap.put("name", attribute.getName());
+                attributeMap.put("type", attribute.getType());
+                attributesList.add(attributeMap);
+              }
+              spanDataMap.put("attributes", attributesList);
+            }
+            if (!spanDataMap.isEmpty()) {
+              entityMap.put("span_data", spanDataMap);
+            }
+
             instrumentations.add(entityMap);
           }
           groupMap.put("instrumentations", instrumentations);
@@ -97,6 +150,7 @@ public class YamlHelper {
 
     DumperOptions options = new DumperOptions();
     options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+    options.setDefaultScalarStyle(DumperOptions.ScalarStyle.PLAIN);
     Representer representer = new Representer(options);
     representer.getPropertyUtils().setSkipMissingProperties(true);
     Yaml yaml = new Yaml(representer, options);

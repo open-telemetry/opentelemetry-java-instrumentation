@@ -7,6 +7,11 @@ package io.opentelemetry.instrumentation.docs;
 
 import static io.opentelemetry.instrumentation.docs.GradleParser.parseGradleFile;
 
+import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
+import io.opentelemetry.instrumentation.docs.internal.EmittedScope;
+import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationEntity;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import io.opentelemetry.instrumentation.docs.utils.InstrumentationPath;
 import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
@@ -43,11 +48,12 @@ class InstrumentationAnalyzer {
       if (!entityMap.containsKey(key)) {
         entityMap.put(
             key,
-            new InstrumentationEntity(
-                path.srcPath().replace("/javaagent", "").replace("/library", ""),
-                path.instrumentationName(),
-                path.namespace(),
-                path.group()));
+            new InstrumentationEntity.Builder()
+                .srcPath(path.srcPath().replace("/javaagent", "").replace("/library", ""))
+                .instrumentationName(path.instrumentationName())
+                .namespace(path.namespace())
+                .group(path.group())
+                .build());
       }
     }
 
@@ -74,11 +80,33 @@ class InstrumentationAnalyzer {
         entity.setMetadata(YamlHelper.metaDataParser(metadataFile));
       }
 
-      String emittedTelemetryMetadata = fileSearch.getEmittedTelemetryMetadata(entity.getSrcPath());
+      String emittedTelemetryMetadata = fileSearch.getScope(entity.getSrcPath());
       if (emittedTelemetryMetadata != null) {
-        EmittedTelemetry telemetry = YamlHelper.emittedTelemetryParser(emittedTelemetryMetadata);
+        EmittedScope telemetry = YamlHelper.emittedScopeParser(emittedTelemetryMetadata);
         if (telemetry != null && telemetry.getScope() != null) {
           entity.setScope(telemetry.getScope());
+        }
+      }
+
+      String emittedMetrics = fileSearch.getMetrics(entity.getSrcPath());
+      if (emittedMetrics != null) {
+        EmittedMetrics metrics = YamlHelper.emittedMetricsParser(emittedMetrics);
+        if (metrics != null && metrics.getMetrics() != null) {
+          entity.setMetrics(metrics.getMetrics());
+        }
+      }
+
+      String emittedSpans = fileSearch.getSpans(entity.getSrcPath());
+      if (emittedSpans != null) {
+        EmittedSpans spans = YamlHelper.emittedSpansParser(emittedSpans);
+        if (spans != null) {
+          if (spans.getSpanKinds() != null && !spans.getSpanKinds().isEmpty()) {
+            entity.setSpanKinds(spans.getSpanKinds());
+          }
+
+          if (spans.getAttributes() != null && !spans.getAttributes().isEmpty()) {
+            entity.setSpanAttributes(spans.getAttributes());
+          }
         }
       }
     }
