@@ -36,6 +36,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.core.document.Document;
+import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeAsyncClient;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClient;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeClientBuilder;
 import software.amazon.awssdk.services.bedrockruntime.model.ContentBlock;
@@ -75,6 +76,12 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
   protected ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder() {
     return ClientOverrideConfiguration.builder()
         .addExecutionInterceptor(telemetry.newExecutionInterceptor());
+  }
+
+  @Override
+  protected BedrockRuntimeAsyncClient configureBedrockRuntimeClient(
+      BedrockRuntimeAsyncClient client) {
+    return telemetry.wrapBedrockRuntimeClient(client);
   }
 
   @Test
