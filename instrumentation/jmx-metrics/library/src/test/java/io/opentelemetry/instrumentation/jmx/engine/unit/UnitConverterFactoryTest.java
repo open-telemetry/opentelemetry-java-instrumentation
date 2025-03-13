@@ -88,9 +88,10 @@ class UnitConverterFactoryTest {
   @CsvSource({
     "'', By", "By, ''",
   })
-  void shouldNotAllowRegisteringConverterWithAnyUnitEmpty(
-      String sourceUnit, String targetUnit) {
-    assertThatThrownBy(() -> UnitConverterFactory.registerConverter(sourceUnit, targetUnit, (value) -> 0, false))
+  void shouldNotAllowRegisteringConverterWithAnyUnitEmpty(String sourceUnit, String targetUnit) {
+    assertThatThrownBy(
+            () ->
+                UnitConverterFactory.registerConverter(sourceUnit, targetUnit, (value) -> 0, false))
         .hasMessageMatching("Non empty .+Unit must be provided");
   }
 
