@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.armeria.grpc.v1_14;
 
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
-import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import com.linecorp.armeria.server.ServiceRequestContext;
 import io.grpc.ServerCall;
@@ -20,7 +20,9 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class ArmeriaServerCallInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("com.linecorp.armeria.server.grpc.ArmeriaServerCall");
+    return namedOneOf(
+        "com.linecorp.armeria.server.grpc.ArmeriaServerCall",
+        "com.linecorp.armeria.internal.server.grpc.AbstractServerCall");
   }
 
   @Override
