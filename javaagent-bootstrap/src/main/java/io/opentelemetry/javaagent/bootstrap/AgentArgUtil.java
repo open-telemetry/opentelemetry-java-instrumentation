@@ -21,11 +21,9 @@ public class AgentArgUtil {
         if (keyValue.length == 2) {
           if (keyValue[0].equals("otel.javaagent.debug")) {
             debug = Boolean.parseBoolean(keyValue[1]);
-          } else {
-            System.setProperty(keyValue[0], keyValue[1]);
-            if (debug) {
-              System.out.println("Setting property [" + keyValue[0] + "] = " + keyValue[1]);
-            }
+          System.setProperty(keyValue[0], keyValue[1]);
+          if (debug) {
+            System.out.println("Setting property [" + keyValue[0] + "] = " + keyValue[1]);
           }
         }
       }
