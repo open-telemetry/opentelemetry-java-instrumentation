@@ -108,6 +108,7 @@ single jar file.
 ## Creating an agent distribution
 
 [Distribution](examples/distro/README.md) provides guidance on creating a separate distribution, serving as a collection of examples for extending the functionality of the OpenTelemetry Java instrumentation agent. It also demonstrates how to repackage the agent while incorporating custom features.
+[Agent extensions](#creating-agent-extensions) are recommended instead for most users as they are simpler and do not require rebuilding with each OpenTelemetry Java agent release.
 
 ## Manually instrumenting
 
