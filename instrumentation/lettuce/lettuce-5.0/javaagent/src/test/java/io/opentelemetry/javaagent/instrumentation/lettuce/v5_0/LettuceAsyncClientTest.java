@@ -33,10 +33,15 @@ import io.lettuce.core.protocol.AsyncCommand;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -413,6 +418,17 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
               assertThat(completedExceptionally).isTrue();
             });
 
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            Arrays.asList(
+                equalTo(maybeStable(DB_SYSTEM), "redis"),
+                equalTo(maybeStable(DB_STATEMENT), "DEL key1 key2"),
+                equalTo(maybeStable(DB_OPERATION), "DEL")));
+
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      assertions.add(equalTo(ERROR_TYPE, "java.lang.IllegalStateException"));
+    }
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -421,11 +437,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasStatus(StatusData.error())
                         .hasException(new IllegalStateException("TestException"))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
-                            equalTo(maybeStable(DB_STATEMENT), "DEL key1 key2"),
-                            equalTo(maybeStable(DB_OPERATION), "DEL"),
-                            equalTo(ERROR_TYPE, "java.lang.IllegalStateException"))));
+                        .hasAttributesSatisfyingExactly(assertions)));
   }
 
   @Test
