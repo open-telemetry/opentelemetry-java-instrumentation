@@ -313,7 +313,7 @@ Sometimes JMX attributes values are reported in units not aligned with semantic 
 For example duration values are usually reported as milliseconds while semantic conventions recommend using seconds.
 
 This issue can be solved by providing optional `sourceUnit` metric property together with `unit` metric property.
-`sourceUnit` defines native unit of value retrieved from JMX attribute, while `unit` defines a semantic convention compatible metric unit that will be reported to the backend.
+`sourceUnit` defines native unit of value retrieved from JMX attribute, while `unit` defines the unit of the metric reported to the backend.
 If conversion between `sourceUnit` and `unit` is available then it is automatically applied before reporting the metric.
 If such a conversion is not available then an error is reported during JMX metrics processing.
 
