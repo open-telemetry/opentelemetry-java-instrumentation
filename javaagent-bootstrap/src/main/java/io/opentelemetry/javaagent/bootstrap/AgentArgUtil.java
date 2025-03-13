@@ -15,15 +15,17 @@ public class AgentArgUtil {
   public static void setSystemProperties(@Nullable String agentArgs) {
     boolean debug = false;
     if (agentArgs != null && !agentArgs.isEmpty()) {
-      String[] options = agentArgs.split(";");
-      for (String option : options) {
+      for (String option : agentArgs.split(";")) {
         String[] keyValue = option.split("=");
         if (keyValue.length == 2) {
-          if (keyValue[0].equals("otel.javaagent.debug")) {
-            debug = Boolean.parseBoolean(keyValue[1]);
-          System.setProperty(keyValue[0], keyValue[1]);
+          String key = keyValue[0];
+          String value = keyValue[1];
+          System.setProperty(key, value);
+          if (key.equals("otel.javaagent.debug")) {
+            debug = Boolean.parseBoolean(value);
+          }
           if (debug) {
-            System.out.println("Setting property [" + keyValue[0] + "] = " + keyValue[1]);
+            System.out.println("Setting property [" + key + "] = " + value);
           }
         }
       }
