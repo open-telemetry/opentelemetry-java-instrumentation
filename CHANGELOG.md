@@ -7,8 +7,6 @@
 - The `java.net.http.HttpClient` instrumentation package
   `io.opentelemetry.instrumentation.httpclient` was deprecated in favor of the new package name
   `io.opentelemetry.instrumentation.javahttpclient`
-- The class (non-stable) `io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel`
-  was renamed to `io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel`
 - The experimental opt-in `jvm.buffer.memory.usage` metric was renamed to
   `jvm.buffer.memory.used` in order to follow general semantic convention naming
 - The Http `*TelemetryBuilder` generic signatures were simplified
@@ -22,9 +20,9 @@
    [#13408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13408),
    [#13473](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13473),
    [#13410](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13410))
-- Add OpenTelemetry instrumentation for ActiveJ HTTP server
+- ActiveJ HTTP server
   ([#13335](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13335))
-- Add support for spring-pulsar 1.0
+- Spring Pulsar
   ([#13320](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13320))
 
 ### 🌟 New library instrumentation
@@ -52,15 +50,15 @@
   ([#13466](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13466))
 - Remove usage of gRPC internal api
   ([#13510](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13510))
+- Add options to disable gRPC per-message events
+  ([#13443](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13443))
+- Add @WithSpan option to break from existing context and start a new trace
+  ([#13112](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13112))
 
 ### 🛠️ Bug fixes
 
-- Fix double instrumentation of Java runtime metrics
-  ([#13337](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13337))
 - Fix `NoSuchElementException` thrown by Akka instrumentation
   ([#13360](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13360))
-- Fix Spring boot starter dependency resolution failure with Gradle and Java 11
-  ([#13393](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13393))
 - Fix Spring Boot Starter MDC instrumentation for Logback not injecting `trace_id`
   ([#13391](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13391))
 - Fix opt-in invoke dynamic instrumentation mechanism in OpenJ9
@@ -69,6 +67,8 @@
   ([#13435](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13435))
 - Avoid overriding user's `trace_id` in Log4j MDC instrumentation
   ([#13479](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13479))
+- Fix gRPC message ID attribute
+  ([#13443](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13443))
 
 ## Version 2.13.3 (2025-02-28)
 
