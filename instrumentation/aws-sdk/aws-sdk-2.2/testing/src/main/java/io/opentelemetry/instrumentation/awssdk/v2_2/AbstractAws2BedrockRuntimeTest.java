@@ -36,6 +36,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
@@ -43,6 +44,8 @@ import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.awscore.client.builder.AwsClientBuilder;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.core.document.Document;
+import software.amazon.awssdk.protocols.json.internal.unmarshall.document.DocumentUnmarshaller;
+import software.amazon.awssdk.protocols.jsoncore.JsonNode;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeAsyncClient;
 import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeAsyncClientBuilder;
@@ -62,6 +65,9 @@ import software.amazon.awssdk.services.bedrockruntime.model.ToolInputSchema;
 import software.amazon.awssdk.services.bedrockruntime.model.ToolResultBlock;
 import software.amazon.awssdk.services.bedrockruntime.model.ToolResultContentBlock;
 import software.amazon.awssdk.services.bedrockruntime.model.ToolSpecification;
+import software.amazon.awssdk.services.bedrockruntime.model.ToolUseBlock;
+import software.amazon.awssdk.services.bedrockruntime.model.ToolUseBlockDelta;
+import software.amazon.awssdk.services.bedrockruntime.model.ToolUseBlockStart;
 
 public abstract class AbstractAws2BedrockRuntimeTest {
   protected static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-sdk-2.2";
@@ -712,6 +718,439 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                         + "The current weather in Seattle is 50 degrees and raining. In San Francisco, the weather is 70 degrees and sunny.")))));
   }
 
+  @Test
+  void testConverseToolCallStream() throws InterruptedException, ExecutionException {
+    BedrockRuntimeAsyncClientBuilder builder = BedrockRuntimeAsyncClient.builder();
+    builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
+    configureClient(builder);
+    BedrockRuntimeAsyncClient client = configureBedrockRuntimeClient(builder.build());
+
+    String modelId = "amazon.nova-micro-v1:0";
+    List<Message> messages = new ArrayList<>();
+    messages.add(
+        Message.builder()
+            .role(ConversationRole.USER)
+            .content(
+                ContentBlock.fromText("What is the weather in Seattle and San Francisco today?"))
+            .build());
+
+    StringBuilder responseChunksText = new StringBuilder();
+    List<ToolUseBlock.Builder> responseChunksTools = new ArrayList<>();
+    StringBuilder currentToolArgs = new StringBuilder();
+
+    ConverseStreamResponseHandler responseHandler =
+        ConverseStreamResponseHandler.builder()
+            .subscriber(
+                ConverseStreamResponseHandler.Visitor.builder()
+                    .onContentBlockStart(
+                        chunk -> {
+                          if (!responseChunksTools.isEmpty()) {
+                            JsonNode node = JsonNode.parser().parse(currentToolArgs.toString());
+                            currentToolArgs.setLength(0);
+                            Document document = node.visit(new DocumentUnmarshaller());
+                            responseChunksTools.get(responseChunksTools.size() - 1).input(document);
+                          }
+                          ToolUseBlockStart toolUse = chunk.start().toolUse();
+                          if (toolUse != null) {
+                            responseChunksTools.add(
+                                ToolUseBlock.builder()
+                                    .name(toolUse.name())
+                                    .toolUseId(toolUse.toolUseId()));
+                          }
+                        })
+                    .onContentBlockDelta(
+                        chunk -> {
+                          ToolUseBlockDelta toolUse = chunk.delta().toolUse();
+                          if (toolUse != null) {
+                            currentToolArgs.append(toolUse.input());
+                          }
+                          String text = chunk.delta().text();
+                          if (text != null) {
+                            responseChunksText.append(text);
+                          }
+                        })
+                    .build())
+            .build();
+
+    client
+        .converseStream(
+            ConverseStreamRequest.builder()
+                .modelId(modelId)
+                .messages(messages)
+                .toolConfig(currentWeatherToolConfig())
+                .build(),
+            responseHandler)
+        .get();
+
+    if (currentToolArgs.length() > 0 && !responseChunksTools.isEmpty()) {
+      JsonNode node = JsonNode.parser().parse(currentToolArgs.toString());
+      currentToolArgs.setLength(0);
+      Document document = node.visit(new DocumentUnmarshaller());
+      responseChunksTools.get(responseChunksTools.size() - 1).input(document);
+    }
+
+    List<ToolUseBlock> toolUses =
+        responseChunksTools.stream().map(ToolUseBlock.Builder::build).collect(Collectors.toList());
+
+    String seattleToolUseId0 = "";
+    String sanFranciscoToolUseId0 = "";
+    for (ToolUseBlock toolUse : toolUses) {
+      String toolUseId = toolUse.toolUseId();
+      switch (toolUse.input().asMap().get("location").asString()) {
+        case "Seattle":
+          seattleToolUseId0 = toolUseId;
+          break;
+        case "San Francisco":
+          sanFranciscoToolUseId0 = toolUseId;
+          break;
+        default:
+          throw new IllegalArgumentException("Invalid tool use: " + toolUse);
+      }
+    }
+    String seattleToolUseId = seattleToolUseId0;
+    String sanFranciscoToolUseId = sanFranciscoToolUseId0;
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("chat amazon.nova-micro-v1:0")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfying(
+                                equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                                equalTo(
+                                    GEN_AI_OPERATION_NAME,
+                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
+                                        .CHAT),
+                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 415),
+                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 162),
+                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
+
+    getTesting()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            metric ->
+                metric
+                    .hasName("gen_ai.client.token.usage")
+                    .hasUnit("{token}")
+                    .hasDescription("Measures number of input and output tokens used")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(415)
+                                        .hasCount(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                                            equalTo(
+                                                GEN_AI_TOKEN_TYPE,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiTokenTypeIncubatingValues.INPUT),
+                                            equalTo(
+                                                GEN_AI_OPERATION_NAME,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)),
+                                point ->
+                                    point
+                                        .hasSum(162)
+                                        .hasCount(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                                            equalTo(
+                                                GEN_AI_TOKEN_TYPE,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiTokenTypeIncubatingValues.COMPLETION),
+                                            equalTo(
+                                                GEN_AI_OPERATION_NAME,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
+            metric ->
+                metric
+                    .hasName("gen_ai.client.operation.duration")
+                    .hasUnit("s")
+                    .hasDescription("GenAI operation duration")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                                            equalTo(
+                                                GEN_AI_OPERATION_NAME,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
+
+    SpanContext spanCtx0 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
+
+    getTesting()
+        .waitAndAssertLogRecords(
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                        equalTo(EVENT_NAME, "gen_ai.user.message"))
+                    .hasSpanContext(spanCtx0)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of(
+                                "content",
+                                Value.of(
+                                    "What is the weather in Seattle and San Francisco today?")))),
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, AWS_BEDROCK), equalTo(EVENT_NAME, "gen_ai.choice"))
+                    .hasSpanContext(spanCtx0)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of("finish_reason", Value.of("tool_use")),
+                            KeyValue.of("index", Value.of(0)),
+                            KeyValue.of(
+                                "toolCalls",
+                                Value.of(
+                                    Value.of(
+                                        KeyValue.of("name", Value.of("get_current_weather")),
+                                        KeyValue.of(
+                                            "arguments", Value.of("{\"location\":\"Seattle\"}")),
+                                        KeyValue.of("id", Value.of(seattleToolUseId)),
+                                        KeyValue.of("type", Value.of("function"))),
+                                    Value.of(
+                                        KeyValue.of("name", Value.of("get_current_weather")),
+                                        KeyValue.of(
+                                            "arguments",
+                                            Value.of("{\"location\":\"San Francisco\"}")),
+                                        KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
+                                        KeyValue.of("type", Value.of("function"))))),
+                            KeyValue.of(
+                                "content",
+                                Value.of(
+                                    "<thinking> The User has asked for the current weather in two locations: Seattle and San Francisco. To provide the requested information, I will use the \"get_current_weather\" tool for each location separately. </thinking>\n")))));
+
+    getTesting().clearData();
+
+    List<ContentBlock> contentBlocks = new ArrayList<>();
+    contentBlocks.add(ContentBlock.fromText(responseChunksText.toString()));
+    toolUses.stream()
+        .map(toolUse -> ContentBlock.builder().toolUse(toolUse).build())
+        .forEach(contentBlocks::add);
+    messages.add(Message.builder().role(ConversationRole.ASSISTANT).content(contentBlocks).build());
+    messages.add(
+        Message.builder()
+            .role(ConversationRole.USER)
+            .content(
+                ContentBlock.fromToolResult(
+                    ToolResultBlock.builder()
+                        .content(
+                            ToolResultContentBlock.builder()
+                                .json(
+                                    Document.mapBuilder()
+                                        .putString("weather", "50 degrees and raining")
+                                        .build())
+                                .build())
+                        .toolUseId(seattleToolUseId)
+                        .build()),
+                ContentBlock.fromToolResult(
+                    ToolResultBlock.builder()
+                        .content(
+                            ToolResultContentBlock.builder()
+                                .json(
+                                    Document.mapBuilder()
+                                        .putString("weather", "70 degrees and sunny")
+                                        .build())
+                                .build())
+                        .toolUseId(sanFranciscoToolUseId)
+                        .build()))
+            .build());
+
+    List<String> responseChunks = new ArrayList<>();
+    ConverseStreamResponseHandler responseHandler1 =
+        ConverseStreamResponseHandler.builder()
+            .subscriber(
+                ConverseStreamResponseHandler.Visitor.builder()
+                    .onContentBlockDelta(
+                        chunk -> {
+                          responseChunks.add(chunk.delta().text());
+                        })
+                    .build())
+            .build();
+
+    client
+        .converseStream(
+            ConverseStreamRequest.builder()
+                .modelId(modelId)
+                .messages(messages)
+                .toolConfig(currentWeatherToolConfig())
+                .build(),
+            responseHandler1)
+        .get();
+
+    assertThat(String.join("", responseChunks))
+        .contains(
+            "The current weather in Seattle is 50 degrees and it is raining. "
+                + "In San Francisco, the weather is 70 degrees and sunny.");
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("chat amazon.nova-micro-v1:0")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfying(
+                                equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                                equalTo(
+                                    GEN_AI_OPERATION_NAME,
+                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
+                                        .CHAT),
+                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 554),
+                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 59),
+                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
+
+    getTesting()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            metric ->
+                metric
+                    .hasName("gen_ai.client.token.usage")
+                    .hasUnit("{token}")
+                    .hasDescription("Measures number of input and output tokens used")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(554)
+                                        .hasCount(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                                            equalTo(
+                                                GEN_AI_TOKEN_TYPE,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiTokenTypeIncubatingValues.INPUT),
+                                            equalTo(
+                                                GEN_AI_OPERATION_NAME,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)),
+                                point ->
+                                    point
+                                        .hasSum(59)
+                                        .hasCount(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                                            equalTo(
+                                                GEN_AI_TOKEN_TYPE,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiTokenTypeIncubatingValues.COMPLETION),
+                                            equalTo(
+                                                GEN_AI_OPERATION_NAME,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
+            metric ->
+                metric
+                    .hasName("gen_ai.client.operation.duration")
+                    .hasUnit("s")
+                    .hasDescription("GenAI operation duration")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                                            equalTo(
+                                                GEN_AI_OPERATION_NAME,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
+
+    SpanContext spanCtx1 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
+
+    getTesting()
+        .waitAndAssertLogRecords(
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                        equalTo(EVENT_NAME, "gen_ai.user.message"))
+                    .hasSpanContext(spanCtx1)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of(
+                                "content",
+                                Value.of(
+                                    "What is the weather in Seattle and San Francisco today?")))),
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                        equalTo(EVENT_NAME, "gen_ai.assistant.message"))
+                    .hasSpanContext(spanCtx1)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of(
+                                "toolCalls",
+                                Value.of(
+                                    Value.of(
+                                        KeyValue.of("name", Value.of("get_current_weather")),
+                                        KeyValue.of(
+                                            "arguments", Value.of("{\"location\":\"Seattle\"}")),
+                                        KeyValue.of("id", Value.of(seattleToolUseId)),
+                                        KeyValue.of("type", Value.of("function"))),
+                                    Value.of(
+                                        KeyValue.of("name", Value.of("get_current_weather")),
+                                        KeyValue.of(
+                                            "arguments",
+                                            Value.of("{\"location\":\"San Francisco\"}")),
+                                        KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
+                                        KeyValue.of("type", Value.of("function"))))),
+                            KeyValue.of(
+                                "content",
+                                Value.of(
+                                    "<thinking> The User has asked for the current weather in two locations: Seattle and San Francisco. To provide the requested information, I will use the \"get_current_weather\" tool for each location separately. </thinking>\n")))),
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                        equalTo(EVENT_NAME, "gen_ai.tool.message"))
+                    .hasSpanContext(spanCtx1)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of("id", Value.of(seattleToolUseId)),
+                            KeyValue.of(
+                                "content", Value.of("{\"weather\":\"50 degrees and raining\"}")))),
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                        equalTo(EVENT_NAME, "gen_ai.tool.message"))
+                    .hasSpanContext(spanCtx1)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
+                            KeyValue.of(
+                                "content", Value.of("{\"weather\":\"70 degrees and sunny\"}")))),
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, AWS_BEDROCK), equalTo(EVENT_NAME, "gen_ai.choice"))
+                    .hasSpanContext(spanCtx1)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of("finish_reason", Value.of("end_turn")),
+                            KeyValue.of("index", Value.of(0)),
+                            KeyValue.of(
+                                "content",
+                                Value.of(
+                                    "<thinking> The tool has provided the current weather for both locations. Now I will compile the information and present it to the User. </thinking>\n"
+                                        + "\n"
+                                        + "The current weather in Seattle is 50 degrees and it is raining. In San Francisco, the weather is 70 degrees and sunny.")))));
+  }
+
   private static ToolConfiguration currentWeatherToolConfig() {
     return ToolConfiguration.builder()
         .tools(
@@ -863,6 +1302,26 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                                 GenAiIncubatingAttributes
                                                     .GenAiOperationNameIncubatingValues.CHAT),
                                             equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
+
+    SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
+
+    getTesting()
+        .waitAndAssertLogRecords(
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                        equalTo(EVENT_NAME, "gen_ai.user.message"))
+                    .hasSpanContext(spanCtx)
+                    .hasBody(Value.of(KeyValue.of("content", Value.of("Say this is a test")))),
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, AWS_BEDROCK), equalTo(EVENT_NAME, "gen_ai.choice"))
+                    .hasSpanContext(spanCtx)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of("finish_reason", Value.of("end_turn")),
+                            KeyValue.of("index", Value.of(0)),
+                            KeyValue.of("content", Value.of("\"Test, test\"")))));
   }
 
   @Test
@@ -935,5 +1394,25 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 8),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 5),
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("max_tokens")))));
+
+    SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
+
+    getTesting()
+        .waitAndAssertLogRecords(
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                        equalTo(EVENT_NAME, "gen_ai.user.message"))
+                    .hasSpanContext(spanCtx)
+                    .hasBody(Value.of(KeyValue.of("content", Value.of("Say this is a test")))),
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, AWS_BEDROCK), equalTo(EVENT_NAME, "gen_ai.choice"))
+                    .hasSpanContext(spanCtx)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of("finish_reason", Value.of("max_tokens")),
+                            KeyValue.of("index", Value.of(0)),
+                            KeyValue.of("content", Value.of("This model")))));
   }
 }
