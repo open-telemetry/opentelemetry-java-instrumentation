@@ -138,7 +138,6 @@ public abstract class Log4j2Test {
   void testNoOverrideTraceId() {
     Logger logger = LogManager.getLogger("TestLogger");
 
-    AtomicReference<Span> spanParent = new AtomicReference<>();
     ThreadContext.put(getLoggingKey("trace_id"), "test_traceId");
     ThreadContext.put(getLoggingKey("span_id"), "test_spanId");
     ThreadContext.put(getLoggingKey("trace_flags"), "test_traceFlag");
@@ -146,10 +145,10 @@ public abstract class Log4j2Test {
         .runWithSpan(
             "test",
             () -> {
-              spanParent.set(Span.current());
               logger.info("log span parent");
             });
     List<ListAppender.LoggedEvent> events = ListAppender.get().getEvents();
+    ThreadContext.clearAll();
     assertThat(events.size()).isEqualTo(1);
     assertThat(events.get(0).getMessage()).isEqualTo("log span parent");
     assertThat(events.get(0).getContextData().get(getLoggingKey("trace_id")))
@@ -158,6 +157,5 @@ public abstract class Log4j2Test {
         .isEqualTo("test_spanId");
     assertThat(events.get(0).getContextData().get(getLoggingKey("trace_flags")))
         .isEqualTo("test_traceFlag");
-    ThreadContext.clearAll();
   }
 }
