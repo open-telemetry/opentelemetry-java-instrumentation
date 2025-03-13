@@ -312,7 +312,7 @@ For now, only the `lowercase` transformation is supported, other additions might
 Sometimes JMX attribute values are reported in units that are not aligned with semantic conventions.
 For example, duration values are usually reported as milliseconds while semantic conventions recommend using seconds.
 
-This issue can be solved by providing an optional `sourceUnit` metric property together with  the `unit` metric property.
+This issue can be solved by providing an optional `sourceUnit` metric property together with the `unit` metric property.
 `sourceUnit` defines the native unit of value retrieved from JMX attribute, while `unit` defines the unit of the metric reported to the backend.
 If a conversion between `sourceUnit` and `unit` is available, then it is automatically applied before reporting the metric.
 If such a conversion is not available, then an error is reported during JMX metrics processing.
@@ -320,9 +320,10 @@ If such a conversion is not available, then an error is reported during JMX metr
 Currently available unit conversions:
 
 | `sourceUnit` | `unit` |
-|-------------|-------|
-| ms          | s     |
-| ns          | s     |
+|--------------|-------|
+| ms           | s     |
+| us           | s     |
+| ns           | s     |
 
 Example of defining unit conversion in yaml file:
 ```yaml
