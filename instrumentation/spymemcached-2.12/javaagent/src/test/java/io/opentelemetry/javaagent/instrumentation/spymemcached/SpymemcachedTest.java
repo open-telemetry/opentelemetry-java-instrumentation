@@ -25,17 +25,21 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.google.common.util.concurrent.MoreExecutors;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.InetSocketAddress;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -259,13 +263,22 @@ class SpymemcachedTest {
                                             EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class))))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "get"),
-                            equalTo(
-                                ERROR_TYPE,
-                                "net.spy.memcached.internal.CheckedOperationTimeoutException"))));
+                            withErrorType(
+                                "net.spy.memcached.internal.CheckedOperationTimeoutException",
+                                equalTo(
+                                    maybeStable(DB_SYSTEM),
+                                    DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
+                                equalTo(maybeStable(DB_OPERATION), "get")))));
+  }
+
+  private static List<AttributeAssertion> withErrorType(
+      String errorType, AttributeAssertion... assertions) {
+    List<AttributeAssertion> list = new ArrayList<>(Arrays.asList(assertions));
+
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      list.add(equalTo(ERROR_TYPE, errorType));
+    }
+    return list;
   }
 
   @Test
@@ -883,11 +896,12 @@ class SpymemcachedTest {
                         .hasException(
                             new IllegalArgumentException("Key is too long (maxlen = 250)"))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "decr"),
-                            equalTo(ERROR_TYPE, "java.lang.IllegalArgumentException"))));
+                            withErrorType(
+                                "java.lang.IllegalArgumentException",
+                                equalTo(
+                                    maybeStable(DB_SYSTEM),
+                                    DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
+                                equalTo(maybeStable(DB_OPERATION), "decr")))));
   }
 
   @Test
@@ -970,11 +984,12 @@ class SpymemcachedTest {
                         .hasException(
                             new IllegalArgumentException("Key is too long (maxlen = 250)"))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
-                            equalTo(maybeStable(DB_OPERATION), "incr"),
-                            equalTo(ERROR_TYPE, "java.lang.IllegalArgumentException"))));
+                            withErrorType(
+                                "java.lang.IllegalArgumentException",
+                                equalTo(
+                                    maybeStable(DB_SYSTEM),
+                                    DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
+                                equalTo(maybeStable(DB_OPERATION), "incr")))));
   }
 
   private static String key(String k) {
