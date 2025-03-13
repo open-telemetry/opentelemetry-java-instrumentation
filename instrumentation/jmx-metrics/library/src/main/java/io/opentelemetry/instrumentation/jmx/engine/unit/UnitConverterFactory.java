@@ -16,6 +16,7 @@ public class UnitConverterFactory {
 
   static {
     registerConverter("ms", "s", value -> value.doubleValue() / TimeUnit.SECONDS.toMillis(1), true);
+    registerConverter("us", "s", value -> value.doubleValue() / TimeUnit.SECONDS.toMicros(1), true);
     registerConverter("ns", "s", value -> value.doubleValue() / TimeUnit.SECONDS.toNanos(1), true);
   }
 
