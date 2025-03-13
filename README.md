@@ -138,7 +138,7 @@ Triagers ([@open-telemetry/java-instrumentation-triagers](https://github.com/org
 
 Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-approvers)):
 
-- [Gregor Zietlinger](https://github.com/zeitlinger), Grafana
+- [Gregor Zeitlinger](https://github.com/zeitlinger), Grafana
 - [Jack Berg](https://github.com/jack-berg), New Relic
 - [Jason Plumb](https://github.com/breedx-splk), Splunk
 - [Jay DeLuca](https://github.com/jaydeluca)
