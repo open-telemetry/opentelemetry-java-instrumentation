@@ -30,20 +30,27 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
 - Targeted branches:
   - `main`
   - `release/*`
-  - `v0.*`
-  - `v1.*`
 - Branch rules
   - Restrict deletions: CHECKED
-  - Require linear history: CHECKED
   - Require a pull request before merging: CHECKED
     - Required approvals: 1
     - Require review from Code Owners: CHECKED
     - Allowed merge methods: Squash
   - Require status checks to pass
-    - EasyCLA
-    - `required-status-check`
-    - `gradle-wrapper-validation`
+    - Do not require status checks on creation: CHECKED
+    - Status checks that are required
+      - EasyCLA
+      - `required-status-check`
+      - `gradle-wrapper-validation`
   - Block force pushes: CHECKED
+  - Require code scanning results: CHECKED
+    - CodeQL
+      - Security alerts: High or higher
+      - Alerts: Errors
+
+> [!NOTE]
+> This repository can't "require linear history" because there is an old merge commit on `main`
+> (and so also on the release branches).
 
 ### `cloudfoundry` branch
 
@@ -69,13 +76,24 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
   - Require linear history: CHECKED
   - Block force pushes: CHECKED
 
+### Old-style release branches
+
+- Targeted branches:
+  - `v0.*`
+  - `v1.*`
+- Branch rules
+  - Restrict creations: CHECKED
+  - Restrict updates: CHECKED
+  - Restrict deletions: CHECKED
+
 ### Restrict branch creation
 
 - Targeted branches
   - Exclude:
     - `release/*`
-    - `renovate/**/**`
-    - `opentelemetrybot/**/**`
+    - `renovate/**/*`
+    - `otelbot/**/*`
+    - `revert-*/**/*` (these are created when using the GitHub UI to revert a PR)
 - Restrict creations: CHECKED
 
 ### Restrict updating tags
@@ -84,6 +102,12 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
   - All tags
 - Restrict updates: CHECKED
 - Restrict deletions: CHECKED
+
+## Branch protections
+
+### `main`, `release/*`, `cloudfoundry`
+
+- Restrict who can push to matching branches: CHECKED
 
 ## Code security and analysis
 
@@ -106,6 +130,9 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
 
 ### Organization secrets
 
-- `OPENTELEMETRYBOT_GITHUB_TOKEN`
-- `OTELBOT_CLIENT_ID`
+- `FOSSA_API_KEY`
 - `OTELBOT_PRIVATE_KEY`
+
+### Organization variables
+
+- `OTELBOT_APP_ID`

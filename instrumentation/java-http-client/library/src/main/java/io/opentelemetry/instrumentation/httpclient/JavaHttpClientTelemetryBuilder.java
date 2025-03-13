@@ -12,13 +12,18 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.httpclient.internal.Experimental;
-import io.opentelemetry.instrumentation.httpclient.internal.HttpHeadersSetter;
-import io.opentelemetry.instrumentation.httpclient.internal.JavaHttpClientInstrumenterBuilderFactory;
+import io.opentelemetry.instrumentation.javahttpclient.internal.HttpHeadersSetter;
+import io.opentelemetry.instrumentation.javahttpclient.internal.JavaHttpClientInstrumenterBuilderFactory;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Collection;
 import java.util.function.Function;
 
+/**
+ * @deprecated Use {@link
+ *     io.opentelemetry.instrumentation.javahttpclient.JavaHttpClientTelemetryBuilder} instead.
+ */
+@Deprecated
 public final class JavaHttpClientTelemetryBuilder {
 
   private final DefaultHttpClientInstrumenterBuilder<HttpRequest, HttpResponse<?>> builder;
@@ -40,7 +45,7 @@ public final class JavaHttpClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<? super HttpRequest, ? super HttpResponse<?>> attributesExtractor) {
+      AttributesExtractor<HttpRequest, HttpResponse<?>> attributesExtractor) {
     builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
@@ -91,9 +96,7 @@ public final class JavaHttpClientTelemetryBuilder {
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setSpanNameExtractor(
-      Function<
-              SpanNameExtractor<? super HttpRequest>,
-              ? extends SpanNameExtractor<? super HttpRequest>>
+      Function<SpanNameExtractor<HttpRequest>, SpanNameExtractor<HttpRequest>>
           spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;

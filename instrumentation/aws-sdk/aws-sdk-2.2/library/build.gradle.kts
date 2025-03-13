@@ -14,6 +14,11 @@ dependencies {
   compileOnly("software.amazon.awssdk:json-utils:2.17.0")
   compileOnly(project(":muzzle")) // For @NoMuzzle
 
+  // Don't use library to make sure base test is run with the floor version.
+  // bedrock runtime is tested separately in testBedrockRuntime.
+  // First release with Converse API
+  compileOnly("software.amazon.awssdk:bedrockruntime:2.25.63")
+
   testImplementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
 
   testLibrary("software.amazon.awssdk:dynamodb:2.2.0")
@@ -32,10 +37,10 @@ testing {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
         compileOnly("software.amazon.awssdk:sqs:2.2.0")
         if (findProperty("testLatestDeps") as Boolean) {
-          implementation("software.amazon.awssdk:aws-core:+")
-          implementation("software.amazon.awssdk:aws-json-protocol:+")
-          implementation("software.amazon.awssdk:dynamodb:+")
-          implementation("software.amazon.awssdk:lambda:+")
+          implementation("software.amazon.awssdk:aws-core:latest.release")
+          implementation("software.amazon.awssdk:aws-json-protocol:latest.release")
+          implementation("software.amazon.awssdk:dynamodb:latest.release")
+          implementation("software.amazon.awssdk:lambda:latest.release")
         } else {
           implementation("software.amazon.awssdk:aws-core:2.2.0")
           implementation("software.amazon.awssdk:aws-json-protocol:2.2.0")
@@ -50,9 +55,21 @@ testing {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
         if (findProperty("testLatestDeps") as Boolean) {
-          implementation("software.amazon.awssdk:lambda:+")
+          implementation("software.amazon.awssdk:lambda:latest.release")
         } else {
           implementation("software.amazon.awssdk:lambda:2.17.0")
+        }
+      }
+    }
+
+    val testBedrockRuntime by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
+        if (findProperty("testLatestDeps") as Boolean) {
+          implementation("software.amazon.awssdk:bedrockruntime:latest.release")
+        } else {
+          implementation("software.amazon.awssdk:bedrockruntime:2.25.63")
         }
       }
     }
@@ -72,6 +89,7 @@ tasks {
   }
 
   check {
+    dependsOn(testing.suites)
     dependsOn(testStableSemconv)
   }
 }

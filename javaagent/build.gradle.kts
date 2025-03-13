@@ -76,6 +76,16 @@ dependencies {
   baseJavaagentLibs(project(":muzzle"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.10:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.15:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.27:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.31:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.32:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.37:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.38:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.40:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.42:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.47:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-api:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent"))
   baseJavaagentLibs(project(":instrumentation:executors:javaagent"))
@@ -253,6 +263,9 @@ tasks {
     dependsOn(shadowJar)
 
     jvmArgs("-Dotel.javaagent.debug=true")
+    jvmArgs("-Dotel.traces.exporter=none")
+    jvmArgs("-Dotel.metrics.exporter=none")
+    jvmArgs("-Dotel.logs.exporter=none")
 
     jvmArgumentProviders.add(JavaagentProvider(shadowJar.flatMap { it.archiveFile }))
 

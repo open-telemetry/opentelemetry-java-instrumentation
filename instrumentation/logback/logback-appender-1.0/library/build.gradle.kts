@@ -26,7 +26,7 @@ dependencies {
   }
 
   if (findProperty("testLatestDeps") as Boolean) {
-    testImplementation("ch.qos.logback:logback-classic:+")
+    testImplementation("ch.qos.logback:logback-classic:latest.release")
   } else {
     testImplementation("ch.qos.logback:logback-classic") {
       version {
@@ -47,10 +47,6 @@ graalvmNative {
 
   binaries.all {
     resources.autodetect()
-
-    // Workaround for https://github.com/junit-team/junit5/issues/3405
-    buildArgs.add("--initialize-at-build-time=org.junit.platform.launcher.core.LauncherConfig")
-    buildArgs.add("--initialize-at-build-time=org.junit.jupiter.engine.config.InstantiatingConfigurationParameterConverter")
   }
 
   // See https://github.com/graalvm/native-build-tools/issues/572
@@ -78,9 +74,9 @@ testing {
         implementation(project(":testing-common"))
 
         if (latestDepTest) {
-          implementation("ch.qos.logback:logback-classic:+")
-          implementation("org.slf4j:slf4j-api:+")
-          implementation("net.logstash.logback:logstash-logback-encoder:+")
+          implementation("ch.qos.logback:logback-classic:latest.release")
+          implementation("org.slf4j:slf4j-api:latest.release")
+          implementation("net.logstash.logback:logstash-logback-encoder:latest.release")
         } else {
           implementation("ch.qos.logback:logback-classic") {
             version {
@@ -108,12 +104,13 @@ testing {
         implementation(project(":testing-common"))
 
         if (latestDepTest) {
-          implementation("ch.qos.logback:logback-classic:+")
+          implementation("ch.qos.logback:logback-classic:latest.release")
         } else {
           implementation("ch.qos.logback:logback-classic") {
             version {
-              // first version that has ch.qos.logback.classic.AsyncAppender
-              strictly("1.0.4")
+              // 1.0.4 is the first version that has ch.qos.logback.classic.AsyncAppender
+              // we are using 1.0.7 because of https://jira.qos.ch/browse/LOGBACK-720
+              strictly("1.0.7")
             }
           }
           implementation("org.slf4j:slf4j-api") {

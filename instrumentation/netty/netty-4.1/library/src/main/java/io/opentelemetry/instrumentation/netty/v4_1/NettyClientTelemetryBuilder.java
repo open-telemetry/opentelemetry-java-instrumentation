@@ -12,10 +12,10 @@ import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHt
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
-import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterBuilderFactory;
-import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyClientInstrumenterFactory;
-import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettyConnectionInstrumentationFlag;
+import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyClientInstrumenterBuilderFactory;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyClientInstrumenterFactory;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyConnectionInstrumentationFlag;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.Experimental;
 import java.util.Collection;
 import java.util.function.Function;
@@ -124,9 +124,7 @@ public final class NettyClientTelemetryBuilder {
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setSpanNameExtractor(
-      Function<
-              SpanNameExtractor<? super HttpRequestAndChannel>,
-              ? extends SpanNameExtractor<? super HttpRequestAndChannel>>
+      Function<SpanNameExtractor<HttpRequestAndChannel>, SpanNameExtractor<HttpRequestAndChannel>>
           spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
