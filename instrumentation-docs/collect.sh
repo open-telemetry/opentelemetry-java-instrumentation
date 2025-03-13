@@ -44,6 +44,6 @@ for instrumentation in "${instrumentations[@]}"; do
 done
 
 # rerun-tasks is used to force re-running tests that might be cached
-echo Running: ./gradlew $gradle_tasks -PcollectMetadata=true --rerun-tasks
-./gradlew $gradle_tasks -PcollectMetadata=true --rerun-tasks
+echo Running: ./gradlew "$gradle_tasks" -PcollectMetadata=true --rerun-tasks
+./gradlew "$gradle_tasks" -PcollectMetadata=true --rerun-tasks
 ./gradlew :instrumentation-docs:generateDocs
