@@ -38,7 +38,7 @@
 
 - Support virtual threads in Spring Scheduling instrumentation
   ([#13370](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13370))
-- Redact query string values for http client spans  
+- Redact query string values for http client spans
   ([#13114](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13114))
 - Support attribute lowercase modifier in JMX metrics yaml definitions
   ([#13385](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13385))
