@@ -36,7 +36,7 @@ public class UnitConverterFactory {
     String converterKey = getConverterKey(sourceUnit, targetUnit);
     UnitConverter converter = conversionMappings.get(converterKey);
     if (converter == null) {
-      throw new IllegalStateException(
+      throw new IllegalArgumentException(
           "No [" + sourceUnit + "] to [" + targetUnit + "] unit converter");
     }
 

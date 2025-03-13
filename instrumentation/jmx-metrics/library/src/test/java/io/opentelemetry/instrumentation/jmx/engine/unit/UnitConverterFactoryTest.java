@@ -71,9 +71,9 @@ class UnitConverterFactoryTest {
     "non-existing, s",
   })
   void shouldHandleNonExistingConverter(String sourceUnit, String targetUnit) {
-    IllegalStateException exception =
+    IllegalArgumentException exception =
         assertThrows(
-            IllegalStateException.class,
+            IllegalArgumentException.class,
             () -> UnitConverterFactory.getConverter(sourceUnit, targetUnit));
     assertEquals(
         "No [" + sourceUnit + "] to [" + targetUnit + "] unit converter", exception.getMessage());
