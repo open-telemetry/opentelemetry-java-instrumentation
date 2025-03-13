@@ -30,6 +30,7 @@ import com.clickhouse.data.ClickHouseFormat;
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -201,8 +202,10 @@ class ClickHouseClientTest {
 
     List<AttributeAssertion> assertions =
         new ArrayList<>(attributeAssertions("select * from non_existent_table", "SELECT"));
-    assertions.add(equalTo(DB_RESPONSE_STATUS_CODE, "60"));
-    assertions.add(equalTo(ERROR_TYPE, "com.clickhouse.client.ClickHouseException"));
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      assertions.add(equalTo(DB_RESPONSE_STATUS_CODE, "60"));
+      assertions.add(equalTo(ERROR_TYPE, "com.clickhouse.client.ClickHouseException"));
+    }
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(

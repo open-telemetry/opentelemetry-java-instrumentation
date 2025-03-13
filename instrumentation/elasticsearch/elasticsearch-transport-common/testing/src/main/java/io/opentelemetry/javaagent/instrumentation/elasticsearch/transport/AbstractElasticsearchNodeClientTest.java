@@ -17,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -104,6 +105,21 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
         .isInstanceOf(IndexNotFoundException.class)
         .hasMessage(expectedException.getMessage());
 
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            Arrays.asList(
+                equalTo(
+                    maybeStable(DB_SYSTEM),
+                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                equalTo(maybeStable(DB_OPERATION), "GetAction"),
+                equalTo(ELASTICSEARCH_ACTION, "GetAction"),
+                equalTo(ELASTICSEARCH_REQUEST, "GetRequest"),
+                equalTo(ELASTICSEARCH_REQUEST_INDICES, "invalid-index")));
+
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      assertions.add(equalTo(ERROR_TYPE, "org.elasticsearch.index.IndexNotFoundException"));
+    }
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -119,15 +135,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error())
                         .hasException(expectedException)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "GetAction"),
-                            equalTo(ERROR_TYPE, "org.elasticsearch.index.IndexNotFoundException"),
-                            equalTo(ELASTICSEARCH_ACTION, "GetAction"),
-                            equalTo(ELASTICSEARCH_REQUEST, "GetRequest"),
-                            equalTo(ELASTICSEARCH_REQUEST_INDICES, "invalid-index")),
+                        .hasAttributesSatisfyingExactly(assertions),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
