@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.docs.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.internal.EmittedScope;
 import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
@@ -15,7 +16,6 @@ import io.opentelemetry.instrumentation.docs.internal.InstrumentationEntity;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import java.io.BufferedWriter;
-import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -147,7 +147,7 @@ class YamlHelperTest {
   }
 
   @Test
-  public void testEmittedScopeParser() throws IOException {
+  public void testEmittedScopeParser() {
     String yamlContent =
         """
         scope:
@@ -166,35 +166,33 @@ class YamlHelperTest {
   }
 
   @Test
-  public void testEmittedSpanParser() throws IOException {
+  public void testEmittedSpanParser() {
     String yamlContent =
         """
-        attributes:
-          - name: server.address
-            type: STRING
-          - name: http.response.header.x-test-response
-            type: STRING_ARRAY
-          - name: error.type
-            type: STRING
-          - name: test.request.id
-            type: LONG
-          - name: http.request.method
-            type: STRING
-          - name: network.protocol.version
-            type: STRING
-          - name: server.port
-            type: LONG
-          - name: http.request.header.x-test-request
-            type: STRING_ARRAY
-          - name: http.response.status_code
-            type: LONG
-          - name: url.full
-            type: STRING
+          spanKinds:
+            - INTERNAL
+            - CLIENT
+          attributes:
+            - name: server.address
+              type: STRING
+            - name: server.port
+              type: LONG
+            - name: db.system.name
+              type: STRING
+            - name: db.query.text
+              type: STRING
+            - name: db.namespace
+              type: STRING
+            - name: db.operation.name
+              type: STRING
         """;
 
     EmittedSpans emittedSpans = YamlHelper.emittedSpansParser(yamlContent);
 
     assertNotNull(emittedSpans.getAttributes());
-    assertThat(emittedSpans.getAttributes()).hasSize(10);
+    assertThat(emittedSpans.getAttributes()).hasSize(6);
+    assertThat(emittedSpans.getSpanKinds()).hasSize(2);
+    assertThat(emittedSpans.getSpanKinds())
+        .containsExactlyInAnyOrder(SpanKind.CLIENT.toString(), SpanKind.INTERNAL.toString());
   }
 }

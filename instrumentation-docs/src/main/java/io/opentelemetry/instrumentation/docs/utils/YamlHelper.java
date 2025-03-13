@@ -22,18 +22,6 @@ import org.yaml.snakeyaml.Yaml;
 
 public class YamlHelper {
 
-  public static EmittedScope emittedScopeParser(String input) {
-    return new Yaml().loadAs(input, EmittedScope.class);
-  }
-
-  public static EmittedMetrics emittedMetricsParser(String input) {
-    return new Yaml().loadAs(input, EmittedMetrics.class);
-  }
-
-  public static EmittedSpans emittedSpansParser(String input) {
-    return new Yaml().loadAs(input, EmittedSpans.class);
-  }
-
   public static void printInstrumentationList(
       List<InstrumentationEntity> list, BufferedWriter writer) {
     Map<String, List<InstrumentationEntity>> groupedByGroup =
@@ -58,22 +46,7 @@ public class YamlHelper {
             entityMap.put("srcPath", entity.getSrcPath());
 
             if (entity.getScope() != null) {
-              Map<String, Object> scopeMap = new LinkedHashMap<>();
-              scopeMap.put("name", entity.getScope().getName());
-              scopeMap.put("version", entity.getScope().getVersion());
-              scopeMap.put("schemaUrl", entity.getScope().getSchemaUrl());
-
-              if (entity.getScope().getAttributes() != null
-                  && !entity.getScope().getAttributes().isEmpty()) {
-
-                Map<String, Object> attributesMap = new LinkedHashMap<>();
-                entity
-                    .getScope()
-                    .getAttributes()
-                    .forEach((key, value) -> attributesMap.put(String.valueOf(key), value));
-                scopeMap.put("attributes", attributesMap);
-              }
-
+              Map<String, Object> scopeMap = getScopeMap(entity);
               entityMap.put("scope", scopeMap);
             }
 
@@ -92,20 +65,7 @@ public class YamlHelper {
               entityMap.put("metrics", metricsList);
             }
 
-            Map<String, Object> spanDataMap = new LinkedHashMap<>();
-            if (entity.getSpanKinds() != null && !entity.getSpanKinds().isEmpty()) {
-              spanDataMap.put("span_kinds", entity.getSpanKinds());
-            }
-            if (entity.getSpanAttributes() != null && !entity.getSpanAttributes().isEmpty()) {
-              List<Map<String, Object>> attributesList = new ArrayList<>();
-              for (EmittedSpans.EmittedSpanAttribute attribute : entity.getSpanAttributes()) {
-                Map<String, Object> attributeMap = new LinkedHashMap<>();
-                attributeMap.put("name", attribute.getName());
-                attributeMap.put("type", attribute.getType());
-                attributesList.add(attributeMap);
-              }
-              spanDataMap.put("attributes", attributesList);
-            }
+            Map<String, Object> spanDataMap = getSpanDataMap(entity);
             if (!spanDataMap.isEmpty()) {
               entityMap.put("span_data", spanDataMap);
             }
@@ -121,6 +81,42 @@ public class YamlHelper {
 
     Yaml yaml = new Yaml(options);
     yaml.dump(output, writer);
+  }
+
+  private static Map<String, Object> getSpanDataMap(InstrumentationEntity entity) {
+    Map<String, Object> spanDataMap = new LinkedHashMap<>();
+    if (entity.getSpanKinds() != null && !entity.getSpanKinds().isEmpty()) {
+      spanDataMap.put("span_kinds", entity.getSpanKinds());
+    }
+    if (entity.getSpanAttributes() != null && !entity.getSpanAttributes().isEmpty()) {
+      List<Map<String, Object>> attributesList = new ArrayList<>();
+      for (EmittedSpans.EmittedSpanAttribute attribute : entity.getSpanAttributes()) {
+        Map<String, Object> attributeMap = new LinkedHashMap<>();
+        attributeMap.put("name", attribute.getName());
+        attributeMap.put("type", attribute.getType());
+        attributesList.add(attributeMap);
+      }
+      spanDataMap.put("attributes", attributesList);
+    }
+    return spanDataMap;
+  }
+
+  private static Map<String, Object> getScopeMap(InstrumentationEntity entity) {
+    Map<String, Object> scopeMap = new LinkedHashMap<>();
+    scopeMap.put("name", entity.getScope().getName());
+    scopeMap.put("version", entity.getScope().getVersion());
+    scopeMap.put("schemaUrl", entity.getScope().getSchemaUrl());
+
+    if (entity.getScope().getAttributes() != null && !entity.getScope().getAttributes().isEmpty()) {
+
+      Map<String, Object> attributesMap = new LinkedHashMap<>();
+      entity
+          .getScope()
+          .getAttributes()
+          .forEach((key, value) -> attributesMap.put(String.valueOf(key), value));
+      scopeMap.put("attributes", attributesMap);
+    }
+    return scopeMap;
   }
 
   private static List<Map<String, Object>> getMetricsList(InstrumentationEntity entity) {
@@ -147,6 +143,18 @@ public class YamlHelper {
 
   public static InstrumentationMetaData metaDataParser(String input) {
     return new Yaml().loadAs(input, InstrumentationMetaData.class);
+  }
+
+  public static EmittedScope emittedScopeParser(String input) {
+    return new Yaml().loadAs(input, EmittedScope.class);
+  }
+
+  public static EmittedMetrics emittedMetricsParser(String input) {
+    return new Yaml().loadAs(input, EmittedMetrics.class);
+  }
+
+  public static EmittedSpans emittedSpansParser(String input) {
+    return new Yaml().loadAs(input, EmittedSpans.class);
   }
 
   private YamlHelper() {}

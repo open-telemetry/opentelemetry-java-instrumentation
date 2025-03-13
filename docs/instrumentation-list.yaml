@@ -98,6 +98,10 @@ apache:
       javaagent:
       - commons-httpclient:commons-httpclient:[2.0,4.0)
     span_data:
+      span_kinds:
+      - SERVER
+      - CLIENT
+      - INTERNAL
       attributes:
       - name: server.address
         type: STRING
@@ -306,6 +310,9 @@ clickhouse:
       - name: server.port
         type: LONG
     span_data:
+      span_kinds:
+      - CLIENT
+      - INTERNAL
       attributes:
       - name: server.address
         type: STRING

@@ -1,3 +1,7 @@
+spanKinds:
+  - SERVER
+  - CLIENT
+  - INTERNAL
 attributes:
   - name: server.address
     type: STRING

@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -51,7 +52,7 @@ public abstract class InstrumentationTestRunner {
   private final TestInstrumenters testInstrumenters;
 
   protected InstrumentationScopeInfo instrumentationScope;
-  protected Set<SpanKind> spanKinds;
+  protected Set<SpanKind> spanKinds = new HashSet<>();
   protected Map<String, String> attributeKeys = new HashMap<>();
   protected Map<String, MetricData> metrics = new HashMap<>();
 
@@ -156,9 +157,7 @@ public abstract class InstrumentationTestRunner {
   public void getMetadataFromTraces(List<List<SpanData>> traces) {
     for (List<SpanData> trace : traces) {
       for (SpanData span : trace) {
-        if (spanKinds != null) {
-          spanKinds.add(span.getKind());
-        }
+        spanKinds.add(span.getKind());
         span.getAttributes()
             .forEach((key, value) -> attributeKeys.put(key.getKey(), key.getType().name()));
 

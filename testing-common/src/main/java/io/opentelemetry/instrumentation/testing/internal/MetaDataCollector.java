@@ -132,7 +132,7 @@ public final class MetaDataCollector {
     try (BufferedWriter writer = Files.newBufferedWriter(spansPath.toFile().toPath(), UTF_8)) {
 
       if (spanKinds != null) {
-        writer.write("span_kinds:\n");
+        writer.write("spanKinds:\n");
         for (SpanKind spanKind : spanKinds) {
           writer.write("  - " + spanKind + "\n");
         }

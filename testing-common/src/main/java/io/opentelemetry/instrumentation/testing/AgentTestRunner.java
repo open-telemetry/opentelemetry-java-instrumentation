@@ -64,8 +64,8 @@ public final class AgentTestRunner extends InstrumentationTestRunner {
     int muzzleFailureCount = TestAgentListenerAccess.getAndResetMuzzleFailureCount();
     assert muzzleFailureCount == 0 : muzzleFailureCount + " Muzzle failures during test";
 
-    // Generates emitted_telemetry.yaml file with all emitted telemetry to be used
-    // by the instrumentation-docs Doc generator.
+    // Generates files in a `.telemetry` directory within the instrumentation module with all
+    // captured emitted metadata to be used by the instrumentation-docs Doc generator.
     if (Boolean.getBoolean("collectMetadata")) {
       URL resource = this.getClass().getClassLoader().getResource("");
       if (resource == null) {

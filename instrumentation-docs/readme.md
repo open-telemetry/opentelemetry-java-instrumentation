@@ -21,7 +21,13 @@ Prior to running the DocGeneratorApplication, run the following command to colle
 * Run tests to collect metadata
   * `./gradlew test -collectMetadata=true`
 * Run the doc generator
-  * `./gradlew :instrumentation-docs`
+  * `./gradlew :instrumentation-docs:generateDocs`
+
+or use the helper script that will run only the currently supported tests:
+
+```bash
+./instrumentation-docs/collect.sh
+```
 
 ## Instrumentation Hierarchy
 
@@ -76,6 +82,7 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 * metrics
   * List of metrics that the instrumentation module collects, including the metric name, description, type, and attributes
 * span_data
+  * List of span types that are emitted (internal, client, server)
   * List of span data that the instrumentation collects, including the attribute name and type
 
 ## Methodology
