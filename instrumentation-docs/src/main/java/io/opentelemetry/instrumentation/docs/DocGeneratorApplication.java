@@ -20,7 +20,7 @@ public class DocGeneratorApplication {
 
   private static final Logger logger = Logger.getLogger(DocGeneratorApplication.class.getName());
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) {
     FileManager fileManager = new FileManager("instrumentation/");
     List<InstrumentationEntity> entities = new InstrumentationAnalyzer(fileManager).analyze();
 

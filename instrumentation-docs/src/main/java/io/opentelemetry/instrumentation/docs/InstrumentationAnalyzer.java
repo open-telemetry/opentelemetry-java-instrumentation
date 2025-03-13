@@ -15,7 +15,6 @@ import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import io.opentelemetry.instrumentation.docs.utils.InstrumentationPath;
 import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -67,7 +66,7 @@ class InstrumentationAnalyzer {
    *
    * @return a list of InstrumentationEntity objects with target versions
    */
-  List<InstrumentationEntity> analyze() throws IOException {
+  List<InstrumentationEntity> analyze() {
     List<InstrumentationPath> paths = fileSearch.getInstrumentationPaths();
     List<InstrumentationEntity> entities = convertToEntities(paths);
 

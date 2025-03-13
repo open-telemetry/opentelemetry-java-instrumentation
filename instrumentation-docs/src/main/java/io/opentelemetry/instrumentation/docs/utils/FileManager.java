@@ -29,7 +29,6 @@ public class FileManager {
 
     try (Stream<Path> walk = Files.walk(rootPath)) {
       return walk.filter(Files::isDirectory)
-          .filter(dir -> !dir.toString().contains("/build"))
           .filter(dir -> isValidInstrumentationPath(dir.toString()))
           .map(dir -> parseInstrumentationPath(dir.toString()))
           .collect(Collectors.toList());
@@ -77,7 +76,9 @@ public class FileManager {
 
     if (filePath.contains("/test/")
         || filePath.contains("/testing")
+        || filePath.contains("/build/")
         || filePath.contains("-common/")
+        || filePath.contains("-common-")
         || filePath.contains("bootstrap/src")) {
       return false;
     }

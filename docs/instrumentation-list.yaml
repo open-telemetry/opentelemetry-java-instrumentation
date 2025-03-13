@@ -390,11 +390,6 @@ elasticsearch:
       javaagent:
       - org.elasticsearch:elasticsearch:[6.0.0,8.0.0)
       - org.elasticsearch.client:transport:[6.0.0,)
-  - name: elasticsearch-rest-common-5.0
-    srcPath: instrumentation/elasticsearch/elasticsearch-rest-common-5.0
-    target_versions:
-      javaagent: []
-      library: []
   - name: elasticsearch-transport-5.0
     srcPath: instrumentation/elasticsearch/elasticsearch-transport-5.0
     target_versions:
@@ -842,10 +837,6 @@ kafka:
     target_versions:
       library:
       - org.apache.kafka:kafka-clients:2.6.0
-  - name: kafka-clients-common-0.11
-    srcPath: instrumentation/kafka/kafka-clients/kafka-clients-common-0.11
-    target_versions:
-      library: []
   - name: kafka-clients-0.11
     srcPath: instrumentation/kafka/kafka-clients/kafka-clients-0.11
     target_versions:
@@ -1049,11 +1040,6 @@ netty:
       - io.netty:netty-all:[4.1.0.Final,5.0.0)
       library:
       - io.netty:netty-codec-http:4.1.0.Final
-  - name: netty-common-4.0
-    srcPath: instrumentation/netty/netty-common-4.0
-    target_versions:
-      javaagent: []
-      library: []
 okhttp:
   instrumentations:
   - name: okhttp-3.0
