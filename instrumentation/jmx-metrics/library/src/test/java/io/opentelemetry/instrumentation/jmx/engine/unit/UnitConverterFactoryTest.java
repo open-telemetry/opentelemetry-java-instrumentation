@@ -5,11 +5,10 @@
 
 package io.opentelemetry.instrumentation.jmx.engine.unit;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -48,7 +47,7 @@ class UnitConverterFactoryTest {
   }
 
   @Test
-  void shouldSupportCustomConverter() {
+  void shouldRegisterConverter() {
     // Given
     String sourceUnit = "MB";
     String targetUnit = "By";
@@ -71,12 +70,8 @@ class UnitConverterFactoryTest {
     "non-existing, s",
   })
   void shouldHandleNonExistingConverter(String sourceUnit, String targetUnit) {
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> UnitConverterFactory.getConverter(sourceUnit, targetUnit));
-    assertEquals(
-        "No [" + sourceUnit + "] to [" + targetUnit + "] unit converter", exception.getMessage());
+    assertThatThrownBy(() -> UnitConverterFactory.getConverter(sourceUnit, targetUnit))
+        .hasMessage("No [" + sourceUnit + "] to [" + targetUnit + "] unit converter");
   }
 
   @ParameterizedTest
@@ -93,23 +88,15 @@ class UnitConverterFactoryTest {
   @CsvSource({
     "'', By", "By, ''",
   })
-  void shouldThrowExceptionWhenRegisteringConverterWithAnyUnitEmpty(
+  void shouldNotAllowRegisteringConverterWithAnyUnitEmpty(
       String sourceUnit, String targetUnit) {
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () ->
-                UnitConverterFactory.registerConverter(
-                    sourceUnit, targetUnit, (value) -> 0, false));
-    assertThat(exception.getMessage()).matches("Non empty .+Unit must be provided");
+    assertThatThrownBy(() -> UnitConverterFactory.registerConverter(sourceUnit, targetUnit, (value) -> 0, false))
+        .hasMessageMatching("Non empty .+Unit must be provided");
   }
 
   @Test
   void shouldNotAllowRegisteringAgainAlreadyExistingConverter() {
-    IllegalArgumentException exception =
-        assertThrows(
-            IllegalArgumentException.class,
-            () -> UnitConverterFactory.registerConverter("ms", "s", (v) -> 0, false));
-    assertEquals("Converter from [ms] to [s] already registered", exception.getMessage());
+    assertThatThrownBy(() -> UnitConverterFactory.registerConverter("ms", "s", (v) -> 0, false))
+        .hasMessage("Converter from [ms] to [s] already registered");
   }
 }
