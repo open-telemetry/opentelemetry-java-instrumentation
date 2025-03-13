@@ -405,8 +405,8 @@ here, including the instrumented library - you can only use JDK and OpenTelemetr
 ### Common Modules
 
 When creating a common module shared among different instrumentations, the naming convention should
-include a version suffix that matches the version of the instrumented library specified in the
-common module's `build.gradle.kts`.
+include a version suffix that matches the major/minor version of the instrumented library specified
+in the common module's `build.gradle.kts`.
 
 For example, if the common module's Gradle file contains the following dependency:
 
