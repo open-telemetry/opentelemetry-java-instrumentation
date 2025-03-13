@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -119,6 +120,21 @@ public abstract class AbstractElasticsearchTransportClientTest
         .isInstanceOf(IndexNotFoundException.class)
         .hasMessage(expectedException.getMessage());
 
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            Arrays.asList(
+                equalTo(
+                    maybeStable(DB_SYSTEM),
+                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                equalTo(maybeStable(DB_OPERATION), "GetAction"),
+                equalTo(ELASTICSEARCH_ACTION, "GetAction"),
+                equalTo(ELASTICSEARCH_REQUEST, "GetRequest"),
+                equalTo(ELASTICSEARCH_REQUEST_INDICES, "invalid-index")));
+
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      assertions.add(equalTo(ERROR_TYPE, "org.elasticsearch.transport.RemoteTransportException"));
+    }
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -141,16 +157,7 @@ public abstract class AbstractElasticsearchTransportClientTest
                                         equalTo(
                                             EXCEPTION_TYPE,
                                             RemoteTransportException.class.getName())))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "GetAction"),
-                            equalTo(
-                                ERROR_TYPE, "org.elasticsearch.transport.RemoteTransportException"),
-                            equalTo(ELASTICSEARCH_ACTION, "GetAction"),
-                            equalTo(ELASTICSEARCH_REQUEST, "GetRequest"),
-                            equalTo(ELASTICSEARCH_REQUEST_INDICES, "invalid-index")),
+                        .hasAttributesSatisfyingExactly(assertions),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)

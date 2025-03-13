@@ -23,9 +23,11 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.vertx.core.Vertx;
@@ -176,6 +178,20 @@ class VertxSqlClientTest {
 
     latch.await(30, TimeUnit.SECONDS);
 
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            Arrays.asList(
+                equalTo(maybeStable(DB_NAME), DB),
+                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
+                equalTo(maybeStable(DB_STATEMENT), "invalid"),
+                equalTo(SERVER_ADDRESS, host),
+                equalTo(SERVER_PORT, port)));
+
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      assertions.add(equalTo(DB_RESPONSE_STATUS_CODE, "42601"));
+      assertions.add(equalTo(ERROR_TYPE, "io.vertx.pgclient.PgException"));
+    }
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -197,14 +213,7 @@ class VertxSqlClientTest {
                                         satisfies(
                                             EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class))))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_NAME), DB),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
-                            equalTo(maybeStable(DB_STATEMENT), "invalid"),
-                            equalTo(DB_RESPONSE_STATUS_CODE, "42601"),
-                            equalTo(ERROR_TYPE, "io.vertx.pgclient.PgException"),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port)),
+                        .hasAttributesSatisfyingExactly(assertions),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)

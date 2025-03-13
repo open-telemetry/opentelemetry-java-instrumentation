@@ -18,14 +18,17 @@ import static org.awaitility.Awaitility.await;
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.io.File;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -163,6 +166,21 @@ class Elasticsearch53SpringTemplateTest {
     assertThatThrownBy(() -> template.refresh(indexName))
         .isInstanceOf(IndexNotFoundException.class);
 
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            Arrays.asList(
+                equalTo(
+                    maybeStable(DB_SYSTEM),
+                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                equalTo(maybeStable(DB_OPERATION), "RefreshAction"),
+                equalTo(stringKey("elasticsearch.action"), "RefreshAction"),
+                equalTo(stringKey("elasticsearch.request"), "RefreshRequest"),
+                equalTo(stringKey("elasticsearch.request.indices"), indexName)));
+
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      assertions.add(equalTo(ERROR_TYPE, "org.elasticsearch.index.IndexNotFoundException"));
+    }
+
     IndexNotFoundException expectedException = new IndexNotFoundException("no such index");
     testing.waitAndAssertTraces(
         trace ->
@@ -173,15 +191,7 @@ class Elasticsearch53SpringTemplateTest {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasException(expectedException)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "RefreshAction"),
-                            equalTo(ERROR_TYPE, "org.elasticsearch.index.IndexNotFoundException"),
-                            equalTo(stringKey("elasticsearch.action"), "RefreshAction"),
-                            equalTo(stringKey("elasticsearch.request"), "RefreshRequest"),
-                            equalTo(stringKey("elasticsearch.request.indices"), indexName))));
+                        .hasAttributesSatisfyingExactly(assertions)));
   }
 
   @Test

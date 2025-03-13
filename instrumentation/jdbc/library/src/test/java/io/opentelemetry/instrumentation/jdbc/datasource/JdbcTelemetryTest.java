@@ -22,6 +22,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -75,6 +76,8 @@ class JdbcTelemetryTest {
 
   @Test
   void error() throws SQLException {
+    assumeTrue(SemconvStability.emitStableDatabaseSemconv());
+
     JdbcTelemetry telemetry = JdbcTelemetry.builder(testing.getOpenTelemetry()).build();
     DataSource source = spy(new TestDataSource());
     Connection connection = spy(source.getConnection());
