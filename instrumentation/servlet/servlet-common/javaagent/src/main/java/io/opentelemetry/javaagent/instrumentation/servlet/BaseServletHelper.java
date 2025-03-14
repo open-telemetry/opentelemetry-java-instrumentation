@@ -181,7 +181,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     return oneSpan.getSpanContext().getTraceId().equals(otherSpan.getSpanContext().getTraceId());
   }
 
-  protected static class ServletAsyncContext implements ImplicitContextKeyed {
+  public static class ServletAsyncContext implements ImplicitContextKeyed {
     private static final ContextKey<ServletAsyncContext> CONTEXT_KEY =
         named("opentelemetry-servlet-async-context");
 
