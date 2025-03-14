@@ -765,6 +765,12 @@ targets:
       target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.47:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:otel4s:otel4s-0.12:bootstrap'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:otel4s:otel4s-0.12:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:pekko:pekko-actor-1.0:javaagent'
     - type: gradle
       path: ./
