@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.javaagent.bootstrap.servlet.ServletAsyncContext;
 
 public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST, RESPONSE> {
   public static final String CONTEXT_ATTRIBUTE = ServletHelper.class.getName() + ".Context";
@@ -37,10 +38,10 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
       // instrumentation and we have an uncaught throwable. Let's add it to the current span.
       if (throwable != null) {
         recordException(currentContext, throwable);
-        if (!mustEndOnHandlerMethodExit(request)) {
+        if (!mustEndOnHandlerMethodExit(currentContext)) {
           // We could be inside async dispatch. Unlike tomcat jetty does not call
           // ServletAsyncListener.onError when exception is thrown inside async dispatch.
-          recordAsyncException(request, throwable);
+          recordAsyncException(currentContext, throwable);
         }
       }
       // also capture request parameters as servlet attributes
@@ -52,7 +53,7 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
     }
 
     ServletResponseContext<RESPONSE> responseContext = new ServletResponseContext<>(response);
-    if (throwable != null || mustEndOnHandlerMethodExit(request)) {
+    if (throwable != null || mustEndOnHandlerMethodExit(context)) {
       instrumenter.end(context, requestContext, responseContext, throwable);
     }
   }
@@ -62,8 +63,8 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
    * that started a span must also end it, even if no error was detected. Extracted as a separate
    * method to avoid duplicating the comments on the logic behind this choice.
    */
-  public boolean mustEndOnHandlerMethodExit(REQUEST request) {
-    if (isAsyncListenerAttached(request)) {
+  public boolean mustEndOnHandlerMethodExit(Context context) {
+    if (isAsyncListenerAttached(context)) {
       // This request is handled asynchronously and startAsync instrumentation has already attached
       // the listener.
       return false;
@@ -76,57 +77,47 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
   }
 
   /**
-   * Response object must be attached to a request prior to {@link
-   * #attachAsyncListener(ServletRequestContext)} being called, as otherwise in some environments it
-   * is not possible to access response from async event in listeners.
+   * Response object must be attached to a request prior to {@link #attachAsyncListener(REQUEST,
+   * Context)} being called, as otherwise in some environments it is not possible to access response
+   * from async event in listeners.
    */
-  public void setAsyncListenerResponse(REQUEST request, RESPONSE response) {
-    Context context = getServerContext(request);
+  public void setAsyncListenerResponse(Context context, RESPONSE response) {
     ServletAsyncContext.setAsyncListenerResponse(context, response);
   }
 
   @SuppressWarnings("unchecked")
-  public RESPONSE getAsyncListenerResponse(REQUEST request) {
-    Context context = getServerContext(request);
+  public RESPONSE getAsyncListenerResponse(Context context) {
     return (RESPONSE) ServletAsyncContext.getAsyncListenerResponse(context);
   }
 
-  public void attachAsyncListener(REQUEST request) {
-    ServletRequestContext<REQUEST> requestContext = new ServletRequestContext<>(request, null);
-    attachAsyncListener(requestContext);
-  }
-
-  private void attachAsyncListener(ServletRequestContext<REQUEST> requestContext) {
-    REQUEST request = requestContext.request();
-    Context context = getServerContext(request);
-
-    if (context != null) {
-      Object response = getAsyncListenerResponse(request);
-
-      accessor.addRequestAsyncListener(
-          request,
-          new AsyncRequestCompletionListener<>(this, instrumenter, requestContext, context),
-          response);
-      ServletAsyncContext.setAsyncListenerAttached(context, true);
+  public void attachAsyncListener(REQUEST request, Context context) {
+    if (isAsyncListenerAttached(context)) {
+      return;
     }
+
+    Object response = getAsyncListenerResponse(context);
+
+    ServletRequestContext<REQUEST> requestContext = new ServletRequestContext<>(request, null);
+    accessor.addRequestAsyncListener(
+        request,
+        new AsyncRequestCompletionListener<>(this, instrumenter, requestContext, context),
+        response);
+    ServletAsyncContext.setAsyncListenerAttached(context, true);
   }
 
-  public boolean isAsyncListenerAttached(REQUEST request) {
-    Context context = getServerContext(request);
+  private static boolean isAsyncListenerAttached(Context context) {
     return ServletAsyncContext.isAsyncListenerAttached(context);
   }
 
-  public Runnable wrapAsyncRunnable(REQUEST request, Runnable runnable) {
-    return AsyncRunnableWrapper.wrap(this, request, runnable);
+  public Runnable wrapAsyncRunnable(Runnable runnable) {
+    return AsyncRunnableWrapper.wrap(this, runnable);
   }
 
-  public void recordAsyncException(REQUEST request, Throwable throwable) {
-    Context context = getServerContext(request);
+  public void recordAsyncException(Context context, Throwable throwable) {
     ServletAsyncContext.recordAsyncException(context, throwable);
   }
 
-  public Throwable getAsyncException(REQUEST request) {
-    Context context = getServerContext(request);
+  public Throwable getAsyncException(Context context) {
     return ServletAsyncContext.getAsyncException(context);
   }
 }
