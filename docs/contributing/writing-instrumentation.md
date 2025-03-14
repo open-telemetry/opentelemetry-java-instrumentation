@@ -402,6 +402,26 @@ All classes from the newly added bootstrap module will be loaded by the bootstra
 globally available within the JVM. **IMPORTANT: Note that you _cannot_ use any third-party libraries
 here, including the instrumented library - you can only use JDK and OpenTelemetry API classes.**
 
+### Common Modules
+
+When creating a common module shared among different instrumentations, the naming convention should
+include a version suffix that matches the major/minor version of the instrumented library specified
+in the common module's `build.gradle.kts`.
+
+For example, if the common module's Gradle file contains the following dependency:
+
+```kotlin
+dependencies {
+  compileOnly("org.yarpc.client:rest:5.0.0")
+}
+```
+
+Then the module should be named using the suffix `yarp-common-5.0`.
+
+If the common module does not have a direct dependency on the instrumented library, no version
+suffix is required. Examples of such cases include modules named `lettuce-common` and
+`netty-common`.
+
 ## Writing Java agent unit tests
 
 As mentioned before, tests in the `javaagent` module cannot access the javaagent instrumentation

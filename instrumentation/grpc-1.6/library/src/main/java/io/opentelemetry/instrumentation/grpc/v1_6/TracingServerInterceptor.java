@@ -9,7 +9,6 @@ import io.grpc.Contexts;
 import io.grpc.ForwardingServerCall;
 import io.grpc.ForwardingServerCallListener;
 import io.grpc.Grpc;
-import io.grpc.InternalMetadata;
 import io.grpc.Metadata;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
@@ -21,10 +20,17 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 final class TracingServerInterceptor implements ServerInterceptor {
 
+  private static final AttributeKey<Boolean> GRPC_CANCELED =
+      AttributeKey.booleanKey("grpc.canceled");
+  private static final AttributeKey<Long> GRPC_RECEIVED_MESSAGE_COUNT =
+      AttributeKey.longKey("grpc.received.message_count");
+  private static final AttributeKey<Long> GRPC_SENT_MESSAGE_COUNT =
+      AttributeKey.longKey("grpc.sent.message_count");
   // copied from MessageIncubatingAttributes
   private static final AttributeKey<Long> MESSAGE_ID = AttributeKey.longKey("message.id");
   private static final AttributeKey<String> MESSAGE_TYPE = AttributeKey.stringKey("message.type");
@@ -33,19 +39,27 @@ final class TracingServerInterceptor implements ServerInterceptor {
   private static final String RECEIVED = "RECEIVED";
 
   @SuppressWarnings("rawtypes")
-  private static final AtomicLongFieldUpdater<TracingServerCall> MESSAGE_ID_UPDATER =
-      AtomicLongFieldUpdater.newUpdater(TracingServerCall.class, "messageId");
+  private static final AtomicLongFieldUpdater<TracingServerCall> SENT_MESSAGE_ID_UPDATER =
+      AtomicLongFieldUpdater.newUpdater(TracingServerCall.class, "sentMessageId");
 
-  private static final Metadata.Key<String> AUTHORITY_KEY =
-      InternalMetadata.keyOf(":authority", Metadata.ASCII_STRING_MARSHALLER);
+  @SuppressWarnings("rawtypes")
+  private static final AtomicLongFieldUpdater<TracingServerCall> RECEIVED_MESSAGE_ID_UPDATER =
+      AtomicLongFieldUpdater.newUpdater(TracingServerCall.class, "receivedMessageId");
+
+  private static final VirtualField<ServerCall<?, ?>, String> AUTHORITY_FIELD =
+      VirtualField.find(ServerCall.class, String.class);
 
   private final Instrumenter<GrpcRequest, Status> instrumenter;
   private final boolean captureExperimentalSpanAttributes;
+  private final boolean emitMessageEvents;
 
   TracingServerInterceptor(
-      Instrumenter<GrpcRequest, Status> instrumenter, boolean captureExperimentalSpanAttributes) {
+      Instrumenter<GrpcRequest, Status> instrumenter,
+      boolean captureExperimentalSpanAttributes,
+      boolean emitMessageEvents) {
     this.instrumenter = instrumenter;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+    this.emitMessageEvents = emitMessageEvents;
   }
 
   @Override
@@ -54,9 +68,11 @@ final class TracingServerInterceptor implements ServerInterceptor {
       Metadata headers,
       ServerCallHandler<REQUEST, RESPONSE> next) {
     String authority = call.getAuthority();
-    if (authority == null && headers != null) {
-      // armeria grpc client exposes authority in a header
-      authority = headers.get(AUTHORITY_KEY);
+    if (authority == null) {
+      // Armeria grpc server call does not implement getAuthority(). In
+      // ArmeriaServerCallInstrumentation we store the value for the authority header in a virtual
+      // field.
+      authority = AUTHORITY_FIELD.get(call);
     }
     GrpcRequest request =
         new GrpcRequest(
@@ -85,9 +101,13 @@ final class TracingServerInterceptor implements ServerInterceptor {
     private final GrpcRequest request;
     private Status status;
 
-    // Used by MESSAGE_ID_UPDATER
+    // Used by SENT_MESSAGE_ID_UPDATER
     @SuppressWarnings("UnusedVariable")
-    volatile long messageId;
+    volatile long sentMessageId;
+
+    // Used by RECEIVED_MESSAGE_ID_UPDATER
+    @SuppressWarnings("UnusedVariable")
+    volatile long receivedMessageId;
 
     TracingServerCall(
         ServerCall<REQUEST, RESPONSE> delegate, Context context, GrpcRequest request) {
@@ -106,10 +126,11 @@ final class TracingServerInterceptor implements ServerInterceptor {
       try (Scope ignored = context.makeCurrent()) {
         super.sendMessage(message);
       }
-      Span span = Span.fromContext(context);
-      Attributes attributes =
-          Attributes.of(MESSAGE_TYPE, SENT, MESSAGE_ID, MESSAGE_ID_UPDATER.incrementAndGet(this));
-      span.addEvent("message", attributes);
+      long messageId = SENT_MESSAGE_ID_UPDATER.incrementAndGet(this);
+      if (emitMessageEvents) {
+        Attributes attributes = Attributes.of(MESSAGE_TYPE, SENT, MESSAGE_ID, messageId);
+        Span.fromContext(context).addEvent("message", attributes);
+      }
     }
 
     @Override
@@ -134,15 +155,27 @@ final class TracingServerInterceptor implements ServerInterceptor {
         this.request = request;
       }
 
+      private void end(Context context, GrpcRequest request, Status response, Throwable error) {
+        if (captureExperimentalSpanAttributes) {
+          Span span = Span.fromContext(context);
+          span.setAttribute(
+              GRPC_RECEIVED_MESSAGE_COUNT, RECEIVED_MESSAGE_ID_UPDATER.get(TracingServerCall.this));
+          span.setAttribute(
+              GRPC_SENT_MESSAGE_COUNT, SENT_MESSAGE_ID_UPDATER.get(TracingServerCall.this));
+          if (Status.CANCELLED.equals(status)) {
+            span.setAttribute(GRPC_CANCELED, true);
+          }
+        }
+        instrumenter.end(context, request, response, error);
+      }
+
       @Override
       public void onMessage(REQUEST message) {
-        Attributes attributes =
-            Attributes.of(
-                MESSAGE_TYPE,
-                RECEIVED,
-                MESSAGE_ID,
-                MESSAGE_ID_UPDATER.incrementAndGet(TracingServerCall.this));
-        Span.fromContext(context).addEvent("message", attributes);
+        long messageId = RECEIVED_MESSAGE_ID_UPDATER.incrementAndGet(TracingServerCall.this);
+        if (emitMessageEvents) {
+          Attributes attributes = Attributes.of(MESSAGE_TYPE, RECEIVED, MESSAGE_ID, messageId);
+          Span.fromContext(context).addEvent("message", attributes);
+        }
         delegate().onMessage(message);
       }
 
@@ -160,14 +193,11 @@ final class TracingServerInterceptor implements ServerInterceptor {
       public void onCancel() {
         try {
           delegate().onCancel();
-          if (captureExperimentalSpanAttributes) {
-            Span.fromContext(context).setAttribute("grpc.canceled", true);
-          }
         } catch (Throwable e) {
-          instrumenter.end(context, request, Status.UNKNOWN, e);
+          end(context, request, Status.UNKNOWN, e);
           throw e;
         }
-        instrumenter.end(context, request, Status.CANCELLED, null);
+        end(context, request, Status.CANCELLED, null);
       }
 
       @Override
@@ -175,13 +205,13 @@ final class TracingServerInterceptor implements ServerInterceptor {
         try {
           delegate().onComplete();
         } catch (Throwable e) {
-          instrumenter.end(context, request, Status.UNKNOWN, e);
+          end(context, request, Status.UNKNOWN, e);
           throw e;
         }
         if (status == null) {
           status = Status.UNKNOWN;
         }
-        instrumenter.end(context, request, status, status.getCause());
+        end(context, request, status, status.getCause());
       }
 
       @Override
@@ -189,7 +219,7 @@ final class TracingServerInterceptor implements ServerInterceptor {
         try {
           delegate().onReady();
         } catch (Throwable e) {
-          instrumenter.end(context, request, Status.UNKNOWN, e);
+          end(context, request, Status.UNKNOWN, e);
           throw e;
         }
       }
