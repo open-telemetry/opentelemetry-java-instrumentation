@@ -32,55 +32,11 @@ alibaba:
   instrumentations:
   - name: alibaba-druid-1.0
     srcPath: instrumentation/alibaba-druid-1.0
-    scope:
-      name: io.opentelemetry.alibaba-druid-1.0
-      version: 2.14.0-alpha-SNAPSHOT
-      schemaUrl: null
     target_versions:
       javaagent:
       - com.alibaba:druid:(,)
       library:
       - com.alibaba:druid:1.0.0
-    metrics:
-    - name: db.client.connections.usage
-      description: The number of connections that are currently in state described
-        by the state attribute.
-      type: LONG_SUM
-      unit: connections
-      attributes:
-      - name: pool.name
-        type: STRING
-      - name: state
-        type: STRING
-    - name: db.client.connections.pending_requests
-      description: The number of pending requests for an open connection, cumulative
-        for the entire pool.
-      type: LONG_SUM
-      unit: requests
-      attributes:
-      - name: pool.name
-        type: STRING
-    - name: db.client.connections.max
-      description: The maximum number of open connections allowed.
-      type: LONG_SUM
-      unit: connections
-      attributes:
-      - name: pool.name
-        type: STRING
-    - name: db.client.connections.idle.min
-      description: The minimum number of idle open connections allowed.
-      type: LONG_SUM
-      unit: connections
-      attributes:
-      - name: pool.name
-        type: STRING
-    - name: db.client.connections.idle.max
-      description: The maximum number of idle open connections allowed.
-      type: LONG_SUM
-      unit: connections
-      attributes:
-      - name: pool.name
-        type: STRING
 apache:
   instrumentations:
   - name: apache-shenyu-2.4
@@ -90,39 +46,9 @@ apache:
       - org.apache.shenyu:shenyu-web:[2.4.0,)
   - name: apache-httpclient-2.0
     srcPath: instrumentation/apache-httpclient/apache-httpclient-2.0
-    scope:
-      name: io.opentelemetry.apache-httpclient-2.0
-      version: 2.14.0-alpha-SNAPSHOT
-      schemaUrl: null
     target_versions:
       javaagent:
       - commons-httpclient:commons-httpclient:[2.0,4.0)
-    span_data:
-      span_kinds:
-      - SERVER
-      - CLIENT
-      - INTERNAL
-      attributes:
-      - name: server.address
-        type: STRING
-      - name: http.response.header.x-test-response
-        type: STRING_ARRAY
-      - name: error.type
-        type: STRING
-      - name: test.request.id
-        type: LONG
-      - name: http.request.method
-        type: STRING
-      - name: network.protocol.version
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: http.request.header.x-test-request
-        type: STRING_ARRAY
-      - name: http.response.status_code
-        type: LONG
-      - name: url.full
-        type: STRING
   - name: apache-httpasyncclient-4.1
     srcPath: instrumentation/apache-httpasyncclient-4.1
     target_versions:
@@ -286,46 +212,9 @@ clickhouse:
     description: Instruments the V1 ClickHouseClient, providing database client spans
       and metrics.
     srcPath: instrumentation/clickhouse-client-0.5
-    scope:
-      name: io.opentelemetry.clickhouse-client-0.5
-      version: 2.14.0-alpha-SNAPSHOT
-      schemaUrl: null
     target_versions:
       javaagent:
       - com.clickhouse.client:clickhouse-client:[0.5.0,)
-    metrics:
-    - name: db.client.operation.duration
-      description: Duration of database client operations.
-      type: HISTOGRAM
-      unit: s
-      attributes:
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.name
-        type: STRING
-      - name: db.system.name
-        type: STRING
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-    span_data:
-      span_kinds:
-      - CLIENT
-      - INTERNAL
-      attributes:
-      - name: server.address
-        type: STRING
-      - name: server.port
-        type: LONG
-      - name: db.system.name
-        type: STRING
-      - name: db.query.text
-        type: STRING
-      - name: db.namespace
-        type: STRING
-      - name: db.operation.name
-        type: STRING
 couchbase:
   instrumentations:
   - name: couchbase-3.1.6

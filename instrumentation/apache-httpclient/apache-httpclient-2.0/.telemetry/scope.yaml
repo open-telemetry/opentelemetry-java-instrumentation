@@ -1,5 +1,0 @@
-scope:
-  name: io.opentelemetry.apache-httpclient-2.0
-  version: 2.14.0-alpha-SNAPSHOT
-  schemaUrl: null
-  attributes:

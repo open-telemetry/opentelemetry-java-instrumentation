@@ -24,9 +24,6 @@ for instrumentation in "${instrumentations[@]}"; do
   # Remove any occurrence of /javaagent/ or /library/ from the path
   path=$(echo "$path" | sed -e 's/\/javaagent//g' -e 's/\/library//g')
 
-  # Debugging: Print the path being checked
-  echo "Checking path: $path/.telemetry"
-
   # Check if the .telemetry directory exists and remove it if it does
   if [ -d "$path/.telemetry" ]; then
     echo "Removing directory: $path/.telemetry"
