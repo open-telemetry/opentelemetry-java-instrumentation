@@ -7,9 +7,7 @@ package io.opentelemetry.instrumentation.docs;
 
 import static io.opentelemetry.instrumentation.docs.GradleParser.parseGradleFile;
 
-import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.internal.EmittedScope;
-import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationEntity;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
@@ -84,28 +82,6 @@ class InstrumentationAnalyzer {
         EmittedScope scope = YamlHelper.emittedScopeParser(emittedScope);
         if (scope != null && scope.getScope() != null) {
           entity.setScope(scope.getScope());
-        }
-      }
-
-      String emittedMetrics = fileSearch.getMetrics(entity.getSrcPath());
-      if (emittedMetrics != null) {
-        EmittedMetrics metrics = YamlHelper.emittedMetricsParser(emittedMetrics);
-        if (metrics != null && metrics.getMetrics() != null) {
-          entity.setMetrics(metrics.getMetrics());
-        }
-      }
-
-      String emittedSpans = fileSearch.getSpans(entity.getSrcPath());
-      if (emittedSpans != null) {
-        EmittedSpans spans = YamlHelper.emittedSpansParser(emittedSpans);
-        if (spans != null) {
-          if (spans.getSpanKinds() != null && !spans.getSpanKinds().isEmpty()) {
-            entity.setSpanKinds(spans.getSpanKinds());
-          }
-
-          if (spans.getAttributes() != null && !spans.getAttributes().isEmpty()) {
-            entity.setSpanAttributes(spans.getAttributes());
-          }
         }
       }
     }

@@ -157,10 +157,6 @@ public abstract class InstrumentationTestRunner {
   public void getMetadataFromTraces(List<List<SpanData>> traces) {
     for (List<SpanData> trace : traces) {
       for (SpanData span : trace) {
-        spanKinds.add(span.getKind());
-        span.getAttributes()
-            .forEach((key, value) -> attributeKeys.put(key.getKey(), key.getType().name()));
-
         InstrumentationScopeInfo scopeInfo = span.getInstrumentationScopeInfo();
         if (!scopeInfo.getName().equals("test") && instrumentationScope == null) {
           instrumentationScope = scopeInfo;
@@ -215,10 +211,6 @@ public abstract class InstrumentationTestRunner {
 
   public void getMetadataFromMetrics(List<MetricData> metrics) {
     for (MetricData metric : metrics) {
-      if (!this.metrics.containsKey(metric.getName())) {
-        this.metrics.put(metric.getName(), metric);
-      }
-
       InstrumentationScopeInfo scopeInfo = metric.getInstrumentationScopeInfo();
       if (!scopeInfo.getName().equals("test") && instrumentationScope == null) {
         instrumentationScope = scopeInfo;

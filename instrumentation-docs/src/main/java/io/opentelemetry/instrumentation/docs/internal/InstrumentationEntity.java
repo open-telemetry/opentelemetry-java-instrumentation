@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.docs.internal;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -29,9 +28,6 @@ public class InstrumentationEntity {
   }
 
   private InstrumentationMetaData metadata;
-  private List<EmittedMetrics.Metric> metrics;
-  private List<EmittedSpans.EmittedSpanAttribute> spanAttributes;
-  private List<String> spanKinds;
   private EmittedScope.Scope scope;
 
   /**
@@ -45,22 +41,7 @@ public class InstrumentationEntity {
     this.group = builder.group;
     this.metadata = builder.metadata;
     this.targetVersions = builder.targetVersions;
-    this.metrics = builder.metrics;
-    this.spanAttributes = builder.spanAttributes;
-    this.spanKinds = builder.spanKinds;
     this.scope = builder.scope;
-  }
-
-  public void setMetrics(List<EmittedMetrics.Metric> metrics) {
-    this.metrics = metrics;
-  }
-
-  public void setSpanAttributes(List<EmittedSpans.EmittedSpanAttribute> spanAttributes) {
-    this.spanAttributes = spanAttributes;
-  }
-
-  public void setSpanKinds(List<String> spanKinds) {
-    this.spanKinds = spanKinds;
   }
 
   public void setScope(EmittedScope.Scope scope) {
@@ -91,18 +72,6 @@ public class InstrumentationEntity {
     return targetVersions;
   }
 
-  public List<EmittedMetrics.Metric> getMetrics() {
-    return metrics;
-  }
-
-  public List<EmittedSpans.EmittedSpanAttribute> getSpanAttributes() {
-    return spanAttributes;
-  }
-
-  public List<String> getSpanKinds() {
-    return spanKinds;
-  }
-
   public EmittedScope.Scope getScope() {
     return scope;
   }
@@ -119,9 +88,6 @@ public class InstrumentationEntity {
     private String group;
     private InstrumentationMetaData metadata;
     private Map<InstrumentationType, Set<String>> targetVersions;
-    private List<EmittedMetrics.Metric> metrics;
-    private List<EmittedSpans.EmittedSpanAttribute> spanAttributes;
-    private List<String> spanKinds;
     private EmittedScope.Scope scope;
 
     public Builder srcPath(String srcPath) {
@@ -151,21 +117,6 @@ public class InstrumentationEntity {
 
     public Builder targetVersions(Map<InstrumentationType, Set<String>> targetVersions) {
       this.targetVersions = targetVersions;
-      return this;
-    }
-
-    public Builder metrics(List<EmittedMetrics.Metric> metrics) {
-      this.metrics = metrics;
-      return this;
-    }
-
-    public Builder spanAttributes(List<EmittedSpans.EmittedSpanAttribute> spanAttributes) {
-      this.spanAttributes = spanAttributes;
-      return this;
-    }
-
-    public Builder spanKinds(List<String> spanKinds) {
-      this.spanKinds = spanKinds;
       return this;
     }
 
