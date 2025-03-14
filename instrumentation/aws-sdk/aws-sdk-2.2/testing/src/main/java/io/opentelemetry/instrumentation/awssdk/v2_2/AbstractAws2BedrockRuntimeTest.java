@@ -518,6 +518,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 Value.of(
                                     "<thinking> The User has asked for the current weather in two locations: Seattle and San Francisco. To provide the requested information, I will use the \"get_current_weather\" tool for each location separately. </thinking>\n")))));
 
+    // Clear to allow asserting telemetry of user request and tool result processing separately.
     getTesting().clearData();
 
     messages.add(response0.output().message());
@@ -932,6 +933,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 Value.of(
                                     "<thinking> The User has asked for the current weather in two locations: Seattle and San Francisco. To provide the requested information, I will use the \"get_current_weather\" tool for each location separately. </thinking>\n")))));
 
+    // Clear to allow asserting telemetry of user request and tool result processing separately.
     getTesting().clearData();
 
     List<ContentBlock> contentBlocks = new ArrayList<>();

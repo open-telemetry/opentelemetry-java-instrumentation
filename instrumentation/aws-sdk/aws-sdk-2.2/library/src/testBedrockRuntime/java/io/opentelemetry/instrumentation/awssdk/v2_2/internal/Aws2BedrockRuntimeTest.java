@@ -252,6 +252,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                         KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
                                         KeyValue.of("type", Value.of("function"))))))));
 
+    // Clear to allow asserting telemetry of user request and tool result processing separately.
     getTesting().clearData();
 
     messages.add(response0.output().message());
@@ -635,6 +636,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                                         KeyValue.of("id", Value.of(sanFranciscoToolUseId)),
                                         KeyValue.of("type", Value.of("function"))))))));
 
+    // Clear to allow asserting telemetry of user request and tool result processing separately.
     getTesting().clearData();
 
     List<ContentBlock> contentBlocks = new ArrayList<>();
