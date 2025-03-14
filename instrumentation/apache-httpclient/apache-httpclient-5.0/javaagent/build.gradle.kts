@@ -12,10 +12,13 @@ muzzle {
 
 dependencies {
   library("org.apache.httpcomponents.client5:httpclient5:5.0")
+  // https://issues.apache.org/jira/browse/HTTPCORE-653
+  library("org.apache.httpcomponents.core5:httpcore5:5.0.3")
 }
 
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("otel.instrumentation.apache-httpclient-5.debug", "true")
   }
 }

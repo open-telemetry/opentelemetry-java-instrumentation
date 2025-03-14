@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapPropagator;
@@ -234,6 +235,10 @@ public final class AwsSdkInstrumenterFactory {
                     GenAiAttributesExtractor.create(BedrockRuntimeAttributesGetter.INSTANCE))
                 .addOperationMetrics(GenAiClientMetrics.get()),
         true);
+  }
+
+  public Logger eventLogger() {
+    return openTelemetry.getLogsBridge().get(INSTRUMENTATION_NAME);
   }
 
   private static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> createInstrumenter(

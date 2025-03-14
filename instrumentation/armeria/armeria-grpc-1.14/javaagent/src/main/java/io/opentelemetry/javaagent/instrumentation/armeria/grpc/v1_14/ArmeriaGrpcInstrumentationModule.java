@@ -22,6 +22,7 @@ public class ArmeriaGrpcInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ArmeriaGrpcClientBuilderInstrumentation(),
-        new ArmeriaGrpcServiceBuilderInstrumentation());
+        new ArmeriaGrpcServiceBuilderInstrumentation(),
+        new ArmeriaServerCallInstrumentation());
   }
 }

@@ -28,7 +28,7 @@ dependencies {
   }
 
   if (findProperty("testLatestDeps") as Boolean) {
-    testImplementation("ch.qos.logback:logback-classic:+")
+    testImplementation("ch.qos.logback:logback-classic:latest.release")
   } else {
     testImplementation("ch.qos.logback:logback-classic") {
       version {
