@@ -101,8 +101,15 @@ class JdbcTelemetryTest {
                 span -> span.hasName("TestDataSource.getConnection"),
                 span ->
                     span.hasName("SELECT dbname")
-                        .hasAttribute(equalTo(DB_RESPONSE_STATUS_CODE, "42"))
-                        .hasAttribute(equalTo(ERROR_TYPE, "java.sql.SQLException"))));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, "postgresql"),
+                            equalTo(DB_OPERATION_NAME, "SELECT"),
+                            equalTo(DB_NAMESPACE, "dbname"),
+                            equalTo(DB_QUERY_TEXT, "SELECT ?;"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "42"),
+                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(SERVER_PORT, 5432),
+                            equalTo(ERROR_TYPE, "java.sql.SQLException"))));
 
     assertDurationMetric(
         testing,
