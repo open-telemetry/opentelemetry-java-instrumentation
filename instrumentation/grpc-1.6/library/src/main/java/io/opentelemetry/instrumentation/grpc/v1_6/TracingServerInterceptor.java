@@ -9,7 +9,6 @@ import io.grpc.Contexts;
 import io.grpc.ForwardingServerCall;
 import io.grpc.ForwardingServerCallListener;
 import io.grpc.Grpc;
-import io.grpc.InternalMetadata;
 import io.grpc.Metadata;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
@@ -21,6 +20,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 final class TracingServerInterceptor implements ServerInterceptor {
@@ -36,8 +36,8 @@ final class TracingServerInterceptor implements ServerInterceptor {
   private static final AtomicLongFieldUpdater<TracingServerCall> MESSAGE_ID_UPDATER =
       AtomicLongFieldUpdater.newUpdater(TracingServerCall.class, "messageId");
 
-  private static final Metadata.Key<String> AUTHORITY_KEY =
-      InternalMetadata.keyOf(":authority", Metadata.ASCII_STRING_MARSHALLER);
+  private static final VirtualField<ServerCall<?, ?>, String> AUTHORITY_FIELD =
+      VirtualField.find(ServerCall.class, String.class);
 
   private final Instrumenter<GrpcRequest, Status> instrumenter;
   private final boolean captureExperimentalSpanAttributes;
@@ -54,9 +54,11 @@ final class TracingServerInterceptor implements ServerInterceptor {
       Metadata headers,
       ServerCallHandler<REQUEST, RESPONSE> next) {
     String authority = call.getAuthority();
-    if (authority == null && headers != null) {
-      // armeria grpc client exposes authority in a header
-      authority = headers.get(AUTHORITY_KEY);
+    if (authority == null) {
+      // Armeria grpc server call does not implement getAuthority(). In
+      // ArmeriaServerCallInstrumentation we store the value for the authority header in a virtual
+      // field.
+      authority = AUTHORITY_FIELD.get(call);
     }
     GrpcRequest request =
         new GrpcRequest(

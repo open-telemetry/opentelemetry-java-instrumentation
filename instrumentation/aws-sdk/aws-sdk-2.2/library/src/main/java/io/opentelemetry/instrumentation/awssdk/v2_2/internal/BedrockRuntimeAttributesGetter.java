@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecu
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesGetter;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
@@ -38,6 +38,8 @@ enum BedrockRuntimeAttributesGetter
     if (operation != null) {
       switch (operation) {
         case "Converse":
+        // fallthrough
+        case "ConverseStream":
           return GenAiOperationNameIncubatingValues.CHAT;
         default:
           return null;
@@ -120,11 +122,11 @@ enum BedrockRuntimeAttributesGetter
     if (response == null) {
       return emptyList();
     }
-    String stopReason = BedrockRuntimeAccess.getStopReason(response.getSdkResponse());
-    if (stopReason == null) {
-      return emptyList();
+    List<String> stopReasons = BedrockRuntimeAccess.getStopReasons(response);
+    if (stopReasons == null) {
+      return Collections.emptyList();
     }
-    return Arrays.asList(stopReason);
+    return stopReasons;
   }
 
   @Nullable
@@ -146,7 +148,7 @@ enum BedrockRuntimeAttributesGetter
     if (response == null) {
       return null;
     }
-    return BedrockRuntimeAccess.getUsageInputTokens(response.getSdkResponse());
+    return BedrockRuntimeAccess.getUsageInputTokens(response);
   }
 
   @Nullable
@@ -156,6 +158,6 @@ enum BedrockRuntimeAttributesGetter
     if (response == null) {
       return null;
     }
-    return BedrockRuntimeAccess.getUsageOutputTokens(response.getSdkResponse());
+    return BedrockRuntimeAccess.getUsageOutputTokens(response);
   }
 }

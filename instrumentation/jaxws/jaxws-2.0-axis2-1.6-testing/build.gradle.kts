@@ -24,9 +24,9 @@ dependencies {
   testImplementation("com.sun.xml.ws:jaxws-rt:2.2.8")
   testImplementation("com.sun.xml.ws:jaxws-tools:2.2.8")
 
-  latestDepTestLibrary("org.apache.axis2:axis2-jaxws:1.+") // see jaxws-3.0-axis2-1.6-testing module
-  latestDepTestLibrary("org.apache.axis2:axis2-transport-http:1.+") // see jaxws-3.0-axis2-1.6-testing module
-  latestDepTestLibrary("org.apache.axis2:axis2-transport-local:1.+") // see jaxws-3.0-axis2-1.6-testing module
+  latestDepTestLibrary("org.apache.axis2:axis2-jaxws:1.+") // see jaxws-3.0-axis2-2.0-testing module
+  latestDepTestLibrary("org.apache.axis2:axis2-transport-http:1.+") // see jaxws-3.0-axis2-2.0-testing module
+  latestDepTestLibrary("org.apache.axis2:axis2-transport-local:1.+") // see jaxws-3.0-axis2-2.0-testing module
 }
 
 configurations.configureEach {
