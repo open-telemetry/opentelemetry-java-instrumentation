@@ -60,7 +60,7 @@ public class Servlet3Advice {
     requestContext = new ServletRequestContext<>(httpServletRequest, servletOrFilter);
     if (attachedContext == null && helper().shouldStart(currentContext, requestContext)) {
       context = helper().start(currentContext, requestContext);
-      helper().setAsyncListenerResponse(httpServletRequest, (HttpServletResponse) response);
+      helper().setAsyncListenerResponse(context, (HttpServletResponse) response);
 
       contextToUpdate = context;
     } else if (attachedContext != null
