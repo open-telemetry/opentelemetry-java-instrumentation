@@ -152,6 +152,6 @@ public class AwsSdkTelemetry {
   @NoMuzzle
   public BedrockRuntimeAsyncClient wrapBedrockRuntimeClient(
       BedrockRuntimeAsyncClient bedrockClient) {
-    return BedrockRuntimeImpl.wrap(bedrockClient);
+    return BedrockRuntimeImpl.wrap(bedrockClient, eventLogger, genAiCaptureMessageContent);
   }
 }
