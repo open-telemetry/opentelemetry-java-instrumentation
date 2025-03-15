@@ -10,15 +10,11 @@ import ch.qos.logback.classic.Logger;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.test.utils.LoggerUtils;
-import io.opentelemetry.instrumentation.testing.internal.MetaDataCollector;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import java.io.IOException;
-import java.net.URL;
-import java.nio.file.Paths;
 import java.util.List;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +50,7 @@ public final class AgentTestRunner extends InstrumentationTestRunner {
   }
 
   @Override
-  public void afterTestClass() throws IOException {
+  public void afterTestClass() {
     // Cleanup before assertion.
     assert TestAgentListenerAccess.getInstrumentationErrorCount() == 0
         : TestAgentListenerAccess.getInstrumentationErrorCount()
@@ -63,21 +59,6 @@ public final class AgentTestRunner extends InstrumentationTestRunner {
     assert adviceFailureCount == 0 : adviceFailureCount + " Advice failures during test";
     int muzzleFailureCount = TestAgentListenerAccess.getAndResetMuzzleFailureCount();
     assert muzzleFailureCount == 0 : muzzleFailureCount + " Muzzle failures during test";
-
-    // Generates files in a `.telemetry` directory within the instrumentation module with all
-    // captured emitted metadata to be used by the instrumentation-docs Doc generator.
-    boolean collectMetadata =
-        Boolean.getBoolean("collectMetadata")
-            || Boolean.parseBoolean(System.getenv("COLLECT_METADATA"));
-
-    if (collectMetadata) {
-      URL resource = this.getClass().getClassLoader().getResource("");
-      if (resource == null) {
-        return;
-      }
-      String path = Paths.get(resource.getPath()).toString();
-      MetaDataCollector.writeTelemetryToFiles(path, instrumentationScope);
-    }
 
     // additional library ignores are ignored during tests, because they can make it really
     // confusing for contributors wondering why their instrumentation is not applied

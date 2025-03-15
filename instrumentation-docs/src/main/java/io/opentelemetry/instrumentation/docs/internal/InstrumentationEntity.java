@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.docs.internal;
 
+import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import java.util.Map;
 import java.util.Set;
 
@@ -28,7 +29,7 @@ public class InstrumentationEntity {
   }
 
   private InstrumentationMetaData metadata;
-  private EmittedScope.Scope scope;
+  private InstrumentationScopeInfo scope;
 
   /**
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -44,7 +45,7 @@ public class InstrumentationEntity {
     this.scope = builder.scope;
   }
 
-  public void setScope(EmittedScope.Scope scope) {
+  public void setScope(InstrumentationScopeInfo scope) {
     this.scope = scope;
   }
 
@@ -72,7 +73,7 @@ public class InstrumentationEntity {
     return targetVersions;
   }
 
-  public EmittedScope.Scope getScope() {
+  public InstrumentationScopeInfo getScope() {
     return scope;
   }
 
@@ -88,7 +89,7 @@ public class InstrumentationEntity {
     private String group;
     private InstrumentationMetaData metadata;
     private Map<InstrumentationType, Set<String>> targetVersions;
-    private EmittedScope.Scope scope;
+    private InstrumentationScopeInfo scope;
 
     public Builder srcPath(String srcPath) {
       this.srcPath = srcPath;
@@ -120,7 +121,7 @@ public class InstrumentationEntity {
       return this;
     }
 
-    public Builder scope(EmittedScope.Scope scope) {
+    public Builder scope(InstrumentationScopeInfo scope) {
       this.scope = scope;
       return this;
     }

@@ -9,7 +9,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
@@ -26,11 +25,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
@@ -52,9 +47,6 @@ public abstract class InstrumentationTestRunner {
   private final TestInstrumenters testInstrumenters;
 
   protected InstrumentationScopeInfo instrumentationScope;
-  protected Set<SpanKind> spanKinds = new HashSet<>();
-  protected Map<String, String> attributeKeys = new HashMap<>();
-  protected Map<String, MetricData> metrics = new HashMap<>();
 
   protected InstrumentationTestRunner(OpenTelemetry openTelemetry) {
     testInstrumenters = new TestInstrumenters(openTelemetry);
@@ -75,6 +67,10 @@ public abstract class InstrumentationTestRunner {
   public abstract List<LogRecordData> getExportedLogRecords();
 
   public abstract boolean forceFlushCalled();
+
+  protected boolean collectMetadata =
+      Boolean.getBoolean("collectMetadata")
+          || Boolean.parseBoolean(System.getenv("COLLECT_METADATA"));
 
   /** Return a list of all captured traces, where each trace is a sorted list of spans. */
   public final List<List<SpanData>> traces() {
@@ -111,7 +107,7 @@ public abstract class InstrumentationTestRunner {
   }
 
   public final <T extends Consumer<TraceAssert>>
-      void waitAndAssertTracesWithoutScopeVersionVerification(Iterable<T> assertions) {
+  void waitAndAssertTracesWithoutScopeVersionVerification(Iterable<T> assertions) {
     waitAndAssertTraces(null, assertions, false);
   }
 
@@ -148,21 +144,6 @@ public abstract class InstrumentationTestRunner {
       traces.sort(traceComparator);
     }
     TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(assertionsList);
-
-    if (Boolean.getBoolean("collectMetadata")) {
-      getMetadataFromTraces(traces);
-    }
-  }
-
-  public void getMetadataFromTraces(List<List<SpanData>> traces) {
-    for (List<SpanData> trace : traces) {
-      for (SpanData span : trace) {
-        InstrumentationScopeInfo scopeInfo = span.getInstrumentationScopeInfo();
-        if (!scopeInfo.getName().equals("test") && instrumentationScope == null) {
-          instrumentationScope = scopeInfo;
-        }
-      }
-    }
   }
 
   /**
@@ -183,9 +164,6 @@ public abstract class InstrumentationTestRunner {
                         data ->
                             data.getInstrumentationScopeInfo().getName().equals(instrumentationName)
                                 && data.getName().equals(metricName))));
-    if (instrumentationScope == null) {
-      getMetadataFromMetrics(getExportedMetrics());
-    }
   }
 
   @SafeVarargs
@@ -203,19 +181,6 @@ public abstract class InstrumentationTestRunner {
                 .anySatisfy(metric -> assertions[index].accept(assertThat(metric)));
           }
         });
-
-    if (Boolean.getBoolean("collectMetadata")) {
-      getMetadataFromMetrics(getExportedMetrics());
-    }
-  }
-
-  public void getMetadataFromMetrics(List<MetricData> metrics) {
-    for (MetricData metric : metrics) {
-      InstrumentationScopeInfo scopeInfo = metric.getInstrumentationScopeInfo();
-      if (!scopeInfo.getName().equals("test") && instrumentationScope == null) {
-        instrumentationScope = scopeInfo;
-      }
-    }
   }
 
   public final List<LogRecordData> waitForLogRecords(int numberOfLogRecords) {

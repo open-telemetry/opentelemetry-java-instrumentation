@@ -60,3 +60,5 @@ replay_pid*
 
 !java-agent/benchmark/releases/*.jar
 
+**/.telemetry/
+

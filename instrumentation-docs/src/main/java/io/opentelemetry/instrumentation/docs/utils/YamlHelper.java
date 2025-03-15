@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.docs.utils;
 
-import io.opentelemetry.instrumentation.docs.internal.EmittedScope;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationEntity;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
 import java.io.BufferedWriter;
@@ -74,8 +73,9 @@ public class YamlHelper {
   private static Map<String, Object> getScopeMap(InstrumentationEntity entity) {
     Map<String, Object> scopeMap = new LinkedHashMap<>();
     scopeMap.put("name", entity.getScope().getName());
-    scopeMap.put("version", entity.getScope().getVersion());
-    scopeMap.put("schemaUrl", entity.getScope().getSchemaUrl());
+    if (entity.getScope().getSchemaUrl() != null) {
+      scopeMap.put("schemaUrl", entity.getScope().getSchemaUrl());
+    }
 
     if (entity.getScope().getAttributes() != null && !entity.getScope().getAttributes().isEmpty()) {
 
@@ -91,10 +91,6 @@ public class YamlHelper {
 
   public static InstrumentationMetaData metaDataParser(String input) {
     return new Yaml().loadAs(input, InstrumentationMetaData.class);
-  }
-
-  public static EmittedScope emittedScopeParser(String input) {
-    return new Yaml().loadAs(input, EmittedScope.class);
   }
 
   private YamlHelper() {}

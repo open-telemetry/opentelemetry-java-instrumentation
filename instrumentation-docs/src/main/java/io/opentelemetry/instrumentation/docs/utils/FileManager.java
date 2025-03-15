@@ -111,60 +111,6 @@ public class FileManager {
     return null;
   }
 
-  public String getScope(String instrumentationDirectory) {
-    String scopeYaml = instrumentationDirectory + "/.telemetry/scope.yaml";
-    if (Files.exists(Paths.get(scopeYaml))) {
-      return readFileToString(scopeYaml);
-    }
-    return null;
-  }
-
-  public String getMetrics(String instrumentationDirectory) {
-    StringBuilder metricsContent = new StringBuilder();
-    Path telemetryDir = Paths.get(instrumentationDirectory, ".telemetry");
-
-    if (Files.exists(telemetryDir) && Files.isDirectory(telemetryDir)) {
-      try (Stream<Path> files = Files.list(telemetryDir)) {
-        files
-            .filter(path -> path.getFileName().toString().startsWith("metrics-"))
-            .forEach(
-                path -> {
-                  String content = readFileToString(path.toString());
-                  if (content != null) {
-                    metricsContent.append(content).append("\n");
-                  }
-                });
-      } catch (IOException e) {
-        logger.severe("Error reading metrics files: " + e.getMessage());
-      }
-    }
-
-    return metricsContent.toString();
-  }
-
-  public String getSpans(String instrumentationDirectory) {
-    StringBuilder spansContent = new StringBuilder();
-    Path telemetryDir = Paths.get(instrumentationDirectory, ".telemetry");
-
-    if (Files.exists(telemetryDir) && Files.isDirectory(telemetryDir)) {
-      try (Stream<Path> files = Files.list(telemetryDir)) {
-        files
-            .filter(path -> path.getFileName().toString().startsWith("spans-"))
-            .forEach(
-                path -> {
-                  String content = readFileToString(path.toString());
-                  if (content != null) {
-                    spansContent.append(content).append("\n");
-                  }
-                });
-      } catch (IOException e) {
-        logger.severe("Error reading spans files: " + e.getMessage());
-      }
-    }
-
-    return spansContent.toString();
-  }
-
   public String readFileToString(String filePath) {
     try {
       return Files.readString(Paths.get(filePath));

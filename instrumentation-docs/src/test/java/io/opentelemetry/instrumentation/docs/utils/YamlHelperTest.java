@@ -6,9 +6,7 @@
 package io.opentelemetry.instrumentation.docs.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import io.opentelemetry.instrumentation.docs.internal.EmittedScope;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationEntity;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
@@ -20,6 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import org.junit.jupiter.api.Test;
 
 class YamlHelperTest {
@@ -46,7 +45,8 @@ class YamlHelperTest {
 
     Map<InstrumentationType, Set<String>> targetVersions2 = new HashMap<>();
 
-    EmittedScope.Scope scope = new EmittedScope.Scope("struts-2.3", "2.14-ALPHA", null, null);
+    InstrumentationScopeInfo scope = InstrumentationScopeInfo.builder("struts-2.3")
+        .build();
 
     targetVersions2.put(
         InstrumentationType.LIBRARY,
@@ -69,46 +69,25 @@ class YamlHelperTest {
 
     String expectedYaml =
         """
-        spring:
-          instrumentations:
-          - name: spring-web-6.0
-            description: Spring Web 6.0 instrumentation
-            srcPath: instrumentation/spring/spring-web/spring-web-6.0
-            target_versions:
-              javaagent:
-              - org.springframework:spring-web:[6.0.0,)
-        struts:
-          instrumentations:
-          - name: struts-2.3
-            srcPath: instrumentation/struts/struts-2.3
-            scope:
-              name: struts-2.3
-              version: 2.14-ALPHA
-              schemaUrl: null
-            target_versions:
-              library:
-              - org.apache.struts:struts2-core:2.1.0
-        """;
+            spring:
+              instrumentations:
+              - name: spring-web-6.0
+                description: Spring Web 6.0 instrumentation
+                srcPath: instrumentation/spring/spring-web/spring-web-6.0
+                target_versions:
+                  javaagent:
+                  - org.springframework:spring-web:[6.0.0,)
+            struts:
+              instrumentations:
+              - name: struts-2.3
+                srcPath: instrumentation/struts/struts-2.3
+                scope:
+                  name: struts-2.3
+                target_versions:
+                  library:
+                  - org.apache.struts:struts2-core:2.1.0
+            """;
 
     assertThat(expectedYaml).isEqualTo(stringWriter.toString());
-  }
-
-  @Test
-  public void testEmittedScopeParser() {
-    String yamlContent =
-        """
-        scope:
-          name: io.opentelemetry.alibaba-druid-1.0
-          version: 2.14.0-alpha-SNAPSHOT
-          schemaUrl: null
-          attributes:
-        """;
-
-    EmittedScope emittedScope = YamlHelper.emittedScopeParser(yamlContent);
-
-    assertNotNull(emittedScope.getScope());
-    assertThat(emittedScope.getScope().getName()).isEqualTo("io.opentelemetry.alibaba-druid-1.0");
-    assertThat(emittedScope.getScope().getVersion()).isEqualTo("2.14.0-alpha-SNAPSHOT");
-    assertThat(emittedScope.getScope().getSchemaUrl()).isNull();
   }
 }

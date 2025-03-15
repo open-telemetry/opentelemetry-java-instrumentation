@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.docs;
 
 import static io.opentelemetry.instrumentation.docs.GradleParser.parseGradleFile;
 
-import io.opentelemetry.instrumentation.docs.internal.EmittedScope;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationEntity;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
@@ -75,14 +74,6 @@ class InstrumentationAnalyzer {
       String metadataFile = fileSearch.getMetaDataFile(entity.getSrcPath());
       if (metadataFile != null) {
         entity.setMetadata(YamlHelper.metaDataParser(metadataFile));
-      }
-
-      String emittedScope = fileSearch.getScope(entity.getSrcPath());
-      if (emittedScope != null) {
-        EmittedScope scope = YamlHelper.emittedScopeParser(emittedScope);
-        if (scope != null && scope.getScope() != null) {
-          entity.setScope(scope.getScope());
-        }
       }
     }
     return entities;

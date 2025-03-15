@@ -23,6 +23,10 @@ Prior to running the DocGeneratorApplication, run the following command to colle
 * Run the doc generator
   * `./gradlew :instrumentation-docs:generateDocs`
 
+You can also use an environment variable to set it for the entire suite:
+
+`COLLECT_METADATA=true ./gradlew test`
+
 or use the helper script that will run only the currently supported tests:
 
 ```bash
