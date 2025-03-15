@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent;
 
+import io.opentelemetry.javaagent.bootstrap.AgentArgUtil;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.bootstrap.JavaagentFileHolder;
@@ -15,6 +16,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
+import javax.annotation.Nullable;
 
 /**
  * Premain-Class for the OpenTelemetry Java agent.
@@ -42,15 +44,17 @@ import java.util.jar.Manifest;
 public final class OpenTelemetryAgent {
 
   public static void premain(String agentArgs, Instrumentation inst) {
-    startAgent(inst, true);
+    startAgent(inst, agentArgs, true);
   }
 
   public static void agentmain(String agentArgs, Instrumentation inst) {
-    startAgent(inst, false);
+    startAgent(inst, agentArgs, false);
   }
 
-  private static void startAgent(Instrumentation inst, boolean fromPremain) {
+  private static void startAgent(
+      Instrumentation inst, @Nullable String agentArgs, boolean fromPremain) {
     try {
+      AgentArgUtil.setSystemProperties(agentArgs);
       File javaagentFile = installBootstrapJar(inst);
       InstrumentationHolder.setInstrumentation(inst);
       JavaagentFileHolder.setJavaagentFile(javaagentFile);

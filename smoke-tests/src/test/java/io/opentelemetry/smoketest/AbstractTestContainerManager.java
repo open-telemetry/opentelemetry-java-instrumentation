@@ -27,6 +27,8 @@ public abstract class AbstractTestContainerManager implements TestContainerManag
         jvmArgsEnvVarName,
         "-Xmx512m -javaagent:/"
             + TARGET_AGENT_FILENAME
+            // args passed to the agent directly
+            + "=otel.javaagent.debug=true;otel.bsp.schedule.delay=10ms"
             // Liberty20Jdk11, Payara6Jdk11 and Payara6Jdk17 fail with
             // java.util.zip.ZipException: Invalid CEN header (invalid zip64 extra data field size)
             + " -Djdk.util.zip.disableZip64ExtraFieldValidation=true");
@@ -36,13 +38,11 @@ public abstract class AbstractTestContainerManager implements TestContainerManag
     environment.put("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc");
 
     environment.put("OTEL_BSP_MAX_EXPORT_BATCH_SIZE", "1");
-    environment.put("OTEL_BSP_SCHEDULE_DELAY", "10ms");
     environment.put("OTEL_METRIC_EXPORT_INTERVAL", "1000");
     environment.put("OTEL_EXPORTER_OTLP_ENDPOINT", "http://" + BACKEND_ALIAS + ":8080");
     if (setServiceName) {
       environment.put("OTEL_RESOURCE_ATTRIBUTES", "service.name=smoke-test");
     }
-    environment.put("OTEL_JAVAAGENT_DEBUG", "true");
     environment.put("OTEL_EXPERIMENTAL_JAVASCRIPT_SNIPPET", "<script>console.log(hi)</script>");
     environment.put("OTEL_INSTRUMENTATION_RUNTIME_TELEMETRY_PACKAGE_EMITTER_ENABLED", "true");
     return environment;
