@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.docs;
+package io.opentelemetry.instrumentation.docs.parsers;
 
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import java.util.HashMap;
@@ -13,7 +13,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-class GradleParser {
+public class GradleParser {
 
   private static final Pattern variablePattern =
       Pattern.compile("val\\s+(\\w+)\\s*=\\s*\"([^\"]+)\"");

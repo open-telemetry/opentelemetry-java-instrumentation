@@ -107,7 +107,7 @@ public abstract class InstrumentationTestRunner {
   }
 
   public final <T extends Consumer<TraceAssert>>
-  void waitAndAssertTracesWithoutScopeVersionVerification(Iterable<T> assertions) {
+      void waitAndAssertTracesWithoutScopeVersionVerification(Iterable<T> assertions) {
     waitAndAssertTraces(null, assertions, false);
   }
 

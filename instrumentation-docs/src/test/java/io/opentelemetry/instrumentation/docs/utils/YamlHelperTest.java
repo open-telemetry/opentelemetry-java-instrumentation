@@ -18,7 +18,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import org.junit.jupiter.api.Test;
 
 class YamlHelperTest {
@@ -45,9 +44,6 @@ class YamlHelperTest {
 
     Map<InstrumentationType, Set<String>> targetVersions2 = new HashMap<>();
 
-    InstrumentationScopeInfo scope = InstrumentationScopeInfo.builder("struts-2.3")
-        .build();
-
     targetVersions2.put(
         InstrumentationType.LIBRARY,
         new HashSet<>(List.of("org.apache.struts:struts2-core:2.1.0")));
@@ -58,7 +54,6 @@ class YamlHelperTest {
             .namespace("struts")
             .group("struts")
             .targetVersions(targetVersions2)
-            .scope(scope)
             .build());
 
     StringWriter stringWriter = new StringWriter();
@@ -74,6 +69,8 @@ class YamlHelperTest {
               - name: spring-web-6.0
                 description: Spring Web 6.0 instrumentation
                 srcPath: instrumentation/spring/spring-web/spring-web-6.0
+                scope:
+                  name: io.opentelemetry.spring-web-6.0
                 target_versions:
                   javaagent:
                   - org.springframework:spring-web:[6.0.0,)
@@ -82,7 +79,7 @@ class YamlHelperTest {
               - name: struts-2.3
                 srcPath: instrumentation/struts/struts-2.3
                 scope:
-                  name: struts-2.3
+                  name: io.opentelemetry.struts-2.3
                 target_versions:
                   library:
                   - org.apache.struts:struts2-core:2.1.0

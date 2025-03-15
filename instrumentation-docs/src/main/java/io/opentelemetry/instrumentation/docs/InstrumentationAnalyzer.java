@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.docs;
 
-import static io.opentelemetry.instrumentation.docs.GradleParser.parseGradleFile;
+import static io.opentelemetry.instrumentation.docs.parsers.GradleParser.parseGradleFile;
 
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationEntity;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;

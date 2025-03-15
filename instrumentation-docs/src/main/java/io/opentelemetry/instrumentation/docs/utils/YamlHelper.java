@@ -42,10 +42,8 @@ public class YamlHelper {
 
             entityMap.put("srcPath", entity.getSrcPath());
 
-            if (entity.getScope() != null) {
-              Map<String, Object> scopeMap = getScopeMap(entity);
-              entityMap.put("scope", scopeMap);
-            }
+            Map<String, Object> scopeMap = getScopeMap(entity);
+            entityMap.put("scope", scopeMap);
 
             Map<String, Object> targetVersions = new TreeMap<>();
             if (entity.getTargetVersions() != null && !entity.getTargetVersions().isEmpty()) {
@@ -72,20 +70,7 @@ public class YamlHelper {
 
   private static Map<String, Object> getScopeMap(InstrumentationEntity entity) {
     Map<String, Object> scopeMap = new LinkedHashMap<>();
-    scopeMap.put("name", entity.getScope().getName());
-    if (entity.getScope().getSchemaUrl() != null) {
-      scopeMap.put("schemaUrl", entity.getScope().getSchemaUrl());
-    }
-
-    if (entity.getScope().getAttributes() != null && !entity.getScope().getAttributes().isEmpty()) {
-
-      Map<String, Object> attributesMap = new LinkedHashMap<>();
-      entity
-          .getScope()
-          .getAttributes()
-          .forEach((key, value) -> attributesMap.put(String.valueOf(key), value));
-      scopeMap.put("attributes", attributesMap);
-    }
+    scopeMap.put("name", "io.opentelemetry." + entity.getInstrumentationName());
     return scopeMap;
   }
 

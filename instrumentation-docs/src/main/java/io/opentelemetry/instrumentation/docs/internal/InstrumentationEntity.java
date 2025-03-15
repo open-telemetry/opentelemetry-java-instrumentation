@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.docs.internal;
 
-import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.Map;
 import java.util.Set;
 
@@ -29,7 +29,6 @@ public class InstrumentationEntity {
   }
 
   private InstrumentationMetaData metadata;
-  private InstrumentationScopeInfo scope;
 
   /**
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -42,11 +41,6 @@ public class InstrumentationEntity {
     this.group = builder.group;
     this.metadata = builder.metadata;
     this.targetVersions = builder.targetVersions;
-    this.scope = builder.scope;
-  }
-
-  public void setScope(InstrumentationScopeInfo scope) {
-    this.scope = scope;
   }
 
   public String getSrcPath() {
@@ -73,15 +67,10 @@ public class InstrumentationEntity {
     return targetVersions;
   }
 
-  public InstrumentationScopeInfo getScope() {
-    return scope;
-  }
-
   /**
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
    * any time.
    */
-  @SuppressWarnings("OtelCanIgnoreReturnValueSuggester")
   public static class Builder {
     private String srcPath;
     private String instrumentationName;
@@ -89,40 +78,40 @@ public class InstrumentationEntity {
     private String group;
     private InstrumentationMetaData metadata;
     private Map<InstrumentationType, Set<String>> targetVersions;
-    private InstrumentationScopeInfo scope;
 
+    @CanIgnoreReturnValue
     public Builder srcPath(String srcPath) {
       this.srcPath = srcPath;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder instrumentationName(String instrumentationName) {
       this.instrumentationName = instrumentationName;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder namespace(String namespace) {
       this.namespace = namespace;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder group(String group) {
       this.group = group;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder metadata(InstrumentationMetaData metadata) {
       this.metadata = metadata;
       return this;
     }
 
+    @CanIgnoreReturnValue
     public Builder targetVersions(Map<InstrumentationType, Set<String>> targetVersions) {
       this.targetVersions = targetVersions;
-      return this;
-    }
-
-    public Builder scope(InstrumentationScopeInfo scope) {
-      this.scope = scope;
       return this;
     }
 
