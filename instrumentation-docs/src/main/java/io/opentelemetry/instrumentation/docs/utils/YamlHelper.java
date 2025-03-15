@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.docs.utils;
 
-import io.opentelemetry.instrumentation.docs.InstrumentationEntity;
-import io.opentelemetry.instrumentation.docs.InstrumentationMetaData;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationEntity;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
 import java.io.BufferedWriter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -16,7 +16,6 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
-import org.yaml.snakeyaml.representer.Representer;
 
 public class YamlHelper {
 
@@ -43,6 +42,9 @@ public class YamlHelper {
 
             entityMap.put("srcPath", entity.getSrcPath());
 
+            Map<String, Object> scopeMap = getScopeMap(entity);
+            entityMap.put("scope", scopeMap);
+
             Map<String, Object> targetVersions = new TreeMap<>();
             if (entity.getTargetVersions() != null && !entity.getTargetVersions().isEmpty()) {
               entity
@@ -52,6 +54,7 @@ public class YamlHelper {
                           targetVersions.put(type.toString(), new ArrayList<>(versions)));
             }
             entityMap.put("target_versions", targetVersions);
+
             instrumentations.add(entityMap);
           }
           groupMap.put("instrumentations", instrumentations);
@@ -60,10 +63,15 @@ public class YamlHelper {
 
     DumperOptions options = new DumperOptions();
     options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
-    Representer representer = new Representer(options);
-    representer.getPropertyUtils().setSkipMissingProperties(true);
-    Yaml yaml = new Yaml(representer, options);
+
+    Yaml yaml = new Yaml(options);
     yaml.dump(output, writer);
+  }
+
+  private static Map<String, Object> getScopeMap(InstrumentationEntity entity) {
+    Map<String, Object> scopeMap = new LinkedHashMap<>();
+    scopeMap.put("name", entity.getScopeInfo().getName());
+    return scopeMap;
   }
 
   public static InstrumentationMetaData metaDataParser(String input) {

@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.docs;
 
-import static io.opentelemetry.instrumentation.docs.GradleParser.parseGradleFile;
+import static io.opentelemetry.instrumentation.docs.parsers.GradleParser.parseGradleFile;
 
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationEntity;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import io.opentelemetry.instrumentation.docs.utils.InstrumentationPath;
 import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
@@ -42,11 +44,12 @@ class InstrumentationAnalyzer {
       if (!entityMap.containsKey(key)) {
         entityMap.put(
             key,
-            new InstrumentationEntity(
-                path.srcPath().replace("/javaagent", "").replace("/library", ""),
-                path.instrumentationName(),
-                path.namespace(),
-                path.group()));
+            new InstrumentationEntity.Builder()
+                .srcPath(path.srcPath().replace("/javaagent", "").replace("/library", ""))
+                .instrumentationName(path.instrumentationName())
+                .namespace(path.namespace())
+                .group(path.group())
+                .build());
       }
     }
 

@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.docs;
+package io.opentelemetry.instrumentation.docs.parsers;
 
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -12,7 +13,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-class GradleParser {
+public class GradleParser {
 
   private static final Pattern variablePattern =
       Pattern.compile("val\\s+(\\w+)\\s*=\\s*\"([^\"]+)\"");
@@ -30,6 +31,8 @@ class GradleParser {
 
   private static final Pattern latestDepTestLibraryPattern =
       Pattern.compile("latestDepTestLibrary\\(\"([^\"]+:[^\"]+):([^\"]+)\"\\)");
+
+  private static final Pattern coreJdkPattern = Pattern.compile("coreJdk\\(\\)");
 
   /**
    * Parses gradle files for muzzle and dependency information
@@ -64,6 +67,10 @@ class GradleParser {
 
     while (passBlockMatcher.find()) {
       String passBlock = passBlockMatcher.group(1);
+
+      if (coreJdkPattern.matcher(passBlock).find()) {
+        results.add("Java 8+");
+      }
 
       String group = extractValue(passBlock, "group\\.set\\(\"([^\"]+)\"\\)");
       String module = extractValue(passBlock, "module\\.set\\(\"([^\"]+)\"\\)");

@@ -45,6 +45,14 @@ class FileManagerTest {
   }
 
   @Test
+  void testExcludesCommonModules() {
+    assertThat(
+            FileManager.isValidInstrumentationPath(
+                "instrumentation/elasticsearch/elasticsearch-rest-common-5.0"))
+        .isFalse();
+  }
+
+  @Test
   void testFindBuildGradleFiles() throws IOException {
     Path gradleFile = Files.createFile(tempDir.resolve("build.gradle.kts"));
     Path nonGradleFile = Files.createFile(tempDir.resolve("gradle.properties"));

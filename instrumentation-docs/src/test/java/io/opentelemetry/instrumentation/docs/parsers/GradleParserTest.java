@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.docs;
+package io.opentelemetry.instrumentation.docs.parsers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -54,6 +55,23 @@ class GradleParserTest {
     assertThat(versions.size()).isEqualTo(1);
     assertThat(versions.stream().findFirst().get())
         .isEqualTo("org.apache.httpcomponents:httpclient:[4.3,4.+)");
+  }
+
+  @Test
+  void testExtractCoreJdk() {
+    String gradleBuildFileContent =
+        """
+            muzzle {
+              pass {
+                coreJdk()
+              }
+            }
+            """;
+
+    Set<String> versions =
+        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
+    assertThat(versions.size()).isEqualTo(1);
+    assertThat(versions.stream().findFirst().get()).isEqualTo("Java 8+");
   }
 
   @Test
