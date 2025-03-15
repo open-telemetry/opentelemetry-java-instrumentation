@@ -58,6 +58,23 @@ class GradleParserTest {
   }
 
   @Test
+  void testExtractCoreJdk() {
+    String gradleBuildFileContent =
+        """
+            muzzle {
+              pass {
+                coreJdk()
+              }
+            }
+            """;
+
+    Set<String> versions =
+        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
+    assertThat(versions.size()).isEqualTo(1);
+    assertThat(versions.stream().findFirst().get()).isEqualTo("Java 8+");
+  }
+
+  @Test
   void testExtractMuzzleVersions_MultiplePassBlocks() {
     String gradleBuildFileContent =
         "plugins {\n"
