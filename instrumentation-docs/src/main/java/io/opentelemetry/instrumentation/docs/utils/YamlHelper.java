@@ -70,7 +70,7 @@ public class YamlHelper {
 
   private static Map<String, Object> getScopeMap(InstrumentationEntity entity) {
     Map<String, Object> scopeMap = new LinkedHashMap<>();
-    scopeMap.put("name", "io.opentelemetry." + entity.getInstrumentationName());
+    scopeMap.put("name", entity.getScopeInfo().getName());
     return scopeMap;
   }
 

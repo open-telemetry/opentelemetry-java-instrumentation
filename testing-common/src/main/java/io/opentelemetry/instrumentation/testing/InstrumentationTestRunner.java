@@ -12,14 +12,12 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
-import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -46,15 +44,13 @@ public abstract class InstrumentationTestRunner {
 
   private final TestInstrumenters testInstrumenters;
 
-  protected InstrumentationScopeInfo instrumentationScope;
-
   protected InstrumentationTestRunner(OpenTelemetry openTelemetry) {
     testInstrumenters = new TestInstrumenters(openTelemetry);
   }
 
   public abstract void beforeTestClass();
 
-  public abstract void afterTestClass() throws IOException;
+  public abstract void afterTestClass();
 
   public abstract void clearAllExportedData();
 
@@ -67,10 +63,6 @@ public abstract class InstrumentationTestRunner {
   public abstract List<LogRecordData> getExportedLogRecords();
 
   public abstract boolean forceFlushCalled();
-
-  protected boolean collectMetadata =
-      Boolean.getBoolean("collectMetadata")
-          || Boolean.parseBoolean(System.getenv("COLLECT_METADATA"));
 
   /** Return a list of all captured traces, where each trace is a sorted list of spans. */
   public final List<List<SpanData>> traces() {
@@ -139,7 +131,6 @@ public abstract class InstrumentationTestRunner {
     if (verifyScopeVersion) {
       TelemetryDataUtil.assertScopeVersion(traces);
     }
-
     if (traceComparator != null) {
       traces.sort(traceComparator);
     }

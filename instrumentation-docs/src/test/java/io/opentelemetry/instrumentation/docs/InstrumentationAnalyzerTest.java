@@ -52,6 +52,8 @@ class InstrumentationAnalyzerTest {
     assertThat(log4jEntity.getNamespace()).isEqualTo("log4j");
     assertThat(log4jEntity.getGroup()).isEqualTo("log4j");
     assertThat(log4jEntity.getSrcPath()).isEqualTo("instrumentation/log4j/log4j-appender-2.17");
+    assertThat(log4jEntity.getScopeInfo().getName())
+        .isEqualTo("io.opentelemetry.log4j-appender-2.17");
 
     InstrumentationEntity springEntity =
         entities.stream()
@@ -63,5 +65,6 @@ class InstrumentationAnalyzerTest {
     assertThat(springEntity.getNamespace()).isEqualTo("spring");
     assertThat(springEntity.getGroup()).isEqualTo("spring");
     assertThat(springEntity.getSrcPath()).isEqualTo("instrumentation/spring/spring-web");
+    assertThat(springEntity.getScopeInfo().getName()).isEqualTo("io.opentelemetry.spring-web");
   }
 }

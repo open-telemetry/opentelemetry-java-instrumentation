@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.docs.internal;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import java.util.Map;
 import java.util.Set;
 
@@ -18,6 +19,7 @@ public class InstrumentationEntity {
   private final String instrumentationName;
   private final String namespace;
   private final String group;
+  private final InstrumentationScopeInfo scopeInfo;
   private Map<InstrumentationType, Set<String>> targetVersions;
 
   public void setTargetVersions(Map<InstrumentationType, Set<String>> targetVersions) {
@@ -41,6 +43,7 @@ public class InstrumentationEntity {
     this.group = builder.group;
     this.metadata = builder.metadata;
     this.targetVersions = builder.targetVersions;
+    this.scopeInfo = InstrumentationScopeInfo.create("io.opentelemetry." + instrumentationName);
   }
 
   public String getSrcPath() {
@@ -65,6 +68,10 @@ public class InstrumentationEntity {
 
   public Map<InstrumentationType, Set<String>> getTargetVersions() {
     return targetVersions;
+  }
+
+  public InstrumentationScopeInfo getScopeInfo() {
+    return scopeInfo;
   }
 
   /**
