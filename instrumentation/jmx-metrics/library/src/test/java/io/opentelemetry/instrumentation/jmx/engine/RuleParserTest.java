@@ -63,6 +63,7 @@ class RuleParserTest {
           + "      ATTRIBUTE2:\n"
           + "        metric: METRIC_NAME2\n"
           + "        desc: DESCRIPTION2\n"
+          + "        sourceUnit: SOURCE_UNIT2\n"
           + "        unit: UNIT2\n"
           + "      ATTRIBUTE3:\n"
           + "      ATTRIBUTE4:\n"
@@ -95,6 +96,7 @@ class RuleParserTest {
     assertThat(m1).isNotNull();
     assertThat(m1.getMetric()).isEqualTo("METRIC_NAME1");
     assertThat(m1.getMetricType()).isEqualTo(MetricInfo.Type.GAUGE);
+    assertThat(m1.getSourceUnit()).isNull();
     assertThat(m1.getUnit()).isEqualTo("UNIT1");
     assertThat(m1.getMetricAttribute()).containsExactly(entry("LABEL_KEY3", "const(CONSTANT)"));
 
@@ -102,6 +104,7 @@ class RuleParserTest {
     assertThat(m2).isNotNull();
     assertThat(m2.getMetric()).isEqualTo("METRIC_NAME2");
     assertThat(m2.getDesc()).isEqualTo("DESCRIPTION2");
+    assertThat(m2.getSourceUnit()).isEqualTo("SOURCE_UNIT2");
     assertThat(m2.getUnit()).isEqualTo("UNIT2");
 
     JmxRule def2 = defs.get(1);
@@ -160,12 +163,14 @@ class RuleParserTest {
           + "      LABEL_KEY2: beanattr(ATTRIBUTE)\n"
           + "    prefix: PREFIX.\n"
           + "    type: upDownCounter\n"
+          + "    sourceUnit: DEFAULT_SOURCE_UNIT\n"
           + "    unit: DEFAULT_UNIT\n"
           + "    mapping:\n"
           + "      A.b:\n"
           + "        metric: METRIC_NAME1\n"
           + "        type: counter\n"
           + "        desc: DESCRIPTION1\n"
+          + "        sourceUnit: SOURCE_UNIT1\n"
           + "        unit: UNIT1\n"
           + "        metricAttribute:\n"
           + "          LABEL_KEY3: const(CONSTANT)\n"
@@ -183,6 +188,7 @@ class RuleParserTest {
     assertThat(defs).hasSize(1);
 
     JmxRule jmxDef = defs.get(0);
+    assertThat(jmxDef.getSourceUnit()).isEqualTo("DEFAULT_SOURCE_UNIT");
     assertThat(jmxDef.getUnit()).isEqualTo("DEFAULT_UNIT");
     assertThat(jmxDef.getMetricType()).isEqualTo(MetricInfo.Type.UPDOWNCOUNTER);
 
@@ -202,6 +208,7 @@ class RuleParserTest {
               MetricInfo metricInfo = m.getInfo();
               assertThat(metricInfo.getMetricName()).isEqualTo("PREFIX.METRIC_NAME1");
               assertThat(metricInfo.getDescription()).isEqualTo("DESCRIPTION1");
+              assertThat(metricInfo.getSourceUnit()).isEqualTo("SOURCE_UNIT1");
               assertThat(metricInfo.getUnit()).isEqualTo("UNIT1");
               assertThat(metricInfo.getType()).isEqualTo(MetricInfo.Type.COUNTER);
             })
@@ -216,6 +223,7 @@ class RuleParserTest {
               MetricInfo metricInfo = m.getInfo();
               assertThat(metricInfo.getMetricName()).isEqualTo("PREFIX.METRIC_NAME2");
               assertThat(metricInfo.getDescription()).isEqualTo("DESCRIPTION2");
+              assertThat(metricInfo.getSourceUnit()).isEqualTo(jmxDef.getSourceUnit());
               assertThat(metricInfo.getUnit()).isEqualTo("UNIT2");
             })
         .anySatisfy(
@@ -233,6 +241,9 @@ class RuleParserTest {
               assertThat(metricInfo.getUnit())
                   .describedAs("default unit should match jmx rule definition")
                   .isEqualTo(jmxDef.getUnit());
+              assertThat(metricInfo.getSourceUnit())
+                  .describedAs("default sourceUnit should match jmx rule definition")
+                  .isEqualTo(jmxDef.getSourceUnit());
             });
   }
 
