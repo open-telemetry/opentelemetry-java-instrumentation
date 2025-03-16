@@ -5,9 +5,12 @@
 
 package io.opentelemetry.instrumentation.docs.parsers;
 
+import io.opentelemetry.instrumentation.docs.internal.DependencyInfo;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -34,20 +37,30 @@ public class GradleParser {
 
   private static final Pattern coreJdkPattern = Pattern.compile("coreJdk\\(\\)");
 
+  private static final Pattern ifBlockPattern =
+      Pattern.compile("if\\s*\\([^)]*\\)\\s*\\{.*?}", Pattern.DOTALL);
+
+  private static final Pattern otelJavaBlockPattern =
+      Pattern.compile("otelJava\\s*\\{.*?}", Pattern.DOTALL);
+
+  private static final Pattern minJavaVersionPattern =
+      Pattern.compile("minJavaVersionSupported\\.set\\(JavaVersion\\.VERSION_(\\d+)\\)");
+
   /**
    * Parses gradle files for muzzle and dependency information
    *
    * @param gradleFileContents Contents of a Gradle build file as a String
    * @return A set of strings summarizing the group, module, and version ranges
    */
-  public static Set<String> parseGradleFile(String gradleFileContents, InstrumentationType type) {
-    Set<String> results = new HashSet<>();
+  public static DependencyInfo parseGradleFile(
+      String gradleFileContents, InstrumentationType type) {
+    DependencyInfo results;
     Map<String, String> variables = extractVariables(gradleFileContents);
 
     if (type.equals(InstrumentationType.JAVAAGENT)) {
-      results.addAll(parseMuzzle(gradleFileContents, variables));
+      results = parseMuzzle(gradleFileContents, variables);
     } else {
-      results.addAll(parseLibraryDependencies(gradleFileContents, variables));
+      results = parseLibraryDependencies(gradleFileContents, variables);
     }
 
     return results;
@@ -61,15 +74,22 @@ public class GradleParser {
    * @param variables Map of variable names to their values
    * @return A set of strings summarizing the group, module, and version ranges
    */
-  private static Set<String> parseMuzzle(String gradleFileContents, Map<String, String> variables) {
+  private static DependencyInfo parseMuzzle(
+      String gradleFileContents, Map<String, String> variables) {
     Set<String> results = new HashSet<>();
     Matcher passBlockMatcher = muzzlePassBlockPattern.matcher(gradleFileContents);
+
+    Integer minJavaVersion = parseMinJavaVersion(gradleFileContents);
 
     while (passBlockMatcher.find()) {
       String passBlock = passBlockMatcher.group(1);
 
       if (coreJdkPattern.matcher(passBlock).find()) {
-        results.add("Java 8+");
+        if (minJavaVersion != null) {
+          results.add("Java " + minJavaVersion + "+");
+        } else {
+          results.add("Java 8+");
+        }
       }
 
       String group = extractValue(passBlock, "group\\.set\\(\"([^\"]+)\"\\)");
@@ -81,7 +101,7 @@ public class GradleParser {
         results.add(summary);
       }
     }
-    return results;
+    return new DependencyInfo(results, minJavaVersion);
   }
 
   /**
@@ -93,7 +113,7 @@ public class GradleParser {
    * @param variables Map of variable names to their values
    * @return A set of strings summarizing the group, module, and versions
    */
-  private static Set<String> parseLibraryDependencies(
+  private static DependencyInfo parseLibraryDependencies(
       String gradleFileContents, Map<String, String> variables) {
     Map<String, String> versions = new HashMap<>();
 
@@ -130,7 +150,45 @@ public class GradleParser {
       }
     }
 
-    return results;
+    Integer minJavaVersion = parseMinJavaVersion(gradleFileContents);
+
+    return new DependencyInfo(results, minJavaVersion);
+  }
+
+  public static Integer parseMinJavaVersion(String gradleFileContents) {
+    List<int[]> excludedRanges = new ArrayList<>();
+
+    // Identify all if-block ranges so we can exclude them
+    Matcher ifBlockMatcher = ifBlockPattern.matcher(gradleFileContents);
+    while (ifBlockMatcher.find()) {
+      excludedRanges.add(new int[] {ifBlockMatcher.start(), ifBlockMatcher.end()});
+    }
+
+    Matcher otelJavaMatcher = otelJavaBlockPattern.matcher(gradleFileContents);
+    while (otelJavaMatcher.find()) {
+      int blockStart = otelJavaMatcher.start();
+
+      if (isInExcludedRange(blockStart, excludedRanges)) {
+        continue; // Skip blocks inside 'if' statements
+      }
+
+      String otelJavaBlock = otelJavaMatcher.group();
+      Matcher versionMatcher = minJavaVersionPattern.matcher(otelJavaBlock);
+      if (versionMatcher.find()) {
+        return Integer.parseInt(versionMatcher.group(1));
+      }
+    }
+
+    return null;
+  }
+
+  private static boolean isInExcludedRange(int position, List<int[]> ranges) {
+    for (int[] range : ranges) {
+      if (position >= range[0] && position <= range[1]) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

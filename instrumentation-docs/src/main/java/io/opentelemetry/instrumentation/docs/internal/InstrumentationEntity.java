@@ -21,15 +21,7 @@ public class InstrumentationEntity {
   private final String group;
   private final InstrumentationScopeInfo scopeInfo;
   private Map<InstrumentationType, Set<String>> targetVersions;
-
-  public void setTargetVersions(Map<InstrumentationType, Set<String>> targetVersions) {
-    this.targetVersions = targetVersions;
-  }
-
-  public void setMetadata(InstrumentationMetaData metadata) {
-    this.metadata = metadata;
-  }
-
+  private Integer minJavaVersion;
   private InstrumentationMetaData metadata;
 
   /**
@@ -43,6 +35,7 @@ public class InstrumentationEntity {
     this.group = builder.group;
     this.metadata = builder.metadata;
     this.targetVersions = builder.targetVersions;
+    this.minJavaVersion = builder.minJavaVersion;
     this.scopeInfo = InstrumentationScopeInfo.create("io.opentelemetry." + instrumentationName);
   }
 
@@ -74,6 +67,22 @@ public class InstrumentationEntity {
     return scopeInfo;
   }
 
+  public void setTargetVersions(Map<InstrumentationType, Set<String>> targetVersions) {
+    this.targetVersions = targetVersions;
+  }
+
+  public void setMetadata(InstrumentationMetaData metadata) {
+    this.metadata = metadata;
+  }
+
+  public Integer getMinJavaVersion() {
+    return minJavaVersion;
+  }
+
+  public void setMinJavaVersion(Integer minJavaVersion) {
+    this.minJavaVersion = minJavaVersion;
+  }
+
   /**
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
    * any time.
@@ -83,6 +92,7 @@ public class InstrumentationEntity {
     private String instrumentationName;
     private String namespace;
     private String group;
+    private Integer minJavaVersion;
     private InstrumentationMetaData metadata;
     private Map<InstrumentationType, Set<String>> targetVersions;
 
@@ -101,6 +111,12 @@ public class InstrumentationEntity {
     @CanIgnoreReturnValue
     public Builder namespace(String namespace) {
       this.namespace = namespace;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder minJavaVersion(Integer minJavaVersion) {
+      this.minJavaVersion = minJavaVersion;
       return this;
     }
 

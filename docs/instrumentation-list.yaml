@@ -6,6 +6,7 @@ activej:
   instrumentations:
   - name: activej-http-6.0
     srcPath: instrumentation/activej-http-6.0
+    minimumJavaVersion: 17
     scope:
       name: io.opentelemetry.activej-http-6.0
     target_versions:
@@ -470,6 +471,7 @@ graphql:
       - com.graphql-java:graphql-java:[12.0,19.+)
   - name: graphql-java-20.0
     srcPath: instrumentation/graphql-java/graphql-java-20.0
+    minimumJavaVersion: 11
     scope:
       name: io.opentelemetry.graphql-java-20.0
     target_versions:
@@ -543,6 +545,7 @@ hibernate:
       - org.hibernate:hibernate-core:[3.3.0.GA,4.0.0.Final)
   - name: hibernate-6.0
     srcPath: instrumentation/hibernate/hibernate-6.0
+    minimumJavaVersion: 11
     scope:
       name: io.opentelemetry.hibernate-6.0
     target_versions:
@@ -656,16 +659,18 @@ java:
       library: []
   - name: java-http-client
     srcPath: instrumentation/java-http-client
+    minimumJavaVersion: 11
     scope:
       name: io.opentelemetry.java-http-client
     target_versions:
       javaagent:
-      - Java 8+
+      - Java 11+
       library: []
 javalin:
   instrumentations:
   - name: javalin-5.0
     srcPath: instrumentation/javalin-5.0
+    minimumJavaVersion: 11
     scope:
       name: io.opentelemetry.javalin-5.0
     target_versions:
@@ -698,6 +703,7 @@ jaxrs:
       - org.glassfish.jersey.containers:jersey-container-servlet:[2.0,3.0.0)
   - name: jaxrs-3.0-jersey-3.0
     srcPath: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-jersey-3.0
+    minimumJavaVersion: 11
     scope:
       name: io.opentelemetry.jaxrs-3.0-jersey-3.0
     target_versions:
@@ -733,6 +739,7 @@ jaxrs:
     target_versions: {}
   - name: jaxrs-3.0-resteasy-6.0
     srcPath: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-resteasy-6.0
+    minimumJavaVersion: 11
     scope:
       name: io.opentelemetry.jaxrs-3.0-resteasy-6.0
     target_versions:
@@ -845,6 +852,7 @@ jetty:
   instrumentations:
   - name: jetty-httpclient-12.0
     srcPath: instrumentation/jetty-httpclient/jetty-httpclient-12.0
+    minimumJavaVersion: 17
     scope:
       name: io.opentelemetry.jetty-httpclient-12.0
     target_versions:
@@ -854,6 +862,7 @@ jetty:
       - org.eclipse.jetty:jetty-client:12.0.0
   - name: jetty-12.0
     srcPath: instrumentation/jetty/jetty-12.0
+    minimumJavaVersion: 17
     scope:
       name: io.opentelemetry.jetty-12.0
     target_versions:
@@ -877,6 +886,7 @@ jetty:
       - org.eclipse.jetty:jetty-client:[9.2.0.v20140526,9.+)
   - name: jetty-11.0
     srcPath: instrumentation/jetty/jetty-11.0
+    minimumJavaVersion: 11
     scope:
       name: io.opentelemetry.jetty-11.0
     target_versions:
@@ -886,6 +896,7 @@ jms:
   instrumentations:
   - name: jms-3.0
     srcPath: instrumentation/jms/jms-3.0
+    minimumJavaVersion: 11
     scope:
       name: io.opentelemetry.jms-3.0
     target_versions:
@@ -922,6 +933,7 @@ jsf:
   instrumentations:
   - name: jsf-myfaces-3.0
     srcPath: instrumentation/jsf/jsf-myfaces-3.0
+    minimumJavaVersion: 11
     scope:
       name: io.opentelemetry.jsf-myfaces-3.0
     target_versions:
@@ -929,6 +941,7 @@ jsf:
       - org.apache.myfaces.core:myfaces-impl:[3,)
   - name: jsf-mojarra-3.0
     srcPath: instrumentation/jsf/jsf-mojarra-3.0
+    minimumJavaVersion: 11
     scope:
       name: io.opentelemetry.jsf-mojarra-3.0
     target_versions:
@@ -1263,6 +1276,7 @@ opensearch:
   instrumentations:
   - name: opensearch-rest-1.0
     srcPath: instrumentation/opensearch/opensearch-rest-1.0
+    minimumJavaVersion: 11
     scope:
       name: io.opentelemetry.opensearch-rest-1.0
     target_versions:
@@ -1684,6 +1698,7 @@ runtime:
   instrumentations:
   - name: runtime-telemetry-java17
     srcPath: instrumentation/runtime-telemetry/runtime-telemetry-java17
+    minimumJavaVersion: 17
     scope:
       name: io.opentelemetry.runtime-telemetry-java17
     target_versions:
@@ -1804,6 +1819,7 @@ spring:
       - org.springframework.batch:spring-batch-core:[3.0.0.RELEASE,5)
   - name: spring-cloud-aws-3.0
     srcPath: instrumentation/spring/spring-cloud-aws-3.0
+    minimumJavaVersion: 17
     scope:
       name: io.opentelemetry.spring-cloud-aws-3.0
     target_versions:
@@ -1827,6 +1843,7 @@ spring:
       - org.springframework:spring-webflux:5.3.0
   - name: spring-jms-6.0
     srcPath: instrumentation/spring/spring-jms/spring-jms-6.0
+    minimumJavaVersion: 17
     scope:
       name: io.opentelemetry.spring-jms-6.0
     target_versions:
@@ -1855,6 +1872,7 @@ spring:
       - org.springframework:spring-webmvc:[3.1.0.RELEASE,6)
   - name: spring-webmvc-6.0
     srcPath: instrumentation/spring/spring-webmvc/spring-webmvc-6.0
+    minimumJavaVersion: 17
     scope:
       name: io.opentelemetry.spring-webmvc-6.0
     target_versions:
@@ -1871,6 +1889,7 @@ spring:
       - org.springframework.data:spring-data-commons:[1.8.0.RELEASE,]
   - name: spring-pulsar-1.0
     srcPath: instrumentation/spring/spring-pulsar-1.0
+    minimumJavaVersion: 17
     scope:
       name: io.opentelemetry.spring-pulsar-1.0
     target_versions:
@@ -1900,6 +1919,7 @@ spring:
       library: []
   - name: spring-core-2.0
     srcPath: instrumentation/spring/spring-core-2.0
+    minimumJavaVersion: 17
     scope:
       name: io.opentelemetry.spring-core-2.0
     target_versions:
@@ -1914,6 +1934,7 @@ spring:
       - org.springframework.cloud:spring-cloud-starter-gateway:[2.0.0.RELEASE,]
   - name: spring-security-config-6.0
     srcPath: instrumentation/spring/spring-security-config-6.0
+    minimumJavaVersion: 17
     scope:
       name: io.opentelemetry.spring-security-config-6.0
     target_versions:
@@ -1975,6 +1996,7 @@ struts:
       - org.apache.struts:struts2-core:[2.1.0,7)
   - name: struts-7.0
     srcPath: instrumentation/struts/struts-7.0
+    minimumJavaVersion: 17
     scope:
       name: io.opentelemetry.struts-7.0
     target_versions:
@@ -1993,6 +2015,7 @@ tomcat:
   instrumentations:
   - name: tomcat-10.0
     srcPath: instrumentation/tomcat/tomcat-10.0
+    minimumJavaVersion: 11
     scope:
       name: io.opentelemetry.tomcat-10.0
     target_versions:

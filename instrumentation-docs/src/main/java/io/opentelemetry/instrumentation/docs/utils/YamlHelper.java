@@ -42,6 +42,10 @@ public class YamlHelper {
 
             entityMap.put("srcPath", entity.getSrcPath());
 
+            if (entity.getMinJavaVersion() != null) {
+              entityMap.put("minimumJavaVersion", entity.getMinJavaVersion());
+            }
+
             Map<String, Object> scopeMap = getScopeMap(entity);
             entityMap.put("scope", scopeMap);
 

@@ -40,6 +40,7 @@ class YamlHelperTest {
             .group("spring")
             .targetVersions(targetVersions1)
             .metadata(metadata1)
+            .minJavaVersion(11)
             .build());
 
     Map<InstrumentationType, Set<String>> targetVersions2 = new HashMap<>();
@@ -69,6 +70,7 @@ class YamlHelperTest {
               - name: spring-web-6.0
                 description: Spring Web 6.0 instrumentation
                 srcPath: instrumentation/spring/spring-web/spring-web-6.0
+                minimumJavaVersion: 11
                 scope:
                   name: io.opentelemetry.spring-web-6.0
                 target_versions:

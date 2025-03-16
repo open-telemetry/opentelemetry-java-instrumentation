@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.docs;
 
 import static io.opentelemetry.instrumentation.docs.parsers.GradleParser.parseGradleFile;
 
+import io.opentelemetry.instrumentation.docs.internal.DependencyInfo;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationEntity;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
@@ -83,15 +84,21 @@ class InstrumentationAnalyzer {
     Map<InstrumentationType, Set<String>> versions = new HashMap<>();
     for (String file : files) {
       String fileContents = fileSearch.readFileToString(file);
+      DependencyInfo results = null;
 
       if (file.contains("/javaagent/")) {
-        Set<String> results = parseGradleFile(fileContents, InstrumentationType.JAVAAGENT);
+        results = parseGradleFile(fileContents, InstrumentationType.JAVAAGENT);
         versions
             .computeIfAbsent(InstrumentationType.JAVAAGENT, k -> new HashSet<>())
-            .addAll(results);
+            .addAll(results.versions());
       } else if (file.contains("/library/")) {
-        Set<String> results = parseGradleFile(fileContents, InstrumentationType.LIBRARY);
-        versions.computeIfAbsent(InstrumentationType.LIBRARY, k -> new HashSet<>()).addAll(results);
+        results = parseGradleFile(fileContents, InstrumentationType.LIBRARY);
+        versions
+            .computeIfAbsent(InstrumentationType.LIBRARY, k -> new HashSet<>())
+            .addAll(results.versions());
+      }
+      if (results != null && results.minJavaVersionSupported() != null) {
+        entity.setMinJavaVersion(results.minJavaVersionSupported());
       }
     }
     entity.setTargetVersions(versions);
