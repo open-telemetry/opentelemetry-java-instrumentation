@@ -50,7 +50,7 @@ object PekkoHttpTestServerSourceWebServer {
                 override def getParameter(name: String): String =
                   map.get(name).orNull
               })
-              ""
+              INDEXED_CHILD.getBody
             }
           }
           complete(AbstractHttpServerTest.controller(INDEXED_CHILD, supplier))

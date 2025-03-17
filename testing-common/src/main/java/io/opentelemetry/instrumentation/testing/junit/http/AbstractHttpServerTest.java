@@ -422,12 +422,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                 .aggregate()
                 .whenComplete(
                     (result, throwable) -> {
-                      latch.countDown();
                       if (throwable != null) {
                         responses.add(throwable.toString());
                       } else {
                         responses.add(result.status().code() + " " + result.contentUtf8());
                       }
+                      latch.countDown();
                     });
           });
     }

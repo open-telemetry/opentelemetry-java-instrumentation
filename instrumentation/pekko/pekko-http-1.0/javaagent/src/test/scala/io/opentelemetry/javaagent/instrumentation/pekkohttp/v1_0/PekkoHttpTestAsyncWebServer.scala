@@ -41,7 +41,7 @@ object PekkoHttpTestAsyncWebServer {
                   override def getParameter(name: String): String =
                     uri.query().get(name).orNull
                 })
-                resp.withEntity("")
+                resp.withEntity(endpoint.getBody)
               case QUERY_PARAM => resp.withEntity(uri.queryString().orNull)
               case REDIRECT =>
                 resp.withHeaders(headers.Location(endpoint.getBody))
