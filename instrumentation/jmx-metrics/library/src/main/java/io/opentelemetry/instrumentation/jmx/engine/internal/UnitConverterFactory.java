@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jmx.engine.unit;
+package io.opentelemetry.instrumentation.jmx.engine.internal;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,6 +11,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
+/**
+ * Manage available unit converters. This class is internal and is hence not for public use. Its
+ * APIs are unstable and can change at any time.
+ */
 public class UnitConverterFactory {
   private static final Map<String, UnitConverter> conversionMappings = new HashMap<>();
 
@@ -22,6 +26,14 @@ public class UnitConverterFactory {
 
   private UnitConverterFactory() {}
 
+  /**
+   * Get the instance of converter that is able to convert a value from given source to target unit.
+   *
+   * @param sourceUnit a source unit supported by requested converter
+   * @param targetUnit a target unit supported by requested converter
+   * @return an instance of converter, or {@literal null} if no converter exists for {@code
+   *     }sourceUnit} to {@code targetUnit} conversion
+   */
   @Nullable
   public static UnitConverter getConverter(@Nullable String sourceUnit, String targetUnit) {
     if (targetUnit.isEmpty()) {
@@ -43,6 +55,17 @@ public class UnitConverterFactory {
     return converter;
   }
 
+  /**
+   * Register new instance of a converter that can then be retrieved with {@link
+   * #getConverter(String, String)}.
+   *
+   * @param sourceUnit a source unit supported by the converter
+   * @param targetUnit a target unit supported by the converter
+   * @param convertingFunction a function that implements algorithm of conversion between {@code
+   *     sourceUnit} and {@code targetUnit}
+   * @param convertToDouble {@code true} indicates that conversion result is of type Double, {@code
+   *     false} indicates that conversion result is of type Long
+   */
   // visible for testing
   static void registerConverter(
       String sourceUnit,

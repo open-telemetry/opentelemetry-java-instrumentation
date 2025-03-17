@@ -3,11 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.jmx.engine.unit;
+package io.opentelemetry.instrumentation.jmx.engine.internal;
 
 import java.util.function.Function;
 
-/** This class is responsible for converting a value using provided algorithm. */
+/**
+ * This class is responsible for converting a value using provided algorithm. This class is internal
+ * and is hence not for public use. Its APIs are unstable and can change at any time.
+ */
 public class UnitConverter {
   private final Function<Number, Number> convertingFunction;
   private final boolean convertToDouble;
@@ -16,8 +19,8 @@ public class UnitConverter {
    * Create an instance of converter
    *
    * @param convertingFunction an algorithm applied when converting value
-   * @param convertToDouble indicates of algorithm will return floating point result. This must be
-   *     in-sync with algorithm implementation.
+   * @param convertToDouble {@code true} indicates that conversion result is of type Double, {@code
+   *     false} indicates that conversion result is of type Long
    */
   UnitConverter(Function<Number, Number> convertingFunction, boolean convertToDouble) {
     this.convertingFunction = convertingFunction;
