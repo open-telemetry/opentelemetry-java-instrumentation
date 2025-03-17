@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent;
 
-import io.opentelemetry.javaagent.bootstrap.AgentArgUtil;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.bootstrap.JavaagentFileHolder;
@@ -54,11 +53,10 @@ public final class OpenTelemetryAgent {
   private static void startAgent(
       Instrumentation inst, @Nullable String agentArgs, boolean fromPremain) {
     try {
-      AgentArgUtil.setSystemProperties(agentArgs);
       File javaagentFile = installBootstrapJar(inst);
       InstrumentationHolder.setInstrumentation(inst);
       JavaagentFileHolder.setJavaagentFile(javaagentFile);
-      AgentInitializer.initialize(inst, javaagentFile, fromPremain);
+      AgentInitializer.initialize(inst, javaagentFile, fromPremain, agentArgs);
     } catch (Throwable ex) {
       // Don't rethrow.  We don't have a log manager here, so just print.
       System.err.println("ERROR " + OpenTelemetryAgent.class.getName());

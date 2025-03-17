@@ -28,11 +28,18 @@ public final class AgentInitializer {
   private static boolean isSecurityManagerSupportEnabled = false;
   private static volatile boolean agentStarted = false;
 
-  public static void initialize(Instrumentation inst, File javaagentFile, boolean fromPremain)
+  public static void initialize(
+      Instrumentation inst, File javaagentFile, boolean fromPremain, String agentArgs)
       throws Exception {
     if (agentClassLoader != null) {
       return;
     }
+
+    doPrivileged(
+        () -> {
+          AgentArgUtil.setSystemProperties(agentArgs);
+          return null;
+        });
 
     // we expect that at this point agent jar has been appended to boot class path and all agent
     // classes are loaded in boot loader
