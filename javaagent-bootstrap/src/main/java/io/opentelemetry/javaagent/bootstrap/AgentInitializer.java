@@ -35,10 +35,15 @@ public final class AgentInitializer {
       return;
     }
 
+    // this call deliberately uses anonymous class instead of lambda because using lambdas too
+    // early on early jdk8 (see isEarlyOracle18 method) causes jvm to crash. See CrashEarlyJdk8Test.
     doPrivileged(
-        () -> {
-          AgentArgUtil.setSystemProperties(agentArgs);
-          return null;
+        new PrivilegedAction<Void>() {
+          @Override
+          public Void run() {
+            AgentArgUtil.setSystemProperties(agentArgs);
+            return null;
+          }
         });
 
     // we expect that at this point agent jar has been appended to boot class path and all agent
