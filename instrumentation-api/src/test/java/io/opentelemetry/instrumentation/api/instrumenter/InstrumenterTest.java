@@ -25,6 +25,7 @@ import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
@@ -32,6 +33,7 @@ import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,6 +41,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -579,6 +582,45 @@ class InstrumenterTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("span").hasInstrumentationScopeInfo(expectedLibraryInfo)));
+  }
+
+  @Test
+  void instrumenterGetNanosWithNullArgument() {
+    AtomicReference<Long> endTime = new AtomicReference<>();
+    OperationListener operationListener =
+        new OperationListener() {
+          @Override
+          public Context onStart(Context context, Attributes startAttributes, long startNanos) {
+            return context;
+          }
+
+          @Override
+          public void onEnd(Context context, Attributes endAttributes, long endNanos) {
+            endTime.set(endNanos);
+          }
+        };
+
+    InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
+        Instrumenter.builder(
+            otelTesting.getOpenTelemetry(), "test-instrumentation", name -> "span");
+    builder.addOperationListener(operationListener);
+    InstrumenterUtil.propagateOperationListenersToOnEnd(builder);
+
+    Instant startTime = Instant.now();
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        builder.buildInstrumenter();
+    InstrumenterUtil.startAndEnd(
+        instrumenter, Context.root(), emptyMap(), emptyMap(), null, startTime, null);
+
+    otelTesting
+        .assertTraces()
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(span -> span.hasName("span").startsAt(startTime)));
+    System.out.printf(
+        "Epoche second of start: %d and end: %d\n",
+        startTime.getEpochSecond(), endTime.get() / 1_000_000_000);
+    Assertions.assertThat(endTime.get() / 1_000_000_000 == startTime.getEpochSecond()).isTrue();
   }
 
   @Test
