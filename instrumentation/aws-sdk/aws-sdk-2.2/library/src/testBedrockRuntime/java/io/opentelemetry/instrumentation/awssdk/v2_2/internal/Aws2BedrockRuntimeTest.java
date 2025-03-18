@@ -462,10 +462,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                           if (!responseChunksTools.isEmpty()) {
                             JsonNode node = JsonNode.parser().parse(currentToolArgs.toString());
                             currentToolArgs.setLength(0);
-                            Document document =
-                                node.visit(
-                                    new software.amazon.awssdk.protocols.json.internal.unmarshall
-                                        .document.DocumentUnmarshaller());
+                            Document document = node.visit(new DocumentUnmarshaller());
                             responseChunksTools.get(responseChunksTools.size() - 1).input(document);
                           }
                           ToolUseBlockStart toolUse = chunk.start().toolUse();
