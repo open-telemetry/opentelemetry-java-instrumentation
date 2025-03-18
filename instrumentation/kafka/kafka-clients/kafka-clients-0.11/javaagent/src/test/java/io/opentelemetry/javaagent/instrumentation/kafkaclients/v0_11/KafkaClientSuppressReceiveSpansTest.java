@@ -58,8 +58,7 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
 
     awaitUntilConsumerIsReady();
     // check that the message was received
-    @SuppressWarnings("PreferJavaTimeOverload")
-    ConsumerRecords<?, ?> records = consumer.poll(Duration.ofSeconds(5).toMillis());
+    ConsumerRecords<?, ?> records = poll(Duration.ofSeconds(5));
     for (ConsumerRecord<?, ?> record : records) {
       testing.runWithSpan(
           "processing",
@@ -99,8 +98,7 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
       throws ExecutionException, InterruptedException, TimeoutException {
     producer.send(new ProducerRecord<>(SHARED_TOPIC, null)).get(5, TimeUnit.SECONDS);
     awaitUntilConsumerIsReady();
-    @SuppressWarnings("PreferJavaTimeOverload")
-    ConsumerRecords<?, ?> records = consumer.poll(Duration.ofSeconds(5).toMillis());
+    ConsumerRecords<?, ?> records = poll(Duration.ofSeconds(5));
     assertThat(records.count()).isEqualTo(1);
 
     // iterate over records to generate spans
@@ -136,8 +134,7 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
     testing.waitForTraces(1);
 
     awaitUntilConsumerIsReady();
-    @SuppressWarnings("PreferJavaTimeOverload")
-    ConsumerRecords<?, ?> consumerRecords = consumer.poll(Duration.ofSeconds(5).toMillis());
+    ConsumerRecords<?, ?> consumerRecords = poll(Duration.ofSeconds(5));
     List<? extends ConsumerRecord<?, ?>> recordsInPartition =
         consumerRecords.records(KafkaClientBaseTest.topicPartition);
     assertThat(recordsInPartition.size()).isEqualTo(1);

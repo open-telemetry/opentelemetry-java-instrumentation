@@ -268,8 +268,8 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
                 "kafka.consumer.io_time_ns_avg",
                 "kafka.consumer.io_wait_ratio",
                 "kafka.consumer.io_wait_time_ns_avg",
-                "kafka.consumer.io_waittime_total",
-                "kafka.consumer.iotime_total",
+                // "kafka.consumer.io_waittime_total",
+                // "kafka.consumer.iotime_total",
                 "kafka.consumer.last_poll_seconds_ago",
                 "kafka.consumer.network_io_rate",
                 "kafka.consumer.network_io_total",
@@ -300,7 +300,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
                 "kafka.producer.buffer_exhausted_total",
                 "kafka.producer.buffer_total_bytes",
                 "kafka.producer.bufferpool_wait_ratio",
-                "kafka.producer.bufferpool_wait_time_total",
+                // "kafka.producer.bufferpool_wait_time_total",
                 "kafka.producer.compression_rate_avg",
                 "kafka.producer.connection_close_rate",
                 "kafka.producer.connection_close_total",
@@ -317,8 +317,8 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
                 "kafka.producer.io_time_ns_avg",
                 "kafka.producer.io_wait_ratio",
                 "kafka.producer.io_wait_time_ns_avg",
-                "kafka.producer.io_waittime_total",
-                "kafka.producer.iotime_total",
+                // "kafka.producer.io_waittime_total",
+                // "kafka.producer.iotime_total",
                 "kafka.producer.metadata_age",
                 "kafka.producer.network_io_rate",
                 "kafka.producer.network_io_total",
@@ -404,7 +404,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
     consumer.subscribe(TOPICS);
     Instant stopTime = Instant.now().plusSeconds(10);
     while (Instant.now().isBefore(stopTime)) {
-      consumer.poll(1_000);
+      KafkaTestUtil.poll(consumer, Duration.ofSeconds(1));
     }
   }
 

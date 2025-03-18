@@ -26,7 +26,7 @@ public abstract class KafkaClientPropagationBaseTest extends KafkaClientBaseTest
 
     awaitUntilConsumerIsReady();
     // check that the message was received
-    ConsumerRecords<?, ?> records = consumer.poll(Duration.ofSeconds(5).toMillis());
+    ConsumerRecords<?, ?> records = poll(Duration.ofSeconds(5));
     assertThat(records.count()).isEqualTo(1);
     for (ConsumerRecord<?, ?> record : records) {
       assertThat(record.headers().iterator().hasNext()).isEqualTo(producerPropagationEnabled);
