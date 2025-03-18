@@ -37,6 +37,7 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
@@ -147,13 +148,12 @@ public abstract class KafkaClientBaseTest {
     kafka.stop();
   }
 
-  @SuppressWarnings("PreferJavaTimeOverload")
   public void awaitUntilConsumerIsReady() throws InterruptedException {
     if (consumerReady.await(0, TimeUnit.SECONDS)) {
       return;
     }
     for (int i = 0; i < 10; i++) {
-      consumer.poll(0);
+      poll(Duration.ofMillis(100));
       if (consumerReady.await(1, TimeUnit.SECONDS)) {
         break;
       }
@@ -162,6 +162,10 @@ public abstract class KafkaClientBaseTest {
       throw new AssertionError("Consumer wasn't assigned any partitions!");
     }
     consumer.seekToBeginning(Collections.emptyList());
+  }
+
+  public ConsumerRecords<Integer, String> poll(Duration duration) {
+    return KafkaTestUtil.poll(consumer, duration);
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
