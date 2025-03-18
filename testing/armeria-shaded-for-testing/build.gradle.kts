@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-  implementation("com.linecorp.armeria:armeria-junit5:1.32.2")
+  implementation("com.linecorp.armeria:armeria-junit5:1.32.3")
 }
 
 tasks {
