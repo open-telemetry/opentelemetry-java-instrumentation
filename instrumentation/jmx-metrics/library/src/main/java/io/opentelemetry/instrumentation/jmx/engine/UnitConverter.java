@@ -27,7 +27,7 @@ class UnitConverter {
   private final Function<Number, Number> convertingFunction;
 
   /**
-   * Get the instance of converter that is able to convert a value from a given source to a target
+   * Get an instance of converter that is able to convert a value from a given source to a target
    * unit.
    *
    * @param sourceUnit a source unit supported by requested converter
@@ -59,13 +59,15 @@ class UnitConverter {
   }
 
   /**
-   * Register new instance of a converter that can then be retrieved with {@link
-   * #getInstance(String, String)}.
+   * Register new converter instance that can then be retrieved with {@link #getInstance(String,
+   * String)}.
    *
    * @param sourceUnit a source unit supported by the converter
    * @param targetUnit a target unit supported by the converter
    * @param convertingFunction a function that implements algorithm of conversion between {@code
    *     sourceUnit} and {@code targetUnit}
+   * @throws IllegalArgumentException if source or target unit is empty, or when there is converter
+   *     already registered for given {@code sourceUnit} and {@code targetUnit}
    */
   // visible for testing
   static void registerConversion(
