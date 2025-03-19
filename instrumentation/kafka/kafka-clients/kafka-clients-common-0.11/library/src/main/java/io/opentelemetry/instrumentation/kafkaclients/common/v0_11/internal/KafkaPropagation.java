@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import org.apache.kafka.clients.ApiVersions;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.record.RecordBatch;
@@ -18,6 +19,7 @@ import org.apache.kafka.common.record.RecordBatch;
 public final class KafkaPropagation {
 
   private static final KafkaHeadersSetter SETTER = KafkaHeadersSetter.INSTANCE;
+  private static final boolean hasMaxUsableProduceMagic = hasMaxUsableProduceMagic();
 
   // Do not inject headers for batch versions below 2
   // This is how similar check is being done in Kafka client itself:
@@ -27,7 +29,23 @@ public final class KafkaPropagation {
   // headers attempt to read messages that were produced by clients > 0.11 and the magic
   // value of the broker(s) is >= 2
   public static boolean shouldPropagate(ApiVersions apiVersions) {
-    return apiVersions.maxUsableProduceMagic() >= RecordBatch.MAGIC_VALUE_V2;
+    return !hasMaxUsableProduceMagic
+        || maxUsableProduceMagic(apiVersions) >= RecordBatch.MAGIC_VALUE_V2;
+  }
+
+  @NoMuzzle
+  private static byte maxUsableProduceMagic(ApiVersions apiVersions) {
+    return apiVersions.maxUsableProduceMagic();
+  }
+
+  private static boolean hasMaxUsableProduceMagic() {
+    try {
+      // missing in kafka 4.x
+      ApiVersions.class.getMethod("maxUsableProduceMagic");
+      return true;
+    } catch (NoSuchMethodException e) {
+      return false;
+    }
   }
 
   public static <K, V> ProducerRecord<K, V> propagateContext(

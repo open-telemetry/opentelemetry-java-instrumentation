@@ -41,8 +41,7 @@ class KafkaClientPropagationDisabledTest extends KafkaClientPropagationBaseTest 
 
     awaitUntilConsumerIsReady();
 
-    @SuppressWarnings("PreferJavaTimeOverload")
-    ConsumerRecords<?, ?> records = consumer.poll(Duration.ofSeconds(5).toMillis());
+    ConsumerRecords<?, ?> records = poll(Duration.ofSeconds(5));
     assertThat(records.count()).isEqualTo(1);
 
     // iterate over records to generate spans
