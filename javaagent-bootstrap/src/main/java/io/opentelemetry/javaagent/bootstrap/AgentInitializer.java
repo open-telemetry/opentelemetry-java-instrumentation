@@ -41,7 +41,7 @@ public final class AgentInitializer {
         new PrivilegedAction<Void>() {
           @Override
           public Void run() {
-            AgentArgUtil.setSystemProperties(agentArgs);
+            setSystemProperties(agentArgs);
             return null;
           }
         });
@@ -213,4 +213,28 @@ public final class AgentInitializer {
   }
 
   private AgentInitializer() {}
+
+  @SuppressWarnings("SystemOut")
+  static void setSystemProperties(@Nullable String agentArgs) {
+    boolean debug = false;
+    if (agentArgs != null && !agentArgs.isEmpty()) {
+      for (String option : agentArgs.split(";")) {
+        int i = option.indexOf('=');
+        if (i < 0) {
+          System.out.println("Malformed agent argument: " + option);
+          continue;
+        }
+
+        String key = option.substring(0, i).trim();
+        String value = option.substring(i + 1).trim();
+        System.setProperty(key, value);
+        if (key.equals("otel.javaagent.debug")) {
+          debug = Boolean.parseBoolean(value);
+        }
+        if (debug) {
+          System.out.println("Setting property [" + key + "] = " + value);
+        }
+      }
+    }
+  }
 }
