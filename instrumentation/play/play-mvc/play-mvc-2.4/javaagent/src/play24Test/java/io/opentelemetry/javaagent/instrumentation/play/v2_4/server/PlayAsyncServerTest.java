@@ -47,7 +47,8 @@ class PlayAsyncServerTest extends PlayServerTest {
                                       it ->
                                           play.mvc.Http.Context.Implicit.request()
                                               .getQueryString(it));
-                                  return Results.status(INDEXED_CHILD.getStatus());
+                                  return Results.status(
+                                      INDEXED_CHILD.getStatus(), INDEXED_CHILD.getBody());
                                 })))
             .GET(QUERY_PARAM.getPath())
             .routeAsync(
