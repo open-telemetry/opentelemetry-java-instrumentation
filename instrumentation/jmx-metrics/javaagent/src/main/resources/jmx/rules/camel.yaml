@@ -1,45 +1,59 @@
 ---
 rules:
+
+  # Context Level Metrics
+
   - bean: org.apache.camel:context=*,type=context,name=*
     prefix: camel.context.
     metricAttribute:
       context: param(context)
-      camelVersion: beanattr(CamelVersion)
+      camel_version: beanattr(CamelVersion)
+      camel_class_resolver: beanattr(PackageScanClassResolver)
     mapping:
+      StartedRoutes:
+        metric: route.started
+        type: updowncounter
+        unit: "{route}"
+        desc: Indicates the number of routes started successfully since context start-up or the last reset operation.
+      TotalRoutes:
+        metric: route.added
+        type: counter
+        unit: "{route}"
+        desc: Indicates the total number of routes added successfully since context start-up or the last reset operation.
       ExchangesCompleted:
         metric: exchange.completed
         type: counter
-        unit: "{exchanges}"
+        unit: "{exchange}"
         desc: Indicates the total number of exchanges processed successfully since context start-up or the last reset operation.
       ExchangesFailed:
         metric: exchange.failed
         type: counter
-        unit: "{exchanges}"
+        unit: "{exchange}"
         desc: Indicates the total number of exchanges that failed to process since context start-up or the last reset operation.
       ExchangesInflight:
         metric: exchange.inflight
         type: updowncounter
-        unit: "{exchanges}"
+        unit: "{exchange}"
         desc: Indicates the number of exchanges currently transiting the context.
       ExchangesTotal:
         metric: exchange
         type: counter
-        unit: "{exchanges}"
+        unit: "{exchange}"
         desc: Indicates the total number of exchanges, passed or failed, processed context start-up or the last reset operation.
       FailuresHandled:
         metric: exchange.failed_handled
-        unit: "{exchanges}"
+        unit: "{exchange}"
         type: counter
         desc: Indicates the number of exchanges failed and handled by an ExceptionHandler in the context.
       Redeliveries:
         metric: exchange.redelivered
         type: counter
-        unit: "{exchanges}"
+        unit: "{exchange}"
         desc: Number of exchanges redelivered (internal only)  since context start-up or the last reset operation.
       ExternalRedeliveries:
         metric: exchange.redelivered_external
         type: counter
-        unit: "{exchanges}"
+        unit: "{exchange}"
         desc: The total number of all external initiated redeliveries (such as from JMS broker) since context start-up or the last reset operation.
       MaxProcessingTime:
         metric: exchange.processing.max_time
@@ -72,7 +86,7 @@ rules:
         unit: ms
         desc: Indicates the total processing time, in milliseconds, to process all exchanges since context start-up or the last reset operation.
 
-# Route Level metrics
+  # Route Level metrics
 
   - bean: org.apache.camel:context=*,type=routes,name=*
     prefix: camel.route.
@@ -83,37 +97,37 @@ rules:
       ExchangesCompleted:
         metric: exchange.completed
         type: counter
-        unit: "{exchanges}"
+        unit: "{exchange}"
         desc: Indicates the total number of exchanges the route has processed successfully since route start-up or the last reset operation.
       ExchangesFailed:
         metric: exchange.failed
         type: counter
-        unit: "{exchanges}"
+        unit: "{exchange}"
         desc: Indicates the total number of exchanges that the route has failed to process since route start-up or the last reset operation.
       ExchangesInflight:
         metric: exchange.inflight
         type: updowncounter
-        unit: "{exchanges}"
+        unit: "{exchange}"
         desc: Indicates the number of exchanges currently transiting the route.
       ExchangesTotal:
         metric: exchange
-        unit: "{exchanges}"
+        unit: "{exchange}"
         type: counter
         desc: Indicates the total number of exchanges, passed or failed, that the route has processed since route start-up or the last reset operation.
       FailuresHandled:
         metric: exchange.failed_handled
-        unit: "{exchanges}"
+        unit: "{exchange}"
         type: counter
         desc: Indicates the number of exchanges failed and handled by an ExceptionHandler in the route.
       ExternalRedeliveries:
         metric: exchange.redelivered_external
-        unit: "{exchanges}"
+        unit: "{exchange}"
         type: counter
         desc: The total number of all external initiated redeliveries (such as from JMS broker) since the route start-up or the last reset operation.
       Redeliveries:
         metric: exchange.redelivered
         type: counter
-        unit: "{exchanges}"
+        unit: "{exchange}"
         desc: Number of exchanges redelivered (internal only)  since route start-up or the last reset operation.
       MaxProcessingTime:
         metric: exchange.processing.max_time
@@ -146,8 +160,7 @@ rules:
         unit: ms
         desc: Indicates the total processing time, in milliseconds, of all exchanges the selected processed since route start-up or the last reset operation.
 
-
-# Processor level Metrics
+  # Processor Level Metrics
 
   - bean: org.apache.camel:context=*,type=processors,name=*
     prefix: camel.processor.
@@ -160,37 +173,37 @@ rules:
       ExchangesCompleted:
         metric: exchange.completed
         type: counter
-        unit: "{exchanges}"
+        unit: "{exchange}"
         desc: Indicates the total number of exchanges the selected processor has processed successfully since processor start-up or the last reset operation.
       ExchangesFailed:
         metric: exchange.failed
         type: counter
-        unit: "{exchanges}"
+        unit: "{exchange}"
         desc: Indicates the total number of exchanges that the selected processor has failed to process since processor start-up or the last reset operation.
       ExchangesInflight:
         metric: exchange.inflight
         type: updowncounter
-        unit: "{exchanges}"
+        unit: "{exchange}"
         desc: Indicates the number of exchanges currently transiting the processor.
       ExchangesTotal:
         metric: exchange
         type: counter
-        unit: "{exchanges}"
+        unit: "{exchange}"
         desc: Indicates the total number of exchanges, passed or failed, that the selected processor has processed since processor start-up or the last reset operation.
       FailuresHandled:
         metric: exchange.failed_handled
-        unit: "{exchanges}"
+        unit: "{exchange}"
         type: counter
         desc: Indicates the number of exchanges failed and handled by an ExceptionHandler in the context.
       ExternalRedeliveries:
         metric: exchange.redelivered_external
         type: counter
-        unit: "{exchanges}"
+        unit: "{exchange}"
         desc: The total number of all external initiated redeliveries (such as from JMS broker) since processor start-up or the last reset operation.
       Redeliveries:
         metric: exchange.redelivered
         type: counter
-        unit: "{exchanges}"
+        unit: "{exchange}"
         desc: Number of exchanges redelivered (internal only)  since selected processor start-up or the last reset operation.
       MaxProcessingTime:
         metric: exchange.processing.max_time
@@ -223,41 +236,48 @@ rules:
         unit: ms
         desc: Indicates the total processing time, in milliseconds, to process all exchanges since start-up or the last reset operation.
 
-
+ # Thread Pools
 
   - bean: org.apache.camel:context=*,type=threadpools,name=*
     prefix: camel.threadpool.
     metricAttribute:
       route: beanattr(RouteId)
       context: param(context)
+      pool_id: beanattr(Id)
     mapping:
       ActiveCount:
         metric: active
         type: updowncounter
-        unit: "{threads}"
+        unit: "{thread}"
         desc: The approximate number of threads that are actively executing tasks.
       CompletedTaskCount:
         metric: task.completed
         type: counter
-        unit: "{tasks}"
+        unit: "{task}"
         desc: The approximate total number of tasks that have completed execution. Because the states of tasks and threads may change dynamically during computation, the returned value is only an approximation, but one that does not ever decrease across successive calls.
       PoolSize:
         metric: pool.size
         type: updowncounter
-        unit: "{threads}"
+        unit: "{thread}"
         desc: The current number of threads in the pool.
+      CorePoolSize:
+        metric: pool.core_size
+        type: updowncounter
+        unit: "{thread}"
+        desc: The number of threads that are always kept in the pool, even if they are idle.
       LargestPoolSize:
         metric: pool.largest_size
         type: gauge
-        unit: "{threads}"
+        unit: "{thread}"
         desc: The largest number of threads that have ever simultaneously been in the pool.
       TaskCount:
         metric: task
         type: counter
-        unit: "{tasks}"
+        unit: "{task}"
         desc: The approximate total number of tasks that have ever been scheduled for execution.
       TaskQueueSize:
         metric: task.queue_size
         type: updowncounter
         unit: "{threads}"
         desc:  The number of Tasks in the Task Queue.
+

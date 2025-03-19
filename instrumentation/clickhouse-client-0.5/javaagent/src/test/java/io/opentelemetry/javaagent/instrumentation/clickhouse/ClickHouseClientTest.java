@@ -5,7 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.clickhouse;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -25,8 +32,8 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.AfterAll;
@@ -332,13 +339,49 @@ class ClickHouseClientTest {
                                 "select * from " + tableName + " where s=:val", "SELECT"))));
   }
 
+  // regression test for
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13019
+  // {s:String} used in the query really a syntax error, should be {s: String}. This test verifies
+  // that this syntax error isn't detected when running with the agent as it is also ignored when
+  // running without the agent.
+  @Test
+  void testPlaceholderQueryInput() throws Exception {
+    ClickHouseRequest<?> request =
+        client.read(server).format(ClickHouseFormat.RowBinaryWithNamesAndTypes);
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          ClickHouseResponse response =
+              request
+                  // {s:String} is really a syntax error should be {s: String}
+                  .query("select * from " + tableName + " where s={s:String}")
+                  .settings(ImmutableMap.of("param_s", "" + Instant.now().getEpochSecond()))
+                  .execute()
+                  .get();
+          response.close();
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span ->
+                    span.hasName("SELECT " + dbName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            attributeAssertions(
+                                "select * from " + tableName + " where s={s:String}", "SELECT"))));
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> attributeAssertions(String statement, String operation) {
     return asList(
-        equalTo(DbIncubatingAttributes.DB_SYSTEM, DbIncubatingAttributes.DbSystemValues.CLICKHOUSE),
-        equalTo(DbIncubatingAttributes.DB_NAME, dbName),
-        equalTo(ServerAttributes.SERVER_ADDRESS, host),
-        equalTo(ServerAttributes.SERVER_PORT, port),
-        equalTo(DbIncubatingAttributes.DB_STATEMENT, statement),
-        equalTo(DbIncubatingAttributes.DB_OPERATION, operation));
+        equalTo(maybeStable(DB_SYSTEM), DbIncubatingAttributes.DbSystemIncubatingValues.CLICKHOUSE),
+        equalTo(maybeStable(DB_NAME), dbName),
+        equalTo(SERVER_ADDRESS, host),
+        equalTo(SERVER_PORT, port),
+        equalTo(maybeStable(DB_STATEMENT), statement),
+        equalTo(maybeStable(DB_OPERATION), operation));
   }
 }

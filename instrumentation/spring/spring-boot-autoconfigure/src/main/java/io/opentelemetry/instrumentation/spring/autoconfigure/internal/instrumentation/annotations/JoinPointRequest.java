@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
-import io.opentelemetry.instrumentation.api.incubator.semconv.util.SpanNames;
+import io.opentelemetry.instrumentation.api.semconv.util.SpanNames;
 import java.lang.reflect.Method;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.reflect.MethodSignature;
@@ -18,8 +18,14 @@ final class JoinPointRequest {
   private final Method method;
   private final String spanName;
   private final SpanKind spanKind;
+  private final boolean inheritContext;
 
-  private JoinPointRequest(JoinPoint joinPoint, Method method, String spanName, SpanKind spanKind) {
+  private JoinPointRequest(
+      JoinPoint joinPoint,
+      Method method,
+      String spanName,
+      SpanKind spanKind,
+      boolean inheritContext) {
     if (spanName.isEmpty()) {
       spanName = SpanNames.fromMethod(method);
     }
@@ -28,6 +34,7 @@ final class JoinPointRequest {
     this.method = method;
     this.spanName = spanName;
     this.spanKind = spanKind;
+    this.inheritContext = inheritContext;
   }
 
   String spanName() {
@@ -44,6 +51,10 @@ final class JoinPointRequest {
 
   Object[] args() {
     return joinPoint.getArgs();
+  }
+
+  boolean inheritContext() {
+    return inheritContext;
   }
 
   interface Factory {
@@ -65,8 +76,9 @@ final class JoinPointRequest {
       WithSpan annotation = method.getDeclaredAnnotation(WithSpan.class);
       String spanName = annotation != null ? annotation.value() : "";
       SpanKind spanKind = annotation != null ? annotation.kind() : SpanKind.INTERNAL;
+      boolean inheritContext = annotation == null || annotation.inheritContext();
 
-      return new JoinPointRequest(joinPoint, method, spanName, spanKind);
+      return new JoinPointRequest(joinPoint, method, spanName, spanKind, inheritContext);
     }
   }
 }

@@ -40,7 +40,8 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         .ignoreClass("com.nr.agent.")
         .ignoreClass("com.singularity.")
         .ignoreClass("com.jinspired.")
-        .ignoreClass("org.jinspired.");
+        .ignoreClass("org.jinspired.")
+        .ignoreClass("org.jboss.byteman.");
 
     // allow JDK HttpClient
     builder.allowClass("jdk.internal.net.http.");
@@ -98,7 +99,8 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         .allowClass("sun.net.www.protocol.")
         .allowClass("sun.rmi.server")
         .allowClass("sun.rmi.transport")
-        .allowClass("sun.net.www.http.HttpClient");
+        .allowClass("sun.net.www.http.HttpClient")
+        .allowClass("sun.net.httpserver.");
 
     builder.ignoreClass("org.slf4j.");
 

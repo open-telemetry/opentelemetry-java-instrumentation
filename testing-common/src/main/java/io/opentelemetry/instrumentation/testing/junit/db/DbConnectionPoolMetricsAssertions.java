@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.testing.junit.db;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
@@ -126,7 +127,7 @@ public final class DbConnectionPoolMetricsAssertions {
   private void verifyConnectionUsage() {
     testing.waitAndAssertMetrics(
         instrumentationName,
-        "db.client.connections.usage",
+        emitStableDatabaseSemconv() ? "db.client.connection.count" : "db.client.connections.usage",
         metrics -> metrics.anySatisfy(this::verifyUsageMetric));
   }
 

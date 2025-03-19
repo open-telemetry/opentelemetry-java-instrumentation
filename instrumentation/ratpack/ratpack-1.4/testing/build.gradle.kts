@@ -10,7 +10,5 @@ dependencies {
   implementation("io.ratpack:ratpack-core:1.4.0")
   implementation("io.ratpack:ratpack-test:1.4.0")
 
-  implementation("org.apache.groovy:groovy")
   implementation("io.opentelemetry:opentelemetry-api")
-  implementation("org.spockframework:spock-core")
 }

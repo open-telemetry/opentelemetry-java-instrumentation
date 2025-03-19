@@ -46,7 +46,6 @@ public abstract class JettyServlet3Test
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
     options.setTestNotFound(false);
-    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setContextPath("/jetty-context");
     options.setVerifyServerSpanEndTime(!isAsyncTest());
   }

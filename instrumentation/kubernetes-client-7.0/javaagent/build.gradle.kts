@@ -16,7 +16,7 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:okhttp:okhttp-3.0:javaagent"))
 
-  latestDepTestLibrary("io.kubernetes:client-java-api:19.+")
+  latestDepTestLibrary("io.kubernetes:client-java-api:19.+") // see test suite below
 }
 
 testing {
@@ -24,7 +24,7 @@ testing {
     val version20Test by registering(JvmTestSuite::class) {
       dependencies {
         if (findProperty("testLatestDeps") as Boolean) {
-          implementation("io.kubernetes:client-java-api:+")
+          implementation("io.kubernetes:client-java-api:latest.release")
         } else {
           implementation("io.kubernetes:client-java-api:20.0.0")
         }

@@ -15,6 +15,11 @@ dependencies {
   testInstrumentation(project(":instrumentation:jaxws:jaxws-jws-api-1.1:javaagent"))
 }
 
+otelJava {
+  // due to security manager deprecation this test does not work on jdk 24 with default configuration
+  maxJavaVersionForTests.set(JavaVersion.VERSION_23)
+}
+
 tasks.withType<Test>().configureEach {
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")

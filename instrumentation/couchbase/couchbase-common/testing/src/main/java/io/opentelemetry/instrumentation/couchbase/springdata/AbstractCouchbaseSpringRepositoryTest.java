@@ -14,11 +14,11 @@ import com.couchbase.client.java.view.DefaultView;
 import com.couchbase.client.java.view.DesignDocument;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.couchbase.AbstractCouchbaseTest;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.Collections;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -29,6 +29,8 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private ConfigurableApplicationContext applicationContext;
   private TestRepository repository;
@@ -64,11 +66,10 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
     repository = applicationContext.getBean(TestRepository.class);
   }
 
-  @AfterEach
-  void cleanUpTest() {
+  private void cleanUpTest() {
     testing.clearData();
     repository.deleteAll();
-    testing.waitForTraces(1);
+    testing.waitForTraces(2);
   }
 
   @AfterAll
@@ -103,6 +104,7 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
   void save() {
     TestDocument document = new TestDocument();
     TestDocument result = repository.save(document);
+    cleanup.deferCleanup(this::cleanUpTest);
 
     assertThat(result).isEqualTo(document);
 
@@ -124,6 +126,7 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
               repository.save(document);
               return findById(repository, "1");
             });
+    cleanup.deferCleanup(this::cleanUpTest);
 
     assertThat(result).isEqualTo(document);
 
@@ -149,6 +152,7 @@ public abstract class AbstractCouchbaseSpringRepositoryTest extends AbstractCouc
           document.setData("other data");
           repository.save(document);
         });
+    cleanup.deferCleanup(this::cleanUpTest);
 
     testing.waitAndAssertTraces(
         trace ->

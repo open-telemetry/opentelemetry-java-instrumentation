@@ -8,14 +8,23 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.ThrowableAssert.catchThrowable;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -34,7 +43,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 @SuppressWarnings("deprecation") // 'lock' is a deprecated method in the Session class
 class SessionTest extends AbstractHibernateTest {
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
+  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @ParameterizedTest
   @MethodSource("provideArgumentsHibernateAction")
   void testHibernateAction(Parameter parameter) {
@@ -64,17 +73,17 @@ class SessionTest extends AbstractHibernateTest {
                     span.hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_NAME), "db1"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "h2:mem:"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
-                                val -> val.isInstanceOf(String.class)),
+                                maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                DbIncubatingAttributes.DB_OPERATION,
-                                val -> val.isInstanceOf(String.class)),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value")),
+                                maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Value")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -144,7 +153,7 @@ class SessionTest extends AbstractHibernateTest {
                     null))));
   }
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
+  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @ParameterizedTest
   @MethodSource("provideArgumentsHibernateActionStateless")
   void testHibernateActionStateless(Parameter parameter) {
@@ -175,17 +184,17 @@ class SessionTest extends AbstractHibernateTest {
                     span.hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_NAME), "db1"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "h2:mem:"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
-                                val -> val.isInstanceOf(String.class)),
+                                maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                DbIncubatingAttributes.DB_OPERATION,
-                                val -> val.isInstanceOf(String.class)),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value")),
+                                maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Value")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -292,7 +301,7 @@ class SessionTest extends AbstractHibernateTest {
                     }))));
   }
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
+  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @ParameterizedTest
   @MethodSource("provideArgumentsHibernateReplicate")
   void testHibernateReplicate(Parameter parameter) {
@@ -322,17 +331,17 @@ class SessionTest extends AbstractHibernateTest {
                     span.hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_NAME), "db1"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "h2:mem:"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
-                                val -> val.isInstanceOf(String.class)),
+                                maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                DbIncubatingAttributes.DB_OPERATION,
-                                val -> val.isInstanceOf(String.class)),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value")),
+                                maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Value")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -348,17 +357,17 @@ class SessionTest extends AbstractHibernateTest {
                     span.hasKind(CLIENT)
                         .hasParent(trace.getSpan(3))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_NAME), "db1"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "h2:mem:"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
-                                val -> val.isInstanceOf(String.class)),
+                                maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                DbIncubatingAttributes.DB_OPERATION,
-                                val -> val.isInstanceOf(String.class)),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value"))));
+                                maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Value"))));
   }
 
   private static Stream<Arguments> provideArgumentsHibernateReplicate() {
@@ -440,7 +449,7 @@ class SessionTest extends AbstractHibernateTest {
                                     .get(stringKey("hibernate.session_id"))))));
   }
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
+  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @ParameterizedTest
   @MethodSource("provideArgumentsHibernateCommitAction")
   void testHibernateCommitAction(Parameter parameter) {
@@ -482,17 +491,17 @@ class SessionTest extends AbstractHibernateTest {
                     span.hasKind(CLIENT)
                         .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_NAME), "db1"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "h2:mem:"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
-                                val -> val.isInstanceOf(String.class)),
+                                maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                DbIncubatingAttributes.DB_OPERATION,
-                                val -> val.isInstanceOf(String.class)),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value"))));
+                                maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Value"))));
   }
 
   private static Stream<Arguments> provideArgumentsHibernateCommitAction() {
@@ -630,7 +639,7 @@ class SessionTest extends AbstractHibernateTest {
                     null))));
   }
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
+  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @ParameterizedTest
   @MethodSource("provideArgumentsStateQuery")
   void testAttachesStateToQueryCreated(Consumer<Session> queryBuilder) {
@@ -661,17 +670,17 @@ class SessionTest extends AbstractHibernateTest {
                     span.hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_NAME), "db1"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "h2:mem:"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
-                                val -> val.isInstanceOf(String.class)),
+                                maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
                             satisfies(
-                                DbIncubatingAttributes.DB_OPERATION,
-                                val -> val.isInstanceOf(String.class)),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value")),
+                                maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Value")),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -703,7 +712,7 @@ class SessionTest extends AbstractHibernateTest {
                             session -> session.createSQLQuery("SELECT * FROM Value").list())))));
   }
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
+  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @Test
   void testHibernateOverlappingSessions() {
     testing.runWithSpan(
@@ -762,15 +771,17 @@ class SessionTest extends AbstractHibernateTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_NAME), "db1"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "h2:mem:"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                maybeStable(DB_STATEMENT),
                                 stringAssert -> stringAssert.startsWith("insert")),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "INSERT"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value")),
+                            equalTo(maybeStable(DB_OPERATION), "INSERT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Value")),
                 span -> {
                   span.hasName("Session.save " + Value.class.getName())
                       .hasKind(INTERNAL)
@@ -806,29 +817,33 @@ class SessionTest extends AbstractHibernateTest {
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(6))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_NAME), "db1"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "h2:mem:"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                maybeStable(DB_STATEMENT),
                                 stringAssert -> stringAssert.startsWith("insert")),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "INSERT"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value")),
+                            equalTo(maybeStable(DB_OPERATION), "INSERT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Value")),
                 span ->
                     span.hasName("DELETE db1.Value")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(6))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "h2"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "db1"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "h2:mem:"),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_NAME), "db1"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "h2:mem:"),
                             satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
+                                maybeStable(DB_STATEMENT),
                                 stringAssert -> stringAssert.startsWith("delete")),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "DELETE"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "Value"))));
+                            equalTo(maybeStable(DB_OPERATION), "DELETE"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Value"))));
 
     assertThat(sessionId1.get()).isNotEqualTo(sessionId2.get());
     assertThat(sessionId1.get()).isNotEqualTo(sessionId3.get());

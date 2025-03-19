@@ -7,8 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_3.
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -26,6 +29,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import spock.util.environment.Jvm;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class Elasticsearch53SpringRepositoryTest {
 
@@ -86,9 +90,9 @@ class Elasticsearch53SpringRepositoryTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SearchAction"),
+                                maybeStable(DB_SYSTEM),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                            equalTo(maybeStable(DB_OPERATION), "SearchAction"),
                             equalTo(stringKey("elasticsearch.action"), "SearchAction"),
                             equalTo(stringKey("elasticsearch.request"), "SearchRequest"),
                             equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
@@ -120,9 +124,9 @@ class Elasticsearch53SpringRepositoryTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "IndexAction"),
+                                maybeStable(DB_SYSTEM),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                            equalTo(maybeStable(DB_OPERATION), "IndexAction"),
                             equalTo(stringKey("elasticsearch.action"), "IndexAction"),
                             equalTo(stringKey("elasticsearch.request"), "IndexRequest"),
                             equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
@@ -138,9 +142,9 @@ class Elasticsearch53SpringRepositoryTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "RefreshAction"),
+                                maybeStable(DB_SYSTEM),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                            equalTo(maybeStable(DB_OPERATION), "RefreshAction"),
                             equalTo(stringKey("elasticsearch.action"), "RefreshAction"),
                             equalTo(stringKey("elasticsearch.request"), "RefreshRequest"),
                             equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
@@ -169,9 +173,9 @@ class Elasticsearch53SpringRepositoryTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GetAction"),
+                                maybeStable(DB_SYSTEM),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                            equalTo(maybeStable(DB_OPERATION), "GetAction"),
                             equalTo(stringKey("elasticsearch.action"), "GetAction"),
                             equalTo(stringKey("elasticsearch.request"), "GetRequest"),
                             equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
@@ -203,9 +207,9 @@ class Elasticsearch53SpringRepositoryTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "IndexAction"),
+                                maybeStable(DB_SYSTEM),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                            equalTo(maybeStable(DB_OPERATION), "IndexAction"),
                             equalTo(stringKey("elasticsearch.action"), "IndexAction"),
                             equalTo(stringKey("elasticsearch.request"), "IndexRequest"),
                             equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
@@ -221,9 +225,9 @@ class Elasticsearch53SpringRepositoryTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "RefreshAction"),
+                                maybeStable(DB_SYSTEM),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                            equalTo(maybeStable(DB_OPERATION), "RefreshAction"),
                             equalTo(stringKey("elasticsearch.action"), "RefreshAction"),
                             equalTo(stringKey("elasticsearch.request"), "RefreshRequest"),
                             equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
@@ -247,9 +251,9 @@ class Elasticsearch53SpringRepositoryTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "GetAction"),
+                                maybeStable(DB_SYSTEM),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                            equalTo(maybeStable(DB_OPERATION), "GetAction"),
                             equalTo(stringKey("elasticsearch.action"), "GetAction"),
                             equalTo(stringKey("elasticsearch.request"), "GetRequest"),
                             equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
@@ -279,9 +283,9 @@ class Elasticsearch53SpringRepositoryTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "DeleteAction"),
+                                maybeStable(DB_SYSTEM),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                            equalTo(maybeStable(DB_OPERATION), "DeleteAction"),
                             equalTo(stringKey("elasticsearch.action"), "DeleteAction"),
                             equalTo(stringKey("elasticsearch.request"), "DeleteRequest"),
                             equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
@@ -296,9 +300,9 @@ class Elasticsearch53SpringRepositoryTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "RefreshAction"),
+                                maybeStable(DB_SYSTEM),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                            equalTo(maybeStable(DB_OPERATION), "RefreshAction"),
                             equalTo(stringKey("elasticsearch.action"), "RefreshAction"),
                             equalTo(stringKey("elasticsearch.request"), "RefreshRequest"),
                             equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
@@ -322,9 +326,9 @@ class Elasticsearch53SpringRepositoryTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DbIncubatingAttributes.DB_SYSTEM,
-                                DbIncubatingAttributes.DbSystemValues.ELASTICSEARCH),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SearchAction"),
+                                maybeStable(DB_SYSTEM),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                            equalTo(maybeStable(DB_OPERATION), "SearchAction"),
                             equalTo(stringKey("elasticsearch.action"), "SearchAction"),
                             equalTo(stringKey("elasticsearch.request"), "SearchRequest"),
                             equalTo(stringKey("elasticsearch.request.indices"), "test-index"),

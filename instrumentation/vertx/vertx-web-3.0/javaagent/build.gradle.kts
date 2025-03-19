@@ -37,9 +37,9 @@ testing {
       dependencies {
         implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
 
-        implementation("io.vertx:vertx-web:+")
-        implementation("io.vertx:vertx-jdbc-client:+")
-        implementation("io.vertx:vertx-codegen:+")
+        implementation("io.vertx:vertx-web:latest.release")
+        implementation("io.vertx:vertx-jdbc-client:latest.release")
+        implementation("io.vertx:vertx-codegen:latest.release")
       }
     }
   }
@@ -51,9 +51,6 @@ tasks {
   if (testLatestDeps) {
     // disable regular test running and compiling tasks when latest dep test task is run
     named("test") {
-      enabled = false
-    }
-    named("compileTestGroovy") {
       enabled = false
     }
   }

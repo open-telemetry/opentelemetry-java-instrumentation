@@ -15,13 +15,14 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class ArmeriaGrpcInstrumentationModule extends InstrumentationModule {
   public ArmeriaGrpcInstrumentationModule() {
-    super("armeria", "armeria-1.14", "armeria-grpc-1.14");
+    super("armeria-grpc", "armeria-grpc-1.14", "armeria", "armeria-1.14");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ArmeriaGrpcClientBuilderInstrumentation(),
-        new ArmeriaGrpcServiceBuilderInstrumentation());
+        new ArmeriaGrpcServiceBuilderInstrumentation(),
+        new ArmeriaServerCallInstrumentation());
   }
 }

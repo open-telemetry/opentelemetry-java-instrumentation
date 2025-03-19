@@ -35,6 +35,7 @@ public abstract class RedissonRequest {
     return new AutoValue_RedissonRequest(address, command);
   }
 
+  @Nullable
   public abstract InetSocketAddress getAddress();
 
   public abstract Object getCommand();
@@ -59,7 +60,7 @@ public abstract class RedissonRequest {
     switch (sanitizedStatements.size()) {
       case 0:
         return null;
-        // optimize for the most common case
+      // optimize for the most common case
       case 1:
         return sanitizedStatements.get(0);
       default:

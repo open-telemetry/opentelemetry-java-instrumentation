@@ -5,11 +5,20 @@
 
 package io.opentelemetry.instrumentation.testing;
 
+import static java.util.Arrays.asList;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
+import io.opentelemetry.api.logs.LoggerProvider;
+import io.opentelemetry.api.metrics.MeterProvider;
+import io.opentelemetry.api.trace.TracerBuilder;
+import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.contrib.baggage.processor.BaggageSpanProcessor;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
@@ -40,7 +49,8 @@ import java.util.concurrent.TimeUnit;
  */
 public final class LibraryTestRunner extends InstrumentationTestRunner {
 
-  private static final OpenTelemetrySdk openTelemetry;
+  private static final OpenTelemetrySdk openTelemetrySdk;
+  private static final OpenTelemetry openTelemetry;
   private static final InMemorySpanExporter testSpanExporter;
   private static final InMemoryMetricExporter testMetricExporter;
   private static final InMemoryLogRecordExporter testLogRecordExporter;
@@ -61,21 +71,31 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
             .setInterval(Duration.ofNanos(Long.MAX_VALUE))
             .build();
 
-    openTelemetry =
+    openTelemetrySdk =
         OpenTelemetrySdk.builder()
             .setTracerProvider(
                 SdkTracerProvider.builder()
                     .addSpanProcessor(new FlushTrackingSpanProcessor())
                     .addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()))
                     .addSpanProcessor(SimpleSpanProcessor.create(testSpanExporter))
+                    .addSpanProcessor(
+                        new BaggageSpanProcessor(
+                            baggageKey ->
+                                asList("test-baggage-key-1", "test-baggage-key-2")
+                                    .contains(baggageKey)))
                     .build())
             .setMeterProvider(SdkMeterProvider.builder().registerMetricReader(metricReader).build())
             .setLoggerProvider(
                 SdkLoggerProvider.builder()
                     .addLogRecordProcessor(SimpleLogRecordProcessor.create(testLogRecordExporter))
                     .build())
-            .setPropagators(ContextPropagators.create(W3CTraceContextPropagator.getInstance()))
+            .setPropagators(
+                ContextPropagators.create(
+                    TextMapPropagator.composite(
+                        W3CTraceContextPropagator.getInstance(),
+                        W3CBaggagePropagator.getInstance())))
             .buildAndRegisterGlobal();
+    openTelemetry = wrap(openTelemetrySdk);
   }
 
   private static final LibraryTestRunner INSTANCE = new LibraryTestRunner();
@@ -91,10 +111,8 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
   @Override
   public void beforeTestClass() {
     // just in case: if there was any test that modified the global instance, reset it
-    if (GlobalOpenTelemetry.get() != openTelemetry) {
-      GlobalOpenTelemetry.resetForTest();
-      GlobalOpenTelemetry.set(openTelemetry);
-    }
+    GlobalOpenTelemetry.resetForTest();
+    GlobalOpenTelemetry.set(openTelemetrySdk);
   }
 
   @Override
@@ -103,7 +121,7 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
   @Override
   public void clearAllExportedData() {
     // Flush meter provider to remove any lingering measurements
-    openTelemetry.getSdkMeterProvider().forceFlush().join(10, TimeUnit.SECONDS);
+    openTelemetrySdk.getSdkMeterProvider().forceFlush().join(10, TimeUnit.SECONDS);
     testSpanExporter.reset();
     testMetricExporter.reset();
     testLogRecordExporter.reset();
@@ -116,7 +134,7 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
   }
 
   public OpenTelemetrySdk getOpenTelemetrySdk() {
-    return openTelemetry;
+    return openTelemetrySdk;
   }
 
   @Override
@@ -138,6 +156,39 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
   @Override
   public boolean forceFlushCalled() {
     return forceFlushCalled;
+  }
+
+  // Wrap the OpenTelemetry instance similarly to what GlobalOpenTelemetry does. We do this to
+  // ensure that the OpenTelemetry instance can not be accidentally closed. This could happen for
+  // example when it is registered as spring bean and spring calls close on it, because
+  // OpenTelemetrySdk implements Closeable, when the application context is closed.
+  private static OpenTelemetry wrap(OpenTelemetry delegate) {
+    return new OpenTelemetry() {
+      @Override
+      public TracerProvider getTracerProvider() {
+        return delegate.getTracerProvider();
+      }
+
+      @Override
+      public MeterProvider getMeterProvider() {
+        return delegate.getMeterProvider();
+      }
+
+      @Override
+      public LoggerProvider getLogsBridge() {
+        return delegate.getLogsBridge();
+      }
+
+      @Override
+      public ContextPropagators getPropagators() {
+        return delegate.getPropagators();
+      }
+
+      @Override
+      public TracerBuilder tracerBuilder(String instrumentationScopeName) {
+        return delegate.tracerBuilder(instrumentationScopeName);
+      }
+    };
   }
 
   private static class FlushTrackingSpanProcessor implements SpanProcessor {

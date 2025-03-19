@@ -35,6 +35,7 @@ class EnduserAttributesCapturingServletFilterTest {
    * io.opentelemetry.instrumentation.spring.security.config.v6_0.EnduserAttributesCapturerTest}
    * tests many other scenarios.
    */
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void test() throws Exception {
 

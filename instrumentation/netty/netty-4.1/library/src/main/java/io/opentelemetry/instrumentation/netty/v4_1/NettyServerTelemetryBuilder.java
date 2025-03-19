@@ -10,13 +10,13 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
-import io.opentelemetry.instrumentation.netty.v4.common.internal.server.HttpRequestHeadersGetter;
-import io.opentelemetry.instrumentation.netty.v4.common.internal.server.NettyHttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.server.HttpRequestHeadersGetter;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.server.NettyHttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.netty.v4_1.internal.Experimental;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.server.NettyServerInstrumenterBuilderUtil;
-import java.util.List;
-import java.util.Set;
+import java.util.Collection;
 
 /** A builder of {@link NettyServerTelemetry}. */
 public final class NettyServerTelemetryBuilder {
@@ -28,11 +28,16 @@ public final class NettyServerTelemetryBuilder {
   static {
     NettyServerInstrumenterBuilderUtil.setBuilderExtractor(
         nettyServerTelemetryBuilder -> nettyServerTelemetryBuilder.builder);
+    Experimental.internalSetEmitExperimentalServerTelemetry(
+        (builder, emit) -> {
+          builder.builder.setEmitExperimentalHttpServerMetrics(emit);
+          builder.emitExperimentalHttpServerEvents = emit;
+        });
   }
 
   NettyServerTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder =
-        new DefaultHttpServerInstrumenterBuilder<>(
+        DefaultHttpServerInstrumenterBuilder.create(
             "io.opentelemetry.netty-4.1",
             openTelemetry,
             new NettyHttpServerAttributesGetter(),
@@ -58,7 +63,7 @@ public final class NettyServerTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setCapturedRequestHeaders(
-      List<String> capturedRequestHeaders) {
+      Collection<String> capturedRequestHeaders) {
     builder.setCapturedRequestHeaders(capturedRequestHeaders);
     return this;
   }
@@ -70,7 +75,7 @@ public final class NettyServerTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setCapturedResponseHeaders(
-      List<String> capturedResponseHeaders) {
+      Collection<String> capturedResponseHeaders) {
     builder.setCapturedResponseHeaders(capturedResponseHeaders);
     return this;
   }
@@ -86,10 +91,10 @@ public final class NettyServerTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Set)
+   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
-  public NettyServerTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+  public NettyServerTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
   }
@@ -99,7 +104,10 @@ public final class NettyServerTelemetryBuilder {
    *
    * @param emitExperimentalHttpServerMetrics {@code true} if the experimental HTTP server metrics
    *     are to be emitted.
+   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(NettyServerTelemetryBuilder,
+   *     boolean)} instead.
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setEmitExperimentalHttpServerMetrics(
       boolean emitExperimentalHttpServerMetrics) {

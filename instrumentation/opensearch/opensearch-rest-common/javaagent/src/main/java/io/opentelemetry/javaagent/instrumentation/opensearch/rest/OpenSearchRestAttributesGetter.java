@@ -12,11 +12,13 @@ import javax.annotation.Nullable;
 final class OpenSearchRestAttributesGetter
     implements DbClientAttributesGetter<OpenSearchRestRequest> {
 
+  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getSystem(OpenSearchRestRequest request) {
-    return DbIncubatingAttributes.DbSystemValues.OPENSEARCH;
+  public String getDbSystem(OpenSearchRestRequest request) {
+    return DbIncubatingAttributes.DbSystemIncubatingValues.OPENSEARCH;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(OpenSearchRestRequest request) {
@@ -25,10 +27,11 @@ final class OpenSearchRestAttributesGetter
 
   @Override
   @Nullable
-  public String getName(OpenSearchRestRequest request) {
+  public String getDbNamespace(OpenSearchRestRequest request) {
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(OpenSearchRestRequest request) {
@@ -37,13 +40,13 @@ final class OpenSearchRestAttributesGetter
 
   @Override
   @Nullable
-  public String getStatement(OpenSearchRestRequest request) {
+  public String getDbQueryText(OpenSearchRestRequest request) {
     return request.getMethod() + " " + request.getOperation();
   }
 
   @Override
   @Nullable
-  public String getOperation(OpenSearchRestRequest request) {
+  public String getDbOperationName(OpenSearchRestRequest request) {
     return request.getMethod();
   }
 }

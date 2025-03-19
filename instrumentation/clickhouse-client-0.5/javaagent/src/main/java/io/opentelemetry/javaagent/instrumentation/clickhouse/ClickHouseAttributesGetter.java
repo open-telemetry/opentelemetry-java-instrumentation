@@ -10,9 +10,10 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class ClickHouseAttributesGetter implements DbClientAttributesGetter<ClickHouseDbRequest> {
+
   @Nullable
   @Override
-  public String getStatement(ClickHouseDbRequest request) {
+  public String getDbQueryText(ClickHouseDbRequest request) {
     if (request.getSqlStatementInfo() == null) {
       return null;
     }
@@ -21,19 +22,20 @@ final class ClickHouseAttributesGetter implements DbClientAttributesGetter<Click
 
   @Nullable
   @Override
-  public String getOperation(ClickHouseDbRequest request) {
+  public String getDbOperationName(ClickHouseDbRequest request) {
     if (request.getSqlStatementInfo() == null) {
       return null;
     }
     return request.getSqlStatementInfo().getOperation();
   }
 
-  @Nullable
+  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getSystem(ClickHouseDbRequest request) {
-    return DbIncubatingAttributes.DbSystemValues.CLICKHOUSE;
+  public String getDbSystem(ClickHouseDbRequest request) {
+    return DbIncubatingAttributes.DbSystemIncubatingValues.CLICKHOUSE;
   }
 
+  @Deprecated
   @Nullable
   @Override
   public String getUser(ClickHouseDbRequest request) {
@@ -42,7 +44,7 @@ final class ClickHouseAttributesGetter implements DbClientAttributesGetter<Click
 
   @Nullable
   @Override
-  public String getName(ClickHouseDbRequest request) {
+  public String getDbNamespace(ClickHouseDbRequest request) {
     String dbName = request.getDbName();
     if (dbName == null || dbName.isEmpty()) {
       return null;
@@ -50,6 +52,7 @@ final class ClickHouseAttributesGetter implements DbClientAttributesGetter<Click
     return dbName;
   }
 
+  @Deprecated
   @Nullable
   @Override
   public String getConnectionString(ClickHouseDbRequest request) {

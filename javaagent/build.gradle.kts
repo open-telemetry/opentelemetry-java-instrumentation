@@ -76,6 +76,16 @@ dependencies {
   baseJavaagentLibs(project(":muzzle"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.10:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.15:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.27:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.31:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.32:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.37:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.38:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.40:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.42:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.47:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-api:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent"))
   baseJavaagentLibs(project(":instrumentation:executors:javaagent"))
@@ -141,20 +151,43 @@ tasks {
     archiveFileName.set("bootstrapLibs.jar")
   }
 
-  val relocateBaseJavaagentLibs by registering(ShadowJar::class) {
+  val relocateBaseJavaagentLibsTmp by registering(ShadowJar::class) {
     configurations = listOf(baseJavaagentLibs)
 
     excludeBootstrapClasses()
 
     duplicatesStrategy = DuplicatesStrategy.FAIL
 
+    archiveFileName.set("baseJavaagentLibs-relocated-tmp.jar")
+  }
+
+  val relocateBaseJavaagentLibs by registering(Jar::class) {
+    dependsOn(relocateBaseJavaagentLibsTmp)
+
+    copyByteBuddy(relocateBaseJavaagentLibsTmp.get().archiveFile)
+
+    duplicatesStrategy = DuplicatesStrategy.FAIL
+
     archiveFileName.set("baseJavaagentLibs-relocated.jar")
   }
 
-  val relocateJavaagentLibs by registering(ShadowJar::class) {
+  val relocateJavaagentLibsTmp by registering(ShadowJar::class) {
     configurations = listOf(javaagentLibs)
 
     excludeBootstrapClasses()
+    // remove MPL licensed content
+    exclude("okhttp3/internal/publicsuffix/NOTICE")
+    exclude("okhttp3/internal/publicsuffix/publicsuffixes.gz")
+
+    duplicatesStrategy = DuplicatesStrategy.FAIL
+
+    archiveFileName.set("javaagentLibs-relocated-tmp.jar")
+  }
+
+  val relocateJavaagentLibs by registering(Jar::class) {
+    dependsOn(relocateJavaagentLibsTmp)
+
+    copyByteBuddy(relocateJavaagentLibsTmp.get().archiveFile)
 
     duplicatesStrategy = DuplicatesStrategy.FAIL
 
@@ -230,6 +263,9 @@ tasks {
     dependsOn(shadowJar)
 
     jvmArgs("-Dotel.javaagent.debug=true")
+    jvmArgs("-Dotel.traces.exporter=none")
+    jvmArgs("-Dotel.metrics.exporter=none")
+    jvmArgs("-Dotel.logs.exporter=none")
 
     jvmArgumentProviders.add(JavaagentProvider(shadowJar.flatMap { it.archiveFile }))
 
@@ -360,6 +396,26 @@ fun CopySpec.isolateClasses(jar: Provider<RegularFile>) {
     exclude("META-INF/INDEX.LIST")
     exclude("META-INF/*.DSA")
     exclude("META-INF/*.SF")
+    exclude("META-INF/maven/**")
+    exclude("META-INF/MANIFEST.MF")
+  }
+}
+
+fun CopySpec.copyByteBuddy(jar: Provider<RegularFile>) {
+  // Byte buddy jar includes classes compiled for java 5 at the root of the jar and the same classes
+  // compiled for java 8 under META-INF/versions/9. Here we move the classes from
+  // META-INF/versions/9/net/bytebuddy to net/bytebuddy to get rid of the duplicate classes.
+  from(zipTree(jar)) {
+    eachFile {
+      if (path.startsWith("net/bytebuddy/") &&
+        // this is our class that we have placed in the byte buddy package, need to preserve it
+        !path.startsWith("net/bytebuddy/agent/builder/AgentBuilderUtil")) {
+        exclude()
+      } else if (path.startsWith("META-INF/versions/9/net/bytebuddy/")) {
+        path = path.removePrefix("META-INF/versions/9/")
+      }
+    }
+    includeEmptyDirs = false
   }
 }
 
@@ -383,5 +439,6 @@ class JavaagentProvider(
 ) : CommandLineArgumentProvider {
   override fun asArguments(): Iterable<String> = listOf(
     "-javaagent:${file(agentJar).absolutePath}",
+    "-Dotel.javaagent.testing.transform-safe-logging.enabled=true"
   )
 }

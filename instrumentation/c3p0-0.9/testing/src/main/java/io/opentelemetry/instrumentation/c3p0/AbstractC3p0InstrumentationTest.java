@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.c3p0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mchange.v2.c3p0.ComboPooledDataSource;
@@ -66,7 +67,11 @@ public abstract class AbstractC3p0InstrumentationTest {
     // then
     Set<String> metricNames =
         new HashSet<>(
-            Arrays.asList("db.client.connections.usage", "db.client.connections.pending_requests"));
+            Arrays.asList(
+                emitStableDatabaseSemconv()
+                    ? "db.client.connection.count"
+                    : "db.client.connections.usage",
+                "db.client.connections.pending_requests"));
     assertThat(testing().metrics())
         .filteredOn(
             metricData ->

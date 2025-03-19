@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -17,10 +16,16 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -29,8 +34,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.EventDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.NetworkAttributes;
-import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
@@ -61,6 +64,7 @@ import server.FooModel;
 import server.SpringWebFluxTestApplication;
 import server.TestController;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -112,17 +116,15 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(UrlAttributes.URL_PATH, parameter.urlPath),
+                            equalTo(URL_PATH, parameter.urlPath),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(UrlAttributes.URL_SCHEME, "http"),
+                            equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, parameter.urlPathWithVariables)),
                 span -> {
@@ -139,7 +141,12 @@ public class SpringWebfluxTest {
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           satisfies(
-                              stringKey("spring-webflux.handler.type"),
+                              CODE_FUNCTION,
+                              parameter.annotatedMethod == null
+                                  ? val -> val.isEqualTo("handle")
+                                  : val -> val.isEqualTo(parameter.annotatedMethod)),
+                          satisfies(
+                              CODE_NAMESPACE,
                               parameter.annotatedMethod == null
                                   ? val -> val.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
                                   : val -> val.isEqualTo(TestController.class.getName())));
@@ -233,17 +240,15 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(UrlAttributes.URL_PATH, parameter.urlPath),
+                            equalTo(URL_PATH, parameter.urlPath),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(UrlAttributes.URL_SCHEME, "http"),
+                            equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, parameter.urlPathWithVariables)),
                 span -> {
@@ -260,7 +265,12 @@ public class SpringWebfluxTest {
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           satisfies(
-                              stringKey("spring-webflux.handler.type"),
+                              CODE_FUNCTION,
+                              parameter.annotatedMethod == null
+                                  ? val -> val.isEqualTo("handle")
+                                  : val -> val.isEqualTo(parameter.annotatedMethod)),
+                          satisfies(
+                              CODE_NAMESPACE,
                               parameter.annotatedMethod == null
                                   ? val -> val.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
                                   : val -> val.isEqualTo(TestController.class.getName())));
@@ -341,17 +351,15 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(UrlAttributes.URL_PATH, parameter.urlPath),
+                            equalTo(URL_PATH, parameter.urlPath),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(UrlAttributes.URL_SCHEME, "http"),
+                            equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, parameter.urlPathWithVariables)),
                 span -> {
@@ -368,7 +376,12 @@ public class SpringWebfluxTest {
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           satisfies(
-                              stringKey("spring-webflux.handler.type"),
+                              CODE_FUNCTION,
+                              parameter.annotatedMethod == null
+                                  ? val -> val.isEqualTo("handle")
+                                  : val -> val.isEqualTo(parameter.annotatedMethod)),
+                          satisfies(
+                              CODE_NAMESPACE,
                               parameter.annotatedMethod == null
                                   ? val -> val.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
                                   : val -> val.isEqualTo(TestController.class.getName())));
@@ -414,17 +427,15 @@ public class SpringWebfluxTest {
                         .hasStatus(StatusData.unset())
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(UrlAttributes.URL_PATH, "/notfoundgreet"),
+                            equalTo(URL_PATH, "/notfoundgreet"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 404),
-                            equalTo(UrlAttributes.URL_SCHEME, "http"),
+                            equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, "/**")),
                 span ->
@@ -434,8 +445,9 @@ public class SpringWebfluxTest {
                         .hasStatus(StatusData.error())
                         .hasEventsSatisfyingExactly(SpringWebfluxTest::resource404Exception)
                         .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION, "handle"),
                             equalTo(
-                                stringKey("spring-webflux.handler.type"),
+                                CODE_NAMESPACE,
                                 "org.springframework.web.reactive.resource.ResourceWebHandler"))));
   }
 
@@ -475,17 +487,15 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(UrlAttributes.URL_PATH, "/echo"),
+                            equalTo(URL_PATH, "/echo"),
                             equalTo(HTTP_REQUEST_METHOD, "POST"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 202),
-                            equalTo(UrlAttributes.URL_SCHEME, "http"),
+                            equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, "/echo")),
                 span ->
@@ -493,9 +503,8 @@ public class SpringWebfluxTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            satisfies(
-                                stringKey("spring-webflux.handler.type"),
-                                val -> val.contains(EchoHandlerFunction.class.getName()))),
+                            equalTo(CODE_FUNCTION, "handle"),
+                            equalTo(CODE_NAMESPACE, EchoHandlerFunction.class.getName())),
                 span ->
                     span.hasName("echo").hasParent(trace.getSpan(1)).hasTotalAttributeCount(0)));
   }
@@ -516,17 +525,15 @@ public class SpringWebfluxTest {
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(UrlAttributes.URL_PATH, parameter.urlPath),
+                            equalTo(URL_PATH, parameter.urlPath),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 500),
-                            equalTo(UrlAttributes.URL_SCHEME, "http"),
+                            equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, parameter.urlPathWithVariables),
                             equalTo(ERROR_TYPE, "500")),
@@ -555,7 +562,12 @@ public class SpringWebfluxTest {
                                           val -> val.isInstanceOf(String.class))))
                       .hasAttributesSatisfyingExactly(
                           satisfies(
-                              stringKey("spring-webflux.handler.type"),
+                              CODE_FUNCTION,
+                              parameter.annotatedMethod == null
+                                  ? val -> val.isEqualTo("handle")
+                                  : val -> val.isEqualTo(parameter.annotatedMethod)),
+                          satisfies(
+                              CODE_NAMESPACE,
                               parameter.annotatedMethod == null
                                   ? val -> val.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
                                   : val -> val.isEqualTo(TestController.class.getName())));
@@ -597,17 +609,15 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(UrlAttributes.URL_PATH, "/double-greet-redirect"),
+                            equalTo(URL_PATH, "/double-greet-redirect"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 307),
-                            equalTo(UrlAttributes.URL_SCHEME, "http"),
+                            equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, "/double-greet-redirect")),
                 span ->
@@ -615,8 +625,9 @@ public class SpringWebfluxTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION, "handle"),
                             satisfies(
-                                stringKey("spring-webflux.handler.type"),
+                                CODE_NAMESPACE,
                                 val -> val.startsWith("server.RedirectComponent$$Lambda")))),
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -626,17 +637,15 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(UrlAttributes.URL_PATH, "/double-greet"),
+                            equalTo(URL_PATH, "/double-greet"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(UrlAttributes.URL_SCHEME, "http"),
+                            equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, "/double-greet")),
                 span -> {
@@ -645,8 +654,9 @@ public class SpringWebfluxTest {
                   span.hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
+                          equalTo(CODE_FUNCTION, "handle"),
                           satisfies(
-                              stringKey("spring-webflux.handler.type"),
+                              CODE_NAMESPACE,
                               val -> val.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)));
                 }));
   }
@@ -678,17 +688,15 @@ public class SpringWebfluxTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(UrlAttributes.URL_PATH, parameter.urlPath),
+                            equalTo(URL_PATH, parameter.urlPath),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(UrlAttributes.URL_SCHEME, "http"),
+                            equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, parameter.urlPathWithVariables)),
                 span -> {
@@ -705,7 +713,12 @@ public class SpringWebfluxTest {
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           satisfies(
-                              stringKey("spring-webflux.handler.type"),
+                              CODE_FUNCTION,
+                              parameter.annotatedMethod == null
+                                  ? val -> val.isEqualTo("handle")
+                                  : val -> val.isEqualTo(parameter.annotatedMethod)),
+                          satisfies(
+                              CODE_NAMESPACE,
                               parameter.annotatedMethod == null
                                   ? val -> val.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
                                   : val -> val.isEqualTo(TestController.class.getName())));
@@ -760,16 +773,14 @@ public class SpringWebfluxTest {
                         .hasStatus(StatusData.unset())
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class)),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             satisfies(SERVER_PORT, val -> val.isInstanceOf(Long.class)),
                             equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(UrlAttributes.URL_PATH, "/slow"),
+                            equalTo(URL_PATH, "/slow"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(UrlAttributes.URL_SCHEME, "http"),
+                            equalTo(URL_SCHEME, "http"),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
                             equalTo(HTTP_ROUTE, "/slow"),
                             equalTo(ERROR_TYPE, "_OTHER")),
@@ -778,10 +789,11 @@ public class SpringWebfluxTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION, "handle"),
                             satisfies(
-                                stringKey("spring-webflux.handler.type"),
-                                value ->
-                                    value.startsWith(
+                                CODE_NAMESPACE,
+                                val ->
+                                    val.startsWith(
                                         "server.SpringWebFluxTestApplication$$Lambda")))));
 
     SpringWebFluxTestApplication.resumeSlowRequest();

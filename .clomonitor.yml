@@ -1,0 +1,6 @@
+# see https://github.com/cncf/clomonitor/blob/main/docs/checks.md#exemptions
+exemptions:
+  - check: artifacthub_badge
+    reason: "Artifact Hub doesn't support Java packages"
+  - check: openssf_badge
+    reason: "ETOOMANYBADGES, but the work has been done: https://www.bestpractices.dev/projects/9977"

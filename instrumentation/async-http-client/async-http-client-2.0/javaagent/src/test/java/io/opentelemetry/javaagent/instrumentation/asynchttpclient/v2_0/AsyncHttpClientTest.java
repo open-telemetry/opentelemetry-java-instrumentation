@@ -34,7 +34,7 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
   private static final int CONNECTION_TIMEOUT_MS = (int) CONNECTION_TIMEOUT.toMillis();
 
   // request timeout is needed in addition to connect timeout on async-http-client versions 2.1.0+
-  private static final AsyncHttpClient client = Dsl.asyncHttpClient(configureTimeout(Dsl.config()));
+  static final AsyncHttpClient client = Dsl.asyncHttpClient(configureTimeout(Dsl.config()));
 
   private static DefaultAsyncHttpClientConfig.Builder configureTimeout(
       DefaultAsyncHttpClientConfig.Builder builder) {

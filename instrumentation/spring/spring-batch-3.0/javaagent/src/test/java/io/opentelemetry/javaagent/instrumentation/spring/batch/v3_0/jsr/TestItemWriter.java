@@ -9,7 +9,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.batch.api.chunk.ItemWriter;
-import org.codehaus.groovy.runtime.DefaultGroovyMethods;
 
 class TestItemWriter implements ItemWriter {
   private final List<Integer> items = new ArrayList<>();
@@ -23,7 +22,7 @@ class TestItemWriter implements ItemWriter {
   @Override
   public void writeItems(List<Object> items) {
     for (Object item : items) {
-      this.items.add(DefaultGroovyMethods.asType(item, Integer.class));
+      this.items.add((Integer) item);
     }
   }
 

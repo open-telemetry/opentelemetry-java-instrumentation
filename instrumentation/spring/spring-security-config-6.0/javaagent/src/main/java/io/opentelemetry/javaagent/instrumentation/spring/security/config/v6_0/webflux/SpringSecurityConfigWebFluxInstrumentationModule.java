@@ -19,7 +19,11 @@ import java.util.List;
 public class SpringSecurityConfigWebFluxInstrumentationModule extends InstrumentationModule {
 
   public SpringSecurityConfigWebFluxInstrumentationModule() {
-    super("spring-security-config-webflux", "spring-security-config-webflux-6.0");
+    super(
+        "spring-security-config",
+        "spring-security-config-6.0",
+        "spring-security-config-webflux",
+        "spring-security-config-webflux-6.0");
   }
 
   @Override

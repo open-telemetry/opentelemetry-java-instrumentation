@@ -8,6 +8,9 @@ package io.opentelemetry.instrumentation.logback.appender.v1_0;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.core.ContextBase;
@@ -17,7 +20,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -90,6 +92,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasTotalAttributeCount(4));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void logWithExtras() {
     Instant start = Instant.now();
@@ -110,13 +113,10 @@ abstract class AbstractOpenTelemetryAppenderTest {
                   .hasSeverity(Severity.INFO)
                   .hasSeverityText("INFO")
                   .hasAttributesSatisfyingExactly(
-                      equalTo(
-                          ExceptionAttributes.EXCEPTION_TYPE,
-                          IllegalStateException.class.getName()),
-                      equalTo(ExceptionAttributes.EXCEPTION_MESSAGE, "Error!"),
+                      equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
+                      equalTo(EXCEPTION_MESSAGE, "Error!"),
                       satisfies(
-                          ExceptionAttributes.EXCEPTION_STACKTRACE,
-                          stackTrace -> stackTrace.contains("logWithExtras")),
+                          EXCEPTION_STACKTRACE, stackTrace -> stackTrace.contains("logWithExtras")),
                       equalTo(
                           CodeIncubatingAttributes.CODE_FILEPATH,
                           AbstractOpenTelemetryAppenderTest.class.getSimpleName() + ".java"),

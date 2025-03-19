@@ -7,21 +7,16 @@ package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpServerExperimentalMetrics;
+import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpServerMetrics;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,46 +53,37 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
       HttpServerAttributesGetter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
           httpAttributesGetter) {
 
-    ServletErrorCauseExtractor<REQUEST, RESPONSE> errorCauseExtractor =
-        new ServletErrorCauseExtractor<>(accessor);
-    AttributesExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
-        additionalAttributesExtractor = new ServletAdditionalAttributesExtractor<>(accessor);
+    DefaultHttpServerInstrumenterBuilder<
+            ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
+        serverBuilder =
+            DefaultHttpServerInstrumenterBuilder.create(
+                instrumentationName,
+                GlobalOpenTelemetry.get(),
+                httpAttributesGetter,
+                new ServletRequestGetter<>(accessor));
+    serverBuilder.setSpanNameExtractor(e -> spanNameExtractor);
 
-    InstrumenterBuilder<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> builder =
-        Instrumenter.<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>builder(
-                GlobalOpenTelemetry.get(), instrumentationName, spanNameExtractor)
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
-            .setErrorCauseExtractor(errorCauseExtractor)
-            .addAttributesExtractor(
-                HttpServerAttributesExtractor.builder(httpAttributesGetter)
-                    .setCapturedRequestHeaders(AgentCommonConfig.get().getServerRequestHeaders())
-                    .setCapturedResponseHeaders(AgentCommonConfig.get().getServerResponseHeaders())
-                    .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods())
-                    .build())
-            .addAttributesExtractor(additionalAttributesExtractor)
-            .addOperationMetrics(HttpServerMetrics.get())
-            .addContextCustomizer(
-                HttpServerRoute.builder(httpAttributesGetter)
-                    .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods())
-                    .build());
-    if (ServletRequestParametersExtractor.enabled()) {
-      AttributesExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
-          requestParametersExtractor = new ServletRequestParametersExtractor<>(accessor);
-      builder.addAttributesExtractor(requestParametersExtractor);
-    }
-    for (ContextCustomizer<? super ServletRequestContext<REQUEST>> contextCustomizer :
-        contextCustomizers) {
-      builder.addContextCustomizer(contextCustomizer);
-    }
-    if (AgentCommonConfig.get().shouldEmitExperimentalHttpServerTelemetry()) {
-      builder
-          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
-          .addOperationMetrics(HttpServerExperimentalMetrics.get());
-    }
-    if (propagateOperationListenersToOnEnd) {
-      InstrumenterUtil.propagateOperationListenersToOnEnd(builder);
-    }
-    return builder.buildServerInstrumenter(new ServletRequestGetter<>(accessor));
+    return JavaagentHttpServerInstrumenters.create(
+        serverBuilder,
+        builder -> {
+          if (ServletRequestParametersExtractor.enabled()) {
+            AttributesExtractor<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
+                requestParametersExtractor = new ServletRequestParametersExtractor<>(accessor);
+            builder.addAttributesExtractor(requestParametersExtractor);
+          }
+          for (ContextCustomizer<? super ServletRequestContext<REQUEST>> contextCustomizer :
+              contextCustomizers) {
+            builder.addContextCustomizer(contextCustomizer);
+          }
+
+          if (propagateOperationListenersToOnEnd) {
+            InstrumenterUtil.propagateOperationListenersToOnEnd(builder);
+          }
+
+          builder
+              .addAttributesExtractor(new ServletAdditionalAttributesExtractor<>(accessor))
+              .setErrorCauseExtractor(new ServletErrorCauseExtractor<>(accessor));
+        });
   }
 
   public Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> build(

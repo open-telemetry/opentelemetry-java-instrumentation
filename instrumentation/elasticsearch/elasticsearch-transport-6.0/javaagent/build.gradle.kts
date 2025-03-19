@@ -81,8 +81,8 @@ testing {
     val elasticsearch7Test by registering(JvmTestSuite::class) {
       dependencies {
         if (latestDepTest) {
-          implementation("org.elasticsearch.client:transport:+")
-          implementation("org.elasticsearch.plugin:transport-netty4-client:+")
+          implementation("org.elasticsearch.client:transport:latest.release")
+          implementation("org.elasticsearch.plugin:transport-netty4-client:latest.release")
         } else {
           implementation("org.elasticsearch.client:transport:7.0.0")
           implementation("org.elasticsearch.plugin:transport-netty4-client:7.0.0")
@@ -101,7 +101,12 @@ tasks {
     jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
   }
 
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
   check {
     dependsOn(testing.suites)
+    dependsOn(testStableSemconv)
   }
 }

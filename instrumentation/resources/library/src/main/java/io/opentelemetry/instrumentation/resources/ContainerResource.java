@@ -50,6 +50,12 @@ public final class ContainerResource {
 
   // Visible for testing
   Resource buildResource() {
+    // disable container id detection on z/os
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/12418
+    String osName = System.getProperty("os.name");
+    if (osName.equalsIgnoreCase("z/OS") || osName.equalsIgnoreCase("OS/390")) {
+      return Resource.empty();
+    }
     return getContainerId()
         .map(id -> Resource.create(Attributes.of(CONTAINER_ID, id)))
         .orElseGet(Resource::empty);

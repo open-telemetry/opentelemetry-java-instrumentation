@@ -58,6 +58,7 @@ instrumentation ->
             build.gradle.kts
         testing
             build.gradle.kts
+        metadata.yaml
 ```
 
 The top level `settings.gradle.kts` file would contain the following (please add in alphabetical order):
@@ -66,6 +67,56 @@ The top level `settings.gradle.kts` file would contain the following (please add
 include("instrumentation:yarpc-1.0:javaagent")
 include("instrumentation:yarpc-1.0:library")
 include("instrumentation:yarpc-1.0:testing")
+```
+
+### Instrumentation metadata.yaml (Experimental)
+
+Each module can contain a `metadata.yaml` file that describes the instrumentation. This information
+is then used when generating the [instrumentation-list.yaml](../instrumentation-list.yaml) file.
+The schema for `metadata.yaml` is still in development and may change in the future. See the
+[instrumentation-docs readme](../../instrumentation-docs/readme.md) for more information and the
+latest schema.
+
+
+### Instrumentation Submodules
+
+When writing instrumentation that requires submodules for different versions, the name of each
+submodule must be prefixed with the name of the parent directory (typically the library or
+framework name).
+
+As an example, if `yarpc` has instrumentation for two different versions, each version submodule
+must include the `yarpc` prefix before the version:
+
+```
+instrumentation ->
+    ...
+    yarpc ->
+      yarpc-1.0 ->
+        javaagent
+            build.gradle.kts
+        library
+            build.gradle.kts
+        testing
+            build.gradle.kts
+      yarpc-2.0 ->
+        javaagent
+            build.gradle.kts
+        library
+            build.gradle.kts
+        testing
+            build.gradle.kts
+```
+
+After creating the submodules, they must be registered in the settings.gradle.kts file. Include each
+submodule explicitly to ensure it is recognized and built as part of the project. For example:
+
+```kotlin
+include(":instrumentation:yarpc:yarpc-1.0:javaagent")
+include(":instrumentation:yarpc:yarpc-1.0:library")
+include(":instrumentation:yarpc:yarpc-1.0:testing")
+include(":instrumentation:yarpc:yarpc-2.0:javaagent")
+include(":instrumentation:yarpc:yarpc-2.0:library")
+include(":instrumentation:yarpc:yarpc-2.0:testing")
 ```
 
 ## Writing library instrumentation
@@ -174,10 +225,10 @@ library instrumentation test, there will be code calling into the instrumentatio
 javaagent instrumentation test it will generally use the underlying library API as is and just rely
 on the javaagent to apply all the necessary bytecode changes automatically.
 
-You can use either JUnit 5 (recommended) or Spock to test the instrumentation. Start by creating an
-abstract class with an abstract method, for example `configure()`, that returns the instrumented
-object, such as a client, server, or the main class of the instrumented library. Then, depending on
-the chosen test library, go to the [JUnit](#junit) or [Spock](#spock) section.
+You can use JUnit 5 to test the instrumentation. Start by creating an abstract class with an
+abstract method, for example `configure()`, that returns the instrumented object, such as a client,
+server, or the main class of the instrumented library. See the [JUnit](#junit) section for more
+information.
 
 After writing some tests, return to the `library` package and make sure it has
 a `testImplementation` dependency on the `testing` submodule. Then, create a test class that extends
@@ -240,37 +291,6 @@ You can use the `@RegisterExtension` annotation to make sure that the instrument
 picked up by JUnit. Then, return the same extension instance in the `testing()` method
 implementation so that it's used in all test scenarios implemented in the abstract class.
 
-### Spock
-
-The `testing-common` module contains some utilities that facilitate writing Spock instrumentation
-tests, such as the `InstrumentationSpecification` base class and the `LibraryTestTrait`
-and `AgentTestTrait` traits.
-
-Consider the following abstract test class extending `InstrumentationSpecification`:
-
-```groovy
-abstract class AbstractYarpcTest extends InstrumentationSpecification {
-
-  abstract Yarpc configure(Yarpc yarpc);
-
-  def "test something"() {
-    // ...
-  }
-}
-```
-
-The `InstrumentationSpecification` class contains abstract methods that are implemented by one of
-our test traits in the actual test class. For example:
-
-```groovy
-class LibraryYarpcTest extends AbstractYarpcTest implements LibraryTestTrait {
-
-  @Override
-  Yarpc configure(Yarpc yarpc) {
-    // register interceptor/listener etc
-  }
-}
-```
 
 ## Writing Java agent instrumentation
 
@@ -311,9 +331,8 @@ without the user knowing about the instrumentation.
 
 Create a test that extends the base class you wrote earlier but does nothing in the `configure()`
 method. Unlike the library instrumentation, the javaagent instrumentation is supposed to work
-without any explicit user code modification. Depending on the testing framework, either use
-the `AgentInstrumentationExtension` or implement the `AgentTestingTrait`, and try running tests in
-this class. All tests should pass.
+without any explicit user code modification. Add an `AgentInstrumentationExtension` and try running
+tests in this class. All tests should pass.
 
 Note that all the tests inside the `javaagent` module are run using the `agent-for-testing`
 javaagent, with the instrumentation being loaded as an extension. This is done to perform the same
@@ -382,6 +401,26 @@ compileOnly(project(":instrumentation:yarpc-1.0:bootstrap"))
 All classes from the newly added bootstrap module will be loaded by the bootstrap module and
 globally available within the JVM. **IMPORTANT: Note that you _cannot_ use any third-party libraries
 here, including the instrumented library - you can only use JDK and OpenTelemetry API classes.**
+
+### Common Modules
+
+When creating a common module shared among different instrumentations, the naming convention should
+include a version suffix that matches the major/minor version of the instrumented library specified
+in the common module's `build.gradle.kts`.
+
+For example, if the common module's Gradle file contains the following dependency:
+
+```kotlin
+dependencies {
+  compileOnly("org.yarpc.client:rest:5.0.0")
+}
+```
+
+Then the module should be named using the suffix `yarp-common-5.0`.
+
+If the common module does not have a direct dependency on the instrumented library, no version
+suffix is required. Examples of such cases include modules named `lettuce-common` and
+`netty-common`.
 
 ## Writing Java agent unit tests
 

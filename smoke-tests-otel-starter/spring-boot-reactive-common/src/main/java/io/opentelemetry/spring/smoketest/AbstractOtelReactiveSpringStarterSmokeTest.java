@@ -37,6 +37,7 @@ public class AbstractOtelReactiveSpringStarterSmokeTest extends AbstractSpringSt
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void webClientAndWebFluxAndR2dbc() {
     webClient
         .get()

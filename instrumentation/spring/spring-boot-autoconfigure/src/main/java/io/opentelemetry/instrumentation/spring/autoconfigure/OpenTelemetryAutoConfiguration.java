@@ -7,11 +7,11 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.TracerProvider;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.MapConverter;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelMapConverter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.PropagationProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.SpringConfigProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources.DistroVersionResourceProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources.SpringResourceProvider;
@@ -51,7 +51,7 @@ import org.springframework.core.env.Environment;
 @EnableConfigurationProperties({
   OtlpExporterProperties.class,
   OtelResourceProperties.class,
-  PropagationProperties.class
+  OtelSpringProperties.class
 })
 public class OpenTelemetryAutoConfiguration {
 
@@ -64,9 +64,9 @@ public class OpenTelemetryAutoConfiguration {
 
     @Bean
     @ConfigurationPropertiesBinding
-    public MapConverter mapConverter() {
+    public OtelMapConverter otelMapConverter() {
       // needed for otlp exporter headers and OtelResourceProperties
-      return new MapConverter();
+      return new OtelMapConverter();
     }
 
     @Bean
@@ -90,7 +90,7 @@ public class OpenTelemetryAutoConfiguration {
         Environment env,
         OtlpExporterProperties otlpExporterProperties,
         OtelResourceProperties resourceProperties,
-        PropagationProperties propagationProperties,
+        OtelSpringProperties otelSpringProperties,
         OpenTelemetrySdkComponentLoader componentLoader) {
 
       return AutoConfigureUtil.setComponentLoader(
@@ -101,7 +101,7 @@ public class OpenTelemetryAutoConfiguration {
                           env,
                           otlpExporterProperties,
                           resourceProperties,
-                          propagationProperties,
+                          otelSpringProperties,
                           c)),
               componentLoader)
           .build();
@@ -132,6 +132,17 @@ public class OpenTelemetryAutoConfiguration {
   @ConditionalOnMissingBean(OpenTelemetry.class)
   @ConditionalOnProperty(name = "otel.sdk.disabled", havingValue = "true")
   static class DisabledOpenTelemetrySdkConfig {
+
+    @Bean
+    @ConfigurationPropertiesBinding
+    // Duplicated in OpenTelemetrySdkConfig and DisabledOpenTelemetrySdkConfig to not expose the
+    // converter in the public API
+    public OtelMapConverter otelMapConverter() {
+      // needed for otlp exporter headers and OtelResourceProperties
+      // we need this converter, even if the SDK is disabled,
+      // because the properties are parsed before the SDK is disabled
+      return new OtelMapConverter();
+    }
 
     @Bean
     public OpenTelemetry openTelemetry() {

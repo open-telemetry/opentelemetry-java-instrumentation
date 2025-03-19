@@ -5,8 +5,13 @@
 
 package io.opentelemetry.instrumentation.couchbase;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 
 import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.cluster.BucketSettings;
@@ -114,21 +119,22 @@ public abstract class AbstractCouchbaseTest {
     return assertCouchbaseSpan(span, operation, operation, bucketName, null);
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected SpanDataAssert assertCouchbaseSpan(
       SpanDataAssert span, String spanName, String operation, String bucketName, String statement) {
     span.hasName(spanName).hasKind(SpanKind.CLIENT);
 
     List<AttributeAssertion> assertions = new ArrayList<>();
     assertions.add(
-        equalTo(DbIncubatingAttributes.DB_SYSTEM, DbIncubatingAttributes.DbSystemValues.COUCHBASE));
+        equalTo(maybeStable(DB_SYSTEM), DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE));
     if (operation != null) {
-      assertions.add(equalTo(DbIncubatingAttributes.DB_OPERATION, operation));
+      assertions.add(equalTo(maybeStable(DB_OPERATION), operation));
     }
     if (bucketName != null) {
-      assertions.add(equalTo(DbIncubatingAttributes.DB_NAME, bucketName));
+      assertions.add(equalTo(maybeStable(DB_NAME), bucketName));
     }
     if (statement != null) {
-      assertions.add(satisfies(DbIncubatingAttributes.DB_STATEMENT, s -> s.startsWith(statement)));
+      assertions.add(satisfies(maybeStable(DB_STATEMENT), s -> s.startsWith(statement)));
     }
     assertions.addAll(couchbaseAttributes());
 

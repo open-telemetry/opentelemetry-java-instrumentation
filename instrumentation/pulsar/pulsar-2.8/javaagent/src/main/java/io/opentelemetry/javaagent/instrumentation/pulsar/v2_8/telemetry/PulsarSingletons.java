@@ -210,6 +210,24 @@ public final class PulsarSingletons {
         timer.now());
   }
 
+  public static CompletableFuture<Void> wrap(CompletableFuture<Void> future) {
+    Context parent = Context.current();
+    CompletableFuture<Void> result = new CompletableFuture<>();
+    future.whenComplete(
+        (unused, t) ->
+            runWithContext(
+                parent,
+                () -> {
+                  if (t != null) {
+                    result.completeExceptionally(t);
+                  } else {
+                    result.complete(null);
+                  }
+                }));
+
+    return result;
+  }
+
   public static CompletableFuture<Message<?>> wrap(
       CompletableFuture<Message<?>> future, Timer timer, Consumer<?> consumer) {
     boolean listenerContextActive = MessageListenerContext.isProcessing();
@@ -245,6 +263,8 @@ public final class PulsarSingletons {
         (messages, throwable) -> {
           Context context =
               startAndEndConsumerReceive(parent, messages, timer, consumer, throwable);
+          // injected context is used in the spring-pulsar instrumentation
+          messages.forEach(message -> VirtualFieldStore.inject(message, context));
           runWithContext(
               context,
               () -> {

@@ -6,12 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.AbstractServlet3Test;
@@ -21,7 +22,6 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import java.io.File;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,10 +38,16 @@ import org.apache.catalina.startup.Tomcat;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> {
+
+  @RegisterExtension
+  protected static final InstrumentationExtension testing =
+      HttpServerInstrumentationExtension.forAgent();
 
   private static final ServerEndpoint ACCESS_LOG_SUCCESS =
       new ServerEndpoint(
@@ -59,10 +65,11 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
           false);
   private final TestAccessLogValve accessLogValue = new TestAccessLogValve();
 
+  @TempDir private static File tempDir;
+
   @Override
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
-    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setContextPath("/tomcat-context");
     options.setTestError(testError());
   }
@@ -91,18 +98,14 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
   protected Tomcat setupServer() throws Exception {
     Tomcat tomcatServer = new Tomcat();
 
-    File baseDir = Files.createTempDirectory("tomcat").toFile();
-    baseDir.deleteOnExit();
+    File baseDir = tempDir;
     tomcatServer.setBaseDir(baseDir.getAbsolutePath());
 
     tomcatServer.setPort(port);
     tomcatServer.getConnector().setEnableLookups(true); // get localhost instead of 127.0.0.1
 
     File applicationDir = new File(baseDir, "/webapps/ROOT");
-    if (!applicationDir.exists()) {
-      applicationDir.mkdirs();
-      applicationDir.deleteOnExit();
-    }
+    applicationDir.mkdirs();
 
     Context servletContext =
         tomcatServer.addWebapp(getContextPath(), applicationDir.getAbsolutePath());

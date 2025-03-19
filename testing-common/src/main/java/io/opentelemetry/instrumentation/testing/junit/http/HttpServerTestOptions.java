@@ -40,7 +40,7 @@ public final class HttpServerTestOptions {
   BiFunction<ServerEndpoint, String, String> expectedHttpRoute = (endpoint, method) -> null;
   Function<ServerEndpoint, String> sockPeerAddr = unused -> "127.0.0.1";
   String contextPath = "";
-  Throwable expectedException = new Exception(EXCEPTION.body);
+  Throwable expectedException = new IllegalStateException(EXCEPTION.body);
   // we're calling /success in the test, and most servers respond with 200 anyway
   int responseCodeOnNonStandardHttpMethod = ServerEndpoint.SUCCESS.status;
 

@@ -10,21 +10,20 @@ import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.Http.ServerBinding
 import org.apache.pekko.http.scaladsl.model.HttpMethods.GET
 import org.apache.pekko.http.scaladsl.model._
-import org.apache.pekko.stream.ActorMaterializer
 import io.opentelemetry.instrumentation.testing.junit.http.{
   AbstractHttpServerTest,
   ServerEndpoint
 }
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint._
+import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.AbstractHttpServerInstrumentationTest.TIMEOUT
 
 import java.util.function.Supplier
-import scala.concurrent.Await
+import scala.concurrent.{Await, ExecutionContext}
 
 object PekkoHttpTestSyncWebServer {
-  implicit val system = ActorSystem("my-system")
-  implicit val materializer = ActorMaterializer()
+  implicit val system: ActorSystem = ActorSystem("my-system")
   // needed for the future flatMap/onComplete in the end
-  implicit val executionContext = system.dispatcher
+  implicit val executionContext: ExecutionContext = system.dispatcher
   val syncHandler: HttpRequest => HttpResponse = {
     case HttpRequest(GET, uri: Uri, _, _, _) => {
       val endpoint = ServerEndpoint.forPath(uri.path.toString())
@@ -44,7 +43,8 @@ object PekkoHttpTestSyncWebServer {
             case REDIRECT =>
               resp.withHeaders(headers.Location(endpoint.getBody))
             case ERROR     => resp.withEntity(endpoint.getBody)
-            case EXCEPTION => throw new Exception(endpoint.getBody)
+            case TIMEOUT   => resp.withEntity(endpoint.getBody)
+            case EXCEPTION => throw new IllegalStateException(endpoint.getBody)
             case _ =>
               HttpResponse(status = NOT_FOUND.getStatus)
                 .withEntity(NOT_FOUND.getBody)

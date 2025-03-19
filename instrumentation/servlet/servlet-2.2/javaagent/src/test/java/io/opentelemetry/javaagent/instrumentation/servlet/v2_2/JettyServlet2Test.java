@@ -93,7 +93,6 @@ class JettyServlet2Test extends AbstractHttpServerTest<Server> {
     options.setTestCaptureHttpHeaders(false);
     options.setHasResponseSpan(e -> e.equals(REDIRECT) || e.equals(ERROR));
     options.setHasResponseCustomizer(e -> true);
-    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
   }
 
   @Override
@@ -112,6 +111,7 @@ class JettyServlet2Test extends AbstractHttpServerTest<Server> {
     }
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {

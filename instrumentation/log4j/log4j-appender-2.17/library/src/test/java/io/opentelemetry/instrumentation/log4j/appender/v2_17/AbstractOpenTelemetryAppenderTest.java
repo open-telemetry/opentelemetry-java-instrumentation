@@ -9,6 +9,15 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FILEPATH;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_LINENO;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.logs.Severity;
@@ -17,9 +26,11 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ExceptionAttributes;
-import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
@@ -29,6 +40,7 @@ import org.apache.logging.log4j.core.impl.Log4jLogEvent;
 import org.apache.logging.log4j.message.FormattedMessage;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
+import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AssertAccess;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -94,11 +106,10 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("log message 1")
                     .hasAttributesSatisfyingExactly(
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_NAME,
-                            Thread.currentThread().getName()),
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId())));
+                        addLocationAttributes(
+                            "logNoSpan",
+                            equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                            equalTo(THREAD_ID, Thread.currentThread().getId()))));
   }
 
   @Test
@@ -128,16 +139,13 @@ abstract class AbstractOpenTelemetryAppenderTest {
                   .hasSeverity(Severity.INFO)
                   .hasSeverityText("INFO")
                   .hasAttributesSatisfyingExactly(
-                      equalTo(
-                          ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                      equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
-                      equalTo(
-                          ExceptionAttributes.EXCEPTION_TYPE,
-                          IllegalStateException.class.getName()),
-                      equalTo(ExceptionAttributes.EXCEPTION_MESSAGE, "Error!"),
-                      satisfies(
-                          ExceptionAttributes.EXCEPTION_STACKTRACE,
-                          v -> v.contains("logWithExtras")));
+                      addLocationAttributes(
+                          "logWithExtras",
+                          equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                          equalTo(THREAD_ID, Thread.currentThread().getId()),
+                          equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
+                          equalTo(EXCEPTION_MESSAGE, "Error!"),
+                          satisfies(EXCEPTION_STACKTRACE, v -> v.contains("logWithExtras"))));
 
               LogRecordData logRecordData = AssertAccess.getActual(logRecord);
               assertThat(logRecordData.getTimestampEpochNanos())
@@ -166,13 +174,12 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("log message 1")
                     .hasAttributesSatisfyingExactly(
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_NAME,
-                            Thread.currentThread().getName()),
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
-                        equalTo(stringKey("key1"), "val1"),
-                        equalTo(stringKey("key2"), "val2")));
+                        addLocationAttributes(
+                            "logContextData",
+                            equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                            equalTo(THREAD_ID, Thread.currentThread().getId()),
+                            equalTo(stringKey("key1"), "val1"),
+                            equalTo(stringKey("key2"), "val2"))));
   }
 
   @Test
@@ -191,13 +198,12 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasResource(resource)
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasAttributesSatisfyingExactly(
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_NAME,
-                            Thread.currentThread().getName()),
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
-                        equalTo(stringKey("log4j.map_message.key1"), "val1"),
-                        equalTo(stringKey("log4j.map_message.key2"), "val2")));
+                        addLocationAttributes(
+                            "logStringMapMessage",
+                            equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                            equalTo(THREAD_ID, Thread.currentThread().getId()),
+                            equalTo(stringKey("log4j.map_message.key1"), "val1"),
+                            equalTo(stringKey("log4j.map_message.key2"), "val2"))));
   }
 
   @Test
@@ -217,12 +223,11 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("val2")
                     .hasAttributesSatisfyingExactly(
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_NAME,
-                            Thread.currentThread().getName()),
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
-                        equalTo(stringKey("log4j.map_message.key1"), "val1")));
+                        addLocationAttributes(
+                            "logStringMapMessageWithSpecialAttribute",
+                            equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                            equalTo(THREAD_ID, Thread.currentThread().getId()),
+                            equalTo(stringKey("log4j.map_message.key1"), "val1"))));
   }
 
   @Test
@@ -257,12 +262,36 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("a message")
                     .hasAttributesSatisfyingExactly(
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_NAME,
-                            Thread.currentThread().getName()),
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
-                        equalTo(stringKey("log4j.map_message.key1"), "val1"),
-                        equalTo(stringKey("log4j.map_message.key2"), "val2")));
+                        addLocationAttributes(
+                            "logStructuredDataMessage",
+                            equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                            equalTo(THREAD_ID, Thread.currentThread().getId()),
+                            equalTo(stringKey("log4j.map_message.key1"), "val1"),
+                            equalTo(stringKey("log4j.map_message.key2"), "val2"))));
+  }
+
+  private static List<AttributeAssertion> addLocationAttributes(
+      String methodName, AttributeAssertion... assertions) {
+    return addLocationAttributes(AbstractOpenTelemetryAppenderTest.class, methodName, assertions);
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  protected static List<AttributeAssertion> addLocationAttributes(
+      Class<?> testClass, String methodName, AttributeAssertion... assertions) {
+    String selector = System.getProperty("Log4j2.contextSelector");
+    boolean async = selector != null && selector.endsWith("AsyncLoggerContextSelector");
+    if (async && !Boolean.getBoolean("testLatestDeps")) {
+      // source info is not available by default when async logger is used in non latest dep tests
+      return Arrays.asList(assertions);
+    }
+
+    List<AttributeAssertion> result = new ArrayList<>(Arrays.asList(assertions));
+    result.addAll(
+        Arrays.asList(
+            equalTo(CODE_NAMESPACE, testClass.getName()),
+            equalTo(CODE_FUNCTION, methodName),
+            satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
+            equalTo(CODE_FILEPATH, testClass.getSimpleName() + ".java")));
+    return result;
   }
 }

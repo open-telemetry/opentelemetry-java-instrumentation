@@ -6,6 +6,9 @@ on:
     - cron: "46 * * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   check-versions:
     runs-on: ubuntu-latest
@@ -14,7 +17,7 @@ jobs:
       latest-version: ${{ steps.check-versions.outputs.latest-version }}
       already-opened: ${{ steps.check-versions.outputs.already-opened }}
     steps:
-      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - id: check-versions
         name: Check versions
@@ -30,7 +33,7 @@ jobs:
                              | sed 's/^v//')
 
           matches=$(gh pr list \
-                        --author opentelemetrybot \
+                        --author app/otelbot \
                         --state open \
                         --search "in:title \"Update the OpenTelemetry SDK version to $latest_version\"")
           if [ ! -z "$matches" ]
@@ -44,7 +47,7 @@ jobs:
 
   update-otel-sdk:
     permissions:
-      contents: write  # for Git to git push
+      contents: write  # for git push to PR branch
     runs-on: ubuntu-latest
     if: |
       needs.check-versions.outputs.current-version != needs.check-versions.outputs.latest-version &&
@@ -52,27 +55,24 @@ jobs:
     needs:
       - check-versions
     steps:
-      - uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Update version
         env:
           VERSION: ${{ needs.check-versions.outputs.latest-version }}
         run: ./.github/scripts/update-sdk-version.sh $VERSION
 
-      - name: Use CLA approved github bot
-        run: .github/scripts/use-cla-approved-github-bot.sh
-
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
-        uses: actions/setup-java@b36c23c0d998641eff861008f374ee103c25ac73 # v4.4.0
+        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
         with:
           distribution: temurin
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@d156388eb19639ec20ade50009f3d199ce1e2808 # v4.1.0
+        uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
 
       - name: Update license report
         run: ./gradlew generateLicenseReport
@@ -81,16 +81,25 @@ jobs:
         if: failure()
         run: git checkout -- licenses
 
+      - name: Use CLA approved bot
+        run: .github/scripts/use-cla-approved-bot.sh
+
+      - uses: actions/create-github-app-token@21cfef2b496dd8ef5b904c159339626a10ad380e # v1.11.6
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+
       - name: Create pull request against main
         if: success() || failure()
         env:
           VERSION: ${{ needs.check-versions.outputs.latest-version }}
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GH_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           message="Update the OpenTelemetry SDK version to $VERSION"
           body="Update the OpenTelemetry SDK version to \`$VERSION\`."
-          branch="opentelemetrybot/update-opentelemetry-sdk-to-${VERSION}"
+          branch="otelbot/update-opentelemetry-sdk-to-${VERSION}"
 
           git checkout -b $branch
           git add -u
