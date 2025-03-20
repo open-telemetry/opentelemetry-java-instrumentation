@@ -123,6 +123,9 @@ tasks {
 
         disable("NonFinalStaticField")
 
+        // We get this warning in modules that compile for old java versions
+        disable("StringConcatToTextBlock")
+
         if (name.contains("Jmh") || name.contains("Test")) {
           // Allow underscore in test-type method names
           disable("MemberName")
