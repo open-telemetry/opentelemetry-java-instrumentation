@@ -33,7 +33,7 @@ public class RouteWrapper implements Function1<RequestContext, Future<RouteResul
     this.serverEndpoint = serverEndpoint;
   }
 
-  public class Finalizer implements PartialFunction<Try<RouteResult>, Unit> {
+  class Finalizer implements PartialFunction<Try<RouteResult>, Unit> {
     private final Uri.Path beforeMatch;
 
     public Finalizer(Uri.Path beforeMatch) {
