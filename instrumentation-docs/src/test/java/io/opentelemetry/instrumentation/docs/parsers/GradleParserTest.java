@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.docs;
+package io.opentelemetry.instrumentation.docs.parsers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.Set;
+import io.opentelemetry.instrumentation.docs.internal.DependencyInfo;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import org.junit.jupiter.api.Test;
 
 class GradleParserTest {
@@ -22,10 +23,10 @@ class GradleParserTest {
             + "    versions.set(\"[5.0,6.4)\")\n"
             + "  }\n"
             + "}";
-    Set<String> versions =
+    DependencyInfo info =
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
-    assertThat(versions.size()).isEqualTo(1);
-    assertThat(versions.stream().findFirst().get())
+    assertThat(info.versions().size()).isEqualTo(1);
+    assertThat(info.versions().stream().findFirst().get())
         .isEqualTo("org.elasticsearch.client:rest:[5.0,6.4)");
   }
 
@@ -33,10 +34,10 @@ class GradleParserTest {
   void testExtractLibraryVersion() {
     String gradleBuildFileContent =
         "dependencies {\n" + "  library(\"org.apache.httpcomponents:httpclient:4.3\")\n" + "}";
-    Set<String> versions =
+    DependencyInfo info =
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.LIBRARY);
-    assertThat(versions.size()).isEqualTo(1);
-    assertThat(versions.stream().findFirst().get())
+    assertThat(info.versions().size()).isEqualTo(1);
+    assertThat(info.versions().stream().findFirst().get())
         .isEqualTo("org.apache.httpcomponents:httpclient:4.3");
   }
 
@@ -49,11 +50,73 @@ class GradleParserTest {
             + "  latestDepTestLibrary(\"org.apache.httpcomponents:httpclient:4.+\") // see apache-httpclient-5.0 module\n"
             + "}";
 
-    Set<String> versions =
+    DependencyInfo info =
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.LIBRARY);
-    assertThat(versions.size()).isEqualTo(1);
-    assertThat(versions.stream().findFirst().get())
+    assertThat(info.versions().size()).isEqualTo(1);
+    assertThat(info.versions().stream().findFirst().get())
         .isEqualTo("org.apache.httpcomponents:httpclient:[4.3,4.+)");
+  }
+
+  @Test
+  void testExtractCoreJdk() {
+    String gradleBuildFileContent =
+        """
+            muzzle {
+              pass {
+                coreJdk()
+              }
+            }
+            """;
+
+    DependencyInfo info =
+        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
+    assertThat(info.versions().size()).isEqualTo(1);
+    assertThat(info.versions().stream().findFirst().get()).isEqualTo("Java 8+");
+  }
+
+  @Test
+  void testExtractMinimumJavaVersion() {
+    String gradleBuildFileContent =
+        """
+          muzzle {
+            pass {
+              coreJdk()
+            }
+          }
+
+          otelJava {
+            minJavaVersionSupported.set(JavaVersion.VERSION_11)
+          }
+          """;
+
+    DependencyInfo info =
+        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
+    assertThat(info.versions().size()).isEqualTo(1);
+    assertThat(info.minJavaVersionSupported()).isEqualTo(11);
+    assertThat(info.versions().stream().findFirst().get()).isEqualTo("Java 11+");
+  }
+
+  @Test
+  void testExtractMinimumJavaVersionIgnoredWithinIfCondition() {
+    String gradleBuildFileContent =
+        """
+          muzzle {
+            pass {
+              coreJdk()
+            }
+          }
+
+          if (latestDepTest) {
+            otelJava {
+              minJavaVersionSupported.set(JavaVersion.VERSION_11)
+            }
+          }
+          """;
+
+    DependencyInfo info =
+        GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
+    assertThat(info.versions().size()).isEqualTo(1);
+    assertThat(info.versions().stream().findFirst().get()).isEqualTo("Java 8+");
   }
 
   @Test
@@ -89,9 +152,9 @@ class GradleParserTest {
             + "  }\n"
             + "}\n";
 
-    Set<String> versions =
+    DependencyInfo info =
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.JAVAAGENT);
-    assertThat(versions)
+    assertThat(info.versions())
         .containsExactlyInAnyOrder(
             "dev.zio:zio_2.12:[2.0.0,)", "dev.zio:zio_2.13:[2.0.0,)", "dev.zio:zio_3:[2.0.0,)");
   }
@@ -117,9 +180,9 @@ class GradleParserTest {
             + "  }\n"
             + "}\n";
 
-    Set<String> versions =
+    DependencyInfo info =
         GradleParser.parseGradleFile(gradleBuildFileContent, InstrumentationType.LIBRARY);
-    assertThat(versions)
+    assertThat(info.versions())
         .containsExactlyInAnyOrder(
             "ch.qos.logback:logback-classic:1.3.0",
             "org.slf4j:slf4j-api:2.0.0",
