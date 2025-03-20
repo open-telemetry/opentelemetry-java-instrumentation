@@ -221,7 +221,7 @@ public final class AgentInitializer {
       for (String option : agentArgs.split(";")) {
         int i = option.indexOf('=');
         if (i < 0) {
-          System.out.println("Malformed agent argument: " + option);
+          System.err.println("Malformed agent argument: " + option);
           continue;
         }
 
@@ -232,7 +232,7 @@ public final class AgentInitializer {
           debug = Boolean.parseBoolean(value);
         }
         if (debug) {
-          System.out.println("Setting property [" + key + "] = " + value);
+          System.err.println("Setting property [" + key + "] = " + value);
         }
       }
     }

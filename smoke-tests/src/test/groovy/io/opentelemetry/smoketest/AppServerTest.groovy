@@ -141,6 +141,9 @@ abstract class AppServerTest extends SmokeTest {
     and: "Number of spans tagged with expected OS type"
     traces.countFilteredResourceAttributes(OS_TYPE.key, isWindows ? WINDOWS : LINUX) == 3
 
+    and: "Number of spans tagged with attribute set via agentArgs"
+    traces.countFilteredResourceAttributes("http.request.header.x-test-request", "test") == 3
+
     where:
     [appServer, jdk, isWindows] << getTestParams()
   }
