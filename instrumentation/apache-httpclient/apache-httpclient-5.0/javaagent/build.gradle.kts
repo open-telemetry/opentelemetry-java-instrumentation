@@ -19,6 +19,5 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    systemProperty("otel.instrumentation.apache-httpclient-5.debug", "true")
   }
 }
