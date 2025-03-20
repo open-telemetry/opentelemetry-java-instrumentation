@@ -5,24 +5,24 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
+import io.opentelemetry.context.Context;
+
 public class AsyncRunnableWrapper<REQUEST> implements Runnable {
   private final ServletHelper<REQUEST, ?> helper;
-  private final REQUEST request;
   private final Runnable runnable;
+  private final Context context;
 
-  private AsyncRunnableWrapper(
-      ServletHelper<REQUEST, ?> helper, REQUEST request, Runnable runnable) {
+  private AsyncRunnableWrapper(ServletHelper<REQUEST, ?> helper, Runnable runnable) {
     this.helper = helper;
-    this.request = request;
     this.runnable = runnable;
+    this.context = Context.current();
   }
 
-  public static <REQUEST> Runnable wrap(
-      ServletHelper<REQUEST, ?> helper, REQUEST request, Runnable runnable) {
+  public static <REQUEST> Runnable wrap(ServletHelper<REQUEST, ?> helper, Runnable runnable) {
     if (runnable == null || runnable instanceof AsyncRunnableWrapper) {
       return runnable;
     }
-    return new AsyncRunnableWrapper<>(helper, request, runnable);
+    return new AsyncRunnableWrapper<>(helper, runnable);
   }
 
   @Override
@@ -30,7 +30,7 @@ public class AsyncRunnableWrapper<REQUEST> implements Runnable {
     try {
       runnable.run();
     } catch (Throwable throwable) {
-      helper.recordAsyncException(request, throwable);
+      helper.recordAsyncException(context, throwable);
       throw throwable;
     }
   }
