@@ -15,15 +15,15 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class ActivejHttpServerConnectionInstrumentationModule extends InstrumentationModule {
+public class ActivejHttpServerInstrumentationModule extends InstrumentationModule {
 
-  public ActivejHttpServerConnectionInstrumentationModule() {
+  public ActivejHttpServerInstrumentationModule() {
     super("activej-http", "activej-http-6.0");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new ActivejHttpServerConnectionInstrumentation());
+    return singletonList(new ActivejAsyncServletInstrumentation());
   }
 
   @Override

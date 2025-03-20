@@ -10,7 +10,7 @@ import io.activej.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 
-public final class ActivejHttpServerConnectionSingletons {
+public final class ActivejHttpServerSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.activej-http-6.0";
 
@@ -20,7 +20,7 @@ public final class ActivejHttpServerConnectionSingletons {
     INSTRUMENTER =
         JavaagentHttpServerInstrumenters.create(
             INSTRUMENTATION_NAME,
-            new ActivejHttpServerHttpAttributesGetter(),
+            new ActivejHttpServerAttributesGetter(),
             ActivejHttpServerRequestGetter.INSTANCE);
   }
 
@@ -28,5 +28,5 @@ public final class ActivejHttpServerConnectionSingletons {
     return INSTRUMENTER;
   }
 
-  private ActivejHttpServerConnectionSingletons() {}
+  private ActivejHttpServerSingletons() {}
 }
