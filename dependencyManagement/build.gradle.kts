@@ -6,7 +6,7 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.48.0"
-val otelContribVersion = "1.44.0-alpha"
+val otelContribVersion = "1.45.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -81,7 +81,7 @@ val CORE_DEPENDENCIES = listOf(
 // There are dependencies included here that appear to have no usages, but are maintained at
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
-  "org.junit.jupiter:junit-jupiter-api:5.12.0",
+  "org.junit.jupiter:junit-jupiter-api:5.12.1",
   "org.spockframework:spock-core:2.4-M5-groovy-4.0",
   "org.spockframework:spock-junit4:2.4-M5-groovy-4.0",
 

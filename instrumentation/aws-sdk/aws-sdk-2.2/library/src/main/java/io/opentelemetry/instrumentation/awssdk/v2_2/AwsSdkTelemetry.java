@@ -10,6 +10,7 @@ import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkInstrumenterFactory;
+import io.opentelemetry.instrumentation.awssdk.v2_2.internal.BedrockRuntimeImpl;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.Response;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsImpl;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsProcessRequest;
@@ -21,6 +22,7 @@ import javax.annotation.Nullable;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
+import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeAsyncClient;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.SqsClient;
 
@@ -28,6 +30,14 @@ import software.amazon.awssdk.services.sqs.SqsClient;
  * Entrypoint to OpenTelemetry instrumentation of the AWS SDK. Register the {@link
  * ExecutionInterceptor} returned by {@link #newExecutionInterceptor()} with an SDK client to have
  * all requests traced.
+ *
+ * <p>Certain services additionally require wrapping the SDK client itself:
+ *
+ * <ul>
+ *   <li>SQSClient - {@link #wrap(SqsClient)}
+ *   <li>SQSAsyncClient - {@link #wrap(SqsAsyncClient)}
+ *   <li>BedrockRuntimeAsyncClient - {@link #wrapBedrockRuntimeClient(BedrockRuntimeAsyncClient)}
+ * </ul>
  *
  * <pre>{@code
  * DynamoDbClient dynamoDb = DynamoDbClient.builder()
@@ -133,5 +143,15 @@ public class AwsSdkTelemetry {
   @NoMuzzle
   public SqsAsyncClient wrap(SqsAsyncClient sqsClient) {
     return SqsImpl.wrap(sqsClient);
+  }
+
+  /**
+   * Construct a new tracing-enabled {@link BedrockRuntimeAsyncClient} using the provided {@link
+   * BedrockRuntimeAsyncClient} instance.
+   */
+  @NoMuzzle
+  public BedrockRuntimeAsyncClient wrapBedrockRuntimeClient(
+      BedrockRuntimeAsyncClient bedrockClient) {
+    return BedrockRuntimeImpl.wrap(bedrockClient, eventLogger, genAiCaptureMessageContent);
   }
 }

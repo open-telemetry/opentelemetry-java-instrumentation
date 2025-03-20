@@ -74,7 +74,7 @@ abstract class AbstractServerTest extends AbstractHttpServerTest<ListeningServer
                   name ->
                       new QueryStringDecoder(uri)
                           .parameters().get(name).stream().findFirst().orElse(""));
-              response.content(Buf.Empty());
+              response.content(Buf.Utf8$.MODULE$.apply(endpoint.getBody()));
             } else if (QUERY_PARAM.equals(endpoint)) {
               response.content(Buf.Utf8$.MODULE$.apply(uri.getQuery()));
             } else if (REDIRECT.equals(endpoint)) {
