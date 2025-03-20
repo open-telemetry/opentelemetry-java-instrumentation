@@ -89,4 +89,90 @@ class YamlHelperTest {
 
     assertThat(expectedYaml).isEqualTo(stringWriter.toString());
   }
+
+  @Test
+  void testPrintInstrumentationListIgnoresNonLibraryInstrumentation() throws Exception {
+    List<InstrumentationEntity> entities = new ArrayList<>();
+    Map<InstrumentationType, Set<String>> targetVersions1 = new HashMap<>();
+    targetVersions1.put(
+        InstrumentationType.JAVAAGENT,
+        new HashSet<>(List.of("org.springframework:spring-web:[6.0.0,)")));
+
+    InstrumentationMetaData metadata1 =
+        new InstrumentationMetaData("Spring Web 6.0 instrumentation");
+
+    entities.add(
+        new InstrumentationEntity.Builder()
+            .srcPath("instrumentation/spring/spring-web/spring-web-6.0")
+            .instrumentationName("spring-web-6.0")
+            .namespace("spring")
+            .group("spring")
+            .targetVersions(targetVersions1)
+            .metadata(metadata1)
+            .minJavaVersion(11)
+            .build());
+
+    InstrumentationMetaData metadata2 = new InstrumentationMetaData(null, false);
+
+    entities.add(
+        new InstrumentationEntity.Builder()
+            .srcPath("instrumentation/internal/internal-application-logger")
+            .instrumentationName("internal-application-logger")
+            .namespace("internal")
+            .group("internal")
+            .metadata(metadata2)
+            .targetVersions(new HashMap<>())
+            .build());
+
+    StringWriter stringWriter = new StringWriter();
+    BufferedWriter writer = new BufferedWriter(stringWriter);
+
+    YamlHelper.printInstrumentationList(entities, writer);
+    writer.flush();
+
+    String expectedYaml =
+        """
+            spring:
+              instrumentations:
+              - name: spring-web-6.0
+                description: Spring Web 6.0 instrumentation
+                srcPath: instrumentation/spring/spring-web/spring-web-6.0
+                minimumJavaVersion: 11
+                scope:
+                  name: io.opentelemetry.spring-web-6.0
+                target_versions:
+                  javaagent:
+                  - org.springframework:spring-web:[6.0.0,)
+            """;
+
+    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+  }
+
+  @Test
+  void testMetadataParser() {
+    String input =
+        """
+        description: test description
+        isLibraryInstrumentation: false
+        """;
+
+    InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
+    assertThat(metadata.getIsLibraryInstrumentation()).isFalse();
+    assertThat(metadata.getDescription()).isEqualTo("test description");
+  }
+
+  @Test
+  void testMetadataParserWithOnlyLibraryEntry() {
+    String input = "isLibraryInstrumentation: false";
+    InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
+    assertThat(metadata.getIsLibraryInstrumentation()).isFalse();
+    assertThat(metadata.getDescription()).isNull();
+  }
+
+  @Test
+  void testMetadataParserWithOnlyDescription() {
+    String input = "description: false";
+    InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
+    assertThat(metadata.getIsLibraryInstrumentation()).isTrue();
+  }
 }

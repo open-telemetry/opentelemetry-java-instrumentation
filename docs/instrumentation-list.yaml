@@ -402,15 +402,6 @@ executors:
     target_versions:
       javaagent:
       - Java 8+
-external:
-  instrumentations:
-  - name: external-annotations
-    srcPath: instrumentation/external-annotations
-    scope:
-      name: io.opentelemetry.external-annotations
-    target_versions:
-      javaagent:
-      - Java 8+
 finagle:
   instrumentations:
   - name: finagle-http-23.11
@@ -596,59 +587,8 @@ influxdb:
     target_versions:
       javaagent:
       - org.influxdb:influxdb-java:[2.4,)
-internal:
-  instrumentations:
-  - name: internal-application-logger
-    srcPath: instrumentation/internal/internal-application-logger
-    scope:
-      name: io.opentelemetry.internal-application-logger
-    target_versions:
-      javaagent:
-      - org.springframework.boot:spring-boot:[1.2.0,)
-      - org.slf4j:slf4j-api:[1.4.0,)
-  - name: internal-class-loader
-    srcPath: instrumentation/internal/internal-class-loader
-    scope:
-      name: io.opentelemetry.internal-class-loader
-    target_versions:
-      javaagent: []
-  - name: internal-lambda-java9
-    srcPath: instrumentation/internal/internal-lambda-java9
-    scope:
-      name: io.opentelemetry.internal-lambda-java9
-    target_versions: {}
-  - name: internal-reflection
-    srcPath: instrumentation/internal/internal-reflection
-    scope:
-      name: io.opentelemetry.internal-reflection
-    target_versions:
-      javaagent: []
-  - name: internal-lambda
-    srcPath: instrumentation/internal/internal-lambda
-    scope:
-      name: io.opentelemetry.internal-lambda
-    target_versions:
-      javaagent: []
-  - name: internal-eclipse-osgi-3.6
-    srcPath: instrumentation/internal/internal-eclipse-osgi-3.6
-    scope:
-      name: io.opentelemetry.internal-eclipse-osgi-3.6
-    target_versions:
-      javaagent: []
-  - name: internal-url-class-loader
-    srcPath: instrumentation/internal/internal-url-class-loader
-    scope:
-      name: io.opentelemetry.internal-url-class-loader
-    target_versions:
-      javaagent: []
 java:
   instrumentations:
-  - name: java-util-logging
-    srcPath: instrumentation/java-util-logging
-    scope:
-      name: io.opentelemetry.java-util-logging
-    target_versions:
-      javaagent: []
   - name: java-http-server
     srcPath: instrumentation/java-http-server
     scope:
@@ -1165,15 +1105,6 @@ logback:
       - net.logstash.logback:logstash-logback-encoder:3.0
       - org.slf4j:slf4j-api:2.0.0
       - ch.qos.logback:logback-classic:1.3.0
-methods:
-  instrumentations:
-  - name: methods
-    srcPath: instrumentation/methods
-    scope:
-      name: io.opentelemetry.methods
-    target_versions:
-      javaagent:
-      - Java 8+
 micrometer:
   instrumentations:
   - name: micrometer-1.5

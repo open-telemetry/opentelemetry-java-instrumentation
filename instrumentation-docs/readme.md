@@ -73,6 +73,10 @@ As of now, the following fields are supported:
 
 ```yaml
 description: "Description of what the instrumentation does."
+
+# used to mark modules that do not instrument traditional libraries (e.g. methods, annotations)
+# defaults to true
+isLibraryInstrumentation: false
 ```
 
 ### Gradle File Derived Information

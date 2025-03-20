@@ -5,10 +5,13 @@
 
 package io.opentelemetry.instrumentation.docs.internal;
 
+import static java.util.Objects.requireNonNull;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -20,15 +23,23 @@ public class InstrumentationEntity {
   private final String namespace;
   private final String group;
   private final InstrumentationScopeInfo scopeInfo;
-  private Map<InstrumentationType, Set<String>> targetVersions;
-  private Integer minJavaVersion;
-  private InstrumentationMetaData metadata;
+
+  @Nullable private Map<InstrumentationType, Set<String>> targetVersions;
+
+  @Nullable private Integer minJavaVersion;
+
+  @Nullable private InstrumentationMetaData metadata;
 
   /**
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
    * any time.
    */
   public InstrumentationEntity(Builder builder) {
+    requireNonNull(builder.srcPath, "srcPath required");
+    requireNonNull(builder.instrumentationName, "instrumentationName required");
+    requireNonNull(builder.namespace, "namespace required");
+    requireNonNull(builder.group, "group required");
+
     this.srcPath = builder.srcPath;
     this.instrumentationName = builder.instrumentationName;
     this.namespace = builder.namespace;
@@ -55,16 +66,23 @@ public class InstrumentationEntity {
     return group;
   }
 
+  public InstrumentationScopeInfo getScopeInfo() {
+    return scopeInfo;
+  }
+
+  @Nullable
   public InstrumentationMetaData getMetadata() {
     return metadata;
   }
 
+  @Nullable
   public Map<InstrumentationType, Set<String>> getTargetVersions() {
     return targetVersions;
   }
 
-  public InstrumentationScopeInfo getScopeInfo() {
-    return scopeInfo;
+  @Nullable
+  public Integer getMinJavaVersion() {
+    return minJavaVersion;
   }
 
   public void setTargetVersions(Map<InstrumentationType, Set<String>> targetVersions) {
@@ -73,10 +91,6 @@ public class InstrumentationEntity {
 
   public void setMetadata(InstrumentationMetaData metadata) {
     this.metadata = metadata;
-  }
-
-  public Integer getMinJavaVersion() {
-    return minJavaVersion;
   }
 
   public void setMinJavaVersion(Integer minJavaVersion) {

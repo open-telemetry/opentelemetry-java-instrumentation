@@ -23,6 +23,7 @@ public class YamlHelper {
       List<InstrumentationEntity> list, BufferedWriter writer) {
     Map<String, List<InstrumentationEntity>> groupedByGroup =
         list.stream()
+            .filter(entity -> isLibraryInstrumentation(entity.getMetadata()))
             .collect(
                 Collectors.groupingBy(
                     InstrumentationEntity::getGroup, TreeMap::new, Collectors.toList()));
@@ -70,6 +71,14 @@ public class YamlHelper {
 
     Yaml yaml = new Yaml(options);
     yaml.dump(output, writer);
+  }
+
+  // We assume true unless explicitly overridden
+  private static Boolean isLibraryInstrumentation(InstrumentationMetaData metadata) {
+    if (metadata == null) {
+      return true;
+    }
+    return metadata.getIsLibraryInstrumentation();
   }
 
   private static Map<String, Object> getScopeMap(InstrumentationEntity entity) {
