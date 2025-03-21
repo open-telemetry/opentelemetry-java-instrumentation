@@ -7,10 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.clickhouse;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static java.util.Arrays.asList;
@@ -28,12 +30,14 @@ import com.clickhouse.data.ClickHouseFormat;
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.AfterAll;
@@ -196,6 +200,12 @@ class ClickHouseClientTest {
 
     assertThat(thrown).isInstanceOf(ClickHouseException.class);
 
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(attributeAssertions("select * from non_existent_table", "SELECT"));
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      assertions.add(equalTo(DB_RESPONSE_STATUS_CODE, "60"));
+      assertions.add(equalTo(ERROR_TYPE, "com.clickhouse.client.ClickHouseException"));
+    }
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -204,8 +214,7 @@ class ClickHouseClientTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasStatus(StatusData.error())
                         .hasException(thrown)
-                        .hasAttributesSatisfyingExactly(
-                            attributeAssertions("select * from non_existent_table", "SELECT"))));
+                        .hasAttributesSatisfyingExactly(assertions)));
   }
 
   @Test
