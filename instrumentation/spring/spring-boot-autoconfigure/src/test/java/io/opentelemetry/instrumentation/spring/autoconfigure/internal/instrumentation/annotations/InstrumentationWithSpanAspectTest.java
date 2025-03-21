@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
 import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
@@ -189,7 +190,8 @@ class InstrumentationWithSpanAspectTest {
     testing.runWithSpan("parent", withSpanTester::testWithoutParentSpan);
 
     // then
-    testing.waitAndAssertTraces(
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanName("parent", unproxiedTesterSimpleClassName + ".testWithoutParentSpan"),
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent").hasKind(INTERNAL)),
         trace ->
             trace.hasSpansSatisfyingExactly(
