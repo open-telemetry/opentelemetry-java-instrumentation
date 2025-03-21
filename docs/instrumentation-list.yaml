@@ -1205,13 +1205,6 @@ opensearch:
     target_versions:
       javaagent:
       - org.opensearch.client:opensearch-rest-client:[1.0,)
-opentelemetry:
-  instrumentations:
-  - name: opentelemetry
-    srcPath: instrumentation/tomcat/tomcat-jdbc/src/main/java/io/opentelemetry
-    scope:
-      name: io.opentelemetry.opentelemetry
-    target_versions: {}
 oracle:
   instrumentations:
   - name: oracle-ucp-11.2

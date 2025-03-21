@@ -56,9 +56,7 @@ public class FileManager {
     String name = parts[parts.length - 2];
     String namespace = name.contains("-") ? name.split("-")[0] : name;
 
-    String srcPath = filePath.substring(0, filePath.indexOf(parts[parts.length - 1]) - 1);
-
-    return new InstrumentationPath(name, srcPath, namespace, namespace, instrumentationType);
+    return new InstrumentationPath(name, filePath, namespace, namespace, instrumentationType);
   }
 
   public static boolean isValidInstrumentationPath(String filePath) {
