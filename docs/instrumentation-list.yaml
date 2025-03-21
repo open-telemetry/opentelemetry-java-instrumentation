@@ -1213,11 +1213,6 @@ opensearch:
     target_versions:
       javaagent:
       - org.opensearch.client:opensearch-rest-client:[1.0,)
-  - name: opensearch-java-2.0
-    srcPath: instrumentation/opensearch/opensearch-java-2.0
-    scope:
-      name: io.opentelemetry.opensearch-java-2.0
-    target_versions: {}
 opentelemetry:
   instrumentations:
   - name: opentelemetry-api-1.15
@@ -1959,6 +1954,13 @@ tomcat:
     target_versions:
       javaagent:
       - org.apache.tomcat.embed:tomcat-embed-core:[7.0.4, 10)
+  - name: tomcat-jdbc
+    srcPath: instrumentation/tomcat/tomcat-jdbc
+    scope:
+      name: io.opentelemetry.tomcat-jdbc
+    target_versions:
+      javaagent:
+      - org.apache.tomcat:tomcat-jdbc:[8.5.0,)
 twilio:
   instrumentations:
   - name: twilio-6.6
