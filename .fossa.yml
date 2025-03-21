@@ -273,7 +273,7 @@ targets:
       target: ':instrumentation:tapestry-5.4:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:tomcat:tomcat-jdbc'
+      target: ':instrumentation:tomcat:tomcat-jdbc:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:twilio-6.6:javaagent'
