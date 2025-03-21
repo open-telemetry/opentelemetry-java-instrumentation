@@ -70,10 +70,11 @@ public final class HttpSpanNameExtractor {
     @Override
     public String extract(REQUEST request) {
       String method = getter.getHttpRequestMethod(request);
+      String template = getter.getUrlTemplate(request);
       if (method == null || !knownMethods.contains(method)) {
         return "HTTP";
       }
-      return method;
+      return template == null ? method : method + " " + template;
     }
   }
 

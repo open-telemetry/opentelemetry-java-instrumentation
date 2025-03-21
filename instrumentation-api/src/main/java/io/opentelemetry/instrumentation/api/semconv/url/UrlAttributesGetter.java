@@ -50,4 +50,14 @@ public interface UrlAttributesGetter<REQUEST> {
   default String getUrlQuery(REQUEST request) {
     return null;
   }
+
+  /**
+   * Returns the template used to build the full URL (if available)
+   *
+   * <p>Examples: {@code /users/{id}}; {@code /users?q={query}}</p>
+   */
+  @Nullable
+  default String getUrlTemplate(REQUEST request) {
+    return null;
+  }
 }
