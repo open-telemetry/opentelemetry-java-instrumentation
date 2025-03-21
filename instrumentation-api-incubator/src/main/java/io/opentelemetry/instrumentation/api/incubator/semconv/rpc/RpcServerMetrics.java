@@ -40,7 +40,7 @@ public final class RpcServerMetrics implements OperationListener {
     DoubleHistogramBuilder durationBuilder =
         meter
             .histogramBuilder("rpc.server.duration")
-            .setDescription("The duration of an inbound RPC invocation")
+            .setDescription("The duration of an inbound RPC invocation.")
             .setUnit("ms");
     RpcMetricsAdvice.applyServerDurationAdvice(durationBuilder);
     serverDurationHistogram = durationBuilder.build();

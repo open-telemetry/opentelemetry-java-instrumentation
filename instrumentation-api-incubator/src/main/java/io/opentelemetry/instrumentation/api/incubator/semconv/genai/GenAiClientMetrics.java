@@ -64,7 +64,7 @@ public final class GenAiClientMetrics implements OperationListener {
             .histogramBuilder("gen_ai.client.token.usage")
             .ofLongs()
             .setUnit("{token}")
-            .setDescription("Measures number of input and output tokens used")
+            .setDescription("Measures number of input and output tokens used.")
             .setExplicitBucketBoundariesAdvice(GenAiMetricsAdvice.CLIENT_TOKEN_USAGE_BUCKETS);
     GenAiMetricsAdvice.applyClientTokenUsageAdvice(tokenUsageBuilder);
     this.tokenUsage = tokenUsageBuilder.build();
@@ -72,7 +72,7 @@ public final class GenAiClientMetrics implements OperationListener {
         meter
             .histogramBuilder("gen_ai.client.operation.duration")
             .setUnit("s")
-            .setDescription("GenAI operation duration")
+            .setDescription("GenAI operation duration.")
             .setExplicitBucketBoundariesAdvice(
                 GenAiMetricsAdvice.CLIENT_OPERATION_DURATION_BUCKETS);
     GenAiMetricsAdvice.applyClientOperationDurationAdvice(operationDurationBuilder);
