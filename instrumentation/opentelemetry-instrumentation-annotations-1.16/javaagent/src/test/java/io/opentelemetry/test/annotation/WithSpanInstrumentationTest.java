@@ -6,6 +6,7 @@
 package io.opentelemetry.test.annotation;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
@@ -112,7 +113,8 @@ class WithSpanInstrumentationTest {
   void multipleSpansWithoutParent() {
     new TracedWithSpan().consumer();
 
-    testing.waitAndAssertTraces(
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanName("TracedWithSpan.consumer", "TracedWithSpan.withoutParent"),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
