@@ -273,9 +273,6 @@ targets:
       target: ':instrumentation:tapestry-5.4:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:tomcat:tomcat-jdbc:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:twilio-6.6:javaagent'
     - type: gradle
       path: ./
@@ -940,6 +937,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:tomcat:tomcat-common:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:tomcat:tomcat-jdbc:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:vertx:vertx-kafka-client-3.6:javaagent'
