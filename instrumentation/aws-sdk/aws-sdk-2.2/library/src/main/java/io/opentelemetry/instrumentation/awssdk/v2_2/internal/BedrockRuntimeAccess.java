@@ -12,6 +12,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.SdkResponse;
+import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 
 final class BedrockRuntimeAccess {
   private BedrockRuntimeAccess() {}
@@ -44,60 +45,86 @@ final class BedrockRuntimeAccess {
     return enabled && BedrockRuntimeImpl.isBedrockRuntimeResponse(response);
   }
 
-  @Nullable
   @NoMuzzle
-  static String getModelId(SdkRequest request) {
-    return enabled ? BedrockRuntimeImpl.getModelId(request) : null;
+  static void maybeParseInvokeModelRequest(
+      ExecutionAttributes executionAttributes, SdkRequest request) {
+    if (enabled) {
+      BedrockRuntimeImpl.maybeParseInvokeModelRequest(executionAttributes, request);
+    }
+  }
+
+  @NoMuzzle
+  static void maybeParseInvokeModelResponse(
+      ExecutionAttributes executionAttributes, SdkResponse response) {
+    if (enabled) {
+      BedrockRuntimeImpl.maybeParseInvokeModelResponse(executionAttributes, response);
+    }
   }
 
   @Nullable
   @NoMuzzle
-  static Long getMaxTokens(SdkRequest request) {
-    return enabled ? BedrockRuntimeImpl.getMaxTokens(request) : null;
+  static String getModelId(ExecutionAttributes executionAttributes) {
+    return enabled ? BedrockRuntimeImpl.getModelId(executionAttributes) : null;
   }
 
   @Nullable
   @NoMuzzle
-  static Double getTemperature(SdkRequest request) {
-    return enabled ? BedrockRuntimeImpl.getTemperature(request) : null;
+  static String getOperationName(ExecutionAttributes executionAttributes) {
+    return enabled ? BedrockRuntimeImpl.getOperationName(executionAttributes) : null;
   }
 
   @Nullable
   @NoMuzzle
-  static Double getTopP(SdkRequest request) {
-    return enabled ? BedrockRuntimeImpl.getTopP(request) : null;
+  static Long getMaxTokens(ExecutionAttributes executionAttributes) {
+    return enabled ? BedrockRuntimeImpl.getMaxTokens(executionAttributes) : null;
   }
 
   @Nullable
   @NoMuzzle
-  static List<String> getStopSequences(SdkRequest request) {
-    return enabled ? BedrockRuntimeImpl.getStopSequences(request) : null;
+  static Double getTemperature(ExecutionAttributes executionAttributes) {
+    return enabled ? BedrockRuntimeImpl.getTemperature(executionAttributes) : null;
   }
 
   @Nullable
   @NoMuzzle
-  static List<String> getStopReasons(Response response) {
-    return enabled ? BedrockRuntimeImpl.getStopReasons(response) : null;
+  static Double getTopP(ExecutionAttributes executionAttributes) {
+    return enabled ? BedrockRuntimeImpl.getTopP(executionAttributes) : null;
   }
 
   @Nullable
   @NoMuzzle
-  static Long getUsageInputTokens(Response response) {
-    return enabled ? BedrockRuntimeImpl.getUsageInputTokens(response) : null;
+  static List<String> getStopSequences(ExecutionAttributes executionAttributes) {
+    return enabled ? BedrockRuntimeImpl.getStopSequences(executionAttributes) : null;
   }
 
   @Nullable
   @NoMuzzle
-  static Long getUsageOutputTokens(Response response) {
-    return enabled ? BedrockRuntimeImpl.getUsageOutputTokens(response) : null;
+  static List<String> getStopReasons(ExecutionAttributes executionAttributes, Response response) {
+    return enabled ? BedrockRuntimeImpl.getStopReasons(executionAttributes, response) : null;
+  }
+
+  @Nullable
+  @NoMuzzle
+  static Long getUsageInputTokens(ExecutionAttributes executionAttributes, Response response) {
+    return enabled ? BedrockRuntimeImpl.getUsageInputTokens(executionAttributes, response) : null;
+  }
+
+  @Nullable
+  @NoMuzzle
+  static Long getUsageOutputTokens(ExecutionAttributes executionAttributes, Response response) {
+    return enabled ? BedrockRuntimeImpl.getUsageOutputTokens(executionAttributes, response) : null;
   }
 
   @NoMuzzle
   static void recordRequestEvents(
-      Context otelContext, Logger eventLogger, SdkRequest request, boolean captureMessageContent) {
+      Context otelContext,
+      Logger eventLogger,
+      ExecutionAttributes executionAttributes,
+      SdkRequest request,
+      boolean captureMessageContent) {
     if (enabled) {
       BedrockRuntimeImpl.recordRequestEvents(
-          otelContext, eventLogger, request, captureMessageContent);
+          otelContext, eventLogger, executionAttributes, request, captureMessageContent);
     }
   }
 
@@ -105,11 +132,12 @@ final class BedrockRuntimeAccess {
   static void recordResponseEvents(
       Context otelContext,
       Logger eventLogger,
+      ExecutionAttributes executionAttributes,
       SdkResponse response,
       boolean captureMessageContent) {
     if (enabled) {
       BedrockRuntimeImpl.recordResponseEvents(
-          otelContext, eventLogger, response, captureMessageContent);
+          otelContext, eventLogger, executionAttributes, response, captureMessageContent);
     }
   }
 }

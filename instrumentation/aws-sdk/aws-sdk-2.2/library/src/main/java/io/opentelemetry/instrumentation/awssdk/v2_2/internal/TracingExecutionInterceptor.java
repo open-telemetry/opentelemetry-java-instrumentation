@@ -172,6 +172,8 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       return request;
     }
 
+    BedrockRuntimeAccess.maybeParseInvokeModelRequest(executionAttributes, request);
+
     RequestSpanFinisher requestFinisher;
     io.opentelemetry.context.Context otelContext;
     Instant requestStart = Instant.now();
@@ -237,7 +239,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
     if (BedrockRuntimeAccess.isBedrockRuntimeRequest(request)) {
       BedrockRuntimeAccess.recordRequestEvents(
-          otelContext, eventLogger, request, genAiCaptureMessageContent);
+          otelContext, eventLogger, executionAttributes, request, genAiCaptureMessageContent);
     }
 
     // Insert other special handling here, following the same pattern as SQS and SNS.
@@ -366,6 +368,8 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
 
     io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
     if (otelContext != null) {
+      BedrockRuntimeAccess.maybeParseInvokeModelResponse(executionAttributes, context.response());
+
       // http request has been changed
       executionAttributes.putAttribute(SDK_HTTP_REQUEST_ATTRIBUTE, context.httpRequest());
 
@@ -395,7 +399,7 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     }
     if (BedrockRuntimeAccess.isBedrockRuntimeResponse(response)) {
       BedrockRuntimeAccess.recordResponseEvents(
-          otelContext, eventLogger, response, genAiCaptureMessageContent);
+          otelContext, eventLogger, executionAttributes, response, genAiCaptureMessageContent);
     }
     if (captureExperimentalSpanAttributes) {
       AwsSdkRequest sdkRequest = executionAttributes.getAttribute(AWS_SDK_REQUEST_ATTRIBUTE);
