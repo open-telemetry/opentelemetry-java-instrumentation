@@ -46,4 +46,11 @@ class HttpSpanNameExtractorTest {
     assertThat(HttpSpanNameExtractor.create(clientGetter).extract(Collections.emptyMap()))
         .isEqualTo("HTTP");
   }
+
+  @Test
+  void templateAndMethod() {
+    when(clientGetter.getUrlTemplate(anyMap())).thenReturn("/cats/{id}");
+    when(clientGetter.getHttpRequestMethod(anyMap())).thenReturn("GET");
+    assertThat(HttpSpanNameExtractor.create(clientGetter).extract(Collections.emptyMap())).isEqualTo("GET /cats/{id}");
+  }
 }
