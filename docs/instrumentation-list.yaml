@@ -322,6 +322,7 @@ couchbase:
 dropwizard:
   instrumentations:
   - name: dropwizard-metrics-4.0
+    disabledByDefault: true
     srcPath: instrumentation/dropwizard/dropwizard-metrics-4.0
     scope:
       name: io.opentelemetry.dropwizard-metrics-4.0
@@ -596,7 +597,6 @@ java:
     target_versions:
       javaagent:
       - Java 8+
-      library: []
   - name: java-http-client
     srcPath: instrumentation/java-http-client
     minimumJavaVersion: 11
@@ -605,7 +605,6 @@ java:
     target_versions:
       javaagent:
       - Java 11+
-      library: []
 javalin:
   instrumentations:
   - name: javalin-5.0
@@ -686,6 +685,7 @@ jaxrs:
       javaagent:
       - org.jboss.resteasy:resteasy-core:[6.0.0.Final,)
   - name: jaxrs-1.0
+    disabledByDefault: true
     srcPath: instrumentation/jaxrs/jaxrs-1.0
     scope:
       name: io.opentelemetry.jaxrs-1.0
@@ -695,6 +695,7 @@ jaxrs:
 jaxws:
   instrumentations:
   - name: jaxws-jws-api-1.1
+    disabledByDefault: true
     srcPath: instrumentation/jaxws/jaxws-jws-api-1.1
     scope:
       name: io.opentelemetry.jaxws-jws-api-1.1
@@ -758,13 +759,13 @@ jboss:
 jdbc:
   instrumentations:
   - name: jdbc
+    disabledByDefault: true
     srcPath: instrumentation/jdbc
     scope:
       name: io.opentelemetry.jdbc
     target_versions:
       javaagent:
       - Java 8+
-      library: []
 jedis:
   instrumentations:
   - name: jedis-1.4
@@ -851,15 +852,6 @@ jms:
       - javax.jms:javax.jms-api:(,)
       - jakarta.jms:jakarta.jms-api:(,3)
       - javax.jms:jms-api:(,)
-jmx:
-  instrumentations:
-  - name: jmx-metrics
-    srcPath: instrumentation/jmx-metrics
-    scope:
-      name: io.opentelemetry.jmx-metrics
-    target_versions:
-      javaagent: []
-      library: []
 jodd:
   instrumentations:
   - name: jodd-http-4.2
@@ -1035,14 +1027,12 @@ liberty:
     srcPath: instrumentation/liberty/liberty-dispatcher-20.0
     scope:
       name: io.opentelemetry.liberty-dispatcher-20.0
-    target_versions:
-      javaagent: []
+    target_versions: {}
   - name: liberty-20.0
     srcPath: instrumentation/liberty/liberty-20.0
     scope:
       name: io.opentelemetry.liberty-20.0
-    target_versions:
-      javaagent: []
+    target_versions: {}
 log4j:
   instrumentations:
   - name: log4j-context-data-2.7
@@ -1108,6 +1098,7 @@ logback:
 micrometer:
   instrumentations:
   - name: micrometer-1.5
+    disabledByDefault: true
     srcPath: instrumentation/micrometer/micrometer-1.5
     scope:
       name: io.opentelemetry.micrometer-1.5
@@ -1152,6 +1143,7 @@ mongo:
 mybatis:
   instrumentations:
   - name: mybatis-3.2
+    disabledByDefault: true
     srcPath: instrumentation/mybatis-3.2
     scope:
       name: io.opentelemetry.mybatis-3.2
@@ -1213,114 +1205,6 @@ opensearch:
     target_versions:
       javaagent:
       - org.opensearch.client:opensearch-rest-client:[1.0,)
-opentelemetry:
-  instrumentations:
-  - name: opentelemetry-api-1.15
-    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.15
-    scope:
-      name: io.opentelemetry.opentelemetry-api-1.15
-    target_versions:
-      javaagent: []
-  - name: opentelemetry-api-1.10
-    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.10
-    scope:
-      name: io.opentelemetry.opentelemetry-api-1.10
-    target_versions:
-      javaagent: []
-  - name: opentelemetry-api-1.27
-    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.27
-    scope:
-      name: io.opentelemetry.opentelemetry-api-1.27
-    target_versions:
-      javaagent: []
-  - name: opentelemetry-extension-annotations-1.0
-    srcPath: instrumentation/opentelemetry-extension-annotations-1.0
-    scope:
-      name: io.opentelemetry.opentelemetry-extension-annotations-1.0
-    target_versions:
-      javaagent:
-      - io.opentelemetry:opentelemetry-extension-annotations:[0.16.0,)
-  - name: opentelemetry-instrumentation-annotations-1.16
-    srcPath: instrumentation/opentelemetry-instrumentation-annotations-1.16
-    scope:
-      name: io.opentelemetry.opentelemetry-instrumentation-annotations-1.16
-    target_versions:
-      javaagent:
-      - io.opentelemetry:opentelemetry-instrumentation-annotations:(,)
-  - name: opentelemetry-instrumentation-api
-    srcPath: instrumentation/opentelemetry-instrumentation-api
-    scope:
-      name: io.opentelemetry.opentelemetry-instrumentation-api
-    target_versions:
-      javaagent:
-      - io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:[1.14.0-alpha,)
-  - name: opentelemetry-api-1.37
-    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.37
-    scope:
-      name: io.opentelemetry.opentelemetry-api-1.37
-    target_versions:
-      javaagent: []
-  - name: opentelemetry-api-1.38
-    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.38
-    scope:
-      name: io.opentelemetry.opentelemetry-api-1.38
-    target_versions:
-      javaagent: []
-  - name: opentelemetry-api-1.31
-    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.31
-    scope:
-      name: io.opentelemetry.opentelemetry-api-1.31
-    target_versions:
-      javaagent: []
-  - name: opentelemetry-api-1.32
-    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.32
-    scope:
-      name: io.opentelemetry.opentelemetry-api-1.32
-    target_versions:
-      javaagent: []
-  - name: opentelemetry-api-1.42
-    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.42
-    scope:
-      name: io.opentelemetry.opentelemetry-api-1.42
-    target_versions:
-      javaagent: []
-  - name: opentelemetry-api-1.40
-    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.40
-    scope:
-      name: io.opentelemetry.opentelemetry-api-1.40
-    target_versions:
-      javaagent: []
-  - name: opentelemetry-api-1.47
-    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.47
-    scope:
-      name: io.opentelemetry.opentelemetry-api-1.47
-    target_versions:
-      javaagent: []
-  - name: opentelemetry
-    srcPath: instrumentation/wicket-8.0/common-testing/src/main/java/io/opentelemetry
-    scope:
-      name: io.opentelemetry.opentelemetry
-    target_versions: {}
-  - name: opentelemetry-extension-kotlin-1.0
-    srcPath: instrumentation/opentelemetry-extension-kotlin-1.0
-    scope:
-      name: io.opentelemetry.opentelemetry-extension-kotlin-1.0
-    target_versions:
-      javaagent:
-      - io.opentelemetry:opentelemetry-extension-kotlin:[0.17.0,)
-  - name: opentelemetry-api-1.4
-    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.4
-    scope:
-      name: io.opentelemetry.opentelemetry-api-1.4
-    target_versions:
-      javaagent: []
-  - name: opentelemetry-api-1.0
-    srcPath: instrumentation/opentelemetry-api/opentelemetry-api-1.0
-    scope:
-      name: io.opentelemetry.opentelemetry-api-1.0
-    target_versions:
-      javaagent:
-      - io.opentelemetry:opentelemetry-api:[0.17.0,)
 oracle:
   instrumentations:
   - name: oracle-ucp-11.2
@@ -1350,8 +1234,7 @@ payara:
     srcPath: instrumentation/payara
     scope:
       name: io.opentelemetry.payara
-    target_versions:
-      javaagent: []
+    target_versions: {}
 pekko:
   instrumentations:
   - name: pekko-actor-1.0
@@ -1510,7 +1393,6 @@ reactor:
     target_versions:
       javaagent:
       - io.projectreactor:reactor-core:[3.1.0.RELEASE,)
-      library: []
   - name: reactor-3.4
     srcPath: instrumentation/reactor/reactor-3.4
     scope:
@@ -1570,8 +1452,7 @@ resources:
     srcPath: instrumentation/resources
     scope:
       name: io.opentelemetry.resources
-    target_versions:
-      library: []
+    target_versions: {}
 restlet:
   instrumentations:
   - name: restlet-1.1
@@ -1627,16 +1508,12 @@ runtime:
     minimumJavaVersion: 17
     scope:
       name: io.opentelemetry.runtime-telemetry-java17
-    target_versions:
-      javaagent: []
-      library: []
+    target_versions: {}
   - name: runtime-telemetry-java8
     srcPath: instrumentation/runtime-telemetry/runtime-telemetry-java8
     scope:
       name: io.opentelemetry.runtime-telemetry-java8
-    target_versions:
-      javaagent: []
-      library: []
+    target_versions: {}
 rxjava:
   instrumentations:
   - name: rxjava-1.0
@@ -1734,9 +1611,9 @@ spring:
     srcPath: instrumentation/spring/spring-boot-resources
     scope:
       name: io.opentelemetry.spring-boot-resources
-    target_versions:
-      javaagent: []
+    target_versions: {}
   - name: spring-batch-3.0
+    disabledByDefault: true
     srcPath: instrumentation/spring/spring-batch-3.0
     scope:
       name: io.opentelemetry.spring-batch-3.0
@@ -1776,6 +1653,7 @@ spring:
       javaagent:
       - org.springframework:spring-jms:[6.0.0,)
   - name: spring-boot-actuator-autoconfigure-2.0
+    disabledByDefault: true
     srcPath: instrumentation/spring/spring-boot-actuator-autoconfigure-2.0
     scope:
       name: io.opentelemetry.spring-boot-actuator-autoconfigure-2.0
@@ -1804,7 +1682,6 @@ spring:
     target_versions:
       javaagent:
       - org.springframework:spring-webmvc:[6.0.0,)
-      library: []
   - name: spring-data-1.8
     srcPath: instrumentation/spring/spring-data/spring-data-1.8
     scope:
@@ -1828,7 +1705,6 @@ spring:
     target_versions:
       javaagent:
       - org.springframework:spring-web:[3.1.0.RELEASE,6)
-      library: []
   - name: spring-kafka-2.7
     srcPath: instrumentation/spring/spring-kafka-2.7
     scope:
@@ -1836,13 +1712,11 @@ spring:
     target_versions:
       javaagent:
       - org.springframework.kafka:spring-kafka:[2.7.0,)
-      library: []
   - name: spring-webmvc-5.3
     srcPath: instrumentation/spring/spring-webmvc/spring-webmvc-5.3
     scope:
       name: io.opentelemetry.spring-webmvc-5.3
-    target_versions:
-      library: []
+    target_versions: {}
   - name: spring-core-2.0
     srcPath: instrumentation/spring/spring-core-2.0
     minimumJavaVersion: 17
@@ -1889,6 +1763,7 @@ spring:
       javaagent:
       - org.springframework:spring-jms:[2.0,6)
   - name: spring-ws-2.0
+    disabledByDefault: true
     srcPath: instrumentation/spring/spring-ws-2.0
     scope:
       name: io.opentelemetry.spring-ws-2.0

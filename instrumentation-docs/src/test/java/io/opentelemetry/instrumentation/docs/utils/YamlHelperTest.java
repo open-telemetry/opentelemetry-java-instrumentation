@@ -30,7 +30,7 @@ class YamlHelperTest {
         new HashSet<>(List.of("org.springframework:spring-web:[6.0.0,)")));
 
     InstrumentationMetaData metadata1 =
-        new InstrumentationMetaData("Spring Web 6.0 instrumentation");
+        new InstrumentationMetaData("Spring Web 6.0 instrumentation", true, true);
 
     entities.add(
         new InstrumentationEntity.Builder()
@@ -69,6 +69,7 @@ class YamlHelperTest {
               instrumentations:
               - name: spring-web-6.0
                 description: Spring Web 6.0 instrumentation
+                disabledByDefault: true
                 srcPath: instrumentation/spring/spring-web/spring-web-6.0
                 minimumJavaVersion: 11
                 scope:
@@ -112,7 +113,7 @@ class YamlHelperTest {
             .minJavaVersion(11)
             .build());
 
-    InstrumentationMetaData metadata2 = new InstrumentationMetaData(null, false);
+    InstrumentationMetaData metadata2 = new InstrumentationMetaData(null, false, null);
 
     entities.add(
         new InstrumentationEntity.Builder()
@@ -154,11 +155,13 @@ class YamlHelperTest {
         """
         description: test description
         isLibraryInstrumentation: false
+        disabledByDefault: true
         """;
 
     InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
     assertThat(metadata.getIsLibraryInstrumentation()).isFalse();
     assertThat(metadata.getDescription()).isEqualTo("test description");
+    assertThat(metadata.getDisabledByDefault()).isEqualTo(true);
   }
 
   @Test
@@ -167,6 +170,7 @@ class YamlHelperTest {
     InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
     assertThat(metadata.getIsLibraryInstrumentation()).isFalse();
     assertThat(metadata.getDescription()).isNull();
+    assertThat(metadata.getDisabledByDefault()).isFalse();
   }
 
   @Test
@@ -174,5 +178,15 @@ class YamlHelperTest {
     String input = "description: false";
     InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
     assertThat(metadata.getIsLibraryInstrumentation()).isTrue();
+    assertThat(metadata.getDisabledByDefault()).isFalse();
+  }
+
+  @Test
+  void testMetadataParserWithOnlyDisabledByDefault() {
+    String input = "disabledByDefault: true";
+    InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
+    assertThat(metadata.getIsLibraryInstrumentation()).isTrue();
+    assertThat(metadata.getDescription()).isNull();
+    assertThat(metadata.getDisabledByDefault()).isTrue();
   }
 }

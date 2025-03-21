@@ -74,12 +74,7 @@ public class FileManager {
       return false;
     }
 
-    if (filePath.contains("/test/")
-        || filePath.contains("/testing")
-        || filePath.contains("/build/")
-        || filePath.contains("-common/")
-        || filePath.contains("-common-")
-        || filePath.contains("bootstrap/src")) {
+    if (filePath.matches(".*(/test/|/testing|/build/|-common/|-common-|common-|bootstrap/src).*")) {
       return false;
     }
 

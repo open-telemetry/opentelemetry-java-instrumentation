@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.docs.internal;
 
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
@@ -18,16 +19,19 @@ public class InstrumentationMetaData {
   public InstrumentationMetaData(String description) {
     this.description = description;
     this.isLibraryInstrumentation = true;
+    this.disabledByDefault = false;
   }
 
-  public InstrumentationMetaData(String description, Boolean isLibraryInstrumentation) {
+  public InstrumentationMetaData(
+      String description, Boolean isLibraryInstrumentation, Boolean disabledByDefault) {
     this.isLibraryInstrumentation = isLibraryInstrumentation;
+    this.disabledByDefault = disabledByDefault;
     this.description = description;
   }
 
   @Nullable private String description;
-
-  private Boolean isLibraryInstrumentation;
+  @Nullable private Boolean disabledByDefault;
+  @Nullable private Boolean isLibraryInstrumentation;
 
   @Nullable
   public String getDescription() {
@@ -35,17 +39,22 @@ public class InstrumentationMetaData {
   }
 
   public Boolean getIsLibraryInstrumentation() {
-    if (isLibraryInstrumentation == null) {
-      return true;
-    }
-    return isLibraryInstrumentation;
+    return Objects.requireNonNullElse(isLibraryInstrumentation, true);
   }
 
-  public void setDescription(String description) {
+  public Boolean getDisabledByDefault() {
+    return Objects.requireNonNullElse(disabledByDefault, false);
+  }
+
+  public void setDescription(@Nullable String description) {
     this.description = description;
   }
 
-  public void setIsLibraryInstrumentation(Boolean libraryInstrumentation) {
+  public void setIsLibraryInstrumentation(@Nullable Boolean libraryInstrumentation) {
     isLibraryInstrumentation = libraryInstrumentation;
+  }
+
+  public void setDisabledByDefault(@Nullable Boolean disabledByDefault) {
+    this.disabledByDefault = disabledByDefault;
   }
 }
