@@ -37,8 +37,14 @@ public class YamlHelper {
             Map<String, Object> entityMap = new LinkedHashMap<>();
             entityMap.put("name", entity.getInstrumentationName());
 
-            if (entity.getMetadata() != null && entity.getMetadata().getDescription() != null) {
-              entityMap.put("description", entity.getMetadata().getDescription());
+            if (entity.getMetadata() != null) {
+              if (entity.getMetadata().getDescription() != null) {
+                entityMap.put("description", entity.getMetadata().getDescription());
+              }
+
+              if (entity.getMetadata().getDisabledByDefault()) {
+                entityMap.put("disabledByDefault", entity.getMetadata().getDisabledByDefault());
+              }
             }
 
             entityMap.put("srcPath", entity.getSrcPath());
@@ -55,8 +61,11 @@ public class YamlHelper {
               entity
                   .getTargetVersions()
                   .forEach(
-                      (type, versions) ->
-                          targetVersions.put(type.toString(), new ArrayList<>(versions)));
+                      (type, versions) -> {
+                        if (!versions.isEmpty()) {
+                          targetVersions.put(type.toString(), new ArrayList<>(versions));
+                        }
+                      });
             }
             entityMap.put("target_versions", targetVersions);
 

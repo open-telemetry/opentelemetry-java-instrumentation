@@ -56,7 +56,9 @@ public class FileManager {
     String name = parts[parts.length - 2];
     String namespace = name.contains("-") ? name.split("-")[0] : name;
 
-    return new InstrumentationPath(name, filePath, namespace, namespace, instrumentationType);
+    String srcPath = filePath.substring(0, filePath.indexOf(parts[parts.length - 1]) - 1);
+
+    return new InstrumentationPath(name, srcPath, namespace, namespace, instrumentationType);
   }
 
   public static boolean isValidInstrumentationPath(String filePath) {
@@ -74,12 +76,7 @@ public class FileManager {
       return false;
     }
 
-    if (filePath.contains("/test/")
-        || filePath.contains("/testing")
-        || filePath.contains("/build/")
-        || filePath.contains("-common/")
-        || filePath.contains("-common-")
-        || filePath.contains("bootstrap/src")) {
+    if (filePath.matches(".*(/test/|/testing|/build/|-common/|-common-|common-|bootstrap/src).*")) {
       return false;
     }
 
