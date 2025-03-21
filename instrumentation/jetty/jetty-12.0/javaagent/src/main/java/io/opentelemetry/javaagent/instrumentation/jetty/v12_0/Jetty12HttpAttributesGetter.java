@@ -86,7 +86,7 @@ class Jetty12HttpAttributesGetter implements HttpServerAttributesGetter<Request,
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       Request request, @Nullable Response unused) {
     SocketAddress address = request.getConnectionMetaData().getRemoteSocketAddress();
-    return address instanceof InetSocketAddress ? (InetSocketAddress) address : null;
+    return address instanceof InetSocketAddress inetSocketAddress ? inetSocketAddress : null;
   }
 
   @Nullable
@@ -94,6 +94,6 @@ class Jetty12HttpAttributesGetter implements HttpServerAttributesGetter<Request,
   public InetSocketAddress getNetworkLocalInetSocketAddress(
       Request request, @Nullable Response unused) {
     SocketAddress address = request.getConnectionMetaData().getLocalSocketAddress();
-    return address instanceof InetSocketAddress ? (InetSocketAddress) address : null;
+    return address instanceof InetSocketAddress inetSocketAddress ? inetSocketAddress : null;
   }
 }

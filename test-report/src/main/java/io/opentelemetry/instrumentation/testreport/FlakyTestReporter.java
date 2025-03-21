@@ -100,10 +100,10 @@ public class FlakyTestReporter {
     Instant reportModified = Instant.ofEpochMilli(testReport.toFile().lastModified());
     reportModified = reportModified.minus(20, ChronoUnit.MINUTES);
     Instant testExecuted = null;
-    if (ta instanceof ZonedDateTime) {
-      testExecuted = ((ZonedDateTime) ta).toInstant();
-    } else if (ta instanceof LocalDateTime) {
-      testExecuted = ((LocalDateTime) ta).toInstant(OffsetDateTime.now().getOffset());
+    if (ta instanceof ZonedDateTime zonedDateTime) {
+      testExecuted = zonedDateTime.toInstant();
+    } else if (ta instanceof LocalDateTime localDateTime) {
+      testExecuted = localDateTime.toInstant(OffsetDateTime.now().getOffset());
     }
     if (testExecuted != null && reportModified.isAfter(testExecuted)) {
       System.err.println(

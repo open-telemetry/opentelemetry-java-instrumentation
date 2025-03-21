@@ -10,6 +10,7 @@ dependencies {
 }
 
 val disableErrorProne = properties["disableErrorProne"]?.toString()?.toBoolean() ?: false
+val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 
 tasks {
   withType<JavaCompile>().configureEach {
@@ -122,6 +123,16 @@ tasks {
         disable("YodaCondition")
 
         disable("NonFinalStaticField")
+
+        // We get this warning in modules that compile for old java versions
+        disable("StringConcatToTextBlock")
+
+        if (testLatestDeps) {
+          // Some latest dep tests are compiled for java 17 although the base version uses an older
+          // version. Disable rules that suggest using new language features.
+          disable("StatementSwitchToExpressionSwitch")
+          disable("PatternMatchingInstanceof")
+        }
 
         if (name.contains("Jmh") || name.contains("Test")) {
           // Allow underscore in test-type method names
