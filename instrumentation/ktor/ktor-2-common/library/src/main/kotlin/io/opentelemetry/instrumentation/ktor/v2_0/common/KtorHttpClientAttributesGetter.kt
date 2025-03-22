@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.ktor.v2_0.common
 
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
+import io.ktor.util.AttributeKey
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter
 
 internal object KtorHttpClientAttributesGetter : HttpClientAttributesGetter<HttpRequestData, HttpResponse> {
@@ -34,4 +35,7 @@ internal object KtorHttpClientAttributesGetter : HttpClientAttributesGetter<Http
   override fun getServerAddress(request: HttpRequestData) = request.url.host
 
   override fun getServerPort(request: HttpRequestData) = request.url.port
+
+  private val urlTemplateAttributeKey = AttributeKey<String>("URL_TEMPLATE")
+  override fun getUrlTemplate(request: HttpRequestData): String? = request.attributes.getOrNull(urlTemplateAttributeKey)
 }

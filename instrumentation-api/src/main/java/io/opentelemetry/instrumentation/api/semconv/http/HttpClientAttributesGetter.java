@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.semconv.http;
 
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.url.UrlAttributesGetter;
 import javax.annotation.Nullable;
 
 /**
@@ -21,7 +22,8 @@ import javax.annotation.Nullable;
 public interface HttpClientAttributesGetter<REQUEST, RESPONSE>
     extends HttpCommonAttributesGetter<REQUEST, RESPONSE>,
         NetworkAttributesGetter<REQUEST, RESPONSE>,
-        ServerAttributesGetter<REQUEST> {
+        ServerAttributesGetter<REQUEST>,
+        UrlAttributesGetter<REQUEST> {
 
   /**
    * Returns the absolute URL describing a network resource according to <a

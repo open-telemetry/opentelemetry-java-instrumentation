@@ -73,7 +73,8 @@ public final class HttpSpanNameExtractor {
       if (method == null || !knownMethods.contains(method)) {
         return "HTTP";
       }
-      return method;
+      String template = getter.getUrlTemplate(request);
+      return template == null ? method : method + " " + template;
     }
   }
 

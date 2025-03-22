@@ -1,2 +1,10 @@
 Comparing source compatibility of opentelemetry-instrumentation-api-2.15.0-SNAPSHOT.jar against opentelemetry-instrumentation-api-2.14.0.jar
-No changes.
+***  MODIFIED INTERFACE: PUBLIC ABSTRACT io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	GENERIC TEMPLATES: === REQUEST:java.lang.Object, === RESPONSE:java.lang.Object
+	+++  NEW INTERFACE: io.opentelemetry.instrumentation.api.semconv.url.UrlAttributesGetter
+***  MODIFIED INTERFACE: PUBLIC ABSTRACT io.opentelemetry.instrumentation.api.semconv.url.UrlAttributesGetter  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	GENERIC TEMPLATES: === REQUEST:java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getUrlTemplate(java.lang.Object)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
