@@ -27,7 +27,7 @@ public final class RatpackClientTelemetryBuilder {
 
   static {
     Experimental.internalSetEmitExperimentalClientTelemetry(
-        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientTelemetry(emit));
   }
 
   RatpackClientTelemetryBuilder(OpenTelemetry openTelemetry) {
