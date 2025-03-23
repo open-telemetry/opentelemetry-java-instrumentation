@@ -16,7 +16,7 @@ class Experimental private constructor() {
     }
 
     fun emitExperimentalTelemetry(builder: AbstractKtorServerTelemetryBuilder) {
-      builder.builder.setEmitExperimentalHttpServerMetrics(true)
+      builder.builder.setEmitExperimentalHttpServerTelemetry(true)
     }
   }
 }

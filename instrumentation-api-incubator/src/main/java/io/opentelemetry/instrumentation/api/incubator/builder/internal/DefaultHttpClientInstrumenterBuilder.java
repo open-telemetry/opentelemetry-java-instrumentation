@@ -165,7 +165,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
    * Configures the instrumentation to emit experimental HTTP client telemetry.
    *
    * @param emitExperimentalHttpClientTelemetry {@code true} if the experimental HTTP client
-   *     telemetry are to be emitted.
+   *     telemetry is to be emitted.
    */
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>

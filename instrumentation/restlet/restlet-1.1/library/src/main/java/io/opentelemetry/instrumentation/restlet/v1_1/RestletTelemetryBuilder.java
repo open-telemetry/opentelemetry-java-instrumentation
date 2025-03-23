@@ -25,7 +25,7 @@ public final class RestletTelemetryBuilder {
 
   static {
     Experimental.internalSetEmitExperimentalTelemetry(
-        (builder, emit) -> builder.builder.setEmitExperimentalHttpServerMetrics(emit));
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpServerTelemetry(emit));
   }
 
   RestletTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -96,7 +96,7 @@ public final class RestletTelemetryBuilder {
   @CanIgnoreReturnValue
   public RestletTelemetryBuilder setEmitExperimentalHttpServerMetrics(
       boolean emitExperimentalHttpServerMetrics) {
-    builder.setEmitExperimentalHttpServerMetrics(emitExperimentalHttpServerMetrics);
+    builder.setEmitExperimentalHttpServerTelemetry(emitExperimentalHttpServerMetrics);
     return this;
   }
 
