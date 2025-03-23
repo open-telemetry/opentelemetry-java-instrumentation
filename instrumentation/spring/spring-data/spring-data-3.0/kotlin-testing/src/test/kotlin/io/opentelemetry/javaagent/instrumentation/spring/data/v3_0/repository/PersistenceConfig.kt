@@ -23,19 +23,17 @@ import java.nio.charset.StandardCharsets
 class PersistenceConfig {
 
   @Bean
-  fun connectionFactory(): ConnectionFactory? {
-    return ConnectionFactories.find(
-      ConnectionFactoryOptions.builder()
-        .option(ConnectionFactoryOptions.DRIVER, "h2")
-        .option(ConnectionFactoryOptions.PROTOCOL, "mem")
-        .option(ConnectionFactoryOptions.HOST, "localhost")
-        .option(ConnectionFactoryOptions.USER, "sa")
-        .option(ConnectionFactoryOptions.PASSWORD, "")
-        .option(ConnectionFactoryOptions.DATABASE, "db")
-        .option(Option.valueOf("DB_CLOSE_DELAY"), "-1")
-        .build()
-    )
-  }
+  fun connectionFactory(): ConnectionFactory? = ConnectionFactories.find(
+    ConnectionFactoryOptions.builder()
+      .option(ConnectionFactoryOptions.DRIVER, "h2")
+      .option(ConnectionFactoryOptions.PROTOCOL, "mem")
+      .option(ConnectionFactoryOptions.HOST, "localhost")
+      .option(ConnectionFactoryOptions.USER, "sa")
+      .option(ConnectionFactoryOptions.PASSWORD, "")
+      .option(ConnectionFactoryOptions.DATABASE, "db")
+      .option(Option.valueOf("DB_CLOSE_DELAY"), "-1")
+      .build()
+  )
 
   @Bean
   fun initializer(connectionFactory: ConnectionFactory): ConnectionFactoryInitializer {

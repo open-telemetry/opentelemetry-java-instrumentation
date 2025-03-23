@@ -13,8 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.Experimental;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.SpringWebfluxBuilderUtil;
-import java.util.List;
-import java.util.Set;
+import java.util.Collection;
 import java.util.function.Function;
 import org.springframework.web.server.ServerWebExchange;
 
@@ -26,7 +25,7 @@ public final class SpringWebfluxServerTelemetryBuilder {
 
   static {
     SpringWebfluxBuilderUtil.setServerBuilderExtractor(builder -> builder.builder);
-    Experimental.setSetEmitExperimentalServerTelemetry(
+    Experimental.internalSetEmitExperimentalServerTelemetry(
         (builder, emit) -> builder.builder.setEmitExperimentalHttpServerMetrics(emit));
   }
 
@@ -58,7 +57,7 @@ public final class SpringWebfluxServerTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public SpringWebfluxServerTelemetryBuilder setCapturedRequestHeaders(
-      List<String> requestHeaders) {
+      Collection<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
@@ -71,7 +70,7 @@ public final class SpringWebfluxServerTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public SpringWebfluxServerTelemetryBuilder setCapturedResponseHeaders(
-      List<String> responseHeaders) {
+      Collection<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
@@ -87,10 +86,10 @@ public final class SpringWebfluxServerTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Set)
+   * @see HttpServerAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
-  public SpringWebfluxServerTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+  public SpringWebfluxServerTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
   }
@@ -98,16 +97,14 @@ public final class SpringWebfluxServerTelemetryBuilder {
   /** Sets custom server {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public SpringWebfluxServerTelemetryBuilder setSpanNameExtractor(
-      Function<
-              SpanNameExtractor<? super ServerWebExchange>,
-              ? extends SpanNameExtractor<? super ServerWebExchange>>
+      Function<SpanNameExtractor<ServerWebExchange>, SpanNameExtractor<ServerWebExchange>>
           serverSpanNameExtractor) {
     builder.setSpanNameExtractor(serverSpanNameExtractor);
     return this;
   }
 
   /**
-   * Returns a new {@link SpringWebfluxTelemetry} with the settings of this {@link
+   * Returns a new {@link SpringWebfluxServerTelemetry} with the settings of this {@link
    * SpringWebfluxServerTelemetryBuilder}.
    */
   public SpringWebfluxServerTelemetry build() {

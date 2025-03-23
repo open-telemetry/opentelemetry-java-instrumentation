@@ -45,13 +45,15 @@ class KtorServerTelemetry private constructor(
     }
 
     fun setStatusExtractor(
-      extractor: (SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>) -> SpanStatusExtractor<in ApplicationRequest, in ApplicationResponse>
+      extractor: (SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> SpanStatusExtractor<ApplicationRequest, ApplicationResponse>
     ) {
       builder.setStatusExtractor { prevExtractor ->
-        SpanStatusExtractor { spanStatusBuilder: SpanStatusBuilder,
-                              request: ApplicationRequest,
-                              response: ApplicationResponse?,
-                              throwable: Throwable? ->
+        SpanStatusExtractor {
+            spanStatusBuilder: SpanStatusBuilder,
+            request: ApplicationRequest,
+            response: ApplicationResponse?,
+            throwable: Throwable?
+          ->
           extractor(prevExtractor).extract(spanStatusBuilder, request, response, throwable)
         }
       }
@@ -61,7 +63,7 @@ class KtorServerTelemetry private constructor(
       this.spanKindExtractor = extractor
     }
 
-    fun addAttributesExtractor(extractor: AttributesExtractor<in ApplicationRequest, in ApplicationResponse>) {
+    fun addAttributesExtractor(extractor: AttributesExtractor<ApplicationRequest, ApplicationResponse>) {
       builder.addAttributesExtractor(extractor)
     }
 
@@ -73,7 +75,7 @@ class KtorServerTelemetry private constructor(
       builder.setCapturedResponseHeaders(responseHeaders)
     }
 
-    fun setKnownMethods(knownMethods: Set<String>) {
+    fun setKnownMethods(knownMethods: Collection<String>) {
       builder.setKnownMethods(knownMethods)
     }
 

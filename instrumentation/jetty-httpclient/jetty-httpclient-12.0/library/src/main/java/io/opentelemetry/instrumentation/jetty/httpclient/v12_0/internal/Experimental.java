@@ -27,7 +27,7 @@ public final class Experimental {
     }
   }
 
-  public static void setSetEmitExperimentalTelemetry(
+  public static void internalSetEmitExperimentalTelemetry(
       BiConsumer<JettyClientTelemetryBuilder, Boolean> setEmitExperimentalTelemetry) {
     Experimental.setEmitExperimentalTelemetry = setEmitExperimentalTelemetry;
   }

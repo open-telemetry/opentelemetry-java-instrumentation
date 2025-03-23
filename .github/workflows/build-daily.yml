@@ -6,21 +6,19 @@ on:
     - cron: "24 3 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   common:
     uses: ./.github/workflows/build-common.yml
-    with:
-      max-test-retries: 0
+    secrets:
+      FLAKY_TEST_REPORTER_ACCESS_KEY: ${{ secrets.FLAKY_TEST_REPORTER_ACCESS_KEY }}
 
   test-latest-deps:
     uses: ./.github/workflows/reusable-test-latest-deps.yml
-    with:
-      max-test-retries: 0
-
-  test-indy:
-    uses: ./.github/workflows/reusable-test-indy.yml
-    with:
-      max-test-retries: 0
+    secrets:
+      FLAKY_TEST_REPORTER_ACCESS_KEY: ${{ secrets.FLAKY_TEST_REPORTER_ACCESS_KEY }}
 
   muzzle:
     uses: ./.github/workflows/reusable-muzzle.yml
@@ -38,6 +36,9 @@ jobs:
     uses: ./.github/workflows/reusable-misspell-check.yml
 
   workflow-notification:
+    permissions:
+      contents: read
+      issues: write
     needs:
       - common
       - test-latest-deps

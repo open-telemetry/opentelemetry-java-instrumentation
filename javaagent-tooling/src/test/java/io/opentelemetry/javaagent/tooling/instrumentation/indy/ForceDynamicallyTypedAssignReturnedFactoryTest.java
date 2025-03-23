@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
@@ -40,9 +41,10 @@ public class ForceDynamicallyTypedAssignReturnedFactoryTest {
 
     ClassLoader cl = ForceDynamicallyTypedAssignReturnedFactoryTest.class.getClassLoader();
 
-    MethodDescription modified =
-        ForceDynamicallyTypedAssignReturnedFactory.forceDynamicTyping(original);
-    assertThat(modified.getDeclaredAnnotations())
+    List<? extends AnnotationDescription> modifiedAnnotations =
+        ForceDynamicallyTypedAssignReturnedFactory.forceDynamicTyping(
+            original.getDeclaredAnnotations());
+    assertThat(modifiedAnnotations)
         .hasSize(7)
         .anySatisfy(
             toFields -> {

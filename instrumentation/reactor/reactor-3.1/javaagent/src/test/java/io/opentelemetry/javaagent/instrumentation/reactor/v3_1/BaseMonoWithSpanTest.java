@@ -18,6 +18,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.UnicastProcessor;
 import reactor.test.StepVerifier;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 abstract class BaseMonoWithSpanTest extends AbstractWithSpanTest<Mono<String>, Mono<String>> {
 
   @Override

@@ -13,8 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.Experimental;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpClientInstrumenterBuilderFactory;
-import java.util.List;
-import java.util.Set;
+import java.util.Collection;
 import java.util.function.Function;
 import okhttp3.Interceptor;
 import okhttp3.Response;
@@ -26,7 +25,7 @@ public final class OkHttpTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
 
   static {
-    Experimental.setSetEmitExperimentalTelemetry(
+    Experimental.internalSetEmitExperimentalTelemetry(
         (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
   }
 
@@ -38,24 +37,10 @@ public final class OkHttpTelemetryBuilder {
   /**
    * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
    * items.
-   *
-   * @deprecated Use {@link #addAttributesExtractor(AttributesExtractor)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public OkHttpTelemetryBuilder addAttributeExtractor(
-      AttributesExtractor<? super Interceptor.Chain, ? super Response> attributesExtractor) {
-    builder.addAttributesExtractor(attributesExtractor);
-    return this;
-  }
-
-  /**
-   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
-   * items.
    */
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<? super Interceptor.Chain, ? super Response> attributesExtractor) {
+      AttributesExtractor<Interceptor.Chain, Response> attributesExtractor) {
     builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
@@ -66,7 +51,7 @@ public final class OkHttpTelemetryBuilder {
    * @param requestHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public OkHttpTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
+  public OkHttpTelemetryBuilder setCapturedRequestHeaders(Collection<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
@@ -77,7 +62,7 @@ public final class OkHttpTelemetryBuilder {
    * @param responseHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public OkHttpTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
+  public OkHttpTelemetryBuilder setCapturedResponseHeaders(Collection<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
@@ -93,36 +78,18 @@ public final class OkHttpTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
-  public OkHttpTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+  public OkHttpTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
-    return this;
-  }
-
-  /**
-   * Configures the instrumentation to emit experimental HTTP client metrics.
-   *
-   * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
-   *     are to be emitted.
-   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(OkHttpTelemetryBuilder,
-   *     boolean)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public OkHttpTelemetryBuilder setEmitExperimentalHttpClientMetrics(
-      boolean emitExperimentalHttpClientMetrics) {
-    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
     return this;
   }
 
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder setSpanNameExtractor(
-      Function<
-              SpanNameExtractor<? super Interceptor.Chain>,
-              ? extends SpanNameExtractor<? super Interceptor.Chain>>
+      Function<SpanNameExtractor<Interceptor.Chain>, SpanNameExtractor<Interceptor.Chain>>
           spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;

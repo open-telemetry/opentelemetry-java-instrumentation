@@ -33,23 +33,29 @@ object KtorServerTelemetryUtil {
     val tracer = KtorServerTracer(instrumenter)
     val startPhase = PipelinePhase("OpenTelemetry")
 
-    application.insertPhaseBefore(ApplicationCallPipeline.Monitoring, startPhase)
+    application.insertPhaseBefore(ApplicationCallPipeline.Setup, startPhase)
     application.intercept(startPhase) {
       val context = tracer.start(call)
 
       if (context != null) {
         call.attributes.put(contextKey, context)
         withContext(context.asContextElement()) {
-          try {
-            proceed()
-          } catch (err: Throwable) {
-            // Stash error for reporting later since need ktor to finish setting up the response
-            call.attributes.put(errorKey, err)
-            throw err
-          }
+          proceed()
         }
       } else {
         proceed()
+      }
+    }
+
+    val errorPhase = PipelinePhase("OpenTelemetryError")
+    application.insertPhaseBefore(ApplicationCallPipeline.Monitoring, errorPhase)
+    application.intercept(errorPhase) {
+      try {
+        proceed()
+      } catch (err: Throwable) {
+        // Stash error for reporting later since need ktor to finish setting up the response
+        call.attributes.put(errorKey, err)
+        throw err
       }
     }
 
@@ -73,11 +79,9 @@ object KtorServerTelemetryUtil {
     }
   }
 
-  private fun instrumenter(builder: AbstractKtorServerTelemetryBuilder): Instrumenter<ApplicationRequest, ApplicationResponse> {
-    return InstrumenterUtil.buildUpstreamInstrumenter(
-      builder.builder.instrumenterBuilder(),
-      ApplicationRequestGetter,
-      builder.spanKindExtractor(SpanKindExtractor.alwaysServer())
-    )
-  }
+  private fun instrumenter(builder: AbstractKtorServerTelemetryBuilder): Instrumenter<ApplicationRequest, ApplicationResponse> = InstrumenterUtil.buildUpstreamInstrumenter(
+    builder.builder.instrumenterBuilder(),
+    ApplicationRequestGetter,
+    builder.spanKindExtractor(SpanKindExtractor.alwaysServer())
+  )
 }

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
 import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
@@ -33,6 +34,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.aop.aspectj.annotation.AspectJProxyFactory;
 import org.springframework.core.ParameterNameDiscoverer;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class InstrumentationWithSpanAspectTest {
 
   @RegisterExtension
@@ -180,6 +182,28 @@ class InstrumentationWithSpanAspectTest {
                             equalTo(stringKey("explicitName"), "baz"))));
   }
 
+  @Test
+  @DisplayName(
+      "when method is annotated with @WithSpan(inheritContext=false) should build span without parent")
+  void withSpanWithoutParent() {
+    // when
+    testing.runWithSpan("parent", withSpanTester::testWithoutParentSpan);
+
+    // then
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanName("parent", unproxiedTesterSimpleClassName + ".testWithoutParentSpan"),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent").hasKind(INTERNAL)),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(unproxiedTesterSimpleClassName + ".testWithoutParentSpan")
+                        .hasKind(INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_NAMESPACE, unproxiedTesterClassName),
+                            equalTo(CODE_FUNCTION, "testWithoutParentSpan"))));
+  }
+
   static class InstrumentationWithSpanTester {
     @WithSpan
     public String testWithSpan() {
@@ -220,6 +244,11 @@ class InstrumentationWithSpanAspectTest {
         String notTraced) {
 
       return "hello!";
+    }
+
+    @WithSpan(inheritContext = false)
+    public String testWithoutParentSpan() {
+      return "Span without parent span was created";
     }
   }
 

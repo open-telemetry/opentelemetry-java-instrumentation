@@ -13,8 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.spring.web.v3_1.internal.Experimental;
 import io.opentelemetry.instrumentation.spring.web.v3_1.internal.WebTelemetryUtil;
-import java.util.List;
-import java.util.Set;
+import java.util.Collection;
 import java.util.function.Function;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpResponse;
@@ -26,7 +25,7 @@ public final class SpringWebTelemetryBuilder {
 
   static {
     WebTelemetryUtil.setBuilderExtractor(SpringWebTelemetryBuilder::getBuilder);
-    Experimental.setSetEmitExperimentalTelemetry(
+    Experimental.internalSetEmitExperimentalTelemetry(
         (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
   }
 
@@ -63,7 +62,7 @@ public final class SpringWebTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public SpringWebTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<? super HttpRequest, ? super ClientHttpResponse> attributesExtractor) {
+      AttributesExtractor<HttpRequest, ClientHttpResponse> attributesExtractor) {
     builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
@@ -74,7 +73,7 @@ public final class SpringWebTelemetryBuilder {
    * @param requestHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public SpringWebTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
+  public SpringWebTelemetryBuilder setCapturedRequestHeaders(Collection<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
@@ -85,7 +84,7 @@ public final class SpringWebTelemetryBuilder {
    * @param responseHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public SpringWebTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
+  public SpringWebTelemetryBuilder setCapturedResponseHeaders(Collection<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
@@ -93,9 +92,7 @@ public final class SpringWebTelemetryBuilder {
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public SpringWebTelemetryBuilder setSpanNameExtractor(
-      Function<
-              SpanNameExtractor<? super HttpRequest>,
-              ? extends SpanNameExtractor<? super HttpRequest>>
+      Function<SpanNameExtractor<HttpRequest>, SpanNameExtractor<HttpRequest>>
           spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
@@ -112,10 +109,10 @@ public final class SpringWebTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
-  public SpringWebTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+  public SpringWebTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
   }

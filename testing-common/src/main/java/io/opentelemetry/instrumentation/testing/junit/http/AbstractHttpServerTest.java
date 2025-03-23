@@ -403,6 +403,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     TextMapPropagator propagator = GlobalOpenTelemetry.getPropagators().getTextMapPropagator();
     TextMapSetter<HttpRequestBuilder> setter = HttpRequestBuilder::header;
 
+    List<String> responses = new ArrayList<>();
     for (int i = 0; i < count; i++) {
       int index = i;
       HttpRequestBuilder request =
@@ -419,10 +420,22 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             client
                 .execute(request.build())
                 .aggregate()
-                .whenComplete((result, throwable) -> latch.countDown());
+                .whenComplete(
+                    (result, throwable) -> {
+                      if (throwable != null) {
+                        responses.add(throwable.toString());
+                      } else {
+                        responses.add(result.status().code() + " " + result.contentUtf8());
+                      }
+                      latch.countDown();
+                    });
           });
     }
     latch.await();
+    assertThat(responses)
+        .allSatisfy(
+            response ->
+                assertThat(response).isEqualTo(endpoint.getStatus() + " " + endpoint.getBody()));
 
     assertHighConcurrency(count);
   }
@@ -541,6 +554,55 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     } finally {
       eventLoopGroup.shutdownGracefully().await(10, TimeUnit.SECONDS);
     }
+  }
+
+  @Test
+  void extractSingleBaggage() {
+    String method = "GET";
+    AggregatedHttpRequest request =
+        AggregatedHttpRequest.of(
+            request(SUCCESS, method).headers().toBuilder()
+                // adding baggage header in w3c baggage format
+                .set("baggage", "test-baggage-key-1=test-baggage-value-1")
+                .build());
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.anySatisfy(
+                span ->
+                    assertServerSpan(assertThat(span), method, SUCCESS, SUCCESS.status)
+                        .hasAttribute(
+                            AttributeKey.stringKey("test-baggage-key-1"), "test-baggage-value-1")));
+  }
+
+  @Test
+  void extractMultiBaggage() {
+    String method = "GET";
+    AggregatedHttpRequest request =
+        AggregatedHttpRequest.of(
+            request(SUCCESS, method).headers().toBuilder()
+                // adding baggage header in w3c baggage format
+                .add("baggage", "test-baggage-key-1=test-baggage-value-1")
+                .add("baggage", "test-baggage-key-2=test-baggage-value-2")
+                .build());
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.anySatisfy(
+                span ->
+                    assertServerSpan(assertThat(span), method, SUCCESS, SUCCESS.status)
+                        .hasAttribute(
+                            AttributeKey.stringKey("test-baggage-key-1"), "test-baggage-value-1")
+                        .hasAttribute(
+                            AttributeKey.stringKey("test-baggage-key-2"), "test-baggage-value-2")));
   }
 
   private static Bootstrap buildBootstrap(EventLoopGroup eventLoopGroup) {

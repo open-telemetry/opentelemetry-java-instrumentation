@@ -9,8 +9,8 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.or
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaClientBaseTest;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaClientPropagationBaseTest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientBaseTest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientPropagationBaseTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -65,8 +65,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
         });
 
     awaitUntilConsumerIsReady();
-    @SuppressWarnings("PreferJavaTimeOverload")
-    ConsumerRecords<?, ?> records = consumer.poll(Duration.ofSeconds(5).toMillis());
+    ConsumerRecords<?, ?> records = poll(Duration.ofSeconds(5));
     assertThat(records.count()).isEqualTo(1);
 
     // iterate over records to generate spans
@@ -108,7 +107,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            processAttributes("10", greeting, testHeaders)),
+                            processAttributes("10", greeting, testHeaders, false)),
                 span -> span.hasName("processing").hasParent(trace.getSpan(1))));
   }
 
@@ -118,8 +117,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
       throws ExecutionException, InterruptedException, TimeoutException {
     producer.send(new ProducerRecord<>(SHARED_TOPIC, null)).get(5, TimeUnit.SECONDS);
     awaitUntilConsumerIsReady();
-    @SuppressWarnings("PreferJavaTimeOverload")
-    ConsumerRecords<?, ?> records = consumer.poll(Duration.ofSeconds(5).toMillis());
+    ConsumerRecords<?, ?> records = poll(Duration.ofSeconds(5));
     assertThat(records.count()).isEqualTo(1);
 
     // iterate over records to generate spans
@@ -152,7 +150,8 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(processAttributes(null, null, false))));
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(null, null, false, false))));
   }
 
   @DisplayName("test records(TopicPartition) kafka consume")
@@ -167,8 +166,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     testing.waitForTraces(1);
 
     awaitUntilConsumerIsReady();
-    @SuppressWarnings("PreferJavaTimeOverload")
-    ConsumerRecords<?, ?> consumerRecords = consumer.poll(Duration.ofSeconds(5).toMillis());
+    ConsumerRecords<?, ?> consumerRecords = poll(Duration.ofSeconds(5));
     List<? extends ConsumerRecord<?, ?>> recordsInPartition =
         consumerRecords.records(KafkaClientBaseTest.topicPartition);
     assertThat(recordsInPartition.size()).isEqualTo(1);
@@ -203,6 +201,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(processAttributes(null, greeting, false))));
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes(null, greeting, false, false))));
   }
 }

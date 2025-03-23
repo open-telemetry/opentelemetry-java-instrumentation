@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_42.logs;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -52,6 +53,12 @@ class LoggerTest {
             .setInstrumentationVersion("1.2.3")
             .setSchemaUrl("http://schema.org")
             .build();
+  }
+
+  @Test
+  void incubatingApiNotAvailable() {
+    assertThatThrownBy(() -> Class.forName("io.opentelemetry.api.incubator.logs.ExtendedLogger"))
+        .isInstanceOf(ClassNotFoundException.class);
   }
 
   @Test

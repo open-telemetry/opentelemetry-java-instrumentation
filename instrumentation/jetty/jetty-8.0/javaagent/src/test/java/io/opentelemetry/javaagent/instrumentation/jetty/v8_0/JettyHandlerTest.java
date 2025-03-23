@@ -84,6 +84,7 @@ class JettyHandlerTest extends AbstractHttpServerTest<Server> {
     options.setHasResponseCustomizer(endpoint -> endpoint != EXCEPTION);
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {

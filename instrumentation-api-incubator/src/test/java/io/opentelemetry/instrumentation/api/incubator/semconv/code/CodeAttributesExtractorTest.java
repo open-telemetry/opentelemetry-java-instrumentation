@@ -37,6 +37,7 @@ class CodeAttributesExtractorTest {
     }
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void shouldExtractAllAttributes() {
     // given

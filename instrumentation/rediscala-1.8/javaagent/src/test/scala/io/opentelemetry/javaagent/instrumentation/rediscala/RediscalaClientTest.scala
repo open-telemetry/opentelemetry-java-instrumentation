@@ -120,7 +120,7 @@ class RediscalaClientTest {
                 .hasKind(CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
-                  equalTo(DB_SYSTEM, REDIS),
+                  equalTo(SemconvStabilityUtil.maybeStable(DB_SYSTEM), REDIS),
                   equalTo(SemconvStabilityUtil.maybeStable(DB_OPERATION), "SET")
                 )
             }
@@ -166,7 +166,7 @@ class RediscalaClientTest {
                 .hasKind(CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
-                  equalTo(DB_SYSTEM, REDIS),
+                  equalTo(SemconvStabilityUtil.maybeStable(DB_SYSTEM), REDIS),
                   equalTo(SemconvStabilityUtil.maybeStable(DB_OPERATION), "SET")
                 )
             }
@@ -178,7 +178,7 @@ class RediscalaClientTest {
                 .hasKind(CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
-                  equalTo(DB_SYSTEM, REDIS),
+                  equalTo(SemconvStabilityUtil.maybeStable(DB_SYSTEM), REDIS),
                   equalTo(SemconvStabilityUtil.maybeStable(DB_OPERATION), "GET")
                 )
             }

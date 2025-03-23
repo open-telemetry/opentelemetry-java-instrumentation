@@ -12,10 +12,8 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - uses: lycheeverse/lychee-action@v2
+      - uses: lycheeverse/lychee-action@f613c4a64e50d792e0b31ec34bbcbba12263c6a6 # v2.3.0
         with:
-          # remove version after next release of lychee-action
-          lycheeVersion: latest
           # excluding links to pull requests and issues is done for performance
           args: >
             --include-fragments

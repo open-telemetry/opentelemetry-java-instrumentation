@@ -312,6 +312,12 @@
       "defaultValue": false
     },
     {
+      "name": "otel.instrumentation.http.client.experimental.redact-query-parameters",
+      "type": "java.lang.Boolean",
+      "description": "Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.",
+      "defaultValue": true
+    },
+    {
       "name": "otel.instrumentation.http.known-methods",
       "type": "java.util.List<java.lang.String>",
       "description": "Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as <code>_OTHER</code>.",
@@ -475,6 +481,30 @@
       "type": "java.lang.Boolean",
       "description": "Enables the DB statement sanitization.",
       "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.runtime-telemetry.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable runtime telemetry metrics.",
+      "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.runtime-telemetry.emit-experimental-telemetry",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of experimental metrics.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.runtime-telemetry-java17.enable-all",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of all JFR based metrics.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.runtime-telemetry-java17.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of JFR based metrics.",
+      "defaultValue": false
     },
     {
       "name": "otel.instrumentation.spring-web.enabled",

@@ -42,6 +42,4 @@ private val ipv4 = Pattern.compile(
     "(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\$",
 )
 
-fun isIpAddress(address: String): Boolean {
-  return ipv4.matcher(address).matches() || ipv6.matcher(address).matches()
-}
+fun isIpAddress(address: String): Boolean = ipv4.matcher(address).matches() || ipv6.matcher(address).matches()

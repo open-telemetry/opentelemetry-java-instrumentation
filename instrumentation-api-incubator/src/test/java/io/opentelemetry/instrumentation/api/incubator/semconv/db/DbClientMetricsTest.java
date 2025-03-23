@@ -42,7 +42,7 @@ class DbClientMetricsTest {
 
     Attributes operationAttributes =
         Attributes.builder()
-            .put(DbClientCommonAttributesExtractor.DB_SYSTEM, "myDb")
+            .put(DbClientCommonAttributesExtractor.DB_SYSTEM_NAME, "myDb")
             .put(SqlClientAttributesExtractor.DB_COLLECTION_NAME, "table")
             .put(DbClientCommonAttributesExtractor.DB_NAMESPACE, "potatoes")
             .put(DbClientAttributesExtractor.DB_OPERATION_NAME, "SELECT")
@@ -89,7 +89,7 @@ class DbClientMetricsTest {
                                         .hasSum(0.15 /* seconds */)
                                         .hasAttributesSatisfying(
                                             equalTo(
-                                                DbClientCommonAttributesExtractor.DB_SYSTEM,
+                                                DbClientCommonAttributesExtractor.DB_SYSTEM_NAME,
                                                 "myDb"),
                                             equalTo(
                                                 DbClientCommonAttributesExtractor.DB_NAMESPACE,

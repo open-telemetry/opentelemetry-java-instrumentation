@@ -47,6 +47,7 @@ public class JmxRule extends MetricStructure {
   @Nullable private String prefix;
   private Map<String, Metric> mapping;
 
+  @Nullable
   public String getBean() {
     return bean;
   }
@@ -90,6 +91,7 @@ public class JmxRule extends MetricStructure {
     return prefix;
   }
 
+  @Nullable
   public String getPrefix() {
     return prefix;
   }
@@ -152,10 +154,13 @@ public class JmxRule extends MetricStructure {
             new MetricInfo(
                 prefix == null ? niceAttributeName : (prefix + niceAttributeName),
                 null,
+                getSourceUnit(),
                 getUnit(),
                 getMetricType());
       } else {
-        metricInfo = m.buildMetricInfo(prefix, niceAttributeName, getUnit(), getMetricType());
+        metricInfo =
+            m.buildMetricInfo(
+                prefix, niceAttributeName, getSourceUnit(), getUnit(), getMetricType());
       }
 
       List<MetricAttribute> ownAttributes = getAttributeList();
@@ -226,6 +231,7 @@ public class JmxRule extends MetricStructure {
           new MetricInfo(
               metricInfo.getMetricName(),
               metricInfo.getDescription(),
+              metricInfo.getSourceUnit(),
               metricInfo.getUnit(),
               MetricInfo.Type.UPDOWNCOUNTER);
 

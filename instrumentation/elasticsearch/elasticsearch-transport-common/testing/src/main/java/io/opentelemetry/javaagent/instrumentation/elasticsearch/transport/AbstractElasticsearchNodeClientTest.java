@@ -71,7 +71,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DB_SYSTEM,
+                                maybeStable(DB_SYSTEM),
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "ClusterHealthAction"),
                             equalTo(ELASTICSEARCH_ACTION, "ClusterHealthAction"),
@@ -120,7 +120,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasException(expectedException)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DB_SYSTEM,
+                                maybeStable(DB_SYSTEM),
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "GetAction"),
                             equalTo(ELASTICSEARCH_ACTION, "GetAction"),
@@ -182,7 +182,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DB_SYSTEM,
+                                maybeStable(DB_SYSTEM),
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "CreateIndexAction"),
                             equalTo(ELASTICSEARCH_ACTION, "CreateIndexAction"),
@@ -196,7 +196,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DB_SYSTEM,
+                                maybeStable(DB_SYSTEM),
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "ClusterHealthAction"),
                             equalTo(ELASTICSEARCH_ACTION, "ClusterHealthAction"),
@@ -209,7 +209,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DB_SYSTEM,
+                                maybeStable(DB_SYSTEM),
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "GetAction"),
                             equalTo(ELASTICSEARCH_ACTION, "GetAction"),
@@ -227,7 +227,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasAttributesSatisfyingExactly(
                             addIndexActionAttributes(
                                 equalTo(
-                                    DB_SYSTEM,
+                                    maybeStable(DB_SYSTEM),
                                     DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                                 equalTo(maybeStable(DB_OPERATION), "IndexAction"),
                                 equalTo(ELASTICSEARCH_ACTION, "IndexAction"),
@@ -246,7 +246,7 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                DB_SYSTEM,
+                                maybeStable(DB_SYSTEM),
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "GetAction"),
                             equalTo(ELASTICSEARCH_ACTION, "GetAction"),

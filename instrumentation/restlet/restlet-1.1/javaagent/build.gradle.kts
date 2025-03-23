@@ -8,6 +8,8 @@ muzzle {
     module.set("org.restlet")
     versions.set("[1.1.0, 1.2-M1)")
     extraDependency("com.noelios.restlet:com.noelios.restlet")
+    // missing dependencies
+    skip("2.5.0", "2.5.1")
     assertInverse.set(true)
   }
 }
@@ -30,6 +32,8 @@ dependencies {
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
+
+  latestDepTestLibrary("org.restlet:org.restlet:1.+") // see restlet-2.0 module
 }
 
 tasks.withType<Test>().configureEach {

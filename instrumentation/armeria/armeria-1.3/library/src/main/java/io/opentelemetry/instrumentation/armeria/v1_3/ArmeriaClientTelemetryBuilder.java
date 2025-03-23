@@ -17,8 +17,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExt
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaInstrumenterBuilderUtil;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.Experimental;
-import java.util.List;
-import java.util.Set;
+import java.util.Collection;
 import java.util.function.Function;
 
 public final class ArmeriaClientTelemetryBuilder {
@@ -27,9 +26,9 @@ public final class ArmeriaClientTelemetryBuilder {
 
   static {
     ArmeriaInstrumenterBuilderUtil.setClientBuilderExtractor(builder -> builder.builder);
-    Experimental.setSetEmitExperimentalClientTelemetry(
+    Experimental.internalSetEmitExperimentalClientTelemetry(
         (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
-    Experimental.setSetClientPeerService(
+    Experimental.internalSetClientPeerService(
         (builder, peerService) -> builder.builder.setPeerService(peerService));
   }
 
@@ -41,8 +40,8 @@ public final class ArmeriaClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public ArmeriaClientTelemetryBuilder setStatusExtractor(
       Function<
-              SpanStatusExtractor<? super ClientRequestContext, ? super RequestLog>,
-              ? extends SpanStatusExtractor<? super ClientRequestContext, ? super RequestLog>>
+              SpanStatusExtractor<ClientRequestContext, RequestLog>,
+              SpanStatusExtractor<ClientRequestContext, RequestLog>>
           statusExtractor) {
     builder.setStatusExtractor(statusExtractor);
     return this;
@@ -54,7 +53,7 @@ public final class ArmeriaClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public ArmeriaClientTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<? super ClientRequestContext, ? super RequestLog> attributesExtractor) {
+      AttributesExtractor<ClientRequestContext, RequestLog> attributesExtractor) {
     builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
@@ -65,7 +64,8 @@ public final class ArmeriaClientTelemetryBuilder {
    * @param requestHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public ArmeriaClientTelemetryBuilder setCapturedRequestHeaders(List<String> requestHeaders) {
+  public ArmeriaClientTelemetryBuilder setCapturedRequestHeaders(
+      Collection<String> requestHeaders) {
     builder.setCapturedRequestHeaders(requestHeaders);
     return this;
   }
@@ -76,7 +76,8 @@ public final class ArmeriaClientTelemetryBuilder {
    * @param responseHeaders A list of HTTP header names.
    */
   @CanIgnoreReturnValue
-  public ArmeriaClientTelemetryBuilder setCapturedResponseHeaders(List<String> responseHeaders) {
+  public ArmeriaClientTelemetryBuilder setCapturedResponseHeaders(
+      Collection<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
     return this;
   }
@@ -92,10 +93,10 @@ public final class ArmeriaClientTelemetryBuilder {
    * not supplement it.
    *
    * @param knownMethods A set of recognized HTTP request methods.
-   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Set)
+   * @see HttpClientAttributesExtractorBuilder#setKnownMethods(Collection)
    */
   @CanIgnoreReturnValue
-  public ArmeriaClientTelemetryBuilder setKnownMethods(Set<String> knownMethods) {
+  public ArmeriaClientTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
   }
@@ -103,9 +104,7 @@ public final class ArmeriaClientTelemetryBuilder {
   /** Sets custom client {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public ArmeriaClientTelemetryBuilder setSpanNameExtractor(
-      Function<
-              SpanNameExtractor<? super ClientRequestContext>,
-              ? extends SpanNameExtractor<? super ClientRequestContext>>
+      Function<SpanNameExtractor<ClientRequestContext>, SpanNameExtractor<ClientRequestContext>>
           clientSpanNameExtractor) {
     builder.setSpanNameExtractor(clientSpanNameExtractor);
     return this;

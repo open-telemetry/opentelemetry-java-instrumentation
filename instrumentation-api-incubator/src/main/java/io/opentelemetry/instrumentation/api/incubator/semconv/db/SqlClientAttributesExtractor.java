@@ -12,6 +12,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import java.util.Collection;
 
 /**
  * Extractor of <a
@@ -35,6 +36,8 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   private static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.query.text");
   static final AttributeKey<String> DB_COLLECTION_NAME =
       AttributeKey.stringKey("db.collection.name");
+  private static final AttributeKey<Long> DB_OPERATION_BATCH_SIZE =
+      AttributeKey.longKey("db.operation.batch.size");
 
   /** Creates the SQL client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
@@ -52,7 +55,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   private static final String SQL_CALL = "CALL";
-  // sanitizer is also used to extract operation and table name, so we have it always enable here
+  // sanitizer is also used to extract operation and table name, so we have it always enabled here
   private static final SqlStatementSanitizer sanitizer = SqlStatementSanitizer.create(true);
 
   private final AttributeKey<String> oldSemconvTableAttribute;
@@ -71,30 +74,72 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    String rawQueryText = getter.getRawQueryText(request);
-    SqlStatementInfo sanitizedStatement = sanitizer.sanitize(rawQueryText);
-    String operation = sanitizedStatement.getOperation();
-    if (SemconvStability.emitStableDatabaseSemconv()) {
-      internalSet(
-          attributes,
-          DB_QUERY_TEXT,
-          statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawQueryText);
-      internalSet(attributes, DB_OPERATION_NAME, operation);
+    Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
+
+    if (rawQueryTexts.isEmpty()) {
+      return;
     }
+
     if (SemconvStability.emitOldDatabaseSemconv()) {
-      internalSet(
-          attributes,
-          DB_STATEMENT,
-          statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawQueryText);
-      internalSet(attributes, DB_OPERATION, operation);
-    }
-    if (!SQL_CALL.equals(operation)) {
-      if (SemconvStability.emitStableDatabaseSemconv()) {
-        internalSet(attributes, DB_COLLECTION_NAME, sanitizedStatement.getMainIdentifier());
+      if (rawQueryTexts.size() == 1) { // for backcompat(?)
+        String rawQueryText = rawQueryTexts.iterator().next();
+        SqlStatementInfo sanitizedStatement = sanitizer.sanitize(rawQueryText);
+        String operation = sanitizedStatement.getOperation();
+        internalSet(
+            attributes,
+            DB_STATEMENT,
+            statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawQueryText);
+        internalSet(attributes, DB_OPERATION, operation);
+        if (!SQL_CALL.equals(operation)) {
+          internalSet(attributes, oldSemconvTableAttribute, sanitizedStatement.getMainIdentifier());
+        }
       }
-      if (SemconvStability.emitOldDatabaseSemconv()) {
-        internalSet(attributes, oldSemconvTableAttribute, sanitizedStatement.getMainIdentifier());
+    }
+
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      Long batchSize = getter.getBatchSize(request);
+      boolean isBatch = batchSize != null && batchSize > 1;
+      if (isBatch) {
+        internalSet(attributes, DB_OPERATION_BATCH_SIZE, batchSize);
+      }
+      if (rawQueryTexts.size() == 1) {
+        String rawQueryText = rawQueryTexts.iterator().next();
+        SqlStatementInfo sanitizedStatement = sanitizer.sanitize(rawQueryText);
+        String operation = sanitizedStatement.getOperation();
+        internalSet(
+            attributes,
+            DB_QUERY_TEXT,
+            statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawQueryText);
+        internalSet(attributes, DB_OPERATION_NAME, isBatch ? "BATCH " + operation : operation);
+        if (!SQL_CALL.equals(operation)) {
+          internalSet(attributes, DB_COLLECTION_NAME, sanitizedStatement.getMainIdentifier());
+        }
+      } else {
+        MultiQuery multiQuery =
+            MultiQuery.analyze(getter.getRawQueryTexts(request), statementSanitizationEnabled);
+        internalSet(attributes, DB_QUERY_TEXT, join("; ", multiQuery.getStatements()));
+
+        String operation =
+            multiQuery.getOperation() != null ? "BATCH " + multiQuery.getOperation() : "BATCH";
+        internalSet(attributes, DB_OPERATION_NAME, operation);
+
+        if (multiQuery.getMainIdentifier() != null
+            && (multiQuery.getOperation() == null || !SQL_CALL.equals(multiQuery.getOperation()))) {
+          internalSet(attributes, DB_COLLECTION_NAME, multiQuery.getMainIdentifier());
+        }
       }
     }
+  }
+
+  // String.join is not available on android
+  private static String join(String delimiter, Collection<String> collection) {
+    StringBuilder builder = new StringBuilder();
+    for (String string : collection) {
+      if (builder.length() != 0) {
+        builder.append(delimiter);
+      }
+      builder.append(string);
+    }
+    return builder.toString();
   }
 }

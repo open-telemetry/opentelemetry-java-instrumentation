@@ -47,7 +47,7 @@ public class ServerEndpoint {
   public static final ServerEndpoint AUTH_ERROR =
       new ServerEndpoint("AUTH_ERROR", "basicsecured/endpoint", 401, null);
   public static final ServerEndpoint INDEXED_CHILD =
-      new ServerEndpoint("INDEXED_CHILD", "child", 200, "");
+      new ServerEndpoint("INDEXED_CHILD", "child", 200, "success");
 
   public static final String ID_ATTRIBUTE_NAME = "test.request.id";
   public static final String ID_PARAMETER_NAME = "id";
@@ -121,8 +121,9 @@ public class ServerEndpoint {
 
   /**
    * Populates custom test attributes for the {@link
-   * io.opentelemetry.instrumentation.test.base.HttpServerTest#controller} span (which must be the
-   * current span when this is called) based on URL parameters. Required for {@link #INDEXED_CHILD}.
+   * io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest#controller} span
+   * (which must be the current span when this is called) based on URL parameters. Required for
+   * {@link #INDEXED_CHILD}.
    */
   public void collectSpanAttributes(ServerEndpoint.UrlParameterProvider parameterProvider) {
     if (this == INDEXED_CHILD) {

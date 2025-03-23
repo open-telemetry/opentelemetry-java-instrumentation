@@ -35,11 +35,11 @@ public class SpringSchedulingRunnableWrapper implements Runnable {
     TaskContextHolder.set(context);
     try (Scope ignored = context.makeCurrent()) {
       runnable.run();
-      instrumenter().end(context, runnable, null, null);
-    } catch (Throwable throwable) {
-      instrumenter().end(context, runnable, null, throwable);
-      throw throwable;
+    } catch (Throwable t) {
+      instrumenter().end(context, runnable, null, t);
+      throw t;
     }
+    instrumenter().end(context, runnable, null, null);
   }
 
   public static Runnable wrapIfNeeded(Runnable task) {

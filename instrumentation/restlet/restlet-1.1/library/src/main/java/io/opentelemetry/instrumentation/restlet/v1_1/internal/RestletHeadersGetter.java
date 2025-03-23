@@ -5,13 +5,14 @@
 
 package io.opentelemetry.instrumentation.restlet.v1_1.internal;
 
-import io.opentelemetry.context.propagation.TextMapGetter;
-import java.util.Locale;
+import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
+import java.util.Iterator;
 import org.restlet.data.Form;
 import org.restlet.data.Message;
+import org.restlet.data.Parameter;
 import org.restlet.data.Request;
 
-enum RestletHeadersGetter implements TextMapGetter<Request> {
+enum RestletHeadersGetter implements ExtendedTextMapGetter<Request> {
   INSTANCE;
 
   @Override
@@ -21,14 +22,14 @@ enum RestletHeadersGetter implements TextMapGetter<Request> {
 
   @Override
   public String get(Request carrier, String key) {
-
     Form headers = getHeaders(carrier);
+    return headers.getFirstValue(key, true);
+  }
 
-    String value = headers.getFirstValue(key);
-    if (value != null) {
-      return value;
-    }
-    return headers.getFirstValue(key.toLowerCase(Locale.ROOT));
+  @Override
+  public Iterator<String> getAll(Request carrier, String key) {
+    Form headers = getHeaders(carrier);
+    return headers.subList(key, true).stream().map(Parameter::getValue).iterator();
   }
 
   static Form getHeaders(Message carrier) {

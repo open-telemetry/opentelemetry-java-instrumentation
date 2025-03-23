@@ -534,7 +534,7 @@ public abstract class AbstractMongoClientTest<T> {
             val ->
                 val.satisfies(
                     statement -> assertThat(statements).contains(statement.replaceAll(" ", "")))),
-        equalTo(DB_SYSTEM, "mongodb"),
+        equalTo(maybeStable(DB_SYSTEM), "mongodb"),
         equalTo(
             DB_CONNECTION_STRING,
             emitStableDatabaseSemconv() ? null : "mongodb://localhost:" + port),

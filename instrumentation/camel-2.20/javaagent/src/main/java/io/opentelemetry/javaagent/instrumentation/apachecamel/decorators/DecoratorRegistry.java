@@ -15,8 +15,8 @@ public class DecoratorRegistry {
   private static final SpanDecorator DEFAULT = new BaseSpanDecorator();
   private static final Map<String, SpanDecorator> DECORATORS = loadDecorators();
 
+  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   private static Map<String, SpanDecorator> loadDecorators() {
-
     Map<String, SpanDecorator> result = new HashMap<>();
     result.put("ahc", new HttpSpanDecorator());
     result.put("ampq", new MessagingSpanDecorator("ampq"));

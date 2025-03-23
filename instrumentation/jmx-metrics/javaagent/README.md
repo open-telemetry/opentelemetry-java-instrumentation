@@ -282,6 +282,65 @@ In the particular case where only two values are defined, we can simplify furthe
             off: '*'
 ```
 
+### Metric attributes modifiers
+
+JMX attributes values may require modification or normalization in order to fit semantic conventions.
+
+For example, with JVM memory, the `java.lang:name=*,type=MemoryPool` MBeans have `type` attribute with either `HEAP` or `NON_HEAP` value.
+However, in the semantic conventions the metric attribute `jvm.memory.type` should be lower-cased to fit the `jvm.memory.used` definition, in this case we can
+apply the `lowercase` metric attribute transformation as follows:
+
+
+```yaml
+---
+rules:
+  - bean: java.lang:name=*,type=MemoryPool
+    mapping:
+      Usage.used:
+        type: updowncounter
+        metric: jvm.memory.used
+        unit: By
+        metricAttribute:
+          jvm.memory.pool.name	: param(name)
+          jvm.memory.type: lowercase(beanattr(type))
+```
+
+For now, only the `lowercase` transformation is supported, other additions might be added in the future if needed.
+
+### Unit conversions
+
+Sometimes JMX attribute values are reported in units that are not aligned with semantic conventions.
+For example, duration values are usually reported as milliseconds while semantic conventions recommend using seconds.
+
+This issue can be solved by providing an optional `sourceUnit` metric property together with the `unit` metric property.
+`sourceUnit` defines the native unit of value retrieved from JMX attribute, while `unit` defines the unit of the metric reported to the backend.
+If a conversion between `sourceUnit` and `unit` is available, then it is automatically applied before reporting the metric.
+If such a conversion is not available, then an error is reported during JMX metrics processing.
+
+Currently available unit conversions:
+
+| `sourceUnit` | `unit` |
+|--------------|-------|
+| ms           | s     |
+| us           | s     |
+| ns           | s     |
+
+Example of defining unit conversion in yaml file:
+```yaml
+rules:
+  - beans:
+    - Catalina:type=GlobalRequestProcessor,name=*
+    prefix: http.server.tomcat.
+    mapping:
+      maxTime:
+        metric: maxTime
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: The longest request processing time
+```
+`sourceUnit` can also be defined on rule level (see [Making shortcuts](#making-shortcuts))
+
 ### General Syntax
 
 Here is the general description of the accepted configuration file syntax. The whole contents of the file is case-sensitive, with exception for `type` as described in the table below.
@@ -293,6 +352,7 @@ rules:                                # start of list of configuration rules
     metricAttribute:                  # optional metric attributes, they apply to all metrics below
       <ATTRIBUTE1>: param(<PARAM>)    # <PARAM> is used as the key to extract value from actual ObjectName
       <ATTRIBUTE2>: beanattr(<ATTR>)  # <ATTR> is used as the MBean attribute name to extract the value
+      <ATTRIBUTE3>: const(<CONST>)    # <CONST> is used as a constant
     prefix: <METRIC_NAME_PREFIX>      # optional, useful for avoiding specifying metric names below
     unit: <UNIT>                      # optional, redefines the default unit for the whole rule
     type: <TYPE>                      # optional, redefines the default type for the whole rule

@@ -120,11 +120,18 @@ public final class ApplicationOpenTelemetry127 implements OpenTelemetry {
   }
 
   private static ApplicationLoggerFactory getLoggerFactory() {
-    // this class is defined in opentelemetry-api-1.42
+    // this class is defined in opentelemetry-api-1.47
     ApplicationLoggerFactory loggerFactory =
         getLoggerFactory(
-            "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_42.incubator.logs.ApplicationLoggerFactory142Incubator");
+            "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_47.incubator.logs.ApplicationLoggerFactory147Incubator");
     if (loggerFactory == null) {
+      // this class is defined in opentelemetry-api-1.42
+      loggerFactory =
+          getLoggerFactory(
+              "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_42.incubator.logs.ApplicationLoggerFactory142Incubator");
+    }
+    if (loggerFactory == null) {
+      // this class is defined in opentelemetry-api-1.42
       loggerFactory =
           getLoggerFactory(
               "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_42.logs.ApplicationLoggerFactory142");
@@ -147,10 +154,16 @@ public final class ApplicationOpenTelemetry127 implements OpenTelemetry {
   }
 
   private static ApplicationTracerFactory getTracerFactory() {
-    // this class is defined in opentelemetry-api-1.40
+    // this class is defined in opentelemetry-api-1.47
     ApplicationTracerFactory tracerFactory =
         getTracerFactory(
-            "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_40.incubator.trace.ApplicationTracerFactory140Incubator");
+            "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_47.incubator.trace.ApplicationTracerFactory147Incubator");
+    if (tracerFactory == null) {
+      // this class is defined in opentelemetry-api-1.40
+      tracerFactory =
+          getTracerFactory(
+              "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_40.incubator.trace.ApplicationTracerFactory140Incubator");
+    }
     if (tracerFactory == null) {
       tracerFactory = new ApplicationTracerFactory127();
     }

@@ -40,8 +40,8 @@ dependencies {
   testImplementation("javax.annotation:javax.annotation-api:1.2")
   testImplementation("com.sun.xml.messaging.saaj:saaj-impl:1.5.2")
 
-  latestDepTestLibrary("org.apache.cxf:cxf-rt-frontend-jaxws:3.+")
-  latestDepTestLibrary("org.apache.cxf:cxf-rt-transports-http:3.+")
+  latestDepTestLibrary("org.apache.cxf:cxf-rt-frontend-jaxws:3.+") // documented limitation
+  latestDepTestLibrary("org.apache.cxf:cxf-rt-transports-http:3.+") // documented limitation
 }
 
 tasks.withType<Test>().configureEach {

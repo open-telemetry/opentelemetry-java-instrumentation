@@ -21,8 +21,7 @@ import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.incubator.events.EventBuilder;
-import io.opentelemetry.api.incubator.events.EventLogger;
+import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.sdk.testing.assertj.AttributesAssert;
 import java.io.File;
@@ -41,15 +40,14 @@ class JarAnalyzerTest {
   @ParameterizedTest
   @MethodSource("processUrlArguments")
   void processUrl_EmitsEvents(URL archiveUrl, Consumer<AttributesAssert> attributesConsumer) {
-    EventLogger eventLogger = mock(EventLogger.class);
-    EventBuilder builder = mock(EventBuilder.class);
-    when(eventLogger.builder(eq("package.info"))).thenReturn(builder);
-    when(builder.setAttributes(any())).thenReturn(builder);
+    ExtendedLogRecordBuilder builder = mock(ExtendedLogRecordBuilder.class);
+    when(builder.setEventName(eq("package.info"))).thenReturn(builder);
+    when(builder.setAllAttributes(any())).thenReturn(builder);
 
-    JarAnalyzer.processUrl(eventLogger, archiveUrl);
+    JarAnalyzer.processUrl(builder, archiveUrl);
 
     ArgumentCaptor<Attributes> attributesArgumentCaptor = ArgumentCaptor.forClass(Attributes.class);
-    verify(builder).setAttributes(attributesArgumentCaptor.capture());
+    verify(builder).setAllAttributes(attributesArgumentCaptor.capture());
 
     attributesConsumer.accept(assertThat(attributesArgumentCaptor.getValue()));
   }
