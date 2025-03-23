@@ -28,6 +28,6 @@ public class NacosClientInstrumentationModule extends InstrumentationModule {
 
   @Override
   public boolean defaultEnabled(ConfigProperties config) {
-    return config.getBoolean(NacosClientConstants.OTEL_NACOS_CLIENT_ENABLED, false);
+    return false;
   }
 }

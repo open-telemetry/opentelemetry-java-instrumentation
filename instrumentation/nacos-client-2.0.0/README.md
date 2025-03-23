@@ -4,9 +4,9 @@
 
 ## Enable Configuration
 
-| Configuration Items                                 | Default Value  |
-|:----------------------------------------------------|:---------------|
-| `otel.instrumentation.nacos-client.default-enabled` | `false`        |
+| Configuration Items                          | Default Value  |
+|:---------------------------------------------|:---------------|
+| `otel.instrumentation.nacos-client.enabled`  | `false`        |
 
 ##  Span Info Details
 <table border="1">

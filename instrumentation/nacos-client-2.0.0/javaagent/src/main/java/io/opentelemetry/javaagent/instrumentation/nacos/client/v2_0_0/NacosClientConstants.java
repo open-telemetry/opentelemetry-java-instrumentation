@@ -10,9 +10,6 @@ import io.opentelemetry.api.common.AttributeKey;
 public class NacosClientConstants {
   private NacosClientConstants() {}
 
-  public static final String OTEL_NACOS_CLIENT_ENABLED =
-      "otel.instrumentation.nacos-client.default-enabled";
-
   public static final String NACOS_PREFIX = "Nacos/";
 
   public static final String SERVER_CHECK = "serverCheck";
