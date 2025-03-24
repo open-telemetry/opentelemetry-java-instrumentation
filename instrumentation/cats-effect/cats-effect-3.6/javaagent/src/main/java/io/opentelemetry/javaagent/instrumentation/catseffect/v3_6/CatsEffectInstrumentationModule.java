@@ -42,6 +42,11 @@ public class CatsEffectInstrumentationModule extends InstrumentationModule
         && config.getBoolean("cats.effect.trackFiberContext", false);
   }
 
+  @Override
+  public String getModuleGroup() {
+    return "opentelemetry-api-bridge";
+  }
+
   // ensure it's the last one
   @Override
   public int order() {
