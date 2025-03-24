@@ -13,18 +13,24 @@ muzzle {
     module.set("cats-effect_2.12")
     versions.set("[$catsEffectVersion,)")
     assertInverse.set(true)
+    extraDependency("io.opentelemetry:opentelemetry-api:1.0.0")
+    excludeInstrumentationName("opentelemetry-api")
   }
   pass {
     group.set("org.typelevel")
     module.set("cats-effect_2.13")
     versions.set("[$catsEffectVersion,)")
     assertInverse.set(true)
+    extraDependency("io.opentelemetry:opentelemetry-api:1.0.0")
+    excludeInstrumentationName("opentelemetry-api")
   }
   pass {
     group.set("org.typelevel")
     module.set("cats-effect_3")
     versions.set("[$catsEffectVersion,)")
     assertInverse.set(true)
+    extraDependency("io.opentelemetry:opentelemetry-api:1.0.0")
+    excludeInstrumentationName("opentelemetry-api")
   }
 }
 
