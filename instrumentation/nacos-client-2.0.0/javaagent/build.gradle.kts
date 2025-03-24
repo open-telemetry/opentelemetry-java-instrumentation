@@ -15,10 +15,10 @@ muzzle {
 dependencies {
   library("com.alibaba.nacos:nacos-client:2.0.0")
   testImplementation("javax.annotation:javax.annotation-api:1.3.2")
-
-  latestDepTestLibrary("com.alibaba.nacos:nacos-client:2.0.4+")
+  
+  latestDepTestLibrary("com.alibaba.nacos:nacos-client:2.0.4+")// documented limitation: nacos-client2.0.3 jar version had a compilation error in the test
 }
 
 tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.nacos-client.default-enabled=true")
+  jvmArgs("-Dotel.instrumentation.nacos-client.enabled=true")
 }

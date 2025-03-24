@@ -21,7 +21,7 @@
     <tr>
       <td>InstanceRequest</td>
       <td>Nacos/{$(lnstanceRequest.getType()}</td>
-      <td rowspan="5">nacos.namespace nacos.group nacos.service.name</td>
+      <td rowspan="5">nacos.namespace <br> nacos.group <br> nacos.service.name</td>
     </tr>
     <tr>
       <td>ServiceQueryRequest</td>
@@ -29,7 +29,7 @@
     </tr>
     <tr>
       <td>SubscribeServiceRequest</td>
-      <td>Nacos/subscribeService,Nacos/unsubscribeService</td>
+      <td>Nacos/subscribeService <br> Nacos/unsubscribeService</td>
     </tr>
     <tr>
       <td>ServicelistRequest</td>
@@ -42,7 +42,7 @@
     <tr>
       <td>ConfigPublishRequest</td>
       <td>Nacos/publishConfig</td>
-      <td rowspan="3">nacos.data.id nacos.group nacos.tenant</td>
+      <td rowspan="3">nacos.data.id <br> nacos.group <br> nacos.tenant</td>
     </tr>
     <tr>
       <td>ConfigRemoveRequest</td>
@@ -55,7 +55,7 @@
     <tr>
       <td>NotifySubscriberRequest</td>
       <td>Nacos/notifySubscribeChange</td>
-      <td>nacos.group nacos.service.name</td>
+      <td>nacos.group <br> nacos.service.name</td>
     </tr>
   </tbody>
 </table>
