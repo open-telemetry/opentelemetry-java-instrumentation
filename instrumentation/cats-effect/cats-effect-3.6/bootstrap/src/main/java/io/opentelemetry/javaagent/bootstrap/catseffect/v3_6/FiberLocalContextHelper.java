@@ -9,7 +9,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -26,7 +25,7 @@ public final class FiberLocalContextHelper {
 
   public static void initialize(
       ThreadLocal<Context> fiberThreadLocal, Supplier<Boolean> isUnderFiberContext) {
-    if (fiberContextThreadLocal.get() == null) {
+    if (fiberContextThreadLocal.compareAndSet(null, fiberThreadLocal)) {
       fiberContextThreadLocal.set(fiberThreadLocal);
       isUnderFiberContextSupplier.set(isUnderFiberContext);
       logger.fine("The fiberThreadLocalContext is configured");
@@ -84,8 +83,7 @@ public final class FiberLocalContextHelper {
         this.closed = true;
         FiberLocalContextHelper.fiberContextThreadLocal.get().set(this.beforeAttach);
       } else {
-        FiberLocalContextHelper.logger.log(
-            Level.FINE,
+        FiberLocalContextHelper.logger.fine(
             "Trying to close scope which does not represent current context. Ignoring the call.");
       }
     }
