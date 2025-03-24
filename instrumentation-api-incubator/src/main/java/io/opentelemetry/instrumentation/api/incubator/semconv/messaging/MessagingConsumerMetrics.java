@@ -46,7 +46,8 @@ public final class MessagingConsumerMetrics implements OperationListener {
     DoubleHistogramBuilder durationBuilder =
         meter
             .histogramBuilder("messaging.client.operation.duration")
-            .setDescription("Duration of messaging operation initiated by a producer or consumer client.")
+            .setDescription(
+                "Duration of messaging operation initiated by a producer or consumer client.")
             .setExplicitBucketBoundariesAdvice(MessagingMetricsAdvice.DURATION_SECONDS_BUCKETS)
             .setUnit("s");
     MessagingMetricsAdvice.applyReceiveDurationAdvice(durationBuilder);

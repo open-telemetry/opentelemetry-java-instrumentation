@@ -75,11 +75,13 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
    */
   public static <REQUEST, RESPONSE> MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessageOperation operation) {
-    return new MessagingAttributesExtractorBuilder<>(getter, operation,"");
+    return new MessagingAttributesExtractorBuilder<>(getter, operation, "");
   }
 
   public static <REQUEST, RESPONSE> MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> builder(
-      MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessageOperation operation, String operationName) {
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter,
+      MessageOperation operation,
+      String operationName) {
     return new MessagingAttributesExtractorBuilder<>(getter, operation, operationName);
   }
 

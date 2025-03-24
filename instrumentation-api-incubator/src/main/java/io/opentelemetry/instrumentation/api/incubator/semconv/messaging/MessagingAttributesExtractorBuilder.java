@@ -22,7 +22,9 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
   final String operationName;
 
   MessagingAttributesExtractorBuilder(
-      MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessageOperation operation, String operationName) {
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter,
+      MessageOperation operation,
+      String operationName) {
     this.getter = getter;
     this.operation = operation;
     this.operationName = operationName;
