@@ -26,7 +26,7 @@ public class CatsEffectInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Arrays.asList(new IoRuntimeInstrumentation(), new IoInstrumentation());
+    return Arrays.asList(new IoFiberInstrumentation(), new IoRuntimeInstrumentation());
   }
 
   @Override
