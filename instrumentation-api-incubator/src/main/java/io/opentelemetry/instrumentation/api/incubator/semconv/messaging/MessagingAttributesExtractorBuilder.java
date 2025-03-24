@@ -19,11 +19,13 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
   final MessagingAttributesGetter<REQUEST, RESPONSE> getter;
   final MessageOperation operation;
   List<String> capturedHeaders = emptyList();
+  final String operationName;
 
   MessagingAttributesExtractorBuilder(
-      MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessageOperation operation) {
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessageOperation operation, String operationName) {
     this.getter = getter;
     this.operation = operation;
+    this.operationName = operationName;
   }
 
   /**
@@ -47,6 +49,6 @@ public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * MessagingAttributesExtractorBuilder}.
    */
   public AttributesExtractor<REQUEST, RESPONSE> build() {
-    return new MessagingAttributesExtractor<>(getter, operation, capturedHeaders);
+    return new MessagingAttributesExtractor<>(getter, operation, capturedHeaders, operationName);
   }
 }

@@ -27,7 +27,7 @@ class SpringPulsarTest extends AbstractSpringPulsarTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent(),
                 span -> {
-                  span.hasName(OTEL_TOPIC + " publish")
+                  span.hasName(OTEL_TOPIC + " send")
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(publishAttributes());

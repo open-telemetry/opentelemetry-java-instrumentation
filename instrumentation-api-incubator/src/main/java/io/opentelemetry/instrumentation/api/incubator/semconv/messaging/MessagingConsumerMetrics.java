@@ -45,8 +45,8 @@ public final class MessagingConsumerMetrics implements OperationListener {
   private MessagingConsumerMetrics(Meter meter) {
     DoubleHistogramBuilder durationBuilder =
         meter
-            .histogramBuilder("messaging.receive.duration")
-            .setDescription("Measures the duration of receive operation.")
+            .histogramBuilder("messaging.client.operation.duration")
+            .setDescription("Duration of messaging operation initiated by a producer or consumer client.")
             .setExplicitBucketBoundariesAdvice(MessagingMetricsAdvice.DURATION_SECONDS_BUCKETS)
             .setUnit("s");
     MessagingMetricsAdvice.applyReceiveDurationAdvice(durationBuilder);
@@ -54,8 +54,8 @@ public final class MessagingConsumerMetrics implements OperationListener {
 
     LongCounterBuilder longCounterBuilder =
         meter
-            .counterBuilder("messaging.receive.messages")
-            .setDescription("Measures the number of received messages.")
+            .counterBuilder("messaging.client.consumed.messages")
+            .setDescription("Number of messages that were delivered to the application.")
             .setUnit("{message}");
     MessagingMetricsAdvice.applyReceiveMessagesAdvice(longCounterBuilder);
     receiveMessageCount = longCounterBuilder.build();

@@ -38,8 +38,8 @@ public final class MessagingProducerMetrics implements OperationListener {
   private MessagingProducerMetrics(Meter meter) {
     DoubleHistogramBuilder durationBuilder =
         meter
-            .histogramBuilder("messaging.publish.duration")
-            .setDescription("Measures the duration of publish operation.")
+            .histogramBuilder("messaging.client.operation.duration")
+            .setDescription("Duration of messaging operation initiated by a producer or consumer client.")
             .setExplicitBucketBoundariesAdvice(MessagingMetricsAdvice.DURATION_SECONDS_BUCKETS)
             .setUnit("s");
     MessagingMetricsAdvice.applyPublishDurationAdvice(durationBuilder);
