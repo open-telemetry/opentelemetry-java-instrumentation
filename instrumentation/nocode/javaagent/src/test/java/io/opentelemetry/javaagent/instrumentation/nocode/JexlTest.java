@@ -36,13 +36,15 @@ class JexlTest {
     param0.add("present");
     param1.put("float", 7.0f);
   }
+
   private JexlTest() {}
 
   @SuppressWarnings("rawtypes")
   private static Object evalJexl(String jexl, Object thiz, Object[] params) {
     // FIXME why doesn't the classpath for this test work right?
     try {
-      ClassLoader cl = new URLClassLoader(new URL[]{new File("./build/classes/java/main").toURI().toURL()});
+      ClassLoader cl =
+          new URLClassLoader(new URL[] {new File("./build/classes/java/main").toURI().toURL()});
       Class<?> c = cl.loadClass("io.opentelemetry.javaagent.instrumentation.nocode.JexlEvaluator");
       Object jexlEvaluator = c.getConstructor().newInstance();
       NocodeEvaluation.Evaluator x = (NocodeEvaluation.Evaluator) jexlEvaluator;
@@ -81,26 +83,26 @@ class JexlTest {
   @ParameterizedTest
   @ValueSource(
       strings = {
-          "nosuchvar",
-          "nosuchvar.toString()",
-          "this  .",
-          "this  .  ",
-          "this.noSuchMethod()",
-          // "toString()", // FIXME would like this not be "..jexl3.MapContext@<instance>"
-          "this.toString()extrastuffatend",
-          "this.toString()toString()",
-          "param1.toString()", // out of bounds
-          "param999.toString()",
-          "this.get(\"noclosequote)",
-          "this.get(\"nocloseparan\"",
-          "this.noparens",
-          "this.noparens.anotherMethod()",
-          "this.wrongOrder)(",
-          "this.get(NotALiteralParameter);",
-          "this.get(12.2)",
-          "this.get(this)",
-          "this.get(\"NoSuchKey\")", // evals completely but returns null
-          "param1.toString()", // no such param
+        "nosuchvar",
+        "nosuchvar.toString()",
+        "this  .",
+        "this  .  ",
+        "this.noSuchMethod()",
+        // "toString()", // FIXME would like this not be "..jexl3.MapContext@<instance>"
+        "this.toString()extrastuffatend",
+        "this.toString()toString()",
+        "param1.toString()", // out of bounds
+        "param999.toString()",
+        "this.get(\"noclosequote)",
+        "this.get(\"nocloseparan\"",
+        "this.noparens",
+        "this.noparens.anotherMethod()",
+        "this.wrongOrder)(",
+        "this.get(NotALiteralParameter);",
+        "this.get(12.2)",
+        "this.get(this)",
+        "this.get(\"NoSuchKey\")", // evals completely but returns null
+        "param1.toString()", // no such param
       })
   void testInvalidJexlReturnNull(String invalid) {
     Object answer = evalJexl(invalid, thiz, new Object[] {param0});
@@ -199,18 +201,18 @@ class JexlTest {
   @ParameterizedTest
   @ValueSource(
       strings = {
-          "this.get(\"key\").substring(1)",
-          " this.get(\"key\").substring(1)",
-          "this .get(\"key\").substring(1)",
-          "this. get(\"key\").substring(1)",
-          "this.get (\"key\").substring(1)",
-          "this.get( \"key\").substring(1)",
-          "this.get(\"key\" ).substring(1)",
-          "this.get(\"key\")\t.substring(1)",
-          "this.get(\"key\").\nsubstring(1)",
-          "this.get(\"key\").substring\r(1)",
-          "this.get(\"key\").substring( 1)",
-          "this.get(\"key\").substring(1 )",
+        "this.get(\"key\").substring(1)",
+        " this.get(\"key\").substring(1)",
+        "this .get(\"key\").substring(1)",
+        "this. get(\"key\").substring(1)",
+        "this.get (\"key\").substring(1)",
+        "this.get( \"key\").substring(1)",
+        "this.get(\"key\" ).substring(1)",
+        "this.get(\"key\")\t.substring(1)",
+        "this.get(\"key\").\nsubstring(1)",
+        "this.get(\"key\").substring\r(1)",
+        "this.get(\"key\").substring( 1)",
+        "this.get(\"key\").substring(1 )",
       })
   void testWhitespace(String test) {
     assertEquals("alue", evalJexl(test, thiz, new Object[] {param0}), test);

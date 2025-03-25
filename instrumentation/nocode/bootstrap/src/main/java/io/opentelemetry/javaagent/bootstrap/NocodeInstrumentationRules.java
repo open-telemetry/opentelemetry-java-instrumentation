@@ -56,7 +56,8 @@ public final class NocodeInstrumentationRules {
 
   private NocodeInstrumentationRules() {}
 
-  // FIXME setting the global and lookup could go away if the instrumentation could be parameterized with the Rule
+  // FIXME setting the global and lookup could go away if the instrumentation could be parameterized
+  // with the Rule
   // Using className.methodName as the key
   private static final HashMap<String, Rule> name2Rule = new HashMap<>();
 
