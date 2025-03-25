@@ -8,9 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import javax.annotation.Nullable;
 
-/**
- * An interface for getting experimental HTTP client attributes.
- */
+/** An interface for getting experimental HTTP client attributes. */
 public interface HttpClientExperimentalAttributesGetter<REQUEST, RESPONSE>
     extends HttpClientAttributesGetter<REQUEST, RESPONSE> {
 
