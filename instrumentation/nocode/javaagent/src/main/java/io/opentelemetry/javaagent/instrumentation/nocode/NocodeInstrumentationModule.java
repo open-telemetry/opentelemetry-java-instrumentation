@@ -35,7 +35,7 @@ public final class NocodeInstrumentationModule extends InstrumentationModule {
 
   @Override
   public boolean isHelperClass(String className) {
-    return className.startsWith("io.opentelemetry.javaagent") && className.contains("Nocode");
+    return className.startsWith("io.opentelemetry.javaagent.instrumentation.nocode");
   }
 
   // If nocode instrumentation is added to something with existing auto-instrumentation,

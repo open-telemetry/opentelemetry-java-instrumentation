@@ -5,21 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.nocode;
 
-//import static org.junit.jupiter.api.Assertions.assertEquals;
-//import static org.junit.jupiter.api.Assertions.assertNull;
-//import static org.junit.jupiter.params.provider.Arguments.arguments;
-//
-//import java.util.Arrays;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.params.provider.Arguments.arguments;
+
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-//import java.util.stream.Stream;
-//import org.junit.jupiter.api.Test;
-//import org.junit.jupiter.params.ParameterizedTest;
-//import org.junit.jupiter.params.provider.Arguments;
-//import org.junit.jupiter.params.provider.MethodSource;
-//import org.junit.jupiter.params.provider.ValueSource;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class JexlTest {
   private static final Map<String, String> thiz = new HashMap<>();
@@ -33,7 +33,7 @@ class JexlTest {
   }
   private JexlTest() {}
 
-  /*
+
   private static Object evalJexl(String jexl, Object thiz, Object[] params) {
     return new JexlEvaluator().evaluate(jexl, thiz, params);
   }
@@ -215,5 +215,4 @@ class JexlTest {
     assertEquals(
         "banana", evalJexl("this.size() < 0 ? \"potato\" : \"banana\"", thiz, new Object[] {}));
   }
-   */
 }

@@ -23,6 +23,7 @@ dependencies {
   implementation(project(":sdk-autoconfigure-support"))
   compileOnly(project(":javaagent-tooling"))
 //  compileOnly(project(":instrumentation-annotations-support"))
+  testImplementation(project(":instrumentation:nocode:bootstrap"))
 
   compileOnly("org.snakeyaml:snakeyaml-engine:2.8")
 
