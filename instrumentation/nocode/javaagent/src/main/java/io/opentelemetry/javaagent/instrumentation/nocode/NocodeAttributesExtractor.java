@@ -24,14 +24,12 @@ public final class NocodeAttributesExtractor
   @Override
   public void onStart(
       AttributesBuilder attributesBuilder, Context context, NocodeMethodInvocation mi) {
-    System.err.println("JBLEY NOCODE ATTS ONSTART "+mi.getRule());
     codeExtractor.onStart(attributesBuilder, context, mi.getClassAndMethod());
 
     Map<String, String> attributes = mi.getRuleAttributes();
     for (String key : attributes.keySet()) {
       String expression = attributes.get(key);
       Object value = mi.evaluate(expression);
-      System.err.println("JBLEY NOCODE ATTS ONSTART KEY "+key+" VALUE"+value);
       if (value instanceof Long
           || value instanceof Integer
           || value instanceof Short

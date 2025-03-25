@@ -27,7 +27,6 @@ public final class NocodeInstrumentation implements TypeInstrumentation {
 
   public NocodeInstrumentation(NocodeInstrumentationRules.Rule rule) {
     this.rule = rule;
-    System.err.println("JBLEY INSTRUMENTATION WITH RULE "+rule);
   }
 
   @Override
@@ -59,7 +58,6 @@ public final class NocodeInstrumentation implements TypeInstrumentation {
         @Advice.AllArguments Object[] methodParams) {
       NocodeInstrumentationRules.Rule rule =
           NocodeInstrumentationRules.find(declaringClass.getName(), methodName);
-      System.err.println("JBLEY ONENTER RULE IS "+rule);
       otelInvocation =
           new NocodeMethodInvocation(
               rule, ClassAndMethod.create(declaringClass, methodName), thiz, methodParams);

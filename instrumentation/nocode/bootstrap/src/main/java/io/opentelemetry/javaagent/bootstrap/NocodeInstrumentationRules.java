@@ -65,7 +65,6 @@ public final class NocodeInstrumentationRules {
     for (Rule r : rules) {
       name2Rule.put(r.className + "." + r.methodName, r);
     }
-    System.out.println("JBLEY SET RULES "+System.identityHashCode(NocodeInstrumentationRules.class)+" "+name2Rule.size());
   }
 
   public static Iterable<Rule> getGlobalRules() {
@@ -73,7 +72,6 @@ public final class NocodeInstrumentationRules {
   }
 
   public static Rule find(String className, String methodName) {
-    System.out.println("JBLEY FIND RULES "+System.identityHashCode(NocodeInstrumentationRules.class)+" "+name2Rule.size());
     return name2Rule.get(className + "." + methodName);
   }
 }
