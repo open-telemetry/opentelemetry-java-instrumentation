@@ -27,7 +27,7 @@ public final class JavaHttpServerTelemetryBuilder {
   static {
     JavaHttpServerInstrumenterBuilderUtil.setServerBuilderExtractor(builder -> builder.builder);
     Experimental.internalSetEmitExperimentalTelemetry(
-        (builder, emit) -> builder.builder.setEmitExperimentalHttpServerMetrics(emit));
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpServerTelemetry(emit));
   }
 
   JavaHttpServerTelemetryBuilder(OpenTelemetry openTelemetry) {
