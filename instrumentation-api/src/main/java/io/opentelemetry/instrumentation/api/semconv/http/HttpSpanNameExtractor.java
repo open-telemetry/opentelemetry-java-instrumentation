@@ -9,6 +9,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * Extractor of the <a
@@ -61,19 +62,28 @@ public final class HttpSpanNameExtractor {
 
     private final HttpClientAttributesGetter<REQUEST, ?> getter;
     private final Set<String> knownMethods;
+    private final Function<REQUEST, String> urlTemplateExtractor;
 
-    Client(HttpClientAttributesGetter<REQUEST, ?> getter, Set<String> knownMethods) {
+    Client(
+        HttpClientAttributesGetter<REQUEST, ?> getter,
+        Set<String> knownMethods,
+        Function<REQUEST, String> urlTemplateExtractor) {
       this.getter = getter;
       this.knownMethods = knownMethods;
+      this.urlTemplateExtractor = urlTemplateExtractor;
     }
 
     @Override
     public String extract(REQUEST request) {
       String method = getter.getHttpRequestMethod(request);
-      if (method == null || !knownMethods.contains(method)) {
+      String template = urlTemplateExtractor.apply(request);
+      if (method == null) {
         return "HTTP";
       }
-      return method;
+      if (!knownMethods.contains(method)) {
+        method = "HTTP";
+      }
+      return template == null ? method : method + " " + template;
     }
   }
 
