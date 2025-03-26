@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_0wu2vf9" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.10.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.19.0">
+  <bpmn:process id="testMainProcess" name="testMainProcess" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0oc588e</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_0oc588e" sourceRef="StartEvent_1" targetRef="getProductInfo" />
+    <bpmn:endEvent id="Event_110t6od">
+      <bpmn:incoming>Flow_0zg0twd</bpmn:incoming>
+      <bpmn:terminateEventDefinition id="TerminateEventDefinition_0fx3yet" />
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1t4wie8" sourceRef="getProductInfo" targetRef="verifyCustomer" />
+    <bpmn:serviceTask id="getProductInfo" name="Get Product Info" camunda:expression="${Product.getInfo(execution)}">
+      <bpmn:incoming>Flow_0oc588e</bpmn:incoming>
+      <bpmn:outgoing>Flow_1t4wie8</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_1qcq966" sourceRef="verifyCustomer" targetRef="customerExist" />
+    <bpmn:callActivity id="verifyCustomer" name="Verify Customer" calledElement="customerSubProcess">
+      <bpmn:incoming>Flow_1t4wie8</bpmn:incoming>
+      <bpmn:outgoing>Flow_1qcq966</bpmn:outgoing>
+    </bpmn:callActivity>
+    <bpmn:exclusiveGateway id="customerExist" name="Customer Exist" default="Flow_0lo1pvt">
+      <bpmn:incoming>Flow_1qcq966</bpmn:incoming>
+      <bpmn:outgoing>Flow_0lo1pvt</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0h7fg5f</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_0lo1pvt" sourceRef="customerExist" targetRef="sendProductInfo" />
+    <bpmn:endEvent id="Event_0c1osp2">
+      <bpmn:incoming>Flow_0h7fg5f</bpmn:incoming>
+      <bpmn:errorEventDefinition id="ErrorEventDefinition_0xll5oi" errorRef="Error_13domxb" />
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0h7fg5f" sourceRef="customerExist" targetRef="Event_0c1osp2">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">#{execution.getVariable("customerExist" ) == false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:serviceTask id="sendProductInfo" name="Send Product Info" camunda:expression="${Product.getInfo(execution)}">
+      <bpmn:incoming>Flow_0lo1pvt</bpmn:incoming>
+      <bpmn:outgoing>Flow_0zg0twd</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="Flow_0zg0twd" sourceRef="sendProductInfo" targetRef="Event_110t6od" />
+  </bpmn:process>
+  <bpmn:error id="Error_13domxb" name="GlobalError" errorCode="400" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="testMainProcess">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="149" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1nx1iz4_di" bpmnElement="getProductInfo">
+        <dc:Bounds x="310" y="127" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1df2kde_di" bpmnElement="verifyCustomer">
+        <dc:Bounds x="470" y="127" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0sflauv_di" bpmnElement="customerExist" isMarkerVisible="true">
+        <dc:Bounds x="675" y="142" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="744" y="157" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_19no73t_di" bpmnElement="Event_0c1osp2">
+        <dc:Bounds x="892" y="82" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0g41qff_di" bpmnElement="Event_110t6od">
+        <dc:Bounds x="1002" y="242" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_1mv97a3" bpmnElement="sendProductInfo">
+        <dc:Bounds x="800" y="220" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0oc588e_di" bpmnElement="Flow_0oc588e">
+        <di:waypoint x="215" y="167" />
+        <di:waypoint x="310" y="167" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1t4wie8_di" bpmnElement="Flow_1t4wie8">
+        <di:waypoint x="410" y="167" />
+        <di:waypoint x="470" y="167" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1qcq966_di" bpmnElement="Flow_1qcq966">
+        <di:waypoint x="570" y="167" />
+        <di:waypoint x="675" y="167" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0lo1pvt_di" bpmnElement="Flow_0lo1pvt">
+        <di:waypoint x="700" y="192" />
+        <di:waypoint x="700" y="260" />
+        <di:waypoint x="800" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0h7fg5f_di" bpmnElement="Flow_0h7fg5f">
+        <di:waypoint x="700" y="142" />
+        <di:waypoint x="700" y="100" />
+        <di:waypoint x="892" y="100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0zg0twd_di" bpmnElement="Flow_0zg0twd">
+        <di:waypoint x="900" y="260" />
+        <di:waypoint x="1002" y="260" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

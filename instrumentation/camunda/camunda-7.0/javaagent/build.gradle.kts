@@ -20,4 +20,7 @@ dependencies {
   library("org.camunda.bpm:camunda-external-task-client:7.18.0")
 
   annotationProcessor("com.google.auto.value:auto-value:1.6")
+
+  testImplementation(project(":instrumentation:camunda:camunda-7.0:testing"))
+  testImplementation("com.h2database:h2:2.2.224")
 }

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:modeler="http://camunda.org/schema/modeler/1.0" id="Definitions_1sxjr88" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="5.10.0" modeler:executionPlatform="Camunda Platform" modeler:executionPlatformVersion="7.19.0">
+  <bpmn:process id="customerSubProcess" name="customerSubProcess" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0ynpw3b</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:endEvent id="Event_12mjag6">
+      <bpmn:incoming>Flow_0ynpw3b</bpmn:incoming>
+      <bpmn:terminateEventDefinition id="TerminateEventDefinition_0nv5dzl" />
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0ynpw3b" sourceRef="StartEvent_1" targetRef="Event_12mjag6" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="customerSubProcess">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="79" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_132saz1_di" bpmnElement="Event_12mjag6">
+        <dc:Bounds x="392" y="79" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0ynpw3b_di" bpmnElement="Flow_0ynpw3b">
+        <di:waypoint x="215" y="97" />
+        <di:waypoint x="392" y="97" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
