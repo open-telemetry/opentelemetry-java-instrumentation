@@ -12,7 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -49,7 +48,6 @@ public final class NocodeRulesParser {
     }
   }
 
-  // FIXME rework with builder
   @SuppressWarnings("unchecked")
   private static List<NocodeInstrumentationRules.Rule> loadUnsafe(String yamlFileName)
       throws Exception {
@@ -60,28 +58,27 @@ public final class NocodeRulesParser {
       for (Object yamlBit : parsedYaml) {
         List<Map<String, Object>> rulesMap = (List<Map<String, Object>>) yamlBit;
         for (Map<String, Object> yamlRule : rulesMap) {
-          // FUTURE support more complex class selection (inherits-from, etc.)
-          String className = yamlRule.get("class").toString();
-          // FUTURE support method override selection - e.g., with classfile method signature or
-          // something
-          String methodName = yamlRule.get("method").toString();
-          String spanName =
-              yamlRule.get("spanName") == null ? null : yamlRule.get("spanName").toString();
-          String spanKind =
-              yamlRule.get("spanKind") == null ? null : yamlRule.get("spanKind").toString();
-          String spanStatus =
-              yamlRule.get("spanStatus") == null ? null : yamlRule.get("spanStatus").toString();
+          NocodeInstrumentationRules.Builder builder = new NocodeInstrumentationRules.Builder();
 
-          Map<String, String> ruleAttributes = new HashMap<>();
+          // FUTURE support more complex class selection (inherits-from, wildcards, etc.)
+          builder = builder.className(yamlRule.get("class").toString());
+          // FUTURE support more complex method (specific overrides, wildcards, etc.)
+          builder = builder.methodName(yamlRule.get("method").toString());
+          builder = builder.spanName(
+              yamlRule.get("spanName") == null ? null : yamlRule.get("spanName").toString());
+          builder = builder.spanKind(
+              yamlRule.get("spanKind") == null ? null : yamlRule.get("spanKind").toString());
+          builder = builder.spanStatus(
+              yamlRule.get("spanStatus") == null ? null : yamlRule.get("spanStatus").toString());
+
           List<Map<String, Object>> attrs = (List<Map<String, Object>>) yamlRule.get("attributes");
           if (attrs != null) {
             for (Map<String, Object> attr : attrs) {
-              ruleAttributes.put(attr.get("key").toString(), attr.get("value").toString());
+              builder = builder.attribute(
+                attr.get("key").toString(), attr.get("value").toString());
             }
           }
-          answer.add(
-              new NocodeInstrumentationRules.Rule(
-                  className, methodName, spanName, spanKind, spanStatus, ruleAttributes));
+          answer.add(builder.build());
         }
       }
     }

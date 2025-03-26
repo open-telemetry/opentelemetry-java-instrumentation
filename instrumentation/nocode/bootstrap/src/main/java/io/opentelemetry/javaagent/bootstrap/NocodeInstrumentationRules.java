@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -12,15 +13,57 @@ import java.util.Map;
 
 public final class NocodeInstrumentationRules {
 
-  // FIXME builder
-  public static final class Rule {
-    public final String className;
-    public final String methodName;
-    public final String spanName; // may be null - use default of "class.method"
-    public final String spanKind; // matches the SpanKind enum, null means default to INTERNAL
-    public final String spanStatus; // may be null, should return string from StatusCodes
+  public final static class Builder {
+    private String className;
+    private String methodName;
+    private String spanName;
+    private String spanKind;
+    private String spanStatus;
+    private final Map<String, String> attributes = new HashMap<>();
 
-    public final Map<String, String> attributes; // key name to jexl expression
+    @CanIgnoreReturnValue
+    public Builder className(String className) {
+      this.className = className;
+      return this;
+    }
+    @CanIgnoreReturnValue
+    public Builder methodName(String methodName) {
+      this.methodName = methodName;
+      return this;
+    }
+    @CanIgnoreReturnValue
+    public Builder spanName(String spanName) {
+      this.spanName = spanName;
+      return this;
+    }
+    @CanIgnoreReturnValue
+    public Builder spanKind(String spanKind) {
+      this.spanKind = spanKind;
+      return this;
+    }
+    @CanIgnoreReturnValue
+    public Builder spanStatus(String spanStatus) {
+      this.spanStatus = spanStatus;
+      return this;
+    }
+    @CanIgnoreReturnValue
+    public Builder attribute(String key, String valueExpression) {
+      attributes.put(key, valueExpression);
+      return this;
+    }
+
+    public Rule build() {
+      return new Rule(className, methodName, spanName, spanKind, spanStatus, attributes);
+    }
+  }
+
+  public static final class Rule {
+    private final String className;
+    private final String methodName;
+    private final String spanName; // may be null - use default of "class.method"
+    private final String spanKind; // matches the SpanKind enum, null means default to INTERNAL
+    private final String spanStatus; // may be null, should return string from StatusCodes
+    private final Map<String, String> attributes; // key name to jexl expression
 
     public Rule(
         String className,
@@ -35,6 +78,25 @@ public final class NocodeInstrumentationRules {
       this.spanKind = spanKind;
       this.spanStatus = spanStatus;
       this.attributes = Collections.unmodifiableMap(new HashMap<>(attributes));
+    }
+
+    public Map<String, String> getAttributes() {
+      return attributes;
+    }
+    public String getClassName() {
+      return className;
+    }
+    public String getMethodName() {
+      return methodName;
+    }
+    public String getSpanName() {
+      return spanName;
+    }
+    public String getSpanKind() {
+      return spanKind;
+    }
+    public String getSpanStatus() {
+      return spanStatus;
     }
 
     @Override
@@ -56,8 +118,9 @@ public final class NocodeInstrumentationRules {
 
   private NocodeInstrumentationRules() {}
 
-  // FIXME setting the global and lookup could go away if the instrumentation could be parameterized
+  // FUTURE setting the global and lookup could go away if the instrumentation could be parameterized
   // with the Rule
+
   // Using className.methodName as the key
   private static final HashMap<String, Rule> name2Rule = new HashMap<>();
 

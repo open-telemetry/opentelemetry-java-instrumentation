@@ -35,13 +35,13 @@ public final class NocodeInstrumentation implements TypeInstrumentation {
     // at advice time.  In the future, we could support
     // more complex rules here if we dynamically generated advice classes for
     // each rule or otherwise parameterized the inserted bytecode by rule.
-    return rule != null ? named(rule.className) : none();
+    return rule != null ? named(rule.getClassName()) : none();
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        rule != null ? named(rule.methodName) : none(),
+        rule != null ? named(rule.getMethodName()) : none(),
         this.getClass().getName() + "$NocodeAdvice");
   }
 

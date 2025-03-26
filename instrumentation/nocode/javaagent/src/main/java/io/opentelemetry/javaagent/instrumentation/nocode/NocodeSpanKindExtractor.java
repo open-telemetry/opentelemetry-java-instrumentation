@@ -12,11 +12,11 @@ import java.util.Locale;
 public class NocodeSpanKindExtractor implements SpanKindExtractor<NocodeMethodInvocation> {
   @Override
   public SpanKind extract(NocodeMethodInvocation mi) {
-    if (mi.getRule() == null || mi.getRule().spanKind == null) {
+    if (mi.getRule() == null || mi.getRule().getSpanKind() == null) {
       return SpanKind.INTERNAL;
     }
     try {
-      return SpanKind.valueOf(mi.getRule().spanKind.toUpperCase(Locale.ROOT));
+      return SpanKind.valueOf(mi.getRule().getSpanKind().toUpperCase(Locale.ROOT));
     } catch (IllegalArgumentException noMatchingValue) {
       return SpanKind.INTERNAL;
     }

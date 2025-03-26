@@ -20,8 +20,8 @@ public class NocodeSpanNameExtractor implements SpanNameExtractor<NocodeMethodIn
   @Override
   public String extract(NocodeMethodInvocation mi) {
     NocodeInstrumentationRules.Rule rule = mi.getRule();
-    if (rule != null && rule.spanName != null) {
-      Object name = mi.evaluate(rule.spanName);
+    if (rule != null && rule.getSpanName() != null) {
+      Object name = mi.evaluate(rule.getSpanName());
       if (name != null) {
         return name.toString();
       }

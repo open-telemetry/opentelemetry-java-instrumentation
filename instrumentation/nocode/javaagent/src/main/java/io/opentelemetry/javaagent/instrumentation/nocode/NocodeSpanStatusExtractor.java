@@ -23,7 +23,7 @@ public class NocodeSpanStatusExtractor
       @Nullable Object returnValue,
       @Nullable Throwable error) {
 
-    if (mi.getRule() == null || mi.getRule().spanStatus == null) {
+    if (mi.getRule() == null || mi.getRule().getSpanStatus() == null) {
 
       // FIXME would love to use a DefaultSpanStatusExtractor as a fallback but it is not public
       // so here is a copy of its (admittedly simple) guts
@@ -32,7 +32,7 @@ public class NocodeSpanStatusExtractor
       }
       return;
     }
-    Object status = mi.evaluateAtEnd(mi.getRule().spanStatus, returnValue, error);
+    Object status = mi.evaluateAtEnd(mi.getRule().getSpanStatus(), returnValue, error);
     if (status != null) {
       try {
         StatusCode code = StatusCode.valueOf(status.toString().toUpperCase(Locale.ROOT));

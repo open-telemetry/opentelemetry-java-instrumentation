@@ -47,7 +47,7 @@ public final class NocodeMethodInvocation {
   }
 
   public Map<String, String> getRuleAttributes() {
-    return rule == null ? Collections.emptyMap() : rule.attributes;
+    return rule == null ? Collections.emptyMap() : rule.getAttributes();
   }
 
   public Object evaluate(String expression) {
