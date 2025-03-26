@@ -5,6 +5,5 @@ import org.camunda.bpm.engine.delegate.DelegateExecution;
 public class Product {
 
     public void getInfo(DelegateExecution execution) {
-        System.out.println("Product Info");
     }
 }
