@@ -198,6 +198,12 @@ targets:
       target: ':instrumentation:mybatis-3.2:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:nocode:bootstrap'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:nocode:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:opentelemetry-extension-annotations-1.0:javaagent'
     - type: gradle
       path: ./
