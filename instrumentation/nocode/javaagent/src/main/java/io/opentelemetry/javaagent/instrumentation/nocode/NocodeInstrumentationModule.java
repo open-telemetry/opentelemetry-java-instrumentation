@@ -33,11 +33,6 @@ public final class NocodeInstrumentationModule extends InstrumentationModule {
     return answer;
   }
 
-  @Override
-  public boolean isHelperClass(String className) {
-    return className.startsWith("io.opentelemetry.javaagent.instrumentation.nocode");
-  }
-
   // If nocode instrumentation is added to something with existing auto-instrumentation,
   // it would generally be better to run the nocode bits after the "regular" bits.
   // E.g., if we want to add nocode to a servlet call, then we want to make sure that
@@ -45,5 +40,11 @@ public final class NocodeInstrumentationModule extends InstrumentationModule {
   @Override
   public int order() {
     return Integer.MAX_VALUE;
+  }
+
+  @Override
+  public boolean isIndyModule() {
+    // FIXME not sure why the indy tests are failing (and only on some jvm versions)
+    return false;
   }
 }
