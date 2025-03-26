@@ -372,6 +372,12 @@ targets:
       target: ':instrumentation:azure-core:azure-core-1.36:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:camunda:camunda-7.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:camunda:camunda-7.0:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:cassandra:cassandra-3.0:javaagent'
     - type: gradle
       path: ./
