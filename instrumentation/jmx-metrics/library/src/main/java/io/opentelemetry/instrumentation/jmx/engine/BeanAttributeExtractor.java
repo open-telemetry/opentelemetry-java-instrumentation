@@ -287,4 +287,27 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
     }
     return null;
   }
+
+  /**
+   * Wraps provided extractor to filter-out negative values by replacing them with {@literal null}.
+   *
+   * @param extractor extractor to wrap
+   * @return extractor filtering-out negative values
+   */
+  public static BeanAttributeExtractor filterNegativeValues(BeanAttributeExtractor extractor) {
+    return new BeanAttributeExtractor(extractor.baseName, extractor.nameChain) {
+      @Nullable
+      @Override
+      protected Number extractNumericalAttribute(
+          MBeanServerConnection connection, ObjectName objectName) {
+        Number v = super.extractNumericalAttribute(connection, objectName);
+        if (v instanceof Long || v instanceof Integer || v instanceof Short || v instanceof Byte) {
+          return v.longValue() < 0 ? null : v;
+        } else if (v instanceof Double || v instanceof Float) {
+          return v.doubleValue() < 0 ? null : v;
+        }
+        return v;
+      }
+    };
+  }
 }

@@ -29,6 +29,8 @@ import javax.management.ObjectName;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class RuleParserTest {
   private static RuleParser parser;
@@ -86,6 +88,10 @@ class RuleParserTest {
         .hasSize(2)
         .containsEntry("LABEL_KEY1", "param(PARAMETER)")
         .containsEntry("LABEL_KEY2", "beanattr(ATTRIBUTE)");
+
+    assertThat(def1.getDropNegativeValues())
+        .describedAs("negative values should not be dropped by default")
+        .isFalse();
 
     Map<String, Metric> attr = def1.getMapping();
     assertThat(attr)
@@ -499,6 +505,75 @@ class RuleParserTest {
   void testEmptyConf() {
     JmxConfig config = parseConf(EMPTY_CONF);
     assertThat(config.getRules()).isEmpty();
+  }
+
+  private static final String CONF11 =
+      "---                                   # keep stupid spotlessJava at bay\n"
+          + "rules:\n"
+          + "  - bean: my-test:type=11_Hello\n"
+          + "    type: counter\n"
+          + "    mapping:\n"
+          + "      negativeDropped:\n"
+          + "        dropNegativeValues: true\n"
+          + "        metric: negative_drop\n"
+          + "      negativeKept:\n"
+          + "        dropNegativeValues: false\n"
+          + "        metric: negative_keep\n";
+
+  @ParameterizedTest
+  @ValueSource(ints = {-1, 0, 1})
+  void negativeValueFiltering(int value) throws Exception {
+    JmxConfig config = parseConf(CONF11);
+
+    List<JmxRule> rules = config.getRules();
+    assertThat(rules).hasSize(1);
+    JmxRule rule = rules.get(0);
+
+    assertThat(rule.getBean()).isEqualTo("my-test:type=11_Hello");
+
+    // test that negative filtering is being applied
+
+    MetricDef metricDef = rule.buildMetricDef();
+    assertThat(metricDef).isNotNull();
+
+    MBeanServerConnection mockConnection = mock(MBeanServerConnection.class);
+    ObjectName objectName = new ObjectName(rule.getBean());
+
+    // mock attribute values
+    when(mockConnection.getAttribute(objectName, "negativeDropped")).thenReturn(value);
+    when(mockConnection.getAttribute(objectName, "negativeKept")).thenReturn(value);
+
+    // mock attribute discovery
+    MBeanInfo mockBeanInfo = mock(MBeanInfo.class);
+    when(mockBeanInfo.getAttributes())
+        .thenReturn(
+            new MBeanAttributeInfo[] {
+              new MBeanAttributeInfo(
+                  "negativeDropped", "java.lang.Integer", "", true, false, false),
+              new MBeanAttributeInfo("negativeKept", "java.lang.Integer", "", true, false, false)
+            });
+    when(mockConnection.getMBeanInfo(objectName)).thenReturn(mockBeanInfo);
+
+    assertThat(metricDef.getMetricExtractors()).hasSize(2);
+    Number filteredValue =
+        metricDef
+            .getMetricExtractors()
+            .get(0)
+            .getMetricValueExtractor()
+            .extractNumericalAttribute(mockConnection, objectName);
+    Number unFilteredValue =
+        metricDef
+            .getMetricExtractors()
+            .get(1)
+            .getMetricValueExtractor()
+            .extractNumericalAttribute(mockConnection, objectName);
+
+    if (value < 0) {
+      assertThat(filteredValue).isNull();
+      assertThat(unFilteredValue).isEqualTo(value);
+    } else {
+      assertThat(filteredValue).isEqualTo(unFilteredValue).isEqualTo(value);
+    }
   }
 
   private static void checkConstantMetricAttribute(
