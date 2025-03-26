@@ -22,7 +22,7 @@ import org.snakeyaml.engine.v2.api.LoadSettings;
 public final class NocodeRulesParser {
   private static final Logger logger = Logger.getLogger(NocodeRulesParser.class.getName());
   // FIXME switch name
-  private static final String NOCODE_YMLFILE = "splunk.otel.instrumentation.nocode.yml.file";
+  private static final String NOCODE_YMLFILE = "otel.java.instrumentation.nocode.yml.file";
 
   private final List<NocodeInstrumentationRules.Rule> instrumentationRules;
 

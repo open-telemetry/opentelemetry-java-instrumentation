@@ -33,5 +33,5 @@ dependencies {
 }
 
 tasks.withType<Test>().configureEach {
-  environment("SPLUNK_OTEL_INSTRUMENTATION_NOCODE_YML_FILE", "./src/test/config/nocode.yml")
+  environment("OTEL_JAVA_INSTRUMENTATION_NOCODE_YML_FILE", "./src/test/config/nocode.yml")
 }
