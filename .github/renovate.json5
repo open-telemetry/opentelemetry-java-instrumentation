@@ -79,6 +79,12 @@
       ],
     },
     {
+      groupName: 'guava packages',
+      matchPackageNames: [
+        'com.google.guava{/,}**',
+      ],
+    },
+    {
       groupName: 'jackson packages',
       matchPackageNames: [
         'com.fasterxml.jackson{/,}**',
