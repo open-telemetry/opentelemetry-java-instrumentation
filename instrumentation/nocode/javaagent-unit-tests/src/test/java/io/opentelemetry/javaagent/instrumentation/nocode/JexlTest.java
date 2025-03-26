@@ -7,13 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.nocode;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
-import io.opentelemetry.javaagent.bootstrap.nocode.NocodeEvaluation;
-import java.io.File;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -41,19 +36,7 @@ class JexlTest {
 
   @SuppressWarnings("rawtypes")
   private static Object evalJexl(String jexl, Object thiz, Object[] params) {
-    // FIXME why doesn't the classpath for this test work right?
-    try {
-      ClassLoader cl =
-          new URLClassLoader(new URL[] {new File("./build/classes/java/main").toURI().toURL()});
-      Class<?> c = cl.loadClass("io.opentelemetry.javaagent.instrumentation.nocode.JexlEvaluator");
-      Object jexlEvaluator = c.getConstructor().newInstance();
-      NocodeEvaluation.Evaluator x = (NocodeEvaluation.Evaluator) jexlEvaluator;
-      return x.evaluate(jexl, thiz, params);
-    } catch (Exception e) {
-      fail(e);
-    }
-    fail("should not reach here");
-    return null;
+    return new JexlEvaluator().evaluate(jexl, thiz, params);
   }
 
   static Stream<Arguments> jexlToExpected() {
