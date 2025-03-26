@@ -64,18 +64,22 @@ public final class NocodeRulesParser {
           builder = builder.className(yamlRule.get("class").toString());
           // FUTURE support more complex method (specific overrides, wildcards, etc.)
           builder = builder.methodName(yamlRule.get("method").toString());
-          builder = builder.spanName(
-              yamlRule.get("spanName") == null ? null : yamlRule.get("spanName").toString());
-          builder = builder.spanKind(
-              yamlRule.get("spanKind") == null ? null : yamlRule.get("spanKind").toString());
-          builder = builder.spanStatus(
-              yamlRule.get("spanStatus") == null ? null : yamlRule.get("spanStatus").toString());
+          builder =
+              builder.spanName(
+                  yamlRule.get("spanName") == null ? null : yamlRule.get("spanName").toString());
+          builder =
+              builder.spanKind(
+                  yamlRule.get("spanKind") == null ? null : yamlRule.get("spanKind").toString());
+          builder =
+              builder.spanStatus(
+                  yamlRule.get("spanStatus") == null
+                      ? null
+                      : yamlRule.get("spanStatus").toString());
 
           List<Map<String, Object>> attrs = (List<Map<String, Object>>) yamlRule.get("attributes");
           if (attrs != null) {
             for (Map<String, Object> attr : attrs) {
-              builder = builder.attribute(
-                attr.get("key").toString(), attr.get("value").toString());
+              builder = builder.attribute(attr.get("key").toString(), attr.get("value").toString());
             }
           }
           answer.add(builder.build());

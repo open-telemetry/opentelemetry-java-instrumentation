@@ -13,7 +13,7 @@ import java.util.Map;
 
 public final class NocodeInstrumentationRules {
 
-  public final static class Builder {
+  public static final class Builder {
     private String className;
     private String methodName;
     private String spanName;
@@ -26,26 +26,31 @@ public final class NocodeInstrumentationRules {
       this.className = className;
       return this;
     }
+
     @CanIgnoreReturnValue
     public Builder methodName(String methodName) {
       this.methodName = methodName;
       return this;
     }
+
     @CanIgnoreReturnValue
     public Builder spanName(String spanName) {
       this.spanName = spanName;
       return this;
     }
+
     @CanIgnoreReturnValue
     public Builder spanKind(String spanKind) {
       this.spanKind = spanKind;
       return this;
     }
+
     @CanIgnoreReturnValue
     public Builder spanStatus(String spanStatus) {
       this.spanStatus = spanStatus;
       return this;
     }
+
     @CanIgnoreReturnValue
     public Builder attribute(String key, String valueExpression) {
       attributes.put(key, valueExpression);
@@ -83,18 +88,23 @@ public final class NocodeInstrumentationRules {
     public Map<String, String> getAttributes() {
       return attributes;
     }
+
     public String getClassName() {
       return className;
     }
+
     public String getMethodName() {
       return methodName;
     }
+
     public String getSpanName() {
       return spanName;
     }
+
     public String getSpanKind() {
       return spanKind;
     }
+
     public String getSpanStatus() {
       return spanStatus;
     }
@@ -118,7 +128,8 @@ public final class NocodeInstrumentationRules {
 
   private NocodeInstrumentationRules() {}
 
-  // FUTURE setting the global and lookup could go away if the instrumentation could be parameterized
+  // FUTURE setting the global and lookup could go away if the instrumentation could be
+  // parameterized
   // with the Rule
 
   // Using className.methodName as the key
