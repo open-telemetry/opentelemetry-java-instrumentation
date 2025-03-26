@@ -89,7 +89,7 @@ class NocodeInstrumentationTest {
   }
 
   @Test
-  void testEchoFalseIsOK() {
+  void testEchoFalseIsOk() {
     new SampleClass().echo(false);
     testing.waitAndAssertTraces(
         trace ->

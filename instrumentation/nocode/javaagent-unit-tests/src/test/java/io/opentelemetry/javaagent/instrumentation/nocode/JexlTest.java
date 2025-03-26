@@ -149,35 +149,25 @@ class JexlTest {
 
   @Test
   void testBooleanLiteralParamTypes() {
-    TakeBooleanPrimitive b = new TakeBooleanPrimitive();
-    TakeBoolean B = new TakeBoolean();
-    TakeObject O = new TakeObject();
-    assertEquals("true", evalJexl("this.take(true)", b, new Object[0]));
-    assertEquals("false", evalJexl("this.take(false)", B, new Object[0]));
-    assertEquals("true", evalJexl("this.take(true)", O, new Object[0]));
+    assertEquals("true", evalJexl("this.take(true)", new TakeBooleanPrimitive(), new Object[0]));
+    assertEquals("false", evalJexl("this.take(false)", new TakeBoolean(), new Object[0]));
+    assertEquals("true", evalJexl("this.take(true)", new TakeObject(), new Object[0]));
   }
 
   @Test
   void testStringLiteralParamTypes() {
-    TakeString S = new TakeString();
-    TakeObject O = new TakeObject();
-    assertEquals("a", evalJexl("this.take(\"a\")", S, new Object[0]));
-    assertEquals("a", evalJexl("this.take(\"a\")", O, new Object[0]));
+    assertEquals("a", evalJexl("this.take(\"a\")", new TakeString(), new Object[0]));
+    assertEquals("a", evalJexl("this.take(\"a\")", new TakeObject(), new Object[0]));
   }
 
   @Test
   public void testIntegerLiteralParamTypes() {
-    TakeIntegerPrimitive i = new TakeIntegerPrimitive();
-    TakeInteger I = new TakeInteger();
-    TakeLongPrimitize l = new TakeLongPrimitize();
-    TakeLong L = new TakeLong();
-    TakeObject O = new TakeObject();
-    assertEquals("13", evalJexl("this.take(13)", i, new Object[0]));
-    assertEquals("13", evalJexl("this.take(13)", I, new Object[0]));
-    assertEquals("13", evalJexl("this.take(13)", l, new Object[0]));
+    assertEquals("13", evalJexl("this.take(13)", new TakeIntegerPrimitive(), new Object[0]));
+    assertEquals("13", evalJexl("this.take(13)", new TakeInteger(), new Object[0]));
+    assertEquals("13", evalJexl("this.take(13)", new TakeLongPrimitize(), new Object[0]));
     // Just documenting some oddness here with the long treatment
-    assertEquals("13", evalJexl("this.take(13L)", L, new Object[0]));
-    assertEquals("13", evalJexl("this.take(13)", O, new Object[0]));
+    assertEquals("13", evalJexl("this.take(13L)", new TakeLong(), new Object[0]));
+    assertEquals("13", evalJexl("this.take(13)", new TakeObject(), new Object[0]));
   }
 
   @ParameterizedTest
