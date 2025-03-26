@@ -11,5 +11,4 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("org.spockframework:spock-core")
   implementation("com.h2database:h2:2.2.224")
-
 }
