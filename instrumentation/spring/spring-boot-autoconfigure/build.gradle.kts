@@ -50,8 +50,11 @@ dependencies {
   implementation(project(":instrumentation:log4j:log4j-appender-2.17:library"))
   compileOnly("org.apache.logging.log4j:log4j-core:2.17.0")
   implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
+  implementation(project(":instrumentation:logback:logback-mdc-1.0:library"))
   compileOnly("ch.qos.logback:logback-classic:1.0.0")
   implementation(project(":instrumentation:jdbc:library"))
+  implementation(project(":instrumentation:runtime-telemetry:runtime-telemetry-java8:library"))
+  implementation(project(":instrumentation:runtime-telemetry:runtime-telemetry-java17:library"))
 
   library("org.springframework.kafka:spring-kafka:2.9.0")
   library("org.springframework.boot:spring-boot-starter-actuator:$springBootVersion")
@@ -129,6 +132,7 @@ testing {
         implementation("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
 
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
+        implementation(project(":instrumentation:logback:logback-mdc-1.0:library"))
         // using the same versions as in the spring-boot-autoconfigure
         implementation("ch.qos.logback:logback-classic") {
           version {
@@ -179,10 +183,6 @@ configurations.configureEach {
 }
 
 tasks {
-  check {
-    dependsOn(testing.suites)
-  }
-
   compileTestJava {
     options.compilerArgs.add("-parameters")
   }
@@ -211,7 +211,20 @@ tasks {
     isEnabled = testSpring3
   }
 
-  withType(Jar::class) {
+  named<Jar>("jar") {
     from(sourceSets["javaSpring3"].output)
+  }
+
+  named<Jar>("sourcesJar") {
+    from(sourceSets["javaSpring3"].java)
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testing.suites)
+    dependsOn(testStableSemconv)
   }
 }

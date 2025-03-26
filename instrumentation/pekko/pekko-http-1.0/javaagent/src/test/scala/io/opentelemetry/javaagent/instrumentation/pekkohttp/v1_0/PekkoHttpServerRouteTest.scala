@@ -25,7 +25,6 @@ import org.apache.pekko.http.scaladsl.server.Directives.{
   pathPrefix,
   pathSingleSlash
 }
-import org.apache.pekko.stream.ActorMaterializer
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.{AfterAll, Test, TestInstance}
@@ -42,7 +41,6 @@ class PekkoHttpServerRouteTest {
   private val client: WebClient = WebClient.of()
 
   implicit val system: ActorSystem = ActorSystem("my-system")
-  implicit val materializer: ActorMaterializer = ActorMaterializer()
 
   private def buildAddress(port: Int): URI = try
     new URI("http://localhost:" + port + "/")

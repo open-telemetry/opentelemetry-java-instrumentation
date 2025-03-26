@@ -12,9 +12,9 @@ import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static java.util.stream.Collectors.toList;
 
-import com.google.protobuf.InvalidProtocolBufferException;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
@@ -22,29 +22,6 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.api.trace.TraceStateBuilder;
-import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceRequest;
-import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
-import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
-import io.opentelemetry.proto.common.v1.AnyValue;
-import io.opentelemetry.proto.common.v1.ArrayValue;
-import io.opentelemetry.proto.common.v1.InstrumentationScope;
-import io.opentelemetry.proto.common.v1.KeyValue;
-import io.opentelemetry.proto.logs.v1.LogRecord;
-import io.opentelemetry.proto.logs.v1.ResourceLogs;
-import io.opentelemetry.proto.logs.v1.ScopeLogs;
-import io.opentelemetry.proto.logs.v1.SeverityNumber;
-import io.opentelemetry.proto.metrics.v1.HistogramDataPoint;
-import io.opentelemetry.proto.metrics.v1.Metric;
-import io.opentelemetry.proto.metrics.v1.NumberDataPoint;
-import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
-import io.opentelemetry.proto.metrics.v1.ScopeMetrics;
-import io.opentelemetry.proto.metrics.v1.Sum;
-import io.opentelemetry.proto.metrics.v1.SummaryDataPoint;
-import io.opentelemetry.proto.resource.v1.Resource;
-import io.opentelemetry.proto.trace.v1.ResourceSpans;
-import io.opentelemetry.proto.trace.v1.ScopeSpans;
-import io.opentelemetry.proto.trace.v1.Span;
-import io.opentelemetry.proto.trace.v1.Status;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
@@ -65,11 +42,37 @@ import io.opentelemetry.sdk.metrics.internal.data.ImmutableSummaryData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableSummaryPointData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableValueAtQuantile;
 import io.opentelemetry.sdk.testing.logs.TestLogRecordData;
+import io.opentelemetry.sdk.testing.logs.internal.TestExtendedLogRecordData;
 import io.opentelemetry.sdk.testing.trace.TestSpanData;
 import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.testing.internal.proto.collector.logs.v1.ExportLogsServiceRequest;
+import io.opentelemetry.testing.internal.proto.collector.metrics.v1.ExportMetricsServiceRequest;
+import io.opentelemetry.testing.internal.proto.collector.trace.v1.ExportTraceServiceRequest;
+import io.opentelemetry.testing.internal.proto.common.v1.AnyValue;
+import io.opentelemetry.testing.internal.proto.common.v1.ArrayValue;
+import io.opentelemetry.testing.internal.proto.common.v1.InstrumentationScope;
+import io.opentelemetry.testing.internal.proto.common.v1.KeyValue;
+import io.opentelemetry.testing.internal.proto.common.v1.KeyValueList;
+import io.opentelemetry.testing.internal.proto.logs.v1.LogRecord;
+import io.opentelemetry.testing.internal.proto.logs.v1.ResourceLogs;
+import io.opentelemetry.testing.internal.proto.logs.v1.ScopeLogs;
+import io.opentelemetry.testing.internal.proto.logs.v1.SeverityNumber;
+import io.opentelemetry.testing.internal.proto.metrics.v1.HistogramDataPoint;
+import io.opentelemetry.testing.internal.proto.metrics.v1.Metric;
+import io.opentelemetry.testing.internal.proto.metrics.v1.NumberDataPoint;
+import io.opentelemetry.testing.internal.proto.metrics.v1.ResourceMetrics;
+import io.opentelemetry.testing.internal.proto.metrics.v1.ScopeMetrics;
+import io.opentelemetry.testing.internal.proto.metrics.v1.Sum;
+import io.opentelemetry.testing.internal.proto.metrics.v1.SummaryDataPoint;
+import io.opentelemetry.testing.internal.proto.resource.v1.Resource;
+import io.opentelemetry.testing.internal.proto.trace.v1.ResourceSpans;
+import io.opentelemetry.testing.internal.proto.trace.v1.ScopeSpans;
+import io.opentelemetry.testing.internal.proto.trace.v1.Span;
+import io.opentelemetry.testing.internal.proto.trace.v1.Status;
+import io.opentelemetry.testing.internal.protobuf.InvalidProtocolBufferException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -91,6 +94,11 @@ public final class AgentTestingExporterAccess {
   private static final MethodHandle getLogExportRequests;
   private static final MethodHandle reset;
   private static final MethodHandle forceFlushCalled;
+  // opentelemetry-api-1.27:javaagent tests use an older version of opentelemetry-api where Value
+  // class is missing
+  private static final boolean canUseValue = classAvailable("io.opentelemetry.api.common.Value");
+  private static final boolean hasExtendedLogRecordData =
+      classAvailable("io.opentelemetry.sdk.logs.data.internal.ExtendedLogRecordData");
 
   static {
     try {
@@ -123,6 +131,15 @@ public final class AgentTestingExporterAccess {
               MethodType.methodType(boolean.class));
     } catch (Exception e) {
       throw new AssertionError("Error accessing fields with reflection.", e);
+    }
+  }
+
+  private static boolean classAvailable(String className) {
+    try {
+      Class.forName(className);
+      return true;
+    } catch (ClassNotFoundException e) {
+      return false;
     }
   }
 
@@ -336,7 +353,7 @@ public final class AgentTestingExporterAccess {
               metric.getName(),
               metric.getDescription(),
               metric.getUnit(),
-              // TODO(anuraaga): Remove usages of internal types.
+              // TODO: Remove usages of internal types.
               ImmutableGaugeData.create(
                   getDoublePointDatas(metric.getGauge().getDataPointsList())));
         } else {
@@ -402,21 +419,88 @@ public final class AgentTestingExporterAccess {
       LogRecord logRecord,
       io.opentelemetry.sdk.resources.Resource resource,
       InstrumentationScopeInfo instrumentationScopeInfo) {
-    return TestLogRecordData.builder()
-        .setResource(resource)
-        .setInstrumentationScopeInfo(instrumentationScopeInfo)
-        .setTimestamp(logRecord.getTimeUnixNano(), TimeUnit.NANOSECONDS)
-        .setSpanContext(
-            SpanContext.create(
-                bytesToHex(logRecord.getTraceId().toByteArray()),
-                bytesToHex(logRecord.getSpanId().toByteArray()),
-                TraceFlags.getDefault(),
-                TraceState.getDefault()))
-        .setSeverity(fromProto(logRecord.getSeverityNumber()))
-        .setSeverityText(logRecord.getSeverityText())
-        .setBody(logRecord.getBody().getStringValue())
-        .setAttributes(fromProto(logRecord.getAttributesList()))
-        .build();
+    if (hasExtendedLogRecordData) {
+      return createExtendedLogData(logRecord, resource, instrumentationScopeInfo);
+    }
+    TestLogRecordData.Builder builder =
+        TestLogRecordData.builder()
+            .setResource(resource)
+            .setInstrumentationScopeInfo(instrumentationScopeInfo)
+            .setTimestamp(logRecord.getTimeUnixNano(), TimeUnit.NANOSECONDS)
+            .setSpanContext(
+                SpanContext.create(
+                    bytesToHex(logRecord.getTraceId().toByteArray()),
+                    bytesToHex(logRecord.getSpanId().toByteArray()),
+                    TraceFlags.getDefault(),
+                    TraceState.getDefault()))
+            .setSeverity(fromProto(logRecord.getSeverityNumber()))
+            .setSeverityText(logRecord.getSeverityText())
+            .setAttributes(fromProto(logRecord.getAttributesList()));
+    if (canUseValue) {
+      builder.setBodyValue(getBodyValue(logRecord.getBody()));
+    } else {
+      builder.setBody(logRecord.getBody().getStringValue());
+    }
+    return builder.build();
+  }
+
+  private static LogRecordData createExtendedLogData(
+      LogRecord logRecord,
+      io.opentelemetry.sdk.resources.Resource resource,
+      InstrumentationScopeInfo instrumentationScopeInfo) {
+    TestExtendedLogRecordData.Builder builder =
+        TestExtendedLogRecordData.builder()
+            .setResource(resource)
+            .setInstrumentationScopeInfo(instrumentationScopeInfo)
+            .setTimestamp(logRecord.getTimeUnixNano(), TimeUnit.NANOSECONDS)
+            .setSpanContext(
+                SpanContext.create(
+                    bytesToHex(logRecord.getTraceId().toByteArray()),
+                    bytesToHex(logRecord.getSpanId().toByteArray()),
+                    TraceFlags.getDefault(),
+                    TraceState.getDefault()))
+            .setSeverity(fromProto(logRecord.getSeverityNumber()))
+            .setSeverityText(logRecord.getSeverityText())
+            .setAttributes(fromProto(logRecord.getAttributesList()))
+            .setEventName(logRecord.getEventName())
+            .setBodyValue(getBodyValue(logRecord.getBody()));
+    return builder.build();
+  }
+
+  private static Value<?> getBodyValue(AnyValue value) {
+    switch (value.getValueCase()) {
+      case STRING_VALUE:
+        return Value.of(value.getStringValue());
+      case BOOL_VALUE:
+        return Value.of(value.getBoolValue());
+      case INT_VALUE:
+        return Value.of(value.getIntValue());
+      case DOUBLE_VALUE:
+        return Value.of(value.getDoubleValue());
+      case ARRAY_VALUE:
+        ArrayValue array = value.getArrayValue();
+        List<Value<?>> convertedValues = new ArrayList<>();
+        for (int i = 0; i < array.getValuesCount(); i++) {
+          convertedValues.add(getBodyValue(array.getValues(i)));
+        }
+        return Value.of(convertedValues);
+      case KVLIST_VALUE:
+        KeyValueList keyValueList = value.getKvlistValue();
+        io.opentelemetry.api.common.KeyValue[] convertedKeyValueList =
+            new io.opentelemetry.api.common.KeyValue[keyValueList.getValuesCount()];
+        for (int i = 0; i < keyValueList.getValuesCount(); i++) {
+          KeyValue keyValue = keyValueList.getValues(i);
+          convertedKeyValueList[i] =
+              io.opentelemetry.api.common.KeyValue.of(
+                  keyValue.getKey(), getBodyValue(keyValue.getValue()));
+        }
+        return Value.of(convertedKeyValueList);
+      case BYTES_VALUE:
+        return Value.of(value.getBytesValue().toByteArray());
+      case VALUE_NOT_SET:
+        return null;
+    }
+    throw new IllegalStateException("Unexpected attribute: " + value.getValueCase());
   }
 
   private static boolean isDouble(List<NumberDataPoint> points) {
@@ -513,7 +597,8 @@ public final class AgentTestingExporterAccess {
   }
 
   private static AggregationTemporality getTemporality(
-      io.opentelemetry.proto.metrics.v1.AggregationTemporality aggregationTemporality) {
+      io.opentelemetry.testing.internal.proto.metrics.v1.AggregationTemporality
+          aggregationTemporality) {
     switch (aggregationTemporality) {
       case AGGREGATION_TEMPORALITY_CUMULATIVE:
         return AggregationTemporality.CUMULATIVE;

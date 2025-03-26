@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
-import org.eclipse.jetty.server.Connector;
+import java.net.InetSocketAddress;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -36,14 +36,10 @@ class TapestryTest extends AbstractHttpServerUsingTest<Server> {
   protected Server setupServer() throws Exception {
     WebAppContext webAppContext = new WebAppContext();
     webAppContext.setContextPath(getContextPath());
-    Server jettyServer = new Server(port);
+    Server jettyServer = new Server(new InetSocketAddress("localhost", port));
 
     // set up test application
     webAppContext.setBaseResource(Resource.newResource("src/test/webapp"));
-    for (Connector connector : jettyServer.getConnectors()) {
-      connector.setHost("localhost");
-    }
-
     jettyServer.setHandler(webAppContext);
     jettyServer.start();
 

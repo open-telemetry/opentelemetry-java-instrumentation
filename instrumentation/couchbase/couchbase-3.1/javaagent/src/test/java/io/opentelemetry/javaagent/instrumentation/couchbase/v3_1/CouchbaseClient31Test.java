@@ -42,11 +42,12 @@ class CouchbaseClient31Test {
   @BeforeAll
   static void setup() {
     couchbase =
-        new CouchbaseContainer("couchbase/server:7.6.0")
+        new CouchbaseContainer("couchbase/server:6.5.1")
             .withExposedPorts(8091)
             .withEnabledServices(CouchbaseService.KV)
             .withBucket(new BucketDefinition("test"))
             .withLogConsumer(new Slf4jLogConsumer(logger))
+            .withStartupAttempts(5)
             .withStartupTimeout(Duration.ofMinutes(2));
     couchbase.start();
 

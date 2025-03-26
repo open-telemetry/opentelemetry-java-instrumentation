@@ -13,8 +13,8 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.PropagationProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.SpringConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -28,6 +28,9 @@ import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.assertj.core.api.AbstractCharSequenceAssert;
@@ -46,6 +49,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.RequestEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.client.RestTemplate;
 
@@ -53,13 +59,14 @@ import org.springframework.web.client.RestTemplate;
  * This test class enforces the order of the tests to make sure that {@link #shouldSendTelemetry()},
  * which asserts the telemetry data from the application startup, is executed first.
  */
+@SuppressWarnings("deprecation") // using deprecated semconv
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
   @Autowired private TestRestTemplate testRestTemplate;
 
   @Autowired private Environment environment;
-  @Autowired private PropagationProperties propagationProperties;
+  @Autowired private OtelSpringProperties otelSpringProperties;
   @Autowired private OtelResourceProperties otelResourceProperties;
   @Autowired private OtlpExporterProperties otlpExporterProperties;
   @Autowired private RestTemplateBuilder restTemplateBuilder;
@@ -104,6 +111,21 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                           Attributes.of(
                               AttributeKey.booleanKey("keyFromResourceCustomizer"), true))));
     }
+
+    @Bean
+    AutoConfigurationCustomizerProvider customizerUsingPropertyDefinedInaSpringFile() {
+      return customizer ->
+          customizer.addResourceCustomizer(
+              (resource, config) -> {
+                String valueForKeyDeclaredZsEnvVariable = config.getString("APPLICATION_PROP");
+                assertThat(valueForKeyDeclaredZsEnvVariable).isNotEmpty();
+
+                String valueForKeyWithDash = config.getString("application.prop-with-dash");
+                assertThat(valueForKeyWithDash).isNotEmpty();
+
+                return resource;
+              });
+    }
   }
 
   @Test
@@ -113,7 +135,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
             environment,
             otlpExporterProperties,
             otelResourceProperties,
-            propagationProperties,
+            otelSpringProperties,
             DefaultConfigProperties.createFromMap(
                 Collections.singletonMap("otel.exporter.otlp.headers", "a=1,b=2")));
     assertThat(configProperties.getMap("otel.exporter.otlp.headers"))
@@ -126,7 +148,13 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
   @Test
   @org.junit.jupiter.api.Order(1)
   void shouldSendTelemetry() {
-    testRestTemplate.getForObject(OtelSpringStarterSmokeTestController.PING, String.class);
+    HttpHeaders headers = new HttpHeaders();
+    headers.add("key", "value");
+
+    testRestTemplate.exchange(
+        new RequestEntity<>(
+            null, headers, HttpMethod.GET, URI.create(OtelSpringStarterSmokeTestController.PING)),
+        String.class);
 
     // Span
     testing.waitAndAssertTraces(
@@ -170,6 +198,9 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                             equalTo(HttpAttributes.HTTP_ROUTE, "/ping"),
                             equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                             equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
+                            equalTo(
+                                AttributeKey.stringArrayKey("http.request.header.key"),
+                                Collections.singletonList("value")),
                             satisfies(
                                 ServerAttributes.SERVER_PORT,
                                 integerAssert -> integerAssert.isNotZero())),
@@ -181,13 +212,37 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
         OtelSpringStarterSmokeTestController.TEST_HISTOGRAM,
         AbstractIterableAssert::isNotEmpty);
 
+    // JMX based metrics - test one per JMX bean
+    List<String> jmxMetrics =
+        new ArrayList<>(Arrays.asList("jvm.thread.count", "jvm.memory.used", "jvm.memory.init"));
+
+    double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
+    // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13503
+    if (javaVersion < 23) {
+      jmxMetrics.add("jvm.system.cpu.load_1m");
+    }
+
+    boolean noNative = System.getProperty("org.graalvm.nativeimage.imagecode") == null;
+    if (noNative) {
+      // GraalVM native image does not support buffer pools - have to investigate why
+      jmxMetrics.add("jvm.buffer.memory.used");
+    }
+    jmxMetrics.forEach(
+        metricName ->
+            testing.waitAndAssertMetrics(
+                "io.opentelemetry.runtime-telemetry-java8",
+                metricName,
+                AbstractIterableAssert::isNotEmpty));
+
+    assertAdditionalMetrics();
+
     // Log
     List<LogRecordData> exportedLogRecords = testing.getExportedLogRecords();
     assertThat(exportedLogRecords).as("No log record exported.").isNotEmpty();
-    if (System.getProperty("org.graalvm.nativeimage.imagecode") == null) {
+    if (noNative) {
       // log records differ in native image mode due to different startup timing
       LogRecordData firstLog = exportedLogRecords.get(0);
-      assertThat(firstLog.getBody().asString())
+      assertThat(firstLog.getBodyValue().asString())
           .as("Should instrument logs")
           .startsWith("Starting ")
           .contains(this.getClass().getSimpleName());
@@ -198,6 +253,8 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
               "org.springframework.boot.StartupInfoLogger");
     }
   }
+
+  protected void assertAdditionalMetrics() {}
 
   @Test
   void databaseQuery() {
@@ -236,5 +293,24 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                 span ->
                     span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"),
                 span -> withSpanAssert(span)));
+  }
+
+  @Test
+  void shouldRedactSomeUrlParameters() {
+    testing.clearAllExportedData();
+
+    RestTemplate restTemplate = restTemplateBuilder.rootUri("http://localhost:" + port).build();
+    restTemplate.getForObject(
+        "/test?X-Goog-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0", String.class);
+
+    testing.waitAndAssertTraces(
+        traceAssert ->
+            traceAssert.hasSpansSatisfyingExactly(
+                span ->
+                    HttpSpanDataAssert.create(span)
+                        .assertClientGetRequest("/test?X-Goog-Signature=REDACTED"),
+                span ->
+                    span.hasKind(SpanKind.SERVER)
+                        .hasAttribute(HttpAttributes.HTTP_ROUTE, "/test")));
   }
 }

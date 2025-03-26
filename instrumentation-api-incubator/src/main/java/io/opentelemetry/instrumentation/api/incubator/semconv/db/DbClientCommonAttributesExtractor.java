@@ -11,6 +11,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import javax.annotation.Nullable;
@@ -21,7 +22,10 @@ abstract class DbClientCommonAttributesExtractor<
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_NAME = AttributeKey.stringKey("db.name");
-  private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
+  static final AttributeKey<String> DB_NAMESPACE = AttributeKey.stringKey("db.namespace");
+  static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
+  public static final AttributeKey<String> DB_SYSTEM_NAME =
+      AttributeKey.stringKey("db.system.name");
   private static final AttributeKey<String> DB_USER = AttributeKey.stringKey("db.user");
   private static final AttributeKey<String> DB_CONNECTION_STRING =
       AttributeKey.stringKey("db.connection_string");
@@ -32,12 +36,22 @@ abstract class DbClientCommonAttributesExtractor<
     this.getter = getter;
   }
 
+  @SuppressWarnings("deprecation") // until old db semconv are dropped
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    internalSet(attributes, DB_SYSTEM, getter.getSystem(request));
-    internalSet(attributes, DB_USER, getter.getUser(request));
-    internalSet(attributes, DB_NAME, getter.getName(request));
-    internalSet(attributes, DB_CONNECTION_STRING, getter.getConnectionString(request));
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      internalSet(
+          attributes,
+          DB_SYSTEM_NAME,
+          SemconvStability.stableDbSystemName(getter.getDbSystem(request)));
+      internalSet(attributes, DB_NAMESPACE, getter.getDbNamespace(request));
+    }
+    if (SemconvStability.emitOldDatabaseSemconv()) {
+      internalSet(attributes, DB_SYSTEM, getter.getDbSystem(request));
+      internalSet(attributes, DB_USER, getter.getUser(request));
+      internalSet(attributes, DB_NAME, getter.getDbNamespace(request));
+      internalSet(attributes, DB_CONNECTION_STRING, getter.getConnectionString(request));
+    }
   }
 
   @Override

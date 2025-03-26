@@ -17,6 +17,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
@@ -46,7 +47,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
-import io.opentelemetry.semconv.HttpAttributes;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Set;
@@ -106,7 +106,9 @@ class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
                                                 HttpResponseStatus.valueOf(endpoint.getStatus()),
                                                 content);
                                       } else if (endpoint.equals(INDEXED_CHILD)) {
-                                        content = Unpooled.EMPTY_BUFFER;
+                                        content =
+                                            Unpooled.copiedBuffer(
+                                                endpoint.getBody(), CharsetUtil.UTF_8);
                                         endpoint.collectSpanAttributes(
                                             it ->
                                                 new QueryStringDecoder(uri)
@@ -212,7 +214,7 @@ class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
         serverEndpoint -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(HttpAttributes.HTTP_ROUTE);
+          attributes.remove(HTTP_ROUTE);
           return attributes;
         });
 

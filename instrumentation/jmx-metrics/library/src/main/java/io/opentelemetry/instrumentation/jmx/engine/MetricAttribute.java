@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.jmx.engine;
 
-import javax.management.MBeanServer;
+import javax.annotation.Nullable;
+import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 
 /**
@@ -22,11 +23,16 @@ public class MetricAttribute {
     this.extractor = extractor;
   }
 
+  public boolean isStateAttribute() {
+    return extractor == null;
+  }
+
   public String getAttributeName() {
     return name;
   }
 
-  String acquireAttributeValue(MBeanServer server, ObjectName objectName) {
-    return extractor.extractValue(server, objectName);
+  @Nullable
+  public String acquireAttributeValue(MBeanServerConnection connection, ObjectName objectName) {
+    return extractor.extractValue(connection, objectName);
   }
 }

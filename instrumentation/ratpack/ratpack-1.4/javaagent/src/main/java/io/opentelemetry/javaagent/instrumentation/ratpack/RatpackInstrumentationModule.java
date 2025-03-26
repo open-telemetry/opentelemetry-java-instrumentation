@@ -30,8 +30,10 @@ public class RatpackInstrumentationModule extends InstrumentationModule
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ContinuationInstrumentation(),
+        new ContinuationStreamInstrumentation(),
         new DefaultExecutionInstrumentation(),
         new DefaultExecStarterInstrumentation(),
+        new ExecutionBoundPublisherInstrumentation(),
         new ServerErrorHandlerInstrumentation(),
         new ServerRegistryInstrumentation());
   }

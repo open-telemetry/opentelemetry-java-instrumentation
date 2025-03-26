@@ -23,7 +23,7 @@ import java.util.logging.Logger;
  */
 public class OperationMetricsUtil {
   private static final Logger logger = Logger.getLogger(OperationMetricsUtil.class.getName());
-  private static final OperationListener NOOP_OPERATION_LISTENER =
+  public static final OperationListener NOOP_OPERATION_LISTENER =
       new OperationListener() {
 
         @Override

@@ -16,11 +16,9 @@ dependencies {
   compileOnly("com.amazonaws:aws-java-sdk-sqs:1.11.106")
 
   // needed for SQS - using emq directly as localstack references emq v0.15.7 ie WITHOUT AWS trace header propagation
-  implementation("org.elasticmq:elasticmq-rest-sqs_2.12:1.0.0")
+  implementation("org.elasticmq:elasticmq-rest-sqs_2.13")
 
   implementation("com.google.guava:guava")
 
-  implementation("org.apache.groovy:groovy")
   implementation("io.opentelemetry:opentelemetry-api")
-  implementation("org.spockframework:spock-core")
 }

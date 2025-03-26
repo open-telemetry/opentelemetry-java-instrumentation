@@ -8,6 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
 import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 
@@ -26,13 +29,13 @@ import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.
 import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.config.TriggerTaskConfig;
 import io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1.spring.service.LambdaTaskConfigurer;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.ExceptionAttributes;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class SpringSchedulingTest {
 
   @RegisterExtension
@@ -166,11 +169,11 @@ class SpringSchedulingTest {
                                       .hasName("exception")
                                       .hasAttributesSatisfying(
                                           equalTo(
-                                              ExceptionAttributes.EXCEPTION_TYPE,
+                                              EXCEPTION_TYPE,
                                               IllegalStateException.class.getName()),
-                                          equalTo(ExceptionAttributes.EXCEPTION_MESSAGE, "failure"),
+                                          equalTo(EXCEPTION_MESSAGE, "failure"),
                                           satisfies(
-                                              ExceptionAttributes.EXCEPTION_STACKTRACE,
+                                              EXCEPTION_STACKTRACE,
                                               value -> value.isInstanceOf(String.class)))),
                   span -> span.hasName("error-handler").hasParent(trace.getSpan(0))));
     }

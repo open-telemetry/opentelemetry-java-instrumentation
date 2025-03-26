@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
 import static io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11.Utils.createClient;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.twitter.finagle.ConnectionFailedException;
@@ -30,7 +32,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11.Utils.ClientType;
-import io.opentelemetry.semconv.ServerAttributes;
 import java.net.ConnectException;
 import java.net.URI;
 import java.util.Collections;
@@ -120,6 +121,7 @@ class ClientTest extends AbstractHttpClientTest<Request> {
     optionsBuilder.setHttpAttributes(ClientTest::getHttpAttributes);
     optionsBuilder.setExpectedClientSpanNameMapper(ClientTest::getExpectedClientSpanName);
     optionsBuilder.disableTestRedirects();
+    optionsBuilder.spanEndsAfterBody();
     optionsBuilder.setClientSpanErrorMapper(
         (uri, error) -> {
           // all errors should be wrapped in RuntimeExceptions due to how we run things in
@@ -193,8 +195,8 @@ class ClientTest extends AbstractHttpClientTest<Request> {
       return Collections.emptySet();
     }
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-    attributes.remove(ServerAttributes.SERVER_ADDRESS);
-    attributes.remove(ServerAttributes.SERVER_PORT);
+    attributes.remove(SERVER_ADDRESS);
+    attributes.remove(SERVER_PORT);
     return attributes;
   }
 

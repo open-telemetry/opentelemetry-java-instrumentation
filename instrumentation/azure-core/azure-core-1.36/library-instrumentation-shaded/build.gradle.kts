@@ -6,7 +6,9 @@ plugins {
 group = "io.opentelemetry.javaagent.instrumentation"
 
 dependencies {
-  implementation("com.azure:azure-core-tracing-opentelemetry:1.0.0-beta.42")
+  // this is the last good version that works with indy build
+  // update to 1.49 or latest once https://github.com/Azure/azure-sdk-for-java/pull/42586 is released.
+  implementation("com.azure:azure-core-tracing-opentelemetry:1.0.0-beta.45")
 }
 
 tasks {

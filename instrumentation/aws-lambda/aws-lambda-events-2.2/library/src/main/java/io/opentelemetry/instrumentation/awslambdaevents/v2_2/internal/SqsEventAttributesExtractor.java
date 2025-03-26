@@ -19,7 +19,7 @@ class SqsEventAttributesExtractor implements AttributesExtractor<SQSEvent, Void>
       AttributeKey.stringKey("messaging.operation");
   private static final AttributeKey<String> MESSAGING_SYSTEM =
       AttributeKey.stringKey("messaging.system");
-  // copied from MessagingIncubatingAttributes.MessagingSystemValues
+  // copied from MessagingIncubatingAttributes.MessagingSystemIncubatingValues
   private static final String AWS_SQS = "aws_sqs";
 
   @Override

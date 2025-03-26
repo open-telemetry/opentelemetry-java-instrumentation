@@ -6,10 +6,11 @@
 package io.opentelemetry.instrumentation.runtimemetrics.java17.internal.garbagecollection;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.metrics.LongHistogram;
+import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.JfrFeature;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants;
+import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.DurationUtil;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.RecordedEventHandler;
 import java.time.Duration;
 import java.util.Optional;
@@ -22,7 +23,7 @@ import jdk.jfr.consumer.RecordedEvent;
 public final class YoungGarbageCollectionHandler implements RecordedEventHandler {
   private static final String EVENT_NAME = "jdk.YoungGarbageCollection";
 
-  private final LongHistogram histogram;
+  private final DoubleHistogram histogram;
   private final Attributes attributes;
 
   public YoungGarbageCollectionHandler(Meter meter, String gc) {
@@ -30,8 +31,7 @@ public final class YoungGarbageCollectionHandler implements RecordedEventHandler
         meter
             .histogramBuilder(Constants.METRIC_NAME_GC_DURATION)
             .setDescription(Constants.METRIC_DESCRIPTION_GC_DURATION)
-            .setUnit(Constants.MILLISECONDS)
-            .ofLongs()
+            .setUnit(Constants.SECONDS)
             .build();
     // Set the attribute's GC based on which GC is being used.
     // G1 young collection is already handled by G1GarbageCollectionHandler.
@@ -42,7 +42,7 @@ public final class YoungGarbageCollectionHandler implements RecordedEventHandler
 
   @Override
   public void accept(RecordedEvent ev) {
-    histogram.record(ev.getLong(Constants.DURATION), attributes);
+    histogram.record(DurationUtil.toSeconds(ev.getDuration()), attributes);
   }
 
   @Override

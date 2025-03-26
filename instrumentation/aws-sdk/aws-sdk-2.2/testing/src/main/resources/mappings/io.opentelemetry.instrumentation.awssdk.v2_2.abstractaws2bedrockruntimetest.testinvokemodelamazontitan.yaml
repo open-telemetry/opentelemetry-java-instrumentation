@@ -1,0 +1,34 @@
+---
+id: dbcd468d-58ca-4d6f-87e9-7d377f1aae67
+name: model_amazontitan-text-lite-v1_invoke
+request:
+  url: /model/amazon.titan-text-lite-v1/invoke
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "inputText" : "Say this is a test",
+        "textGenerationConfig" : {
+          "maxTokenCount" : 10,
+          "temperature" : 0.8,
+          "topP" : 1,
+          "stopSequences" : [ "|" ]
+        }
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  body: "{\"inputTextTokenCount\":5,\"results\":[{\"tokenCount\":10,\"outputText\"\
+    :\"\\nHello! I am a computer program designed to\",\"completionReason\":\"LENGTH\"\
+    }]}"
+  headers:
+    Date: "Wed, 19 Mar 2025 05:44:06 GMT"
+    Content-Type: application/json
+    x-amzn-RequestId: 1c4e6b83-4da3-430c-b21f-34b0cb003f06
+    X-Amzn-Bedrock-Invocation-Latency: "658"
+    X-Amzn-Bedrock-Output-Token-Count: "10"
+    X-Amzn-Bedrock-Input-Token-Count: "5"
+uuid: dbcd468d-58ca-4d6f-87e9-7d377f1aae67
+persistent: true
+insertionIndex: 20

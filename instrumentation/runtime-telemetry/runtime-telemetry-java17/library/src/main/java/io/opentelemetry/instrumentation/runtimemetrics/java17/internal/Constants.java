@@ -18,7 +18,7 @@ public final class Constants {
   public static final String ONE = "1";
   public static final String HERTZ = "Hz";
   public static final String BYTES = "By";
-  public static final String MILLISECONDS = "ms";
+  public static final String SECONDS = "s";
   public static final String COMMITTED = "committed";
   public static final String RESERVED = "reserved";
   public static final String INITIAL_SIZE = "initialSize";

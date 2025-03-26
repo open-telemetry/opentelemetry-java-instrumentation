@@ -12,12 +12,13 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridgin
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationLongCounterBuilder;
 import java.util.List;
 
-final class ApplicationLongCounterBuilder137 extends ApplicationLongCounterBuilder
+public class ApplicationLongCounterBuilder137 extends ApplicationLongCounterBuilder
     implements ExtendedLongCounterBuilder {
 
   private final io.opentelemetry.api.metrics.LongCounterBuilder agentBuilder;
 
-  ApplicationLongCounterBuilder137(io.opentelemetry.api.metrics.LongCounterBuilder agentBuilder) {
+  protected ApplicationLongCounterBuilder137(
+      io.opentelemetry.api.metrics.LongCounterBuilder agentBuilder) {
     super(agentBuilder);
     this.agentBuilder = agentBuilder;
   }

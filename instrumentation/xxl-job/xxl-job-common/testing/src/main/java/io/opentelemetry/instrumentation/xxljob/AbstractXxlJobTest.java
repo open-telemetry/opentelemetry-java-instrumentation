@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Assumptions;
@@ -139,6 +140,7 @@ public abstract class AbstractXxlJobTest {
                         .hasAttributesSatisfyingExactly(assertions)));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static void checkXxlJob(
       String spanName,
       StatusData statusData,
@@ -147,8 +149,8 @@ public abstract class AbstractXxlJobTest {
       String codeFunction) {
     List<AttributeAssertion> attributeAssertions = new ArrayList<>();
     attributeAssertions.addAll(attributeAssertions(glueType));
-    attributeAssertions.add(equalTo(AttributeKey.stringKey("code.namespace"), codeNamespace));
-    attributeAssertions.add(equalTo(AttributeKey.stringKey("code.function"), codeFunction));
+    attributeAssertions.add(equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, codeNamespace));
+    attributeAssertions.add(equalTo(CodeIncubatingAttributes.CODE_FUNCTION, codeFunction));
 
     checkXxlJob(spanName, statusData, attributeAssertions);
   }

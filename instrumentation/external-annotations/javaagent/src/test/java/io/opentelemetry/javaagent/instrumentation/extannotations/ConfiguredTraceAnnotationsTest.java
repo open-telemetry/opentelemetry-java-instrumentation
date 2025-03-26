@@ -26,6 +26,7 @@ class ConfiguredTraceAnnotationsTest {
     assertThat(testing.spans()).isEmpty();
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testMethodWithAnnotationShouldBeTraced() {
     assertThat(new AnnotationTracedCallable().call()).isEqualTo("Hello!");

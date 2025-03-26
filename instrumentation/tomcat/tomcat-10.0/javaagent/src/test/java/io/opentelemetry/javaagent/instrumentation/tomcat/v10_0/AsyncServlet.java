@@ -13,14 +13,14 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
-import io.opentelemetry.instrumentation.test.base.HttpServerTest;
+import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import jakarta.servlet.AsyncContext;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.concurrent.CountDownLatch;
 
@@ -37,7 +37,7 @@ class AsyncServlet extends HttpServlet {
     context.start(
         () -> {
           try {
-            HttpServerTest.controller(
+            AbstractHttpServerTest.controller(
                 endpoint,
                 () -> {
                   resp.setContentType("text/plain");
@@ -45,8 +45,9 @@ class AsyncServlet extends HttpServlet {
                     resp.setStatus(endpoint.getStatus());
                     resp.getWriter().print(endpoint.getBody());
                   } else if (endpoint.equals(INDEXED_CHILD)) {
-                    endpoint.collectSpanAttributes(x -> req.getParameter(x));
+                    endpoint.collectSpanAttributes(req::getParameter);
                     resp.setStatus(endpoint.getStatus());
+                    resp.getWriter().print(endpoint.getBody());
                   } else if (endpoint.equals(QUERY_PARAM)) {
                     resp.setStatus(endpoint.getStatus());
                     resp.getWriter().print(req.getQueryString());
@@ -61,10 +62,11 @@ class AsyncServlet extends HttpServlet {
                     PrintWriter writer = resp.getWriter();
                     writer.print(endpoint.getBody());
                     writer.close();
-                    throw new ServletException(endpoint.getBody());
+                    throw new IllegalStateException(endpoint.getBody());
                   }
-                  return null;
                 });
+          } catch (IOException exception) {
+            throw new IllegalStateException(exception);
           } finally {
             // complete at the end so the server span will end after the controller span
             if (endpoint != EXCEPTION) {

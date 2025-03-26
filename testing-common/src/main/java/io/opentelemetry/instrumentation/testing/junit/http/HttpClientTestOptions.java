@@ -89,7 +89,22 @@ public abstract class HttpClientTestOptions {
 
   public abstract boolean getTestNonStandardHttpMethod();
 
+  public abstract boolean getTestCaptureHttpHeaders();
+
+  public abstract boolean getHasSendRequest();
+
   public abstract Function<URI, String> getHttpProtocolVersion();
+
+  @Nullable
+  abstract SpanEndsAfterType getSpanEndsAfterType();
+
+  public boolean isSpanEndsAfterHeaders() {
+    return getSpanEndsAfterType() == SpanEndsAfterType.HEADERS;
+  }
+
+  public boolean isSpanEndsAfterBody() {
+    return getSpanEndsAfterType() == SpanEndsAfterType.BODY;
+  }
 
   static Builder builder() {
     return new AutoValue_HttpClientTestOptions.Builder().withDefaults();
@@ -106,6 +121,7 @@ public abstract class HttpClientTestOptions {
           .setSingleConnectionFactory((host, port) -> null)
           .setExpectedClientSpanNameMapper(DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER)
           .setInstrumentationType(HttpClientInstrumentationType.HIGH_LEVEL)
+          .setSpanEndsAfterType(SpanEndsAfterType.HEADERS)
           .setTestWithClientParent(true)
           .setTestRedirects(true)
           .setTestCircularRedirects(true)
@@ -119,8 +135,12 @@ public abstract class HttpClientTestOptions {
           .setTestCallbackWithParent(true)
           .setTestErrorWithCallback(true)
           .setTestNonStandardHttpMethod(true)
+          .setTestCaptureHttpHeaders(true)
+          .setHasSendRequest(true)
           .setHttpProtocolVersion(uri -> "1.1");
     }
+
+    Builder setTestCaptureHttpHeaders(boolean value);
 
     Builder setHttpAttributes(Function<URI, Set<AttributeKey<?>>> value);
 
@@ -133,6 +153,8 @@ public abstract class HttpClientTestOptions {
     Builder setExpectedClientSpanNameMapper(BiFunction<URI, String, String> value);
 
     Builder setInstrumentationType(HttpClientInstrumentationType instrumentationType);
+
+    Builder setSpanEndsAfterType(SpanEndsAfterType spanEndsAfterType);
 
     Builder setTestWithClientParent(boolean value);
 
@@ -159,6 +181,8 @@ public abstract class HttpClientTestOptions {
     Builder setTestErrorWithCallback(boolean value);
 
     Builder setTestNonStandardHttpMethod(boolean value);
+
+    Builder setHasSendRequest(boolean value);
 
     Builder setHttpProtocolVersion(Function<URI, String> value);
 
@@ -227,6 +251,16 @@ public abstract class HttpClientTestOptions {
       return setInstrumentationType(HttpClientInstrumentationType.LOW_LEVEL);
     }
 
+    @CanIgnoreReturnValue
+    default Builder disableTestSpanEndsAfter() {
+      return setSpanEndsAfterType(null);
+    }
+
+    @CanIgnoreReturnValue
+    default Builder spanEndsAfterBody() {
+      return setSpanEndsAfterType(SpanEndsAfterType.BODY);
+    }
+
     HttpClientTestOptions build();
   }
 
@@ -238,5 +272,12 @@ public abstract class HttpClientTestOptions {
     LOW_LEVEL,
     /** Creates a single span for the topmost HTTP client operation. */
     HIGH_LEVEL
+  }
+
+  enum SpanEndsAfterType {
+    /** HTTP client span ends when headers are received. */
+    HEADERS,
+    /** HTTP client span ends when the body is received */
+    BODY
   }
 }

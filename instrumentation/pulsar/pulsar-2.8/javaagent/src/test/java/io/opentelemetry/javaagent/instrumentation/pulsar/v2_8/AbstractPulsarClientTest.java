@@ -89,12 +89,17 @@ abstract class AbstractPulsarClientTest {
         new PulsarContainer(DEFAULT_IMAGE_NAME)
             .withEnv("PULSAR_MEM", "-Xmx128m")
             .withLogConsumer(new Slf4jLogConsumer(logger))
-            .withStartupTimeout(Duration.ofMinutes(2));
+            .withStartupTimeout(Duration.ofMinutes(2))
+            .withTransactions();
     pulsar.start();
 
     brokerHost = pulsar.getHost();
     brokerPort = pulsar.getMappedPort(6650);
-    client = PulsarClient.builder().serviceUrl(pulsar.getPulsarBrokerUrl()).build();
+    client =
+        PulsarClient.builder()
+            .serviceUrl(pulsar.getPulsarBrokerUrl())
+            .enableTransaction(true)
+            .build();
     admin = PulsarAdmin.builder().serviceHttpUrl(pulsar.getHttpServiceUrl()).build();
   }
 
@@ -340,6 +345,7 @@ abstract class AbstractPulsarClientTest {
                                             equalTo(SERVER_ADDRESS, brokerHost)))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   static List<AttributeAssertion> sendAttributes(
       String destination, String messageId, boolean testHeaders) {
     List<AttributeAssertion> assertions =
@@ -377,6 +383,7 @@ abstract class AbstractPulsarClientTest {
     return receiveAttributes(destination, messageId, testHeaders, false);
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   static List<AttributeAssertion> receiveAttributes(
       String destination, String messageId, boolean testHeaders, boolean isBatch) {
     List<AttributeAssertion> assertions =
@@ -405,6 +412,7 @@ abstract class AbstractPulsarClientTest {
     return assertions;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   static List<AttributeAssertion> processAttributes(
       String destination, String messageId, boolean testHeaders) {
     List<AttributeAssertion> assertions =

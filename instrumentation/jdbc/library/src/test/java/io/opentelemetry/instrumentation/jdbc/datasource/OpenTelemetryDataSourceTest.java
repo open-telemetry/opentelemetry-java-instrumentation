@@ -5,7 +5,12 @@
 
 package io.opentelemetry.instrumentation.jdbc.datasource;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
@@ -16,7 +21,6 @@ import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.stream.Stream;
@@ -33,7 +37,7 @@ class OpenTelemetryDataSourceTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
   @ArgumentsSource(GetConnectionMethods.class)
   void shouldEmitGetConnectionSpans(GetConnectionFunction getConnection) throws SQLException {
@@ -55,11 +59,13 @@ class OpenTelemetryDataSourceTest {
                                 CodeIncubatingAttributes.CODE_NAMESPACE,
                                 TestDataSource.class.getName()),
                             equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "getConnection"),
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "postgresql"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "dbname"),
+                            equalTo(maybeStable(DB_SYSTEM), "postgresql"),
+                            equalTo(maybeStable(DB_NAME), "dbname"),
                             equalTo(
-                                DbIncubatingAttributes.DB_CONNECTION_STRING,
-                                "postgresql://127.0.0.1:5432"))));
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv()
+                                    ? null
+                                    : "postgresql://127.0.0.1:5432"))));
 
     assertThat(connection).isExactlyInstanceOf(OpenTelemetryConnection.class);
     DbInfo dbInfo = ((OpenTelemetryConnection) connection).getDbInfo();

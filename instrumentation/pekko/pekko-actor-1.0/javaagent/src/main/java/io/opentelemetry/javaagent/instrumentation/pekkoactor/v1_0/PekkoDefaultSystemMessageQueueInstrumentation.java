@@ -58,8 +58,13 @@ public class PekkoDefaultSystemMessageQueueInstrumentation implements TypeInstru
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exit(
-        @Advice.Enter PropagatedContext propagatedContext, @Advice.Thrown Throwable throwable) {
-      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
+        @Advice.Argument(1) SystemMessage systemMessage,
+        @Advice.Enter PropagatedContext propagatedContext,
+        @Advice.Thrown Throwable throwable) {
+      VirtualField<SystemMessage, PropagatedContext> virtualField =
+          VirtualField.find(SystemMessage.class, PropagatedContext.class);
+      ExecutorAdviceHelper.cleanUpAfterSubmit(
+          propagatedContext, throwable, virtualField, systemMessage);
     }
   }
 }

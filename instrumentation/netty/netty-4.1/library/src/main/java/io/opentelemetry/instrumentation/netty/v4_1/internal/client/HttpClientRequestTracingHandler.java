@@ -15,7 +15,7 @@ import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 
 /**
@@ -63,12 +63,12 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
     try (Scope ignored = context.makeCurrent()) {
       super.write(ctx, msg, prm);
-      // span is ended normally in HttpClientResponseTracingHandler
     } catch (Throwable throwable) {
       instrumenter.end(contextAttr.getAndSet(null), requestAttr.getAndSet(null), null, throwable);
       parentContextAttr.set(null);
       throw throwable;
     }
+    // span is ended normally in HttpClientResponseTracingHandler
   }
 
   private static boolean isAwsRequest(HttpRequestAndChannel request) {

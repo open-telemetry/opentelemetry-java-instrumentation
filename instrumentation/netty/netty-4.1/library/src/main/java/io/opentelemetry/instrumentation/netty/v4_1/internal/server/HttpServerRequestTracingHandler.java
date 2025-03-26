@@ -13,7 +13,7 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContexts;
 
@@ -59,15 +59,15 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
 
     try (Scope ignored = context.makeCurrent()) {
       super.channelRead(ctx, msg);
-      // the span is ended normally in HttpServerResponseTracingHandler
-    } catch (Throwable throwable) {
+    } catch (Throwable t) {
       // make sure to remove the server context on end() call
       ServerContext serverContext = serverContexts.pollLast();
       if (serverContext != null) {
-        instrumenter.end(serverContext.context(), serverContext.request(), null, throwable);
+        instrumenter.end(serverContext.context(), serverContext.request(), null, t);
       }
-      throw throwable;
+      throw t;
     }
+    // span is ended normally in HttpServerResponseTracingHandler
   }
 
   @Override

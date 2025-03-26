@@ -158,8 +158,7 @@ abstract class SmokeTest {
         .map(
             it -> {
               ExportTraceServiceRequest.Builder builder = ExportTraceServiceRequest.newBuilder();
-              // TODO(anuraaga): Register parser into object mapper to avoid de -> re ->
-              // deserialize.
+              // TODO: Register parser into object mapper to avoid de -> re -> deserialize.
               try {
                 JsonFormat.parser().merge(OBJECT_MAPPER.writeValueAsString(it), builder);
               } catch (InvalidProtocolBufferException | JsonProcessingException e) {

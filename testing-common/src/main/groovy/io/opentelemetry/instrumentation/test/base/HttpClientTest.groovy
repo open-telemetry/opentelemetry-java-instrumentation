@@ -162,18 +162,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     server.stop()
   }
 
-  static int getPort(URI uri) {
-    if (uri.port != -1) {
-      return uri.port
-    } else if (uri.scheme == "http") {
-      return 80
-    } else if (uri.scheme == "https") {
-      443
-    } else {
-      throw new IllegalArgumentException("Unexpected uri: $uri")
-    }
-  }
-
   def "basic GET request #path"() {
     expect:
     junitTest.successfulGetRequest(path)
@@ -256,9 +244,14 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     junitTest.redirectToSecuredCopiesAuthHeader()
   }
 
-  def "error span"() {
+  def "error span for #path"() {
     expect:
-    junitTest.errorSpan()
+    junitTest.errorSpan(path, statusCode)
+
+    where:
+    path            | statusCode
+    "/client-error" | 400
+    "/error"        | 500
   }
 
   def "reuse request"() {
@@ -352,6 +345,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     assumeTrue(singleConnection != null)
     expect:
     junitTest.highConcurrencyOnSingleConnection()
+  }
+
+  def "http client span ends after headers are received"() {
+    junitTest.spanEndsAfterHeadersReceived()
   }
 
   // ideally private, but then groovy closures in this class cannot find them

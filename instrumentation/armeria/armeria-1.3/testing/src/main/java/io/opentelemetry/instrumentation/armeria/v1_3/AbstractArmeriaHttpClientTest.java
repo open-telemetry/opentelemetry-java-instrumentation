@@ -111,6 +111,7 @@ public abstract class AbstractArmeriaHttpClientTest extends AbstractHttpClientTe
     optionsBuilder.disableTestReusedRequest();
     // can only use methods from HttpMethod enum
     optionsBuilder.disableTestNonStandardHttpMethod();
+    optionsBuilder.spanEndsAfterBody();
     // armeria uses http/2
     optionsBuilder.setHttpProtocolVersion(
         uri -> {

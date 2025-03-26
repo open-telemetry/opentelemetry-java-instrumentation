@@ -11,24 +11,23 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /** Instrumentation for methods annotated with {@code WithSpan} annotation. */
 @AutoService(InstrumentationModule.class)
-public class AnnotationInstrumentationModule extends InstrumentationModule {
+public class AnnotationInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public AnnotationInstrumentationModule() {
     super(
-        "kotlinx-coroutines-opentelemetry-instrumentation-annotations",
         "kotlinx-coroutines",
+        "kotlinx-coroutines-1.0",
+        "kotlinx-coroutines-opentelemetry-instrumentation-annotations",
         "opentelemetry-instrumentation-annotations");
-  }
-
-  @Override
-  public boolean isIndyModule() {
-    // needs helper classes in the same class loader
-    return false;
   }
 
   @Override
@@ -48,5 +47,18 @@ public class AnnotationInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new WithSpanInstrumentation());
+  }
+
+  @Override
+  public void injectClasses(ClassInjector injector) {
+    // AnnotationInstrumentationHelper is called directly in the instrumented bytecode.
+    //
+    // With invokedynamic instrumentation a proxy class can be used as long as it does not pull
+    // extra types in the method signatures (which would require those types to also be available
+    // in the instrumented code).
+    injector
+        .proxyBuilder(
+            "io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.instrumentationannotations.AnnotationInstrumentationHelper")
+        .inject(InjectionMode.CLASS_ONLY);
   }
 }

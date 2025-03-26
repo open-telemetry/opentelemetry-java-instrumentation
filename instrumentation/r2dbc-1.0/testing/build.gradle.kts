@@ -13,5 +13,5 @@ dependencies {
 
   runtimeOnly("dev.miku:r2dbc-mysql:0.8.2.RELEASE")
   runtimeOnly("org.mariadb:r2dbc-mariadb:1.1.3")
-  runtimeOnly("org.postgresql:r2dbc-postgresql:1.0.1.RELEASE")
+  runtimeOnly("org.postgresql:r2dbc-postgresql:1.0.7.RELEASE")
 }

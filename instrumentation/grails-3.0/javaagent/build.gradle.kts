@@ -38,8 +38,8 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
   testLibrary("org.springframework.boot:spring-boot-starter-tomcat:$springBootVersion")
 
-  latestDepTestLibrary("org.springframework.boot:spring-boot-autoconfigure:2.+")
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-tomcat:2.+")
+  latestDepTestLibrary("org.springframework.boot:spring-boot-autoconfigure:2.+") // related dependency
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-tomcat:2.+") // related dependency
 }
 
 // testing-common pulls in groovy 4 and spock as dependencies, exclude them

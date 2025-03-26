@@ -13,11 +13,13 @@ import java.io.IOException;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.ClassFileLocator.Resolution;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public final class IndyTypeTransformerImpl implements TypeTransformer {
+
   // path (with trailing slash) to dump transformed advice class to
   private static final String DUMP_PATH = null;
   private final Advice.WithCustomMapping adviceMapping;
@@ -35,7 +37,8 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
                     new Advice.AssignReturned.Factory().withSuppressed(Throwable.class)))
             .bootstrap(
                 IndyBootstrap.getIndyBootstrapMethod(),
-                IndyBootstrap.getAdviceBootstrapArguments(instrumentationModule));
+                IndyBootstrap.getAdviceBootstrapArguments(instrumentationModule),
+                TypeDescription.Generic.Visitor.Generalizing.INSTANCE);
   }
 
   @Override
@@ -106,7 +109,6 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
       } else {
         result = bytes;
       }
-      result = AdviceSignatureEraser.transform(result);
       return result;
     }
   }

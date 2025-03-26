@@ -15,11 +15,12 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridgin
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
 
-class ApplicationLogRecordBuilder implements LogRecordBuilder {
+public class ApplicationLogRecordBuilder implements LogRecordBuilder {
 
   private final io.opentelemetry.api.logs.LogRecordBuilder agentLogRecordBuilder;
 
-  ApplicationLogRecordBuilder(io.opentelemetry.api.logs.LogRecordBuilder agentLogRecordBuilder) {
+  protected ApplicationLogRecordBuilder(
+      io.opentelemetry.api.logs.LogRecordBuilder agentLogRecordBuilder) {
     this.agentLogRecordBuilder = agentLogRecordBuilder;
   }
 

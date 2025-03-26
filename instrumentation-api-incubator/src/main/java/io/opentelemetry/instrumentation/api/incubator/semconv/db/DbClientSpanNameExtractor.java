@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import java.util.Collection;
 
 public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtractor<REQUEST> {
 
@@ -13,8 +15,9 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
    * Returns a {@link SpanNameExtractor} that constructs the span name according to DB semantic
    * conventions: {@code <db.operation> <db.name>}.
    *
-   * @see DbClientAttributesGetter#getOperation(Object) used to extract {@code <db.operation>}.
-   * @see DbClientAttributesGetter#getName(Object) used to extract {@code <db.name>}.
+   * @see DbClientAttributesGetter#getDbOperationName(Object) used to extract {@code
+   *     <db.operation.name>}.
+   * @see DbClientAttributesGetter#getDbNamespace(Object) used to extract {@code <db.namespace>}.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       DbClientAttributesGetter<REQUEST> getter) {
@@ -26,7 +29,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
    * conventions: {@code <db.operation> <db.name>.<identifier>}.
    *
    * @see SqlStatementInfo#getOperation() used to extract {@code <db.operation>}.
-   * @see DbClientAttributesGetter#getName(Object) used to extract {@code <db.name>}.
+   * @see DbClientAttributesGetter#getDbNamespace(Object) used to extract {@code <db.namespace>}.
    * @see SqlStatementInfo#getMainIdentifier() used to extract {@code <db.table>} or stored
    *     procedure name.
    */
@@ -72,9 +75,9 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
     @Override
     public String extract(REQUEST request) {
-      String dbName = getter.getName(request);
-      String operation = getter.getOperation(request);
-      return computeSpanName(dbName, operation, null);
+      String namespace = getter.getDbNamespace(request);
+      String operationName = getter.getDbOperationName(request);
+      return computeSpanName(namespace, operationName, null);
     }
   }
 
@@ -92,10 +95,41 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
     @Override
     public String extract(REQUEST request) {
-      String dbName = getter.getName(request);
-      SqlStatementInfo sanitizedStatement = sanitizer.sanitize(getter.getRawStatement(request));
+      String namespace = getter.getDbNamespace(request);
+      Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
+
+      if (rawQueryTexts.isEmpty()) {
+        return computeSpanName(namespace, null, null);
+      }
+
+      if (!SemconvStability.emitStableDatabaseSemconv()) {
+        if (rawQueryTexts.size() > 1) { // for backcompat(?)
+          return computeSpanName(namespace, null, null);
+        }
+        SqlStatementInfo sanitizedStatement = sanitizer.sanitize(rawQueryTexts.iterator().next());
+        return computeSpanName(
+            namespace, sanitizedStatement.getOperation(), sanitizedStatement.getMainIdentifier());
+      }
+
+      if (rawQueryTexts.size() == 1) {
+        SqlStatementInfo sanitizedStatement = sanitizer.sanitize(rawQueryTexts.iterator().next());
+        String operation = sanitizedStatement.getOperation();
+        if (isBatch(request)) {
+          operation = "BATCH " + operation;
+        }
+        return computeSpanName(namespace, operation, sanitizedStatement.getMainIdentifier());
+      }
+
+      MultiQuery multiQuery = MultiQuery.analyze(rawQueryTexts, false);
       return computeSpanName(
-          dbName, sanitizedStatement.getOperation(), sanitizedStatement.getMainIdentifier());
+          namespace,
+          multiQuery.getOperation() != null ? "BATCH " + multiQuery.getOperation() : "BATCH",
+          multiQuery.getMainIdentifier());
+    }
+
+    private boolean isBatch(REQUEST request) {
+      Long batchSize = getter.getBatchSize(request);
+      return batchSize != null && batchSize > 1;
     }
   }
 }

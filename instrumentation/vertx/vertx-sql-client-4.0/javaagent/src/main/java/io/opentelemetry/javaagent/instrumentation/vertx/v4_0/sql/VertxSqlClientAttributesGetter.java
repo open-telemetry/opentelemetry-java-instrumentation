@@ -5,7 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql;
 
+import static java.util.Collections.singleton;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
+import java.util.Collection;
 import javax.annotation.Nullable;
 
 public enum VertxSqlClientAttributesGetter
@@ -13,10 +16,11 @@ public enum VertxSqlClientAttributesGetter
   INSTANCE;
 
   @Override
-  public String getSystem(VertxSqlClientRequest request) {
+  public String getDbSystem(VertxSqlClientRequest request) {
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(VertxSqlClientRequest request) {
@@ -25,10 +29,11 @@ public enum VertxSqlClientAttributesGetter
 
   @Override
   @Nullable
-  public String getName(VertxSqlClientRequest request) {
+  public String getDbNamespace(VertxSqlClientRequest request) {
     return request.getDatabase();
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(VertxSqlClientRequest request) {
@@ -36,8 +41,7 @@ public enum VertxSqlClientAttributesGetter
   }
 
   @Override
-  @Nullable
-  public String getRawStatement(VertxSqlClientRequest request) {
-    return request.getStatement();
+  public Collection<String> getRawQueryTexts(VertxSqlClientRequest request) {
+    return singleton(request.getQueryText());
   }
 }

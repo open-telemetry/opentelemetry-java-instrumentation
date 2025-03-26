@@ -13,7 +13,7 @@ as the last step, which publishes a snapshot build to
 ## Release cadence
 
 This repository roughly targets monthly minor releases from the `main` branch on the Wednesday after
-the second Monday of the month (roughly a few of days after the monthly minor release of
+the second Monday of the month (roughly a few days after the monthly minor release of
 [opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)).
 
 ## Preparing a new major or minor release
@@ -49,7 +49,7 @@ and deadlocks.
   - Review and merge the backport pull request that it generates.
   - Note: if the PR contains any changes to workflow files, it will have to be manually backported,
     because the default `GITHUB_TOKEN` does not have permission to update workflow files (and the
-    `opentelemetrybot` token doesn't have write permission to this repository at all, so while it
+    `otelbot` token doesn't have write permission to this repository at all, so while it
     can be used to open a PR, it can't be used to push to a local branch).
 - Merge a pull request to the release branch updating the `CHANGELOG.md`.
   - The heading for the unreleased entries should be `## Unreleased`.
@@ -65,23 +65,12 @@ and deadlocks.
     e.g. `release/v1.9.x`, and click the "Run workflow" button below that.
   - This workflow will publish the artifacts to maven central and will publish a GitHub release
     with release notes based on the change log and with the javaagent jar attached.
+  - Review and merge the pull request that it creates for updating the apidiff baseline version
+    to the newly released version (note that this pull request won't be made until after the release
+    is available in maven central).
   - Review and merge the pull request that it creates for updating the change log in main
     (note that if this is not a patch release then the change log on main may already be up-to-date,
     in which case no pull request will be created).
-
-## Update release versions in documentations
-
-After releasing is done, you need to first update the docs. This needs to happen after artifacts have propagated
-to Maven Central so should probably be done an hour or two after the release workflow finishes.
-
-```sh
-./gradlew japicmp -PapiBaseVersion=a.b.c -PapiNewVersion=x.y.z
-./gradlew --refresh-dependencies japicmp
-```
-
-Where `x.y.z` is the version just released and `a.b.c` is the previous version.
-
-Create a PR to mark the new release in docs on the main branch.
 
 ## Credentials
 

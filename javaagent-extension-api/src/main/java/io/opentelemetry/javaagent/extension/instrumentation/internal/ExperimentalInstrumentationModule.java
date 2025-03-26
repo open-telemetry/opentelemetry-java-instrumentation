@@ -9,7 +9,10 @@ import static java.util.Collections.emptyList;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import net.bytebuddy.utility.JavaModule;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -47,5 +50,29 @@ public interface ExperimentalInstrumentationModule {
    */
   default String getModuleGroup() {
     return getClass().getName();
+  }
+
+  /**
+   * Some instrumentations need to invoke classes which are present both in the agent classloader
+   * and the instrumented application classloader. By default, the classloader of the
+   * instrumentation would link those against the class provided by the agent. This setting allows
+   * to hide packages, so that matching classes are instead used from the application classloader.
+   *
+   * @return the list of packages (without trailing dots)
+   */
+  default List<String> agentPackagesToHide() {
+    return Collections.emptyList();
+  }
+
+  /**
+   * Some instrumentation need to access JPMS modules that are not accessible by default, this
+   * method provides a way to access those classes like the "--add-opens" JVM command.
+   *
+   * @return map of module to open as key, list of packages as value.
+   */
+  // TODO: when moving this method outside of experimental API, we need to decide using JavaModule
+  // instance or a class FQN in the map entry, as it could lead to some limitations
+  default Map<JavaModule, List<String>> jpmsModulesToOpen() {
+    return Collections.emptyMap();
   }
 }

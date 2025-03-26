@@ -5,8 +5,20 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createStatementInstrumenter;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -17,8 +29,6 @@ import io.opentelemetry.instrumentation.jdbc.TestConnection;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.semconv.ServerAttributes;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -187,15 +197,18 @@ class OpenTelemetryConnectionTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, dbInfo.getSystem()),
-                            equalTo(DbIncubatingAttributes.DB_NAME, dbInfo.getName()),
-                            equalTo(DbIncubatingAttributes.DB_USER, dbInfo.getUser()),
                             equalTo(
-                                DbIncubatingAttributes.DB_CONNECTION_STRING, dbInfo.getShortUrl()),
-                            equalTo(DbIncubatingAttributes.DB_STATEMENT, query),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "users"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, dbInfo.getHost()),
-                            equalTo(ServerAttributes.SERVER_PORT, dbInfo.getPort()))));
+                                maybeStable(DB_SYSTEM),
+                                maybeStableDbSystemName(dbInfo.getSystem())),
+                            equalTo(maybeStable(DB_NAME), dbInfo.getName()),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : dbInfo.getUser()),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : dbInfo.getShortUrl()),
+                            equalTo(maybeStable(DB_STATEMENT), query),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "users"),
+                            equalTo(SERVER_ADDRESS, dbInfo.getHost()),
+                            equalTo(SERVER_PORT, dbInfo.getPort()))));
   }
 }

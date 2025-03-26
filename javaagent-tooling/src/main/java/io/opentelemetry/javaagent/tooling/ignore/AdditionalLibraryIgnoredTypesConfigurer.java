@@ -64,6 +64,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .ignoreClass("org.springframework.jndi.")
         .ignoreClass("org.springframework.lang.")
         .ignoreClass("org.springframework.messaging.")
+        .allowClass("org.springframework.messaging.support.GenericMessage")
         .ignoreClass("org.springframework.objenesis.")
         .ignoreClass("org.springframework.orm.")
         .ignoreClass("org.springframework.scripting.")
@@ -103,6 +104,10 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("org.springframework.boot.logging.logback.")
         .allowClass("org.springframework.boot.web.filter.")
         .allowClass("org.springframework.boot.web.servlet.")
+        .allowClass("org.springframework.boot.web.embedded.netty.GracefulShutdown$$Lambda")
+        .allowClass("org.springframework.boot.web.embedded.tomcat.GracefulShutdown$$Lambda")
+        .allowClass(
+            "org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory$$Lambda")
         .allowClass(
             "org.springframework.boot.actuate.metrics.web.reactive.server.MetricsWebFilter$$Lambda")
         .allowClass("org.springframework.boot.autoconfigure.BackgroundPreinitializer$")

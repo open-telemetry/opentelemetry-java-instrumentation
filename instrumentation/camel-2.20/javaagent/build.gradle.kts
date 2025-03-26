@@ -45,7 +45,7 @@ dependencies {
   testImplementation("org.springframework.boot:spring-boot-starter:1.5.17.RELEASE")
 
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
-  testImplementation("org.elasticmq:elasticmq-rest-sqs_2.12:1.0.0")
+  testImplementation("org.elasticmq:elasticmq-rest-sqs_2.13")
 
   testImplementation("org.testcontainers:cassandra")
   testImplementation("org.testcontainers:testcontainers")
@@ -78,6 +78,14 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
   }
 }
 

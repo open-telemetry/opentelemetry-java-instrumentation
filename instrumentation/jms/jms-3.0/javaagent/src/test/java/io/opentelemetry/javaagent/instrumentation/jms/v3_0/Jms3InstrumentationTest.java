@@ -8,11 +8,14 @@ package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import jakarta.jms.Destination;
 import jakarta.jms.JMSException;
 import jakarta.jms.MessageConsumer;
@@ -25,6 +28,7 @@ import org.junit.jupiter.params.provider.ArgumentsSource;
 
 class Jms3InstrumentationTest extends AbstractJms3Test {
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @ArgumentsSource(DestinationsProvider.class)
   @ParameterizedTest
   void testMessageConsumer(DestinationFactory destinationFactory, boolean isTemporary)
@@ -63,12 +67,10 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
-                          equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "jms"),
-                          equalTo(
-                              MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                              producerDestinationName),
-                          equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
-                          equalTo(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId),
+                          equalTo(MESSAGING_SYSTEM, "jms"),
+                          equalTo(MESSAGING_DESTINATION_NAME, producerDestinationName),
+                          equalTo(MESSAGING_OPERATION, "publish"),
+                          equalTo(MESSAGING_MESSAGE_ID, messageId),
                           messagingTempDestination(isTemporary)));
 
           producerSpan.set(trace.getSpan(1));
@@ -82,12 +84,9 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "jms"),
-                            equalTo(
-                                MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
-                                actualDestinationName),
-                            equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "receive"),
-                            equalTo(
-                                MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, messageId))));
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
+                            equalTo(MESSAGING_OPERATION, "receive"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId))));
   }
 }

@@ -5,8 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.data;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -20,7 +29,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.List;
 import java.util.Optional;
 import org.hibernate.Version;
@@ -68,7 +76,7 @@ public abstract class AbstractSpringJpaTest<
                 span -> span.hasName("toString test").hasTotalAttributeCount(0)));
   }
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
+  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   static void assertHibernate4Trace(TraceAssert trace, String repoClassName) {
     trace.hasSpansSatisfyingExactly(
         span ->
@@ -82,17 +90,17 @@ public abstract class AbstractSpringJpaTest<
                 .hasKind(SpanKind.CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
-                    equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                    equalTo(DbIncubatingAttributes.DB_NAME, "test"),
-                    equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                    equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
-                    satisfies(
-                        DbIncubatingAttributes.DB_STATEMENT, val -> val.startsWith("insert ")),
-                    equalTo(DbIncubatingAttributes.DB_OPERATION, "INSERT"),
-                    equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "JpaCustomer")));
+                    equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                    equalTo(maybeStable(DB_NAME), "test"),
+                    equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                    equalTo(
+                        DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
+                    satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("insert ")),
+                    equalTo(maybeStable(DB_OPERATION), "INSERT"),
+                    equalTo(maybeStable(DB_SQL_TABLE), "JpaCustomer")));
   }
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
+  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   static void assertHibernateTrace(TraceAssert trace, String repoClassName) {
     trace.hasSpansSatisfyingExactly(
         span ->
@@ -105,30 +113,30 @@ public abstract class AbstractSpringJpaTest<
             span.hasName("CALL test")
                 .hasKind(SpanKind.CLIENT)
                 .hasAttributesSatisfyingExactly(
-                    equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                    equalTo(DbIncubatingAttributes.DB_NAME, "test"),
-                    equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                    equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
+                    equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                    equalTo(maybeStable(DB_NAME), "test"),
+                    equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                    equalTo(
+                        DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                     satisfies(
-                        DbIncubatingAttributes.DB_STATEMENT,
-                        val -> val.startsWith("call next value for ")),
-                    equalTo(DbIncubatingAttributes.DB_OPERATION, "CALL")),
+                        maybeStable(DB_STATEMENT), val -> val.startsWith("call next value for ")),
+                    equalTo(maybeStable(DB_OPERATION), "CALL")),
         span ->
             span.hasName("INSERT test.JpaCustomer")
                 .hasKind(SpanKind.CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasAttributesSatisfyingExactly(
-                    equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                    equalTo(DbIncubatingAttributes.DB_NAME, "test"),
-                    equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                    equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
-                    satisfies(
-                        DbIncubatingAttributes.DB_STATEMENT, val -> val.startsWith("insert ")),
-                    equalTo(DbIncubatingAttributes.DB_OPERATION, "INSERT"),
-                    equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "JpaCustomer")));
+                    equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                    equalTo(maybeStable(DB_NAME), "test"),
+                    equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                    equalTo(
+                        DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
+                    satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("insert ")),
+                    equalTo(maybeStable(DB_OPERATION), "INSERT"),
+                    equalTo(maybeStable(DB_SQL_TABLE), "JpaCustomer")));
   }
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
+  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @Test
   void testCrud() {
     boolean isHibernate4 = Version.getVersionString().startsWith("4.");
@@ -154,15 +162,15 @@ public abstract class AbstractSpringJpaTest<
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
-                            satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
-                                val -> val.startsWith("select ")),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "JpaCustomer"))));
+                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                            equalTo(maybeStable(DB_NAME), "test"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
+                            satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("select ")),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "JpaCustomer"))));
     clearData();
 
     repo.save(customer);
@@ -192,29 +200,29 @@ public abstract class AbstractSpringJpaTest<
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
-                            satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
-                                val -> val.startsWith("select ")),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "JpaCustomer")),
+                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                            equalTo(maybeStable(DB_NAME), "test"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
+                            satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("select ")),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "JpaCustomer")),
                 span ->
                     span.hasName("UPDATE test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
-                            satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
-                                val -> val.startsWith("update ")),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "UPDATE"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "JpaCustomer"))));
+                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                            equalTo(maybeStable(DB_NAME), "test"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
+                            satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("update ")),
+                            equalTo(maybeStable(DB_OPERATION), "UPDATE"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "JpaCustomer"))));
     clearData();
 
     customer = findByLastName(repo, "Anonymous").get(0);
@@ -232,15 +240,15 @@ public abstract class AbstractSpringJpaTest<
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
-                            satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
-                                val -> val.startsWith("select ")),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "JpaCustomer"))));
+                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                            equalTo(maybeStable(DB_NAME), "test"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
+                            satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("select ")),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "JpaCustomer"))));
     clearData();
 
     repo.delete(customer);
@@ -258,32 +266,32 @@ public abstract class AbstractSpringJpaTest<
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
-                            satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
-                                val -> val.startsWith("select ")),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "JpaCustomer")),
+                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                            equalTo(maybeStable(DB_NAME), "test"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
+                            satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("select ")),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "JpaCustomer")),
                 span ->
                     span.hasName("DELETE test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
-                            satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
-                                val -> val.startsWith("delete ")),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "DELETE"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "JpaCustomer"))));
+                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                            equalTo(maybeStable(DB_NAME), "test"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
+                            satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("delete ")),
+                            equalTo(maybeStable(DB_OPERATION), "DELETE"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "JpaCustomer"))));
   }
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
+  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @Test
   void testCustomRepositoryMethod() {
     REPOSITORY repo = repository();
@@ -307,18 +315,18 @@ public abstract class AbstractSpringJpaTest<
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
-                            satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
-                                val -> val.startsWith("select ")),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "JpaCustomer"))));
+                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                            equalTo(maybeStable(DB_NAME), "test"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
+                            satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("select ")),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "JpaCustomer"))));
   }
 
-  @SuppressWarnings("deprecation") // TODO DbIncubatingAttributes.DB_CONNECTION_STRING deprecation
+  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @Test
   void testFailedRepositoryMethod() {
     // given
@@ -354,14 +362,14 @@ public abstract class AbstractSpringJpaTest<
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(DbIncubatingAttributes.DB_SYSTEM, "hsqldb"),
-                            equalTo(DbIncubatingAttributes.DB_NAME, "test"),
-                            equalTo(DbIncubatingAttributes.DB_USER, "sa"),
-                            equalTo(DbIncubatingAttributes.DB_CONNECTION_STRING, "hsqldb:mem:"),
-                            satisfies(
-                                DbIncubatingAttributes.DB_STATEMENT,
-                                val -> val.startsWith("select ")),
-                            equalTo(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-                            equalTo(DbIncubatingAttributes.DB_SQL_TABLE, "JpaCustomer"))));
+                            equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
+                            equalTo(maybeStable(DB_NAME), "test"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
+                            satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("select ")),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "JpaCustomer"))));
   }
 }

@@ -14,6 +14,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 
 import com.google.common.collect.Sets;
 import com.twitter.finagle.ListeningServer;
@@ -33,7 +34,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
-import io.opentelemetry.semconv.HttpAttributes;
 import java.net.URI;
 import java.util.Collections;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -48,9 +48,7 @@ abstract class AbstractServerTest extends AbstractHttpServerTest<ListeningServer
     super.configure(options);
     options.setTestException(false);
     options.setHttpAttributes(
-        unused ->
-            Sets.difference(
-                DEFAULT_HTTP_ATTRIBUTES, Collections.singleton(HttpAttributes.HTTP_ROUTE)));
+        unused -> Sets.difference(DEFAULT_HTTP_ATTRIBUTES, Collections.singleton(HTTP_ROUTE)));
 
     options.setTestCaptureHttpHeaders(true);
   }
@@ -76,7 +74,7 @@ abstract class AbstractServerTest extends AbstractHttpServerTest<ListeningServer
                   name ->
                       new QueryStringDecoder(uri)
                           .parameters().get(name).stream().findFirst().orElse(""));
-              response.content(Buf.Empty());
+              response.content(Buf.Utf8$.MODULE$.apply(endpoint.getBody()));
             } else if (QUERY_PARAM.equals(endpoint)) {
               response.content(Buf.Utf8$.MODULE$.apply(uri.getQuery()));
             } else if (REDIRECT.equals(endpoint)) {

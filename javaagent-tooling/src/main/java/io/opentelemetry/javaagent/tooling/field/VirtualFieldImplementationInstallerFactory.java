@@ -18,9 +18,15 @@ public final class VirtualFieldImplementationInstallerFactory {
 
   private static final TransformSafeLogger logger =
       TransformSafeLogger.getLogger(VirtualFieldImplementationInstallerFactory.class);
+  private static final VirtualFieldImplementationInstallerFactory INSTANCE =
+      new VirtualFieldImplementationInstallerFactory();
 
-  public VirtualFieldImplementationInstallerFactory() {
+  private VirtualFieldImplementationInstallerFactory() {
     RuntimeVirtualFieldSupplier.set(new RuntimeFieldBasedImplementationSupplier());
+  }
+
+  public static VirtualFieldImplementationInstallerFactory getInstance() {
+    return INSTANCE;
   }
 
   public VirtualFieldImplementationInstaller create(InstrumentationModule instrumentationModule) {

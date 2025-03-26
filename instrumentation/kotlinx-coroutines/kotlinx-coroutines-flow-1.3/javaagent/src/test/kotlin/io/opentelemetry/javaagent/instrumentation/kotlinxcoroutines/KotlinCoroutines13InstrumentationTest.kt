@@ -185,9 +185,7 @@ class KotlinCoroutines13InstrumentationTest {
     tracer.spanBuilder(opName).startSpan().end()
   }
 
-  private fun <T> runTest(dispatcherWrapper: DispatcherWrapper, block: suspend CoroutineScope.() -> T): T {
-    return runTest(dispatcherWrapper.dispatcher, block)
-  }
+  private fun <T> runTest(dispatcherWrapper: DispatcherWrapper, block: suspend CoroutineScope.() -> T): T = runTest(dispatcherWrapper.dispatcher, block)
 
   private fun <T> runTest(dispatcher: CoroutineDispatcher, block: suspend CoroutineScope.() -> T): T {
     val parentSpan = tracer.spanBuilder("parent").startSpan()

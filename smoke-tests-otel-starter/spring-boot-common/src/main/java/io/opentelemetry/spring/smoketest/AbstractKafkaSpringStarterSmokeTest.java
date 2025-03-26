@@ -28,6 +28,10 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
 
   @Autowired protected KafkaTemplate<String, String> kafkaTemplate;
 
+  private static final AttributeKey<String> MESSAGING_CLIENT_ID =
+      AttributeKey.stringKey("messaging.client_id");
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void shouldInstrumentProducerAndConsumer() {
     testing.runWithSpan(
@@ -62,7 +66,7 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
                                 "testTopic"),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
                             satisfies(
-                                MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
+                                MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("producer")),
                             satisfies(
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID,
@@ -100,7 +104,7 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
                                 AttributeKey.longKey("kafka.record.queue_time_ms"),
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
-                                MessagingIncubatingAttributes.MESSAGING_CLIENT_ID,
+                                MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("consumer"))),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
