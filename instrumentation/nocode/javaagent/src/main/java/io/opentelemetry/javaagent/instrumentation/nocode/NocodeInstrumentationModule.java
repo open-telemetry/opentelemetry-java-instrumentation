@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.nocode;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.NocodeInstrumentationRules;
+import io.opentelemetry.javaagent.bootstrap.nocode.NocodeInstrumentationRules;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.ArrayList;

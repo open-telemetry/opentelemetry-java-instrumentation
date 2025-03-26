@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.nocode;
 
-import io.opentelemetry.javaagent.bootstrap.NocodeEvaluation;
+import io.opentelemetry.javaagent.bootstrap.nocode.NocodeEvaluation;
 import java.util.logging.Logger;
 import org.apache.commons.jexl3.JexlBuilder;
 import org.apache.commons.jexl3.JexlContext;

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.bootstrap;
+package io.opentelemetry.javaagent.bootstrap.nocode;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.Collections;

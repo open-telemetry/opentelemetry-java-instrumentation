@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.nocode;
 import static io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil.getConfig;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.NocodeEvaluation;
-import io.opentelemetry.javaagent.bootstrap.NocodeInstrumentationRules;
+import io.opentelemetry.javaagent.bootstrap.nocode.NocodeEvaluation;
+import io.opentelemetry.javaagent.bootstrap.nocode.NocodeInstrumentationRules;
 import io.opentelemetry.javaagent.tooling.BeforeAgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;

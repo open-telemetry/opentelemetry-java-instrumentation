@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
-import io.opentelemetry.javaagent.bootstrap.NocodeEvaluation;
+import io.opentelemetry.javaagent.bootstrap.nocode.NocodeEvaluation;
 import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;

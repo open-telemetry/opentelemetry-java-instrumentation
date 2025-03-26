@@ -13,7 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.none;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
-import io.opentelemetry.javaagent.bootstrap.NocodeInstrumentationRules;
+import io.opentelemetry.javaagent.bootstrap.nocode.NocodeInstrumentationRules;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Method;

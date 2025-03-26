@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.nocode;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
-import io.opentelemetry.javaagent.bootstrap.NocodeEvaluation;
-import io.opentelemetry.javaagent.bootstrap.NocodeInstrumentationRules;
+import io.opentelemetry.javaagent.bootstrap.nocode.NocodeEvaluation;
+import io.opentelemetry.javaagent.bootstrap.nocode.NocodeInstrumentationRules;
 import java.util.Collections;
 import java.util.Map;
 

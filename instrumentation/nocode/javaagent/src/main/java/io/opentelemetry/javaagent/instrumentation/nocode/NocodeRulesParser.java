@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.nocode;
 
-import io.opentelemetry.javaagent.bootstrap.NocodeInstrumentationRules;
+import io.opentelemetry.javaagent.bootstrap.nocode.NocodeInstrumentationRules;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.io.InputStream;
 import java.nio.file.Files;
