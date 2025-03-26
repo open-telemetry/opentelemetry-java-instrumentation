@@ -90,8 +90,8 @@ class RuleParserTest {
         .containsEntry("LABEL_KEY2", "beanattr(ATTRIBUTE)");
 
     assertThat(def1.getDropNegativeValues())
-        .describedAs("negative values should not be dropped by default")
-        .isFalse();
+        .describedAs("dropping negative values should not be set")
+        .isNull();
 
     Map<String, Metric> attr = def1.getMapping();
     assertThat(attr)
@@ -105,6 +105,9 @@ class RuleParserTest {
     assertThat(m1.getSourceUnit()).isNull();
     assertThat(m1.getUnit()).isEqualTo("UNIT1");
     assertThat(m1.getMetricAttribute()).containsExactly(entry("LABEL_KEY3", "const(CONSTANT)"));
+    assertThat(m1.getDropNegativeValues())
+        .describedAs("dropping negative values should not be set")
+        .isNull();
 
     Metric m2 = attr.get("ATTRIBUTE2");
     assertThat(m2).isNotNull();
