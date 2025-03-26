@@ -17,12 +17,9 @@ sourceSets {
 // FIXME trim down as things come online
 dependencies {
   bootstrap(project(":instrumentation:nocode:bootstrap"))
-//  testImplementation(project(":instrumentation:nocode:bootstrap"))
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-//  testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   implementation(project(":sdk-autoconfigure-support"))
   compileOnly(project(":javaagent-tooling"))
-//  compileOnly(project(":instrumentation-annotations-support"))
   testImplementation(project(":instrumentation:nocode:bootstrap"))
 
   compileOnly("org.snakeyaml:snakeyaml-engine:2.8")
