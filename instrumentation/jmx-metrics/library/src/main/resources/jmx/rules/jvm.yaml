@@ -74,7 +74,7 @@ rules:
         desc: Number of processors available to the Java virtual machine.
       # jvm.cpu.time
       ProcessCpuTime:
-        metric: jvm.cpu.time
+        metric: cpu.time
         type: counter
         sourceUnit: ns
         unit: s
