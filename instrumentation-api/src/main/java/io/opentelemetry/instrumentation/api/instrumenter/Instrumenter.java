@@ -190,7 +190,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
       context = contextCustomizer.onStart(context, request, attributes);
     }
 
-    boolean localRoot = LocalRootSpan.isLocalRoot(context);
+    boolean localRoot = LocalRootSpan.fromContextOrNull(context) == null;
 
     spanBuilder.setAllAttributes(attributes);
     Span span = spanBuilder.setParent(context).startSpan();
