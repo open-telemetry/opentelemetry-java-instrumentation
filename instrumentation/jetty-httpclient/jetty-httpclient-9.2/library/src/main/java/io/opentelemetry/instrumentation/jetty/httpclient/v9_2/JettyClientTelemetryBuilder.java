@@ -29,7 +29,7 @@ public final class JettyClientTelemetryBuilder {
 
   static {
     Experimental.internalSetEmitExperimentalTelemetry(
-        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientTelemetry(emit));
   }
 
   JettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {

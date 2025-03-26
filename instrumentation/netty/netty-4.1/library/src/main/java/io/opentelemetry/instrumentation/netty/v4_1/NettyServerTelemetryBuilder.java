@@ -30,7 +30,7 @@ public final class NettyServerTelemetryBuilder {
         nettyServerTelemetryBuilder -> nettyServerTelemetryBuilder.builder);
     Experimental.internalSetEmitExperimentalServerTelemetry(
         (builder, emit) -> {
-          builder.builder.setEmitExperimentalHttpServerMetrics(emit);
+          builder.builder.setEmitExperimentalHttpServerTelemetry(emit);
           builder.emitExperimentalHttpServerEvents = emit;
         });
   }
@@ -111,7 +111,7 @@ public final class NettyServerTelemetryBuilder {
   @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setEmitExperimentalHttpServerMetrics(
       boolean emitExperimentalHttpServerMetrics) {
-    builder.setEmitExperimentalHttpServerMetrics(emitExperimentalHttpServerMetrics);
+    builder.setEmitExperimentalHttpServerTelemetry(emitExperimentalHttpServerMetrics);
     return this;
   }
 
