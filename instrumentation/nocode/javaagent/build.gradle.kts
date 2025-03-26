@@ -14,15 +14,13 @@ sourceSets {
   }
 }
 
-// FIXME trim down as things come online
 dependencies {
   bootstrap(project(":instrumentation:nocode:bootstrap"))
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   implementation(project(":sdk-autoconfigure-support"))
   compileOnly(project(":javaagent-tooling"))
-  testImplementation(project(":instrumentation:nocode:bootstrap"))
 
-  compileOnly("org.snakeyaml:snakeyaml-engine:2.8")
+  compileOnly("org.snakeyaml:snakeyaml-engine:2.9")
 
   implementation("org.apache.commons:commons-jexl3:3.4.0") {
     exclude("commons-logging", "commons-logging")

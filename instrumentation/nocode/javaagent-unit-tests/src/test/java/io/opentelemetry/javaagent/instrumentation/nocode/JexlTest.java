@@ -71,7 +71,6 @@ class JexlTest {
         "this  .",
         "this  .  ",
         "this.noSuchMethod()",
-        // "toString()", // FIXME would like this not be "..jexl3.MapContext@<instance>"
         "this.toString()extrastuffatend",
         "this.toString()toString()",
         "param1.toString()", // out of bounds

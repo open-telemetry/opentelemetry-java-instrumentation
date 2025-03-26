@@ -24,8 +24,7 @@ public class NocodeSpanStatusExtractor
       @Nullable Throwable error) {
 
     if (mi.getRule() == null || mi.getRule().getSpanStatus() == null) {
-
-      // FIXME would love to use a DefaultSpanStatusExtractor as a fallback but it is not public
+      // FUTURE would love to use a DefaultSpanStatusExtractor as a fallback but it is not public
       // so here is a copy of its (admittedly simple) guts
       if (error != null) {
         spanStatusBuilder.setStatus(StatusCode.ERROR);

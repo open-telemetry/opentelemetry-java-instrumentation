@@ -84,7 +84,7 @@ public final class NocodeInstrumentation implements TypeInstrumentation {
       scope.close();
       // This is heavily based on the "methods" instrumentation, but
       // for now we're not supporting modifying return types/async result codes, etc.
-      // This could be expanded in the future.
+      // FUTURE make spanStatus extend to cover these cases by sharing code with "methods"
       instrumenter().end(context, otelInvocation, returnValue, error);
     }
   }
