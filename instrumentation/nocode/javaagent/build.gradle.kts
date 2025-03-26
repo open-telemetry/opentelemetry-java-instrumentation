@@ -22,10 +22,7 @@ dependencies {
 
   compileOnly("org.snakeyaml:snakeyaml-engine:2.9")
 
-  implementation("org.apache.commons:commons-jexl3:3.4.0") {
-    exclude("commons-logging", "commons-logging")
-  }
-  implementation("org.slf4j:jcl-over-slf4j")
+  implementation("org.apache.commons:commons-jexl3")
 
   add("codegen", project(":instrumentation:nocode:bootstrap"))
 }
