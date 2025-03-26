@@ -63,6 +63,8 @@ rules:
 
   - bean: java.lang:type=OperatingSystem
     prefix: jvm.
+    # TODO: drop negative values once https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13589 is merged
+    # dropNegativeValues: true
     mapping:
       # jvm.cpu.count
       AvailableProcessors:
@@ -71,35 +73,30 @@ rules:
         unit: "{cpu}"
         desc: Number of processors available to the Java virtual machine.
       # jvm.cpu.time
-      # TODO requires time unit conversion to seconds be semconv compliant, so disabled for now
-      # https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13369
-      # ProcessCpuTime:
-      #   metric: jvm.cpu.time
-      #   type: counter
-      #   unit: ns
-      #   desc: CPU time used by the process as reported by the JVM.
-      #   # TODO: should we filter zero values ?
+      ProcessCpuTime:
+        metric: jvm.cpu.time
+        type: counter
+        sourceUnit: ns
+        unit: s
+        desc: CPU time used by the process as reported by the JVM.
       # jvm.cpu.recent_utilization
       ProcessCpuLoad:
         metric: cpu.recent_utilization
         type: gauge
         unit: '1'
         desc: Recent CPU utilization for the process as reported by the JVM.
-        # TODO: should we filter zero values ?
       # jvm.system.cpu.load_1m (experimental)
       SystemLoadAverage:
         metric: system.cpu.load_1m
         type: gauge
         unit: "{run_queue_item}"
         desc: Average CPU load of the whole system for the last minute as reported by the JVM.
-        # TODO: should we filter zero values ?
       # jvm.system.cpu.utilization (experimental)
       SystemCpuLoad:
         metric: system.cpu.utilization
         type: gauge
         unit: '1'
         desc: Recent CPU utilization for the whole system as reported by the JVM.
-        # TODO: should we filter zero values ?
 
   - bean: java.nio:name=*,type=BufferPool
     prefix: jvm.buffer.

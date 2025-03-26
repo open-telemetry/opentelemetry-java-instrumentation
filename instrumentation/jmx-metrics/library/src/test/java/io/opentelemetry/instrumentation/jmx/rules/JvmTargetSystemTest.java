@@ -145,6 +145,11 @@ public class JvmTargetSystemTest extends TargetSystemTest {
                         .hasUnit("{cpu}")
                         .isUpDownCounter()
                         .hasDataPointsWithoutAttributes())
+            .add("jvm.cpu.time", metric -> metric
+                .hasDescription("CPU time used by the process as reported by the JVM.")
+                .hasUnit("s")
+                .isCounter()
+                .hasDataPointsWithoutAttributes())
             .add(
                 "jvm.cpu.recent_utilization",
                 metric ->
