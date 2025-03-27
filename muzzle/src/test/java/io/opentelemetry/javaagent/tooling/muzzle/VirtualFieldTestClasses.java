@@ -26,7 +26,8 @@ public class VirtualFieldTestClasses {
     static final VirtualField<Key1, Context> FIELD_1 = VirtualField.find(Key1.class, Context.class);
 
     public static class Helper {
-      static final VirtualField<Key2, Context> FIELD_2 = VirtualField.find(Key2.class, Context.class);
+      static final VirtualField<Key2, Context> FIELD_2 =
+          VirtualField.find(Key2.class, Context.class);
 
       public static void foo() {}
     }
