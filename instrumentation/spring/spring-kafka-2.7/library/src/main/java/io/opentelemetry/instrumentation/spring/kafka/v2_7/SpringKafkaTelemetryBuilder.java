@@ -43,17 +43,6 @@ public final class SpringKafkaTelemetryBuilder {
   }
 
   /**
-   * @deprecated if you have a need for this configuration option please open an issue in the <a
-   *     href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues">opentelemetry-java-instrumentation</a>
-   *     repository.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public SpringKafkaTelemetryBuilder setPropagationEnabled(boolean propagationEnabled) {
-    return this;
-  }
-
-  /**
    * Set whether to capture the consumer message receive telemetry in messaging instrumentation.
    *
    * <p>Note that this will cause the consumer side to start a new trace, with only a span link
