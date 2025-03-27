@@ -76,13 +76,13 @@ public final class HttpSpanNameExtractor {
     @Override
     public String extract(REQUEST request) {
       String method = getter.getHttpRequestMethod(request);
-      String template = urlTemplateExtractor.apply(request);
       if (method == null) {
         return "HTTP";
       }
       if (!knownMethods.contains(method)) {
         method = "HTTP";
       }
+      String template = urlTemplateExtractor.apply(request);
       return template == null ? method : method + " " + template;
     }
   }
@@ -100,13 +100,13 @@ public final class HttpSpanNameExtractor {
     @Override
     public String extract(REQUEST request) {
       String method = getter.getHttpRequestMethod(request);
-      String route = getter.getHttpRoute(request);
       if (method == null) {
         return "HTTP";
       }
       if (!knownMethods.contains(method)) {
         method = "HTTP";
       }
+      String route = getter.getHttpRoute(request);
       return route == null ? method : method + " " + route;
     }
   }
