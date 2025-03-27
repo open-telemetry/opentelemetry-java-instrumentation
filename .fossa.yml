@@ -774,6 +774,12 @@ targets:
       target: ':instrumentation:pulsar:pulsar-2.8:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:pulsar:pulsar-4.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:pulsar:pulsar-common:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:ratpack:ratpack-1.4:javaagent'
     - type: gradle
       path: ./
