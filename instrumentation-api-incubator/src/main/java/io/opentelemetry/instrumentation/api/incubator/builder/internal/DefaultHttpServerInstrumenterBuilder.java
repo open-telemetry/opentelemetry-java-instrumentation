@@ -57,7 +57,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
       spanNameExtractorTransformer = Function.identity();
   private final HttpServerRouteBuilder<REQUEST> httpServerRouteBuilder;
   private final HttpServerAttributesGetter<REQUEST, RESPONSE> attributesGetter;
-  private boolean emitExperimentalHttpServerMetrics = false;
+  private boolean emitExperimentalHttpServerTelemetry = false;
   private Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer = b -> {};
 
   private DefaultHttpServerInstrumenterBuilder(
@@ -160,15 +160,15 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Configures the instrumentation to emit experimental HTTP server metrics.
+   * Configures the instrumentation to emit experimental HTTP server telemetry.
    *
-   * @param emitExperimentalHttpServerMetrics {@code true} if the experimental HTTP server metrics
-   *     are to be emitted.
+   * @param emitExperimentalHttpServerTelemetry {@code true} if the experimental HTTP server
+   *     telemetry is to be emitted.
    */
   @CanIgnoreReturnValue
   public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE>
-      setEmitExperimentalHttpServerMetrics(boolean emitExperimentalHttpServerMetrics) {
-    this.emitExperimentalHttpServerMetrics = emitExperimentalHttpServerMetrics;
+      setEmitExperimentalHttpServerTelemetry(boolean emitExperimentalHttpServerTelemetry) {
+    this.emitExperimentalHttpServerTelemetry = emitExperimentalHttpServerTelemetry;
     return this;
   }
 
@@ -210,7 +210,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
             .addAttributesExtractors(additionalExtractors)
             .addContextCustomizer(httpServerRouteBuilder.build())
             .addOperationMetrics(HttpServerMetrics.get());
-    if (emitExperimentalHttpServerMetrics) {
+    if (emitExperimentalHttpServerTelemetry) {
       builder
           .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(attributesGetter))
           .addOperationMetrics(HttpServerExperimentalMetrics.get());
@@ -226,7 +226,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
     set(config::getServerResponseHeaders, this::setCapturedResponseHeaders);
     set(
         config::shouldEmitExperimentalHttpServerTelemetry,
-        this::setEmitExperimentalHttpServerMetrics);
+        this::setEmitExperimentalHttpServerTelemetry);
     return this;
   }
 

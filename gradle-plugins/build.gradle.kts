@@ -25,11 +25,11 @@ configurations.named("compileOnly") {
   extendsFrom(bbGradlePlugin)
 }
 
-val byteBuddyVersion = "1.17.2"
+val byteBuddyVersion = "1.17.4"
 val aetherVersion = "1.1.0"
 
 dependencies {
-  implementation("com.google.guava:guava:33.4.5-jre")
+  implementation("com.google.guava:guava:33.4.6-jre")
   // we need to use byte buddy variant that does not shade asm
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:${byteBuddyVersion}") {
     exclude(group = "net.bytebuddy", module = "byte-buddy")

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Value;
@@ -30,6 +31,8 @@ import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.SdkResponse;
 import software.amazon.awssdk.core.async.SdkPublisher;
 import software.amazon.awssdk.core.document.Document;
+import software.amazon.awssdk.core.interceptor.ExecutionAttribute;
+import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.protocols.json.SdkJsonGenerator;
 import software.amazon.awssdk.protocols.jsoncore.JsonNode;
 import software.amazon.awssdk.protocols.jsoncore.JsonNodeParser;
@@ -39,6 +42,7 @@ import software.amazon.awssdk.services.bedrockruntime.model.ContentBlockDelta;
 import software.amazon.awssdk.services.bedrockruntime.model.ContentBlockDeltaEvent;
 import software.amazon.awssdk.services.bedrockruntime.model.ContentBlockStartEvent;
 import software.amazon.awssdk.services.bedrockruntime.model.ContentBlockStopEvent;
+import software.amazon.awssdk.services.bedrockruntime.model.ConversationRole;
 import software.amazon.awssdk.services.bedrockruntime.model.ConverseRequest;
 import software.amazon.awssdk.services.bedrockruntime.model.ConverseResponse;
 import software.amazon.awssdk.services.bedrockruntime.model.ConverseStreamMetadataEvent;
@@ -47,6 +51,8 @@ import software.amazon.awssdk.services.bedrockruntime.model.ConverseStreamReques
 import software.amazon.awssdk.services.bedrockruntime.model.ConverseStreamResponse;
 import software.amazon.awssdk.services.bedrockruntime.model.ConverseStreamResponseHandler;
 import software.amazon.awssdk.services.bedrockruntime.model.InferenceConfiguration;
+import software.amazon.awssdk.services.bedrockruntime.model.InvokeModelRequest;
+import software.amazon.awssdk.services.bedrockruntime.model.InvokeModelResponse;
 import software.amazon.awssdk.services.bedrockruntime.model.Message;
 import software.amazon.awssdk.services.bedrockruntime.model.MessageStartEvent;
 import software.amazon.awssdk.services.bedrockruntime.model.MessageStopEvent;
@@ -64,8 +70,22 @@ import software.amazon.awssdk.thirdparty.jackson.core.JsonFactory;
 public final class BedrockRuntimeImpl {
   private BedrockRuntimeImpl() {}
 
+  // copied from GenAiIncubatingAttributes
+  private static final class GenAiOperationNameIncubatingValues {
+    static final String CHAT = "chat";
+    static final String TEXT_COMPLETION = "text_completion";
+
+    private GenAiOperationNameIncubatingValues() {}
+  }
+
   private static final AttributeKey<String> EVENT_NAME = stringKey("event.name");
   private static final AttributeKey<String> GEN_AI_SYSTEM = stringKey("gen_ai.system");
+
+  private static final ExecutionAttribute<Document> INVOKE_MODEL_REQUEST_BODY =
+      new ExecutionAttribute<>(BedrockRuntimeImpl.class.getName() + ".InvokeModelRequestBody");
+
+  private static final ExecutionAttribute<Document> INVOKE_MODEL_RESPONSE_BODY =
+      new ExecutionAttribute<>(BedrockRuntimeImpl.class.getName() + ".InvokeModelResponseBody");
 
   private static final JsonFactory JSON_FACTORY = new JsonFactory();
   private static final JsonNodeParser JSON_PARSER = JsonNode.parser();
@@ -78,6 +98,9 @@ public final class BedrockRuntimeImpl {
     if (request instanceof ConverseStreamRequest) {
       return true;
     }
+    if (request instanceof InvokeModelRequest) {
+      return true;
+    }
     return false;
   }
 
@@ -85,21 +108,76 @@ public final class BedrockRuntimeImpl {
     if (request instanceof ConverseResponse) {
       return true;
     }
+    if (request instanceof InvokeModelResponse) {
+      return true;
+    }
     return false;
   }
 
+  static void maybeParseInvokeModelRequest(
+      ExecutionAttributes executionAttributes, SdkRequest request) {
+    if (request instanceof InvokeModelRequest) {
+      Document body =
+          deserializeDocument(((InvokeModelRequest) request).body().asByteArrayUnsafe());
+      executionAttributes.putAttribute(INVOKE_MODEL_REQUEST_BODY, body);
+    }
+  }
+
+  static void maybeParseInvokeModelResponse(
+      ExecutionAttributes executionAttributes, SdkResponse response) {
+    if (response instanceof InvokeModelResponse) {
+      Document body =
+          deserializeDocument(((InvokeModelResponse) response).body().asByteArrayUnsafe());
+      executionAttributes.putAttribute(INVOKE_MODEL_RESPONSE_BODY, body);
+    }
+  }
+
   @Nullable
-  static String getModelId(SdkRequest request) {
+  static String getModelId(ExecutionAttributes executionAttributes) {
+    SdkRequest request = executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE);
     if (request instanceof ConverseRequest) {
       return ((ConverseRequest) request).modelId();
-    } else if (request instanceof ConverseStreamRequest) {
+    }
+    if (request instanceof ConverseStreamRequest) {
       return ((ConverseStreamRequest) request).modelId();
+    }
+    if (request instanceof InvokeModelRequest) {
+      return ((InvokeModelRequest) request).modelId();
     }
     return null;
   }
 
   @Nullable
-  static Long getMaxTokens(SdkRequest request) {
+  static String getOperationName(ExecutionAttributes executionAttributes) {
+    SdkRequest request = executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE);
+    if (request instanceof ConverseRequest) {
+      return GenAiOperationNameIncubatingValues.CHAT;
+    }
+    if (request instanceof ConverseStreamRequest) {
+      return GenAiOperationNameIncubatingValues.CHAT;
+    }
+    if (request instanceof InvokeModelRequest) {
+      String modelId = ((InvokeModelRequest) request).modelId();
+      if (modelId == null) {
+        return null;
+      }
+      if (modelId.startsWith("amazon.titan")) {
+        // titan using invoke model is a text completion request
+        return GenAiOperationNameIncubatingValues.TEXT_COMPLETION;
+      }
+      return GenAiOperationNameIncubatingValues.CHAT;
+    }
+
+    return null;
+  }
+
+  @Nullable
+  static Long getMaxTokens(ExecutionAttributes executionAttributes) {
+    SdkRequest request = executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE);
+    if (request instanceof InvokeModelRequest) {
+      return getMaxTokens(executionAttributes, (InvokeModelRequest) request);
+    }
+
     InferenceConfiguration config = null;
     if (request instanceof ConverseRequest) {
       config = ((ConverseRequest) request).inferenceConfig();
@@ -113,7 +191,45 @@ public final class BedrockRuntimeImpl {
   }
 
   @Nullable
-  static Double getTemperature(SdkRequest request) {
+  private static Long getMaxTokens(
+      ExecutionAttributes executionAttributes, InvokeModelRequest request) {
+    String modelId = request.modelId();
+    if (modelId == null) {
+      return null;
+    }
+    Document body = executionAttributes.getAttribute(INVOKE_MODEL_REQUEST_BODY);
+    if (!body.isMap()) {
+      return null;
+    }
+    Document count = null;
+    if (modelId.startsWith("amazon.titan")) {
+      Document config = body.asMap().get("textGenerationConfig");
+      if (config == null || !config.isMap()) {
+        return null;
+      }
+      count = config.asMap().get("maxTokenCount");
+    } else if (modelId.startsWith("amazon.nova")) {
+      Document config = body.asMap().get("inferenceConfig");
+      if (config == null || !config.isMap()) {
+        return null;
+      }
+      count = config.asMap().get("max_new_tokens");
+    } else if (modelId.startsWith("anthropic.claude")) {
+      count = body.asMap().get("max_tokens");
+    }
+    if (count != null && count.isNumber()) {
+      return count.asNumber().longValue();
+    }
+    return null;
+  }
+
+  @Nullable
+  static Double getTemperature(ExecutionAttributes executionAttributes) {
+    SdkRequest request = executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE);
+    if (request instanceof InvokeModelRequest) {
+      return getTemperature(executionAttributes, (InvokeModelRequest) request);
+    }
+
     InferenceConfiguration config = null;
     if (request instanceof ConverseRequest) {
       config = ((ConverseRequest) request).inferenceConfig();
@@ -127,7 +243,45 @@ public final class BedrockRuntimeImpl {
   }
 
   @Nullable
-  static Double getTopP(SdkRequest request) {
+  private static Double getTemperature(
+      ExecutionAttributes executionAttributes, InvokeModelRequest request) {
+    String modelId = request.modelId();
+    if (modelId == null) {
+      return null;
+    }
+    Document body = executionAttributes.getAttribute(INVOKE_MODEL_REQUEST_BODY);
+    if (!body.isMap()) {
+      return null;
+    }
+    Document temperature = null;
+    if (modelId.startsWith("amazon.titan")) {
+      Document config = body.asMap().get("textGenerationConfig");
+      if (config == null || !config.isMap()) {
+        return null;
+      }
+      temperature = config.asMap().get("temperature");
+    } else if (modelId.startsWith("amazon.nova")) {
+      Document config = body.asMap().get("inferenceConfig");
+      if (config == null || !config.isMap()) {
+        return null;
+      }
+      temperature = config.asMap().get("temperature");
+    } else if (modelId.startsWith("anthropic.claude")) {
+      temperature = body.asMap().get("temperature");
+    }
+    if (temperature != null && temperature.isNumber()) {
+      return temperature.asNumber().doubleValue();
+    }
+    return null;
+  }
+
+  @Nullable
+  static Double getTopP(ExecutionAttributes executionAttributes) {
+    SdkRequest request = executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE);
+    if (request instanceof InvokeModelRequest) {
+      return getTopP(executionAttributes, (InvokeModelRequest) request);
+    }
+
     InferenceConfiguration config = null;
     if (request instanceof ConverseRequest) {
       config = ((ConverseRequest) request).inferenceConfig();
@@ -140,8 +294,45 @@ public final class BedrockRuntimeImpl {
     return null;
   }
 
+  private static Double getTopP(
+      ExecutionAttributes executionAttributes, InvokeModelRequest request) {
+    String modelId = request.modelId();
+    if (modelId == null) {
+      return null;
+    }
+    Document body = executionAttributes.getAttribute(INVOKE_MODEL_REQUEST_BODY);
+    if (!body.isMap()) {
+      return null;
+    }
+    Document topP = null;
+    if (modelId.startsWith("amazon.titan")) {
+      Document config = body.asMap().get("textGenerationConfig");
+      if (config == null || !config.isMap()) {
+        return null;
+      }
+      topP = config.asMap().get("topP");
+    } else if (modelId.startsWith("amazon.nova")) {
+      Document config = body.asMap().get("inferenceConfig");
+      if (config == null || !config.isMap()) {
+        return null;
+      }
+      topP = config.asMap().get("topP");
+    } else if (modelId.startsWith("anthropic.claude")) {
+      topP = body.asMap().get("top_p");
+    }
+    if (topP != null && topP.isNumber()) {
+      return topP.asNumber().doubleValue();
+    }
+    return null;
+  }
+
   @Nullable
-  static List<String> getStopSequences(SdkRequest request) {
+  static List<String> getStopSequences(ExecutionAttributes executionAttributes) {
+    SdkRequest request = executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE);
+    if (request instanceof InvokeModelRequest) {
+      return getStopSequences(executionAttributes, (InvokeModelRequest) request);
+    }
+
     InferenceConfiguration config = null;
     if (request instanceof ConverseRequest) {
       config = ((ConverseRequest) request).inferenceConfig();
@@ -155,8 +346,50 @@ public final class BedrockRuntimeImpl {
   }
 
   @Nullable
-  static List<String> getStopReasons(Response response) {
+  private static List<String> getStopSequences(
+      ExecutionAttributes executionAttributes, InvokeModelRequest request) {
+    String modelId = request.modelId();
+    if (modelId == null) {
+      return null;
+    }
+    Document body = executionAttributes.getAttribute(INVOKE_MODEL_REQUEST_BODY);
+    if (!body.isMap()) {
+      return null;
+    }
+    Document stopSequences = null;
+    if (modelId.startsWith("amazon.titan")) {
+      Document config = body.asMap().get("textGenerationConfig");
+      if (config == null || !config.isMap()) {
+        return null;
+      }
+      stopSequences = config.asMap().get("stopSequences");
+    } else if (modelId.startsWith("amazon.nova")) {
+      Document config = body.asMap().get("inferenceConfig");
+      if (config == null || !config.isMap()) {
+        return null;
+      }
+      stopSequences = config.asMap().get("stopSequences");
+    } else if (modelId.startsWith("anthropic.claude")) {
+      stopSequences = body.asMap().get("stop_sequences");
+    }
+    if (stopSequences != null && stopSequences.isList()) {
+      return stopSequences.asList().stream()
+          .filter(Document::isString)
+          .map(Document::asString)
+          .collect(Collectors.toList());
+    }
+    return null;
+  }
+
+  @Nullable
+  static List<String> getStopReasons(ExecutionAttributes executionAttributes, Response response) {
     SdkResponse sdkResponse = response.getSdkResponse();
+    if (sdkResponse instanceof InvokeModelResponse) {
+      return getStopReasons(
+          executionAttributes,
+          (InvokeModelRequest) executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE));
+    }
+
     if (sdkResponse instanceof ConverseResponse) {
       StopReason reason = ((ConverseResponse) sdkResponse).stopReason();
       if (reason != null) {
@@ -173,8 +406,52 @@ public final class BedrockRuntimeImpl {
   }
 
   @Nullable
-  static Long getUsageInputTokens(Response response) {
+  private static List<String> getStopReasons(
+      ExecutionAttributes executionAttributes, InvokeModelRequest request) {
+    String modelId = request.modelId();
+    if (modelId == null) {
+      return null;
+    }
+    Document body = executionAttributes.getAttribute(INVOKE_MODEL_RESPONSE_BODY);
+    if (!body.isMap()) {
+      return null;
+    }
+    if (modelId.startsWith("amazon.titan")) {
+      List<String> stopReasons = new ArrayList<>();
+      Document results = body.asMap().get("results");
+      if (results == null || !results.isList()) {
+        return null;
+      }
+      for (Document result : results.asList()) {
+        Document completionReason = result.asMap().get("completionReason");
+        if (completionReason == null || !completionReason.isString()) {
+          continue;
+        }
+        stopReasons.add(completionReason.asString());
+      }
+      return stopReasons;
+    }
+    Document stopReason = null;
+    if (modelId.startsWith("amazon.nova")) {
+      stopReason = body.asMap().get("stopReason");
+    } else if (modelId.startsWith("anthropic.claude")) {
+      stopReason = body.asMap().get("stop_reason");
+    }
+    if (stopReason != null && stopReason.isString()) {
+      return Collections.singletonList(stopReason.asString());
+    }
+    return null;
+  }
+
+  @Nullable
+  static Long getUsageInputTokens(ExecutionAttributes executionAttributes, Response response) {
     SdkResponse sdkResponse = response.getSdkResponse();
+    if (sdkResponse instanceof InvokeModelResponse) {
+      return getUsageInputTokens(
+          executionAttributes,
+          (InvokeModelRequest) executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE));
+    }
+
     TokenUsage usage = null;
     if (sdkResponse instanceof ConverseResponse) {
       usage = ((ConverseResponse) sdkResponse).usage();
@@ -192,8 +469,47 @@ public final class BedrockRuntimeImpl {
   }
 
   @Nullable
-  static Long getUsageOutputTokens(Response response) {
+  private static Long getUsageInputTokens(
+      ExecutionAttributes executionAttributes, InvokeModelRequest request) {
+    String modelId = request.modelId();
+    if (modelId == null) {
+      return null;
+    }
+    Document body = executionAttributes.getAttribute(INVOKE_MODEL_RESPONSE_BODY);
+    if (!body.isMap()) {
+      return null;
+    }
+    Document count = null;
+    if (modelId.startsWith("amazon.titan")) {
+      count = body.asMap().get("inputTextTokenCount");
+    } else if (modelId.startsWith("amazon.nova")) {
+      Document usage = body.asMap().get("usage");
+      if (usage == null || !usage.isMap()) {
+        return null;
+      }
+      count = usage.asMap().get("inputTokens");
+    } else if (modelId.startsWith("anthropic.claude")) {
+      Document usage = body.asMap().get("usage");
+      if (usage == null || !usage.isMap()) {
+        return null;
+      }
+      count = usage.asMap().get("input_tokens");
+    }
+    if (count != null && count.isNumber()) {
+      return count.asNumber().longValue();
+    }
+    return null;
+  }
+
+  @Nullable
+  static Long getUsageOutputTokens(ExecutionAttributes executionAttributes, Response response) {
     SdkResponse sdkResponse = response.getSdkResponse();
+    if (sdkResponse instanceof InvokeModelResponse) {
+      return getUsageOutputTokens(
+          executionAttributes,
+          (InvokeModelRequest) executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE));
+    }
+
     TokenUsage usage = null;
     if (sdkResponse instanceof ConverseResponse) {
       usage = ((ConverseResponse) sdkResponse).usage();
@@ -210,11 +526,67 @@ public final class BedrockRuntimeImpl {
     return null;
   }
 
+  @Nullable
+  private static Long getUsageOutputTokens(
+      ExecutionAttributes executionAttributes, InvokeModelRequest request) {
+    String modelId = request.modelId();
+    if (modelId == null) {
+      return null;
+    }
+    Document body = executionAttributes.getAttribute(INVOKE_MODEL_RESPONSE_BODY);
+    if (!body.isMap()) {
+      return null;
+    }
+    Document count = null;
+    if (modelId.startsWith("amazon.titan")) {
+      Document results = body.asMap().get("results");
+      if (results == null || !results.isList()) {
+        return null;
+      }
+      long outputTokens = 0;
+      for (Document result : results.asList()) {
+        Document tokenCount = result.asMap().get("tokenCount");
+        if (tokenCount == null || !tokenCount.isNumber()) {
+          continue;
+        }
+        outputTokens += tokenCount.asNumber().intValue();
+      }
+      return outputTokens;
+    } else if (modelId.startsWith("amazon.nova")) {
+      Document usage = body.asMap().get("usage");
+      if (usage == null || !usage.isMap()) {
+        return null;
+      }
+      count = usage.asMap().get("outputTokens");
+    } else if (modelId.startsWith("anthropic.claude")) {
+      Document usage = body.asMap().get("usage");
+      if (usage == null || !usage.isMap()) {
+        return null;
+      }
+      count = usage.asMap().get("output_tokens");
+    }
+    if (count != null && count.isNumber()) {
+      return count.asNumber().longValue();
+    }
+    return null;
+  }
+
   static void recordRequestEvents(
-      Context otelContext, Logger eventLogger, SdkRequest request, boolean captureMessageContent) {
+      Context otelContext,
+      Logger eventLogger,
+      ExecutionAttributes executionAttributes,
+      SdkRequest request,
+      boolean captureMessageContent) {
+    if (request instanceof InvokeModelRequest) {
+      Document body = executionAttributes.getAttribute(INVOKE_MODEL_REQUEST_BODY);
+      recordInvokeModelRequestEvents(
+          otelContext, eventLogger, (InvokeModelRequest) request, body, captureMessageContent);
+      return;
+    }
     if (request instanceof ConverseRequest) {
       recordRequestMessageEvents(
           otelContext, eventLogger, ((ConverseRequest) request).messages(), captureMessageContent);
+      return;
     }
     if (request instanceof ConverseStreamRequest) {
       recordRequestMessageEvents(
@@ -225,6 +597,66 @@ public final class BedrockRuntimeImpl {
 
       // Good a time as any to store the context for a streaming request.
       TracingConverseStreamResponseHandler.fromContext(otelContext).setOtelContext(otelContext);
+    }
+  }
+
+  private static void recordInvokeModelRequestEvents(
+      Context otelContext,
+      Logger eventLogger,
+      InvokeModelRequest request,
+      Document body,
+      boolean captureMessageContent) {
+    if (!body.isMap()) {
+      return;
+    }
+    String modelId = request.modelId();
+    if (modelId == null) {
+      return;
+    }
+    if (modelId.startsWith("amazon.titan")) {
+      Document inputText = body.asMap().get("inputText");
+      if (inputText == null || !inputText.isString()) {
+        return;
+      }
+      Message message =
+          Message.builder()
+              .role(ConversationRole.USER)
+              .content(ContentBlock.fromText(inputText.asString()))
+              .build();
+      recordRequestMessageEvents(
+          otelContext, eventLogger, Collections.singletonList(message), captureMessageContent);
+      return;
+    }
+    if (modelId.startsWith("amazon.nova") || modelId.startsWith("anthropic.claude")) {
+      Document messages = body.asMap().get("messages");
+      if (messages == null || !messages.isList()) {
+        return;
+      }
+      List<Message> parsedMessages = new ArrayList<>();
+      for (Document message : messages.asList()) {
+        if (!message.isMap()) {
+          continue;
+        }
+        Document role = message.asMap().get("role");
+        if (role == null || !role.isString()) {
+          continue;
+        }
+        Document content = message.asMap().get("content");
+        if (content == null || !content.isList()) {
+          continue;
+        }
+        List<ContentBlock> parsedContentBlocks = new ArrayList<>();
+        for (Document contentBlock : content.asList()) {
+          Document text = contentBlock.asMap().get("text");
+          if (text == null || !text.isString()) {
+            continue;
+          }
+          parsedContentBlocks.add(ContentBlock.fromText(text.asString()));
+        }
+        parsedMessages.add(
+            Message.builder().role(role.asString()).content(parsedContentBlocks).build());
+      }
+      recordRequestMessageEvents(otelContext, eventLogger, parsedMessages, captureMessageContent);
     }
   }
 
@@ -267,8 +699,16 @@ public final class BedrockRuntimeImpl {
   static void recordResponseEvents(
       Context otelContext,
       Logger eventLogger,
+      ExecutionAttributes executionAttributes,
       SdkResponse response,
       boolean captureMessageContent) {
+    if (response instanceof InvokeModelResponse) {
+      InvokeModelRequest request =
+          (InvokeModelRequest) executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE);
+      Document body = executionAttributes.getAttribute(INVOKE_MODEL_RESPONSE_BODY);
+      recordInvokeModelResponseEvents(
+          otelContext, eventLogger, request, body, captureMessageContent);
+    }
     if (response instanceof ConverseResponse) {
       ConverseResponse converseResponse = (ConverseResponse) response;
       newEvent(otelContext, eventLogger)
@@ -282,6 +722,91 @@ public final class BedrockRuntimeImpl {
                   captureMessageContent))
           .emit();
     }
+  }
+
+  private static void recordInvokeModelResponseEvents(
+      Context otelContext,
+      Logger eventLogger,
+      InvokeModelRequest request,
+      Document body,
+      boolean captureMessageContent) {
+    if (!body.isMap()) {
+      return;
+    }
+    String modelId = request.modelId();
+    if (modelId == null) {
+      return;
+    }
+    if (modelId.startsWith("amazon.titan")) {
+      // Text completion records an event per result.
+      Document results = body.asMap().get("results");
+      if (results == null || !results.isList()) {
+        return;
+      }
+      int index = 0;
+      for (Document result : results.asList()) {
+        Document completionReason = result.asMap().get("completionReason");
+        if (completionReason == null || !completionReason.isString()) {
+          continue;
+        }
+
+        Message.Builder parsedMessage = Message.builder().role(ConversationRole.ASSISTANT);
+
+        Document outputText = result.asMap().get("outputText");
+        if (outputText != null && outputText.isString()) {
+          parsedMessage.content(ContentBlock.fromText(outputText.asString()));
+        }
+        newEvent(otelContext, eventLogger)
+            .setAttribute(EVENT_NAME, "gen_ai.choice")
+            .setBody(
+                convertMessage(
+                    parsedMessage.build(),
+                    index,
+                    completionReason.asString(),
+                    captureMessageContent))
+            .emit();
+        index++;
+      }
+      return;
+    }
+
+    String stopReasonString = null;
+    Document content = null;
+    if (modelId.startsWith("amazon.nova")) {
+      Document stopReason = body.asMap().get("stopReason");
+      Document output = body.asMap().get("output");
+      if (output == null || !output.isMap()) {
+        return;
+      }
+      Document message = output.asMap().get("message");
+      if (message == null || !message.isMap()) {
+        return;
+      }
+      content = message.asMap().get("content");
+      stopReasonString = stopReason.asString();
+    } else if (modelId.startsWith("anthropic.claude")) {
+      Document stopReason = body.asMap().get("stop_reason");
+      content = body.asMap().get("content");
+      stopReasonString = stopReason.asString();
+    }
+
+    if (content == null || !content.isList()) {
+      return;
+    }
+    List<ContentBlock> parsedContentBlocks = new ArrayList<>();
+    for (Document contentBlock : content.asList()) {
+      Document text = contentBlock.asMap().get("text");
+      if (text == null || !text.isString()) {
+        continue;
+      }
+      parsedContentBlocks.add(ContentBlock.fromText(text.asString()));
+    }
+    Message parsedMessage =
+        Message.builder().role(ConversationRole.ASSISTANT).content(parsedContentBlocks).build();
+    newEvent(otelContext, eventLogger)
+        .setAttribute(EVENT_NAME, "gen_ai.choice")
+        .setBody(convertMessage(parsedMessage, 0, stopReasonString, captureMessageContent))
+        .emit();
   }
 
   @Nullable
@@ -568,6 +1093,11 @@ public final class BedrockRuntimeImpl {
   }
 
   private static Document deserializeDocument(String json) {
+    JsonNode node = JSON_PARSER.parse(json);
+    return node.visit(DOCUMENT_UNMARSHALLER);
+  }
+
+  private static Document deserializeDocument(byte[] json) {
     JsonNode node = JSON_PARSER.parse(json);
     return node.visit(DOCUMENT_UNMARSHALLER);
   }

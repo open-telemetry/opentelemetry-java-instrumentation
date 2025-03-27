@@ -10,18 +10,17 @@ import static io.opentelemetry.context.ContextKey.named;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import org.apache.pekko.http.scaladsl.model.Uri;
 
 public class PekkoRouteHolder implements ImplicitContextKeyed {
   private static final ContextKey<PekkoRouteHolder> KEY = named("opentelemetry-pekko-route");
 
-  private String route = "";
-  private boolean newSegment = true;
-  private boolean endMatched;
-  private final Deque<String> stack = new ArrayDeque<>();
+  private StringBuilder route = new StringBuilder();
+  private Uri.Path lastUnmatchedPath = null;
+  private boolean lastWasMatched = false;
+  private final Deque<State> savedStates = new ArrayDeque<>();
 
   public static Context init(Context context) {
     if (context.get(KEY) != null) {
@@ -30,51 +29,51 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
     return context.with(new PekkoRouteHolder());
   }
 
-  public static void push(String path) {
-    PekkoRouteHolder holder = Context.current().get(KEY);
-    if (holder != null && holder.newSegment && !holder.endMatched) {
-      holder.route += path;
-      holder.newSegment = false;
+  public static PekkoRouteHolder get(Context context) {
+    return context.get(KEY);
+  }
+
+  public void push(Uri.Path beforeMatch, Uri.Path afterMatch, String pathToPush) {
+    // Only accept the suggested 'pathToPush' if:
+    // - either this is the first match, or
+    // - the unmatched part of the path from the previous match is what the current match
+    //   acted upon. This avoids pushes from PathMatchers that compose other PathMatchers,
+    //   instead only accepting pushes from leaf-nodes in the PathMatcher hierarchy that actually
+    //   act on the path.
+    // AND:
+    // - some part of the path has now been matched by this matcher
+    if ((lastUnmatchedPath == null || lastUnmatchedPath.equals(beforeMatch))
+        && !afterMatch.equals(beforeMatch)) {
+      route.append(pathToPush);
+      lastUnmatchedPath = afterMatch;
+    }
+    lastWasMatched = true;
+  }
+
+  public void didNotMatch() {
+    lastWasMatched = false;
+  }
+
+  public void pushIfNotCompletelyMatched(String pathToPush) {
+    if (lastUnmatchedPath != null && !lastUnmatchedPath.isEmpty()) {
+      route.append(pathToPush);
     }
   }
 
-  public static void startSegment() {
-    PekkoRouteHolder holder = Context.current().get(KEY);
-    if (holder != null) {
-      holder.newSegment = true;
-    }
+  public String route() {
+    return lastWasMatched ? route.toString() : null;
   }
 
-  public static void endMatched() {
-    Context context = Context.current();
-    PekkoRouteHolder holder = context.get(KEY);
-    if (holder != null) {
-      holder.endMatched = true;
-      HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, holder.route);
-    }
+  public void save() {
+    savedStates.add(new State(lastUnmatchedPath, route));
+    route = new StringBuilder(route);
   }
 
-  public static void save() {
-    PekkoRouteHolder holder = Context.current().get(KEY);
-    if (holder != null) {
-      holder.stack.push(holder.route);
-      holder.newSegment = true;
-    }
-  }
-
-  public static void reset() {
-    PekkoRouteHolder holder = Context.current().get(KEY);
-    if (holder != null) {
-      holder.route = holder.stack.peek();
-      holder.newSegment = true;
-    }
-  }
-
-  public static void restore() {
-    PekkoRouteHolder holder = Context.current().get(KEY);
-    if (holder != null) {
-      holder.route = holder.stack.pop();
-      holder.newSegment = true;
+  public void restore() {
+    State popped = savedStates.pollLast();
+    if (popped != null) {
+      lastUnmatchedPath = popped.lastUnmatchedPath;
+      route = popped.route;
     }
   }
 
@@ -84,4 +83,14 @@ public class PekkoRouteHolder implements ImplicitContextKeyed {
   }
 
   private PekkoRouteHolder() {}
+
+  private static class State {
+    private final Uri.Path lastUnmatchedPath;
+    private final StringBuilder route;
+
+    private State(Uri.Path lastUnmatchedPath, StringBuilder route) {
+      this.lastUnmatchedPath = lastUnmatchedPath;
+      this.route = route;
+    }
+  }
 }

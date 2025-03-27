@@ -25,7 +25,7 @@ public final class RestletTelemetryBuilder {
 
   static {
     Experimental.internalSetEmitExperimentalTelemetry(
-        (builder, emit) -> builder.builder.setEmitExperimentalHttpServerMetrics(emit));
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpServerTelemetry(emit));
   }
 
   RestletTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -81,22 +81,6 @@ public final class RestletTelemetryBuilder {
   @CanIgnoreReturnValue
   public RestletTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
-    return this;
-  }
-
-  /**
-   * Configures the instrumentation to emit experimental HTTP server metrics.
-   *
-   * @param emitExperimentalHttpServerMetrics {@code true} if the experimental HTTP server metrics
-   *     are to be emitted.
-   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(RestletTelemetryBuilder,
-   *     boolean)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public RestletTelemetryBuilder setEmitExperimentalHttpServerMetrics(
-      boolean emitExperimentalHttpServerMetrics) {
-    builder.setEmitExperimentalHttpServerMetrics(emitExperimentalHttpServerMetrics);
     return this;
   }
 

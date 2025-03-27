@@ -30,7 +30,7 @@ public final class NettyServerTelemetryBuilder {
         nettyServerTelemetryBuilder -> nettyServerTelemetryBuilder.builder);
     Experimental.internalSetEmitExperimentalServerTelemetry(
         (builder, emit) -> {
-          builder.builder.setEmitExperimentalHttpServerMetrics(emit);
+          builder.builder.setEmitExperimentalHttpServerTelemetry(emit);
           builder.emitExperimentalHttpServerEvents = emit;
         });
   }
@@ -96,22 +96,6 @@ public final class NettyServerTelemetryBuilder {
   @CanIgnoreReturnValue
   public NettyServerTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
-    return this;
-  }
-
-  /**
-   * Configures the instrumentation to emit experimental HTTP server metrics.
-   *
-   * @param emitExperimentalHttpServerMetrics {@code true} if the experimental HTTP server metrics
-   *     are to be emitted.
-   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(NettyServerTelemetryBuilder,
-   *     boolean)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public NettyServerTelemetryBuilder setEmitExperimentalHttpServerMetrics(
-      boolean emitExperimentalHttpServerMetrics) {
-    builder.setEmitExperimentalHttpServerMetrics(emitExperimentalHttpServerMetrics);
     return this;
   }
 
