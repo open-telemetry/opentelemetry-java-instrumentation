@@ -32,7 +32,9 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
     this.instrumentationModule = module;
     this.adviceMapping =
         Advice.withCustomMapping()
-            .with(new Advice.AssignReturned.Factory().withSuppressed(Throwable.class))
+            .with(
+                new ForceDynamicallyTypedAssignReturnedFactory(
+                    new Advice.AssignReturned.Factory().withSuppressed(Throwable.class)))
             .bootstrap(
                 IndyBootstrap.getIndyBootstrapMethod(),
                 IndyBootstrap.getAdviceBootstrapArguments(instrumentationModule),
