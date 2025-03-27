@@ -6,9 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.pulsar.common.telemetry;
 
 import io.opentelemetry.context.propagation.TextMapSetter;
-import org.apache.pulsar.client.impl.MessageImpl;
-
 import javax.annotation.Nullable;
+import org.apache.pulsar.client.impl.MessageImpl;
 
 public enum MessageTextMapSetter implements TextMapSetter<PulsarRequest> {
   INSTANCE;

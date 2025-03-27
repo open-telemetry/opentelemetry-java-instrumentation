@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.common.telemetry;
 
+import static io.opentelemetry.javaagent.instrumentation.pulsar.common.UrlParser.parseUrl;
+
 import io.opentelemetry.javaagent.instrumentation.pulsar.common.ProducerData;
 import io.opentelemetry.javaagent.instrumentation.pulsar.common.UrlParser;
 import org.apache.pulsar.client.api.Message;
-
-import static io.opentelemetry.javaagent.instrumentation.pulsar.common.UrlParser.parseUrl;
 
 public final class PulsarRequest extends BasePulsarRequest {
   private final Message<?> message;
@@ -39,7 +39,6 @@ public final class PulsarRequest extends BasePulsarRequest {
   public Message<?> getMessage() {
     return message;
   }
-
 
   public int getProduceNumMessages() {
     return produceNumMessages;
