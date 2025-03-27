@@ -49,7 +49,7 @@ public class AkkaDefaultSystemMessageQueueInstrumentation implements TypeInstrum
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, systemMessage)) {
         return ExecutorAdviceHelper.attachContextToTask(
-            context, AkkaVirtualFields.SYSTEM_MESSAGE_PROPAGATED_CONTEXT, systemMessage);
+            context, VirtualFields.SYSTEM_MESSAGE_PROPAGATED_CONTEXT, systemMessage);
       }
       return null;
     }
@@ -62,7 +62,7 @@ public class AkkaDefaultSystemMessageQueueInstrumentation implements TypeInstrum
       ExecutorAdviceHelper.cleanUpAfterSubmit(
           propagatedContext,
           throwable,
-          AkkaVirtualFields.SYSTEM_MESSAGE_PROPAGATED_CONTEXT,
+          VirtualFields.SYSTEM_MESSAGE_PROPAGATED_CONTEXT,
           systemMessage);
     }
   }
