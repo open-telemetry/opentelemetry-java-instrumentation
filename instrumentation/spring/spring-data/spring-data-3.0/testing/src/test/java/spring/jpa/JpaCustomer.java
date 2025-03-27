@@ -65,10 +65,9 @@ public class JpaCustomer {
     if (obj == this) {
       return true;
     }
-    if (!(obj instanceof JpaCustomer)) {
+    if (!(obj instanceof JpaCustomer other)) {
       return false;
     }
-    JpaCustomer other = (JpaCustomer) obj;
     return Objects.equals(id, other.id)
         && Objects.equals(firstName, other.firstName)
         && Objects.equals(lastName, other.lastName);
