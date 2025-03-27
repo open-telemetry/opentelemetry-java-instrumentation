@@ -29,7 +29,7 @@ public final class NettyClientTelemetryBuilder {
   static {
     Experimental.internalSetEmitExperimentalClientTelemetry(
         (builder, emit) -> {
-          builder.builder.setEmitExperimentalHttpClientMetrics(emit);
+          builder.builder.setEmitExperimentalHttpClientTelemetry(emit);
           builder.emitExperimentalHttpClientEvents = emit;
         });
   }

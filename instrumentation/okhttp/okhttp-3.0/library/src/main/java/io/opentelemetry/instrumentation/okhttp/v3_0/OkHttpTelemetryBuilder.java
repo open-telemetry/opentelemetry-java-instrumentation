@@ -26,7 +26,7 @@ public final class OkHttpTelemetryBuilder {
 
   static {
     Experimental.internalSetEmitExperimentalTelemetry(
-        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientTelemetry(emit));
   }
 
   OkHttpTelemetryBuilder(OpenTelemetry openTelemetry) {

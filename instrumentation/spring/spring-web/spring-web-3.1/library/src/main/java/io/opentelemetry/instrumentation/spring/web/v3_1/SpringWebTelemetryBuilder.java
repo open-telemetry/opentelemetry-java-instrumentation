@@ -26,7 +26,7 @@ public final class SpringWebTelemetryBuilder {
   static {
     WebTelemetryUtil.setBuilderExtractor(SpringWebTelemetryBuilder::getBuilder);
     Experimental.internalSetEmitExperimentalTelemetry(
-        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientTelemetry(emit));
   }
 
   SpringWebTelemetryBuilder(OpenTelemetry openTelemetry) {
