@@ -41,10 +41,4 @@ public final class NocodeInstrumentationModule extends InstrumentationModule {
   public int order() {
     return Integer.MAX_VALUE;
   }
-
-  @Override
-  public boolean isIndyModule() {
-    // FIXME not sure why the indy tests are failing (and only on some jvm versions)
-    return false;
-  }
 }
