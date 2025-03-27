@@ -99,22 +99,6 @@ public final class NettyServerTelemetryBuilder {
     return this;
   }
 
-  /**
-   * Configures the instrumentation to emit experimental HTTP server metrics.
-   *
-   * @param emitExperimentalHttpServerMetrics {@code true} if the experimental HTTP server metrics
-   *     are to be emitted.
-   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(NettyServerTelemetryBuilder,
-   *     boolean)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public NettyServerTelemetryBuilder setEmitExperimentalHttpServerMetrics(
-      boolean emitExperimentalHttpServerMetrics) {
-    builder.setEmitExperimentalHttpServerTelemetry(emitExperimentalHttpServerMetrics);
-    return this;
-  }
-
   /** Returns a new {@link NettyServerTelemetry} with the given configuration. */
   public NettyServerTelemetry build() {
     return new NettyServerTelemetry(
