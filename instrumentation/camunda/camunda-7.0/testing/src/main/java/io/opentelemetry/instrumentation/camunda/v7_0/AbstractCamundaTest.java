@@ -53,7 +53,7 @@ public abstract class AbstractCamundaTest {
   }
 
   @Test
-  void testProcessExecutionSuccess() {
+  void testProcessExecutionAllSuccess() {
     Deployment deployment =
         processEngine
             .getRepositoryService()
