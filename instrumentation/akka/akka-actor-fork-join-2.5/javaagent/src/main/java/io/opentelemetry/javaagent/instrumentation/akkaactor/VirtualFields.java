@@ -19,6 +19,6 @@ public class VirtualFields {
           VirtualField.find(ForkJoinTask.class, PropagatedContext.class);
   public static final VirtualField<Runnable, PropagatedContext> RUNNABLE_PROPAGATED_CONTEXT =
       VirtualField.find(Runnable.class, PropagatedContext.class);
-  public static final VirtualField<Callable, PropagatedContext> CALLABLE_PROPAGATED_CONTEXT =
+  public static final VirtualField<Callable<?>, PropagatedContext> CALLABLE_PROPAGATED_CONTEXT =
       VirtualField.find(Callable.class, PropagatedContext.class);
 }
