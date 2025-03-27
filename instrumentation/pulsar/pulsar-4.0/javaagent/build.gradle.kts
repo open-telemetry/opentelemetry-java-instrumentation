@@ -14,8 +14,8 @@ muzzle {
 dependencies {
   library("org.apache.pulsar:pulsar-client:4.0.0")
   implementation(project(":instrumentation:pulsar:pulsar-common:javaagent"))
+  implementation("org.glassfish.jersey.core:jersey-client:2.42")
 
-  testImplementation("javax.annotation:javax.annotation-api:1.3.2")
   testImplementation("org.testcontainers:pulsar")
   testImplementation("org.apache.pulsar:pulsar-client-admin:4.0.0")
 }
