@@ -7,7 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.UrlParser.UrlData;
+import io.opentelemetry.javaagent.instrumentation.pulsar.common.UrlParser;
+import io.opentelemetry.javaagent.instrumentation.pulsar.common.UrlParser.UrlData;
 import org.junit.jupiter.api.Test;
 
 public class UrlParserTest {
