@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
+package io.opentelemetry.javaagent.instrumentation.pulsar.v4_0.telemetry;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -79,10 +79,9 @@ enum PulsarMessagingAttributesGetter implements MessagingAttributesGetter<Pulsar
     return null;
   }
 
-  @Nullable
   @Override
   public Long getBatchMessageCount(PulsarRequest request, @Nullable Void unused) {
-    return null;
+    return (long) request.getProduceNumMessages();
   }
 
   @Nullable

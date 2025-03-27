@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
+package io.opentelemetry.javaagent.instrumentation.pulsar.common.telemetry;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
 import javax.annotation.Nullable;
 
-enum MessageTextMapGetter implements TextMapGetter<PulsarRequest> {
+public enum MessageTextMapGetter implements TextMapGetter<PulsarRequest> {
   INSTANCE;
 
   @Override

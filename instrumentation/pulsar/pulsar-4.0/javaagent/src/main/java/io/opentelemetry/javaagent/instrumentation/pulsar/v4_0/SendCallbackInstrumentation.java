@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
+package io.opentelemetry.javaagent.instrumentation.pulsar.v4_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
-import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.producerInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.v4_0.telemetry.PulsarSingletons.producerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -21,6 +21,7 @@ import io.opentelemetry.javaagent.instrumentation.pulsar.common.telemetry.Pulsar
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.pulsar.client.impl.OpSendMsgStats;
 import org.apache.pulsar.client.impl.SendCallback;
 
 public class SendCallbackInstrumentation implements TypeInstrumentation {
@@ -64,12 +65,14 @@ public class SendCallbackInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Argument(0) Throwable t,
+        @Advice.Argument(1) OpSendMsgStats opSendMsgStats,
         @Advice.Local("otelContext") Context otelContext,
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("otelRequest") PulsarRequest request) {
       if (otelScope != null) {
         // Close the Scope and end the span.
         otelScope.close();
+        request.setProduceNumMessages(opSendMsgStats.getNumMessagesInBatch());
         producerInstrumenter().end(otelContext, request, null, t);
       }
     }

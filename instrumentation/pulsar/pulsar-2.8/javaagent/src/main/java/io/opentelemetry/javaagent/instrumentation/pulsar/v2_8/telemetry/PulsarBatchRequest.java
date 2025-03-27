@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 
-import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.UrlParser.parseUrl;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.common.UrlParser.parseUrl;
 
-import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.UrlParser.UrlData;
+import io.opentelemetry.javaagent.instrumentation.pulsar.common.UrlParser.UrlData;
+import io.opentelemetry.javaagent.instrumentation.pulsar.common.telemetry.BasePulsarRequest;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.Messages;
 import org.apache.pulsar.common.naming.TopicName;

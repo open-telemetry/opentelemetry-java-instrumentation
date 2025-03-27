@@ -65,6 +65,12 @@ final class MessagingMetricsAdvice {
     }
     ((ExtendedLongCounterBuilder) builder).setAttributesAdvice(MESSAGING_ATTRIBUTES);
   }
+  static void applyProduceMessagesAdvice(LongCounterBuilder builder) {
+    if (!(builder instanceof ExtendedLongCounterBuilder)) {
+      return;
+    }
+    ((ExtendedLongCounterBuilder) builder).setAttributesAdvice(MESSAGING_ATTRIBUTES);
+  }
 
   private MessagingMetricsAdvice() {}
 }

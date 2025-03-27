@@ -9,9 +9,12 @@ import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
+import io.opentelemetry.api.metrics.LongCounter;
+import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -29,11 +32,15 @@ import java.util.logging.Logger;
 public final class MessagingProducerMetrics implements OperationListener {
   private static final double NANOS_PER_S = TimeUnit.SECONDS.toNanos(1);
 
+  // copied from MessagingIncubatingAttributes
+  private static final AttributeKey<Long> MESSAGING_BATCH_MESSAGE_COUNT =
+      AttributeKey.longKey("messaging.batch.message_count");
   private static final ContextKey<MessagingProducerMetrics.State> MESSAGING_PRODUCER_METRICS_STATE =
       ContextKey.named("messaging-producer-metrics-state");
   private static final Logger logger = Logger.getLogger(MessagingProducerMetrics.class.getName());
 
   private final DoubleHistogram publishDurationHistogram;
+  private final LongCounter produceMessageCount;
 
   private MessagingProducerMetrics(Meter meter) {
     DoubleHistogramBuilder durationBuilder =
@@ -44,6 +51,14 @@ public final class MessagingProducerMetrics implements OperationListener {
             .setUnit("s");
     MessagingMetricsAdvice.applyPublishDurationAdvice(durationBuilder);
     publishDurationHistogram = durationBuilder.build();
+
+    LongCounterBuilder longCounterBuilder =
+        meter
+            .counterBuilder("messaging.client.sent.messages")
+            .setDescription("Number of messages producer attempted to send to the broker.")
+            .setUnit("{message}");
+    MessagingMetricsAdvice.applyProduceMessagesAdvice(longCounterBuilder);
+    produceMessageCount = longCounterBuilder.build();
   }
 
   public static OperationMetrics get() {
@@ -73,6 +88,21 @@ public final class MessagingProducerMetrics implements OperationListener {
 
     publishDurationHistogram.record(
         (endNanos - state.startTimeNanos()) / NANOS_PER_S, attributes, context);
+
+    long receiveMessagesCount = getProduceMessagesCount(state.startAttributes(), endAttributes);
+    if (receiveMessagesCount > 0) {
+      produceMessageCount.add(receiveMessagesCount, attributes, context);
+    }
+  }
+
+  private static long getProduceMessagesCount(Attributes... attributesList) {
+    for (Attributes attributes : attributesList) {
+      Long value = attributes.get(MESSAGING_BATCH_MESSAGE_COUNT);
+      if (value != null) {
+        return value;
+      }
+    }
+    return 0;
   }
 
   @AutoValue

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
+package io.opentelemetry.javaagent.instrumentation.pulsar.common.telemetry;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -15,7 +15,7 @@ import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.impl.MessageImpl;
 import org.apache.pulsar.common.api.proto.MessageMetadata;
 
-enum ExperimentalProducerAttributesExtractor implements AttributesExtractor<PulsarRequest, Void> {
+public enum ExperimentalProducerAttributesExtractor implements AttributesExtractor<PulsarRequest, Void> {
   INSTANCE;
 
   private static final AttributeKey<String> MESSAGE_TYPE =

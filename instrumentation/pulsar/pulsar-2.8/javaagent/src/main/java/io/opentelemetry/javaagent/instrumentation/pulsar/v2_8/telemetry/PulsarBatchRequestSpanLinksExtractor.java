@@ -10,6 +10,8 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
+import io.opentelemetry.javaagent.instrumentation.pulsar.common.telemetry.MessageTextMapGetter;
+import io.opentelemetry.javaagent.instrumentation.pulsar.common.telemetry.PulsarRequest;
 import org.apache.pulsar.client.api.Message;
 
 final class PulsarBatchRequestSpanLinksExtractor implements SpanLinksExtractor<PulsarBatchRequest> {

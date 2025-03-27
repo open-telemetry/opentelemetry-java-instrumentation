@@ -13,6 +13,7 @@ muzzle {
 
 dependencies {
   library("org.apache.pulsar:pulsar-client:2.8.0")
+  implementation(project(":instrumentation:pulsar:pulsar-common:javaagent"))
 
   testImplementation("javax.annotation:javax.annotation-api:1.3.2")
   testImplementation("org.testcontainers:pulsar")

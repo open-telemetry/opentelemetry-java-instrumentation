@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
+package io.opentelemetry.javaagent.instrumentation.pulsar.common.telemetry;
 
 /**
  * Helper class used to determine whether message is going to be processed by a listener. If we know
