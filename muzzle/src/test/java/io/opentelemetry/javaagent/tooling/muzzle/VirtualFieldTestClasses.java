@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 
-@SuppressWarnings({"ReturnValueIgnored", "unused"})
+@SuppressWarnings({"ReturnValueIgnored", "unused", "OtelPrivateConstructorForUtilityClass"})
 public class VirtualFieldTestClasses {
 
   public static class ValidAdvice {
@@ -18,6 +18,21 @@ public class VirtualFieldTestClasses {
       Key2.class.getName();
       Key1.class.getName();
       VirtualField.find(Key2.class, Context.class);
+    }
+  }
+
+  public static class VirtualFieldInStaticInitializerAdvice {
+
+    static final VirtualField<Key1, Context> FIELD_1 = VirtualField.find(Key1.class, Context.class);
+
+    public static class Helper {
+      static final VirtualField<Key2, Context> FIELD_2 = VirtualField.find(Key2.class, Context.class);
+
+      public static void foo() {}
+    }
+
+    public static void advice() {
+      Helper.foo();
     }
   }
 
