@@ -23,7 +23,12 @@ OPEN_PAREN           = "("
 CLOSE_PAREN          = ")"
 OPEN_COMMENT         = "/*"
 CLOSE_COMMENT        = "*/"
-IDENTIFIER           = ([:letter:] | "_") ([:letter:] | [0-9] | [_.])*
+UNQUOTED_IDENTIFIER  = ([:letter:] | "_") ([:letter:] | [0-9] | "_")*
+IDENTIFIER_PART      = {UNQUOTED_IDENTIFIER} | {DOUBLE_QUOTED_STR} | {BACKTICK_QUOTED_STR}
+// We are using {UNQUOTED_IDENTIFIER} instead of {IDENTIFIER_PART} here because DOUBLE_QUOTED_STR
+// and BACKTICK_QUOTED_STR are handled separately. Depending on the context they appear in they will
+// either be recorded as the identifier or replaced with ?.
+IDENTIFIER           = {UNQUOTED_IDENTIFIER} | ({IDENTIFIER_PART} ("." {IDENTIFIER_PART})+)
 BASIC_NUM            = [.+-]* [0-9] ([0-9] | [eE.+-])*
 HEX_NUM              = "0x" ([a-f] | [A-F] | [0-9])+
 QUOTED_STR           = "'" ("''" | [^'])* "'"
@@ -69,12 +74,31 @@ WHITESPACE           = [ \t\r\n]+
     return builder.length() > LIMIT;
   }
 
+  private String removeQuotes(String identifierName, String quote) {
+    // remove quotes from the start and end of the identifier ("table" is transformed to table), if
+    // identifier contains quote anywhere else besides start and end leave it as is (quotes are not
+    // removed from "schema"."table")
+    if (identifierName.startsWith(quote) && identifierName.endsWith(quote)) {
+      String s = identifierName.substring(1, identifierName.length() - 1);
+      if (!s.contains(quote)) {
+        return s;
+      }
+    }
+    return identifierName;
+  }
+
   /** @return text matched by current token without enclosing double quotes or backticks */
   private String readIdentifierName() {
     String identifierName = yytext();
-    if (identifierName != null && ((identifierName.startsWith("\"") && identifierName.endsWith("\""))
-        || (identifierName.startsWith("`") && identifierName.endsWith("`")))) {
-      identifierName = identifierName.substring(1, identifierName.length() - 1);
+    if (identifierName != null) {
+      String result = removeQuotes(identifierName, "\"");
+      if (!result.equals(identifierName)) {
+        return result;
+      }
+      result = removeQuotes(identifierName, "`");
+      if (!result.equals(identifierName)) {
+        return result;
+      }
     }
     return identifierName;
   }

@@ -277,7 +277,11 @@ public class SqlStatementSanitizerTest {
           // Select
           Arguments.of("SELECT x, y, z FROM schema.table", expect("SELECT", "schema.table")),
           Arguments.of("SELECT x, y, z FROM `schema table`", expect("SELECT", "schema table")),
+          Arguments.of(
+              "SELECT x, y, z FROM `schema`.`table`", expect("SELECT", "`schema`.`table`")),
           Arguments.of("SELECT x, y, z FROM \"schema table\"", expect("SELECT", "schema table")),
+          Arguments.of(
+              "SELECT x, y, z FROM \"schema\".\"table\"", expect("SELECT", "\"schema\".\"table\"")),
           Arguments.of(
               "WITH subquery as (select a from b) SELECT x, y, z FROM table",
               expect("SELECT", null)),
