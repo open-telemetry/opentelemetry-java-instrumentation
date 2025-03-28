@@ -108,7 +108,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
             new Utf8StringCodec(), new RedisURI(host, port, 3, TimeUnit.SECONDS));
     StatefulRedisConnection<String, String> connection1 = connectionFuture.get();
     cleanup.deferCleanup(connection1);
-    cleanup.deferCleanup(testConnectionClient::shutdown);
+    cleanup.deferCleanup(() -> shutdown(testConnectionClient));
 
     assertThat(connection1).isNotNull();
 
