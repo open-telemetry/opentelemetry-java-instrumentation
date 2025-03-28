@@ -125,7 +125,9 @@ public class AppServerBridge {
      * @return new context with AppServerBridge attached.
      */
     public Context init(Context context) {
-      return context.with(AppServerBridge.CONTEXT_KEY, new AppServerBridge(this));
+      Context result = context.with(AppServerBridge.CONTEXT_KEY, new AppServerBridge(this));
+      result = ServletAsyncContext.init(result);
+      return result;
     }
   }
 }
