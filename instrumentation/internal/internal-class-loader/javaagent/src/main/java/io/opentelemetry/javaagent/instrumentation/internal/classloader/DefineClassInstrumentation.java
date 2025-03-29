@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
+import static io.opentelemetry.javaagent.instrumentation.internal.classloader.AdviceUtil.applyInlineAdvice;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -27,16 +28,18 @@ public class DefineClassInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
+    applyInlineAdvice(
+        transformer,
         named("defineClass")
             .and(
                 takesArguments(
                     String.class, byte[].class, int.class, int.class, ProtectionDomain.class)),
-        DefineClassInstrumentation.class.getName() + "$DefineClassAdvice");
-    transformer.applyAdviceToMethod(
+        this.getClass().getName() + "$DefineClassAdvice");
+    applyInlineAdvice(
+        transformer,
         named("defineClass")
             .and(takesArguments(String.class, ByteBuffer.class, ProtectionDomain.class)),
-        DefineClassInstrumentation.class.getName() + "$DefineClassWithThreeArgsAdvice");
+        this.getClass().getName() + "$DefineClassWithThreeArgsAdvice");
   }
 
   @SuppressWarnings("unused")

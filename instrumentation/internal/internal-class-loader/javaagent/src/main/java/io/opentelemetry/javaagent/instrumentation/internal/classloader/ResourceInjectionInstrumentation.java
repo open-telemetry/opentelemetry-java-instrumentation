@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static io.opentelemetry.javaagent.instrumentation.internal.classloader.AdviceUtil.applyInlineAdvice;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -37,24 +37,20 @@ public class ResourceInjectionInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("getResource"))
-            .and(takesArguments(String.class))
-            .and(returns(URL.class)),
-        ResourceInjectionInstrumentation.class.getName() + "$GetResourceAdvice");
-    transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("getResources"))
-            .and(takesArguments(String.class))
-            .and(returns(Enumeration.class)),
-        ResourceInjectionInstrumentation.class.getName() + "$GetResourcesAdvice");
-    transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("getResourceAsStream"))
+    applyInlineAdvice(
+        transformer,
+        named("getResource").and(takesArguments(String.class)).and(returns(URL.class)),
+        this.getClass().getName() + "$GetResourceAdvice");
+    applyInlineAdvice(
+        transformer,
+        named("getResources").and(takesArguments(String.class)).and(returns(Enumeration.class)),
+        this.getClass().getName() + "$GetResourcesAdvice");
+    applyInlineAdvice(
+        transformer,
+        named("getResourceAsStream")
             .and(takesArguments(String.class))
             .and(returns(InputStream.class)),
-        ResourceInjectionInstrumentation.class.getName() + "$GetResourceAsStreamAdvice");
+        this.getClass().getName() + "$GetResourceAsStreamAdvice");
   }
 
   @SuppressWarnings("unused")

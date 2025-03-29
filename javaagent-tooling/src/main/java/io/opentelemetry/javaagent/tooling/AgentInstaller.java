@@ -56,6 +56,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -225,12 +226,11 @@ public class AgentInstaller {
 
     AgentBuilder.Identified.Extendable extendableAgentBuilder =
         agentBuilder
-            .ignore(
-                target ->
-                    // turn off after instrumentation is installed, exclude classes in
-                    // java.lang.invoke to avoid circularity when bootstrapping indy instrumentation
-                    instrumentationInstalled
-                        || target.getTypeName().startsWith("java.lang.invoke."))
+            // ignore classes that are not in boot loader, this also ignores classes in our agent
+            // loader
+            .ignore(any(), Objects::nonNull)
+            // turn off after instrumentation is installed
+            .or(target -> instrumentationInstalled)
             .type(none())
             .transform(
                 (builder, typeDescription, classLoader, module, protectionDomain) -> builder);
