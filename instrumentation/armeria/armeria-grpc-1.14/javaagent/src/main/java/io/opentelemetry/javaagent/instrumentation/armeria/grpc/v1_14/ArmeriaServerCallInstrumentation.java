@@ -34,6 +34,11 @@ public class ArmeriaServerCallInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
 
+    public static class VirtualFields {
+      public static final VirtualField<ServerCall<?, ?>, String> SERVER_CALL_AUTHORITY =
+          VirtualField.find(ServerCall.class, String.class);
+    }
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This ServerCall<?, ?> serverCall,
@@ -43,7 +48,7 @@ public class ArmeriaServerCallInstrumentation implements TypeInstrumentation {
         // ArmeriaServerCall does not implement getAuthority. We will store the value for authority
         // header as virtual field, this field is read in grpc instrumentation in
         // TracingServerInterceptor
-        VirtualField.find(ServerCall.class, String.class).set(serverCall, authority);
+        VirtualFields.SERVER_CALL_AUTHORITY.set(serverCall, authority);
       }
     }
   }
