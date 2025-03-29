@@ -267,7 +267,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
   private static long getNanos(@Nullable Instant time) {
     if (time == null) {
-      return System.nanoTime();
+      time = Instant.now();
     }
     return TimeUnit.SECONDS.toNanos(time.getEpochSecond()) + time.getNano();
   }
