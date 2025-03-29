@@ -172,6 +172,14 @@ public class JmxRule extends MetricStructure {
       StateMapping stateMapping = getEffectiveStateMapping(m, this);
 
       if (stateMapping.isEmpty()) {
+
+        // higher priority to metric level, then jmx rule as fallback
+        boolean dropNegative = getEffectiveDropNegativeValues(m, this);
+
+        if (dropNegative) {
+          attrExtractor = BeanAttributeExtractor.filterNegativeValues(attrExtractor);
+        }
+
         metricExtractors.add(new MetricExtractor(attrExtractor, metricInfo, attributeList));
       } else {
 
@@ -265,6 +273,14 @@ public class JmxRule extends MetricStructure {
       return rule.getStateMapping();
     } else {
       return m.getStateMapping();
+    }
+  }
+
+  private static boolean getEffectiveDropNegativeValues(Metric m, JmxRule rule) {
+    if (m == null || m.getDropNegativeValues() == null) {
+      return Boolean.TRUE.equals(rule.getDropNegativeValues());
+    } else {
+      return Boolean.TRUE.equals(m.getDropNegativeValues());
     }
   }
 }

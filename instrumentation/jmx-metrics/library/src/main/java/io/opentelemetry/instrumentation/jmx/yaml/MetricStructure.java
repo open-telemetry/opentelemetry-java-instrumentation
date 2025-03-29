@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * An abstract class containing skeletal info about Metrics:
@@ -48,6 +49,7 @@ abstract class MetricStructure {
   private static final String STATE_MAPPING_DEFAULT = "*";
   private String sourceUnit;
   private String unit;
+  @Nullable private Boolean dropNegativeValues;
 
   private MetricInfo.Type metricType;
   private List<MetricAttribute> metricAttributes;
@@ -74,6 +76,15 @@ abstract class MetricStructure {
 
   public void setUnit(String unit) {
     this.unit = validateUnit(unit.trim());
+  }
+
+  public void setDropNegativeValues(Boolean dropNegativeValues) {
+    this.dropNegativeValues = dropNegativeValues;
+  }
+
+  @Nullable
+  public Boolean getDropNegativeValues() {
+    return dropNegativeValues;
   }
 
   private static void addMappedValue(
