@@ -40,6 +40,6 @@ void configureClientInterceptor(OpenTelemetry openTelemetry, NettyChannelBuilder
 // For server-side, attatch the interceptor to your service.
 ServerServiceDefinition configureServerInterceptor(OpenTelemetry openTelemetry, ServerServiceDefinition serviceDefinition) {
   GrpcTelemetry grpcTelemetry = GrpcTelemetry.create(openTelemetry);
-  return ServiceInterceptors.intercept(serviceDefinition, grpcTelemetry.newServerInterceptor());
+  return ServerInterceptors.intercept(serviceDefinition, grpcTelemetry.newServerInterceptor());
 }
 ```
