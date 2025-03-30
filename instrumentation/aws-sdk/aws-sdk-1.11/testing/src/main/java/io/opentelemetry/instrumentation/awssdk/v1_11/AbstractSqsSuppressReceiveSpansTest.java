@@ -105,7 +105,6 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(stringKey("aws.endpoint"), "http://localhost:" + sqsPort),
                                 equalTo(stringKey("aws.queue.name"), "testSdkSqs"),
                                 satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(RPC_SYSTEM, "aws-api"),
@@ -125,7 +124,6 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(stringKey("aws.endpoint"), "http://localhost:" + sqsPort),
                                 equalTo(
                                     stringKey("aws.queue.url"),
                                     "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
@@ -153,7 +151,6 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(stringKey("aws.endpoint"), "http://localhost:" + sqsPort),
                                 equalTo(
                                     stringKey("aws.queue.url"),
                                     "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
@@ -211,7 +208,6 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(stringKey("aws.endpoint"), "http://localhost:" + sqsPort),
                                 equalTo(stringKey("aws.queue.name"), "testSdkSqs"),
                                 satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(RPC_SYSTEM, "aws-api"),
@@ -231,7 +227,6 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(stringKey("aws.endpoint"), "http://localhost:" + sqsPort),
                                 equalTo(
                                     stringKey("aws.queue.url"),
                                     "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
@@ -259,7 +254,6 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(stringKey("aws.endpoint"), "http://localhost:" + sqsPort),
                                 equalTo(
                                     stringKey("aws.queue.url"),
                                     "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
@@ -298,7 +292,6 @@ public abstract class AbstractSqsSuppressReceiveSpansTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(stringKey("aws.endpoint"), "http://localhost:" + sqsPort),
                                 equalTo(
                                     stringKey("aws.queue.url"),
                                     "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
