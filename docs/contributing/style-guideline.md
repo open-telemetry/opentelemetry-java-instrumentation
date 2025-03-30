@@ -108,18 +108,7 @@ All parameters and fields which can be `null` should be annotated with `@Nullabl
 (specifically `javax.annotation.Nullable`, which is included by the
 `otel.java-conventions` gradle plugin as a `compileOnly` dependency).
 
-There is no need to use `@NonNull`, as this is the default, which should be declared in a
-`package-info.java` file on the root package of each module, e.g.
-
-```java
-@DefaultQualifier(
-    value = NonNull.class,
-    locations = {TypeUseLocation.FIELD, TypeUseLocation.PARAMETER, TypeUseLocation.RETURN})
-package io.opentelemetry.instrumentation.api;
-
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.framework.qual.DefaultQualifier;
-```
+There is no need to use `@NonNull`, as this is the default.
 
 Public APIs should still defensively check for `null` parameters, even if the parameter is not
 annotated with `@Nullable`. Internal APIs do not need to defensively check for `null` parameters.

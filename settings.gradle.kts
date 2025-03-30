@@ -4,7 +4,7 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.4.5"
     id("com.gradle.plugin-publish") version "1.3.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.1.10"
+    id("org.jetbrains.kotlin.jvm") version "2.1.20"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("org.unbroken-dome.xjc") version "2.0.0"
     id("org.graalvm.buildtools.native") version "0.10.6"
@@ -12,7 +12,7 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.1"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.2.1"
   id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
@@ -587,7 +587,7 @@ include(":instrumentation:tapestry-5.4:javaagent")
 include(":instrumentation:tomcat:tomcat-7.0:javaagent")
 include(":instrumentation:tomcat:tomcat-10.0:javaagent")
 include(":instrumentation:tomcat:tomcat-common:javaagent")
-include(":instrumentation:tomcat:tomcat-jdbc")
+include(":instrumentation:tomcat:tomcat-jdbc:javaagent")
 include(":instrumentation:twilio-6.6:javaagent")
 include(":instrumentation:undertow-1.4:bootstrap")
 include(":instrumentation:undertow-1.4:javaagent")

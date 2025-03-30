@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.activejhttp;
 
-import static io.opentelemetry.javaagent.instrumentation.activejhttp.ActivejHttpServerConnectionSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.activejhttp.ActivejHttpServerSingletons.instrumenter;
 
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;

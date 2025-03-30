@@ -58,7 +58,9 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
                     INDEXED_CHILD,
                     () -> {
                       INDEXED_CHILD.collectSpanAttributes(it -> ctx.request().getParam(it));
-                      end(ctx.response().setStatusCode(INDEXED_CHILD.getStatus()));
+                      end(
+                          ctx.response().setStatusCode(INDEXED_CHILD.getStatus()),
+                          INDEXED_CHILD.getBody());
                       return null;
                     }));
     router

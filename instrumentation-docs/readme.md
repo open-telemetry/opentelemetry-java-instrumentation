@@ -2,6 +2,12 @@
 
 Runs analysis on instrumentation modules in order to generate documentation.
 
+## How to use
+
+Run the doc generator:
+
+`./gradlew :instrumentation-docs:generateDocs`
+
 ## Instrumentation Hierarchy
 
 An "InstrumentationEntity" represents a module that that targets specific code in a framework/library/technology.
@@ -44,12 +50,17 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 * name
   * Identifier for instrumentation module, used to enable/disable
   * Configured in `InstrumentationModule` code for each module
-* srcPath
+* source_path
   * Path to the source code of the instrumentation module
+* minimum_java_version
+  * Minimum Java version required by the instrumentation module. If not specified, it is assumed to
+    be Java 8
 * description
   * Short description of what the instrumentation does
 * target_versions
   * List of supported versions by the module, broken down by `library` or `javaagent` support
+* scope
+  * Name: The scope name of the instrumentation, `io.opentelemetry.{instrumentation name}`
 
 ## Methodology
 
@@ -62,12 +73,26 @@ As of now, the following fields are supported:
 
 ```yaml
 description: "Description of what the instrumentation does."
+disabled_by_default: true
+
+# used to mark modules that do not instrument traditional libraries (e.g. methods, annotations)
+# defaults to true
+isLibraryInstrumentation: false
 ```
 
-### Versions targeted
+### Gradle File Derived Information
 
-We parse gradle files in order to determine the target versions.
+We parse gradle files in order to determine several pieces of metadata:
 
 - Javaagent versions are determined by the `muzzle` plugin configurations
 - Library versions are determined by the library dependency versions
   - when available, latestDepTestLibrary is used to determine the latest supported version
+- Minimum Java version is determined by the `otelJava` configurations
+
+### Scope
+
+For now, the scope name is the only value that is implemented in our instrumentations. The scope
+name is determined by the instrumentation module name:  `io.opentelemetry.{instrumentation name}`
+
+We will implement gatherers for the schemaUrl and scope attributes when instrumentations start
+implementing them.
