@@ -12,7 +12,7 @@ import org.apache.dubbo.rpc.Invocation;
 import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.Result;
 
-@Activate(group = {"consumer"})
+@Activate(group = {"consumer"}, order = Integer.MIN_VALUE + 100)
 public final class OpenTelemetryClientFilter implements Filter {
 
   private final Filter delegate;
