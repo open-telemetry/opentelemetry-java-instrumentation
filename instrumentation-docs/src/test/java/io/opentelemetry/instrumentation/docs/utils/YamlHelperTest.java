@@ -69,9 +69,9 @@ class YamlHelperTest {
               instrumentations:
               - name: spring-web-6.0
                 description: Spring Web 6.0 instrumentation
-                disabledByDefault: true
-                srcPath: instrumentation/spring/spring-web/spring-web-6.0
-                minimumJavaVersion: 11
+                disabled_by_default: true
+                source_path: instrumentation/spring/spring-web/spring-web-6.0
+                minimum_java_version: 11
                 scope:
                   name: io.opentelemetry.spring-web-6.0
                 target_versions:
@@ -80,7 +80,7 @@ class YamlHelperTest {
             struts:
               instrumentations:
               - name: struts-2.3
-                srcPath: instrumentation/struts/struts-2.3
+                source_path: instrumentation/struts/struts-2.3
                 scope:
                   name: io.opentelemetry.struts-2.3
                 target_versions:
@@ -137,8 +137,8 @@ class YamlHelperTest {
               instrumentations:
               - name: spring-web-6.0
                 description: Spring Web 6.0 instrumentation
-                srcPath: instrumentation/spring/spring-web/spring-web-6.0
-                minimumJavaVersion: 11
+                source_path: instrumentation/spring/spring-web/spring-web-6.0
+                minimum_java_version: 11
                 scope:
                   name: io.opentelemetry.spring-web-6.0
                 target_versions:
@@ -155,7 +155,7 @@ class YamlHelperTest {
         """
         description: test description
         isLibraryInstrumentation: false
-        disabledByDefault: true
+        disabled_by_default: true
         """;
 
     InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
@@ -183,7 +183,7 @@ class YamlHelperTest {
 
   @Test
   void testMetadataParserWithOnlyDisabledByDefault() {
-    String input = "disabledByDefault: true";
+    String input = "disabled_by_default: true";
     InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
     assertThat(metadata.getIsLibraryInstrumentation()).isTrue();
     assertThat(metadata.getDescription()).isNull();

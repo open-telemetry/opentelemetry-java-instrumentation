@@ -28,11 +28,23 @@ public final class AgentInitializer {
   private static boolean isSecurityManagerSupportEnabled = false;
   private static volatile boolean agentStarted = false;
 
-  public static void initialize(Instrumentation inst, File javaagentFile, boolean fromPremain)
+  public static void initialize(
+      Instrumentation inst, File javaagentFile, boolean fromPremain, String agentArgs)
       throws Exception {
     if (agentClassLoader != null) {
       return;
     }
+
+    // this call deliberately uses anonymous class instead of lambda because using lambdas too
+    // early on early jdk8 (see isEarlyOracle18 method) causes jvm to crash. See CrashEarlyJdk8Test.
+    doPrivileged(
+        new PrivilegedAction<Void>() {
+          @Override
+          public Void run() {
+            setSystemProperties(agentArgs);
+            return null;
+          }
+        });
 
     // we expect that at this point agent jar has been appended to boot class path and all agent
     // classes are loaded in boot loader
@@ -201,4 +213,28 @@ public final class AgentInitializer {
   }
 
   private AgentInitializer() {}
+
+  @SuppressWarnings("SystemOut")
+  static void setSystemProperties(@Nullable String agentArgs) {
+    boolean debug = false;
+    if (agentArgs != null && !agentArgs.isEmpty()) {
+      for (String option : agentArgs.split(";")) {
+        int i = option.indexOf('=');
+        if (i < 0) {
+          System.err.println("Malformed agent argument: " + option);
+          continue;
+        }
+
+        String key = option.substring(0, i).trim();
+        String value = option.substring(i + 1).trim();
+        System.setProperty(key, value);
+        if (key.equals("otel.javaagent.debug")) {
+          debug = Boolean.parseBoolean(value);
+        }
+        if (debug) {
+          System.err.println("Setting property [" + key + "] = " + value);
+        }
+      }
+    }
+  }
 }

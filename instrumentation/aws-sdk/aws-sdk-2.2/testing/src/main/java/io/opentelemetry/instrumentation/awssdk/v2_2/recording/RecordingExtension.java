@@ -31,6 +31,7 @@ public final class RecordingExtension extends WireMockExtension
         WireMockExtension.newInstance()
             .options(
                 options()
+                    .dynamicPort()
                     .extensions(
                         ResponseHeaderScrubber.class,
                         PrettyPrintEqualToJsonStubMappingTransformer.class)

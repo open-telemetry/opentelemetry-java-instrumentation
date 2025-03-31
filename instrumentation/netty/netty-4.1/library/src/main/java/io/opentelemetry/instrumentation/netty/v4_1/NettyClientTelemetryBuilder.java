@@ -40,18 +40,6 @@ public final class NettyClientTelemetryBuilder {
   }
 
   /**
-   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(NettyClientTelemetryBuilder,
-   *     boolean)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public NettyClientTelemetryBuilder setEmitExperimentalHttpClientEvents(
-      boolean emitExperimentalHttpClientEvents) {
-    this.emitExperimentalHttpClientEvents = emitExperimentalHttpClientEvents;
-    return this;
-  }
-
-  /**
    * Configures the HTTP request headers that will be captured as span attributes.
    *
    * @param capturedRequestHeaders A list of HTTP header names.
@@ -102,22 +90,6 @@ public final class NettyClientTelemetryBuilder {
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
-    return this;
-  }
-
-  /**
-   * Configures the instrumentation to emit experimental HTTP client metrics.
-   *
-   * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
-   *     are to be emitted.
-   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(NettyClientTelemetryBuilder,
-   *     boolean)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public NettyClientTelemetryBuilder setEmitExperimentalHttpClientMetrics(
-      boolean emitExperimentalHttpClientMetrics) {
-    builder.setEmitExperimentalHttpClientTelemetry(emitExperimentalHttpClientMetrics);
     return this;
   }
 

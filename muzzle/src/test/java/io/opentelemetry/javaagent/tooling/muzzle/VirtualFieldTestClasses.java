@@ -21,6 +21,24 @@ public class VirtualFieldTestClasses {
     }
   }
 
+  public static class VirtualFieldInStaticInitializerAdvice {
+
+    static final VirtualField<Key1, Context> FIELD_1 = VirtualField.find(Key1.class, Context.class);
+
+    public static class Helper {
+      private Helper() {}
+
+      static final VirtualField<Key2, Context> FIELD_2 =
+          VirtualField.find(Key2.class, Context.class);
+
+      public static void foo() {}
+    }
+
+    public static void advice() {
+      Helper.foo();
+    }
+  }
+
   public static class TwoVirtualFieldsInTheSameClassAdvice {
     public static void advice() {
       VirtualField.find(Key1.class, Context.class);
