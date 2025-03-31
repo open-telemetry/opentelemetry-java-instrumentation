@@ -50,6 +50,7 @@ public enum VertxSqlClientAttributesGetter
   @Override
   public String getResponseStatus(@Nullable Void response, @Nullable Throwable error) {
     try {
+      // loaded via reflection, because this class is not available in all versions that we support
       Class<?> ex = Class.forName("io.vertx.pgclient.PgException");
       if (ex.isInstance(error)) {
         return (String) ex.getMethod("getCode").invoke(error);
