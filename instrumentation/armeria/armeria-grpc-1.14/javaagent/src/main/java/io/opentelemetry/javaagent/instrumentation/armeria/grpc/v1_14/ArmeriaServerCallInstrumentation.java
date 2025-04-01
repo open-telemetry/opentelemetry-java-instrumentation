@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import com.linecorp.armeria.server.ServiceRequestContext;
 import io.grpc.ServerCall;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcAuthorityStorage;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
