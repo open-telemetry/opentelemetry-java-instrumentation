@@ -6,74 +6,77 @@ rules:
   - beans:
     - Catalina:type=GlobalRequestProcessor,name=*
     - Tomcat:type=GlobalRequestProcessor,name=*
-    unit: "1"
     prefix: http.server.tomcat.
     metricAttribute:
       name: param(name)
     mapping:
       errorCount:
-        metric: errorCount
-        type: gauge
-        desc: The number of errors per second on all request processors
+        metric: error_count
+        type: counter
+        unit: "{error}"
+        desc: The number of errors.
       requestCount:
-        metric: requestCount
-        type: gauge
-        desc: The number of requests per second across all request processors
+        metric: request.count
+        type: counter
+        unit: "{request}"
+        desc: The number of requests processed.
       maxTime:
-        metric: maxTime
+        metric: request.max_time
         type: gauge
-        unit: ms
-        desc: The longest request processing time
+        sourceUnit: ms
+        unit: s
+        desc: The longest request processing time.
       processingTime:
-        metric: processingTime
+        metric: request.processing_time
         type: counter
-        unit: ms
-        desc: Total time for processing all requests
+        sourceUnit: ms
+        unit: s
+        desc: Total time for processing all requests.
       bytesReceived:
-        metric: traffic
-        type: counter
-        unit: By
-        desc: The number of bytes transmitted
+        metric: &metric traffic
+        type: &type counter
+        unit: &unit By
+        desc: &desc The number of bytes transmitted.
         metricAttribute:
           direction: const(received)
       bytesSent:
-        metric: traffic
-        type: counter
-        unit: By
-        desc: The number of bytes transmitted
+        metric: *metric
+        type: *type
+        unit: *unit
+        desc: *desc
         metricAttribute:
           direction: const(sent)
 
   - beans:
     - Catalina:type=Manager,host=localhost,context=*
     - Tomcat:type=Manager,host=localhost,context=*
-    unit: "1"
     prefix: http.server.tomcat.
-    type: updowncounter
     metricAttribute:
       context: param(context)
     mapping:
       activeSessions:
         metric: sessions.activeSessions
-        desc: The number of active sessions
+        type: updowncounter
+        unit: "{session}"
+        desc: The number of active sessions.
 
   - beans:
     - Catalina:type=ThreadPool,name=*
     - Tomcat:type=ThreadPool,name=*
-    unit: "{threads}"
+    unit: "{thread}"
     prefix: http.server.tomcat.
     type: updowncounter
     metricAttribute:
       name: param(name)
     mapping:
       currentThreadCount:
-        metric: threads
-        desc: Thread Count of the Thread Pool
+        metric: &metric thread_count
+        desc: &desc Thread Count of the Thread Pool.
         metricAttribute:
           state: const(idle)
       currentThreadsBusy:
-        metric: threads
-        desc: Thread Count of the Thread Pool
+        metric: *metric
+        desc: *desc
         metricAttribute:
           state: const(busy)
 
