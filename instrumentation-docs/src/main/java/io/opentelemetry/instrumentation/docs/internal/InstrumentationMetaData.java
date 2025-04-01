@@ -9,17 +9,18 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
+ * Represents the data in a metadata.yaml file. This class is internal and is hence not for public
+ * use. Its APIs are unstable and can change at any time.
  */
 public class InstrumentationMetaData {
+  @Nullable private String description;
+  @Nullable private Boolean isLibraryInstrumentation;
+  @Nullable private Boolean disabledByDefault;
 
   public InstrumentationMetaData() {}
 
   public InstrumentationMetaData(String description) {
     this.description = description;
-    this.isLibraryInstrumentation = true;
-    this.disabledByDefault = false;
   }
 
   public InstrumentationMetaData(
@@ -28,10 +29,6 @@ public class InstrumentationMetaData {
     this.disabledByDefault = disabledByDefault;
     this.description = description;
   }
-
-  @Nullable private String description;
-  @Nullable private Boolean disabledByDefault;
-  @Nullable private Boolean isLibraryInstrumentation;
 
   @Nullable
   public String getDescription() {
