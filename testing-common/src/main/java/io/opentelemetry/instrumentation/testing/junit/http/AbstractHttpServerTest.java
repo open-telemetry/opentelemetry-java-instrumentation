@@ -403,6 +403,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     TextMapPropagator propagator = GlobalOpenTelemetry.getPropagators().getTextMapPropagator();
     TextMapSetter<HttpRequestBuilder> setter = HttpRequestBuilder::header;
 
+    List<String> responses = new ArrayList<>();
     for (int i = 0; i < count; i++) {
       int index = i;
       HttpRequestBuilder request =
@@ -419,10 +420,22 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             client
                 .execute(request.build())
                 .aggregate()
-                .whenComplete((result, throwable) -> latch.countDown());
+                .whenComplete(
+                    (result, throwable) -> {
+                      if (throwable != null) {
+                        responses.add(throwable.toString());
+                      } else {
+                        responses.add(result.status().code() + " " + result.contentUtf8());
+                      }
+                      latch.countDown();
+                    });
           });
     }
     latch.await();
+    assertThat(responses)
+        .allSatisfy(
+            response ->
+                assertThat(response).isEqualTo(endpoint.getStatus() + " " + endpoint.getBody()));
 
     assertHighConcurrency(count);
   }

@@ -24,6 +24,7 @@ public final class AwsSdkSingletons {
           .setMessagingReceiveInstrumentationEnabled(messagingReceiveInstrumentationEnabled())
           .setUseConfiguredPropagatorForMessaging(useMessagingPropagator())
           .setRecordIndividualHttpError(recordIndividualHttpError())
+          .setGenaiCaptureMessageContent(genaiCaptureMessageContent())
           .build();
 
   private static boolean hasAgentConfiguration() {
@@ -65,6 +66,10 @@ public final class AwsSdkSingletons {
   private static boolean recordIndividualHttpError() {
     return getBoolean(
         "otel.instrumentation.aws-sdk.experimental-record-individual-http-error", false);
+  }
+
+  private static boolean genaiCaptureMessageContent() {
+    return getBoolean("otel.instrumentation.genai.capture-message-content", false);
   }
 
   private static boolean getBoolean(String name, boolean defaultValue) {

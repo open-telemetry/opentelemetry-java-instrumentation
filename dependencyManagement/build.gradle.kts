@@ -5,8 +5,8 @@ plugins {
 data class DependencySet(val group: String, val version: String, val modules: List<String>)
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.47.0"
-val otelContribVersion = "1.44.0-alpha"
+val otelSdkVersion = "1.48.0"
+val otelContribVersion = "1.45.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -29,7 +29,7 @@ val DEPENDENCY_BOMS = listOf(
 
   "com.fasterxml.jackson:jackson-bom:2.18.3",
   "com.squareup.okio:okio-bom:3.10.2", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
-  "com.google.guava:guava-bom:33.4.0-jre",
+  "com.google.guava:guava-bom:33.4.6-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
@@ -38,9 +38,9 @@ val DEPENDENCY_BOMS = listOf(
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
-val errorProneVersion = "2.36.0"
-val byteBuddyVersion = "1.17.2"
-val asmVersion = "9.7.1"
+val errorProneVersion = "2.37.0"
+val byteBuddyVersion = "1.17.5"
+val asmVersion = "9.8"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.17"
@@ -81,7 +81,7 @@ val CORE_DEPENDENCIES = listOf(
 // There are dependencies included here that appear to have no usages, but are maintained at
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
-  "org.junit.jupiter:junit-jupiter-api:5.12.0",
+  "org.junit.jupiter:junit-jupiter-api:5.12.1",
   "org.spockframework:spock-core:2.4-M5-groovy-4.0",
   "org.spockframework:spock-junit4:2.4-M5-groovy-4.0",
 
@@ -90,7 +90,7 @@ val DEPENDENCIES = listOf(
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.12.4",
+  "com.uber.nullaway:nullaway:0.12.6",
   "commons-beanutils:commons-beanutils:1.10.1",
   "commons-cli:commons-cli:1.9.0",
   "commons-codec:commons-codec:1.18.0",
@@ -119,7 +119,7 @@ val DEPENDENCIES = listOf(
   "org.objenesis:objenesis:3.4",
   "javax.validation:validation-api:2.0.1.Final",
   "org.snakeyaml:snakeyaml-engine:2.9",
-  "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.11"
+  "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.12"
 )
 
 javaPlatform {

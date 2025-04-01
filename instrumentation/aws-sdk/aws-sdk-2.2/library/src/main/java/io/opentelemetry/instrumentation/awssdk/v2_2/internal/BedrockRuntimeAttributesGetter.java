@@ -5,27 +5,19 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
-import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE;
+import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesGetter;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
-import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 
 enum BedrockRuntimeAttributesGetter
     implements GenAiAttributesGetter<ExecutionAttributes, Response> {
   INSTANCE;
 
-  // copied from GenAiIncubatingAttributes
-  private static final class GenAiOperationNameIncubatingValues {
-    static final String CHAT = "chat";
-
-    private GenAiOperationNameIncubatingValues() {}
-  }
-
-  private static final class GenAiSystemIncubatingValues {
+  static final class GenAiSystemIncubatingValues {
     static final String AWS_BEDROCK = "aws.bedrock";
 
     private GenAiSystemIncubatingValues() {}
@@ -33,16 +25,7 @@ enum BedrockRuntimeAttributesGetter
 
   @Override
   public String getOperationName(ExecutionAttributes executionAttributes) {
-    String operation = executionAttributes.getAttribute(SdkExecutionAttribute.OPERATION_NAME);
-    if (operation != null) {
-      switch (operation) {
-        case "Converse":
-          return GenAiOperationNameIncubatingValues.CHAT;
-        default:
-          return null;
-      }
-    }
-    return null;
+    return BedrockRuntimeAccess.getOperationName(executionAttributes);
   }
 
   @Override
@@ -53,7 +36,7 @@ enum BedrockRuntimeAttributesGetter
   @Nullable
   @Override
   public String getRequestModel(ExecutionAttributes executionAttributes) {
-    return BedrockRuntimeAccess.getModelId(executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE));
+    return BedrockRuntimeAccess.getModelId(executionAttributes);
   }
 
   @Nullable
@@ -77,8 +60,7 @@ enum BedrockRuntimeAttributesGetter
   @Nullable
   @Override
   public Long getRequestMaxTokens(ExecutionAttributes executionAttributes) {
-    return BedrockRuntimeAccess.getMaxTokens(
-        executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE));
+    return BedrockRuntimeAccess.getMaxTokens(executionAttributes);
   }
 
   @Nullable
@@ -90,15 +72,13 @@ enum BedrockRuntimeAttributesGetter
   @Nullable
   @Override
   public List<String> getRequestStopSequences(ExecutionAttributes executionAttributes) {
-    return BedrockRuntimeAccess.getStopSequences(
-        executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE));
+    return BedrockRuntimeAccess.getStopSequences(executionAttributes);
   }
 
   @Nullable
   @Override
   public Double getRequestTemperature(ExecutionAttributes executionAttributes) {
-    return BedrockRuntimeAccess.getTemperature(
-        executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE));
+    return BedrockRuntimeAccess.getTemperature(executionAttributes);
   }
 
   @Nullable
@@ -110,18 +90,20 @@ enum BedrockRuntimeAttributesGetter
   @Nullable
   @Override
   public Double getRequestTopP(ExecutionAttributes executionAttributes) {
-    return BedrockRuntimeAccess.getTopP(executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE));
+    return BedrockRuntimeAccess.getTopP(executionAttributes);
   }
 
-  @Nullable
   @Override
   public List<String> getResponseFinishReasons(
-      ExecutionAttributes executionAttributes, Response response) {
-    String stopReason = BedrockRuntimeAccess.getStopReason(response.getSdkResponse());
-    if (stopReason == null) {
-      return null;
+      ExecutionAttributes executionAttributes, @Nullable Response response) {
+    if (response == null) {
+      return emptyList();
     }
-    return Arrays.asList(stopReason);
+    List<String> stopReasons = BedrockRuntimeAccess.getStopReasons(executionAttributes, response);
+    if (stopReasons == null) {
+      return Collections.emptyList();
+    }
+    return stopReasons;
   }
 
   @Nullable
@@ -138,13 +120,21 @@ enum BedrockRuntimeAttributesGetter
 
   @Nullable
   @Override
-  public Long getUsageInputTokens(ExecutionAttributes executionAttributes, Response response) {
-    return BedrockRuntimeAccess.getUsageInputTokens(response.getSdkResponse());
+  public Long getUsageInputTokens(
+      ExecutionAttributes executionAttributes, @Nullable Response response) {
+    if (response == null) {
+      return null;
+    }
+    return BedrockRuntimeAccess.getUsageInputTokens(executionAttributes, response);
   }
 
   @Nullable
   @Override
-  public Long getUsageOutputTokens(ExecutionAttributes executionAttributes, Response response) {
-    return BedrockRuntimeAccess.getUsageOutputTokens(response.getSdkResponse());
+  public Long getUsageOutputTokens(
+      ExecutionAttributes executionAttributes, @Nullable Response response) {
+    if (response == null) {
+      return null;
+    }
+    return BedrockRuntimeAccess.getUsageOutputTokens(executionAttributes, response);
   }
 }

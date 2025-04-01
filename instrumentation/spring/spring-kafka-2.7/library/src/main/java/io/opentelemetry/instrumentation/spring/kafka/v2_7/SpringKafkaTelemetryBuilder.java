@@ -9,7 +9,7 @@ import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterFactory;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.spring.kafka.v2_7.internal.SpringKafkaErrorCauseExtractor;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -39,17 +39,6 @@ public final class SpringKafkaTelemetryBuilder {
   public SpringKafkaTelemetryBuilder setCaptureExperimentalSpanAttributes(
       boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
-    return this;
-  }
-
-  /**
-   * @deprecated if you have a need for this configuration option please open an issue in the <a
-   *     href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues">opentelemetry-java-instrumentation</a>
-   *     repository.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public SpringKafkaTelemetryBuilder setPropagationEnabled(boolean propagationEnabled) {
     return this;
   }
 

@@ -43,7 +43,9 @@ abstract class AbstractVertxRxVerticle extends AbstractVerticle {
                     () -> {
                       INDEXED_CHILD.collectSpanAttributes(
                           parameter -> ctx.request().params().get(parameter));
-                      ctx.response().setStatusCode(INDEXED_CHILD.getStatus()).end();
+                      ctx.response()
+                          .setStatusCode(INDEXED_CHILD.getStatus())
+                          .end(INDEXED_CHILD.getBody());
                     }));
 
     router

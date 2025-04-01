@@ -26,7 +26,7 @@ public final class SpringWebfluxServerTelemetryBuilder {
   static {
     SpringWebfluxBuilderUtil.setServerBuilderExtractor(builder -> builder.builder);
     Experimental.internalSetEmitExperimentalServerTelemetry(
-        (builder, emit) -> builder.builder.setEmitExperimentalHttpServerMetrics(emit));
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpServerTelemetry(emit));
   }
 
   SpringWebfluxServerTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -97,9 +97,7 @@ public final class SpringWebfluxServerTelemetryBuilder {
   /** Sets custom server {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public SpringWebfluxServerTelemetryBuilder setSpanNameExtractor(
-      Function<
-              SpanNameExtractor<? super ServerWebExchange>,
-              ? extends SpanNameExtractor<? super ServerWebExchange>>
+      Function<SpanNameExtractor<ServerWebExchange>, SpanNameExtractor<ServerWebExchange>>
           serverSpanNameExtractor) {
     builder.setSpanNameExtractor(serverSpanNameExtractor);
     return this;

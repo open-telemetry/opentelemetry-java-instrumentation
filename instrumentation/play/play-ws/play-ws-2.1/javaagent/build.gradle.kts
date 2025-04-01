@@ -49,7 +49,7 @@ testing {
   suites {
     val latestDepTest by registering(JvmTestSuite::class) {
       dependencies {
-        implementation("com.typesafe.play:play-ahc-ws-standalone_2.13:+")
+        implementation("com.typesafe.play:play-ahc-ws-standalone_2.13:latest.release")
       }
     }
   }
