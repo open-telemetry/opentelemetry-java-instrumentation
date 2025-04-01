@@ -15,7 +15,6 @@ import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.bugpatterns.PrivateConstructorForUtilityClass;
 import com.google.errorprone.matchers.Description;
 import com.sun.source.tree.ClassTree;
-import com.sun.source.tree.Tree;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -32,7 +31,7 @@ public class OtelPrivateConstructorForUtilityClass extends BugChecker
 
   @Override
   public Description matchClass(ClassTree tree, VisitorState state) {
-    if (isAdviceOrAdviceNestedClass(tree, state)) {
+    if (tree.getSimpleName().toString().endsWith("Advice")) {
       return NO_MATCH;
     }
     Description description = delegate.matchClass(tree, state);
@@ -40,18 +39,5 @@ public class OtelPrivateConstructorForUtilityClass extends BugChecker
       return description;
     }
     return describeMatch(tree);
-  }
-
-  private static boolean isAdviceOrAdviceNestedClass(ClassTree tree, VisitorState state) {
-    if (tree.getSimpleName().toString().endsWith("Advice")) {
-      return true;
-    }
-    for (Tree parent : state.getPath()) {
-      if (parent instanceof ClassTree
-          && ((ClassTree) parent).getSimpleName().toString().endsWith("Advice")) {
-        return true;
-      }
-    }
-    return false;
   }
 }
