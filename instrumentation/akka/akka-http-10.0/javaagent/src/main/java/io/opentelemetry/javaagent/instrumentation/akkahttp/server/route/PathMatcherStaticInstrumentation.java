@@ -47,7 +47,7 @@ public class PathMatcherStaticInstrumentation implements TypeInstrumentation {
         }
         // if present use the matched path that was remembered in PathMatcherInstrumentation,
         // otherwise just use a *
-        String prefix = VirtualFields.PATH_MATCHER_ROUTE.get(pathMatcher);
+        String prefix = PathMatcherUtil.getMatched(pathMatcher);
         if (prefix == null) {
           if (PathMatchers.Slash$.class == pathMatcher.getClass()) {
             prefix = "/";

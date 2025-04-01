@@ -40,7 +40,7 @@ public class PathMatcherInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Uri.Path prefix, @Advice.Return PathMatcher<?> result) {
       // store the path being matched inside a VirtualField on the given matcher, so it can be used
       // for constructing the route
-      VirtualFields.PATH_MATCHER_ROUTE.set(result, prefix.toString());
+      PathMatcherUtil.setMatched(result, prefix.toString());
     }
   }
 }
