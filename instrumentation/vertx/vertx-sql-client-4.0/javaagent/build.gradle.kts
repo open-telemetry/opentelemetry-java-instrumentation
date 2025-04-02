@@ -12,13 +12,31 @@ muzzle {
 }
 
 dependencies {
-  library("io.vertx:vertx-sql-client:4.0.0")
-  compileOnly("io.vertx:vertx-codegen:4.0.0")
+  val version = "4.0.0"
+  library("io.vertx:vertx-sql-client:$version")
+  compileOnly("io.vertx:vertx-codegen:$version")
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
-  testLibrary("io.vertx:vertx-pg-client:4.0.0")
-  testLibrary("io.vertx:vertx-codegen:4.0.0")
+  testLibrary("io.vertx:vertx-pg-client:$version")
+  testLibrary("io.vertx:vertx-codegen:$version")
+}
+
+testing {
+  suites {
+    val testVertx5 by registering(JvmTestSuite::class) {
+      val version = "4.5.13"
+      dependencies {
+        implementation(project())
+        implementation("io.vertx:vertx-sql-client:$version")
+        implementation("io.vertx:vertx-codegen:$version")
+        implementation("io.vertx:vertx-pg-client:$version")
+        implementation("org.testcontainers:testcontainers")
+
+        implementation(project(":instrumentation:netty:netty-4.1:javaagent"))
+      }
+    }
+  }
 }
 
 tasks {

@@ -18,8 +18,8 @@ import java.util.Set;
  */
 public final class SemconvStability {
 
-  private static final boolean emitOldDatabaseSemconv;
-  private static final boolean emitStableDatabaseSemconv;
+  private static boolean emitOldDatabaseSemconv;
+  private static boolean emitStableDatabaseSemconv;
 
   static {
     boolean oldDatabase = true;
@@ -78,4 +78,9 @@ public final class SemconvStability {
   }
 
   private SemconvStability() {}
+
+  public static void setForTesting(boolean emitOldDatabaseSemconv, boolean emitStableDatabaseSemconv) {
+    SemconvStability.emitOldDatabaseSemconv = emitOldDatabaseSemconv;
+    SemconvStability.emitStableDatabaseSemconv = emitStableDatabaseSemconv;
+  }
 }
