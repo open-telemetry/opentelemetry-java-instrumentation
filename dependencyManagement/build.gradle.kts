@@ -102,6 +102,7 @@ val DEPENDENCIES = listOf(
   "commons-logging:commons-logging:1.3.5",
   "commons-validator:commons-validator:1.9.0",
   "io.netty:netty:3.10.6.Final",
+  "io.opentelemetry.contrib:opentelemetry-azure-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-aws-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-gcp-resources:${otelContribVersion}",
