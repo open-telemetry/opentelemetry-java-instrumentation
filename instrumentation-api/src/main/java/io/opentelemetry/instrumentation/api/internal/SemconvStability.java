@@ -79,7 +79,8 @@ public final class SemconvStability {
 
   private SemconvStability() {}
 
-  public static void setForTesting(boolean emitOldDatabaseSemconv, boolean emitStableDatabaseSemconv) {
+  public static void setForTesting(
+      boolean emitOldDatabaseSemconv, boolean emitStableDatabaseSemconv) {
     SemconvStability.emitOldDatabaseSemconv = emitOldDatabaseSemconv;
     SemconvStability.emitStableDatabaseSemconv = emitStableDatabaseSemconv;
   }

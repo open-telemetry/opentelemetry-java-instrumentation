@@ -1,10 +1,14 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import javax.annotation.Nullable;
 
 public class DbResponseStatusUtil {
-  private DbResponseStatusUtil() {
-  }
+  private DbResponseStatusUtil() {}
 
   @Nullable
   public static String dbResponseStatusCode(int responseStatusCode) {
