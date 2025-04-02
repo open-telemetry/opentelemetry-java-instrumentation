@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.DbResponseStatusUtil.dbResponseStatusCode;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
@@ -96,10 +97,6 @@ final class ElasticsearchDbAttributesGetter
   @Nullable
   @Override
   public String getResponseStatus(@Nullable Response response, @Nullable Throwable error) {
-    if (response != null) {
-      int httpStatus = response.getStatusLine().getStatusCode();
-      return httpStatus >= 400 && httpStatus < 600 ? Integer.toString(httpStatus) : null;
-    }
-    return null;
+    return response != null ? dbResponseStatusCode(response.getStatusLine().getStatusCode()) : null;
   }
 }

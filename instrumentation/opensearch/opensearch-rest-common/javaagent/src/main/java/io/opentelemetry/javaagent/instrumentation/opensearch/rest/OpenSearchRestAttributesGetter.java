@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.DbResponseStatusUtil.dbResponseStatusCode;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
@@ -54,10 +56,6 @@ final class OpenSearchRestAttributesGetter
   @Nullable
   @Override
   public String getResponseStatus(@Nullable Response response, @Nullable Throwable error) {
-    if (response != null) {
-      int httpStatus = response.getStatusLine().getStatusCode();
-      return httpStatus >= 400 && httpStatus < 600 ? Integer.toString(httpStatus) : null;
-    }
-    return null;
+    return response != null ? dbResponseStatusCode(response.getStatusLine().getStatusCode()) : null;
   }
 }
