@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.DbResponseStatusUtil.dbResponseStatusCode;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbResponseStatusUtil.dbResponseStatusCode;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;

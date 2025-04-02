@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.DbResponseStatusUtil.dbResponseStatusCode;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbResponseStatusUtil.dbResponseStatusCode;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;

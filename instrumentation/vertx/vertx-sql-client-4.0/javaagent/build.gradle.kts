@@ -24,7 +24,7 @@ dependencies {
 
 testing {
   suites {
-    val testVertx5 by registering(JvmTestSuite::class) {
+    val testVertx4_5 by registering(JvmTestSuite::class) {
       val version = "4.5.13"
       dependencies {
         implementation(project())
@@ -34,6 +34,14 @@ testing {
         implementation("org.testcontainers:testcontainers")
 
         implementation(project(":instrumentation:netty:netty-4.1:javaagent"))
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=database")
+          }
+        }
       }
     }
   }

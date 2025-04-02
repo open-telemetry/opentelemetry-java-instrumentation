@@ -18,7 +18,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_RESPONSE_STATUS_CODE;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -62,7 +61,6 @@ class VertxSqlClientTest {
 
   @BeforeAll
   static void setUp() throws Exception {
-    SemconvStability.setForTesting(false, true);
     container =
         new GenericContainer<>("postgres:9.6.8")
             .withEnv("POSTGRES_USER", USER_DB)

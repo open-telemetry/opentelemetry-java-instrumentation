@@ -3,11 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.incubator.semconv.db;
+package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
 
 import javax.annotation.Nullable;
 
-public class DbResponseStatusUtil {
+/**
+ * This class is internal and experimental. Its APIs are unstable and can change at any time. Its
+ * APIs (or a version of them) may be promoted to the public stable API in the future, but no
+ * guarantees are made.
+ */
+public final class DbResponseStatusUtil {
   private DbResponseStatusUtil() {}
 
   @Nullable
