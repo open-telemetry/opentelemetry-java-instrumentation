@@ -22,31 +22,6 @@ dependencies {
   testLibrary("io.vertx:vertx-codegen:$version")
 }
 
-testing {
-  suites {
-    val testVertx4_5 by registering(JvmTestSuite::class) {
-      val version = "4.5.13"
-      dependencies {
-        implementation(project())
-        implementation("io.vertx:vertx-sql-client:$version")
-        implementation("io.vertx:vertx-codegen:$version")
-        implementation("io.vertx:vertx-pg-client:$version")
-        implementation("org.testcontainers:testcontainers")
-
-        implementation(project(":instrumentation:netty:netty-4.1:javaagent"))
-      }
-
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database")
-          }
-        }
-      }
-    }
-  }
-}
-
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
