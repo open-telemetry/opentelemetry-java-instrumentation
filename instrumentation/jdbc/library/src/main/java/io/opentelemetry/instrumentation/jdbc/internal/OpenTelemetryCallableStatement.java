@@ -42,6 +42,7 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
 
+@SuppressWarnings("OverloadMethodsDeclarationOrder")
 class OpenTelemetryCallableStatement<S extends CallableStatement>
     extends OpenTelemetryPreparedStatement<S> implements CallableStatement {
 

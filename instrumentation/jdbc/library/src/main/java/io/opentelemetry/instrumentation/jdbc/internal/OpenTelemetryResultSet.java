@@ -28,7 +28,7 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.Map;
 
-@SuppressWarnings("UngroupedOverloads")
+@SuppressWarnings({"UngroupedOverloads", "OverloadMethodsDeclarationOrder"})
 class OpenTelemetryResultSet implements ResultSet {
 
   private final ResultSet delegate;
@@ -771,23 +771,23 @@ class OpenTelemetryResultSet implements ResultSet {
   }
 
   @Override
-  public void updateNString(int columnIndex, String nString) throws SQLException {
-    delegate.updateNString(columnIndex, nString);
+  public void updateNString(int columnIndex, String string) throws SQLException {
+    delegate.updateNString(columnIndex, string);
   }
 
   @Override
-  public void updateNString(String columnLabel, String nString) throws SQLException {
-    delegate.updateNString(columnLabel, nString);
+  public void updateNString(String columnLabel, String string) throws SQLException {
+    delegate.updateNString(columnLabel, string);
   }
 
   @Override
-  public void updateNClob(int columnIndex, NClob nClob) throws SQLException {
-    delegate.updateNClob(columnIndex, nClob);
+  public void updateNClob(int columnIndex, NClob clob) throws SQLException {
+    delegate.updateNClob(columnIndex, clob);
   }
 
   @Override
-  public void updateNClob(String columnLabel, NClob nClob) throws SQLException {
-    delegate.updateNClob(columnLabel, nClob);
+  public void updateNClob(String columnLabel, NClob clob) throws SQLException {
+    delegate.updateNClob(columnLabel, clob);
   }
 
   @Override

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection.OpenTelemetryConnectionJdbc43;
 import java.lang.reflect.Method;
 import java.sql.CallableStatement;
 import java.sql.Connection;
@@ -21,7 +22,11 @@ class WrapperTest {
     validate(Statement.class, OpenTelemetryStatement.class);
     validate(PreparedStatement.class, OpenTelemetryPreparedStatement.class);
     validate(CallableStatement.class, OpenTelemetryCallableStatement.class);
-    validate(Connection.class, OpenTelemetryConnection.class);
+    validate(
+        Connection.class,
+        OpenTelemetryConnection.hasJdbc43()
+            ? OpenTelemetryConnectionJdbc43.class
+            : OpenTelemetryConnection.class);
     validate(ResultSet.class, OpenTelemetryResultSet.class);
   }
 
