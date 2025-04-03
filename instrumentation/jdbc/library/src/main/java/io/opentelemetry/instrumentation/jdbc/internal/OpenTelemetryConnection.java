@@ -35,6 +35,7 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.SQLXML;
 import java.sql.Savepoint;
+import java.sql.ShardingKey;
 import java.sql.Statement;
 import java.sql.Struct;
 import java.util.Map;
@@ -363,6 +364,46 @@ public class OpenTelemetryConnection implements Connection {
   @Override
   public boolean isWrapperFor(Class<?> iface) throws SQLException {
     return delegate.isWrapperFor(iface);
+  }
+
+  // JDBC 4.3
+
+  @SuppressWarnings("Since15")
+  @Override
+  public void beginRequest() throws SQLException {
+    delegate.beginRequest();
+  }
+
+  @SuppressWarnings("Since15")
+  @Override
+  public void endRequest() throws SQLException {
+    delegate.endRequest();
+  }
+
+  @SuppressWarnings("Since15")
+  @Override
+  public boolean setShardingKeyIfValid(
+      ShardingKey shardingKey, ShardingKey superShardingKey, int timeout) throws SQLException {
+    return delegate.setShardingKeyIfValid(shardingKey, superShardingKey, timeout);
+  }
+
+  @SuppressWarnings("Since15")
+  @Override
+  public boolean setShardingKeyIfValid(ShardingKey shardingKey, int timeout) throws SQLException {
+    return delegate.setShardingKeyIfValid(shardingKey, timeout);
+  }
+
+  @SuppressWarnings("Since15")
+  @Override
+  public void setShardingKey(ShardingKey shardingKey, ShardingKey superShardingKey)
+      throws SQLException {
+    delegate.setShardingKey(shardingKey, superShardingKey);
+  }
+
+  @SuppressWarnings("Since15")
+  @Override
+  public void setShardingKey(ShardingKey shardingKey) throws SQLException {
+    delegate.setShardingKey(shardingKey);
   }
 
   // visible for testing
