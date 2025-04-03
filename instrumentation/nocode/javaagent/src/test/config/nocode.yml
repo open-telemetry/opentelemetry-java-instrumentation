@@ -1,0 +1,42 @@
+- class: io.opentelemetry.javaagent.instrumentation.nocode.NocodeInstrumentationTest$SampleClass
+  method: doSomething
+  spanName: "this.getName()"
+  attributes:
+    - key: "details"
+      value: this.getDetails()
+    - key: "map.size"
+      value: this.getMap().entrySet().size()
+    - key: "map.isEmpty"
+      value: this.getMap().isEmpty()
+    - key: getFloat
+      value: this.getFloat()
+    - key: getDouble
+      value: this.getDouble()
+    - key: getLong
+      value: this.getLong()
+    - key: getShort
+      value: this.getShort()
+    - key: getByte
+      value: this.getByte()
+
+- class: io.opentelemetry.javaagent.instrumentation.nocode.NocodeInstrumentationTest$SampleClass
+  method: throwException
+  spanKind: SERVER
+  attributes:
+    - key: "five"
+      value: param0.toString().substring(0)
+
+- class: io.opentelemetry.javaagent.instrumentation.nocode.NocodeInstrumentationTest$SampleClass
+  method: echo
+  spanStatus: 'returnValue.booleanValue() ? "ERROR" : "OK"'
+
+
+- class: io.opentelemetry.javaagent.instrumentation.nocode.NocodeInstrumentationTest$SampleClass
+  method: doInvalidRule
+  spanName: "this.thereIsNoSuchMethod()"
+  spanKind: INVALID
+  spanStatus: invalid jexl that does not parse
+  attributes:
+    - key: "notpresent"
+      value: "invalid.noSuchStatement()"
+
