@@ -49,22 +49,16 @@ public class TomcatHelper<REQUEST, RESPONSE> {
       throwable = AppServerBridge.getException(context);
     }
 
-    if (throwable != null || mustEndOnHandlerMethodExit(request)) {
+    if (throwable != null || servletHelper.mustEndOnHandlerMethodExit(context)) {
       instrumenter.end(context, request, response, throwable);
     }
   }
 
-  private boolean mustEndOnHandlerMethodExit(Request request) {
-    REQUEST servletRequest = servletEntityProvider.getServletRequest(request);
-    return servletRequest != null && servletHelper.mustEndOnHandlerMethodExit(servletRequest);
-  }
-
-  public void attachResponseToRequest(Request request, Response response) {
-    REQUEST servletRequest = servletEntityProvider.getServletRequest(request);
+  public void attachResponseToRequest(Context context, Response response) {
     RESPONSE servletResponse = servletEntityProvider.getServletResponse(response);
 
-    if (servletRequest != null && servletResponse != null) {
-      servletHelper.setAsyncListenerResponse(servletRequest, servletResponse);
+    if (servletResponse != null) {
+      servletHelper.setAsyncListenerResponse(context, servletResponse);
     }
   }
 

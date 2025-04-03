@@ -45,7 +45,7 @@ public class Jetty8HandlerAdvice {
     scope = context.makeCurrent();
 
     // Must be set here since Jetty handlers can use startAsync outside of servlet scope.
-    helper().setAsyncListenerResponse(request, response);
+    helper().setAsyncListenerResponse(context, response);
 
     HttpServerResponseCustomizerHolder.getCustomizer()
         .customize(context, response, Jetty8ResponseMutator.INSTANCE);

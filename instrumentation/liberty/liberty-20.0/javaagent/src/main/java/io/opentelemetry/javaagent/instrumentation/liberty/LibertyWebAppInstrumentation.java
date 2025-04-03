@@ -125,7 +125,7 @@ public class LibertyWebAppInstrumentation implements TypeInstrumentation {
 
       // Must be set here since Liberty RequestProcessors can use startAsync outside of servlet
       // scope.
-      helper().setAsyncListenerResponse(requestInfo.getRequest(), requestInfo.getResponse());
+      helper().setAsyncListenerResponse(context, requestInfo.getResponse());
 
       HttpServerResponseCustomizerHolder.getCustomizer()
           .customize(context, requestInfo.getResponse(), Servlet3Accessor.INSTANCE);
