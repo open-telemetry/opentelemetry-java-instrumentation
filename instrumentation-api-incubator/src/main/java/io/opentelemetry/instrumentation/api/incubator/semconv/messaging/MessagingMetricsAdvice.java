@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 
@@ -23,12 +24,14 @@ final class MessagingMetricsAdvice {
           asList(0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0));
 
   // copied from MessagingIncubatingAttributes
+  private static final AttributeKey<String> MESSAGING_OPERATION_NAME =
+      stringKey("messaging.operation.name");
   private static final AttributeKey<String> MESSAGING_SYSTEM =
       AttributeKey.stringKey("messaging.system");
   private static final AttributeKey<String> MESSAGING_DESTINATION_NAME =
       AttributeKey.stringKey("messaging.destination.name");
-  private static final AttributeKey<String> MESSAGING_OPERATION =
-      AttributeKey.stringKey("messaging.operation");
+  private static final AttributeKey<String> MESSAGING_OPERATION_TYPE =
+      stringKey("messaging.operation.type");
   private static final AttributeKey<String> MESSAGING_DESTINATION_PARTITION_ID =
       AttributeKey.stringKey("messaging.destination.partition.id");
   private static final AttributeKey<String> MESSAGING_DESTINATION_TEMPLATE =
@@ -36,9 +39,10 @@ final class MessagingMetricsAdvice {
 
   private static final List<AttributeKey<?>> MESSAGING_ATTRIBUTES =
       asList(
+          MESSAGING_OPERATION_NAME,
           MESSAGING_SYSTEM,
           MESSAGING_DESTINATION_NAME,
-          MESSAGING_OPERATION,
+          MESSAGING_OPERATION_TYPE,
           MESSAGING_DESTINATION_PARTITION_ID,
           MESSAGING_DESTINATION_TEMPLATE,
           ErrorAttributes.ERROR_TYPE,
