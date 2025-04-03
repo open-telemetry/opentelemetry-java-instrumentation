@@ -13,7 +13,10 @@ import javax.management.MBeanServerFactory;
 import javax.management.ObjectName;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class AttributeExtractorTest {
 
@@ -41,6 +44,9 @@ class AttributeExtractorTest {
   }
 
   private static class Test1 implements Test1MBean {
+
+    boolean negativeValues;
+
     @Override
     public byte getByteAttribute() {
       return 10;
@@ -53,22 +59,22 @@ class AttributeExtractorTest {
 
     @Override
     public int getIntAttribute() {
-      return 12;
+      return negativeValues ? -12 : 12;
     }
 
     @Override
     public long getLongAttribute() {
-      return 13;
+      return negativeValues ? -13 : 13;
     }
 
     @Override
     public float getFloatAttribute() {
-      return 14.0f;
+      return negativeValues ? -14.0f : 14.0f;
     }
 
     @Override
     public double getDoubleAttribute() {
-      return 15.0;
+      return negativeValues ? -15.0 : 15.0;
     }
 
     @Override
@@ -93,13 +99,13 @@ class AttributeExtractorTest {
 
   private static final String DOMAIN = "otel.jmx.test";
   private static final String OBJECT_NAME = "otel.jmx.test:type=Test1";
+  private static final Test1 test1 = new Test1();
   private static ObjectName objectName;
   private static MBeanServer theServer;
 
   @BeforeAll
   static void setUp() throws Exception {
     theServer = MBeanServerFactory.createMBeanServer(DOMAIN);
-    Test1 test1 = new Test1();
     objectName = new ObjectName(OBJECT_NAME);
     theServer.registerMBean(test1, objectName);
   }
@@ -108,6 +114,11 @@ class AttributeExtractorTest {
   static void tearDown() {
     MBeanServerFactory.releaseMBeanServer(theServer);
     theServer = null;
+  }
+
+  @BeforeEach
+  void reset() {
+    test1.negativeValues = false;
   }
 
   @Test
@@ -220,7 +231,7 @@ class AttributeExtractorTest {
   }
 
   @Test
-  void testBooleanAttribute() throws Exception {
+  void testBooleanAttribute() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("BooleanAttribute");
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
     assertThat(info).isNull();
@@ -228,10 +239,31 @@ class AttributeExtractorTest {
   }
 
   @Test
-  void testEnumAttribute() throws Exception {
+  void testEnumAttribute() {
     BeanAttributeExtractor extractor = BeanAttributeExtractor.fromName("EnumAttribute");
     AttributeInfo info = extractor.getAttributeInfo(theServer, objectName);
     assertThat(info).isNull();
     assertThat(extractor.extractValue(theServer, objectName)).isEqualTo("ENUM_VALUE");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"LongAttribute", "IntAttribute", "DoubleAttribute", "FloatAttribute"})
+  void testNegativeFilter(String attributeName) {
+    test1.negativeValues = false;
+    BeanAttributeExtractor rawExtractor = BeanAttributeExtractor.fromName(attributeName);
+    BeanAttributeExtractor filteringExtractor =
+        BeanAttributeExtractor.filterNegativeValues(rawExtractor);
+    assertThat(rawExtractor.extractNumericalAttribute(theServer, objectName))
+        .isNotNull()
+        .describedAs("when value is not negative original numerical value is returned")
+        .isEqualTo(filteringExtractor.extractNumericalAttribute(theServer, objectName));
+
+    test1.negativeValues = true;
+    Number rawValue = rawExtractor.extractNumericalAttribute(theServer, objectName);
+    assertThat(rawValue).isNotNull();
+    assertThat(rawValue.doubleValue()).isNegative();
+    assertThat(filteringExtractor.extractNumericalAttribute(theServer, objectName))
+        .describedAs("negative value should be filtered")
+        .isNull();
   }
 }

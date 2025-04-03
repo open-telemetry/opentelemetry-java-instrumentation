@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
-import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
@@ -172,6 +171,14 @@ public class JmxRule extends MetricStructure {
       StateMapping stateMapping = getEffectiveStateMapping(m, this);
 
       if (stateMapping.isEmpty()) {
+
+        // higher priority to metric level, then jmx rule as fallback
+        boolean dropNegative = getEffectiveDropNegativeValues(m, this);
+
+        if (dropNegative) {
+          attrExtractor = BeanAttributeExtractor.filterNegativeValues(attrExtractor);
+        }
+
         metricExtractors.add(new MetricExtractor(attrExtractor, metricInfo, attributeList));
       } else {
 
@@ -206,25 +213,8 @@ public class JmxRule extends MetricStructure {
         }
       }
 
-      BeanAttributeExtractor stateMetricExtractor =
-          new BeanAttributeExtractor(attrExtractor.getAttributeName()) {
-
-            @Override
-            protected Object getSampleValue(
-                MBeanServerConnection connection, ObjectName objectName) {
-              // metric actual type is sampled in the discovery process, so we have to
-              // make this extractor as extracting integers.
-              return 0;
-            }
-
-            @Override
-            protected Number extractNumericalAttribute(
-                MBeanServerConnection connection, ObjectName objectName) {
-              String rawStateValue = attrExtractor.extractValue(connection, objectName);
-              String mappedStateValue = stateMapping.getStateValue(rawStateValue);
-              return key.equals(mappedStateValue) ? 1 : 0;
-            }
-          };
+      BeanAttributeExtractor extractor =
+          BeanAttributeExtractor.forStateMetric(attrExtractor, key, stateMapping);
 
       // state metric are always up/down counters
       MetricInfo stateMetricInfo =
@@ -235,8 +225,7 @@ public class JmxRule extends MetricStructure {
               metricInfo.getUnit(),
               MetricInfo.Type.UPDOWNCOUNTER);
 
-      extractors.add(
-          new MetricExtractor(stateMetricExtractor, stateMetricInfo, stateMetricAttributes));
+      extractors.add(new MetricExtractor(extractor, stateMetricInfo, stateMetricAttributes));
     }
     return extractors;
   }
@@ -265,6 +254,14 @@ public class JmxRule extends MetricStructure {
       return rule.getStateMapping();
     } else {
       return m.getStateMapping();
+    }
+  }
+
+  private static boolean getEffectiveDropNegativeValues(Metric m, JmxRule rule) {
+    if (m == null || m.getDropNegativeValues() == null) {
+      return Boolean.TRUE.equals(rule.getDropNegativeValues());
+    } else {
+      return Boolean.TRUE.equals(m.getDropNegativeValues());
     }
   }
 }
