@@ -9,24 +9,25 @@ import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAtt
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
 
+import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 public class TomcatIntegrationTest extends TargetSystemTest {
 
   @ParameterizedTest
-  @ValueSource(
-      strings = {
-          "tomcat:10.0",
-          "tomcat:9.0"
-      })
-  void testCollectedMetrics(String dockerImageName) throws Exception {
+  @CsvSource({
+    "tomcat:10.0, https://tomcat.apache.org/tomcat-10.0-doc/appdev/sample/sample.war",
+    "tomcat:9.0, https://tomcat.apache.org/tomcat-9.0-doc/appdev/sample/sample.war"
+  })
+  void testCollectedMetrics(String dockerImageName, String sampleWebApplicationURL)
+      throws Exception {
     List<String> yamlFiles = Collections.singletonList("tomcat.yaml");
 
     yamlFiles.forEach(this::validateYamlSyntax);
@@ -46,11 +47,19 @@ public class TomcatIntegrationTest extends TargetSystemTest {
     copyFilesToTarget(target, yamlFiles);
 
     startTarget(target);
+    target.execInContainer("rm", "-fr", "/usr/local/tomcat/webapps/ROOT");
+    target.execInContainer(
+        "curl", sampleWebApplicationURL, "-o", "/usr/local/tomcat/webapps/ROOT.war");
 
     verifyMetrics(createMetricsVerifier());
   }
 
   private static MetricsVerifier createMetricsVerifier() {
+    AttributeMatcher requestProcessorNameAttribute =
+        attribute("tomcat.request_processor.name", "\"http-nio-8080\"");
+    AttributeMatcher threadPoolNameAttribute =
+        attribute("tomcat.thread_pool.name", "\"http-nio-8080\"");
+
     return MetricsVerifier.create()
         .add(
             "tomcat.error.count",
@@ -59,7 +68,7 @@ public class TomcatIntegrationTest extends TargetSystemTest {
                     .hasDescription("The number of errors.")
                     .hasUnit("{error}")
                     .isCounter()
-                    .hasDataPointsWithOneAttribute(attribute("tomcat.request_processor.name", "\"http-nio-8080\"")))
+                    .hasDataPointsWithOneAttribute(requestProcessorNameAttribute))
         .add(
             "tomcat.request.count",
             metric ->
@@ -67,7 +76,7 @@ public class TomcatIntegrationTest extends TargetSystemTest {
                     .hasDescription("The number of requests processed.")
                     .hasUnit("{request}")
                     .isCounter()
-                    .hasDataPointsWithOneAttribute(attribute("tomcat.request_processor.name", "\"http-nio-8080\"")))
+                    .hasDataPointsWithOneAttribute(requestProcessorNameAttribute))
         .add(
             "tomcat.request.duration.max",
             metric ->
@@ -75,7 +84,7 @@ public class TomcatIntegrationTest extends TargetSystemTest {
                     .hasDescription("The longest request processing time.")
                     .hasUnit("s")
                     .isGauge()
-                    .hasDataPointsWithOneAttribute(attribute("tomcat.request_processor.name", "\"http-nio-8080\"")))
+                    .hasDataPointsWithOneAttribute(requestProcessorNameAttribute))
         .add(
             "tomcat.request.processing_time",
             metric ->
@@ -83,22 +92,21 @@ public class TomcatIntegrationTest extends TargetSystemTest {
                     .hasDescription("Total time for processing all requests.")
                     .hasUnit("s")
                     .isCounter()
-                    .hasDataPointsWithOneAttribute(attribute("tomcat.request_processor.name", "\"http-nio-8080\"")))
+                    .hasDataPointsWithOneAttribute(requestProcessorNameAttribute))
         .add(
             "tomcat.network.io",
             metric ->
                 metric
-                    .hasDescription("The number of bytes transmitted and received")
+                    .hasDescription("The number of bytes transmitted.")
                     .hasUnit("By")
                     .isCounter()
                     .hasDataPointsWithAttributes(
                         attributeGroup(
                             attribute("tomcat.network.io.direction", "sent"),
-                            attribute("tomcat.request_processor.name", "\"http-nio-8080\"")),
+                            requestProcessorNameAttribute),
                         attributeGroup(
                             attribute("tomcat.network.io.direction", "received"),
-                            attribute("tomcat.request_processor.name", "\"http-nio-8080\""))))
-
+                            requestProcessorNameAttribute)))
         .add(
             "tomcat.active_session.count",
             metric ->
@@ -107,7 +115,6 @@ public class TomcatIntegrationTest extends TargetSystemTest {
                     .hasUnit("{session}")
                     .isUpDownCounter()
                     .hasDataPointsWithOneAttribute(attributeWithAnyValue("tomcat.web_app_context")))
-
         .add(
             "tomcat.thread.count",
             metric ->
@@ -117,11 +124,8 @@ public class TomcatIntegrationTest extends TargetSystemTest {
                     .isUpDownCounter()
                     .hasDataPointsWithAttributes(
                         attributeGroup(
-                            attribute("state", "idle"),
-                            attribute("tomcat.thread_pool.name", "\"http-nio-8080\"")),
+                            attribute("tomcat.thread.state", "idle"), threadPoolNameAttribute),
                         attributeGroup(
-                            attribute("state", "busy"),
-                            attribute("tomcat.thread_pool.name", "\"http-nio-8080\""))));
-
+                            attribute("tomcat.thread.state", "busy"), threadPoolNameAttribute)));
   }
 }
