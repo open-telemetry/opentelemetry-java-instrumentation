@@ -52,7 +52,7 @@ class ExperimentalBufferPoolsTest {
     when(bufferPoolBean.getTotalCapacity()).thenReturn(11L);
     when(bufferPoolBean.getCount()).thenReturn(12L);
 
-    ExperimentalBufferPools.registerObservers(testing.getOpenTelemetry(), beans);
+    ExperimentalBufferPools.registerObservers(testing.getOpenTelemetry().getMeterProvider(), beans);
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",

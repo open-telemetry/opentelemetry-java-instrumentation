@@ -51,7 +51,7 @@ class GarbageCollectorTest {
   @Test
   void registerObservers() {
     GarbageCollector.registerObservers(
-        testing.getOpenTelemetry(),
+        testing.getOpenTelemetry().getMeterProvider(),
         singletonList(gcBean),
         GarbageCollectorTest::getGcNotificationInfo);
 

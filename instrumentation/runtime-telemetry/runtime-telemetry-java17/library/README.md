@@ -2,7 +2,7 @@ The main entry point is the `RuntimeMetrics` class in the package `io.openteleme
 
 ```java
 // Initialize JfrTelemetry
-RuntimeMetrics runtimeMetrics = RuntimeMetrics.create(openTelemetry);
+RuntimeMetrics runtimeMetrics = RuntimeMetrics.create(meterProvider);
 
 // Close JfrTelemetry to stop listening for JFR events
 runtimeMetrics.close();
@@ -23,7 +23,7 @@ by the handlers associated with those features.
 Enable or disable a feature as follows:
 
 ```
-RuntimeMetrics runtimeMetrics = RuntimeMetrics.builder(openTelemetry)
+RuntimeMetrics runtimeMetrics = RuntimeMetrics.builder(meterProvider)
   .enableFeature(JfrFeature.BUFFER_METRICS)
   .disableFeature(JfrFeature.LOCK_METRICS)
   .build();

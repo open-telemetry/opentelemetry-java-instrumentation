@@ -56,7 +56,7 @@ class ExperimentalMemoryPoolsTest {
   void registerObservers() {
     when(heapPoolUsage.getInit()).thenReturn(11L);
     when(nonHeapUsage.getInit()).thenReturn(15L);
-    ExperimentalMemoryPools.registerObservers(testing.getOpenTelemetry(), beans);
+    ExperimentalMemoryPools.registerObservers(testing.getOpenTelemetry().getMeterProvider(), beans);
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",

@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java17;
 
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
+import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.RecordedEventHandler;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.ThreadGrouper;
@@ -47,9 +47,9 @@ final class HandlerRegistry {
   private HandlerRegistry() {}
 
   static List<RecordedEventHandler> getHandlers(
-      OpenTelemetry openTelemetry, Predicate<JfrFeature> featurePredicate) {
+      MeterProvider meterProvider, Predicate<JfrFeature> featurePredicate) {
 
-    MeterBuilder meterBuilder = openTelemetry.meterBuilder(SCOPE_NAME);
+    MeterBuilder meterBuilder = meterProvider.meterBuilder(SCOPE_NAME);
     if (SCOPE_VERSION != null) {
       meterBuilder.setInstrumentationVersion(SCOPE_VERSION);
     }

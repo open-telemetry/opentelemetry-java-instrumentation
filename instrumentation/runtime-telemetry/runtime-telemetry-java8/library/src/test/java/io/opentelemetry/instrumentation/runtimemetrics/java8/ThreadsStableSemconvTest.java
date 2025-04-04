@@ -49,7 +49,7 @@ class ThreadsStableSemconvTest {
     when(threadBean.getDaemonThreadCount()).thenReturn(2);
 
     Threads.INSTANCE
-        .registerObservers(testing.getOpenTelemetry(), threadBean)
+        .registerObservers(testing.getOpenTelemetry().getMeterProvider(), threadBean)
         .forEach(cleanup::deferCleanup);
 
     testing.waitAndAssertMetrics(
@@ -86,7 +86,7 @@ class ThreadsStableSemconvTest {
     Thread[] threads = new Thread[] {threadInfo1, threadInfo2};
 
     Threads.INSTANCE
-        .registerObservers(testing.getOpenTelemetry(), () -> threads)
+        .registerObservers(testing.getOpenTelemetry().getMeterProvider(), () -> threads)
         .forEach(cleanup::deferCleanup);
 
     testing.waitAndAssertMetrics(
@@ -131,7 +131,7 @@ class ThreadsStableSemconvTest {
         .thenReturn(new ThreadInfo[] {threadInfo1, null, threadInfo2});
 
     Threads.INSTANCE
-        .registerObservers(testing.getOpenTelemetry(), threadBean)
+        .registerObservers(testing.getOpenTelemetry().getMeterProvider(), threadBean)
         .forEach(cleanup::deferCleanup);
 
     testing.waitAndAssertMetrics(

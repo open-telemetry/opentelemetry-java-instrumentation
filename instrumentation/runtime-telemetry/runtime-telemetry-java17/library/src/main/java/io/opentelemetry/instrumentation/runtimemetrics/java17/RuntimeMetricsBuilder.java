@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.runtimemetrics.java17;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsFactory;
 import java.util.Arrays;
 import java.util.EnumMap;
@@ -16,15 +16,15 @@ import javax.annotation.Nullable;
 /** Builder for {@link RuntimeMetrics}. */
 public final class RuntimeMetricsBuilder {
 
-  private final OpenTelemetry openTelemetry;
+  private final MeterProvider meterProvider;
   // Visible for testing
   final EnumMap<JfrFeature, Boolean> enabledFeatureMap;
 
   private boolean disableJmx = false;
   private boolean enableExperimentalJmxTelemetry = false;
 
-  RuntimeMetricsBuilder(OpenTelemetry openTelemetry) {
-    this.openTelemetry = openTelemetry;
+  RuntimeMetricsBuilder(MeterProvider meterProvider) {
+    this.meterProvider = meterProvider;
     enabledFeatureMap = new EnumMap<>(JfrFeature.class);
     for (JfrFeature feature : JfrFeature.values()) {
       enabledFeatureMap.put(feature, feature.isDefaultEnabled());
@@ -87,9 +87,9 @@ public final class RuntimeMetricsBuilder {
         disableJmx
             ? List.of()
             : JmxRuntimeMetricsFactory.buildObservables(
-                openTelemetry, enableExperimentalJmxTelemetry);
+                meterProvider, enableExperimentalJmxTelemetry);
     RuntimeMetrics.JfrRuntimeMetrics jfrRuntimeMetrics = buildJfrMetrics();
-    return new RuntimeMetrics(openTelemetry, observables, jfrRuntimeMetrics);
+    return new RuntimeMetrics(meterProvider, observables, jfrRuntimeMetrics);
   }
 
   @Nullable
@@ -97,6 +97,6 @@ public final class RuntimeMetricsBuilder {
     if (enabledFeatureMap.values().stream().noneMatch(isEnabled -> isEnabled)) {
       return null;
     }
-    return RuntimeMetrics.JfrRuntimeMetrics.build(openTelemetry, enabledFeatureMap::get);
+    return RuntimeMetrics.JfrRuntimeMetrics.build(meterProvider, enabledFeatureMap::get);
   }
 }

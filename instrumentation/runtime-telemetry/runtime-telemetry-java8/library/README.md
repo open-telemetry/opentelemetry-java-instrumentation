@@ -33,12 +33,13 @@ Register observers for the desired runtime metrics:
 
 ```java
 OpenTelemetry openTelemetry = // OpenTelemetry instance configured elsewhere
+MeterProvider meterProvider = openTelemetry.getMeterProvider();
 
-Classes.registerObservers(openTelemetry);
-Cpu.registerObservers(openTelemetry);
-MemoryPools.registerObservers(openTelemetry);
-Threads.registerObservers(openTelemetry);
-GarbageCollector.registerObservers(openTelemetry);
+Classes.registerObservers(meterProvider);
+Cpu.registerObservers(meterProvider);
+MemoryPools.registerObservers(meterProvider);
+Threads.registerObservers(meterProvider);
+GarbageCollector.registerObservers(meterProvider);
 ```
 
 ## Garbage Collector Dependent Metrics

@@ -32,7 +32,7 @@ class ExperimentalCpuTest {
     when(osBean.getSystemLoadAverage()).thenReturn(2.2);
     Supplier<Double> systemCpuUtilization = () -> 0.11;
 
-    ExperimentalCpu.registerObservers(testing.getOpenTelemetry(), osBean, systemCpuUtilization);
+    ExperimentalCpu.registerObservers(testing.getOpenTelemetry().getMeterProvider(), osBean, systemCpuUtilization);
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",

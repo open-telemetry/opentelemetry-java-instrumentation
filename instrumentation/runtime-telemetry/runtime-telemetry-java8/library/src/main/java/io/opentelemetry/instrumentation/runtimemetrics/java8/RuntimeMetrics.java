@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.runtimemetrics.java8;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
 import java.util.Collections;
 import java.util.List;
@@ -34,7 +35,19 @@ public final class RuntimeMetrics implements AutoCloseable {
    * @param openTelemetry the {@link OpenTelemetry} instance used to record telemetry
    */
   public static RuntimeMetrics create(OpenTelemetry openTelemetry) {
-    return new RuntimeMetricsBuilder(openTelemetry).build();
+    return new RuntimeMetricsBuilder(openTelemetry.getMeterProvider()).build();
+  }
+
+  /**
+   * Create and start {@link RuntimeMetrics}.
+   *
+   * <p>Listens for select JMX beans, extracts data, and records to various metrics. Recording will
+   * continue until {@link #close()} is called.
+   *
+   * @param meterProvider the {@link MeterProvider} instance used to record telemetry
+   */
+  public static RuntimeMetrics create(MeterProvider meterProvider) {
+    return new RuntimeMetricsBuilder(meterProvider).build();
   }
 
   /**
@@ -43,7 +56,16 @@ public final class RuntimeMetrics implements AutoCloseable {
    * @param openTelemetry the {@link OpenTelemetry} instance used to record telemetry
    */
   public static RuntimeMetricsBuilder builder(OpenTelemetry openTelemetry) {
-    return new RuntimeMetricsBuilder(openTelemetry);
+    return new RuntimeMetricsBuilder(openTelemetry.getMeterProvider());
+  }
+
+  /**
+   * Create a builder for configuring {@link RuntimeMetrics}.
+   *
+   * @param meterProvider the {@link MeterProvider} instance used to record telemetry
+   */
+  public static RuntimeMetricsBuilder builder(MeterProvider meterProvider) {
+    return new RuntimeMetricsBuilder(meterProvider);
   }
 
   /** Stop recording JMX metrics. */

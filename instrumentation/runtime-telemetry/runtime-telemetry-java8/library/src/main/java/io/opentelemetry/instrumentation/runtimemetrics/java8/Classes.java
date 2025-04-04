@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java8;
 
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
 import java.lang.management.ClassLoadingMXBean;
 import java.lang.management.ManagementFactory;
@@ -39,13 +40,13 @@ public final class Classes {
   static final Classes INSTANCE = new Classes();
 
   /** Register observers for java runtime class metrics. */
-  public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
-    return INSTANCE.registerObservers(openTelemetry, ManagementFactory.getClassLoadingMXBean());
+  public static List<AutoCloseable> registerObservers(MeterProvider meterProvider) {
+    return INSTANCE.registerObservers(meterProvider, ManagementFactory.getClassLoadingMXBean());
   }
 
   // Visible for testing
-  List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry, ClassLoadingMXBean classBean) {
-    Meter meter = JmxRuntimeMetricsUtil.getMeter(openTelemetry);
+  List<AutoCloseable> registerObservers(MeterProvider meterProvider, ClassLoadingMXBean classBean) {
+    Meter meter = JmxRuntimeMetricsUtil.getMeter(meterProvider);
     List<AutoCloseable> observables = new ArrayList<>();
 
     observables.add(

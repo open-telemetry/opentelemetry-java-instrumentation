@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java8;
 
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.CpuMethods;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
@@ -44,9 +44,9 @@ public final class Cpu {
   private static final double NANOS_PER_S = TimeUnit.SECONDS.toNanos(1);
 
   /** Register observers for java runtime CPU metrics. */
-  public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
+  public static List<AutoCloseable> registerObservers(MeterProvider meterProvider) {
     return INSTANCE.registerObservers(
-        openTelemetry,
+        meterProvider,
         Runtime.getRuntime()::availableProcessors,
         CpuMethods.processCpuTime(),
         CpuMethods.processCpuUtilization());
@@ -54,11 +54,11 @@ public final class Cpu {
 
   // Visible for testing
   List<AutoCloseable> registerObservers(
-      OpenTelemetry openTelemetry,
+      MeterProvider meterProvider,
       IntSupplier availableProcessors,
       @Nullable Supplier<Long> processCpuTime,
       @Nullable Supplier<Double> processCpuUtilization) {
-    Meter meter = JmxRuntimeMetricsUtil.getMeter(openTelemetry);
+    Meter meter = JmxRuntimeMetricsUtil.getMeter(meterProvider);
     List<AutoCloseable> observables = new ArrayList<>();
 
     if (processCpuTime != null) {

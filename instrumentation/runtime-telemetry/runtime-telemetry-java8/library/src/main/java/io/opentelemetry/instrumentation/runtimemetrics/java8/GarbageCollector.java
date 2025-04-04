@@ -9,7 +9,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
 
 import com.sun.management.GarbageCollectionNotificationInfo;
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
@@ -62,7 +62,7 @@ public final class GarbageCollector {
               .equals(GarbageCollectionNotificationInfo.GARBAGE_COLLECTION_NOTIFICATION);
 
   /** Register observers for java runtime memory metrics. */
-  public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
+  public static List<AutoCloseable> registerObservers(MeterProvider meterProvider) {
     if (!isNotificationClassPresent()) {
       logger.fine(
           "The com.sun.management.GarbageCollectionNotificationInfo class is not available;"
@@ -71,17 +71,17 @@ public final class GarbageCollector {
     }
 
     return registerObservers(
-        openTelemetry,
+        meterProvider,
         ManagementFactory.getGarbageCollectorMXBeans(),
         GarbageCollector::extractNotificationInfo);
   }
 
   // Visible for testing
   static List<AutoCloseable> registerObservers(
-      OpenTelemetry openTelemetry,
+      MeterProvider meterProvider,
       List<GarbageCollectorMXBean> gcBeans,
       Function<Notification, GarbageCollectionNotificationInfo> notificationInfoExtractor) {
-    Meter meter = JmxRuntimeMetricsUtil.getMeter(openTelemetry);
+    Meter meter = JmxRuntimeMetricsUtil.getMeter(meterProvider);
 
     DoubleHistogram gcDuration =
         meter

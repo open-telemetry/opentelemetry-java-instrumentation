@@ -6,19 +6,19 @@
 package io.opentelemetry.instrumentation.runtimemetrics.java8;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsFactory;
 import java.util.List;
 
 /** Builder for {@link RuntimeMetrics}. */
 public final class RuntimeMetricsBuilder {
 
-  private final OpenTelemetry openTelemetry;
+  private final MeterProvider meterProvider;
 
   private boolean enableExperimentalJmxTelemetry = false;
 
-  RuntimeMetricsBuilder(OpenTelemetry openTelemetry) {
-    this.openTelemetry = openTelemetry;
+  RuntimeMetricsBuilder(MeterProvider meterProvider) {
+    this.meterProvider = meterProvider;
   }
 
   /** Enable all JMX telemetry collection. */
@@ -31,7 +31,7 @@ public final class RuntimeMetricsBuilder {
   /** Build and start an {@link RuntimeMetrics} with the config from this builder. */
   public RuntimeMetrics build() {
     List<AutoCloseable> observables =
-        JmxRuntimeMetricsFactory.buildObservables(openTelemetry, enableExperimentalJmxTelemetry);
+        JmxRuntimeMetricsFactory.buildObservables(meterProvider, enableExperimentalJmxTelemetry);
     return new RuntimeMetrics(observables);
   }
 }

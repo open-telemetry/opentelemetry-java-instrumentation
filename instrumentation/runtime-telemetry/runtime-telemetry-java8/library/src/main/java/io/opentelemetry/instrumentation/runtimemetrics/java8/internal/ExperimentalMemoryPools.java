@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
 
 import static java.util.Collections.singletonList;
 
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
@@ -29,15 +29,15 @@ import java.util.function.Consumer;
 public final class ExperimentalMemoryPools {
 
   /** Register observers for java runtime experimental memory metrics. */
-  public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
-    return registerObservers(openTelemetry, ManagementFactory.getMemoryPoolMXBeans());
+  public static List<AutoCloseable> registerObservers(MeterProvider meterProvider) {
+    return registerObservers(meterProvider, ManagementFactory.getMemoryPoolMXBeans());
   }
 
   // Visible for testing
   static List<AutoCloseable> registerObservers(
-      OpenTelemetry openTelemetry, List<MemoryPoolMXBean> poolBeans) {
+      MeterProvider meterProvider, List<MemoryPoolMXBean> poolBeans) {
 
-    Meter meter = JmxRuntimeMetricsUtil.getMeter(openTelemetry);
+    Meter meter = JmxRuntimeMetricsUtil.getMeter(meterProvider);
     return singletonList(
         meter
             .upDownCounterBuilder("jvm.memory.init")

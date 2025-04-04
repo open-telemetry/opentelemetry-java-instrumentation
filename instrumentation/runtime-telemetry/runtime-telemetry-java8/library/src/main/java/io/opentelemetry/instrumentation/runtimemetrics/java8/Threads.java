@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.runtimemetrics.java8;
 
 import static java.util.Objects.requireNonNull;
 
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
@@ -56,36 +56,36 @@ public final class Threads {
   static final Threads INSTANCE = new Threads();
 
   /** Register observers for java runtime class metrics. */
-  public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
-    return INSTANCE.registerObservers(openTelemetry, useThreads());
+  public static List<AutoCloseable> registerObservers(MeterProvider meterProvider) {
+    return INSTANCE.registerObservers(meterProvider, useThreads());
   }
 
-  private List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry, boolean useThread) {
+  private List<AutoCloseable> registerObservers(MeterProvider meterProvider, boolean useThread) {
     if (useThread) {
-      return registerObservers(openTelemetry, Threads::getThreads);
+      return registerObservers(meterProvider, Threads::getThreads);
     }
-    return registerObservers(openTelemetry, ManagementFactory.getThreadMXBean());
+    return registerObservers(meterProvider, ManagementFactory.getThreadMXBean());
   }
 
   // Visible for testing
-  List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry, ThreadMXBean threadBean) {
+  List<AutoCloseable> registerObservers(MeterProvider meterProvider, ThreadMXBean threadBean) {
     return registerObservers(
-        openTelemetry,
+        meterProvider,
         isJava9OrNewer() ? Threads::java9AndNewerCallback : Threads::java8Callback,
         threadBean);
   }
 
   // Visible for testing
   List<AutoCloseable> registerObservers(
-      OpenTelemetry openTelemetry, Supplier<Thread[]> threadSupplier) {
-    return registerObservers(openTelemetry, Threads::java8ThreadCallback, threadSupplier);
+      MeterProvider meterProvider, Supplier<Thread[]> threadSupplier) {
+    return registerObservers(meterProvider, Threads::java8ThreadCallback, threadSupplier);
   }
 
   private static <T> List<AutoCloseable> registerObservers(
-      OpenTelemetry openTelemetry,
+      MeterProvider meterProvider,
       Function<T, Consumer<ObservableLongMeasurement>> callbackProvider,
       T threadInfo) {
-    Meter meter = JmxRuntimeMetricsUtil.getMeter(openTelemetry);
+    Meter meter = JmxRuntimeMetricsUtil.getMeter(meterProvider);
     List<AutoCloseable> observables = new ArrayList<>();
 
     observables.add(

@@ -78,7 +78,7 @@ class MemoryPoolsStableSemconvTest {
     when(nonHeapUsage.getMax()).thenReturn(17L);
     when(heapCollectionUsage.getUsed()).thenReturn(18L);
     when(nonHeapCollectionUsage.getUsed()).thenReturn(19L);
-    MemoryPools.registerObservers(testing.getOpenTelemetry(), beans);
+    MemoryPools.registerObservers(testing.getOpenTelemetry().getMeterProvider(), beans);
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",

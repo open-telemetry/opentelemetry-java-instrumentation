@@ -72,7 +72,7 @@ class RuntimeMetricsTest {
   @Test
   void builder() {
     try (var jfrTelemetry = RuntimeMetrics.builder(sdk).build()) {
-      assertThat(jfrTelemetry.getOpenTelemetry()).isSameAs(sdk);
+      assertThat(jfrTelemetry.getMeterProvider()).isSameAs(sdk.getMeterProvider());
       assertThat(jfrTelemetry.getJfrRuntimeMetrics().getRecordedEventHandlers())
           .hasSizeGreaterThan(0)
           .allSatisfy(handler -> assertThat(handler.getFeature().isDefaultEnabled()).isTrue());

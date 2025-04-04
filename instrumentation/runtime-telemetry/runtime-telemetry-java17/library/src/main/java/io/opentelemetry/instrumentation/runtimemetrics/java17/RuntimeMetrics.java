@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.runtimemetrics.java17;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.RecordedEventHandler;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
 import java.io.Closeable;
@@ -26,16 +27,16 @@ public final class RuntimeMetrics implements AutoCloseable {
   private static final Logger logger = Logger.getLogger(RuntimeMetrics.class.getName());
 
   private final AtomicBoolean isClosed = new AtomicBoolean();
-  private final OpenTelemetry openTelemetry;
+  private final MeterProvider meterProvider;
   private final List<AutoCloseable> observables;
 
   @Nullable private final JfrRuntimeMetrics jfrRuntimeMetrics;
 
   RuntimeMetrics(
-      OpenTelemetry openTelemetry,
+      MeterProvider meterProvider,
       List<AutoCloseable> observables,
       @Nullable JfrRuntimeMetrics jfrRuntimeMetrics) {
-    this.openTelemetry = openTelemetry;
+    this.meterProvider = meterProvider;
     this.observables = List.copyOf(observables);
     this.jfrRuntimeMetrics = jfrRuntimeMetrics;
   }
@@ -49,7 +50,19 @@ public final class RuntimeMetrics implements AutoCloseable {
    * @param openTelemetry the {@link OpenTelemetry} instance used to record telemetry
    */
   public static RuntimeMetrics create(OpenTelemetry openTelemetry) {
-    return new RuntimeMetricsBuilder(openTelemetry).build();
+    return new RuntimeMetricsBuilder(openTelemetry.getMeterProvider()).build();
+  }
+
+  /**
+   * Create and start {@link RuntimeMetrics}, configured with the default {@link JfrFeature}s.
+   *
+   * <p>Listens for select JFR events, extracts data, and records to various metrics. Recording will
+   * continue until {@link #close()} is called.
+   *
+   * @param meterProvider the {@link MeterProvider} instance used to record telemetry
+   */
+  public static RuntimeMetrics create(MeterProvider meterProvider) {
+    return new RuntimeMetricsBuilder(meterProvider).build();
   }
 
   /**
@@ -58,12 +71,21 @@ public final class RuntimeMetrics implements AutoCloseable {
    * @param openTelemetry the {@link OpenTelemetry} instance used to record telemetry
    */
   public static RuntimeMetricsBuilder builder(OpenTelemetry openTelemetry) {
-    return new RuntimeMetricsBuilder(openTelemetry);
+    return new RuntimeMetricsBuilder(openTelemetry.getMeterProvider());
+  }
+
+  /**
+   * Create a builder for configuring {@link RuntimeMetrics}.
+   *
+   * @param meterProvider the {@link MeterProvider} instance used to record telemetry
+   */
+  public static RuntimeMetricsBuilder builder(MeterProvider meterProvider) {
+    return new RuntimeMetricsBuilder(meterProvider);
   }
 
   // Visible for testing
-  OpenTelemetry getOpenTelemetry() {
-    return openTelemetry;
+  MeterProvider getMeterProvider() {
+    return meterProvider;
   }
 
   // Visible for testing
@@ -90,8 +112,8 @@ public final class RuntimeMetrics implements AutoCloseable {
     private final RecordingStream recordingStream;
     private final CountDownLatch startUpLatch = new CountDownLatch(1);
 
-    private JfrRuntimeMetrics(OpenTelemetry openTelemetry, Predicate<JfrFeature> featurePredicate) {
-      this.recordedEventHandlers = HandlerRegistry.getHandlers(openTelemetry, featurePredicate);
+    private JfrRuntimeMetrics(MeterProvider meterProvider, Predicate<JfrFeature> featurePredicate) {
+      this.recordedEventHandlers = HandlerRegistry.getHandlers(meterProvider, featurePredicate);
       recordingStream = new RecordingStream();
       recordedEventHandlers.forEach(
           handler -> {
@@ -107,11 +129,11 @@ public final class RuntimeMetrics implements AutoCloseable {
     }
 
     static JfrRuntimeMetrics build(
-        OpenTelemetry openTelemetry, Predicate<JfrFeature> featurePredicate) {
+        MeterProvider meterProvider, Predicate<JfrFeature> featurePredicate) {
       if (!isJfrAvailable()) {
         return null;
       }
-      return new JfrRuntimeMetrics(openTelemetry, featurePredicate);
+      return new JfrRuntimeMetrics(meterProvider, featurePredicate);
     }
 
     @Override

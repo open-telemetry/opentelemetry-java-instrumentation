@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
 
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.api.metrics.Meter;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
@@ -23,20 +23,20 @@ import javax.annotation.Nullable;
 public final class ExperimentalCpu {
 
   /** Register observers for java runtime experimental CPU metrics. */
-  public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
+  public static List<AutoCloseable> registerObservers(MeterProvider meterProvider) {
     return registerObservers(
-        openTelemetry,
+        meterProvider,
         ManagementFactory.getOperatingSystemMXBean(),
         CpuMethods.systemCpuUtilization());
   }
 
   // Visible for testing
   static List<AutoCloseable> registerObservers(
-      OpenTelemetry openTelemetry,
+      MeterProvider meterProvider,
       OperatingSystemMXBean osBean,
       @Nullable Supplier<Double> systemCpuUtilization) {
 
-    Meter meter = JmxRuntimeMetricsUtil.getMeter(openTelemetry);
+    Meter meter = JmxRuntimeMetricsUtil.getMeter(meterProvider);
     List<AutoCloseable> observables = new ArrayList<>();
     observables.add(
         meter

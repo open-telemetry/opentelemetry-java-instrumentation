@@ -33,7 +33,7 @@ class ClassesStableSemconvTest {
     when(classBean.getUnloadedClassCount()).thenReturn(2L);
     when(classBean.getLoadedClassCount()).thenReturn(1);
 
-    Classes.INSTANCE.registerObservers(testing.getOpenTelemetry(), classBean);
+    Classes.INSTANCE.registerObservers(testing.getOpenTelemetry().getMeterProvider(), classBean);
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",

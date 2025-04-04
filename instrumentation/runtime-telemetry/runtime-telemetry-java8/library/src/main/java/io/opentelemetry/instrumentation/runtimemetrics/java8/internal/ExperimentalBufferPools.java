@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.MeterProvider;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
@@ -31,18 +31,18 @@ public final class ExperimentalBufferPools {
       stringKey("jvm.buffer.pool.name");
 
   /** Register observers for java runtime buffer pool metrics. */
-  public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
+  public static List<AutoCloseable> registerObservers(MeterProvider meterProvider) {
     List<BufferPoolMXBean> bufferBeans =
         ManagementFactory.getPlatformMXBeans(BufferPoolMXBean.class);
-    return registerObservers(openTelemetry, bufferBeans);
+    return registerObservers(meterProvider, bufferBeans);
   }
 
   // Visible for testing
   static List<AutoCloseable> registerObservers(
-      OpenTelemetry openTelemetry, List<BufferPoolMXBean> bufferBeans) {
+      MeterProvider meterProvider, List<BufferPoolMXBean> bufferBeans) {
 
     List<AutoCloseable> observables = new ArrayList<>();
-    Meter meter = JmxRuntimeMetricsUtil.getMeter(openTelemetry);
+    Meter meter = JmxRuntimeMetricsUtil.getMeter(meterProvider);
     observables.add(
         meter
             .upDownCounterBuilder("jvm.buffer.memory.used")

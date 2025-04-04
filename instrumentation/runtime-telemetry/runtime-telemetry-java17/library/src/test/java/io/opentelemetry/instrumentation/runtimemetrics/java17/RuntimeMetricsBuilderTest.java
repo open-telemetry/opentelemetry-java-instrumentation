@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.runtimemetrics.java17;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.MeterProvider;
 import java.util.Arrays;
 import java.util.HashMap;
 import jdk.jfr.FlightRecorder;
@@ -33,27 +33,27 @@ class RuntimeMetricsBuilderTest {
     Arrays.stream(JfrFeature.values())
         .forEach(jfrFeature -> defaultFeatures.put(jfrFeature, jfrFeature.isDefaultEnabled()));
 
-    assertThat(new RuntimeMetricsBuilder(OpenTelemetry.noop()).enabledFeatureMap)
+    assertThat(new RuntimeMetricsBuilder(MeterProvider.noop()).enabledFeatureMap)
         .isEqualTo(defaultFeatures);
   }
 
   @Test
   void enableAllFeatures() {
     assertThat(
-            new RuntimeMetricsBuilder(OpenTelemetry.noop()).enableAllFeatures().enabledFeatureMap)
+            new RuntimeMetricsBuilder(MeterProvider.noop()).enableAllFeatures().enabledFeatureMap)
         .allSatisfy((unused, enabled) -> assertThat(enabled).isTrue());
   }
 
   @Test
   void disableAllFeatures() {
     assertThat(
-            new RuntimeMetricsBuilder(OpenTelemetry.noop()).disableAllFeatures().enabledFeatureMap)
+            new RuntimeMetricsBuilder(MeterProvider.noop()).disableAllFeatures().enabledFeatureMap)
         .allSatisfy((unused, enabled) -> assertThat(enabled).isFalse());
   }
 
   @Test
   void enableDisableFeature() {
-    var builder = new RuntimeMetricsBuilder(OpenTelemetry.noop());
+    var builder = new RuntimeMetricsBuilder(MeterProvider.noop());
 
     assertThat(builder.enabledFeatureMap.get(JfrFeature.BUFFER_METRICS)).isFalse();
 
@@ -65,9 +65,9 @@ class RuntimeMetricsBuilderTest {
 
   @Test
   void build() {
-    var openTelemetry = OpenTelemetry.noop();
-    try (var jfrTelemetry = new RuntimeMetricsBuilder(openTelemetry).build()) {
-      assertThat(jfrTelemetry.getOpenTelemetry()).isSameAs(openTelemetry);
+    var meterProvider = MeterProvider.noop();
+    try (var jfrTelemetry = new RuntimeMetricsBuilder(meterProvider).build()) {
+      assertThat(jfrTelemetry.getMeterProvider()).isSameAs(meterProvider);
       assertThat(jfrTelemetry.getJfrRuntimeMetrics().getRecordedEventHandlers())
           .hasSizeGreaterThan(0)
           .allSatisfy(handler -> assertThat(handler.getFeature().isDefaultEnabled()).isTrue());
