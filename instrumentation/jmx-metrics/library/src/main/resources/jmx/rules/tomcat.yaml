@@ -73,10 +73,10 @@ rules:
         metric: &metric thread.count
         desc: &desc Thread count of the thread pool.
         metricAttribute:
-          state: const(idle)
+          tomcat.thread.state: const(idle)
       currentThreadsBusy:
         metric: *metric
         desc: *desc
         metricAttribute:
-          state: const(busy)
+          tomcat.thread.state: const(busy)
 
