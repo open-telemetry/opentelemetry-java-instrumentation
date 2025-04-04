@@ -805,10 +805,81 @@ class JdbcInstrumentationTest {
       String url,
       String table)
       throws SQLException {
+    testPreparedStatementUpdateImpl(
+        system,
+        connection,
+        username,
+        query,
+        spanName,
+        url,
+        table,
+        statement -> assertThat(statement.executeUpdate()).isEqualTo(0));
+  }
+
+  static Stream<Arguments> preparedStatementLargeUpdateStream() throws SQLException {
+    return Stream.of(
+        Arguments.of(
+            "h2",
+            new org.h2.Driver().connect(jdbcUrls.get("h2"), null),
+            null,
+            "CREATE TABLE PS_LARGE_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            "CREATE TABLE jdbcunittest.PS_LARGE_H2",
+            "h2:mem:",
+            "PS_LARGE_H2"),
+        Arguments.of(
+            "h2",
+            cpDatasources.get("tomcat").get("h2").getConnection(),
+            null,
+            "CREATE TABLE PS_LARGE_H2_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            "CREATE TABLE jdbcunittest.PS_LARGE_H2_TOMCAT",
+            "h2:mem:",
+            "PS_LARGE_H2_TOMCAT"),
+        Arguments.of(
+            "h2",
+            cpDatasources.get("hikari").get("h2").getConnection(),
+            null,
+            "CREATE TABLE PS_LARGE_H2_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            "CREATE TABLE jdbcunittest.PS_LARGE_H2_HIKARI",
+            "h2:mem:",
+            "PS_LARGE_H2_HIKARI"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("preparedStatementLargeUpdateStream")
+  void testPreparedStatementLargeUpdate(
+      String system,
+      Connection connection,
+      String username,
+      String query,
+      String spanName,
+      String url,
+      String table)
+      throws SQLException {
+    testPreparedStatementUpdateImpl(
+        system,
+        connection,
+        username,
+        query,
+        spanName,
+        url,
+        table,
+        statement -> assertThat(statement.executeLargeUpdate()).isEqualTo(0));
+  }
+
+  void testPreparedStatementUpdateImpl(
+      String system,
+      Connection connection,
+      String username,
+      String query,
+      String spanName,
+      String url,
+      String table,
+      ThrowingConsumer<PreparedStatement> action)
+      throws SQLException {
     String sql = connection.nativeSQL(query);
     PreparedStatement statement = connection.prepareStatement(sql);
     cleanup.deferCleanup(statement);
-    testing.runWithSpan("parent", () -> assertThat(statement.executeUpdate()).isEqualTo(0));
+    testing.runWithSpan("parent", () -> action.accept(statement));
 
     testing.waitAndAssertTraces(
         trace ->
