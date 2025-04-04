@@ -6,12 +6,12 @@ rules:
   - beans:
     - Catalina:type=GlobalRequestProcessor,name=*
     - Tomcat:type=GlobalRequestProcessor,name=*
-    prefix: http.server.tomcat.
+    prefix: tomcat.
     metricAttribute:
-      name: param(name)
+      tomcat.request_processor.name: param(name)
     mapping:
       errorCount:
-        metric: error_count
+        metric: error.count
         type: counter
         unit: "{error}"
         desc: The number of errors.
@@ -21,7 +21,7 @@ rules:
         unit: "{request}"
         desc: The number of requests processed.
       maxTime:
-        metric: request.max_time
+        metric: request.duration.max
         type: gauge
         sourceUnit: ms
         unit: s
@@ -33,29 +33,29 @@ rules:
         unit: s
         desc: Total time for processing all requests.
       bytesReceived:
-        metric: &metric traffic
+        metric: &metric network.io
         type: &type counter
         unit: &unit By
         desc: &desc The number of bytes transmitted.
         metricAttribute:
-          direction: const(received)
+          tomcat.network.io.direction: const(received)
       bytesSent:
         metric: *metric
         type: *type
         unit: *unit
         desc: *desc
         metricAttribute:
-          direction: const(sent)
+          tomcat.network.io.direction: const(sent)
 
   - beans:
     - Catalina:type=Manager,host=localhost,context=*
     - Tomcat:type=Manager,host=localhost,context=*
-    prefix: http.server.tomcat.
+    prefix: tomcat.
     metricAttribute:
-      context: param(context)
+      tomcat.web_app_context: param(context)
     mapping:
       activeSessions:
-        metric: sessions.activeSessions
+        metric: active_session.count
         type: updowncounter
         unit: "{session}"
         desc: The number of active sessions.
@@ -64,14 +64,14 @@ rules:
     - Catalina:type=ThreadPool,name=*
     - Tomcat:type=ThreadPool,name=*
     unit: "{thread}"
-    prefix: http.server.tomcat.
+    prefix: tomcat.
     type: updowncounter
     metricAttribute:
-      name: param(name)
+      tomcat.thread_pool.name: param(name)
     mapping:
       currentThreadCount:
-        metric: &metric thread_count
-        desc: &desc Thread Count of the Thread Pool.
+        metric: &metric thread.count
+        desc: &desc Thread count of the thread pool.
         metricAttribute:
           state: const(idle)
       currentThreadsBusy:
