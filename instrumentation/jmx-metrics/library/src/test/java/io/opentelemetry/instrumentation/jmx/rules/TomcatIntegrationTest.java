@@ -47,6 +47,9 @@ public class TomcatIntegrationTest extends TargetSystemTest {
     copyFilesToTarget(target, yamlFiles);
 
     startTarget(target);
+
+    // Deploy example web application to the tomcat to enable reporting tomcat.active_session.count
+    // metric
     target.execInContainer("rm", "-fr", "/usr/local/tomcat/webapps/ROOT");
     target.execInContainer(
         "curl", sampleWebApplicationURL, "-o", "/usr/local/tomcat/webapps/ROOT.war");
