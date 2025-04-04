@@ -26,7 +26,7 @@ public class TomcatIntegrationTest extends TargetSystemTest {
     "tomcat:10.0, https://tomcat.apache.org/tomcat-10.0-doc/appdev/sample/sample.war",
     "tomcat:9.0, https://tomcat.apache.org/tomcat-9.0-doc/appdev/sample/sample.war"
   })
-  void testCollectedMetrics(String dockerImageName, String sampleWebApplicationURL)
+  void testCollectedMetrics(String dockerImageName, String sampleWebApplicationUrl)
       throws Exception {
     List<String> yamlFiles = Collections.singletonList("tomcat.yaml");
 
@@ -52,7 +52,7 @@ public class TomcatIntegrationTest extends TargetSystemTest {
     // metric
     target.execInContainer("rm", "-fr", "/usr/local/tomcat/webapps/ROOT");
     target.execInContainer(
-        "curl", sampleWebApplicationURL, "-o", "/usr/local/tomcat/webapps/ROOT.war");
+        "curl", sampleWebApplicationUrl, "-o", "/usr/local/tomcat/webapps/ROOT.war");
 
     verifyMetrics(createMetricsVerifier());
   }
