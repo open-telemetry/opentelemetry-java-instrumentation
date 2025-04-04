@@ -214,8 +214,12 @@ public final class BedrockRuntimeImpl {
         return null;
       }
       count = config.asMap().get("max_new_tokens");
-    } else if (modelId.startsWith("anthropic.claude")) {
+    } else if (modelId.startsWith("anthropic.claude")
+        || modelId.startsWith("cohere.command")
+        || modelId.startsWith("mistral.mistral")) {
       count = body.asMap().get("max_tokens");
+    } else if (modelId.startsWith("meta.llama")) {
+      count = body.asMap().get("max_gen_len");
     }
     if (count != null && count.isNumber()) {
       return count.asNumber().longValue();
@@ -266,7 +270,10 @@ public final class BedrockRuntimeImpl {
         return null;
       }
       temperature = config.asMap().get("temperature");
-    } else if (modelId.startsWith("anthropic.claude")) {
+    } else if (modelId.startsWith("anthropic.claude")
+        || modelId.startsWith("meta.llama")
+        || modelId.startsWith("cohere.command")
+        || modelId.startsWith("mistral.mistral")) {
       temperature = body.asMap().get("temperature");
     }
     if (temperature != null && temperature.isNumber()) {
@@ -317,8 +324,12 @@ public final class BedrockRuntimeImpl {
         return null;
       }
       topP = config.asMap().get("topP");
-    } else if (modelId.startsWith("anthropic.claude")) {
+    } else if (modelId.startsWith("anthropic.claude")
+        || modelId.startsWith("meta.llama")
+        || modelId.startsWith("mistral.mistral")) {
       topP = body.asMap().get("top_p");
+    } else if (modelId.startsWith("cohere.command")) {
+      topP = body.asMap().get("p");
     }
     if (topP != null && topP.isNumber()) {
       return topP.asNumber().doubleValue();
@@ -369,9 +380,12 @@ public final class BedrockRuntimeImpl {
         return null;
       }
       stopSequences = config.asMap().get("stopSequences");
-    } else if (modelId.startsWith("anthropic.claude")) {
+    } else if (modelId.startsWith("anthropic.claude") || modelId.startsWith("cohere.command")) {
       stopSequences = body.asMap().get("stop_sequences");
+    } else if (modelId.startsWith("mistral.mistral")) {
+      stopSequences = body.asMap().get("stop");
     }
+    // meta llama request does not support stop sequences
     if (stopSequences != null && stopSequences.isList()) {
       return stopSequences.asList().stream()
           .filter(Document::isString)
@@ -434,8 +448,38 @@ public final class BedrockRuntimeImpl {
     Document stopReason = null;
     if (modelId.startsWith("amazon.nova")) {
       stopReason = body.asMap().get("stopReason");
-    } else if (modelId.startsWith("anthropic.claude")) {
+    } else if (modelId.startsWith("anthropic.claude") || modelId.startsWith("meta.llama")) {
       stopReason = body.asMap().get("stop_reason");
+    } else if (modelId.startsWith("cohere.command-r")) {
+      stopReason = body.asMap().get("finish_reason");
+    } else if (modelId.startsWith("cohere.command")) {
+      List<String> stopReasons = new ArrayList<>();
+      Document results = body.asMap().get("generations");
+      if (results == null || !results.isList()) {
+        return null;
+      }
+      for (Document result : results.asList()) {
+        Document finishReason = result.asMap().get("finish_reason");
+        if (finishReason == null || !finishReason.isString()) {
+          continue;
+        }
+        stopReasons.add(finishReason.asString());
+      }
+      return stopReasons;
+    } else if (modelId.startsWith("mistral.mistral")) {
+      List<String> stopReasons = new ArrayList<>();
+      Document results = body.asMap().get("outputs");
+      if (results == null || !results.isList()) {
+        return null;
+      }
+      for (Document result : results.asList()) {
+        Document stopReason = result.asMap().get("stop_reason");
+        if (stopReason == null || !stopReason.isString()) {
+          continue;
+        }
+        stopReasons.add(stopReason.asString());
+      }
+      return stopReasons;
     }
     if (stopReason != null && stopReason.isString()) {
       return Collections.singletonList(stopReason.asString());
@@ -494,7 +538,10 @@ public final class BedrockRuntimeImpl {
         return null;
       }
       count = usage.asMap().get("input_tokens");
+    } else if (modelId.startswith("meta.llama")) {
+      count = body.asMap().get("prompt_token_count");
     }
+    // cohere and mistral model responses do not have input token count
     if (count != null && count.isNumber()) {
       return count.asNumber().longValue();
     }
@@ -564,7 +611,10 @@ public final class BedrockRuntimeImpl {
         return null;
       }
       count = usage.asMap().get("output_tokens");
+    } else if (modelId.startsWith("meta.llama")) {
+      count = body.asMap().get("generation_token_count");
     }
+    // cohere and mistral model responses do not have output token count
     if (count != null && count.isNumber()) {
       return count.asNumber().longValue();
     }
