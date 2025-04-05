@@ -12,7 +12,7 @@ enum HttpStatusCodeConverter {
     boolean isError(int responseStatusCode) {
       return responseStatusCode >= 500
           ||
-          // invalid status code, does not exists
+          // invalid status code, does not exist
           responseStatusCode < 100;
     }
   },
@@ -21,7 +21,7 @@ enum HttpStatusCodeConverter {
     boolean isError(int responseStatusCode) {
       return responseStatusCode >= 400
           ||
-          // invalid status code, does not exists
+          // invalid status code, does not exist
           responseStatusCode < 100;
     }
   };
