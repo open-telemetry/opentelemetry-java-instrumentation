@@ -38,17 +38,15 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.RowId;
 import java.sql.SQLException;
+import java.sql.SQLType;
 import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
-public class OpenTelemetryPreparedStatement<S extends PreparedStatement>
-    extends OpenTelemetryStatement<S> implements PreparedStatement {
+@SuppressWarnings("OverloadMethodsDeclarationOrder")
+class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTelemetryStatement<S>
+    implements PreparedStatement {
 
   public OpenTelemetryPreparedStatement(
       S delegate,
@@ -61,7 +59,7 @@ public class OpenTelemetryPreparedStatement<S extends PreparedStatement>
 
   @Override
   public ResultSet executeQuery() throws SQLException {
-    return wrapCall(query, delegate::executeQuery);
+    return new OpenTelemetryResultSet(wrapCall(query, delegate::executeQuery), this);
   }
 
   @Override
@@ -373,5 +371,23 @@ public class OpenTelemetryPreparedStatement<S extends PreparedStatement>
   private <T, E extends Exception> T wrapBatchCall(ThrowingSupplier<T, E> callable) throws E {
     DbRequest request = DbRequest.create(dbInfo, query, batchSize);
     return wrapCall(request, callable);
+  }
+
+  // JDBC 4.2
+
+  @Override
+  public void setObject(int parameterIndex, Object x, SQLType targetSqlType, int scaleOrLength)
+      throws SQLException {
+    delegate.setObject(parameterIndex, x, targetSqlType, scaleOrLength);
+  }
+
+  @Override
+  public void setObject(int parameterIndex, Object x, SQLType targetSqlType) throws SQLException {
+    delegate.setObject(parameterIndex, x, targetSqlType);
+  }
+
+  @Override
+  public long executeLargeUpdate() throws SQLException {
+    return wrapCall(query, delegate::executeLargeUpdate);
   }
 }

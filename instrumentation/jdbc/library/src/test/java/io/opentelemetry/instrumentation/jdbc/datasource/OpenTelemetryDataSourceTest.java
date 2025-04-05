@@ -67,7 +67,7 @@ class OpenTelemetryDataSourceTest {
                                     ? null
                                     : "postgresql://127.0.0.1:5432"))));
 
-    assertThat(connection).isExactlyInstanceOf(OpenTelemetryConnection.class);
+    assertThat(connection).isInstanceOf(OpenTelemetryConnection.class);
     DbInfo dbInfo = ((OpenTelemetryConnection) connection).getDbInfo();
     assertDbInfo(dbInfo);
   }
@@ -83,7 +83,7 @@ class OpenTelemetryDataSourceTest {
 
     assertThat(testing.waitForTraces(0)).isEmpty();
 
-    assertThat(connection).isExactlyInstanceOf(OpenTelemetryConnection.class);
+    assertThat(connection).isInstanceOf(OpenTelemetryConnection.class);
     DbInfo dbInfo = ((OpenTelemetryConnection) connection).getDbInfo();
     assertDbInfo(dbInfo);
   }

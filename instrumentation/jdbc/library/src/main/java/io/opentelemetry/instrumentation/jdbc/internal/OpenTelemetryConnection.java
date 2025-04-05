@@ -35,6 +35,7 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.SQLXML;
 import java.sql.Savepoint;
+import java.sql.ShardingKey;
 import java.sql.Statement;
 import java.sql.Struct;
 import java.util.Map;
@@ -47,15 +48,34 @@ import java.util.concurrent.Executor;
  */
 public class OpenTelemetryConnection implements Connection {
 
-  private final Connection delegate;
+  private static final boolean hasJdbc43 = hasJdbc43();
+  protected final Connection delegate;
   private final DbInfo dbInfo;
   protected final Instrumenter<DbRequest, Void> statementInstrumenter;
 
-  public OpenTelemetryConnection(
+  protected OpenTelemetryConnection(
       Connection delegate, DbInfo dbInfo, Instrumenter<DbRequest, Void> statementInstrumenter) {
     this.delegate = delegate;
     this.dbInfo = dbInfo;
     this.statementInstrumenter = statementInstrumenter;
+  }
+
+  // visible for testing
+  static boolean hasJdbc43() {
+    try {
+      Class.forName("java.sql.ShardingKey");
+      return true;
+    } catch (ClassNotFoundException exception) {
+      return false;
+    }
+  }
+
+  public static Connection create(
+      Connection delegate, DbInfo dbInfo, Instrumenter<DbRequest, Void> statementInstrumenter) {
+    if (hasJdbc43) {
+      return new OpenTelemetryConnectionJdbc43(delegate, dbInfo, statementInstrumenter);
+    }
+    return new OpenTelemetryConnection(delegate, dbInfo, statementInstrumenter);
   }
 
   @Override
@@ -368,5 +388,51 @@ public class OpenTelemetryConnection implements Connection {
   // visible for testing
   public DbInfo getDbInfo() {
     return dbInfo;
+  }
+
+  // JDBC 4.3
+  static class OpenTelemetryConnectionJdbc43 extends OpenTelemetryConnection {
+    OpenTelemetryConnectionJdbc43(
+        Connection delegate, DbInfo dbInfo, Instrumenter<DbRequest, Void> statementInstrumenter) {
+      super(delegate, dbInfo, statementInstrumenter);
+    }
+
+    @SuppressWarnings("Since15")
+    @Override
+    public void beginRequest() throws SQLException {
+      delegate.beginRequest();
+    }
+
+    @SuppressWarnings("Since15")
+    @Override
+    public void endRequest() throws SQLException {
+      delegate.endRequest();
+    }
+
+    @SuppressWarnings("Since15")
+    @Override
+    public boolean setShardingKeyIfValid(
+        ShardingKey shardingKey, ShardingKey superShardingKey, int timeout) throws SQLException {
+      return delegate.setShardingKeyIfValid(shardingKey, superShardingKey, timeout);
+    }
+
+    @SuppressWarnings("Since15")
+    @Override
+    public boolean setShardingKeyIfValid(ShardingKey shardingKey, int timeout) throws SQLException {
+      return delegate.setShardingKeyIfValid(shardingKey, timeout);
+    }
+
+    @SuppressWarnings("Since15")
+    @Override
+    public void setShardingKey(ShardingKey shardingKey, ShardingKey superShardingKey)
+        throws SQLException {
+      delegate.setShardingKey(shardingKey, superShardingKey);
+    }
+
+    @SuppressWarnings("Since15")
+    @Override
+    public void setShardingKey(ShardingKey shardingKey) throws SQLException {
+      delegate.setShardingKey(shardingKey);
+    }
   }
 }

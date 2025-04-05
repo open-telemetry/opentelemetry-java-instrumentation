@@ -30,6 +30,7 @@ import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import org.junit.jupiter.api.Test;
@@ -93,6 +94,33 @@ class OpenTelemetryConnectionTest {
         "parent",
         () -> {
           assertThat(statement.execute()).isTrue();
+          ResultSet resultSet = statement.getResultSet();
+          assertThat(resultSet).isInstanceOf(OpenTelemetryResultSet.class);
+          assertThat(resultSet.getStatement()).isEqualTo(statement);
+        });
+
+    jdbcTraceAssertion(dbInfo, query);
+
+    statement.close();
+    connection.close();
+  }
+
+  @Test
+  void testVerifyPrepareStatementQuery() throws SQLException {
+    Instrumenter<DbRequest, Void> instrumenter =
+        createStatementInstrumenter(testing.getOpenTelemetry());
+    DbInfo dbInfo = getDbInfo();
+    OpenTelemetryConnection connection =
+        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
+    String query = "SELECT * FROM users";
+    PreparedStatement statement = connection.prepareStatement(query);
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          ResultSet resultSet = statement.executeQuery();
+          assertThat(resultSet).isInstanceOf(OpenTelemetryResultSet.class);
+          assertThat(resultSet.getStatement()).isEqualTo(statement);
         });
 
     jdbcTraceAssertion(dbInfo, query);
