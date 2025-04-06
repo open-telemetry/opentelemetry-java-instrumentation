@@ -19,6 +19,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -388,10 +389,16 @@ class JdbcInstrumentationTest {
           DB_SYSTEM_NAME,
           DB_COLLECTION_NAME,
           DB_NAMESPACE,
-          DB_OPERATION_NAME);
+          DB_OPERATION_NAME,
+          DB_QUERY_TEXT);
     } else {
       assertDurationMetric(
-          testing, "io.opentelemetry.jdbc", DB_SYSTEM_NAME, DB_OPERATION_NAME, DB_NAMESPACE);
+          testing,
+          "io.opentelemetry.jdbc",
+          DB_SYSTEM_NAME,
+          DB_OPERATION_NAME,
+          DB_QUERY_TEXT,
+          DB_NAMESPACE);
     }
   }
 

@@ -70,6 +70,7 @@ class JdbcTelemetryTest {
         "io.opentelemetry.jdbc",
         DB_NAMESPACE,
         DB_OPERATION_NAME,
+        DB_QUERY_TEXT,
         DB_SYSTEM_NAME,
         SERVER_ADDRESS,
         SERVER_PORT);
@@ -117,6 +118,7 @@ class JdbcTelemetryTest {
         "io.opentelemetry.jdbc",
         DB_NAMESPACE,
         DB_OPERATION_NAME,
+        DB_QUERY_TEXT,
         DB_RESPONSE_STATUS_CODE,
         DB_SYSTEM_NAME,
         ERROR_TYPE,
