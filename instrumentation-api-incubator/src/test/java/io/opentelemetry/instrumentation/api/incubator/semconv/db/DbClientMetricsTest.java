@@ -43,16 +43,19 @@ class DbClientMetricsTest {
     Attributes operationAttributes =
         Attributes.builder()
             .put(DbClientCommonAttributesExtractor.DB_SYSTEM_NAME, "myDb")
-            .put(SqlClientAttributesExtractor.DB_COLLECTION_NAME, "table")
             .put(DbClientCommonAttributesExtractor.DB_NAMESPACE, "potatoes")
-            .put(DbClientAttributesExtractor.DB_OPERATION_NAME, "SELECT")
+            .put(DbClientCommonAttributesExtractor.DB_OPERATION_NAME, "SELECT")
+            .put(SqlClientAttributesExtractor.DB_COLLECTION_NAME, "table")
+            .put(
+                DbClientCommonAttributesExtractor.DB_QUERY_TEXT,
+                "select id, name from table where id = ?")
             .put(ServerAttributes.SERVER_ADDRESS, "localhost")
             .put(ServerAttributes.SERVER_PORT, 1234)
             .build();
 
     Attributes responseAttributes =
         Attributes.builder()
-            .put(DbClientAttributesExtractor.DB_RESPONSE_STATUS_CODE, "200")
+            .put(DbClientCommonAttributesExtractor.DB_RESPONSE_STATUS_CODE, "200")
             .put(ErrorAttributes.ERROR_TYPE, "400")
             .put(NetworkAttributes.NETWORK_PEER_ADDRESS, "1.2.3.4")
             .put(NetworkAttributes.NETWORK_PEER_PORT, 8080)
@@ -95,15 +98,19 @@ class DbClientMetricsTest {
                                                 DbClientCommonAttributesExtractor.DB_NAMESPACE,
                                                 "potatoes"),
                                             equalTo(
-                                                DbClientAttributesExtractor.DB_OPERATION_NAME,
+                                                DbClientCommonAttributesExtractor.DB_OPERATION_NAME,
                                                 "SELECT"),
                                             equalTo(
                                                 SqlClientAttributesExtractor.DB_COLLECTION_NAME,
                                                 "table"),
+                                            equalTo(
+                                                SqlClientAttributesExtractor.DB_QUERY_TEXT,
+                                                "select id, name from table where id = ?"),
                                             equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                             equalTo(ServerAttributes.SERVER_PORT, 1234),
                                             equalTo(
-                                                DbClientAttributesExtractor.DB_RESPONSE_STATUS_CODE,
+                                                DbClientCommonAttributesExtractor
+                                                    .DB_RESPONSE_STATUS_CODE,
                                                 "200"),
                                             equalTo(ErrorAttributes.ERROR_TYPE, "400"),
                                             equalTo(

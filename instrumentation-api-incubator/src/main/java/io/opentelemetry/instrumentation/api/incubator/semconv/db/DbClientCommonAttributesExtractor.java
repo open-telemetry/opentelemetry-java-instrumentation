@@ -30,8 +30,12 @@ abstract class DbClientCommonAttributesExtractor<
   private static final AttributeKey<String> DB_USER = AttributeKey.stringKey("db.user");
   private static final AttributeKey<String> DB_CONNECTION_STRING =
       AttributeKey.stringKey("db.connection_string");
-  private static final AttributeKey<String> DB_RESPONSE_STATUS_CODE =
+  static final AttributeKey<String> DB_RESPONSE_STATUS_CODE =
       AttributeKey.stringKey("db.response.status_code");
+  static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
+  static final AttributeKey<String> DB_OPERATION_NAME = AttributeKey.stringKey("db.operation.name");
+  static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
+  static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.query.text");
 
   final GETTER getter;
 

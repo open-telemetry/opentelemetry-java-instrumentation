@@ -29,11 +29,6 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         REQUEST, RESPONSE, SqlClientAttributesGetter<REQUEST, RESPONSE>> {
 
   // copied from DbIncubatingAttributes
-  private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
-  private static final AttributeKey<String> DB_OPERATION_NAME =
-      AttributeKey.stringKey("db.operation.name");
-  private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
-  private static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.query.text");
   static final AttributeKey<String> DB_COLLECTION_NAME =
       AttributeKey.stringKey("db.collection.name");
   private static final AttributeKey<Long> DB_OPERATION_BATCH_SIZE =

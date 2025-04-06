@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -24,14 +23,6 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
     extends DbClientCommonAttributesExtractor<
         REQUEST, RESPONSE, DbClientAttributesGetter<REQUEST, RESPONSE>> {
-
-  // copied from DbIncubatingAttributes
-  private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
-  private static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.query.text");
-  static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
-  static final AttributeKey<String> DB_OPERATION_NAME = AttributeKey.stringKey("db.operation.name");
-  static final AttributeKey<String> DB_RESPONSE_STATUS_CODE =
-      AttributeKey.stringKey("db.response.status_code");
 
   /** Creates the database client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
