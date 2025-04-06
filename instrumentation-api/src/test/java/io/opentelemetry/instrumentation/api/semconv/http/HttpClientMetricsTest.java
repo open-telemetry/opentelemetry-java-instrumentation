@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.semconv.http;
 
+import static io.opentelemetry.instrumentation.api.semconv.http.HttpMetricsAdvice.URL_TEMPLATE;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -50,8 +51,9 @@ class HttpClientMetricsTest {
     Attributes requestAttributes =
         Attributes.builder()
             .put(HTTP_REQUEST_METHOD, "GET")
-            .put(URL_FULL, "https://localhost:1234/")
-            .put(URL_PATH, "/")
+            .put(URL_FULL, "https://localhost:1234/users/123?q=a")
+            .put(URL_PATH, "/users/123")
+            .put(URL_TEMPLATE, "/users/{id}")
             .put(URL_QUERY, "q=a")
             .put(SERVER_ADDRESS, "localhost")
             .put(SERVER_PORT, 1234)
@@ -104,6 +106,7 @@ class HttpClientMetricsTest {
                                         .hasSum(0.15 /* seconds */)
                                         .hasAttributesSatisfying(
                                             equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                            equalTo(URL_TEMPLATE, "/users/{id}"),
                                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                                             equalTo(ERROR_TYPE, "400"),
                                             equalTo(NETWORK_PROTOCOL_NAME, "http"),
