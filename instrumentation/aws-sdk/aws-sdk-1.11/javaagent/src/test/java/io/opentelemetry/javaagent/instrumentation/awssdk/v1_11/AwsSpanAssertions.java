@@ -34,7 +34,6 @@ class AwsSpanAssertions {
         .hasNoParent()
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-            satisfies(stringKey("aws.endpoint"), v -> v.isInstanceOf(String.class)),
             equalTo(stringKey("aws.queue.name"), queueName),
             equalTo(stringKey("aws.queue.url"), queueUrl),
             satisfies(AWS_REQUEST_ID, v -> v.isInstanceOf(String.class)),
@@ -66,7 +65,6 @@ class AwsSpanAssertions {
         .hasNoParent()
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-            satisfies(stringKey("aws.endpoint"), v -> v.isInstanceOf(String.class)),
             equalTo(stringKey("aws.bucket.name"), bucketName),
             equalTo(RPC_METHOD, rpcMethod),
             equalTo(RPC_SYSTEM, "aws-api"),
@@ -92,7 +90,6 @@ class AwsSpanAssertions {
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
             equalTo(MESSAGING_DESTINATION_NAME, topicArn),
-            satisfies(stringKey("aws.endpoint"), v -> v.isInstanceOf(String.class)),
             satisfies(AWS_REQUEST_ID, v -> v.isInstanceOf(String.class)),
             equalTo(RPC_METHOD, rpcMethod),
             equalTo(RPC_SYSTEM, "aws-api"),

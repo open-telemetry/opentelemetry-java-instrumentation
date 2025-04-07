@@ -83,7 +83,6 @@ class SnsTracingTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                            satisfies(stringKey("aws.endpoint"), v -> v.isInstanceOf(String.class)),
                             equalTo(stringKey("aws.queue.url"), queueUrl),
                             satisfies(AWS_REQUEST_ID, v -> v.isInstanceOf(String.class)),
                             equalTo(RPC_METHOD, "ReceiveMessage"),

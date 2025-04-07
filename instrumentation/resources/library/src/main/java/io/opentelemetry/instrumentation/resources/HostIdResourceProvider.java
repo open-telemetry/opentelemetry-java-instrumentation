@@ -21,7 +21,7 @@ public final class HostIdResourceProvider implements ConditionalResourceProvider
 
   @Override
   public Resource createResource(ConfigProperties config) {
-    return HostResource.get();
+    return HostIdResource.get();
   }
 
   @Override

@@ -15,7 +15,7 @@ otelJava {
   maxJavaVersionForTests.set(JavaVersion.VERSION_11)
 }
 
-val dockerJavaVersion = "3.4.2"
+val dockerJavaVersion = "3.5.0"
 dependencies {
   testCompileOnly("com.google.auto.value:auto-value-annotations")
   testAnnotationProcessor("com.google.auto.value:auto-value")

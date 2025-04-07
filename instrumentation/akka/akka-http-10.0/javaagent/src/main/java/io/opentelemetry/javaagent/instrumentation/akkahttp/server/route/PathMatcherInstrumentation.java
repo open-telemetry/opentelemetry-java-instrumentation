@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import akka.http.scaladsl.model.Uri;
 import akka.http.scaladsl.server.PathMatcher;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -41,7 +40,7 @@ public class PathMatcherInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Uri.Path prefix, @Advice.Return PathMatcher<?> result) {
       // store the path being matched inside a VirtualField on the given matcher, so it can be used
       // for constructing the route
-      VirtualField.find(PathMatcher.class, String.class).set(result, prefix.toString());
+      PathMatcherUtil.setMatched(result, prefix.toString());
     }
   }
 }
