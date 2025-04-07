@@ -10,6 +10,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
@@ -218,6 +219,13 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   public Instrumenter<REQUEST, RESPONSE> build() {
+    if (emitExperimentalHttpClientTelemetry
+        && attributesGetter instanceof HttpClientExperimentalAttributesGetter) {
+      HttpClientExperimentalAttributesGetter<REQUEST, RESPONSE> experimentalAttributesGetter =
+          (HttpClientExperimentalAttributesGetter<REQUEST, RESPONSE>) attributesGetter;
+      Experimental.setUrlTemplateExtractor(
+          httpSpanNameExtractorBuilder, experimentalAttributesGetter::getUrlTemplate);
+    }
     SpanNameExtractor<? super REQUEST> spanNameExtractor =
         spanNameExtractorTransformer.apply(httpSpanNameExtractorBuilder.build());
 
