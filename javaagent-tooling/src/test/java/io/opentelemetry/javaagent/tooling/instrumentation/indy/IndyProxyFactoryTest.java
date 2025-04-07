@@ -26,7 +26,7 @@ import net.bytebuddy.utility.JavaConstant;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-class IndyProxyFactoryTest {
+public class IndyProxyFactoryTest {
 
   private static IndyProxyFactory proxyFactory;
 
