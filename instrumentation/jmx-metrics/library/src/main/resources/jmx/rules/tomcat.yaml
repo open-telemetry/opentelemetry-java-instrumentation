@@ -38,21 +38,21 @@ rules:
         unit: &unit By
         desc: &desc The number of bytes transmitted.
         metricAttribute:
-          tomcat.network.io.direction: const(received)
+          network.io.direction: const(receive)
       bytesSent:
         metric: *metric
         type: *type
         unit: *unit
         desc: *desc
         metricAttribute:
-          tomcat.network.io.direction: const(sent)
+          network.io.direction: const(transmit)
 
   - beans:
     - Catalina:type=Manager,host=localhost,context=*
     - Tomcat:type=Manager,host=localhost,context=*
     prefix: tomcat.
     metricAttribute:
-      tomcat.web_app_context: param(context)
+      tomcat.context: param(context)
     mapping:
       activeSessions:
         metric: active_session.count

@@ -105,10 +105,10 @@ public class TomcatIntegrationTest extends TargetSystemTest {
                     .isCounter()
                     .hasDataPointsWithAttributes(
                         attributeGroup(
-                            attribute("tomcat.network.io.direction", "sent"),
+                            attribute("network.io.direction", "receive"),
                             requestProcessorNameAttribute),
                         attributeGroup(
-                            attribute("tomcat.network.io.direction", "received"),
+                            attribute("network.io.direction", "transmit"),
                             requestProcessorNameAttribute)))
         .add(
             "tomcat.active_session.count",
