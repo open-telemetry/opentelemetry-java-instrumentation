@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.instrumentation.internal.classloader.AdviceUtil.applyInlineAdvice;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -19,9 +20,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.tooling.Utils;
-import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
-import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
@@ -62,12 +60,7 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
             .and(isPublic().or(isProtected()))
             .and(not(isStatic()));
     // Inline instrumentation to prevent problems with invokedynamic-recursion
-    transformer.applyTransformer(
-        new AgentBuilder.Transformer.ForAdvice()
-            .include(Utils.getBootstrapProxy(), Utils.getAgentClassLoader())
-            .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
-            .advice(
-                methodMatcher, BootDelegationInstrumentation.class.getName() + "$LoadClassAdvice"));
+    applyInlineAdvice(transformer, methodMatcher, this.getClass().getName() + "$LoadClassAdvice");
   }
 
   @SuppressWarnings("unused")
