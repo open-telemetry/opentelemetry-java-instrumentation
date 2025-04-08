@@ -320,10 +320,10 @@ If such a conversion is not available, then an error is reported during JMX metr
 Currently available unit conversions:
 
 | `sourceUnit` | `unit` |
-|--------------|-------|
-| ms           | s     |
-| us           | s     |
-| ns           | s     |
+|--------------|--------|
+| ms           | s      |
+| us           | s      |
+| ns           | s      |
 
 Example of defining unit conversion in yaml file:
 ```yaml
@@ -341,6 +341,29 @@ rules:
 ```
 `sourceUnit` can also be defined on rule level (see [Making shortcuts](#making-shortcuts))
 
+### Filtering negative values
+
+Sometimes a negative value is returned by the MBean implementation when a metric is not available or not supported.
+For example, [`OperatingSystemMXBean.getProcessCpuLoad`](https://docs.oracle.com/javase/7/docs/jre/api/management/extension/com/sun/management/OperatingSystemMXBean.html#getProcessCpuLoad()) can return a negative value.
+
+In this case, it is recommended to filter out the negative values by setting the `dropNegativeValues` metric (or rule) property to `true`, it is set to `false` by default.
+
+```yaml
+rules:
+  - bean: java.lang:type=OperatingSystem
+    # can also be set at rule-level (with lower priority)
+    dropNegativeValues: false
+    mapping:
+      # jvm.cpu.recent_utilization
+      ProcessCpuLoad:
+        metric: jvm.cpu.recent_utilization
+        type: gauge
+        unit: '1'
+        # setting dropNegativeValues at metric level has priority over rule level.
+        dropNegativeValues: true
+        desc: Recent CPU utilization for the process as reported by the JVM.
+```
+
 ### General Syntax
 
 Here is the general description of the accepted configuration file syntax. The whole contents of the file is case-sensitive, with exception for `type` as described in the table below.
@@ -356,12 +379,14 @@ rules:                                # start of list of configuration rules
     prefix: <METRIC_NAME_PREFIX>      # optional, useful for avoiding specifying metric names below
     unit: <UNIT>                      # optional, redefines the default unit for the whole rule
     type: <TYPE>                      # optional, redefines the default type for the whole rule
+    dropNegativeValues: <BOOL>        # optional, redefines if negative values are dropped for the whole rule
     mapping:
       <BEANATTR1>:                    # an MBean attribute name defining the metric value
         metric: <METRIC_NAME1>        # metric name will be <METRIC_NAME_PREFIX><METRIC_NAME1>
         type: <TYPE>                  # optional, the default type is gauge
         desc: <DESCRIPTION1>          # optional
         unit: <UNIT1>                 # optional
+        dropNegativeValues: <BOOL>    # optional, defines if negative values are dropped for the metric
         metricAttribute:              # optional, will be used in addition to the shared metric attributes above
           <ATTRIBUTE3>: const(<STR>)  # direct value for the metric attribute
       <BEANATTR2>:                    # use a.b to get access into CompositeData
@@ -381,19 +406,20 @@ rules:                                # start of list of configuration rules
 
 The following table explains the used terms with more details.
 
-| Syntactic Element | Description |
-| ---------------- | --------------- |
-| OBJECTNAME | A syntactically valid string representing an ObjectName (see [ObjectName constructor](https://docs.oracle.com/javase/8/docs/api/javax/management/ObjectName.html#ObjectName-java.lang.String-)). |
-| ATTRIBUTE | Any well-formed string that can be used as a metric [attribute](https://opentelemetry.io/docs/reference/specification/common/#attribute) key. |
-| ATTR | A non-empty string used as a name of the MBean attribute. The MBean attribute value must be a String, otherwise the specified metric attribute will not be used. |
-| PARAM | A non-empty string used as a property key in the ObjectName identifying the MBean which provides the metric value. If the ObjectName does not have a property with the given key, the specified metric attribute will not be used. |
-| METRIC_NAME_PREFIX | Any non-empty string which will be prepended to the specified metric (instrument) names. |
-| METRIC_NAME | Any non-empty string. The string, prefixed by the optional prefix (see above) must satisfy [instrument naming rule](https://opentelemetry.io/docs/reference/specification/metrics/api/#instrument-naming-rule). |
-| TYPE | One of `counter`, `updowncounter`, or `gauge`. The default is `gauge`. This value is case insensitive. |
-| DESCRIPTION | Any string to be used as human-readable [description](https://opentelemetry.io/docs/reference/specification/metrics/api/#instrument-description) of the metric. If the description is not provided by the rule, an attempt will be made to extract one automatically from the corresponding MBean. |
-| UNIT | A string identifying the [unit](https://opentelemetry.io/docs/reference/specification/metrics/api/#instrument-unit) of measurements reported by the metric. Enclose the string in single or double quotes if using unit annotations. |
-| STR | Any string to be used directly as the metric attribute value. |
-| BEANATTR | A non-empty string representing the MBean attribute defining the metric value. The attribute value must be a number. Special dot-notation _attributeName.itemName_ can be used to access numerical items within attributes of [CompositeType](https://docs.oracle.com/javase/8/docs/api/javax/management/openmbean/CompositeType.html). If a dot happens to be an integral part of the MBean attribute name, it must be escaped by backslash (`\`). |
+| Syntactic Element  | Description                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+|--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| OBJECTNAME         | A syntactically valid string representing an ObjectName (see [ObjectName constructor](https://docs.oracle.com/javase/8/docs/api/javax/management/ObjectName.html#ObjectName-java.lang.String-)).                                                                                                                                                                                                                                                    |
+| ATTRIBUTE          | Any well-formed string that can be used as a metric [attribute](https://opentelemetry.io/docs/reference/specification/common/#attribute) key.                                                                                                                                                                                                                                                                                                       |
+| ATTR               | A non-empty string used as a name of the MBean attribute. The MBean attribute value must be a String, otherwise the specified metric attribute will not be used.                                                                                                                                                                                                                                                                                    |
+| PARAM              | A non-empty string used as a property key in the ObjectName identifying the MBean which provides the metric value. If the ObjectName does not have a property with the given key, the specified metric attribute will not be used.                                                                                                                                                                                                                  |
+| METRIC_NAME_PREFIX | Any non-empty string which will be prepended to the specified metric (instrument) names.                                                                                                                                                                                                                                                                                                                                                            |
+| METRIC_NAME        | Any non-empty string. The string, prefixed by the optional prefix (see above) must satisfy [instrument naming rule](https://opentelemetry.io/docs/reference/specification/metrics/api/#instrument-naming-rule).                                                                                                                                                                                                                                     |
+| TYPE               | One of `counter`, `updowncounter`, or `gauge`. The default is `gauge`. This value is case insensitive.                                                                                                                                                                                                                                                                                                                                              |
+| DESCRIPTION        | Any string to be used as human-readable [description](https://opentelemetry.io/docs/reference/specification/metrics/api/#instrument-description) of the metric. If the description is not provided by the rule, an attempt will be made to extract one automatically from the corresponding MBean.                                                                                                                                                  |
+| UNIT               | A string identifying the [unit](https://opentelemetry.io/docs/reference/specification/metrics/api/#instrument-unit) of measurements reported by the metric. Enclose the string in single or double quotes if using unit annotations.                                                                                                                                                                                                                |
+| STR                | Any string to be used directly as the metric attribute value.                                                                                                                                                                                                                                                                                                                                                                                       |
+| BEANATTR           | A non-empty string representing the MBean attribute defining the metric value. The attribute value must be a number. Special dot-notation _attributeName.itemName_ can be used to access numerical items within attributes of [CompositeType](https://docs.oracle.com/javase/8/docs/api/javax/management/openmbean/CompositeType.html). If a dot happens to be an integral part of the MBean attribute name, it must be escaped by backslash (`\`). |
+| BOOL               | A boolean value, either `true` or `false`                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 ## Assumptions and Limitations
 
