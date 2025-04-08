@@ -268,7 +268,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("org.h2.util.Task")
         .allowClass("org.h2.store.FileLock")
         .allowClass("org.h2.engine.DatabaseCloser")
-        .allowClass("org.h2.engine.OnExitDatabaseCloser");
+        .allowClass("org.h2.engine.OnExitDatabaseCloser")
+        .allowClass("org.h2.server.web.WebServlet");
 
     builder
         .ignoreClass("com.carrotsearch.hppc.")

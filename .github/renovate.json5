@@ -28,6 +28,7 @@
     },
     {
       matchPackageNames: [
+        'io.opentelemetry.contrib:opentelemetry-azure-resources',
         'io.opentelemetry.contrib:opentelemetry-aws-resources',
         'io.opentelemetry.contrib:opentelemetry-aws-xray-propagator',
         'io.opentelemetry.contrib:opentelemetry-gcp-resources',

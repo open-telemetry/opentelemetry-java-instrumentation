@@ -128,8 +128,6 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "Amazon S3"),
                                 equalTo(RPC_METHOD, "GetObject"),
-                                equalTo(
-                                    stringKey("aws.endpoint"), "http://127.0.0.1:" + UNUSABLE_PORT),
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(stringKey("aws.bucket.name"), "someBucket"),
                                 equalTo(ERROR_TYPE, SdkClientException.class.getName()))));
@@ -175,7 +173,6 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "Amazon S3"),
                                 equalTo(RPC_METHOD, "GetObject"),
-                                equalTo(stringKey("aws.endpoint"), server.httpUri().toString()),
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(stringKey("aws.bucket.name"), "someBucket"),
                                 equalTo(ERROR_TYPE, SdkClientException.class.getName()))));

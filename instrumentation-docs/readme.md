@@ -50,9 +50,9 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 * name
   * Identifier for instrumentation module, used to enable/disable
   * Configured in `InstrumentationModule` code for each module
-* srcPath
+* source_path
   * Path to the source code of the instrumentation module
-* minimumJavaVersion
+* minimum_java_version
   * Minimum Java version required by the instrumentation module. If not specified, it is assumed to
     be Java 8
 * description
@@ -73,7 +73,7 @@ As of now, the following fields are supported:
 
 ```yaml
 description: "Description of what the instrumentation does."
-disabledByDefault: true
+disabled_by_default: true
 
 # used to mark modules that do not instrument traditional libraries (e.g. methods, annotations)
 # defaults to true
