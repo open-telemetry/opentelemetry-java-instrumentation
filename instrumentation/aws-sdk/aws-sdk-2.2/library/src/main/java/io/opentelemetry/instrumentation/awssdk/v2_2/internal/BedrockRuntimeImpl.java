@@ -459,11 +459,11 @@ public final class BedrockRuntimeImpl {
         return null;
       }
       for (Document result : results.asList()) {
-        Document finishReason = result.asMap().get("finish_reason");
-        if (finishReason == null || !finishReason.isString()) {
+        stopReason = result.asMap().get("finish_reason");
+        if (stopReason == null || !stopReason.isString()) {
           continue;
         }
-        stopReasons.add(finishReason.asString());
+        stopReasons.add(stopReason.asString());
       }
       return stopReasons;
     } else if (modelId.startsWith("mistral.mistral")) {
@@ -473,7 +473,7 @@ public final class BedrockRuntimeImpl {
         return null;
       }
       for (Document result : results.asList()) {
-        Document stopReason = result.asMap().get("stop_reason");
+        stopReason = result.asMap().get("stop_reason");
         if (stopReason == null || !stopReason.isString()) {
           continue;
         }
@@ -538,7 +538,7 @@ public final class BedrockRuntimeImpl {
         return null;
       }
       count = usage.asMap().get("input_tokens");
-    } else if (modelId.startswith("meta.llama")) {
+    } else if (modelId.startsWith("meta.llama")) {
       count = body.asMap().get("prompt_token_count");
     }
     // cohere and mistral model responses do not have input token count
