@@ -63,8 +63,7 @@ rules:
 
   - bean: java.lang:type=OperatingSystem
     prefix: jvm.
-    # TODO: drop negative values once https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13589 is merged
-    # dropNegativeValues: true
+    dropNegativeValues: true
     mapping:
       # jvm.cpu.count
       AvailableProcessors:
