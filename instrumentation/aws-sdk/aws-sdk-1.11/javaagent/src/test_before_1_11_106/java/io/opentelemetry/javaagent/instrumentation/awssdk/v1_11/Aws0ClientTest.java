@@ -218,7 +218,6 @@ class Aws0ClientTest {
                               equalTo(RPC_SYSTEM, "aws-api"),
                               satisfies(RPC_SERVICE, v -> v.contains(service)),
                               equalTo(RPC_METHOD, operation),
-                              equalTo(stringKey("aws.endpoint"), server.httpUri().toString()),
                               equalTo(stringKey("aws.agent"), "java-aws-sdk")));
 
                   additionalAttributes.forEach((k, v) -> attributes.add(equalTo(stringKey(k), v)));
@@ -266,7 +265,6 @@ class Aws0ClientTest {
                             equalTo(RPC_SYSTEM, "aws-api"),
                             equalTo(RPC_SERVICE, "Amazon S3"),
                             equalTo(RPC_METHOD, "GetObject"),
-                            equalTo(stringKey("aws.endpoint"), "http://localhost:" + UNUSABLE_PORT),
                             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                             equalTo(stringKey("aws.bucket.name"), "someBucket"),
                             equalTo(ERROR_TYPE, AmazonClientException.class.getName()))));
@@ -304,7 +302,6 @@ class Aws0ClientTest {
                             equalTo(RPC_SYSTEM, "aws-api"),
                             equalTo(RPC_SERVICE, "Amazon S3"),
                             equalTo(RPC_METHOD, "GetObject"),
-                            equalTo(stringKey("aws.endpoint"), "https://s3.amazonaws.com"),
                             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                             equalTo(stringKey("aws.bucket.name"), "someBucket"),
                             equalTo(ERROR_TYPE, IllegalStateException.class.getName()))));
@@ -344,7 +341,6 @@ class Aws0ClientTest {
                             equalTo(RPC_SYSTEM, "aws-api"),
                             equalTo(RPC_SERVICE, "Amazon S3"),
                             equalTo(RPC_METHOD, "GetObject"),
-                            equalTo(stringKey("aws.endpoint"), server.httpUri().toString()),
                             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                             equalTo(stringKey("aws.bucket.name"), "someBucket"),
                             equalTo(ERROR_TYPE, AmazonClientException.class.getName()))));
