@@ -222,8 +222,8 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
       jmxMetrics.add("jvm.system.cpu.load_1m");
     }
 
-    boolean noNative = System.getProperty("org.graalvm.nativeimage.imagecode") == null;
-    if (noNative) {
+    boolean nativeImage = System.getProperty("org.graalvm.nativeimage.imagecode") != null;
+    if (!nativeImage) {
       // GraalVM native image does not support buffer pools - have to investigate why
       jmxMetrics.add("jvm.buffer.memory.used");
     }
@@ -239,7 +239,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
     // Log
     List<LogRecordData> exportedLogRecords = testing.getExportedLogRecords();
     assertThat(exportedLogRecords).as("No log record exported.").isNotEmpty();
-    if (noNative) {
+    if (!nativeImage) {
       // log records differ in native image mode due to different startup timing
       LogRecordData firstLog = exportedLogRecords.get(0);
       assertThat(firstLog.getBodyValue().asString())

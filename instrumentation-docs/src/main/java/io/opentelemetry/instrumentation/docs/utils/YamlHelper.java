@@ -15,9 +15,19 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.TypeDescription;
 import org.yaml.snakeyaml.Yaml;
 
 public class YamlHelper {
+
+  private static final Yaml metaDataYaml = new Yaml();
+
+  static {
+    TypeDescription customDescriptor = new TypeDescription(InstrumentationMetaData.class);
+    customDescriptor.substituteProperty(
+        "disabled_by_default", Boolean.class, "getDisabledByDefault", "setDisabledByDefault");
+    metaDataYaml.addTypeDescription(customDescriptor);
+  }
 
   public static void printInstrumentationList(
       List<InstrumentationEntity> list, BufferedWriter writer) {
@@ -43,14 +53,14 @@ public class YamlHelper {
               }
 
               if (entity.getMetadata().getDisabledByDefault()) {
-                entityMap.put("disabledByDefault", entity.getMetadata().getDisabledByDefault());
+                entityMap.put("disabled_by_default", entity.getMetadata().getDisabledByDefault());
               }
             }
 
-            entityMap.put("srcPath", entity.getSrcPath());
+            entityMap.put("source_path", entity.getSrcPath());
 
             if (entity.getMinJavaVersion() != null) {
-              entityMap.put("minimumJavaVersion", entity.getMinJavaVersion());
+              entityMap.put("minimum_java_version", entity.getMinJavaVersion());
             }
 
             Map<String, Object> scopeMap = getScopeMap(entity);
@@ -97,7 +107,7 @@ public class YamlHelper {
   }
 
   public static InstrumentationMetaData metaDataParser(String input) {
-    return new Yaml().loadAs(input, InstrumentationMetaData.class);
+    return metaDataYaml.loadAs(input, InstrumentationMetaData.class);
   }
 
   private YamlHelper() {}

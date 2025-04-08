@@ -44,7 +44,7 @@ class HttpServerRouteTest {
   }
 
   @Test
-  void noLocalRootSpan() {
+  void nonInstrumenerParentLocalRootSpan() {
     Span parentSpan =
         testing.getOpenTelemetry().getTracer("test").spanBuilder("parent").startSpan();
     parentSpan.end();
@@ -56,10 +56,11 @@ class HttpServerRouteTest {
 
     instrumenter.end(context, "test", null, null);
 
-    assertNull(HttpServerRoute.get(context));
+    assertEquals("/get/:id", HttpServerRoute.get(context));
     assertThat(testing.getSpans())
         .satisfiesExactly(
-            span -> assertThat(span).hasName("parent"), span -> assertThat(span).hasName("test"));
+            span -> assertThat(span).hasName("parent"),
+            span -> assertThat(span).hasName("HTTP /get/:id"));
   }
 
   @Test

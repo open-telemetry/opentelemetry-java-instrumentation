@@ -226,9 +226,11 @@ public class AgentInstaller {
 
     AgentBuilder.Identified.Extendable extendableAgentBuilder =
         agentBuilder
-            .ignore(
-                target -> instrumentationInstalled, // turn off after instrumentation is installed
-                Objects::nonNull)
+            // ignore classes that are not in boot loader, this also ignores classes in our agent
+            // loader
+            .ignore(any(), Objects::nonNull)
+            // turn off after instrumentation is installed
+            .or(target -> instrumentationInstalled)
             .type(none())
             .transform(
                 (builder, typeDescription, classLoader, module, protectionDomain) -> builder);

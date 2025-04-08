@@ -69,7 +69,6 @@ class AwsSpanAssertions {
     attributeAssertions.addAll(
         Arrays.asList(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-            satisfies(stringKey("aws.endpoint"), val -> val.isInstanceOf(String.class)),
             satisfies(
                 stringKey("aws.queue.name"),
                 val ->
@@ -124,7 +123,6 @@ class AwsSpanAssertions {
     return span.hasName(spanName)
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-            satisfies(stringKey("aws.endpoint"), val -> val.isInstanceOf(String.class)),
             equalTo(stringKey("aws.bucket.name"), bucketName),
             equalTo(RPC_SYSTEM, "aws-api"),
             equalTo(RPC_METHOD, spanName.substring(3)),
@@ -146,7 +144,6 @@ class AwsSpanAssertions {
         .hasKind(CLIENT)
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-            satisfies(stringKey("aws.endpoint"), val -> val.isInstanceOf(String.class)),
             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
             equalTo(RPC_SYSTEM, "aws-api"),
             equalTo(RPC_METHOD, spanName.substring(4)),
