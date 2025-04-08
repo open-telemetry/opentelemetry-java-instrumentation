@@ -1116,7 +1116,7 @@ public final class BedrockRuntimeImpl {
       } else if (requestModel.startsWith("amazon.nova")) {
         handleEventAmazonNova(result);
       } else if (requestModel.startsWith("anthropic.claude")) {
-        handleEventAnthropicCloud(result);
+        handleEventAnthropicClaude(result);
       }
     }
 
@@ -1222,7 +1222,7 @@ public final class BedrockRuntimeImpl {
       }
     }
 
-    private void handleEventAnthropicCloud(Document result) {
+    private void handleEventAnthropicClaude(Document result) {
       Document type = result.asMap().get("type");
       if (type == null || !type.isString()) {
         return;
