@@ -117,7 +117,7 @@ public class TomcatIntegrationTest extends TargetSystemTest {
                     .hasDescription("The number of active sessions.")
                     .hasUnit("{session}")
                     .isUpDownCounter()
-                    .hasDataPointsWithOneAttribute(attributeWithAnyValue("tomcat.web_app_context")))
+                    .hasDataPointsWithOneAttribute(attributeWithAnyValue("tomcat.context")))
         .add(
             "tomcat.thread.count",
             metric ->
