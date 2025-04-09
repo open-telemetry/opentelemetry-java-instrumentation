@@ -302,7 +302,7 @@ rules:
         unit: By
         metricAttribute:
           jvm.memory.pool.name	: param(name)
-          jvm.memory.type: lowercase(beanattr(type))
+          jvm.memory.type: lowercase(beanattr(Type))
 ```
 
 For now, only the `lowercase` transformation is supported, other additions might be added in the future if needed.
