@@ -6,20 +6,22 @@
 package io.opentelemetry.javaagent.bootstrap.nocode;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.api.trace.SpanKind;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public final class NocodeInstrumentationRules {
 
   public static final class Builder {
     private String className;
     private String methodName;
-    private String spanName;
-    private String spanKind;
-    private String spanStatus;
-    private final Map<String, String> attributes = new HashMap<>();
+    private NocodeExpression spanName;
+    private SpanKind spanKind;
+    private NocodeExpression spanStatus;
+    private final Map<String, NocodeExpression> attributes = new HashMap<>();
 
     @CanIgnoreReturnValue
     public Builder className(String className) {
@@ -34,25 +36,25 @@ public final class NocodeInstrumentationRules {
     }
 
     @CanIgnoreReturnValue
-    public Builder spanName(String spanName) {
+    public Builder spanName(NocodeExpression spanName) {
       this.spanName = spanName;
       return this;
     }
 
     @CanIgnoreReturnValue
-    public Builder spanKind(String spanKind) {
+    public Builder spanKind(SpanKind spanKind) {
       this.spanKind = spanKind;
       return this;
     }
 
     @CanIgnoreReturnValue
-    public Builder spanStatus(String spanStatus) {
+    public Builder spanStatus(NocodeExpression spanStatus) {
       this.spanStatus = spanStatus;
       return this;
     }
 
     @CanIgnoreReturnValue
-    public Builder attribute(String key, String valueExpression) {
+    public Builder attribute(String key, NocodeExpression valueExpression) {
       attributes.put(key, valueExpression);
       return this;
     }
@@ -63,20 +65,23 @@ public final class NocodeInstrumentationRules {
   }
 
   public static final class Rule {
+    private static final AtomicInteger counter = new AtomicInteger();
+
+    private final int id = counter.incrementAndGet();
     private final String className;
     private final String methodName;
-    private final String spanName; // may be null - use default of "class.method"
-    private final String spanKind; // matches the SpanKind enum, null means default to INTERNAL
-    private final String spanStatus; // may be null, should return string from StatusCodes
-    private final Map<String, String> attributes; // key name to jexl expression
+    private final NocodeExpression spanName; // may be null - use default of "class.method"
+    private final SpanKind spanKind; // may be null
+    private final NocodeExpression spanStatus; // may be null, should return string from StatusCodes
+    private final Map<String, NocodeExpression> attributes; // key name to jexl expression
 
     public Rule(
         String className,
         String methodName,
-        String spanName,
-        String spanKind,
-        String spanStatus,
-        Map<String, String> attributes) {
+        NocodeExpression spanName,
+        SpanKind spanKind,
+        NocodeExpression spanStatus,
+        Map<String, NocodeExpression> attributes) {
       this.className = className;
       this.methodName = methodName;
       this.spanName = spanName;
@@ -85,7 +90,11 @@ public final class NocodeInstrumentationRules {
       this.attributes = Collections.unmodifiableMap(new HashMap<>(attributes));
     }
 
-    public Map<String, String> getAttributes() {
+    public int getId() {
+      return id;
+    }
+
+    public Map<String, NocodeExpression> getAttributes() {
       return attributes;
     }
 
@@ -97,15 +106,15 @@ public final class NocodeInstrumentationRules {
       return methodName;
     }
 
-    public String getSpanName() {
+    public NocodeExpression getSpanName() {
       return spanName;
     }
 
-    public String getSpanKind() {
+    public SpanKind getSpanKind() {
       return spanKind;
     }
 
-    public String getSpanStatus() {
+    public NocodeExpression getSpanStatus() {
       return spanStatus;
     }
 
@@ -129,24 +138,22 @@ public final class NocodeInstrumentationRules {
   private NocodeInstrumentationRules() {}
 
   // FUTURE setting the global and lookup could go away if the instrumentation could be
-  // parameterized
-  // with the Rule
+  // parameterized with the Rule
 
-  // Using className.methodName as the key
-  private static final HashMap<String, Rule> name2Rule = new HashMap<>();
+  private static final HashMap<Integer, Rule> ruleMap = new HashMap<>();
 
   // Called by the NocodeInitializer
   public static void setGlobalRules(List<Rule> rules) {
     for (Rule r : rules) {
-      name2Rule.put(r.className + "." + r.methodName, r);
+      ruleMap.put(r.id, r);
     }
   }
 
   public static Iterable<Rule> getGlobalRules() {
-    return name2Rule.values();
+    return ruleMap.values();
   }
 
-  public static Rule find(String className, String methodName) {
-    return name2Rule.get(className + "." + methodName);
+  public static Rule find(int id) {
+    return ruleMap.get(id);
   }
 }

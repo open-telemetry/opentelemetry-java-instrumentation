@@ -10,11 +10,11 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.javaagent.bootstrap.nocode.NocodeExpression;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-public final class NocodeAttributesExtractor
-    implements AttributesExtractor<NocodeMethodInvocation, Object> {
+class NocodeAttributesExtractor implements AttributesExtractor<NocodeMethodInvocation, Object> {
   private final AttributesExtractor<ClassAndMethod, Object> codeExtractor;
 
   public NocodeAttributesExtractor() {
@@ -26,9 +26,9 @@ public final class NocodeAttributesExtractor
       AttributesBuilder attributesBuilder, Context context, NocodeMethodInvocation mi) {
     codeExtractor.onStart(attributesBuilder, context, mi.getClassAndMethod());
 
-    Map<String, String> attributes = mi.getRuleAttributes();
+    Map<String, NocodeExpression> attributes = mi.getRuleAttributes();
     for (String key : attributes.keySet()) {
-      String expression = attributes.get(key);
+      NocodeExpression expression = attributes.get(key);
       Object value = mi.evaluate(expression);
       if (value instanceof Long
           || value instanceof Integer

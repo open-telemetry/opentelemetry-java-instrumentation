@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.nocode;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
-public class NocodeSingletons {
+public final class NocodeSingletons {
   private static final Instrumenter<NocodeMethodInvocation, Object> INSTRUMENTER;
 
   static {

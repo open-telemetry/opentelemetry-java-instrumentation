@@ -17,8 +17,8 @@ sourceSets {
 dependencies {
   bootstrap(project(":instrumentation:nocode:bootstrap"))
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+  compileOnly(project(":instrumentation-annotations-support"))
   implementation(project(":sdk-autoconfigure-support"))
-  compileOnly(project(":javaagent-tooling"))
 
   compileOnly("org.snakeyaml:snakeyaml-engine:2.9")
 

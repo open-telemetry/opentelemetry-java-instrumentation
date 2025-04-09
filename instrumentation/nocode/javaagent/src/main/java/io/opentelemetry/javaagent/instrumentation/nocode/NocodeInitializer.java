@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.nocode;
 import static io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil.getConfig;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.nocode.NocodeEvaluation;
 import io.opentelemetry.javaagent.bootstrap.nocode.NocodeInstrumentationRules;
 import io.opentelemetry.javaagent.tooling.BeforeAgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -22,6 +21,5 @@ public class NocodeInitializer implements BeforeAgentListener {
     ConfigProperties config = getConfig(autoConfiguredOpenTelemetrySdk);
     NocodeRulesParser parser = new NocodeRulesParser(config);
     NocodeInstrumentationRules.setGlobalRules(parser.getInstrumentationRules());
-    NocodeEvaluation.internalSetEvaluator(new JexlEvaluator());
   }
 }

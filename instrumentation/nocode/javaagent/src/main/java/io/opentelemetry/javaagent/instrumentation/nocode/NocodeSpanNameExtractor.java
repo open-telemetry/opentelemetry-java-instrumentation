@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMetho
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.javaagent.bootstrap.nocode.NocodeInstrumentationRules;
 
-public class NocodeSpanNameExtractor implements SpanNameExtractor<NocodeMethodInvocation> {
+class NocodeSpanNameExtractor implements SpanNameExtractor<NocodeMethodInvocation> {
   private final SpanNameExtractor<ClassAndMethod> defaultNamer;
 
   public NocodeSpanNameExtractor() {
