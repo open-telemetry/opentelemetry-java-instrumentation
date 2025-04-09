@@ -12,8 +12,7 @@ import java.util.Locale;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
-public class NocodeSpanStatusExtractor
-    implements SpanStatusExtractor<NocodeMethodInvocation, Object> {
+class NocodeSpanStatusExtractor implements SpanStatusExtractor<NocodeMethodInvocation, Object> {
   private static final Logger logger = Logger.getLogger(NocodeSpanStatusExtractor.class.getName());
 
   @Override
@@ -24,10 +23,8 @@ public class NocodeSpanStatusExtractor
       @Nullable Throwable error) {
 
     if (mi.getRule() == null || mi.getRule().getSpanStatus() == null) {
-      // FUTURE would love to use a DefaultSpanStatusExtractor as a fallback but it is not public
-      // so here is a copy of its (admittedly simple) guts
       if (error != null) {
-        spanStatusBuilder.setStatus(StatusCode.ERROR);
+        SpanStatusExtractor.getDefault().extract(spanStatusBuilder, mi, returnValue, error);
       }
       return;
     }

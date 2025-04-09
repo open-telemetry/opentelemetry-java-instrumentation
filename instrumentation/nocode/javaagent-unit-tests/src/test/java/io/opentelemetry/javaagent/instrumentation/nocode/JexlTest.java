@@ -15,6 +15,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
+import org.apache.commons.jexl3.JexlExpression;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -34,9 +35,13 @@ class JexlTest {
 
   private JexlTest() {}
 
-  @SuppressWarnings("rawtypes")
   private static Object evalJexl(String jexl, Object thiz, Object[] params) {
-    return new JexlEvaluator().evaluate(jexl, thiz, params);
+    JexlEvaluator evaluator = new JexlEvaluator();
+    JexlExpression expression = evaluator.createExpression(jexl);
+    if (expression == null) {
+      return null;
+    }
+    return evaluator.evaluate(expression, thiz, params);
   }
 
   static Stream<Arguments> jexlToExpected() {
