@@ -63,6 +63,8 @@ import software.amazon.awssdk.services.bedrockruntime.model.ConverseStreamRespon
 import software.amazon.awssdk.services.bedrockruntime.model.InferenceConfiguration;
 import software.amazon.awssdk.services.bedrockruntime.model.InvokeModelRequest;
 import software.amazon.awssdk.services.bedrockruntime.model.InvokeModelResponse;
+import software.amazon.awssdk.services.bedrockruntime.model.InvokeModelWithResponseStreamRequest;
+import software.amazon.awssdk.services.bedrockruntime.model.InvokeModelWithResponseStreamResponseHandler;
 import software.amazon.awssdk.services.bedrockruntime.model.Message;
 import software.amazon.awssdk.services.bedrockruntime.model.Tool;
 import software.amazon.awssdk.services.bedrockruntime.model.ToolConfiguration;
@@ -1575,6 +1577,171 @@ public abstract class AbstractAws2BedrockRuntimeTest {
   }
 
   @Test
+  void testInvokeModelWithResponseStreamAmazonTitan()
+      throws InterruptedException, ExecutionException {
+    BedrockRuntimeAsyncClientBuilder builder = BedrockRuntimeAsyncClient.builder();
+    builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
+    configureClient(builder);
+    BedrockRuntimeAsyncClient client = configureBedrockRuntimeClient(builder.build());
+
+    String modelId = "amazon.titan-text-lite-v1";
+
+    Document requestPayload =
+        Document.mapBuilder()
+            // Long output string to trigger multiple chunks.
+            .putString("inputText", "List out every country in the world")
+            .putDocument(
+                "textGenerationConfig",
+                Document.mapBuilder()
+                    .putNumber("maxTokenCount", 100)
+                    .putNumber("temperature", 0.8f)
+                    .putNumber("topP", 1)
+                    .putList("stopSequences", singletonList(Document.fromString("|")))
+                    .build())
+            .build();
+
+    SdkJsonGenerator generator = new SdkJsonGenerator(new JsonFactory(), "application/json");
+    DocumentTypeJsonMarshaller marshaller = new DocumentTypeJsonMarshaller(generator);
+    requestPayload.accept(marshaller);
+
+    InvokeModelWithResponseStreamRequest request =
+        InvokeModelWithResponseStreamRequest.builder()
+            .modelId(modelId)
+            .body(SdkBytes.fromByteArray(generator.getBytes()))
+            .build();
+
+    StringBuilder text = new StringBuilder();
+
+    InvokeModelWithResponseStreamResponseHandler responseHandler =
+        InvokeModelWithResponseStreamResponseHandler.builder()
+            .subscriber(
+                InvokeModelWithResponseStreamResponseHandler.Visitor.builder()
+                    .onChunk(
+                        chunk -> {
+                          JsonNode node = JsonNode.parser().parse(chunk.bytes().asByteArray());
+                          DocumentUnmarshaller unmarshaller = new DocumentUnmarshaller();
+                          Document result = node.visit(unmarshaller);
+                          text.append(result.asMap().get("outputText").asString());
+                        })
+                    .build())
+            .build();
+
+    client.invokeModelWithResponseStream(request, responseHandler).get();
+
+    assertThat(text.toString()).contains("Here is the list of every country in the world");
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("text_completion amazon.titan-text-lite-v1")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfying(
+                                equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                                equalTo(
+                                    GEN_AI_OPERATION_NAME,
+                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
+                                        .TEXT_COMPLETION),
+                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_MAX_TOKENS, 100),
+                                satisfies(
+                                    GEN_AI_REQUEST_TEMPERATURE,
+                                    temp -> temp.isCloseTo(0.8, within(0.0001))),
+                                equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
+                                equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, asList("|")),
+                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 7),
+                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 100),
+                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("LENGTH")))));
+
+    getTesting()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            metric ->
+                metric
+                    .hasName("gen_ai.client.token.usage")
+                    .hasUnit("{token}")
+                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(7)
+                                        .hasCount(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                                            equalTo(
+                                                GEN_AI_TOKEN_TYPE,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiTokenTypeIncubatingValues.INPUT),
+                                            equalTo(
+                                                GEN_AI_OPERATION_NAME,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiOperationNameIncubatingValues
+                                                    .TEXT_COMPLETION),
+                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)),
+                                point ->
+                                    point
+                                        .hasSum(100)
+                                        .hasCount(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                                            equalTo(
+                                                GEN_AI_TOKEN_TYPE,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiTokenTypeIncubatingValues.COMPLETION),
+                                            equalTo(
+                                                GEN_AI_OPERATION_NAME,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiOperationNameIncubatingValues
+                                                    .TEXT_COMPLETION),
+                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
+            metric ->
+                metric
+                    .hasName("gen_ai.client.operation.duration")
+                    .hasUnit("s")
+                    .hasDescription("GenAI operation duration.")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                                            equalTo(
+                                                GEN_AI_OPERATION_NAME,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiOperationNameIncubatingValues
+                                                    .TEXT_COMPLETION),
+                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
+
+    SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
+
+    getTesting()
+        .waitAndAssertLogRecords(
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                        equalTo(EVENT_NAME, "gen_ai.user.message"))
+                    .hasSpanContext(spanCtx)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of(
+                                "content", Value.of("List out every country in the world")))),
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, AWS_BEDROCK), equalTo(EVENT_NAME, "gen_ai.choice"))
+                    .hasSpanContext(spanCtx)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of("finish_reason", Value.of("LENGTH")),
+                            KeyValue.of("index", Value.of(0)),
+                            KeyValue.of("content", Value.of(text.toString())))));
+  }
+
+  @Test
   void testInvokeModelAmazonNova() {
     BedrockRuntimeClientBuilder builder = BedrockRuntimeClient.builder();
     builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
@@ -1744,6 +1911,188 @@ public abstract class AbstractAws2BedrockRuntimeTest {
   }
 
   @Test
+  void testInvokeModelWithResponseStreamAmazonNova()
+      throws InterruptedException, ExecutionException {
+    BedrockRuntimeAsyncClientBuilder builder = BedrockRuntimeAsyncClient.builder();
+    builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
+    configureClient(builder);
+    BedrockRuntimeAsyncClient client = configureBedrockRuntimeClient(builder.build());
+
+    String modelId = "amazon.nova-micro-v1:0";
+
+    Document requestPayload =
+        Document.mapBuilder()
+            .putList(
+                "messages",
+                singletonList(
+                    Document.mapBuilder()
+                        .putString("role", "user")
+                        .putList(
+                            "content",
+                            singletonList(
+                                Document.mapBuilder()
+                                    // Long output string to trigger multiple chunks.
+                                    .putString("text", "List out every country in the world")
+                                    .build()))
+                        .build()))
+            .putDocument(
+                "inferenceConfig",
+                Document.mapBuilder()
+                    .putNumber("max_new_tokens", 100)
+                    .putNumber("temperature", 0.8f)
+                    .putNumber("topP", 1)
+                    .putList("stopSequences", singletonList(Document.fromString("|")))
+                    .build())
+            .build();
+
+    SdkJsonGenerator generator = new SdkJsonGenerator(new JsonFactory(), "application/json");
+    DocumentTypeJsonMarshaller marshaller = new DocumentTypeJsonMarshaller(generator);
+    requestPayload.accept(marshaller);
+
+    InvokeModelWithResponseStreamRequest request =
+        InvokeModelWithResponseStreamRequest.builder()
+            .modelId(modelId)
+            .body(SdkBytes.fromByteArray(generator.getBytes()))
+            .build();
+
+    StringBuilder text = new StringBuilder();
+
+    InvokeModelWithResponseStreamResponseHandler responseHandler =
+        InvokeModelWithResponseStreamResponseHandler.builder()
+            .subscriber(
+                InvokeModelWithResponseStreamResponseHandler.Visitor.builder()
+                    .onChunk(
+                        chunk -> {
+                          JsonNode node = JsonNode.parser().parse(chunk.bytes().asByteArray());
+                          DocumentUnmarshaller unmarshaller = new DocumentUnmarshaller();
+                          Document result = node.visit(unmarshaller);
+                          Document block = result.asMap().get("contentBlockDelta");
+                          if (block == null) {
+                            return;
+                          }
+                          Document delta = block.asMap().get("delta");
+                          if (delta == null) {
+                            return;
+                          }
+                          text.append(delta.asMap().get("text").asString());
+                        })
+                    .build())
+            .build();
+
+    client.invokeModelWithResponseStream(request, responseHandler).get();
+
+    assertThat(text.toString())
+        .contains("Listing every country in the world is a comprehensive task");
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("chat amazon.nova-micro-v1:0")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfying(
+                                equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                                equalTo(
+                                    GEN_AI_OPERATION_NAME,
+                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
+                                        .CHAT),
+                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_MAX_TOKENS, 100),
+                                satisfies(
+                                    GEN_AI_REQUEST_TEMPERATURE,
+                                    temp -> temp.isCloseTo(0.8, within(0.0001))),
+                                equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
+                                equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, asList("|")),
+                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 7),
+                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 100),
+                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("max_tokens")))));
+
+    getTesting()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            metric ->
+                metric
+                    .hasName("gen_ai.client.token.usage")
+                    .hasUnit("{token}")
+                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(7)
+                                        .hasCount(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                                            equalTo(
+                                                GEN_AI_TOKEN_TYPE,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiTokenTypeIncubatingValues.INPUT),
+                                            equalTo(
+                                                GEN_AI_OPERATION_NAME,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)),
+                                point ->
+                                    point
+                                        .hasSum(100)
+                                        .hasCount(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                                            equalTo(
+                                                GEN_AI_TOKEN_TYPE,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiTokenTypeIncubatingValues.COMPLETION),
+                                            equalTo(
+                                                GEN_AI_OPERATION_NAME,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
+            metric ->
+                metric
+                    .hasName("gen_ai.client.operation.duration")
+                    .hasUnit("s")
+                    .hasDescription("GenAI operation duration.")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                                            equalTo(
+                                                GEN_AI_OPERATION_NAME,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
+
+    SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
+
+    getTesting()
+        .waitAndAssertLogRecords(
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                        equalTo(EVENT_NAME, "gen_ai.user.message"))
+                    .hasSpanContext(spanCtx)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of(
+                                "content", Value.of("List out every country in the world")))),
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, AWS_BEDROCK), equalTo(EVENT_NAME, "gen_ai.choice"))
+                    .hasSpanContext(spanCtx)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of("finish_reason", Value.of("max_tokens")),
+                            KeyValue.of("index", Value.of(0)),
+                            KeyValue.of("content", Value.of(text.toString())))));
+  }
+
+  @Test
   void testInvokeModelAnthropicClaude() {
     BedrockRuntimeClientBuilder builder = BedrockRuntimeClient.builder();
     builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
@@ -1896,5 +2245,180 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                             KeyValue.of("index", Value.of(0)),
                             KeyValue.of(
                                 "content", Value.of("Okay, I just said \"This is a test")))));
+  }
+
+  @Test
+  void testInvokeModelWithResponseStreamAnthropicClaude()
+      throws InterruptedException, ExecutionException {
+    BedrockRuntimeAsyncClientBuilder builder = BedrockRuntimeAsyncClient.builder();
+    builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
+    configureClient(builder);
+    BedrockRuntimeAsyncClient client = configureBedrockRuntimeClient(builder.build());
+
+    String modelId = "anthropic.claude-v2";
+
+    Document requestPayload =
+        Document.mapBuilder()
+            .putList(
+                "messages",
+                singletonList(
+                    Document.mapBuilder()
+                        .putString("role", "user")
+                        .putList(
+                            "content",
+                            singletonList(
+                                Document.mapBuilder()
+                                    // Long output string to trigger multiple chunks.
+                                    .putString("text", "List out every country in the world")
+                                    .putString("type", "text")
+                                    .build()))
+                        .build()))
+            .putString("anthropic_version", "bedrock-2023-05-31")
+            .putNumber("max_tokens", 10)
+            .putNumber("temperature", 0.8f)
+            .putNumber("top_p", 1)
+            .putList("stop_sequences", singletonList(Document.fromString("|")))
+            .build();
+
+    SdkJsonGenerator generator = new SdkJsonGenerator(new JsonFactory(), "application/json");
+    DocumentTypeJsonMarshaller marshaller = new DocumentTypeJsonMarshaller(generator);
+    requestPayload.accept(marshaller);
+
+    InvokeModelWithResponseStreamRequest request =
+        InvokeModelWithResponseStreamRequest.builder()
+            .modelId(modelId)
+            .body(SdkBytes.fromByteArray(generator.getBytes()))
+            .build();
+
+    StringBuilder text = new StringBuilder();
+
+    InvokeModelWithResponseStreamResponseHandler responseHandler =
+        InvokeModelWithResponseStreamResponseHandler.builder()
+            .subscriber(
+                InvokeModelWithResponseStreamResponseHandler.Visitor.builder()
+                    .onChunk(
+                        chunk -> {
+                          JsonNode node = JsonNode.parser().parse(chunk.bytes().asByteArray());
+                          DocumentUnmarshaller unmarshaller = new DocumentUnmarshaller();
+                          Document result = node.visit(unmarshaller);
+                          Document delta = result.asMap().get("delta");
+                          if (delta == null) {
+                            return;
+                          }
+                          text.append(delta.asMap().get("text").asString());
+                        })
+                    .build())
+            .build();
+
+    client.invokeModelWithResponseStream(request, responseHandler).get();
+
+    assertThat(text.toString()).contains("Unfortunately I do not have a complete list of every");
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("chat anthropic.claude-v2")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfying(
+                                equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                                equalTo(
+                                    GEN_AI_OPERATION_NAME,
+                                    GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues
+                                        .CHAT),
+                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_MAX_TOKENS, 10),
+                                satisfies(
+                                    GEN_AI_REQUEST_TEMPERATURE,
+                                    temp -> temp.isCloseTo(0.8, within(0.0001))),
+                                equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
+                                equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, asList("|")),
+                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 16),
+                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 10),
+                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("max_tokens")))));
+
+    getTesting()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            metric ->
+                metric
+                    .hasName("gen_ai.client.token.usage")
+                    .hasUnit("{token}")
+                    .hasDescription("Measures number of input and output tokens used.")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(16)
+                                        .hasCount(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                                            equalTo(
+                                                GEN_AI_TOKEN_TYPE,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiTokenTypeIncubatingValues.INPUT),
+                                            equalTo(
+                                                GEN_AI_OPERATION_NAME,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)),
+                                point ->
+                                    point
+                                        .hasSum(10)
+                                        .hasCount(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                                            equalTo(
+                                                GEN_AI_TOKEN_TYPE,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiTokenTypeIncubatingValues.COMPLETION),
+                                            equalTo(
+                                                GEN_AI_OPERATION_NAME,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
+            metric ->
+                metric
+                    .hasName("gen_ai.client.operation.duration")
+                    .hasUnit("s")
+                    .hasDescription("GenAI operation duration.")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                                            equalTo(
+                                                GEN_AI_OPERATION_NAME,
+                                                GenAiIncubatingAttributes
+                                                    .GenAiOperationNameIncubatingValues.CHAT),
+                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
+
+    SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
+
+    getTesting()
+        .waitAndAssertLogRecords(
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, AWS_BEDROCK),
+                        equalTo(EVENT_NAME, "gen_ai.user.message"))
+                    .hasSpanContext(spanCtx)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of(
+                                "content", Value.of("List out every country in the world")))),
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, AWS_BEDROCK), equalTo(EVENT_NAME, "gen_ai.choice"))
+                    .hasSpanContext(spanCtx)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of("finish_reason", Value.of("max_tokens")),
+                            KeyValue.of("index", Value.of(0)),
+                            KeyValue.of("content", Value.of(text.toString())))));
   }
 }
