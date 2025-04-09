@@ -9,6 +9,5 @@ dependencies {
 
   implementation(project(":instrumentation-annotations"))
   implementation("io.opentelemetry:opentelemetry-extension-annotations")
-  implementation("com.google.guava:guava")
   implementation("io.opentelemetry:opentelemetry-api")
 }
