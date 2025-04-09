@@ -25,9 +25,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.StringMatcher;
@@ -181,7 +183,9 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
         new TypeTransformer() {
           @Override
           public void applyAdviceToMethod(
-              ElementMatcher<? super MethodDescription> methodMatcher, String adviceClassName) {
+              ElementMatcher<? super MethodDescription> methodMatcher,
+              Function<Advice.WithCustomMapping, Advice.WithCustomMapping> mappingCustomizer,
+              String adviceClassName) {
             adviceNames.add(adviceClassName);
           }
 
