@@ -54,7 +54,6 @@ dependencies {
   compileOnly("ch.qos.logback:logback-classic:1.0.0")
   implementation(project(":instrumentation:jdbc:library"))
   implementation(project(":instrumentation:runtime-telemetry:runtime-telemetry-java8:library"))
-  implementation(project(":instrumentation:runtime-telemetry:runtime-telemetry-java17:library"))
 
   library("org.springframework.kafka:spring-kafka:2.9.0")
   library("org.springframework.boot:spring-boot-starter-actuator:$springBootVersion")
@@ -99,6 +98,7 @@ dependencies {
 
   // needed for the Spring Boot 3 support
   implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
+  compileOnly(project(":instrumentation:runtime-telemetry:runtime-telemetry-java17:library"))
 
   // give access to common classes, e.g. InstrumentationConfigUtil
   add("javaSpring3CompileOnly", files(sourceSets.main.get().output.classesDirs))
