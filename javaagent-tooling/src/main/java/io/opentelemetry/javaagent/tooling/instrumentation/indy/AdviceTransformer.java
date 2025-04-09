@@ -154,12 +154,14 @@ class AdviceTransformer {
     if (source.visibleParameterAnnotations != null) {
       int i = 0;
       for (List<AnnotationNode> list : source.visibleParameterAnnotations) {
-        for (AnnotationNode annotationNode : list) {
-          Type annotationType = Type.getType(annotationNode.desc);
-          if (ADVICE_ARGUMENT.equals(annotationType) && isWriteable(annotationNode)) {
-            Object value = getAnnotationValue(annotationNode);
-            if (value instanceof Integer) {
-              result.add(new OutputArgument(i, (Integer) value));
+        if (list != null) {
+          for (AnnotationNode annotationNode : list) {
+            Type annotationType = Type.getType(annotationNode.desc);
+            if (ADVICE_ARGUMENT.equals(annotationType) && isWriteable(annotationNode)) {
+              Object value = getAnnotationValue(annotationNode);
+              if (value instanceof Integer) {
+                result.add(new OutputArgument(i, (Integer) value));
+              }
             }
           }
         }
@@ -177,10 +179,12 @@ class AdviceTransformer {
     if (source.visibleParameterAnnotations != null) {
       int i = 0;
       for (List<AnnotationNode> list : source.visibleParameterAnnotations) {
-        for (AnnotationNode annotationNode : list) {
-          Type annotationType = Type.getType(annotationNode.desc);
-          if (ADVICE_RETURN.equals(annotationType) && isWriteable(annotationNode)) {
-            return new OutputArgument(i, -1);
+        if (list != null) {
+          for (AnnotationNode annotationNode : list) {
+            Type annotationType = Type.getType(annotationNode.desc);
+            if (ADVICE_RETURN.equals(annotationType) && isWriteable(annotationNode)) {
+              return new OutputArgument(i, -1);
+            }
           }
         }
         i++;
@@ -198,11 +202,13 @@ class AdviceTransformer {
     if (source.visibleParameterAnnotations != null) {
       int i = 0;
       for (List<AnnotationNode> list : source.visibleParameterAnnotations) {
-        for (AnnotationNode annotationNode : list) {
-          Type annotationType = Type.getType(annotationNode.desc);
-          if (ADVICE_ENTER.equals(annotationType)
-              && argumentTypes[i].getDescriptor().length() > 1) {
-            return new OutputArgument(i, -1);
+        if (list != null) {
+          for (AnnotationNode annotationNode : list) {
+            Type annotationType = Type.getType(annotationNode.desc);
+            if (ADVICE_ENTER.equals(annotationType)
+                && argumentTypes[i].getDescriptor().length() > 1) {
+              return new OutputArgument(i, -1);
+            }
           }
         }
         i++;
@@ -220,12 +226,14 @@ class AdviceTransformer {
     if (source.visibleParameterAnnotations != null) {
       int i = 0;
       for (List<AnnotationNode> list : source.visibleParameterAnnotations) {
-        for (AnnotationNode annotationNode : list) {
-          Type annotationType = Type.getType(annotationNode.desc);
-          if (ADVICE_LOCAL.equals(annotationType)) {
-            Object value = getAnnotationValue(annotationNode);
-            if (value instanceof String) {
-              result.add(new AdviceLocal(i, (String) value));
+        if (list != null) {
+          for (AnnotationNode annotationNode : list) {
+            Type annotationType = Type.getType(annotationNode.desc);
+            if (ADVICE_LOCAL.equals(annotationType)) {
+              Object value = getAnnotationValue(annotationNode);
+              if (value instanceof String) {
+                result.add(new AdviceLocal(i, (String) value));
+              }
             }
           }
         }
