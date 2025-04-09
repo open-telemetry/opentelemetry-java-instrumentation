@@ -12,6 +12,7 @@ import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcSingletons.sta
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
@@ -52,7 +53,7 @@ public class StatementInstrumentation implements TypeInstrumentation {
         named("clearBatch").and(isPublic()),
         StatementInstrumentation.class.getName() + "$ClearBatchAdvice");
     transformer.applyAdviceToMethod(
-        named("executeBatch").and(takesNoArguments()).and(isPublic()),
+        namedOneOf("executeBatch", "executeLargeBatch").and(takesNoArguments()).and(isPublic()),
         StatementInstrumentation.class.getName() + "$ExecuteBatchAdvice");
   }
 
