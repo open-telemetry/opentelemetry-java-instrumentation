@@ -23,6 +23,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SE
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -45,7 +46,6 @@ import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.rds.AmazonRDSClient;
 import com.amazonaws.services.rds.model.DeleteOptionGroupRequest;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -137,7 +137,7 @@ class Aws0ClientTest {
             "PUT",
             1,
             (Function<AmazonS3Client, Object>) c -> c.createBucket("testbucket"),
-            ImmutableMap.of("aws.bucket.name", "testbucket"),
+            singletonMap("aws.bucket.name", "testbucket"),
             ""),
         Arguments.of(
             new AmazonS3Client().withEndpoint(server.httpUri().toString()),
@@ -146,7 +146,7 @@ class Aws0ClientTest {
             "GET",
             1,
             (Function<AmazonS3Client, Object>) c -> c.getObject("someBucket", "someKey"),
-            ImmutableMap.of("aws.bucket.name", "someBucket"),
+            singletonMap("aws.bucket.name", "someBucket"),
             ""),
         Arguments.of(
             new AmazonEC2Client().withEndpoint(server.httpUri().toString()),

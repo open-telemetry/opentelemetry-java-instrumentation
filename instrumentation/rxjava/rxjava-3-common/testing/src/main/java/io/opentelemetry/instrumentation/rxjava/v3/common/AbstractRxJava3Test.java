@@ -7,9 +7,9 @@ package io.opentelemetry.instrumentation.rxjava.v3.common;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.attributeEntry;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.google.common.primitives.Ints;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -173,8 +173,7 @@ public abstract class AbstractRxJava3Test {
   public void basicFlowable() {
     Iterable<Integer> result =
         createParentSpan(
-            () ->
-                Flowable.fromIterable(Ints.asList(5, 6)).map(this::addOne).toList().blockingGet());
+            () -> Flowable.fromIterable(asList(5, 6)).map(this::addOne).toList().blockingGet());
     assertThat(result).contains(6, 7);
     testing()
         .waitAndAssertTraces(
@@ -196,7 +195,7 @@ public abstract class AbstractRxJava3Test {
     List<Integer> result =
         createParentSpan(
             () ->
-                Flowable.fromIterable(Ints.asList(6, 7))
+                Flowable.fromIterable(asList(6, 7))
                     .map(this::addOne)
                     .map(this::addOne)
                     .toList()
@@ -230,7 +229,7 @@ public abstract class AbstractRxJava3Test {
     List<Integer> result =
         createParentSpan(
             () ->
-                Flowable.fromIterable(Ints.asList(7, 8))
+                Flowable.fromIterable(asList(7, 8))
                     .delay(100, TimeUnit.MILLISECONDS)
                     .map(this::addOne)
                     .toList()
@@ -256,7 +255,7 @@ public abstract class AbstractRxJava3Test {
     List<Integer> result =
         createParentSpan(
             () ->
-                Flowable.fromIterable(Ints.asList(8, 9))
+                Flowable.fromIterable(asList(8, 9))
                     .delay(100, TimeUnit.MILLISECONDS)
                     .map(this::addOne)
                     .delay(100, TimeUnit.MILLISECONDS)
@@ -477,7 +476,7 @@ public abstract class AbstractRxJava3Test {
             () ->
                 createParentSpan(
                     () ->
-                        Flowable.fromIterable(Ints.asList(5, 6))
+                        Flowable.fromIterable(asList(5, 6))
                             .map(this::addOne)
                             .map(
                                 i -> {
@@ -513,7 +512,7 @@ public abstract class AbstractRxJava3Test {
   public void basicFlowableCancel() {
     createParentSpan(
         () ->
-            Flowable.fromIterable(Ints.asList(5, 6))
+            Flowable.fromIterable(asList(5, 6))
                 .map(this::addOne)
                 .subscribe(CancellingSubscriber.INSTANCE));
     testing()
@@ -597,7 +596,7 @@ public abstract class AbstractRxJava3Test {
   public void basicFlowableChain() {
     createParentSpan(
         () ->
-            Flowable.fromIterable(Ints.asList(5, 6))
+            Flowable.fromIterable(asList(5, 6))
                 .map(this::addOne)
                 .map(this::addOne)
                 .concatWith(Maybe.just(1).map(this::addOne))
@@ -685,8 +684,7 @@ public abstract class AbstractRxJava3Test {
     List<Integer> result =
         createParentSpan(
             () -> {
-              Flowable<Integer> flowable =
-                  Flowable.fromIterable(Ints.asList(1, 2)).map(this::addOne);
+              Flowable<Integer> flowable = Flowable.fromIterable(asList(1, 2)).map(this::addOne);
               return testing()
                   .runWithSpan("intermediate", () -> flowable.map(this::addTwo))
                   .toList()
@@ -789,7 +787,7 @@ public abstract class AbstractRxJava3Test {
             .runWithSpan(
                 "flowable root",
                 () -> {
-                  return Flowable.fromIterable(Ints.asList(1, 2, 3, 4))
+                  return Flowable.fromIterable(asList(1, 2, 3, 4))
                       .parallel()
                       .runOn(scheduler)
                       .flatMap(num -> Maybe.just(num).map(this::addOne).toFlowable())
