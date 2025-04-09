@@ -13,6 +13,7 @@ dependencies {
 
   if (findProperty("testLatestDeps") as Boolean) {
     testCompileOnly("biz.aQute.bnd:biz.aQute.bnd.annotation:7.0.0")
+    testCompileOnly("com.google.errorprone:error_prone_annotations")
   }
 }
 
