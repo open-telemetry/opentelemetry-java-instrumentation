@@ -33,6 +33,6 @@ subprojects {
     // relying on predictable ordering of subprojects
     // (see https://docs.gradle.org/current/dsl/org.gradle.api.Project.html#N14CB4)
     // since we are splitting these muzzleX tasks across different github action jobs
-    instrumentationProjectMuzzle[counter++ % 4].dependsOn(subProj.tasks.named("muzzle"))
+    instrumentationProjectMuzzle[counter++ % 4].get().dependsOn(subProj.tasks.named("muzzle"))
   }
 }
