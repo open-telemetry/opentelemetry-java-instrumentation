@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.docs.internal;
 
 import java.util.Objects;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -14,18 +15,14 @@ import javax.annotation.Nullable;
  */
 public class InstrumentationMetaData {
   @Nullable private String description;
-  @Nullable private Boolean isLibraryInstrumentation;
   @Nullable private Boolean disabledByDefault;
+  private String classification;
 
   public InstrumentationMetaData() {}
 
-  public InstrumentationMetaData(String description) {
-    this.description = description;
-  }
-
   public InstrumentationMetaData(
-      String description, Boolean isLibraryInstrumentation, Boolean disabledByDefault) {
-    this.isLibraryInstrumentation = isLibraryInstrumentation;
+      String description, String classification, Boolean disabledByDefault) {
+    this.classification = classification;
     this.disabledByDefault = disabledByDefault;
     this.description = description;
   }
@@ -35,8 +32,11 @@ public class InstrumentationMetaData {
     return description;
   }
 
-  public Boolean getIsLibraryInstrumentation() {
-    return Objects.requireNonNullElse(isLibraryInstrumentation, true);
+  @Nonnull
+  public InstrumentationClassification getClassification() {
+    return Objects.requireNonNullElse(
+        InstrumentationClassification.fromString(classification),
+        InstrumentationClassification.LIBRARY);
   }
 
   public Boolean getDisabledByDefault() {
@@ -47,8 +47,8 @@ public class InstrumentationMetaData {
     this.description = description;
   }
 
-  public void setIsLibraryInstrumentation(@Nullable Boolean libraryInstrumentation) {
-    isLibraryInstrumentation = libraryInstrumentation;
+  public void setClassification(@Nullable String classification) {
+    this.classification = classification;
   }
 
   public void setDisabledByDefault(@Nullable Boolean disabledByDefault) {
