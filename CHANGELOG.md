@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Version 2.15.0 (2025-04-10)
 
 ### 📈 Enhancements
 
