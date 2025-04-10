@@ -32,8 +32,8 @@ class InstrumenterContextTest {
   @Test
   void testSqlSanitizer() {
     String testQuery = "SELECT name FROM test WHERE id = 1";
-    SqlClientAttributesGetter<Object> getter =
-        new SqlClientAttributesGetter<Object>() {
+    SqlClientAttributesGetter<Object, Void> getter =
+        new SqlClientAttributesGetter<Object, Void>() {
 
           @Override
           public Collection<String> getRawQueryTexts(Object request) {
