@@ -94,6 +94,7 @@ settings](https://github.com/open-telemetry/community/blob/main/docs/how-to-conf
     - `renovate/**/*`
     - `otelbot/**/*`
     - `revert-*/**/*` (these are created when using the GitHub UI to revert a PR)
+    - `opentelemetrybot/**/*`
 - Restrict creations: CHECKED
 
 ### Restrict updating tags
