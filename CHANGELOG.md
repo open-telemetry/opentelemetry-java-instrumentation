@@ -2,6 +2,56 @@
 
 ## Unreleased
 
+### 📈 Enhancements
+
+- Delete deprecated java http client classes
+  ([#13527](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13527))
+- Support latest version of kafka client library
+  ([#13544](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13544))
+- Implement genai events for bedrock (streaming)
+  ([#13507](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13507))
+- JMX metrics support unit conversion
+  ([#13448](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13448))
+- Rename experimental method, use Telemetry instead of Metrics
+  ([#13574](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13574))
+- End metric description with dot
+  ([#13559](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13559))
+- Add initial gen_ai instrumentation of bedrock InvokeModel
+  ([#13547](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13547))
+- Delete deprecated library instrumentation methods
+  ([#13575](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13575))
+- Add experimental http client url.template attribute
+  ([#13581](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13581))
+- Add `error.type` for JDBC under `otel.semconv-stability.opt-in` flag
+  ([#13331](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13331))
+- Add azure resource provider
+  ([#13627](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13627))
+- Remove `aws.endpoint` attribute from SQS instrumentation
+  ([#13620](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13620))
+- Avoid conflicts with user-defined Apache Dubbo filters with default order
+  ([#13625](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13625))
+- Support filtering negative values from JMX metrics
+  ([#13589](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13589))
+- Instrument bedrock InvokeModelWithResponseStream
+  ([#13607](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13607))
+- Use context instead of request attributes for servlet async instrumentation
+  ([#13493](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13493))
+- Improve handling of quoted table names
+  ([#13612](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13612))
+
+### 🛠️ Bug fixes
+
+- Fix aws timeseries requests misdetected as dynamodb
+  ([#13579](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13579))
+- Fix pekko route naming
+  ([#13491](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13491))
+- Fix route handling when local root span wasn't created by instrumentation api
+  ([#13588](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13588))
+- The `HostIdResourceProvider` should instantiate an `HostIdResource`, not an `HostResource`
+  ([#13628](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13628))
+- Fix OpenTelemetryPreparedStatement and the returned ResultSet.getStatement() do not match
+  ([#13646](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13646))
+
 ## Version 2.14.0 (2025-03-13)
 
 ### Migration notes
