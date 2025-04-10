@@ -11,7 +11,7 @@ dependencies {
   testImplementation("io.github.netmikey.logunit:logunit-jul:1.1.3")
 }
 
-tasks.create("generateDocs", JavaExec::class) {
+tasks.register("generateDocs", JavaExec::class) {
   group = "build"
   description = "Generate table for README.md"
   classpath = sourceSets.test.get().runtimeClasspath
