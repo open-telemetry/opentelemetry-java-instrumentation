@@ -18,9 +18,9 @@ request:
 response:
   status: 200
   body: "{\"id\":\"85f3632c-7c94-4abe-b162-9cde2c3d934c\",\"generations\":
-  [{\"id\":\"57637583-570e-4f5e-96f1-ec928af797c9\",
-  \"text\":\"I would be more than happy to assist you with\",\"finish_reason\":\"MAX_TOKENS\"}],
-  \"prompt\":\"Say this is a test\"}"
+    [{\"id\":\"57637583-570e-4f5e-96f1-ec928af797c9\",
+    \"text\":\"I would be more than happy to assist you with\",\"finish_reason\":\"MAX_TOKENS\"}],
+    \"prompt\":\"Say this is a test\"}"
   headers:
     Date: "Wed, 19 Mar 2025 05:44:06 GMT"
     Content-Type: application/json

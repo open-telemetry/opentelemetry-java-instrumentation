@@ -17,7 +17,7 @@ request:
 response:
   status: 200
   body: "{\"generation\":\"\\n\\nThis is a test\",\"prompt_token_count\":5,
-  \"generation_token_count\":10,\"stop_reason\":\"max_tokens\"}"
+    \"generation_token_count\":10,\"stop_reason\":\"max_tokens\"}"
   headers:
     Date: "Wed, 19 Mar 2025 05:44:06 GMT"
     Content-Type: application/json

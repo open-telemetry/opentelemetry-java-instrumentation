@@ -18,9 +18,9 @@ request:
 response:
   status: 200
   body: "{\"response_id\":\"379ed018/a23f0c4a-6922-49f2-8ffe-9135b5f1eb9d\",\"text\":\"This is a
-  test. How\\u0027s it going?\",\"generation_id\":\"d50288c6-62d0-4f22-9fc5-ce026d675f00\",
-  \"chat_history\":[{\"role\":\"USER\",\"message\":\"Say this is a test\"},{\"role\":\"CHATBOT\",
-  \"message\":\"This is a test. How\\u0027s it going?\"}],\"finish_reason\":\"MAX_TOKENS\"}"
+    test. How\\u0027s it going?\",\"generation_id\":\"d50288c6-62d0-4f22-9fc5-ce026d675f00\",
+    \"chat_history\":[{\"role\":\"USER\",\"message\":\"Say this is a test\"},{\"role\":\"CHATBOT\",
+    \"message\":\"This is a test. How\\u0027s it going?\"}],\"finish_reason\":\"MAX_TOKENS\"}"
   headers:
     Date: "Wed, 19 Mar 2025 05:44:06 GMT"
     Content-Type: application/json
