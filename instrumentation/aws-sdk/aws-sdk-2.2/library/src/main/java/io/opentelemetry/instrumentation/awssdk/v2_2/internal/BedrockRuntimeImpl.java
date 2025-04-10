@@ -540,8 +540,29 @@ public final class BedrockRuntimeImpl {
       count = usage.asMap().get("input_tokens");
     } else if (modelId.startsWith("meta.llama")) {
       count = body.asMap().get("prompt_token_count");
+    } else if (modelId.startsWith("cohere.command-r")) {
+      // approximate input tokens based on prompt length
+      Document requestBody = executionAttributes.getAttribute(INVOKE_MODEL_REQUEST_BODY);
+      if (requestBody == null || !requestBody.isMap()) {
+        return null;
+      }
+      String prompt = requestBody.asMap().get("message").asString();
+      if (prompt == null) {
+        return null;
+      }
+      count = Document.fromNumber(Math.ceil(prompt.length() / 6.0));
+    } else if (modelId.startsWith("cohere.command") || modelId.startsWith("mistral.mistral")) {
+      // approximate input tokens based on prompt length
+      Document requestBody = executionAttributes.getAttribute(INVOKE_MODEL_REQUEST_BODY);
+      if (requestBody == null || !requestBody.isMap()) {
+        return null;
+      }
+      String prompt = requestBody.asMap().get("prompt").asString();
+      if (prompt == null) {
+        return null;
+      }
+      count = Document.fromNumber(Math.ceil(prompt.length() / 6.0));
     }
-    // cohere and mistral model responses do not have input token count
     if (count != null && count.isNumber()) {
       return count.asNumber().longValue();
     }
@@ -613,8 +634,41 @@ public final class BedrockRuntimeImpl {
       count = usage.asMap().get("output_tokens");
     } else if (modelId.startsWith("meta.llama")) {
       count = body.asMap().get("generation_token_count");
+    } else if (modelId.startsWith("cohere.command-r")) {
+      Document text = body.asMap().get("text");
+      if (text == null || !text.isString()) {
+        return null;
+      }
+      count = Document.fromNumber(Math.ceil(text.asString().length() / 6.0));
+    } else if (modelId.startsWith("cohere.command")) {
+      Document generations = body.asMap().get("generations");
+      if (generations == null || !generations.isList()) {
+        return null;
+      }
+      long outputLength = 0;
+      for (Document generation : generations.asList()) {
+        Document text = generation.asMap().get("text");
+        if (text == null || !text.isString()) {
+          continue;
+        }
+        outputLength += text.asString().length();
+      }
+      count = Document.fromNumber(Math.ceil(outputLength / 6.0));
+    } else if (modelId.startsWith("mistral.mistral")) {
+      Document outputs = body.asMap().get("outputs");
+      if (outputs == null || !outputs.isList()) {
+        return null;
+      }
+      long outputLength = 0;
+      for (Document output : outputs.asList()) {
+        Document text = output.asMap().get("text");
+        if (text == null || !text.isString()) {
+          continue;
+        }
+        outputLength += text.asString().length();
+      }
+      count = Document.fromNumber(Math.ceil(outputLength / 6.0));
     }
-    // cohere and mistral model responses do not have output token count
     if (count != null && count.isNumber()) {
       return count.asNumber().longValue();
     }

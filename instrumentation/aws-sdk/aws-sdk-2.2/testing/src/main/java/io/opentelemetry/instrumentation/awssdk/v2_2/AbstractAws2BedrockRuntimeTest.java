@@ -2010,6 +2010,9 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                     GEN_AI_REQUEST_TEMPERATURE,
                                     temp -> temp.isCloseTo(0.8, within(0.0001))),
                                 equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
+                                equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, asList("|")),
+                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 3),
+                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 6),
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("MAX_TOKENS")))));
   }
 
@@ -2045,7 +2048,15 @@ public abstract class AbstractAws2BedrockRuntimeTest {
 
     JsonNode node = JsonNode.parser().parse(response.body().asByteArray());
     Document responsePayload = node.visit(new DocumentUnmarshaller());
-    assertThat(responsePayload.asMap().get("generations").asList().get(0).asMap().get("text").asString())
+    assertThat(
+            responsePayload
+                .asMap()
+                .get("generations")
+                .asList()
+                .get(0)
+                .asMap()
+                .get("text")
+                .asString())
         .isEqualTo("I would be more than happy to assist you with");
 
     getTesting()
@@ -2067,6 +2078,9 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                     GEN_AI_REQUEST_TEMPERATURE,
                                     temp -> temp.isCloseTo(0.8, within(0.0001))),
                                 equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
+                                equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, asList("|")),
+                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 3),
+                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 8),
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("MAX_TOKENS")))));
   }
 
@@ -2102,7 +2116,8 @@ public abstract class AbstractAws2BedrockRuntimeTest {
 
     JsonNode node = JsonNode.parser().parse(response.body().asByteArray());
     Document responsePayload = node.visit(new DocumentUnmarshaller());
-    assertThat(responsePayload.asMap().get("outputs").asList().get(0).asMap().get("text").asString())
+    assertThat(
+            responsePayload.asMap().get("outputs").asList().get(0).asMap().get("text").asString())
         .isEqualTo(", say it just a test...\n");
 
     getTesting()
@@ -2124,6 +2139,9 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                     GEN_AI_REQUEST_TEMPERATURE,
                                     temp -> temp.isCloseTo(0.8, within(0.0001))),
                                 equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
+                                equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, asList("|")),
+                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 3),
+                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 4),
                                 equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("length")))));
   }
 }
