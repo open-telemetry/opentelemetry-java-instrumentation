@@ -98,6 +98,11 @@ public final class BedrockRuntimeImpl {
   private static final JsonNodeParser JSON_PARSER = JsonNode.parser();
   private static final DocumentUnmarshaller DOCUMENT_UNMARSHALLER = new DocumentUnmarshaller();
 
+  // used to approximate input/output token count for Cohere and Mistral AI models,
+  // which don't provide these values in the response body.
+  // https://docs.aws.amazon.com/bedrock/latest/userguide/model-customization-prepare.html
+  private static final Double CHARS_PER_TOKEN = 6.0;
+
   static boolean isBedrockRuntimeRequest(SdkRequest request) {
     if (request instanceof ConverseRequest) {
       return true;
@@ -590,7 +595,7 @@ public final class BedrockRuntimeImpl {
       if (prompt == null) {
         return null;
       }
-      count = Document.fromNumber(Math.ceil(prompt.length() / 6.0));
+      count = Document.fromNumber(Math.ceil(prompt.length() / CHARS_PER_TOKEN));
     } else if (modelId.startsWith("cohere.command") || modelId.startsWith("mistral.mistral")) {
       // approximate input tokens based on prompt length
       Document requestBody = executionAttributes.getAttribute(INVOKE_MODEL_REQUEST_BODY);
@@ -601,7 +606,7 @@ public final class BedrockRuntimeImpl {
       if (prompt == null) {
         return null;
       }
-      count = Document.fromNumber(Math.ceil(prompt.length() / 6.0));
+      count = Document.fromNumber(Math.ceil(prompt.length() / CHARS_PER_TOKEN));
     }
     if (count != null && count.isNumber()) {
       return count.asNumber().longValue();
@@ -679,7 +684,7 @@ public final class BedrockRuntimeImpl {
       if (text == null || !text.isString()) {
         return null;
       }
-      count = Document.fromNumber(Math.ceil(text.asString().length() / 6.0));
+      count = Document.fromNumber(Math.ceil(text.asString().length() / CHARS_PER_TOKEN));
     } else if (modelId.startsWith("cohere.command")) {
       Document generations = body.asMap().get("generations");
       if (generations == null || !generations.isList()) {
@@ -693,7 +698,7 @@ public final class BedrockRuntimeImpl {
         }
         outputLength += text.asString().length();
       }
-      count = Document.fromNumber(Math.ceil(outputLength / 6.0));
+      count = Document.fromNumber(Math.ceil(outputLength / CHARS_PER_TOKEN));
     } else if (modelId.startsWith("mistral.mistral")) {
       Document outputs = body.asMap().get("outputs");
       if (outputs == null || !outputs.isList()) {
@@ -707,7 +712,7 @@ public final class BedrockRuntimeImpl {
         }
         outputLength += text.asString().length();
       }
-      count = Document.fromNumber(Math.ceil(outputLength / 6.0));
+      count = Document.fromNumber(Math.ceil(outputLength / CHARS_PER_TOKEN));
     }
     if (count != null && count.isNumber()) {
       return count.asNumber().longValue();
