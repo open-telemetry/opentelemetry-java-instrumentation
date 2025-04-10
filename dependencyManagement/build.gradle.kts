@@ -5,7 +5,7 @@ plugins {
 data class DependencySet(val group: String, val version: String, val modules: List<String>)
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.48.0"
+val otelSdkVersion = "1.49.0"
 val otelContribVersion = "1.45.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
@@ -29,7 +29,7 @@ val DEPENDENCY_BOMS = listOf(
 
   "com.fasterxml.jackson:jackson-bom:2.18.3",
   "com.squareup.okio:okio-bom:3.10.2", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
-  "com.google.guava:guava-bom:33.4.6-jre",
+  "com.google.guava:guava-bom:33.4.7-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",

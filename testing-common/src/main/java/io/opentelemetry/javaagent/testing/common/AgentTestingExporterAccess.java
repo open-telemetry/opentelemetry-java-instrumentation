@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.testing.common;
 
-import static com.google.common.base.Strings.emptyToNull;
 import static io.opentelemetry.api.common.AttributeKey.booleanArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.doubleArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
@@ -755,6 +754,10 @@ public final class AgentTestingExporterAccess {
       encoding[i | 0x100] = ALPHABET.charAt(i & 0xF);
     }
     return encoding;
+  }
+
+  private static String emptyToNull(String string) {
+    return string == null || string.isEmpty() ? null : string;
   }
 
   private AgentTestingExporterAccess() {}
