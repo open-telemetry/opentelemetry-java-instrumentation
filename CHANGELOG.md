@@ -53,6 +53,8 @@
   ([#13646](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13646))
 - Fix Spring boot starter dependency resolution failure with Gradle and Java 11
   ([#13384](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13384))
+- Fix extremely large DB statements may cause memory leak
+  ([#13353](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13353))
 
 ## Version 2.14.0 (2025-03-13)
 
