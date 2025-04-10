@@ -30,18 +30,8 @@ jobs:
         with:
           version: "latest"
           java-version: ${{ matrix.test-java-version }}
-          components: "native-image"
       - name: Running test
         env:
           DOCKER_COMPOSE_TEST: "true"
-        run: |
-          echo "GRAALVM_HOME: $GRAALVM_HOME"
-          echo "JAVA_HOME: $JAVA_HOME"
-          java --version
-          native-image --version
-          # Testcontainers does not work in some cases with GraalVM native images, 
-          # therefore we're starting a Kafka container manually for the tests
-          docker compose -f .github/graal-native-docker-compose.yaml up -d
-          # don't wait for startup - gradle compile takes long enough
-          ./gradlew ${{ inputs.test-latest-deps && '-PtestLatestDeps=true' || '' }} nativeTest
-          docker compose -f .github/graal-native-docker-compose.yaml down # is this needed?
+          TEST_LATEST_DEPS: ${{ inputs.test-latest-deps && 'true' || 'false' }}
+        run: .github/scripts/native-tests.sh
