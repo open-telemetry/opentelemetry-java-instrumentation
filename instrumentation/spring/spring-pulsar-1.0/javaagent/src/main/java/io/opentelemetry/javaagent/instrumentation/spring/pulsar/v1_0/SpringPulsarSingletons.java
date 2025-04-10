@@ -34,7 +34,7 @@ public final class SpringPulsarSingletons {
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, operation))
             .addAttributesExtractor(
-                MessagingAttributesExtractor.builder(getter, operation)
+                MessagingAttributesExtractor.builder(getter, operation, "process")
                     .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
                     .build());
     if (messagingReceiveInstrumentationEnabled) {
