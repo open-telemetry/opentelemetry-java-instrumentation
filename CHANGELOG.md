@@ -51,6 +51,8 @@
   ([#13628](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13628))
 - Fix OpenTelemetryPreparedStatement and the returned ResultSet.getStatement() do not match
   ([#13646](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13646))
+- Fix Spring boot starter dependency resolution failure with Gradle and Java 11
+  ([#13384](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13384))
 
 ## Version 2.14.0 (2025-03-13)
 
