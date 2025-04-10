@@ -53,6 +53,7 @@ public class TestServlet5 {
             } else if (INDEXED_CHILD.equals(endpoint)) {
               endpoint.collectSpanAttributes(req::getParameter);
               resp.setStatus(endpoint.getStatus());
+              resp.getWriter().print(endpoint.getBody());
             } else if (QUERY_PARAM.equals(endpoint)) {
               resp.setStatus(endpoint.getStatus());
               resp.getWriter().print(req.getQueryString());
@@ -118,6 +119,7 @@ public class TestServlet5 {
                     } else if (INDEXED_CHILD.equals(endpoint)) {
                       endpoint.collectSpanAttributes(req::getParameter);
                       resp.setStatus(endpoint.getStatus());
+                      resp.getWriter().print(endpoint.getBody());
                       context.complete();
                     } else if (QUERY_PARAM.equals(endpoint)) {
                       resp.setStatus(endpoint.getStatus());
@@ -206,6 +208,7 @@ public class TestServlet5 {
               } else if (INDEXED_CHILD.equals(endpoint)) {
                 endpoint.collectSpanAttributes(req::getParameter);
                 resp.setStatus(endpoint.getStatus());
+                resp.getWriter().print(endpoint.getBody());
               } else if (QUERY_PARAM.equals(endpoint)) {
                 resp.setStatus(endpoint.getStatus());
                 resp.getWriter().print(req.getQueryString());

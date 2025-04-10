@@ -154,9 +154,7 @@ class RestletAppTestBase {
           () -> {
             INDEXED_CHILD.collectSpanAttributes(
                 name -> getRequest().getOriginalRef().getQueryAsForm().getFirstValue(name));
-            // INDEXED_CHILD.getBody() returns an empty string, in which case Restlet sets status to
-            // 204
-            return "child";
+            return INDEXED_CHILD.getBody();
           });
     }
   }

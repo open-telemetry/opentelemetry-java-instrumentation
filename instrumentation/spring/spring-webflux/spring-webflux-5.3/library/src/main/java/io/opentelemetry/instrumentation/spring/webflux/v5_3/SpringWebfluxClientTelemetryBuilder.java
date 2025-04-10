@@ -29,7 +29,7 @@ public final class SpringWebfluxClientTelemetryBuilder {
   static {
     SpringWebfluxBuilderUtil.setClientBuilderExtractor(builder -> builder.builder);
     Experimental.internalSetEmitExperimentalClientTelemetry(
-        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientTelemetry(emit));
   }
 
   SpringWebfluxClientTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -96,9 +96,7 @@ public final class SpringWebfluxClientTelemetryBuilder {
   /** Sets custom client {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public SpringWebfluxClientTelemetryBuilder setSpanNameExtractor(
-      Function<
-              SpanNameExtractor<? super ClientRequest>,
-              ? extends SpanNameExtractor<? super ClientRequest>>
+      Function<SpanNameExtractor<ClientRequest>, SpanNameExtractor<ClientRequest>>
           clientSpanNameExtractor) {
     builder.setSpanNameExtractor(clientSpanNameExtractor);
     return this;

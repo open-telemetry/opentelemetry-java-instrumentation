@@ -75,8 +75,24 @@ final class FixedHostAwsV4AuthScheme implements AwsV4AuthScheme {
     @Override
     public CompletableFuture<AsyncSignedRequest> signAsync(
         AsyncSignRequest<? extends AwsCredentialsIdentity> request) {
-      // TODO: Implement
-      return null;
+      SdkHttpRequest original = request.request();
+      AsyncSignRequest<? extends AwsCredentialsIdentity> override =
+          request.toBuilder()
+              .request(
+                  request.request().toBuilder().port(443).protocol("https").host(apiUrl).build())
+              .build();
+      return DEFAULT
+          .signAsync(override)
+          .thenApply(
+              signed ->
+                  signed.toBuilder()
+                      .request(
+                          signed.request().toBuilder()
+                              .protocol(original.protocol())
+                              .host(original.host())
+                              .port(original.port())
+                              .build())
+                      .build());
     }
   }
 }

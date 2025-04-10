@@ -33,8 +33,9 @@ dependencies {
   testLibrary("com.mchange:c3p0:0.9.5")
 
   // some classes in earlier versions of derby were split out into derbytools in later versions
-  latestDepTestLibrary("org.apache.derby:derbytools:+")
+  latestDepTestLibrary("org.apache.derby:derbytools:latest.release")
 
+  testImplementation("com.google.guava:guava")
   testImplementation(project(":instrumentation:jdbc:testing"))
 
   // these dependencies are for SlickTest

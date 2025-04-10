@@ -32,6 +32,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:spring:spring-web:spring-web-3.1:javaagent"))
 
   testImplementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-common:testing"))
+  testImplementation("com.google.guava:guava")
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:1.5.17.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-web:1.5.17.RELEASE")

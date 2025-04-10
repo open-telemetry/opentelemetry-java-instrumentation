@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.docs.utils;
 
-import io.opentelemetry.instrumentation.docs.InstrumentationType;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,7 +29,6 @@ public class FileManager {
 
     try (Stream<Path> walk = Files.walk(rootPath)) {
       return walk.filter(Files::isDirectory)
-          .filter(dir -> !dir.toString().contains("/build"))
           .filter(dir -> isValidInstrumentationPath(dir.toString()))
           .map(dir -> parseInstrumentationPath(dir.toString()))
           .collect(Collectors.toList());
@@ -75,10 +74,7 @@ public class FileManager {
       return false;
     }
 
-    if (filePath.contains("/test/")
-        || filePath.contains("/testing")
-        || filePath.contains("-common/")
-        || filePath.contains("bootstrap/src")) {
+    if (filePath.matches(".*(/test/|/testing|/build/|-common/|-common-|common-|bootstrap/src).*")) {
       return false;
     }
 

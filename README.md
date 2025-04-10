@@ -104,6 +104,11 @@ having to create a separate distribution or to fork this repository. For example
 custom samplers or span exporters, set new defaults, and embed it all in the agent to obtain a
 single jar file.
 
+## Creating an agent distribution
+
+[Distribution](examples/distro/README.md) provides guidance on creating a separate distribution, serving as a collection of examples for extending the functionality of the OpenTelemetry Java instrumentation agent. It also demonstrates how to repackage the agent while incorporating custom features.
+[Agent extensions](#creating-agent-extensions) are recommended instead for most users as they are simpler and do not require rebuilding with each OpenTelemetry Java agent release.
+
 ## Manually instrumenting
 
 For most users, the out-of-the-box instrumentation is completely sufficient and nothing more has to
@@ -131,20 +136,17 @@ Debug logging negatively impacts the performance of your application.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Triagers ([@open-telemetry/java-instrumentation-triagers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-triagers)):
-
-- [Jonas Kunz](https://github.com/JonasKunz), Elastic
-- [Sylvain Juge](https://github.com/SylvainJuge), Elastic
-
 Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-approvers)):
 
-- [Gregor Zietlinger](https://github.com/zeitlinger), Grafana
+- [Gregor Zeitlinger](https://github.com/zeitlinger), Grafana
 - [Jack Berg](https://github.com/jack-berg), New Relic
 - [Jason Plumb](https://github.com/breedx-splk), Splunk
 - [Jay DeLuca](https://github.com/jaydeluca)
 - [Jean Bisutti](https://github.com/jeanbisutti), Microsoft
 - [John Watson](https://github.com/jkwatson), Cloudera
+- [Jonas Kunz](https://github.com/JonasKunz), Elastic
 - [Steve Rao](https://github.com/steverao), Alibaba
+- [Sylvain Juge](https://github.com/SylvainJuge), Elastic
 
 Maintainers ([@open-telemetry/java-instrumentation-maintainers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-maintainers)):
 

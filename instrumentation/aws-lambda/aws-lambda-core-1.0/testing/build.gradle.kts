@@ -10,8 +10,6 @@ dependencies {
   api("org.junit-pioneer:junit-pioneer")
   api("org.mockito:mockito-junit-jupiter")
 
-  implementation("com.google.guava:guava")
-
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("com.github.stefanbirkner:system-lambda")
 }

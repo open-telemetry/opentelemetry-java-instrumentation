@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.docs;
 
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationEntity;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
 import java.io.BufferedWriter;
@@ -26,7 +27,11 @@ public class DocGeneratorApplication {
     try (BufferedWriter writer =
         Files.newBufferedWriter(
             Paths.get("docs/instrumentation-list.yaml"), Charset.defaultCharset())) {
-      YamlHelper.printInstrumentationList(entities, writer);
+      writer.write("# This file is generated and should not be manually edited.\n");
+      writer.write("# The structure and contents are a work in progress and subject to change.\n");
+      writer.write(
+          "# For more information see: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13468\n\n");
+      YamlHelper.generateInstrumentationYaml(entities, writer);
     } catch (IOException e) {
       logger.severe("Error writing instrumentation list: " + e.getMessage());
     }

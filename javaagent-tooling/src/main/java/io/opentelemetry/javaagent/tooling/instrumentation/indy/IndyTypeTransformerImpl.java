@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -25,11 +26,15 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
   private final Advice.WithCustomMapping adviceMapping;
   private AgentBuilder.Identified.Extendable agentBuilder;
   private final InstrumentationModule instrumentationModule;
+  private final boolean transformAdvice;
 
   public IndyTypeTransformerImpl(
       AgentBuilder.Identified.Extendable agentBuilder, InstrumentationModule module) {
     this.agentBuilder = agentBuilder;
     this.instrumentationModule = module;
+    this.transformAdvice =
+        !(instrumentationModule instanceof ExperimentalInstrumentationModule)
+            || !((ExperimentalInstrumentationModule) instrumentationModule).isIndyReady();
     this.adviceMapping =
         Advice.withCustomMapping()
             .with(
@@ -44,17 +49,23 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
   @Override
   public void applyAdviceToMethod(
       ElementMatcher<? super MethodDescription> methodMatcher, String adviceClassName) {
+    // default strategy used by AgentBuilder.Transformer.ForAdvice
+    AgentBuilder.PoolStrategy poolStrategy = AgentBuilder.PoolStrategy.Default.FAST;
+
     agentBuilder =
         agentBuilder.transform(
             new AgentBuilder.Transformer.ForAdvice(adviceMapping)
                 .advice(methodMatcher, adviceClassName)
+                // advice transformation already performs uninlining
+                .with(
+                    transformAdvice ? poolStrategy : new AdviceUninliningPoolStrategy(poolStrategy))
                 .include(getAdviceLocator(instrumentationModule.getClass().getClassLoader()))
                 .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler()));
   }
 
-  private static ClassFileLocator getAdviceLocator(ClassLoader classLoader) {
+  private ClassFileLocator getAdviceLocator(ClassLoader classLoader) {
     ClassFileLocator classFileLocator = ClassFileLocator.ForClassLoader.of(classLoader);
-    return new AdviceLocator(classFileLocator);
+    return transformAdvice ? new AdviceLocator(classFileLocator) : classFileLocator;
   }
 
   @Override

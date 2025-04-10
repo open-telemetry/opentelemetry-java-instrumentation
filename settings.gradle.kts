@@ -1,26 +1,26 @@
 pluginManagement {
   plugins {
     id("com.github.jk1.dependency-license-report") version "2.9"
-    id("com.google.cloud.tools.jib") version "3.4.4"
+    id("com.google.cloud.tools.jib") version "3.4.5"
     id("com.gradle.plugin-publish") version "1.3.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.1.10"
+    id("org.jetbrains.kotlin.jvm") version "2.1.20"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("org.unbroken-dome.xjc") version "2.0.0"
-    id("org.graalvm.buildtools.native") version "0.10.5"
+    id("org.graalvm.buildtools.native") version "0.10.6"
   }
 }
 
 plugins {
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.1"
-  id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.2.1"
+  id("org.gradle.toolchains.foojay-resolver-convention") version "0.10.0"
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
   // in particular, these commands are failing (reproducible locally):
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "9.4.0" apply false
-  id("com.gradle.develocity") version "3.19.2"
+  id("com.gradle.develocity") version "4.0"
 }
 
 dependencyResolutionManagement {
@@ -209,8 +209,8 @@ include(":instrumentation:elasticsearch:elasticsearch-rest-5.0:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-rest-6.4:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-rest-7.0:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-rest-7.0:library")
-include(":instrumentation:elasticsearch:elasticsearch-rest-common:javaagent")
-include(":instrumentation:elasticsearch:elasticsearch-rest-common:library")
+include(":instrumentation:elasticsearch:elasticsearch-rest-common-5.0:javaagent")
+include(":instrumentation:elasticsearch:elasticsearch-rest-common-5.0:library")
 include(":instrumentation:elasticsearch:elasticsearch-transport-5.0:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-5.3:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-transport-6.0:javaagent")
@@ -304,10 +304,10 @@ include(":instrumentation:jaxws:jaxws-2.0-common-testing")
 include(":instrumentation:jaxws:jaxws-2.0-metro-2.2-testing")
 include(":instrumentation:jaxws:jaxws-2.0-tomee-testing")
 include(":instrumentation:jaxws:jaxws-2.0-wildfly-testing")
-include(":instrumentation:jaxws:jaxws-3.0-axis2-1.6-testing")
+include(":instrumentation:jaxws:jaxws-3.0-axis2-2.0-testing")
 include(":instrumentation:jaxws:jaxws-3.0-common-testing")
 include(":instrumentation:jaxws:jaxws-3.0-cxf-4.0-testing")
-include(":instrumentation:jaxws:jaxws-3.0-metro-2.2-testing")
+include(":instrumentation:jaxws:jaxws-3.0-metro-3.0-testing")
 include(":instrumentation:jaxws:jaxws-common:javaagent")
 include(":instrumentation:jaxws:jaxws-cxf-3.0:javaagent")
 include(":instrumentation:jaxws:jaxws-cxf-3.0:javaagent-unit-tests")
@@ -356,7 +356,7 @@ include(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:testing")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library")
-include(":instrumentation:kafka:kafka-clients:kafka-clients-common:library")
+include(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library")
 include(":instrumentation:kafka:kafka-streams-0.11:javaagent")
 include(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-1.0:javaagent")
 include(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-flow-1.3:javaagent")
@@ -411,8 +411,8 @@ include(":instrumentation:netty:netty-4.0:javaagent")
 include(":instrumentation:netty:netty-4.1:javaagent")
 include(":instrumentation:netty:netty-4.1:library")
 include(":instrumentation:netty:netty-4.1:testing")
-include(":instrumentation:netty:netty-4-common:javaagent")
-include(":instrumentation:netty:netty-4-common:library")
+include(":instrumentation:netty:netty-common-4.0:javaagent")
+include(":instrumentation:netty:netty-common-4.0:library")
 include(":instrumentation:netty:netty-common:library")
 include(":instrumentation:okhttp:okhttp-2.2:javaagent")
 include(":instrumentation:okhttp:okhttp-3.0:javaagent")
@@ -554,6 +554,8 @@ include(":instrumentation:spring:spring-jms:spring-jms-6.0:javaagent")
 include(":instrumentation:spring:spring-kafka-2.7:javaagent")
 include(":instrumentation:spring:spring-kafka-2.7:library")
 include(":instrumentation:spring:spring-kafka-2.7:testing")
+include(":instrumentation:spring:spring-pulsar-1.0:javaagent")
+include(":instrumentation:spring:spring-pulsar-1.0:testing")
 include(":instrumentation:spring:spring-rabbit-1.0:javaagent")
 include(":instrumentation:spring:spring-rmi-4.0:javaagent")
 include(":instrumentation:spring:spring-scheduling-3.1:bootstrap")
@@ -585,7 +587,7 @@ include(":instrumentation:tapestry-5.4:javaagent")
 include(":instrumentation:tomcat:tomcat-7.0:javaagent")
 include(":instrumentation:tomcat:tomcat-10.0:javaagent")
 include(":instrumentation:tomcat:tomcat-common:javaagent")
-include(":instrumentation:tomcat:tomcat-jdbc")
+include(":instrumentation:tomcat:tomcat-jdbc:javaagent")
 include(":instrumentation:twilio-6.6:javaagent")
 include(":instrumentation:undertow-1.4:bootstrap")
 include(":instrumentation:undertow-1.4:javaagent")

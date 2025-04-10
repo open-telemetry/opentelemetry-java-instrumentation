@@ -27,7 +27,7 @@ public final class JavaHttpServerTelemetryBuilder {
   static {
     JavaHttpServerInstrumenterBuilderUtil.setServerBuilderExtractor(builder -> builder.builder);
     Experimental.internalSetEmitExperimentalTelemetry(
-        (builder, emit) -> builder.builder.setEmitExperimentalHttpServerMetrics(emit));
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpServerTelemetry(emit));
   }
 
   JavaHttpServerTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -43,8 +43,8 @@ public final class JavaHttpServerTelemetryBuilder {
   @CanIgnoreReturnValue
   public JavaHttpServerTelemetryBuilder setStatusExtractor(
       Function<
-              SpanStatusExtractor<? super HttpExchange, ? super HttpExchange>,
-              ? extends SpanStatusExtractor<? super HttpExchange, ? super HttpExchange>>
+              SpanStatusExtractor<HttpExchange, HttpExchange>,
+              SpanStatusExtractor<HttpExchange, HttpExchange>>
           statusExtractor) {
     builder.setStatusExtractor(statusExtractor);
     return this;
@@ -107,9 +107,7 @@ public final class JavaHttpServerTelemetryBuilder {
   /** Sets custom server {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public JavaHttpServerTelemetryBuilder setSpanNameExtractor(
-      Function<
-              SpanNameExtractor<? super HttpExchange>,
-              ? extends SpanNameExtractor<? super HttpExchange>>
+      Function<SpanNameExtractor<HttpExchange>, SpanNameExtractor<HttpExchange>>
           serverSpanNameExtractor) {
     builder.setSpanNameExtractor(serverSpanNameExtractor);
     return this;

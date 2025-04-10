@@ -18,7 +18,5 @@ dependencies {
   // needed for SQS - using emq directly as localstack references emq v0.15.7 ie WITHOUT AWS trace header propagation
   implementation("org.elasticmq:elasticmq-rest-sqs_2.13")
 
-  implementation("com.google.guava:guava")
-
   implementation("io.opentelemetry:opentelemetry-api")
 }

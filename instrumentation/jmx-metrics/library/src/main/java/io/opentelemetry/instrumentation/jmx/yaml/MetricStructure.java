@@ -13,12 +13,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * An abstract class containing skeletal info about Metrics:
  * <li>the metric type
  * <li>the metric attributes
  * <li>the unit
+ * <li>the sourceUnit
  *
  *     <p>Known subclasses are {@link JmxRule} and {@link Metric}.
  */
@@ -45,7 +47,9 @@ abstract class MetricStructure {
   private Map<String, Object> metricAttribute;
   private StateMapping stateMapping = StateMapping.empty();
   private static final String STATE_MAPPING_DEFAULT = "*";
+  private String sourceUnit;
   private String unit;
+  @Nullable private Boolean dropNegativeValues;
 
   private MetricInfo.Type metricType;
   private List<MetricAttribute> metricAttributes;
@@ -58,12 +62,29 @@ abstract class MetricStructure {
     this.metricType = MetricInfo.Type.valueOf(t);
   }
 
+  public String getSourceUnit() {
+    return sourceUnit;
+  }
+
+  public void setSourceUnit(String unit) {
+    this.sourceUnit = validateUnit(unit.trim());
+  }
+
   public String getUnit() {
     return unit;
   }
 
   public void setUnit(String unit) {
     this.unit = validateUnit(unit.trim());
+  }
+
+  public void setDropNegativeValues(Boolean dropNegativeValues) {
+    this.dropNegativeValues = dropNegativeValues;
+  }
+
+  @Nullable
+  public Boolean getDropNegativeValues() {
+    return dropNegativeValues;
   }
 
   private static void addMappedValue(
