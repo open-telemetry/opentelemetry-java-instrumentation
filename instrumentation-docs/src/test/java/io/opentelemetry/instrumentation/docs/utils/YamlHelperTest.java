@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.docs.utils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationClassification;
-import io.opentelemetry.instrumentation.docs.internal.InstrumentationEntity;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import java.io.BufferedWriter;
 import java.io.StringWriter;
@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
 class YamlHelperTest {
   @Test
   void testPrintInstrumentationList() throws Exception {
-    List<InstrumentationEntity> entities = new ArrayList<>();
+    List<InstrumentationModule> modules = new ArrayList<>();
     Map<InstrumentationType, Set<String>> targetVersions1 = new HashMap<>();
     targetVersions1.put(
         InstrumentationType.JAVAAGENT,
@@ -36,8 +36,8 @@ class YamlHelperTest {
             InstrumentationClassification.LIBRARY.toString(),
             true);
 
-    entities.add(
-        new InstrumentationEntity.Builder()
+    modules.add(
+        new InstrumentationModule.Builder()
             .srcPath("instrumentation/spring/spring-web/spring-web-6.0")
             .instrumentationName("spring-web-6.0")
             .namespace("spring")
@@ -52,8 +52,8 @@ class YamlHelperTest {
     targetVersions2.put(
         InstrumentationType.LIBRARY,
         new HashSet<>(List.of("org.apache.struts:struts2-core:2.1.0")));
-    entities.add(
-        new InstrumentationEntity.Builder()
+    modules.add(
+        new InstrumentationModule.Builder()
             .srcPath("instrumentation/struts/struts-2.3")
             .instrumentationName("struts-2.3")
             .namespace("struts")
@@ -64,7 +64,7 @@ class YamlHelperTest {
     StringWriter stringWriter = new StringWriter();
     BufferedWriter writer = new BufferedWriter(stringWriter);
 
-    YamlHelper.generateInstrumentationYaml(entities, writer);
+    YamlHelper.generateInstrumentationYaml(modules, writer);
     writer.flush();
 
     String expectedYaml =
@@ -96,7 +96,7 @@ class YamlHelperTest {
 
   @Test
   void testGenerateInstrumentationYamlSeparatesClassifications() throws Exception {
-    List<InstrumentationEntity> entities = new ArrayList<>();
+    List<InstrumentationModule> modules = new ArrayList<>();
     Map<InstrumentationType, Set<String>> springTargetVersions = new HashMap<>();
     springTargetVersions.put(
         InstrumentationType.JAVAAGENT,
@@ -108,8 +108,8 @@ class YamlHelperTest {
             InstrumentationClassification.LIBRARY.toString(),
             false);
 
-    entities.add(
-        new InstrumentationEntity.Builder()
+    modules.add(
+        new InstrumentationModule.Builder()
             .srcPath("instrumentation/spring/spring-web/spring-web-6.0")
             .instrumentationName("spring-web-6.0")
             .namespace("spring")
@@ -122,8 +122,8 @@ class YamlHelperTest {
     InstrumentationMetaData internalMetadata =
         new InstrumentationMetaData(null, InstrumentationClassification.INTERNAL.toString(), null);
 
-    entities.add(
-        new InstrumentationEntity.Builder()
+    modules.add(
+        new InstrumentationModule.Builder()
             .srcPath("instrumentation/internal/internal-application-logger")
             .instrumentationName("internal-application-logger")
             .namespace("internal")
@@ -135,8 +135,8 @@ class YamlHelperTest {
     InstrumentationMetaData customMetadata =
         new InstrumentationMetaData(null, InstrumentationClassification.CUSTOM.toString(), null);
 
-    entities.add(
-        new InstrumentationEntity.Builder()
+    modules.add(
+        new InstrumentationModule.Builder()
             .srcPath("instrumentation/opentelemetry-external-annotations-1.0")
             .instrumentationName("opentelemetry-external-annotations")
             .namespace("opentelemetry-external-annotations")
@@ -148,7 +148,7 @@ class YamlHelperTest {
     StringWriter stringWriter = new StringWriter();
     BufferedWriter writer = new BufferedWriter(stringWriter);
 
-    YamlHelper.generateInstrumentationYaml(entities, writer);
+    YamlHelper.generateInstrumentationYaml(modules, writer);
     writer.flush();
 
     String expectedYaml =
