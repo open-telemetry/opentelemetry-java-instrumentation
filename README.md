@@ -162,7 +162,7 @@ Emeritus maintainers:
 Learn more about roles in
 the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md).
 
-Thanks to all the people who already contributed!
+Thanks to all the people who have already contributed!
 
 <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/graphs/contributors">
   <img src="https://contributors-img.web.app/image?repo=open-telemetry/opentelemetry-java-instrumentation" />
