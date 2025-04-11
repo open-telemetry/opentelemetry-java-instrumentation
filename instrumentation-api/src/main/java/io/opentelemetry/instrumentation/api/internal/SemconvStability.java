@@ -18,16 +18,21 @@ import java.util.Set;
  */
 public final class SemconvStability {
 
+  private static final boolean emitStableHttpSemconv;
   private static final boolean emitOldDatabaseSemconv;
   private static final boolean emitStableDatabaseSemconv;
 
   static {
+    boolean stableHttp = false;
     boolean oldDatabase = true;
     boolean stableDatabase = false;
 
     String value = ConfigPropertiesUtil.getString("otel.semconv-stability.opt-in");
     if (value != null) {
       Set<String> values = new HashSet<>(asList(value.split(",")));
+      if (values.contains("http")) {
+        stableHttp = true;
+      }
       if (values.contains("database")) {
         oldDatabase = false;
         stableDatabase = true;
@@ -40,6 +45,7 @@ public final class SemconvStability {
       }
     }
 
+    emitStableHttpSemconv = stableHttp;
     emitOldDatabaseSemconv = oldDatabase;
     emitStableDatabaseSemconv = stableDatabase;
   }
@@ -50,6 +56,10 @@ public final class SemconvStability {
 
   public static boolean emitStableDatabaseSemconv() {
     return emitStableDatabaseSemconv;
+  }
+
+  public static boolean emitStableHttpSemconv() {
+    return emitStableHttpSemconv;
   }
 
   private static final Map<String, String> dbSystemNameMap = new HashMap<>();

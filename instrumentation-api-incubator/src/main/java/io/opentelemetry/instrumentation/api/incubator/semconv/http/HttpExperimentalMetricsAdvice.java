@@ -35,6 +35,23 @@ final class HttpExperimentalMetricsAdvice {
                 ServerAttributes.SERVER_PORT));
   }
 
+  static void applyStableClientRequestSizeAdvice(LongHistogramBuilder builder) {
+    if (!(builder instanceof ExtendedLongHistogramBuilder)) {
+      return;
+    }
+    ((ExtendedLongHistogramBuilder) builder)
+        .setAttributesAdvice(
+            asList(
+                HttpAttributes.HTTP_REQUEST_METHOD,
+                HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
+                ErrorAttributes.ERROR_TYPE,
+                NetworkAttributes.NETWORK_PROTOCOL_NAME,
+                NetworkAttributes.NETWORK_PROTOCOL_VERSION,
+                ServerAttributes.SERVER_ADDRESS,
+                ServerAttributes.SERVER_PORT,
+                UrlAttributes.URL_SCHEME));
+  }
+
   static void applyServerRequestSizeAdvice(LongHistogramBuilder builder) {
     if (!(builder instanceof ExtendedLongHistogramBuilder)) {
       return;
@@ -52,6 +69,25 @@ final class HttpExperimentalMetricsAdvice {
                 UrlAttributes.URL_SCHEME));
   }
 
+  static void applyStableServerRequestSizeAdvice(LongHistogramBuilder builder) {
+    if (!(builder instanceof ExtendedLongHistogramBuilder)) {
+      return;
+    }
+    ((ExtendedLongHistogramBuilder) builder)
+        .setAttributesAdvice(
+            asList(
+                // stable attributes
+                HttpAttributes.HTTP_ROUTE,
+                HttpAttributes.HTTP_REQUEST_METHOD,
+                HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
+                ErrorAttributes.ERROR_TYPE,
+                NetworkAttributes.NETWORK_PROTOCOL_NAME,
+                NetworkAttributes.NETWORK_PROTOCOL_VERSION,
+                UrlAttributes.URL_SCHEME,
+                ServerAttributes.SERVER_ADDRESS,
+                ServerAttributes.SERVER_PORT));
+  }
+
   static void applyServerActiveRequestsAdvice(LongUpDownCounterBuilder builder) {
     if (!(builder instanceof ExtendedLongUpDownCounterBuilder)) {
       return;
@@ -61,6 +97,18 @@ final class HttpExperimentalMetricsAdvice {
             asList(
                 // https://github.com/open-telemetry/semantic-conventions/blob/v1.23.0/docs/http/http-metrics.md#metric-httpserveractive_requests
                 HttpAttributes.HTTP_REQUEST_METHOD, UrlAttributes.URL_SCHEME));
+  }
+
+  static void applyStableServerActiveRequestsAdvice(LongUpDownCounterBuilder builder) {
+    if (!(builder instanceof ExtendedLongUpDownCounterBuilder)) {
+      return;
+    }
+    ((ExtendedLongUpDownCounterBuilder) builder)
+        .setAttributesAdvice(
+            asList(
+                // https://github.com/open-telemetry/semantic-conventions/blob/v1.32.0/docs/http/http-metrics.md#metric-httpserveractive_requests
+                HttpAttributes.HTTP_REQUEST_METHOD, UrlAttributes.URL_SCHEME,
+                ServerAttributes.SERVER_ADDRESS, ServerAttributes.SERVER_PORT));
   }
 
   private HttpExperimentalMetricsAdvice() {}
