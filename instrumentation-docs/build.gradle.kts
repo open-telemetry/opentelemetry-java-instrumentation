@@ -10,7 +10,7 @@ dependencies {
   implementation("org.yaml:snakeyaml:2.4")
   implementation("io.opentelemetry:opentelemetry-sdk-common")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.12.1"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.12.2"))
   testImplementation("org.assertj:assertj-core:3.27.3")
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
