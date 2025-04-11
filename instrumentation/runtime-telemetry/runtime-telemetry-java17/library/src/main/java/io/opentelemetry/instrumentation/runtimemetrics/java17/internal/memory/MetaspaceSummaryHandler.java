@@ -128,8 +128,8 @@ public final class MetaspaceSummaryHandler implements RecordedEventHandler {
       return;
     }
     Object value = event.getValue(field);
-    if (value instanceof RecordedObject recordedObject) {
-      closure.accept(recordedObject);
+    if (value instanceof RecordedObject) {
+      closure.accept((RecordedObject) value);
     }
   }
 

@@ -24,6 +24,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
@@ -37,7 +38,6 @@ import com.amazonaws.services.sqs.model.MessageAttributeValue;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
-import com.google.common.collect.ImmutableList;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
@@ -183,7 +183,7 @@ public abstract class AbstractSqsTracingTest {
                         attributes.add(
                             satisfies(
                                 stringArrayKey("messaging.header.test_message_header"),
-                                val -> val.isEqualTo(ImmutableList.of("test"))));
+                                val -> val.isEqualTo(singletonList("test"))));
                       }
 
                       span.hasName("testSdkSqs publish")
@@ -223,7 +223,7 @@ public abstract class AbstractSqsTracingTest {
                         attributes.add(
                             satisfies(
                                 stringArrayKey("messaging.header.test_message_header"),
-                                val -> val.isEqualTo(ImmutableList.of("test"))));
+                                val -> val.isEqualTo(singletonList("test"))));
                       }
 
                       span.hasName("testSdkSqs receive")
@@ -262,7 +262,7 @@ public abstract class AbstractSqsTracingTest {
                         attributes.add(
                             satisfies(
                                 stringArrayKey("messaging.header.test_message_header"),
-                                val -> val.isEqualTo(ImmutableList.of("test"))));
+                                val -> val.isEqualTo(singletonList("test"))));
                       }
                       span.hasName("testSdkSqs process")
                           .hasKind(SpanKind.CONSUMER)
@@ -475,6 +475,6 @@ public abstract class AbstractSqsTracingTest {
     sqsClient.receiveMessage(receive);
     sqsClient.sendMessage(send);
     sqsClient.receiveMessage(receive);
-    assertThat(receive.getAttributeNames()).isEqualTo(ImmutableList.of("AWSTraceHeader"));
+    assertThat(receive.getAttributeNames()).isEqualTo(singletonList("AWSTraceHeader"));
   }
 }

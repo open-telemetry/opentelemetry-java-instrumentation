@@ -136,11 +136,6 @@ Debug logging negatively impacts the performance of your application.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Triagers ([@open-telemetry/java-instrumentation-triagers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-triagers)):
-
-- [Jonas Kunz](https://github.com/JonasKunz), Elastic
-- [Sylvain Juge](https://github.com/SylvainJuge), Elastic
-
 Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-approvers)):
 
 - [Gregor Zeitlinger](https://github.com/zeitlinger), Grafana
@@ -149,7 +144,9 @@ Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/o
 - [Jay DeLuca](https://github.com/jaydeluca)
 - [Jean Bisutti](https://github.com/jeanbisutti), Microsoft
 - [John Watson](https://github.com/jkwatson), Cloudera
+- [Jonas Kunz](https://github.com/JonasKunz), Elastic
 - [Steve Rao](https://github.com/steverao), Alibaba
+- [Sylvain Juge](https://github.com/SylvainJuge), Elastic
 
 Maintainers ([@open-telemetry/java-instrumentation-maintainers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-maintainers)):
 
@@ -165,7 +162,7 @@ Emeritus maintainers:
 Learn more about roles in
 the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md).
 
-Thanks to all the people who already contributed!
+Thanks to all the people who have already contributed!
 
 <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/graphs/contributors">
   <img src="https://contributors-img.web.app/image?repo=open-telemetry/opentelemetry-java-instrumentation" />

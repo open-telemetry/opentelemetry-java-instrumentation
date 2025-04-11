@@ -70,8 +70,11 @@ public class InstrumentationEntity {
     return scopeInfo;
   }
 
-  @Nullable
   public InstrumentationMetaData getMetadata() {
+    if (metadata == null) {
+      metadata = new InstrumentationMetaData();
+    }
+
     return metadata;
   }
 
