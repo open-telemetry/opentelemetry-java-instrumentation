@@ -42,7 +42,7 @@ tasks {
   }
 
   val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database,http")
   }
 
   val testBothSemconv by registering(Test::class) {

@@ -20,6 +20,7 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.logging.Logger;
 
 /**
@@ -61,7 +62,11 @@ public final class HttpServerExperimentalMetrics implements OperationListener {
             .upDownCounterBuilder("http.server.active_requests")
             .setUnit("{requests}")
             .setDescription("Number of active HTTP server requests.");
-    HttpExperimentalMetricsAdvice.applyServerActiveRequestsAdvice(activeRequestsBuilder);
+    if (SemconvStability.emitStableHttpSemconv()) {
+      HttpExperimentalMetricsAdvice.applyStableServerActiveRequestsAdvice(activeRequestsBuilder);
+    } else {
+      HttpExperimentalMetricsAdvice.applyServerActiveRequestsAdvice(activeRequestsBuilder);
+    }
     activeRequests = activeRequestsBuilder.build();
     LongHistogramBuilder requestSizeBuilder =
         meter
@@ -69,7 +74,11 @@ public final class HttpServerExperimentalMetrics implements OperationListener {
             .setUnit("By")
             .setDescription("Size of HTTP server request bodies.")
             .ofLongs();
-    HttpExperimentalMetricsAdvice.applyServerRequestSizeAdvice(requestSizeBuilder);
+    if (SemconvStability.emitStableHttpSemconv()) {
+      HttpExperimentalMetricsAdvice.applyStableServerRequestSizeAdvice(requestSizeBuilder);
+    } else {
+      HttpExperimentalMetricsAdvice.applyServerRequestSizeAdvice(requestSizeBuilder);
+    }
     requestSize = requestSizeBuilder.build();
     LongHistogramBuilder responseSizeBuilder =
         meter
@@ -77,7 +86,11 @@ public final class HttpServerExperimentalMetrics implements OperationListener {
             .setUnit("By")
             .setDescription("Size of HTTP server response bodies.")
             .ofLongs();
-    HttpExperimentalMetricsAdvice.applyServerRequestSizeAdvice(responseSizeBuilder);
+    if (SemconvStability.emitStableHttpSemconv()) {
+      HttpExperimentalMetricsAdvice.applyStableServerRequestSizeAdvice(responseSizeBuilder);
+    } else {
+      HttpExperimentalMetricsAdvice.applyServerRequestSizeAdvice(responseSizeBuilder);
+    }
     responseSize = responseSizeBuilder.build();
   }
 
