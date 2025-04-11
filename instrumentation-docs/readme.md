@@ -10,8 +10,8 @@ Run the doc generator:
 
 ## Instrumentation Hierarchy
 
-An "InstrumentationEntity" represents a module that that targets specific code in a
-framework/library/technology. Each entity will have a name, a namespace, and a group.
+An "InstrumentationModule" represents a module that that targets specific code in a
+framework/library/technology. Each module will have a name, a namespace, and a group.
 
 Using these structures as examples:
 

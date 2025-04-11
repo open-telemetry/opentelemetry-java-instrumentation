@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.docs;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.docs.internal.InstrumentationEntity;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.instrumentation.docs.utils.InstrumentationPath;
 import java.util.Arrays;
@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 class InstrumentationAnalyzerTest {
 
   @Test
-  void testConvertToEntities() {
+  void testConvertToInstrumentationModule() {
     List<InstrumentationPath> paths =
         Arrays.asList(
             new InstrumentationPath(
@@ -39,32 +39,33 @@ class InstrumentationAnalyzerTest {
                 "spring",
                 InstrumentationType.LIBRARY));
 
-    List<InstrumentationEntity> entities = InstrumentationAnalyzer.convertToEntities(paths);
+    List<InstrumentationModule> modules =
+        InstrumentationAnalyzer.convertToInstrumentationModules(paths);
 
-    assertThat(entities.size()).isEqualTo(2);
+    assertThat(modules.size()).isEqualTo(2);
 
-    InstrumentationEntity log4jEntity =
-        entities.stream()
+    InstrumentationModule log4jModule =
+        modules.stream()
             .filter(e -> e.getInstrumentationName().equals("log4j-appender-2.17"))
             .findFirst()
             .orElse(null);
 
-    assertThat(log4jEntity.getNamespace()).isEqualTo("log4j");
-    assertThat(log4jEntity.getGroup()).isEqualTo("log4j");
-    assertThat(log4jEntity.getSrcPath()).isEqualTo("instrumentation/log4j/log4j-appender-2.17");
-    assertThat(log4jEntity.getScopeInfo().getName())
+    assertThat(log4jModule.getNamespace()).isEqualTo("log4j");
+    assertThat(log4jModule.getGroup()).isEqualTo("log4j");
+    assertThat(log4jModule.getSrcPath()).isEqualTo("instrumentation/log4j/log4j-appender-2.17");
+    assertThat(log4jModule.getScopeInfo().getName())
         .isEqualTo("io.opentelemetry.log4j-appender-2.17");
 
-    InstrumentationEntity springEntity =
-        entities.stream()
+    InstrumentationModule springModule =
+        modules.stream()
             .filter(e -> e.getInstrumentationName().equals("spring-web"))
             .findFirst()
             .orElse(null);
 
-    assertThat(springEntity).isNotNull();
-    assertThat(springEntity.getNamespace()).isEqualTo("spring");
-    assertThat(springEntity.getGroup()).isEqualTo("spring");
-    assertThat(springEntity.getSrcPath()).isEqualTo("instrumentation/spring/spring-web");
-    assertThat(springEntity.getScopeInfo().getName()).isEqualTo("io.opentelemetry.spring-web");
+    assertThat(springModule).isNotNull();
+    assertThat(springModule.getNamespace()).isEqualTo("spring");
+    assertThat(springModule.getGroup()).isEqualTo("spring");
+    assertThat(springModule.getSrcPath()).isEqualTo("instrumentation/spring/spring-web");
+    assertThat(springModule.getScopeInfo().getName()).isEqualTo("io.opentelemetry.spring-web");
   }
 }

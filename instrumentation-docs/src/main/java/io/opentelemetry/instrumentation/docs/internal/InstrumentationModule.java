@@ -14,10 +14,12 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
+ * Represents an instrumentation module and all associated metadata.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
-public class InstrumentationEntity {
+public class InstrumentationModule {
   private final String srcPath;
   private final String instrumentationName;
   private final String namespace;
@@ -34,7 +36,7 @@ public class InstrumentationEntity {
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
    * any time.
    */
-  public InstrumentationEntity(Builder builder) {
+  public InstrumentationModule(Builder builder) {
     requireNonNull(builder.srcPath, "srcPath required");
     requireNonNull(builder.instrumentationName, "instrumentationName required");
     requireNonNull(builder.namespace, "namespace required");
@@ -155,8 +157,8 @@ public class InstrumentationEntity {
       return this;
     }
 
-    public InstrumentationEntity build() {
-      return new InstrumentationEntity(this);
+    public InstrumentationModule build() {
+      return new InstrumentationModule(this);
     }
   }
 }

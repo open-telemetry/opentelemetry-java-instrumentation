@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.docs;
 
-import io.opentelemetry.instrumentation.docs.internal.InstrumentationEntity;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
 import java.io.BufferedWriter;
@@ -22,7 +22,7 @@ public class DocGeneratorApplication {
 
   public static void main(String[] args) {
     FileManager fileManager = new FileManager("instrumentation/");
-    List<InstrumentationEntity> entities = new InstrumentationAnalyzer(fileManager).analyze();
+    List<InstrumentationModule> modules = new InstrumentationAnalyzer(fileManager).analyze();
 
     try (BufferedWriter writer =
         Files.newBufferedWriter(
@@ -31,7 +31,7 @@ public class DocGeneratorApplication {
       writer.write("# The structure and contents are a work in progress and subject to change.\n");
       writer.write(
           "# For more information see: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13468\n\n");
-      YamlHelper.generateInstrumentationYaml(entities, writer);
+      YamlHelper.generateInstrumentationYaml(modules, writer);
     } catch (IOException e) {
       logger.severe("Error writing instrumentation list: " + e.getMessage());
     }
