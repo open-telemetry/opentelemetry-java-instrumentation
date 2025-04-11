@@ -59,7 +59,7 @@ class ContainerResourceTest {
   void testAlternateEncoding() throws Exception {
     String containerId = "ac679f8a8319c8cf7d38e1adf263bc08d231f2ff81abda3915f6e8ba4d64156a";
     String line = "13:name=systemd:/podruntime/docker/kubepods/" + containerId + ".aaaa";
-    Charset ibmCharset = Charset.forName("IBM-273");
+    Charset ibmCharset = Charset.forName("Cp1047");
     byte[] utf8 = line.getBytes(StandardCharsets.UTF_8);
     byte[] ibm = line.getBytes(ibmCharset);
     assertThat(ibm).isNotEqualTo(utf8);
@@ -77,9 +77,9 @@ class ContainerResourceTest {
     ContainerResource.Filesystem fs =
         new ContainerResource.Filesystem() {
           @Override
-          Charset getDefaultCharset() {
-            // Override to pretend our default encoding is ibm273
-            return ibmCharset;
+          String getOsName() {
+            // Override to pretend we are on z/OS
+            return "z/OS";
           }
         };
     CgroupV1ContainerIdExtractor extractor =
