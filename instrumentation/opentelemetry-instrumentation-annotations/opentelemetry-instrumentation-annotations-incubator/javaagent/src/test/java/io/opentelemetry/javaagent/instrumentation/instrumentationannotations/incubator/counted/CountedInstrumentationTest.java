@@ -84,10 +84,10 @@ class CountedInstrumentationTest {
                         assertThat(metricData.getData().getPoints())
                             .allMatch(
                                 p ->
-                                    Integer.valueOf(2)
+                                    Long.valueOf(2)
                                             .equals(
                                                 p.getAttributes()
-                                                    .get(AttributeKey.stringKey("custom_attr")))
+                                                    .get(AttributeKey.longKey("custom_attr")))
                                         && "attr1"
                                             .equals(
                                                 p.getAttributes()

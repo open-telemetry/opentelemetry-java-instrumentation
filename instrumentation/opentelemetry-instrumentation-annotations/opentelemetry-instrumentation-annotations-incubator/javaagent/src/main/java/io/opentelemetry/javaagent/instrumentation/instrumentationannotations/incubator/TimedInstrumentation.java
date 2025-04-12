@@ -41,7 +41,7 @@ public class TimedInstrumentation implements TypeInstrumentation {
             whereAny(
                 isAnnotatedWith(
                     named(
-                        "application.io.opentelemetry.instrumentation.annotations.incubator.MetricAttribute"))));
+                        "application.io.opentelemetry.instrumentation.annotations.incubator.Attribute"))));
     // exclude all kotlin suspend methods, these are handle in kotlinx-coroutines instrumentation
     excludedMethodsMatcher =
         AnnotationExcludedMethods.configureExcludedMethods().or(isKotlinSuspendMethod());

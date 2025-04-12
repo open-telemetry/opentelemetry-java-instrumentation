@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.incubator.timed;
 
+import io.opentelemetry.instrumentation.annotations.incubator.Attribute;
 import io.opentelemetry.instrumentation.annotations.incubator.AttributeForReturnValue;
 import io.opentelemetry.instrumentation.annotations.incubator.StaticAttribute;
 import io.opentelemetry.instrumentation.annotations.incubator.Timed;
@@ -27,10 +28,14 @@ public class TimedExample {
     Thread.sleep(2000);
   }
 
-  @Timed("example.with.attributes.duration")
+  @Timed("example.with.static.attributes.duration")
   @StaticAttribute(name = "key1", value = "value1")
   @StaticAttribute(name = "key2", value = "value2")
-  public void exampleWithAdditionalAttributes1() {}
+  public void exampleWithStaticAttributes() {}
+
+  @Timed("example.with.attributes.duration")
+  public void exampleWithAttributes(
+      @Attribute String attribute1, @Attribute("custom_attr") long attribute2) {}
 
   @Timed("example.ignore.duration")
   public void exampleIgnore() {}

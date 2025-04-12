@@ -56,13 +56,13 @@ class TimedInstrumentationTest {
   }
 
   @Test
-  void testExampleWithAdditionalAttributes1() {
-    new TimedExample().exampleWithAdditionalAttributes1();
+  void testExampleWithStaticAttributes() {
+    new TimedExample().exampleWithStaticAttributes();
     testing.waitAndAssertMetrics(
         TIMED_INSTRUMENTATION_NAME,
         metric ->
             metric
-                .hasName("example.with.attributes.duration")
+                .hasName("example.with.static.attributes.duration")
                 .satisfies(
                     metricData ->
                         assertThat(metricData.getData().getPoints())
@@ -76,6 +76,29 @@ class TimedInstrumentationTest {
                                             .equals(
                                                 p.getAttributes()
                                                     .get(AttributeKey.stringKey("key2"))))));
+  }
+
+  @Test
+  void testExampleWithAttributes() {
+    new TimedExample().exampleWithAttributes("attr1", 2);
+    testing.waitAndAssertMetrics(
+        TIMED_INSTRUMENTATION_NAME,
+        metric ->
+            metric
+                .hasName("example.with.attributes.duration")
+                .satisfies(
+                    metricData ->
+                        assertThat(metricData.getData().getPoints())
+                            .allMatch(
+                                p ->
+                                    Long.valueOf(2)
+                                            .equals(
+                                                p.getAttributes()
+                                                    .get(AttributeKey.longKey("custom_attr")))
+                                        && "attr1"
+                                            .equals(
+                                                p.getAttributes()
+                                                    .get(AttributeKey.stringKey("attribute1"))))));
   }
 
   @Test
