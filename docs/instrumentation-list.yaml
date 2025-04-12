@@ -1949,6 +1949,12 @@ internal:
   source_path: instrumentation/internal/internal-url-class-loader
   scope:
     name: io.opentelemetry.internal-url-class-loader
+- name: opentelemetry-extension-kotlin-1.0
+  description: |
+    Our Kotlin coroutine instrumentation relies on a shaded copy of the opentelemetry-extension-kotlin library. This can cause conflicts when the application itself also uses opentelemetry-extension-kotlin, because the shaded and unshaded versions store the OpenTelemetry context under different keys. To resolve this issue, this instrumentation modifies the application's copy of opentelemetry-extension-kotlin so that it delegates to the shaded version bundled within the agent.
+  source_path: instrumentation/opentelemetry-extension-kotlin-1.0
+  scope:
+    name: io.opentelemetry.opentelemetry-extension-kotlin-1.0
 - name: opentelemetry-api-1.4
   source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.4
   scope:
@@ -1960,27 +1966,31 @@ internal:
 custom:
 - name: external-annotations
   description: |
-    The external-annotations instrumentation acts as a "shim" that automatically instruments methods  annotated with custom or third-party tracing annotations. This is particularly useful if you have existing annotations (such as a custom @Trace or any third-party annotation) that you want to leverage with OpenTelemetry. At runtime, this module recognizes those annotations and applies the appropriate OpenTelemetry instrumentation logic, including span creation and context propagation. Covers many common vendor annotations by default, and additional annotations can be targeted using the configuration property: "otel.instrumentation.external-annotations.include"
+    The external-annotations instrumentation acts as a "shim" that automatically instruments methods annotated with custom or third-party tracing annotations. This is particularly useful if you have existing annotations (such as a custom @Trace or any third-party annotation) that you want to leverage with OpenTelemetry. At runtime, this module recognizes those annotations and applies the appropriate OpenTelemetry instrumentation logic, including span creation and context propagation. Covers many common vendor annotations by default, and additional annotations can be targeted using the configuration property: "otel.instrumentation.external-annotations.include"
   source_path: instrumentation/external-annotations
   scope:
     name: io.opentelemetry.external-annotations
 - name: opentelemetry-extension-annotations-1.0
+  description: |
+    Instruments methods annotated with Opentelemetry extension annotations, such as @WithSpan and @SpanAttribute.
   source_path: instrumentation/opentelemetry-extension-annotations-1.0
   scope:
     name: io.opentelemetry.opentelemetry-extension-annotations-1.0
 - name: opentelemetry-instrumentation-annotations-1.16
+  description: |
+    Instruments methods annotated with Opentelemetry instrumentation annotations, such as @WithSpan and @SpanAttribute.
   source_path: instrumentation/opentelemetry-instrumentation-annotations-1.16
   scope:
     name: io.opentelemetry.opentelemetry-instrumentation-annotations-1.16
 - name: jmx-metrics
+  description: |
+    Collects and reports key metrics exposed through Java Management Extensions (JMX). By registering JMX MBeans and polling their attributes, it automatically extracts JVM and application-level telemetry data such as memory usage, thread counts, and garbage collection statistics, and then translates these measurements into OpenTelemetry metrics.
   source_path: instrumentation/jmx-metrics
   scope:
     name: io.opentelemetry.jmx-metrics
 - name: methods
+  description: |
+    Provides a flexible way to capture telemetry at the method level in JVM applications. By weaving instrumentation into targeted methods at runtime based on the "otel.instrumentation.methods.include" configuration property, it measures entry and exit points, execution duration and exception occurrences. The resulting data is automatically translated into OpenTelemetry traces and metrics.
   source_path: instrumentation/methods
   scope:
     name: io.opentelemetry.methods
-- name: opentelemetry-extension-kotlin-1.0
-  source_path: instrumentation/opentelemetry-extension-kotlin-1.0
-  scope:
-    name: io.opentelemetry.opentelemetry-extension-kotlin-1.0

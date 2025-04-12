@@ -137,7 +137,7 @@ class YamlHelperTest {
 
     modules.add(
         new InstrumentationModule.Builder()
-            .srcPath("instrumentation/opentelemetry-external-annotations")
+            .srcPath("instrumentation/opentelemetry-external-annotations-1.0")
             .instrumentationName("opentelemetry-external-annotations")
             .namespace("opentelemetry-external-annotations")
             .group("opentelemetry-external-annotations")
@@ -171,7 +171,7 @@ class YamlHelperTest {
                 name: io.opentelemetry.internal-application-logger
             custom:
             - name: opentelemetry-external-annotations
-              source_path: instrumentation/opentelemetry-external-annotations
+              source_path: instrumentation/opentelemetry-external-annotations-1.0
               scope:
                 name: io.opentelemetry.opentelemetry-external-annotations
             """;
