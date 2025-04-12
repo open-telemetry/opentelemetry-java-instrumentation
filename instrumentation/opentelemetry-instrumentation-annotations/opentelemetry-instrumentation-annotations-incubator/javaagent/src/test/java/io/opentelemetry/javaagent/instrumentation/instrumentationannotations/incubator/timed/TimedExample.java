@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 public class TimedExample {
   public static final String METRIC_NAME = "name.duration";
   public static final String METRIC_DESCRIPTION = "I am the description.";
-  public static final String TO_STRING = "I am a return string.";
+  public static final String TO_STRING = "I am a to string object.";
 
   @Timed(METRIC_NAME)
   public void exampleWithName() {}
@@ -36,7 +36,7 @@ public class TimedExample {
   @Timed("example.with.attributes.duration")
   public void exampleWithAttributes(
       @Attribute String attribute1,
-      @Attribute("custom_attr") long attribute2,
+      @Attribute("custom_attr1") long attribute2,
       @Attribute("custom_attr2") TimedExample.ToStringObject toStringObject) {}
 
   @Timed("example.ignore.duration")

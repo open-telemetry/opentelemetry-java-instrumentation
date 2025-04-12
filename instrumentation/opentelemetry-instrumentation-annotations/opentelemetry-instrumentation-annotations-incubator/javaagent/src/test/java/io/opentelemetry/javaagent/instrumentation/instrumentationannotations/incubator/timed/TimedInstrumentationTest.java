@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.incubator.timed;
 
-import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.incubator.counted.CountedExample.TO_STRING;
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.incubator.timed.TimedExample.METRIC_DESCRIPTION;
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.incubator.timed.TimedExample.METRIC_NAME;
+import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.incubator.timed.TimedExample.TO_STRING;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -95,7 +95,7 @@ class TimedInstrumentationTest {
                                     Long.valueOf(2)
                                             .equals(
                                                 p.getAttributes()
-                                                    .get(AttributeKey.longKey("custom_attr")))
+                                                    .get(AttributeKey.longKey("custom_attr1")))
                                         && TO_STRING.equals(
                                             p.getAttributes()
                                                 .get(AttributeKey.stringKey("custom_attr2")))
