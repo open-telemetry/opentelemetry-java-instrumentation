@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 public class TimedExample {
   public static final String METRIC_NAME = "name.duration";
   public static final String METRIC_DESCRIPTION = "I am the description.";
-  public static final String RETURN_STRING = "I am a return string.";
+  public static final String TO_STRING = "I am a return string.";
 
   @Timed(METRIC_NAME)
   public void exampleWithName() {}
@@ -35,7 +35,9 @@ public class TimedExample {
 
   @Timed("example.with.attributes.duration")
   public void exampleWithAttributes(
-      @Attribute String attribute1, @Attribute("custom_attr") long attribute2) {}
+      @Attribute String attribute1,
+      @Attribute("custom_attr") long attribute2,
+      @Attribute("custom_attr2") TimedExample.ToStringObject toStringObject) {}
 
   @Timed("example.ignore.duration")
   public void exampleIgnore() {}
@@ -47,8 +49,8 @@ public class TimedExample {
 
   @Timed(value = "example.with.return.duration")
   @AttributeForReturnValue("returnValue")
-  public ReturnObject exampleWithReturnValueAttribute() {
-    return new ReturnObject();
+  public ToStringObject exampleWithReturnValueAttribute() {
+    return new ToStringObject();
   }
 
   @Timed(value = "example.completable.future.duration")
@@ -57,10 +59,10 @@ public class TimedExample {
     return future;
   }
 
-  public static class ReturnObject {
+  public static class ToStringObject {
     @Override
     public String toString() {
-      return RETURN_STRING;
+      return TO_STRING;
     }
   }
 }

@@ -16,7 +16,7 @@ public class CountedExample {
   public static final String METRIC_NAME = "name.count";
   public static final String METRIC_DESCRIPTION = "I am the description.";
   public static final String METRIC_UNIT = "ms";
-  public static final String RETURN_STRING = "I am a return string.";
+  public static final String TO_STRING = "I am a to string object.";
 
   @Counted(METRIC_NAME)
   public void exampleWithName() {}
@@ -35,12 +35,14 @@ public class CountedExample {
 
   @Counted("example.with.attributes.count")
   public void exampleWithAttributes(
-      @Attribute String attribute1, @Attribute("custom_attr") long attribute2) {}
+      @Attribute String attribute1,
+      @Attribute("custom_attr1") long attribute2,
+      @Attribute("custom_attr2") ToStringObject toStringObject) {}
 
   @Counted(value = "example.with.return.count")
   @AttributeForReturnValue("returnValue")
-  public ReturnObject exampleWithReturnValueAttribute() {
-    return new ReturnObject();
+  public ToStringObject exampleWithReturnValueAttribute() {
+    return new ToStringObject();
   }
 
   @Counted("example.with.exception.count")
@@ -57,10 +59,10 @@ public class CountedExample {
     return future;
   }
 
-  public static class ReturnObject {
+  public static class ToStringObject {
     @Override
     public String toString() {
-      return RETURN_STRING;
+      return TO_STRING;
     }
   }
 }

@@ -33,7 +33,8 @@ public @interface Attribute {
    *
    * <p>If not specified and the code is compiled using the `{@code -parameters}` argument to
    * `javac`, the parameter name will be used instead. If the parameter name is not available, e.g.,
-   * because the code was not compiled with that flag, the attribute will be ignored.
+   * because the code was not compiled with that flag, the attribute will be ignored. `{@link
+   * Object#toString()}` may be called on the attribute value to convert it to a String.
    */
   String value() default "";
 }

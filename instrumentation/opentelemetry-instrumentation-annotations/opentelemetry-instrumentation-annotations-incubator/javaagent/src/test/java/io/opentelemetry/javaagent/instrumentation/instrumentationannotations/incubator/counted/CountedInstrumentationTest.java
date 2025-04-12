@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.in
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.incubator.counted.CountedExample.METRIC_DESCRIPTION;
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.incubator.counted.CountedExample.METRIC_NAME;
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.incubator.counted.CountedExample.METRIC_UNIT;
+import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.incubator.counted.CountedExample.TO_STRING;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -73,7 +74,7 @@ class CountedInstrumentationTest {
 
   @Test
   void testExampleWithAttributes() {
-    new CountedExample().exampleWithAttributes("attr1", 2);
+    new CountedExample().exampleWithAttributes("attr1", 2, new CountedExample.ToStringObject());
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         metric ->
@@ -87,7 +88,10 @@ class CountedInstrumentationTest {
                                     Long.valueOf(2)
                                             .equals(
                                                 p.getAttributes()
-                                                    .get(AttributeKey.longKey("custom_attr")))
+                                                    .get(AttributeKey.longKey("custom_attr1")))
+                                        && TO_STRING.equals(
+                                            p.getAttributes()
+                                                .get(AttributeKey.stringKey("custom_attr2")))
                                         && "attr1"
                                             .equals(
                                                 p.getAttributes()
@@ -107,7 +111,7 @@ class CountedInstrumentationTest {
                         assertThat(metricData.getData().getPoints())
                             .allMatch(
                                 p ->
-                                    CountedExample.RETURN_STRING.equals(
+                                    TO_STRING.equals(
                                         p.getAttributes()
                                             .get(AttributeKey.stringKey("returnValue"))))));
   }

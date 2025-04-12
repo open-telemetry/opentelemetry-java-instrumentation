@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.incubator.timed;
 
+import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.incubator.counted.CountedExample.TO_STRING;
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.incubator.timed.TimedExample.METRIC_DESCRIPTION;
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.incubator.timed.TimedExample.METRIC_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -80,7 +81,7 @@ class TimedInstrumentationTest {
 
   @Test
   void testExampleWithAttributes() {
-    new TimedExample().exampleWithAttributes("attr1", 2);
+    new TimedExample().exampleWithAttributes("attr1", 2, new TimedExample.ToStringObject());
     testing.waitAndAssertMetrics(
         TIMED_INSTRUMENTATION_NAME,
         metric ->
@@ -95,6 +96,9 @@ class TimedInstrumentationTest {
                                             .equals(
                                                 p.getAttributes()
                                                     .get(AttributeKey.longKey("custom_attr")))
+                                        && TO_STRING.equals(
+                                            p.getAttributes()
+                                                .get(AttributeKey.stringKey("custom_attr2")))
                                         && "attr1"
                                             .equals(
                                                 p.getAttributes()
@@ -145,7 +149,7 @@ class TimedInstrumentationTest {
                         assertThat(metricData.getData().getPoints())
                             .allMatch(
                                 p ->
-                                    TimedExample.RETURN_STRING.equals(
+                                    TimedExample.TO_STRING.equals(
                                         p.getAttributes()
                                             .get(AttributeKey.stringKey("returnValue"))))));
   }
