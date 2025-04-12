@@ -1,0 +1,30 @@
+---
+id: dbcd468d-58ca-4d6f-87e9-7d377f1aae67
+name: model_metallama3-3-70b-instruct-v1_invoke
+request:
+  url: /model/meta.llama3-3-70b-instruct-v1%3A0/invoke
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "prompt" : "Say this is a test",
+        "max_gen_len" : 10,
+        "temperature" : 0.8,
+        "top_p" : 1
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  body: "{\"generation\":\"\\n\\nThis is a test\",\"prompt_token_count\":5,
+    \"generation_token_count\":10,\"stop_reason\":\"max_tokens\"}"
+  headers:
+    Date: "Wed, 19 Mar 2025 05:44:06 GMT"
+    Content-Type: application/json
+    x-amzn-RequestId: 1c4e6b83-4da3-430c-b21f-34b0cb003f06
+    X-Amzn-Bedrock-Invocation-Latency: "658"
+    X-Amzn-Bedrock-Output-Token-Count: "10"
+    X-Amzn-Bedrock-Input-Token-Count: "5"
+uuid: dbcd468d-58ca-4d6f-87e9-7d377f1aae67
+persistent: true
+insertionIndex: 20

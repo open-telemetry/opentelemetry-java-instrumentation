@@ -1,7 +1,7 @@
 plugins {
   `kotlin-dsl`
   // When updating, update below in dependencies too
-  id("com.diffplug.spotless") version "7.0.2"
+  id("com.diffplug.spotless") version "7.0.3"
 }
 
 spotless {
@@ -54,15 +54,15 @@ dependencies {
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
   // When updating, update above in plugins too
-  implementation("com.diffplug.spotless:spotless-plugin-gradle:7.0.2")
-  implementation("com.google.guava:guava:33.4.6-jre")
+  implementation("com.diffplug.spotless:spotless-plugin-gradle:7.0.3")
+  implementation("com.google.guava:guava:33.4.7-jre")
   implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.18")
   implementation("com.gradleup.shadow:shadow-gradle-plugin:8.3.6")
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
-  implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:3.19.2")
-  implementation("org.owasp:dependency-check-gradle:12.1.0")
+  implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:4.0")
+  implementation("org.owasp:dependency-check-gradle:12.1.1")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:2.0.0")
-  implementation("org.spdx:spdx-gradle-plugin:0.8.0")
+  implementation("org.spdx:spdx-gradle-plugin:0.9.0")
   // When updating, also update dependencyManagement/build.gradle.kts
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.17.5")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")

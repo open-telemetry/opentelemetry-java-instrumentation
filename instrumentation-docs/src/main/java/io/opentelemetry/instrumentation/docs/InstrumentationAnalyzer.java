@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.docs;
 import static io.opentelemetry.instrumentation.docs.parsers.GradleParser.parseGradleFile;
 
 import io.opentelemetry.instrumentation.docs.internal.DependencyInfo;
-import io.opentelemetry.instrumentation.docs.internal.InstrumentationEntity;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import io.opentelemetry.instrumentation.docs.utils.InstrumentationPath;
@@ -22,30 +22,28 @@ import java.util.Set;
 
 class InstrumentationAnalyzer {
 
-  private final FileManager fileSearch;
+  private final FileManager fileManager;
 
-  InstrumentationAnalyzer(FileManager fileSearch) {
-    this.fileSearch = fileSearch;
+  InstrumentationAnalyzer(FileManager fileManager) {
+    this.fileManager = fileManager;
   }
 
   /**
-   * Converts a list of InstrumentationPath objects into a list of InstrumentationEntity objects.
-   * Each InstrumentationEntity represents a unique combination of group, namespace, and
-   * instrumentation name. The types of instrumentation (e.g., library, javaagent) are aggregated
-   * into a list within each entity.
+   * Converts a list of {@link InstrumentationPath} into a list of {@link InstrumentationModule},
    *
-   * @param paths the list of InstrumentationPath objects to be converted
-   * @return a list of InstrumentationEntity objects with aggregated types
+   * @param paths the list of {@link InstrumentationPath} objects to be converted
+   * @return a list of {@link InstrumentationModule} objects with aggregated types
    */
-  public static List<InstrumentationEntity> convertToEntities(List<InstrumentationPath> paths) {
-    Map<String, InstrumentationEntity> entityMap = new HashMap<>();
+  public static List<InstrumentationModule> convertToInstrumentationModules(
+      List<InstrumentationPath> paths) {
+    Map<String, InstrumentationModule> moduleMap = new HashMap<>();
 
     for (InstrumentationPath path : paths) {
       String key = path.group() + ":" + path.namespace() + ":" + path.instrumentationName();
-      if (!entityMap.containsKey(key)) {
-        entityMap.put(
+      if (!moduleMap.containsKey(key)) {
+        moduleMap.put(
             key,
-            new InstrumentationEntity.Builder()
+            new InstrumentationModule.Builder()
                 .srcPath(path.srcPath().replace("/javaagent", "").replace("/library", ""))
                 .instrumentationName(path.instrumentationName())
                 .namespace(path.namespace())
@@ -54,36 +52,36 @@ class InstrumentationAnalyzer {
       }
     }
 
-    return new ArrayList<>(entityMap.values());
+    return new ArrayList<>(moduleMap.values());
   }
 
   /**
-   * Analyzes the given root directory to find all instrumentation paths and then analyze them.
-   * Extracts version information from each instrumentation's build.gradle file. Extracts
+   * Traverses the given root directory to find all instrumentation paths and then analyzes them.
+   * Extracts version information from each instrumentation's build.gradle file, and other
    * information from metadata.yaml files.
    *
-   * @return a list of InstrumentationEntity objects with target versions
+   * @return a list of {@link InstrumentationModule}
    */
-  List<InstrumentationEntity> analyze() {
-    List<InstrumentationPath> paths = fileSearch.getInstrumentationPaths();
-    List<InstrumentationEntity> entities = convertToEntities(paths);
+  List<InstrumentationModule> analyze() {
+    List<InstrumentationPath> paths = fileManager.getInstrumentationPaths();
+    List<InstrumentationModule> modules = convertToInstrumentationModules(paths);
 
-    for (InstrumentationEntity entity : entities) {
-      List<String> gradleFiles = fileSearch.findBuildGradleFiles(entity.getSrcPath());
-      analyzeVersions(gradleFiles, entity);
+    for (InstrumentationModule module : modules) {
+      List<String> gradleFiles = fileManager.findBuildGradleFiles(module.getSrcPath());
+      analyzeVersions(gradleFiles, module);
 
-      String metadataFile = fileSearch.getMetaDataFile(entity.getSrcPath());
+      String metadataFile = fileManager.getMetaDataFile(module.getSrcPath());
       if (metadataFile != null) {
-        entity.setMetadata(YamlHelper.metaDataParser(metadataFile));
+        module.setMetadata(YamlHelper.metaDataParser(metadataFile));
       }
     }
-    return entities;
+    return modules;
   }
 
-  void analyzeVersions(List<String> files, InstrumentationEntity entity) {
+  void analyzeVersions(List<String> files, InstrumentationModule module) {
     Map<InstrumentationType, Set<String>> versions = new HashMap<>();
     for (String file : files) {
-      String fileContents = fileSearch.readFileToString(file);
+      String fileContents = fileManager.readFileToString(file);
       DependencyInfo results = null;
 
       if (file.contains("/javaagent/")) {
@@ -98,9 +96,9 @@ class InstrumentationAnalyzer {
             .addAll(results.versions());
       }
       if (results != null && results.minJavaVersionSupported() != null) {
-        entity.setMinJavaVersion(results.minJavaVersionSupported());
+        module.setMinJavaVersion(results.minJavaVersionSupported());
       }
     }
-    entity.setTargetVersions(versions);
+    module.setTargetVersions(versions);
   }
 }

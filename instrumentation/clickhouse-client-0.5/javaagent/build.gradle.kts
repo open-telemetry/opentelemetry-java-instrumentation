@@ -16,6 +16,7 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
+  testImplementation("com.google.guava:guava")
   testLibrary("com.clickhouse:clickhouse-client:0.5.0")
   testLibrary("com.clickhouse:clickhouse-http-client:0.5.0")
   testLibrary("org.apache.httpcomponents.client5:httpclient5:5.2.3")

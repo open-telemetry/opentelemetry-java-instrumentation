@@ -146,6 +146,9 @@ public class RuleParser {
     if (sourceUnit != null) {
       out.setSourceUnit(sourceUnit);
     }
+
+    Boolean dropNegativeValues = (Boolean) metricStructureYaml.remove("dropNegativeValues");
+    out.setDropNegativeValues(dropNegativeValues);
   }
 
   private static void failOnExtraKeys(Map<String, Object> yaml) {

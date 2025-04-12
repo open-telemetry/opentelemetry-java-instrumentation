@@ -15,7 +15,6 @@ import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_
 import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.spring.webmvc.boot.AbstractSpringBootBasedTest;
 import io.opentelemetry.instrumentation.spring.webmvc.boot.AppConfig;
@@ -26,6 +25,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.util.Map;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -55,7 +55,7 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
   protected ConfigurableApplicationContext setupServer() {
     SpringApplication app = new SpringApplication(AppConfig.class, securityConfigClass());
     app.setDefaultProperties(
-        ImmutableMap.of(
+        Map.of(
             "server.port",
             port,
             "server.context-path",

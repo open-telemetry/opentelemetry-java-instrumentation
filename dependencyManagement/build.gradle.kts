@@ -5,7 +5,7 @@ plugins {
 data class DependencySet(val group: String, val version: String, val modules: List<String>)
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.48.0"
+val otelSdkVersion = "1.49.0"
 val otelContribVersion = "1.45.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
@@ -28,8 +28,8 @@ val DEPENDENCY_BOMS = listOf(
   // even if they are only used by test dependencies, so not using junit bom since it is LGPL
 
   "com.fasterxml.jackson:jackson-bom:2.18.3",
-  "com.squareup.okio:okio-bom:3.10.2", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
-  "com.google.guava:guava-bom:33.4.6-jre",
+  "com.squareup.okio:okio-bom:3.11.0", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
+  "com.google.guava:guava-bom:33.4.7-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
@@ -44,7 +44,7 @@ val asmVersion = "9.8"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.17"
-val semConvVersion = "1.30.0"
+val semConvVersion = "1.32.0"
 val semConvAlphaVersion =  semConvVersion.replaceFirst("(-rc.*)?$".toRegex(), "-alpha$1")
 
 val CORE_DEPENDENCIES = listOf(
@@ -102,6 +102,7 @@ val DEPENDENCIES = listOf(
   "commons-logging:commons-logging:1.3.5",
   "commons-validator:commons-validator:1.9.0",
   "io.netty:netty:3.10.6.Final",
+  "io.opentelemetry.contrib:opentelemetry-azure-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-aws-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-gcp-resources:${otelContribVersion}",
