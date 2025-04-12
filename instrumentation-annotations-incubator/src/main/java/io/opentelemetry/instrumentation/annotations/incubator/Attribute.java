@@ -12,10 +12,10 @@ import java.lang.annotation.Target;
 
 /**
  * This annotation marks that a parameter of a method or constructor annotated with {@link Timed} or
- * {@link Counted} should be added as an attribute to the instrument.
+ * {@link Counted} should be added as an attribute to the metric.
  *
  * <p>Application developers can use this annotation to signal OpenTelemetry auto-instrumentation
- * that the attribute should be created.
+ * that the attribute should be captured.
  *
  * <p>If you are a library developer, then probably you should NOT use this annotation, because it
  * is non-functional without the OpenTelemetry auto-instrumentation agent, or some other annotation

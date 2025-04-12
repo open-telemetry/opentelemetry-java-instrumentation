@@ -36,23 +36,23 @@ import java.util.concurrent.TimeUnit;
 public @interface Timed {
 
   /**
-   * Name of the Histogram instrument.
+   * Name of the Histogram metric.
    *
-   * <p>The name should follow the instrument naming rule: <a
+   * <p>The name should follow the metric naming rule: <a
    * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-naming-rule">https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-naming-rule</a>
    */
   String value();
 
   /**
-   * Description for the instrument.
+   * Description for the metric.
    *
-   * <p>Description strings should follow the instrument description rules: <a
+   * <p>Description strings should follow the metric description rules: <a
    * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-description">https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-description</a>
    */
   String description() default "";
 
   /**
-   * The unit for the instrument.
+   * The unit for the metric.
    *
    * <p>Default is seconds.
    */

@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
  * </ul>
  *
  * <p>Application developers can use this annotation to signal OpenTelemetry auto-instrumentation
- * that the Counter instrument should be created.
+ * that a Counter metric should be captured.
  *
  * <p>If you are a library developer, then probably you should NOT use this annotation, because it
  * is non-functional without the OpenTelemetry auto-instrumentation agent, or some other annotation
@@ -35,30 +35,30 @@ import java.lang.annotation.Target;
 public @interface Counted {
 
   /**
-   * Name of the Counter instrument.
+   * Name of the Counter metric.
    *
-   * <p>The name should follow the instrument naming rule: <a
-   * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-naming-rule">https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-naming-rule</a>
+   * <p>The name should follow the metric naming rule: <a
+   * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-name-syntax">https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-name-syntax</a>
    */
   String value();
 
   /**
-   * Description of the instrument.
+   * Description of the metric.
    *
-   * <p>Description strings should follow the instrument description rules: <a
+   * <p>Description strings should follow the metric description rules: <a
    * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-description">https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-description</a>
    *
-   * <p>This property would not take effect if the value is not specified.
+   * <p>This property will not take effect if the value is not specified.
    */
   String description() default "";
 
   /**
-   * Unit of the instrument.
+   * Unit of the metric.
    *
-   * <p>Unit strings should follow the instrument unit rules: <a
+   * <p>Unit strings should follow the metric unit rules: <a
    * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-unit">https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-unit</a>
    *
-   * <p>This property would not take effect if the value is not specified.
+   * <p>This property will not take effect if the value is not specified.
    */
   String unit() default "{invocation}";
 }

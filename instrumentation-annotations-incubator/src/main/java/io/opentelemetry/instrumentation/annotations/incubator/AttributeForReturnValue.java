@@ -11,11 +11,11 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * This annotation allows for adding method return value as attribute to the metrics recorded using
- * {@link Timed} and {@link Counted} annotations.
+ * This annotation allows for adding the method return value as an attribute to metrics recorded using
+ * the {@link Timed} and {@link Counted} annotations.
  *
  * <p>Application developers can use this annotation to signal OpenTelemetry auto-instrumentation
- * that the attribute should be created.
+ * that the attribute should be captured.
  *
  * <p>If you are a library developer, then probably you should NOT use this annotation, because it
  * is non-functional without the OpenTelemetry auto-instrumentation agent, or some other annotation

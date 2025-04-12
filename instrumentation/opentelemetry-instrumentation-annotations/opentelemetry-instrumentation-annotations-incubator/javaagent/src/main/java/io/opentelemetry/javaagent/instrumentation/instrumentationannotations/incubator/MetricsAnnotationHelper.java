@@ -35,8 +35,8 @@ public abstract class MetricsAnnotationHelper {
 
   static void addStaticAttributes(Method method, AttributesBuilder attributesBuilder) {
     attributesBuilder.put(
-        CodeIncubatingAttributes.CODE_NAMESPACE, method.getDeclaringClass().getName());
-    attributesBuilder.put(CodeIncubatingAttributes.CODE_FUNCTION_NAME, method.getName());
+        CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+        method.getDeclaringClass().getName() + "." + method.getName());
 
     StaticAttribute[] staticAttributes = method.getDeclaredAnnotationsByType(StaticAttribute.class);
     for (StaticAttribute staticAttribute : staticAttributes) {
