@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.incubator.counted;
 
+import io.opentelemetry.instrumentation.annotations.incubator.Attribute;
 import io.opentelemetry.instrumentation.annotations.incubator.AttributeForReturnValue;
 import io.opentelemetry.instrumentation.annotations.incubator.Counted;
 import io.opentelemetry.instrumentation.annotations.incubator.StaticAttribute;
@@ -26,11 +27,15 @@ public class CountedExample {
   @Counted(value = "example.with.unit.count", unit = METRIC_UNIT)
   public void exampleWithUnit() {}
 
-  @Counted("example.with.attributes.count")
+  @Counted("example.with.static.attributes.count")
   @StaticAttribute(name = "key1", value = "value1")
   @StaticAttribute(name = "key2", value = "value2")
   @StaticAttribute(name = "key2", value = "value2")
-  public void exampleWithAdditionalAttributes1() {}
+  public void exampleWithStaticAttributes() {}
+
+  @Counted("example.with.attributes.count")
+  public void exampleWithAttributes(
+      @Attribute String attribute1, @Attribute("custom_attr") long attribute2) {}
 
   @Counted(value = "example.with.return.count")
   @AttributeForReturnValue("returnValue")

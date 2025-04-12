@@ -49,13 +49,13 @@ class CountedInstrumentationTest {
   }
 
   @Test
-  void testExampleWithAdditionalAttributes1() {
-    new CountedExample().exampleWithAdditionalAttributes1();
+  void testExampleWithStaticAttributes() {
+    new CountedExample().exampleWithStaticAttributes();
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         metric ->
             metric
-                .hasName("example.with.attributes.count")
+                .hasName("example.with.static.attributes.count")
                 .satisfies(
                     metricData ->
                         assertThat(metricData.getData().getPoints())
@@ -69,6 +69,29 @@ class CountedInstrumentationTest {
                                             .equals(
                                                 p.getAttributes()
                                                     .get(AttributeKey.stringKey("key2"))))));
+  }
+
+  @Test
+  void testExampleWithAttributes() {
+    new CountedExample().exampleWithAttributes("attr1", 2);
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        metric ->
+            metric
+                .hasName("example.with.attributes.count")
+                .satisfies(
+                    metricData ->
+                        assertThat(metricData.getData().getPoints())
+                            .allMatch(
+                                p ->
+                                    Integer.valueOf(2)
+                                            .equals(
+                                                p.getAttributes()
+                                                    .get(AttributeKey.stringKey("custom_attr")))
+                                        && "attr1"
+                                            .equals(
+                                                p.getAttributes()
+                                                    .get(AttributeKey.stringKey("attribute1"))))));
   }
 
   @Test
