@@ -1,6 +1,6 @@
 # Settings for the OpenTelemetry Extension Annotations integration
 
-Instruments methods annotated with Opentelemetry extension annotations, such as @WithSpan and
+Instruments methods annotated with OpenTelemetry extension annotations, such as @WithSpan and
 @SpanAttribute.
 
 | Environment variable                                             | Type   | Default | Description                                                                       |

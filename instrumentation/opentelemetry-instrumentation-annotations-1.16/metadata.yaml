@@ -1,4 +1,4 @@
 classification: custom
 description: >
-  Instruments methods annotated with Opentelemetry instrumentation annotations, such as @WithSpan
+  Instruments methods annotated with OpenTelemetry instrumentation annotations, such as @WithSpan
   and @SpanAttribute.

@@ -4,4 +4,4 @@ description: >
   instrumentation into targeted methods at runtime based on the
   "otel.instrumentation.methods.include" configuration property, it measures entry and exit points,
   execution duration and exception occurrences. The resulting data is automatically translated into
-  OpenTelemetry traces and metrics.
+  OpenTelemetry traces.

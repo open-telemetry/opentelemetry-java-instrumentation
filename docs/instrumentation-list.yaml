@@ -638,11 +638,6 @@ libraries:
     target_versions:
       javaagent:
       - javax.ws.rs:javax.ws.rs-api:[,]
-  - name: jaxrs-client-1.1
-    source_path: instrumentation/jaxrs-client/jaxrs-client-1.1
-    scope:
-      name: io.opentelemetry.jaxrs-client-1.1
-    target_versions: {}
   - name: jaxrs-3.0-resteasy-6.0
     source_path: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-resteasy-6.0
     minimum_java_version: 11
@@ -675,11 +670,6 @@ libraries:
     target_versions:
       javaagent:
       - javax.xml.ws:jaxws-api:[2.0,]
-  - name: jaxws-2.0-metro-2.2
-    source_path: instrumentation/jaxws/jaxws-2.0-metro-2.2
-    scope:
-      name: io.opentelemetry.jaxws-2.0-metro-2.2
-    target_versions: {}
   - name: jaxws-cxf-3.0
     source_path: instrumentation/jaxws/jaxws-cxf-3.0
     scope:
@@ -694,11 +684,6 @@ libraries:
     target_versions:
       javaagent:
       - org.apache.axis2:axis2-jaxws:[1.6.0,)
-  - name: jaxws-2.0-cxf-3.0
-    source_path: instrumentation/jaxws/jaxws-2.0-cxf-3.0
-    scope:
-      name: io.opentelemetry.jaxws-2.0-cxf-3.0
-    target_versions: {}
   - name: jaxws-metro-2.2
     source_path: instrumentation/jaxws/jaxws-metro-2.2
     scope:
@@ -979,12 +964,10 @@ libraries:
     source_path: instrumentation/liberty/liberty-dispatcher-20.0
     scope:
       name: io.opentelemetry.liberty-dispatcher-20.0
-    target_versions: {}
   - name: liberty-20.0
     source_path: instrumentation/liberty/liberty-20.0
     scope:
       name: io.opentelemetry.liberty-20.0
-    target_versions: {}
   log4j:
   - name: log4j-context-data-2.7
     source_path: instrumentation/log4j/log4j-context-data/log4j-context-data-2.7
@@ -1175,7 +1158,6 @@ libraries:
     source_path: instrumentation/payara
     scope:
       name: io.opentelemetry.payara
-    target_versions: {}
   pekko:
   - name: pekko-actor-1.0
     source_path: instrumentation/pekko/pekko-actor-1.0
@@ -1380,7 +1362,6 @@ libraries:
     source_path: instrumentation/resources
     scope:
       name: io.opentelemetry.resources
-    target_versions: {}
   restlet:
   - name: restlet-1.1
     source_path: instrumentation/restlet/restlet-1.1
@@ -1432,12 +1413,10 @@ libraries:
     minimum_java_version: 17
     scope:
       name: io.opentelemetry.runtime-telemetry-java17
-    target_versions: {}
   - name: runtime-telemetry-java8
     source_path: instrumentation/runtime-telemetry/runtime-telemetry-java8
     scope:
       name: io.opentelemetry.runtime-telemetry-java8
-    target_versions: {}
   rxjava:
   - name: rxjava-1.0
     source_path: instrumentation/rxjava/rxjava-1.0
@@ -1530,7 +1509,6 @@ libraries:
     source_path: instrumentation/spring/spring-boot-resources
     scope:
       name: io.opentelemetry.spring-boot-resources
-    target_versions: {}
   - name: spring-batch-3.0
     disabled_by_default: true
     source_path: instrumentation/spring/spring-batch-3.0
@@ -1635,7 +1613,6 @@ libraries:
     source_path: instrumentation/spring/spring-webmvc/spring-webmvc-5.3
     scope:
       name: io.opentelemetry.spring-webmvc-5.3
-    target_versions: {}
   - name: spring-core-2.0
     source_path: instrumentation/spring/spring-core-2.0
     minimum_java_version: 17
@@ -1893,6 +1870,10 @@ internal:
   source_path: instrumentation/internal/internal-application-logger
   scope:
     name: io.opentelemetry.internal-application-logger
+  target_versions:
+    javaagent:
+    - org.springframework.boot:spring-boot:[1.2.0,)
+    - org.slf4j:slf4j-api:[1.4.0,)
 - name: internal-class-loader
   source_path: instrumentation/internal/internal-class-loader
   scope:
@@ -1909,6 +1890,9 @@ internal:
   source_path: instrumentation/opentelemetry-instrumentation-api
   scope:
     name: io.opentelemetry.opentelemetry-instrumentation-api
+  target_versions:
+    javaagent:
+    - io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:[1.14.0-alpha,)
 - name: opentelemetry-api-1.37
   source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.37
   scope:
@@ -1955,6 +1939,9 @@ internal:
   source_path: instrumentation/opentelemetry-extension-kotlin-1.0
   scope:
     name: io.opentelemetry.opentelemetry-extension-kotlin-1.0
+  target_versions:
+    javaagent:
+    - io.opentelemetry:opentelemetry-extension-kotlin:[0.17.0,)
 - name: opentelemetry-api-1.4
   source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.4
   scope:
@@ -1963,34 +1950,49 @@ internal:
   source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.0
   scope:
     name: io.opentelemetry.opentelemetry-api-1.0
+  target_versions:
+    javaagent:
+    - io.opentelemetry:opentelemetry-api:[0.17.0,)
 custom:
 - name: external-annotations
   description: |
-    The external-annotations instrumentation acts as a "shim" that automatically instruments methods annotated with custom or third-party tracing annotations. This is particularly useful if you have existing annotations (such as a custom @Trace or any third-party annotation) that you want to leverage with OpenTelemetry. At runtime, this module recognizes those annotations and applies the appropriate OpenTelemetry instrumentation logic, including span creation and context propagation. Covers many common vendor annotations by default, and additional annotations can be targeted using the configuration property: "otel.instrumentation.external-annotations.include"
+    The external-annotations instrumentation acts as a "shim" that automatically instruments methods annotated with custom or third-party tracing annotations. This is particularly useful if you have existing annotations (such as a custom @Trace or third-party annotation) that you want to leverage with OpenTelemetry. At runtime, this module recognizes those annotations and applies the appropriate OpenTelemetry instrumentation logic, including span creation and context propagation. Covers many common vendor annotations by default, and additional annotations can be targeted using the configuration property "otel.instrumentation.external-annotations.include".
   source_path: instrumentation/external-annotations
   scope:
     name: io.opentelemetry.external-annotations
+  target_versions:
+    javaagent:
+    - Java 8+
 - name: opentelemetry-extension-annotations-1.0
   description: |
-    Instruments methods annotated with Opentelemetry extension annotations, such as @WithSpan and @SpanAttribute.
+    Instruments methods annotated with OpenTelemetry extension annotations, such as @WithSpan and @SpanAttribute.
   source_path: instrumentation/opentelemetry-extension-annotations-1.0
   scope:
     name: io.opentelemetry.opentelemetry-extension-annotations-1.0
+  target_versions:
+    javaagent:
+    - io.opentelemetry:opentelemetry-extension-annotations:[0.16.0,)
 - name: opentelemetry-instrumentation-annotations-1.16
   description: |
-    Instruments methods annotated with Opentelemetry instrumentation annotations, such as @WithSpan and @SpanAttribute.
+    Instruments methods annotated with OpenTelemetry instrumentation annotations, such as @WithSpan and @SpanAttribute.
   source_path: instrumentation/opentelemetry-instrumentation-annotations-1.16
   scope:
     name: io.opentelemetry.opentelemetry-instrumentation-annotations-1.16
+  target_versions:
+    javaagent:
+    - io.opentelemetry:opentelemetry-instrumentation-annotations:(,)
 - name: jmx-metrics
   description: |
-    Collects and reports key metrics exposed through Java Management Extensions (JMX). By registering JMX MBeans and polling their attributes, it automatically extracts JVM and application-level telemetry data such as memory usage, thread counts, and garbage collection statistics, and then translates these measurements into OpenTelemetry metrics.
+    Collects and reports metrics exposed through Java Management Extensions (JMX). It can be configured to extract JVM and application-level telemetry data from JMX MBeans such as memory usage, thread counts, and garbage collection statistics, and translate these measurements into OpenTelemetry metrics.
   source_path: instrumentation/jmx-metrics
   scope:
     name: io.opentelemetry.jmx-metrics
 - name: methods
   description: |
-    Provides a flexible way to capture telemetry at the method level in JVM applications. By weaving instrumentation into targeted methods at runtime based on the "otel.instrumentation.methods.include" configuration property, it measures entry and exit points, execution duration and exception occurrences. The resulting data is automatically translated into OpenTelemetry traces and metrics.
+    Provides a flexible way to capture telemetry at the method level in JVM applications. By weaving instrumentation into targeted methods at runtime based on the "otel.instrumentation.methods.include" configuration property, it measures entry and exit points, execution duration and exception occurrences. The resulting data is automatically translated into OpenTelemetry traces.
   source_path: instrumentation/methods
   scope:
     name: io.opentelemetry.methods
+  target_versions:
+    javaagent:
+    - Java 8+

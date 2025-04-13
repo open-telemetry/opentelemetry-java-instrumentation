@@ -2,11 +2,11 @@
 
 The external-annotations instrumentation acts as a "shim" that automatically instruments methods
 annotated with custom or third-party tracing annotations. This is particularly useful if you have
-existing annotations (such as a custom @Trace or any third-party annotation) that you want to
-leverage with OpenTelemetry. At runtime, this module recognizes those annotations and applies the
-appropriate OpenTelemetry instrumentation logic, including span creation and context propagation.
-Covers many common vendor annotations by default, and additional annotations can be targeted using
-the configuration property: "otel.instrumentation.external-annotations.include"
+existing annotations (such as a custom @Trace or third-party annotation) that you want to leverage
+with OpenTelemetry. At runtime, this module recognizes those annotations and applies the appropriate
+OpenTelemetry instrumentation logic, including span creation and context propagation. Covers many
+common vendor annotations by default, and additional annotations can be targeted using the
+configuration property "otel.instrumentation.external-annotations.include".
 
 | System property                                             | Type   | Default             | Description                                                                                               |
 | ----------------------------------------------------------- | ------ | ------------------- | --------------------------------------------------------------------------------------------------------- |
