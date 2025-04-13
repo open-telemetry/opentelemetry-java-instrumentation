@@ -7,8 +7,9 @@ package io.opentelemetry.instrumentation.docs.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.docs.internal.InstrumentationEntity;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationClassification;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import java.io.BufferedWriter;
 import java.io.StringWriter;
@@ -23,23 +24,26 @@ import org.junit.jupiter.api.Test;
 class YamlHelperTest {
   @Test
   void testPrintInstrumentationList() throws Exception {
-    List<InstrumentationEntity> entities = new ArrayList<>();
+    List<InstrumentationModule> modules = new ArrayList<>();
     Map<InstrumentationType, Set<String>> targetVersions1 = new HashMap<>();
     targetVersions1.put(
         InstrumentationType.JAVAAGENT,
         new HashSet<>(List.of("org.springframework:spring-web:[6.0.0,)")));
 
-    InstrumentationMetaData metadata1 =
-        new InstrumentationMetaData("Spring Web 6.0 instrumentation", true, true);
+    InstrumentationMetaData springMetadata =
+        new InstrumentationMetaData(
+            "Spring Web 6.0 instrumentation",
+            InstrumentationClassification.LIBRARY.toString(),
+            true);
 
-    entities.add(
-        new InstrumentationEntity.Builder()
+    modules.add(
+        new InstrumentationModule.Builder()
             .srcPath("instrumentation/spring/spring-web/spring-web-6.0")
             .instrumentationName("spring-web-6.0")
             .namespace("spring")
             .group("spring")
             .targetVersions(targetVersions1)
-            .metadata(metadata1)
+            .metadata(springMetadata)
             .minJavaVersion(11)
             .build());
 
@@ -48,8 +52,8 @@ class YamlHelperTest {
     targetVersions2.put(
         InstrumentationType.LIBRARY,
         new HashSet<>(List.of("org.apache.struts:struts2-core:2.1.0")));
-    entities.add(
-        new InstrumentationEntity.Builder()
+    modules.add(
+        new InstrumentationModule.Builder()
             .srcPath("instrumentation/struts/struts-2.3")
             .instrumentationName("struts-2.3")
             .namespace("struts")
@@ -60,13 +64,13 @@ class YamlHelperTest {
     StringWriter stringWriter = new StringWriter();
     BufferedWriter writer = new BufferedWriter(stringWriter);
 
-    YamlHelper.printInstrumentationList(entities, writer);
+    YamlHelper.generateInstrumentationYaml(modules, writer);
     writer.flush();
 
     String expectedYaml =
         """
-            spring:
-              instrumentations:
+            libraries:
+              spring:
               - name: spring-web-6.0
                 description: Spring Web 6.0 instrumentation
                 disabled_by_default: true
@@ -77,8 +81,7 @@ class YamlHelperTest {
                 target_versions:
                   javaagent:
                   - org.springframework:spring-web:[6.0.0,)
-            struts:
-              instrumentations:
+              struts:
               - name: struts-2.3
                 source_path: instrumentation/struts/struts-2.3
                 scope:
@@ -92,49 +95,66 @@ class YamlHelperTest {
   }
 
   @Test
-  void testPrintInstrumentationListIgnoresNonLibraryInstrumentation() throws Exception {
-    List<InstrumentationEntity> entities = new ArrayList<>();
-    Map<InstrumentationType, Set<String>> targetVersions1 = new HashMap<>();
-    targetVersions1.put(
+  void testGenerateInstrumentationYamlSeparatesClassifications() throws Exception {
+    List<InstrumentationModule> modules = new ArrayList<>();
+    Map<InstrumentationType, Set<String>> springTargetVersions = new HashMap<>();
+    springTargetVersions.put(
         InstrumentationType.JAVAAGENT,
         new HashSet<>(List.of("org.springframework:spring-web:[6.0.0,)")));
 
-    InstrumentationMetaData metadata1 =
-        new InstrumentationMetaData("Spring Web 6.0 instrumentation");
+    InstrumentationMetaData springMetadata =
+        new InstrumentationMetaData(
+            "Spring Web 6.0 instrumentation",
+            InstrumentationClassification.LIBRARY.toString(),
+            false);
 
-    entities.add(
-        new InstrumentationEntity.Builder()
+    modules.add(
+        new InstrumentationModule.Builder()
             .srcPath("instrumentation/spring/spring-web/spring-web-6.0")
             .instrumentationName("spring-web-6.0")
             .namespace("spring")
             .group("spring")
-            .targetVersions(targetVersions1)
-            .metadata(metadata1)
+            .targetVersions(springTargetVersions)
+            .metadata(springMetadata)
             .minJavaVersion(11)
             .build());
 
-    InstrumentationMetaData metadata2 = new InstrumentationMetaData(null, false, null);
+    InstrumentationMetaData internalMetadata =
+        new InstrumentationMetaData(null, InstrumentationClassification.INTERNAL.toString(), null);
 
-    entities.add(
-        new InstrumentationEntity.Builder()
+    modules.add(
+        new InstrumentationModule.Builder()
             .srcPath("instrumentation/internal/internal-application-logger")
             .instrumentationName("internal-application-logger")
             .namespace("internal")
             .group("internal")
-            .metadata(metadata2)
+            .metadata(internalMetadata)
+            .targetVersions(new HashMap<>())
+            .build());
+
+    InstrumentationMetaData customMetadata =
+        new InstrumentationMetaData(null, InstrumentationClassification.CUSTOM.toString(), null);
+
+    modules.add(
+        new InstrumentationModule.Builder()
+            .srcPath("instrumentation/opentelemetry-external-annotations-1.0")
+            .instrumentationName("opentelemetry-external-annotations")
+            .namespace("opentelemetry-external-annotations")
+            .group("opentelemetry-external-annotations")
+            .metadata(customMetadata)
             .targetVersions(new HashMap<>())
             .build());
 
     StringWriter stringWriter = new StringWriter();
     BufferedWriter writer = new BufferedWriter(stringWriter);
 
-    YamlHelper.printInstrumentationList(entities, writer);
+    YamlHelper.generateInstrumentationYaml(modules, writer);
     writer.flush();
 
     String expectedYaml =
         """
-            spring:
-              instrumentations:
+            libraries:
+              spring:
               - name: spring-web-6.0
                 description: Spring Web 6.0 instrumentation
                 source_path: instrumentation/spring/spring-web/spring-web-6.0
@@ -144,6 +164,16 @@ class YamlHelperTest {
                 target_versions:
                   javaagent:
                   - org.springframework:spring-web:[6.0.0,)
+            internal:
+            - name: internal-application-logger
+              source_path: instrumentation/internal/internal-application-logger
+              scope:
+                name: io.opentelemetry.internal-application-logger
+            custom:
+            - name: opentelemetry-external-annotations
+              source_path: instrumentation/opentelemetry-external-annotations-1.0
+              scope:
+                name: io.opentelemetry.opentelemetry-external-annotations
             """;
 
     assertThat(expectedYaml).isEqualTo(stringWriter.toString());
@@ -153,22 +183,22 @@ class YamlHelperTest {
   void testMetadataParser() {
     String input =
         """
-        description: test description
-        isLibraryInstrumentation: false
-        disabled_by_default: true
-        """;
+            description: test description
+            classification: internal
+            disabled_by_default: true
+            """;
 
     InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
-    assertThat(metadata.getIsLibraryInstrumentation()).isFalse();
+    assertThat(metadata.getClassification()).isEqualTo(InstrumentationClassification.INTERNAL);
     assertThat(metadata.getDescription()).isEqualTo("test description");
     assertThat(metadata.getDisabledByDefault()).isEqualTo(true);
   }
 
   @Test
   void testMetadataParserWithOnlyLibraryEntry() {
-    String input = "isLibraryInstrumentation: false";
+    String input = "classification: internal";
     InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
-    assertThat(metadata.getIsLibraryInstrumentation()).isFalse();
+    assertThat(metadata.getClassification()).isEqualTo(InstrumentationClassification.INTERNAL);
     assertThat(metadata.getDescription()).isNull();
     assertThat(metadata.getDisabledByDefault()).isFalse();
   }
@@ -177,7 +207,7 @@ class YamlHelperTest {
   void testMetadataParserWithOnlyDescription() {
     String input = "description: false";
     InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
-    assertThat(metadata.getIsLibraryInstrumentation()).isTrue();
+    assertThat(metadata.getClassification()).isEqualTo(InstrumentationClassification.LIBRARY);
     assertThat(metadata.getDisabledByDefault()).isFalse();
   }
 
@@ -185,7 +215,7 @@ class YamlHelperTest {
   void testMetadataParserWithOnlyDisabledByDefault() {
     String input = "disabled_by_default: true";
     InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
-    assertThat(metadata.getIsLibraryInstrumentation()).isTrue();
+    assertThat(metadata.getClassification()).isEqualTo(InstrumentationClassification.LIBRARY);
     assertThat(metadata.getDescription()).isNull();
     assertThat(metadata.getDisabledByDefault()).isTrue();
   }
