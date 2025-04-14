@@ -201,6 +201,48 @@ class OpenTelemetryConnectionTest {
     connection.close();
   }
 
+  @Test
+  void testVerifyCommit() throws Exception {
+    Instrumenter<DbRequest, Void> instrumenter =
+        createStatementInstrumenter(testing.getOpenTelemetry());
+    DbInfo dbInfo = getDbInfo();
+    OpenTelemetryConnection connection =
+        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
+    String query = "COMMIT";
+    Statement statement = connection.createStatement();
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          assertThat(statement.execute(query)).isTrue();
+        });
+    transactionTraceAssertion(dbInfo, query);
+
+    statement.close();
+    connection.close();
+  }
+
+  @Test
+  void testVerifyRollback() throws Exception {
+    Instrumenter<DbRequest, Void> instrumenter =
+        createStatementInstrumenter(testing.getOpenTelemetry());
+    DbInfo dbInfo = getDbInfo();
+    OpenTelemetryConnection connection =
+        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
+    String query = "ROLLBACK";
+    Statement statement = connection.createStatement();
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          assertThat(statement.execute(query)).isTrue();
+        });
+    transactionTraceAssertion(dbInfo, query);
+
+    statement.close();
+    connection.close();
+  }
+
   private static DbInfo getDbInfo() {
     return DbInfo.builder()
         .system("my_system")
@@ -236,6 +278,31 @@ class OpenTelemetryConnectionTest {
                             equalTo(maybeStable(DB_STATEMENT), query),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "users"),
+                            equalTo(SERVER_ADDRESS, dbInfo.getHost()),
+                            equalTo(SERVER_PORT, dbInfo.getPort()))));
+  }
+
+  @SuppressWarnings("deprecation") // old semconv
+  private static void transactionTraceAssertion(DbInfo dbInfo, String query) {
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(query + " " + dbInfo.getName())
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                maybeStable(DB_SYSTEM),
+                                maybeStableDbSystemName(dbInfo.getSystem())),
+                            equalTo(maybeStable(DB_NAME), dbInfo.getName()),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : dbInfo.getUser()),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : dbInfo.getShortUrl()),
+                            equalTo(maybeStable(DB_STATEMENT), query),
+                            equalTo(maybeStable(DB_OPERATION), query),
                             equalTo(SERVER_ADDRESS, dbInfo.getHost()),
                             equalTo(SERVER_PORT, dbInfo.getPort()))));
   }

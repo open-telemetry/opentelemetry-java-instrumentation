@@ -20,7 +20,10 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.Array;
 import java.sql.Blob;
@@ -48,6 +51,8 @@ import java.util.concurrent.Executor;
  */
 public class OpenTelemetryConnection implements Connection {
 
+  private static final boolean TXN_ENABLED =
+      ConfigPropertiesUtil.getBoolean("otel.instrumentation.jdbc.experimental.txn.enabled", false);
   private static final boolean hasJdbc43 = hasJdbc43();
   protected final Connection delegate;
   private final DbInfo dbInfo;
@@ -173,7 +178,11 @@ public class OpenTelemetryConnection implements Connection {
 
   @Override
   public void commit() throws SQLException {
-    delegate.commit();
+    if (TXN_ENABLED) {
+      wrapCall(delegate::commit, "COMMIT");
+    } else {
+      delegate.commit();
+    }
   }
 
   @Override
@@ -279,13 +288,21 @@ public class OpenTelemetryConnection implements Connection {
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void rollback() throws SQLException {
-    delegate.rollback();
+    if (TXN_ENABLED) {
+      wrapCall(delegate::rollback, "ROLLBACK");
+    } else {
+      delegate.rollback();
+    }
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void rollback(Savepoint savepoint) throws SQLException {
-    delegate.rollback(savepoint);
+    if (TXN_ENABLED) {
+      wrapCall(() -> delegate.rollback(savepoint), "ROLLBACK");
+    } else {
+      delegate.rollback(savepoint);
+    }
   }
 
   @Override
@@ -434,5 +451,30 @@ public class OpenTelemetryConnection implements Connection {
     public void setShardingKey(ShardingKey shardingKey) throws SQLException {
       delegate.setShardingKey(shardingKey);
     }
+  }
+
+  protected <E extends Exception> void wrapCall(ThrowingSupplier<E> callable, String statement)
+      throws E {
+    Context parentContext = Context.current();
+    DbRequest request = DbRequest.create(dbInfo, statement);
+    if (!this.statementInstrumenter.shouldStart(parentContext, request)) {
+      callable.call();
+      return;
+    }
+
+    Context context = this.statementInstrumenter.start(parentContext, request);
+    try (Scope ignored = context.makeCurrent()) {
+      callable.call();
+    } catch (Throwable t) {
+      this.statementInstrumenter.end(context, request, null, t);
+      throw t;
+    }
+    this.statementInstrumenter.end(context, request, null, null);
+  }
+
+  protected interface ThrowingSupplier<E extends Exception> {
+    String statement = null;
+
+    void call() throws E;
   }
 }
