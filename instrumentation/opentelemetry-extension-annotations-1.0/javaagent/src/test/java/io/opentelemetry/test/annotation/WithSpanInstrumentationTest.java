@@ -146,7 +146,8 @@ class WithSpanInstrumentationTest {
   @Test
   void exceptionallyCompletedCompletionStage() {
     CompletableFuture<String> future = new CompletableFuture<>();
-    future.completeExceptionally(new IllegalArgumentException("Boom"));
+    Exception exception = new IllegalArgumentException("Boom");
+    future.completeExceptionally(exception);
     new TracedWithSpan().completionStage(future);
 
     testing.waitAndAssertTraces(
@@ -157,7 +158,7 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasException(new IllegalArgumentException("Boom"))
+                        .hasException(exception)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 CodeIncubatingAttributes.CODE_NAMESPACE,
@@ -215,7 +216,8 @@ class WithSpanInstrumentationTest {
     Thread.sleep(500); // sleep a bit just to make sure no span is captured
     assertThat(testing.waitForTraces(0)).isEmpty();
 
-    future.completeExceptionally(new IllegalArgumentException("Boom"));
+    Exception exception = new IllegalArgumentException("Boom");
+    future.completeExceptionally(exception);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -225,7 +227,7 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasException(new IllegalArgumentException("Boom"))
+                        .hasException(exception)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 CodeIncubatingAttributes.CODE_NAMESPACE,
@@ -255,7 +257,8 @@ class WithSpanInstrumentationTest {
   @Test
   void exceptionallyCompletedCompletableFuture() {
     CompletableFuture<String> future = new CompletableFuture<>();
-    future.completeExceptionally(new IllegalArgumentException("Boom"));
+    Exception exception = new IllegalArgumentException("Boom");
+    future.completeExceptionally(exception);
     new TracedWithSpan().completableFuture(future);
 
     testing.waitAndAssertTraces(
@@ -266,7 +269,7 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasException(new IllegalArgumentException("Boom"))
+                        .hasException(exception)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 CodeIncubatingAttributes.CODE_NAMESPACE,
@@ -324,7 +327,8 @@ class WithSpanInstrumentationTest {
     Thread.sleep(500); // sleep a bit just to make sure no span is captured
     assertThat(testing.waitForTraces(0)).isEmpty();
 
-    future.completeExceptionally(new IllegalArgumentException("Boom"));
+    Exception exception = new IllegalArgumentException("Boom");
+    future.completeExceptionally(exception);
 
     testing.waitAndAssertTraces(
         trace ->
@@ -334,7 +338,7 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.error())
-                        .hasException(new IllegalArgumentException("Boom"))
+                        .hasException(exception)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 CodeIncubatingAttributes.CODE_NAMESPACE,
