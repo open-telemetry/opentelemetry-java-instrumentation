@@ -38,7 +38,7 @@ public @interface Timed {
   /**
    * Name of the Histogram metric.
    *
-   * <p>The name should follow the metric naming rule: <a
+   * <p>The name should follow the metric naming rules: <a
    * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-naming-rule">https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-naming-rule</a>
    */
   String value();
