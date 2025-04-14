@@ -19,6 +19,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_PARAMETER;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -38,6 +39,7 @@ import io.opentelemetry.instrumentation.jdbc.TestDriver;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
@@ -52,12 +54,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
 import org.apache.derby.jdbc.EmbeddedDataSource;
@@ -218,7 +222,8 @@ class JdbcInstrumentationTest {
             "SELECT ?",
             "SELECT " + dbNameLower,
             "h2:mem:",
-            null),
+            null,
+            Collections.singletonMap("0", "3")),
         Arguments.of(
             "derby",
             new EmbeddedDriver().connect(jdbcUrls.get("derby"), null),
@@ -227,7 +232,8 @@ class JdbcInstrumentationTest {
             "SELECT ? FROM SYSIBM.SYSDUMMY1",
             "SELECT SYSIBM.SYSDUMMY1",
             "derby:memory:",
-            "SYSIBM.SYSDUMMY1"),
+            "SYSIBM.SYSDUMMY1",
+            Collections.singletonMap("0", "3")),
         Arguments.of(
             "hsqldb",
             new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null),
@@ -236,7 +242,8 @@ class JdbcInstrumentationTest {
             "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS",
             "SELECT INFORMATION_SCHEMA.SYSTEM_USERS",
             "hsqldb:mem:",
-            "INFORMATION_SCHEMA.SYSTEM_USERS"),
+            "INFORMATION_SCHEMA.SYSTEM_USERS",
+            Collections.singletonMap("0", "3")),
         Arguments.of(
             "h2",
             new org.h2.Driver().connect(jdbcUrls.get("h2"), connectionProps),
@@ -245,7 +252,8 @@ class JdbcInstrumentationTest {
             "SELECT ?",
             "SELECT " + dbNameLower,
             "h2:mem:",
-            null),
+            null,
+            Collections.singletonMap("0", "3")),
         Arguments.of(
             "derby",
             new EmbeddedDriver().connect(jdbcUrls.get("derby"), connectionProps),
@@ -254,7 +262,8 @@ class JdbcInstrumentationTest {
             "SELECT ? FROM SYSIBM.SYSDUMMY1",
             "SELECT SYSIBM.SYSDUMMY1",
             "derby:memory:",
-            "SYSIBM.SYSDUMMY1"),
+            "SYSIBM.SYSDUMMY1",
+            Collections.singletonMap("0", "3")),
         Arguments.of(
             "hsqldb",
             new JDBCDriver().connect(jdbcUrls.get("hsqldb"), connectionProps),
@@ -263,7 +272,8 @@ class JdbcInstrumentationTest {
             "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS",
             "SELECT INFORMATION_SCHEMA.SYSTEM_USERS",
             "hsqldb:mem:",
-            "INFORMATION_SCHEMA.SYSTEM_USERS"),
+            "INFORMATION_SCHEMA.SYSTEM_USERS",
+            Collections.singletonMap("0", "3")),
         Arguments.of(
             "h2",
             cpDatasources.get("tomcat").get("h2").getConnection(),
@@ -272,7 +282,8 @@ class JdbcInstrumentationTest {
             "SELECT ?",
             "SELECT " + dbNameLower,
             "h2:mem:",
-            null),
+            null,
+            Collections.singletonMap("0", "3")),
         Arguments.of(
             "derby",
             cpDatasources.get("tomcat").get("derby").getConnection(),
@@ -281,7 +292,8 @@ class JdbcInstrumentationTest {
             "SELECT ? FROM SYSIBM.SYSDUMMY1",
             "SELECT SYSIBM.SYSDUMMY1",
             "derby:memory:",
-            "SYSIBM.SYSDUMMY1"),
+            "SYSIBM.SYSDUMMY1",
+            Collections.singletonMap("0", "3")),
         Arguments.of(
             "hsqldb",
             cpDatasources.get("tomcat").get("hsqldb").getConnection(),
@@ -290,7 +302,8 @@ class JdbcInstrumentationTest {
             "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS",
             "SELECT INFORMATION_SCHEMA.SYSTEM_USERS",
             "hsqldb:mem:",
-            "INFORMATION_SCHEMA.SYSTEM_USERS"),
+            "INFORMATION_SCHEMA.SYSTEM_USERS",
+            Collections.singletonMap("0", "3")),
         Arguments.of(
             "h2",
             cpDatasources.get("hikari").get("h2").getConnection(),
@@ -299,7 +312,8 @@ class JdbcInstrumentationTest {
             "SELECT ?",
             "SELECT " + dbNameLower,
             "h2:mem:",
-            null),
+            null,
+            Collections.singletonMap("0", "3")),
         Arguments.of(
             "derby",
             cpDatasources.get("hikari").get("derby").getConnection(),
@@ -308,7 +322,8 @@ class JdbcInstrumentationTest {
             "SELECT ? FROM SYSIBM.SYSDUMMY1",
             "SELECT SYSIBM.SYSDUMMY1",
             "derby:memory:",
-            "SYSIBM.SYSDUMMY1"),
+            "SYSIBM.SYSDUMMY1",
+            Collections.singletonMap("0", "3")),
         Arguments.of(
             "hsqldb",
             cpDatasources.get("hikari").get("hsqldb").getConnection(),
@@ -317,7 +332,8 @@ class JdbcInstrumentationTest {
             "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS",
             "SELECT INFORMATION_SCHEMA.SYSTEM_USERS",
             "hsqldb:mem:",
-            "INFORMATION_SCHEMA.SYSTEM_USERS"),
+            "INFORMATION_SCHEMA.SYSTEM_USERS",
+            Collections.singletonMap("0", "3")),
         Arguments.of(
             "h2",
             cpDatasources.get("c3p0").get("h2").getConnection(),
@@ -326,7 +342,8 @@ class JdbcInstrumentationTest {
             "SELECT ?",
             "SELECT " + dbNameLower,
             "h2:mem:",
-            null),
+            null,
+            Collections.singletonMap("0", "3")),
         Arguments.of(
             "derby",
             cpDatasources.get("c3p0").get("derby").getConnection(),
@@ -335,7 +352,8 @@ class JdbcInstrumentationTest {
             "SELECT ? FROM SYSIBM.SYSDUMMY1",
             "SELECT SYSIBM.SYSDUMMY1",
             "derby:memory:",
-            "SYSIBM.SYSDUMMY1"),
+            "SYSIBM.SYSDUMMY1",
+            Collections.singletonMap("0", "3")),
         Arguments.of(
             "hsqldb",
             cpDatasources.get("c3p0").get("hsqldb").getConnection(),
@@ -344,7 +362,8 @@ class JdbcInstrumentationTest {
             "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS",
             "SELECT INFORMATION_SCHEMA.SYSTEM_USERS",
             "hsqldb:mem:",
-            "INFORMATION_SCHEMA.SYSTEM_USERS"));
+            "INFORMATION_SCHEMA.SYSTEM_USERS",
+            Collections.singletonMap("0", "3")));
   }
 
   @ParameterizedTest
@@ -357,7 +376,8 @@ class JdbcInstrumentationTest {
       String sanitizedQuery,
       String spanName,
       String url,
-      String table)
+      String table,
+      Map<String, String> parameters)
       throws SQLException {
     Statement statement = connection.createStatement();
     cleanup.deferCleanup(statement);
@@ -365,6 +385,24 @@ class JdbcInstrumentationTest {
 
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
+
+    List<AttributeAssertion> baseAssertions =
+        parameters.entrySet().stream()
+            .map(
+                entry ->
+                    equalTo(
+                        DB_OPERATION_PARAMETER.getAttributeKey(entry.getKey()), entry.getValue()))
+            .collect(Collectors.toList());
+
+    baseAssertions.addAll(
+        asList(
+            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
+            equalTo(maybeStable(DB_NAME), dbNameLower),
+            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
+            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
+            equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
+            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+            equalTo(maybeStable(DB_SQL_TABLE), table)));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -374,14 +412,7 @@ class JdbcInstrumentationTest {
                     span.hasName(spanName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                            equalTo(maybeStable(DB_NAME), dbNameLower),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                            equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), table))));
+                        .hasAttributesSatisfyingExactly(baseAssertions)));
 
     if (table != null) {
       assertDurationMetric(
@@ -397,80 +428,95 @@ class JdbcInstrumentationTest {
     }
   }
 
+  private static Map<String, String> parametersMapBuilder(String k) {
+    HashMap<String, String> map = new HashMap<String, String>() {};
+    map.put("0", "3");
+    map.put(k, "'Y'");
+    return map;
+  }
+
   static Stream<Arguments> preparedStatementStream() throws SQLException {
     return Stream.of(
         Arguments.of(
             "h2",
             new org.h2.Driver().connect(jdbcUrls.get("h2"), null),
             null,
-            "SELECT 3",
-            "SELECT ?",
+            "SELECT 3, $1",
+            "SELECT ?, $1",
             "SELECT " + dbNameLower,
             "h2:mem:",
-            null),
+            null,
+            parametersMapBuilder("$1")),
         Arguments.of(
             "derby",
             new EmbeddedDriver().connect(jdbcUrls.get("derby"), null),
             "APP",
-            "SELECT 3 FROM SYSIBM.SYSDUMMY1",
-            "SELECT ? FROM SYSIBM.SYSDUMMY1",
+            "SELECT 3 FROM SYSIBM.SYSDUMMY1 WHERE IBMREQD=?",
+            "SELECT ? FROM SYSIBM.SYSDUMMY1 WHERE IBMREQD=?",
             "SELECT SYSIBM.SYSDUMMY1",
             "derby:memory:",
-            "SYSIBM.SYSDUMMY1"),
+            "SYSIBM.SYSDUMMY1",
+            parametersMapBuilder("1")),
         Arguments.of(
             "h2",
             cpDatasources.get("tomcat").get("h2").getConnection(),
             null,
-            "SELECT 3",
-            "SELECT ?",
+            "SELECT 3, $1",
+            "SELECT ?, $1",
             "SELECT " + dbNameLower,
             "h2:mem:",
-            null),
+            null,
+            parametersMapBuilder("$1")),
         Arguments.of(
             "derby",
             cpDatasources.get("tomcat").get("derby").getConnection(),
             "APP",
-            "SELECT 3 FROM SYSIBM.SYSDUMMY1",
-            "SELECT ? FROM SYSIBM.SYSDUMMY1",
+            "SELECT 3 FROM SYSIBM.SYSDUMMY1 WHERE IBMREQD=?",
+            "SELECT ? FROM SYSIBM.SYSDUMMY1 WHERE IBMREQD=?",
             "SELECT SYSIBM.SYSDUMMY1",
             "derby:memory:",
-            "SYSIBM.SYSDUMMY1"),
+            "SYSIBM.SYSDUMMY1",
+            parametersMapBuilder("1")),
         Arguments.of(
             "h2",
             cpDatasources.get("hikari").get("h2").getConnection(),
             null,
-            "SELECT 3",
-            "SELECT ?",
+            "SELECT 3, $1",
+            "SELECT ?, $1",
             "SELECT " + dbNameLower,
             "h2:mem:",
-            null),
+            null,
+            parametersMapBuilder("$1")),
         Arguments.of(
             "derby",
             cpDatasources.get("hikari").get("derby").getConnection(),
             "APP",
-            "SELECT 3 FROM SYSIBM.SYSDUMMY1",
-            "SELECT ? FROM SYSIBM.SYSDUMMY1",
+            "SELECT 3 FROM SYSIBM.SYSDUMMY1 WHERE IBMREQD=?",
+            "SELECT ? FROM SYSIBM.SYSDUMMY1 WHERE IBMREQD=?",
             "SELECT SYSIBM.SYSDUMMY1",
             "derby:memory:",
-            "SYSIBM.SYSDUMMY1"),
+            "SYSIBM.SYSDUMMY1",
+            parametersMapBuilder("1")),
         Arguments.of(
             "h2",
             cpDatasources.get("c3p0").get("h2").getConnection(),
             null,
-            "SELECT 3",
-            "SELECT ?",
+            "SELECT 3, $1",
+            "SELECT ?, $1",
             "SELECT " + dbNameLower,
             "h2:mem:",
-            null),
+            null,
+            parametersMapBuilder("$1")),
         Arguments.of(
             "derby",
             cpDatasources.get("c3p0").get("derby").getConnection(),
             "APP",
-            "SELECT 3 FROM SYSIBM.SYSDUMMY1",
-            "SELECT ? FROM SYSIBM.SYSDUMMY1",
+            "SELECT 3 FROM SYSIBM.SYSDUMMY1 WHERE IBMREQD=?",
+            "SELECT ? FROM SYSIBM.SYSDUMMY1 WHERE IBMREQD=?",
             "SELECT SYSIBM.SYSDUMMY1",
             "derby:memory:",
-            "SYSIBM.SYSDUMMY1"));
+            "SYSIBM.SYSDUMMY1",
+            parametersMapBuilder("1")));
   }
 
   @ParameterizedTest
@@ -483,7 +529,8 @@ class JdbcInstrumentationTest {
       String sanitizedQuery,
       String spanName,
       String url,
-      String table)
+      String table,
+      Map<String, String> parameters)
       throws SQLException {
     PreparedStatement statement = connection.prepareStatement(query);
     cleanup.deferCleanup(statement);
@@ -491,12 +538,31 @@ class JdbcInstrumentationTest {
         testing.runWithSpan(
             "parent",
             () -> {
+              statement.setString(1, "Y");
               statement.execute();
               return statement.getResultSet();
             });
 
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
+
+    List<AttributeAssertion> baseAssertions =
+        parameters.entrySet().stream()
+            .map(
+                entry ->
+                    equalTo(
+                        DB_OPERATION_PARAMETER.getAttributeKey(entry.getKey()), entry.getValue()))
+            .collect(Collectors.toList());
+
+    baseAssertions.addAll(
+        asList(
+            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
+            equalTo(maybeStable(DB_NAME), dbNameLower),
+            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
+            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
+            equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
+            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+            equalTo(maybeStable(DB_SQL_TABLE), table)));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -506,14 +572,7 @@ class JdbcInstrumentationTest {
                     span.hasName(spanName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                            equalTo(maybeStable(DB_NAME), dbNameLower),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                            equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), table))));
+                        .hasAttributesSatisfyingExactly(baseAssertions)));
   }
 
   @ParameterizedTest
@@ -526,14 +585,39 @@ class JdbcInstrumentationTest {
       String sanitizedQuery,
       String spanName,
       String url,
-      String table)
+      String table,
+      Map<String, String> parameters)
       throws SQLException {
     PreparedStatement statement = connection.prepareStatement(query);
     cleanup.deferCleanup(statement);
-    ResultSet resultSet = testing.runWithSpan("parent", () -> statement.executeQuery());
+    ResultSet resultSet =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              statement.setString(1, "Y");
+              return statement.executeQuery();
+            });
 
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
+
+    List<AttributeAssertion> baseAssertions =
+        parameters.entrySet().stream()
+            .map(
+                entry ->
+                    equalTo(
+                        DB_OPERATION_PARAMETER.getAttributeKey(entry.getKey()), entry.getValue()))
+            .collect(Collectors.toList());
+
+    baseAssertions.addAll(
+        asList(
+            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
+            equalTo(maybeStable(DB_NAME), dbNameLower),
+            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
+            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
+            equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
+            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+            equalTo(maybeStable(DB_SQL_TABLE), table)));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -543,14 +627,7 @@ class JdbcInstrumentationTest {
                     span.hasName(spanName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                            equalTo(maybeStable(DB_NAME), dbNameLower),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                            equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), table))));
+                        .hasAttributesSatisfyingExactly(baseAssertions)));
   }
 
   @ParameterizedTest
@@ -563,14 +640,39 @@ class JdbcInstrumentationTest {
       String sanitizedQuery,
       String spanName,
       String url,
-      String table)
+      String table,
+      Map<String, String> parameters)
       throws SQLException {
     CallableStatement statement = connection.prepareCall(query);
     cleanup.deferCleanup(statement);
-    ResultSet resultSet = testing.runWithSpan("parent", () -> statement.executeQuery());
+    ResultSet resultSet =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              statement.setString(1, "Y");
+              return statement.executeQuery();
+            });
 
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
+
+    List<AttributeAssertion> baseAssertions =
+        parameters.entrySet().stream()
+            .map(
+                entry ->
+                    equalTo(
+                        DB_OPERATION_PARAMETER.getAttributeKey(entry.getKey()), entry.getValue()))
+            .collect(Collectors.toList());
+
+    baseAssertions.addAll(
+        asList(
+            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
+            equalTo(maybeStable(DB_NAME), dbNameLower),
+            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
+            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
+            equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
+            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+            equalTo(maybeStable(DB_SQL_TABLE), table)));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -580,14 +682,7 @@ class JdbcInstrumentationTest {
                     span.hasName(spanName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                            equalTo(maybeStable(DB_NAME), dbNameLower),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                            equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), table))));
+                        .hasAttributesSatisfyingExactly(baseAssertions)));
   }
 
   static Stream<Arguments> statementUpdateStream() throws SQLException {
@@ -911,7 +1006,8 @@ class JdbcInstrumentationTest {
             "SELECT ?;",
             "SELECT " + dbNameLower,
             "h2:mem:",
-            null),
+            null,
+            Collections.singletonMap("0", "3")),
         Arguments.of(
             true,
             "derby",
@@ -922,7 +1018,8 @@ class JdbcInstrumentationTest {
             "SELECT ? FROM SYSIBM.SYSDUMMY1",
             "SELECT SYSIBM.SYSDUMMY1",
             "derby:memory:",
-            "SYSIBM.SYSDUMMY1"),
+            "SYSIBM.SYSDUMMY1",
+            Collections.singletonMap("0", "3")),
         Arguments.of(
             false,
             "h2",
@@ -933,7 +1030,8 @@ class JdbcInstrumentationTest {
             "SELECT ?;",
             "SELECT " + dbNameLower,
             "h2:mem:",
-            null),
+            null,
+            Collections.singletonMap("0", "3")),
         Arguments.of(
             false,
             "derby",
@@ -944,7 +1042,8 @@ class JdbcInstrumentationTest {
             "SELECT ? FROM SYSIBM.SYSDUMMY1",
             "SELECT SYSIBM.SYSDUMMY1",
             "derby:memory:",
-            "SYSIBM.SYSDUMMY1"));
+            "SYSIBM.SYSDUMMY1",
+            Collections.singletonMap("0", "3")));
   }
 
   @SuppressWarnings("CatchingUnchecked")
@@ -960,7 +1059,8 @@ class JdbcInstrumentationTest {
       String sanitizedQuery,
       String spanName,
       String url,
-      String table)
+      String table,
+      Map<String, String> parameters)
       throws SQLException {
     Connection connection = null;
 
@@ -988,6 +1088,25 @@ class JdbcInstrumentationTest {
 
     rs.next();
     assertThat(rs.getInt(1)).isEqualTo(3);
+
+    List<AttributeAssertion> baseAssertions =
+        parameters.entrySet().stream()
+            .map(
+                entry ->
+                    equalTo(
+                        DB_OPERATION_PARAMETER.getAttributeKey(entry.getKey()), entry.getValue()))
+            .collect(Collectors.toList());
+
+    baseAssertions.addAll(
+        asList(
+            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
+            equalTo(maybeStable(DB_NAME), dbNameLower),
+            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
+            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
+            equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
+            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+            equalTo(maybeStable(DB_SQL_TABLE), table)));
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -996,14 +1115,7 @@ class JdbcInstrumentationTest {
                     span.hasName(spanName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                            equalTo(maybeStable(DB_NAME), dbNameLower),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                            equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), table))));
+                        .hasAttributesSatisfyingExactly(baseAssertions)));
   }
 
   static Stream<Arguments> getConnectionStream() {
@@ -1127,7 +1239,8 @@ class JdbcInstrumentationTest {
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "testdb://localhost"),
-                            equalTo(SERVER_ADDRESS, "localhost"))));
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(DB_OPERATION_PARAMETER.getAttributeKey("0"), "123"))));
   }
 
   static Stream<Arguments> spanNameStream() {
@@ -1139,7 +1252,8 @@ class JdbcInstrumentationTest {
             "SELECT test.table",
             "test",
             "SELECT",
-            "table"),
+            "table",
+            Collections.emptyMap()),
         Arguments.of(
             "jdbc:testdb://localhost?databaseName=test",
             "SELECT 42",
@@ -1147,7 +1261,8 @@ class JdbcInstrumentationTest {
             "SELECT test",
             "test",
             "SELECT",
-            null),
+            null,
+            Collections.singletonMap("0", "42")),
         Arguments.of(
             "jdbc:testdb://localhost",
             "SELECT * FROM table",
@@ -1155,7 +1270,8 @@ class JdbcInstrumentationTest {
             "SELECT table",
             null,
             "SELECT",
-            "table"),
+            "table",
+            Collections.emptyMap()),
         Arguments.of(
             "jdbc:testdb://localhost?databaseName=test",
             "CREATE TABLE table",
@@ -1163,7 +1279,8 @@ class JdbcInstrumentationTest {
             "CREATE TABLE test.table",
             "test",
             "CREATE TABLE",
-            "table"),
+            "table",
+            Collections.emptyMap()),
         Arguments.of(
             "jdbc:testdb://localhost",
             "CREATE TABLE table",
@@ -1171,7 +1288,8 @@ class JdbcInstrumentationTest {
             "CREATE TABLE table",
             null,
             "CREATE TABLE",
-            "table"));
+            "table",
+            Collections.emptyMap()));
   }
 
   @ParameterizedTest
@@ -1183,7 +1301,8 @@ class JdbcInstrumentationTest {
       String spanName,
       String databaseName,
       String operation,
-      String table)
+      String table,
+      Map<String, String> parameters)
       throws SQLException {
     Driver driver = new TestDriver();
     Connection connection = driver.connect(url, null);
@@ -1196,6 +1315,25 @@ class JdbcInstrumentationTest {
           statement.executeQuery(query);
         });
 
+    List<AttributeAssertion> baseAssertions =
+        parameters.entrySet().stream()
+            .map(
+                entry ->
+                    equalTo(
+                        DB_OPERATION_PARAMETER.getAttributeKey(entry.getKey()), entry.getValue()))
+            .collect(Collectors.toList());
+
+    baseAssertions.addAll(
+        asList(
+            equalTo(maybeStable(DB_SYSTEM), "other_sql"),
+            equalTo(maybeStable(DB_NAME), databaseName),
+            equalTo(
+                DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "testdb://localhost"),
+            equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
+            equalTo(maybeStable(DB_OPERATION), operation),
+            equalTo(maybeStable(DB_SQL_TABLE), table),
+            equalTo(SERVER_ADDRESS, "localhost")));
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -1204,16 +1342,7 @@ class JdbcInstrumentationTest {
                     span.hasName(spanName)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "other_sql"),
-                            equalTo(maybeStable(DB_NAME), databaseName),
-                            equalTo(
-                                DB_CONNECTION_STRING,
-                                emitStableDatabaseSemconv() ? null : "testdb://localhost"),
-                            equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
-                            equalTo(maybeStable(DB_OPERATION), operation),
-                            equalTo(maybeStable(DB_SQL_TABLE), table),
-                            equalTo(SERVER_ADDRESS, "localhost"))));
+                        .hasAttributesSatisfyingExactly(baseAssertions)));
   }
 
   @ParameterizedTest
@@ -1265,7 +1394,8 @@ class JdbcInstrumentationTest {
                                 maybeStable(DB_STATEMENT),
                                 "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS"),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "INFORMATION_SCHEMA.SYSTEM_USERS")));
+                            equalTo(maybeStable(DB_SQL_TABLE), "INFORMATION_SCHEMA.SYSTEM_USERS"),
+                            equalTo(DB_OPERATION_PARAMETER.getAttributeKey("0"), "3")));
     for (int i = 0; i < numQueries; i++) {
       assertions.add(traceAssertConsumer);
     }
@@ -1577,7 +1707,8 @@ class JdbcInstrumentationTest {
                                 maybeStable(DB_STATEMENT),
                                 "INSERT INTO " + tableName + " VALUES(?)"),
                             equalTo(maybeStable(DB_OPERATION), "INSERT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), tableName))));
+                            equalTo(maybeStable(DB_SQL_TABLE), tableName),
+                            equalTo(DB_OPERATION_PARAMETER.getAttributeKey("0"), "1"))));
   }
 
   @ParameterizedTest

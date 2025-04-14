@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_PARAMETER;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.entry;
@@ -22,6 +23,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.spockframework.util.Nullable;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class SqlClientAttributesExtractorTest {
@@ -60,6 +62,30 @@ class SqlClientAttributesExtractorTest {
     @Override
     public Long getBatchSize(Map<String, Object> map) {
       return read(map, "db.operation.batch.size", Long.class);
+    }
+
+    @SuppressWarnings("EmptyCatch")
+    @Nullable
+    @Override
+    public Map<Integer, Object> getOperationParameters(Map<String, Object> map) {
+      String parameterString = read(map, "db.operation.parameter");
+
+      if (parameterString == null) {
+        return null;
+      }
+
+      Map<Integer, Object> parameters = new HashMap<>();
+      for (String s : parameterString.split(";")) {
+        // cast basic types used in tests
+        Object value = s;
+        try {
+          value = Integer.parseInt(s);
+        } catch (NumberFormatException ignored) {
+        }
+
+        parameters.put(parameters.size() + 1, value);
+      }
+      return parameters;
     }
 
     protected String read(Map<String, Object> map, String key) {
@@ -383,6 +409,99 @@ class SqlClientAttributesExtractorTest {
               entry(DbIncubatingAttributes.DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
               entry(DbIncubatingAttributes.DB_OPERATION_NAME, "INSERT"),
               entry(DbIncubatingAttributes.DB_COLLECTION_NAME, "potato"));
+    }
+
+    assertThat(endAttributes.build().isEmpty()).isTrue();
+  }
+
+  @Test
+  void shouldExtractOperationParameters() {
+    // given
+    Map<String, Object> request = new HashMap<>();
+    request.put("db.name", "potatoes");
+    // a query with prepared parameters and parameters to sanitize
+    request.put(
+        "db.statement",
+        "SELECT col FROM table WHERE field1=? AND field2='A' AND field3=$2 AND field4=2");
+    // a prepared parameters map
+    request.put("db.operation.parameter", "a;1");
+
+    Context context = Context.root();
+
+    AttributesExtractor<Map<String, Object>, Void> underTest =
+        SqlClientAttributesExtractor.builder(new TestAttributesGetter())
+            .setOperationParameterEnabled(true)
+            .build();
+
+    // when
+    AttributesBuilder startAttributes = Attributes.builder();
+    underTest.onStart(startAttributes, context, request);
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    underTest.onEnd(endAttributes, context, request, null, null);
+
+    String prefix = DB_OPERATION_PARAMETER.getAttributeKey("").getKey();
+    Attributes operationParameterAttributes =
+        startAttributes.removeIf(attribute -> !attribute.getKey().startsWith(prefix)).build();
+
+    // then
+    if (SemconvStability.emitStableDatabaseSemconv() && SemconvStability.emitOldDatabaseSemconv()) {
+      assertThat(operationParameterAttributes)
+          .containsOnly(
+              entry(DB_OPERATION_PARAMETER.getAttributeKey("0"), "'a'"),
+              entry(DB_OPERATION_PARAMETER.getAttributeKey("1"), "'A'"),
+              entry(DB_OPERATION_PARAMETER.getAttributeKey("$2"), "1"),
+              entry(DB_OPERATION_PARAMETER.getAttributeKey("2"), "2"));
+    } else if (SemconvStability.emitOldDatabaseSemconv()) {
+      assertThat(operationParameterAttributes)
+          .containsOnly(
+              entry(DB_OPERATION_PARAMETER.getAttributeKey("0"), "'a'"),
+              entry(DB_OPERATION_PARAMETER.getAttributeKey("1"), "'A'"),
+              entry(DB_OPERATION_PARAMETER.getAttributeKey("$2"), "1"),
+              entry(DB_OPERATION_PARAMETER.getAttributeKey("2"), "2"));
+    } else if (SemconvStability.emitStableDatabaseSemconv()) {
+      assertThat(operationParameterAttributes)
+          .containsOnly(
+              entry(DB_OPERATION_PARAMETER.getAttributeKey("0"), "'a'"),
+              entry(DB_OPERATION_PARAMETER.getAttributeKey("1"), "'A'"),
+              entry(DB_OPERATION_PARAMETER.getAttributeKey("$2"), "1"),
+              entry(DB_OPERATION_PARAMETER.getAttributeKey("2"), "2"));
+    }
+
+    assertThat(endAttributes.build().isEmpty()).isTrue();
+  }
+
+  @Test
+  void shouldNotExtractOperationParametersForBatch() {
+    // given
+    Map<String, Object> request = new HashMap<>();
+    request.put("db.name", "potatoes");
+    request.put("db.statements", singleton("INSERT INTO potato VALUES(?)"));
+    request.put("db.operation.batch.size", 1L);
+    request.put("db.operation.parameter", "1");
+
+    Context context = Context.root();
+
+    AttributesExtractor<Map<String, Object>, Void> underTest =
+        SqlClientAttributesExtractor.create(new TestMultiAttributesGetter());
+
+    // when
+    AttributesBuilder startAttributes = Attributes.builder();
+    underTest.onStart(startAttributes, context, request);
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    underTest.onEnd(endAttributes, context, request, null, null);
+
+    // then
+    if (SemconvStability.emitStableDatabaseSemconv() && SemconvStability.emitOldDatabaseSemconv()) {
+      assertThat(startAttributes.build())
+          .doesNotContainKey(DB_OPERATION_PARAMETER.getAttributeKey("0"));
+    } else if (SemconvStability.emitOldDatabaseSemconv()) {
+      assertThat(startAttributes.build())
+          .doesNotContainKey(DB_OPERATION_PARAMETER.getAttributeKey("0"));
+    } else if (SemconvStability.emitStableDatabaseSemconv()) {
+      assertThat(startAttributes.build())
+          .doesNotContainKey(DB_OPERATION_PARAMETER.getAttributeKey("0"));
     }
 
     assertThat(endAttributes.build().isEmpty()).isTrue();

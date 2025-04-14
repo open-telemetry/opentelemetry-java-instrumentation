@@ -25,6 +25,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -81,7 +82,7 @@ public class StatementInstrumentation implements TypeInstrumentation {
       }
 
       Context parentContext = currentContext();
-      request = DbRequest.create(statement, sql);
+      request = DbRequest.create(statement, sql, null);
 
       if (request == null || !statementInstrumenter().shouldStart(parentContext, request)) {
         return;
@@ -156,17 +157,19 @@ public class StatementInstrumentation implements TypeInstrumentation {
       if (statement instanceof PreparedStatement) {
         Long batchSize = JdbcData.getPreparedStatementBatchSize((PreparedStatement) statement);
         String sql = JdbcData.preparedStatement.get((PreparedStatement) statement);
+        Map<Integer, Object> parameters = JdbcData.parameters.get((PreparedStatement) statement);
         if (sql == null) {
           return;
         }
-        request = DbRequest.create(statement, sql, batchSize);
+        request = DbRequest.create(statement, sql, batchSize, parameters);
       } else {
         JdbcData.StatementBatchInfo batchInfo = JdbcData.getStatementBatchInfo(statement);
         if (batchInfo == null) {
-          request = DbRequest.create(statement, null);
+          request = DbRequest.create(statement, null, null);
         } else {
           request =
-              DbRequest.create(statement, batchInfo.getStatements(), batchInfo.getBatchSize());
+              DbRequest.create(
+                  statement, batchInfo.getStatements(), batchInfo.getBatchSize(), null);
         }
       }
 

@@ -15,6 +15,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_PARAMETER;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -29,10 +30,15 @@ import io.opentelemetry.instrumentation.jdbc.TestConnection;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -201,6 +207,38 @@ class OpenTelemetryConnectionTest {
     connection.close();
   }
 
+  @Test
+  void testVerifyPrepareStatementParameters() throws SQLException {
+    Instrumenter<DbRequest, Void> instrumenter =
+        createStatementInstrumenter(testing.getOpenTelemetry());
+    DbInfo dbInfo = getDbInfo();
+    OpenTelemetryConnection connection =
+        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
+    String query = "SELECT * FROM users WHERE id=? AND name=$2 AND age=3";
+    String sanitized = "SELECT * FROM users WHERE id=? AND name=$2 AND age=?";
+    PreparedStatement statement = connection.prepareStatement(query);
+    statement.setInt(1, 1);
+    statement.setString(2, "bob");
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          ResultSet resultSet = statement.executeQuery();
+          assertThat(resultSet).isInstanceOf(OpenTelemetryResultSet.class);
+          assertThat(resultSet.getStatement()).isEqualTo(statement);
+        });
+
+    jdbcTraceAssertion(
+        dbInfo,
+        sanitized,
+        equalTo(DB_OPERATION_PARAMETER.getAttributeKey("0"), "1"),
+        equalTo(DB_OPERATION_PARAMETER.getAttributeKey("$2"), "'bob'"),
+        equalTo(DB_OPERATION_PARAMETER.getAttributeKey("1"), "3"));
+
+    statement.close();
+    connection.close();
+  }
+
   private static DbInfo getDbInfo() {
     return DbInfo.builder()
         .system("my_system")
@@ -215,7 +253,23 @@ class OpenTelemetryConnectionTest {
   }
 
   @SuppressWarnings("deprecation") // old semconv
-  private static void jdbcTraceAssertion(DbInfo dbInfo, String query) {
+  private static void jdbcTraceAssertion(
+      DbInfo dbInfo, String query, AttributeAssertion... assertions) {
+    List<AttributeAssertion> baseAttributeAssertions =
+        Arrays.asList(
+            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(dbInfo.getSystem())),
+            equalTo(maybeStable(DB_NAME), dbInfo.getName()),
+            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : dbInfo.getUser()),
+            equalTo(
+                DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : dbInfo.getShortUrl()),
+            equalTo(maybeStable(DB_STATEMENT), query),
+            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+            equalTo(maybeStable(DB_SQL_TABLE), "users"),
+            equalTo(SERVER_ADDRESS, dbInfo.getHost()),
+            equalTo(SERVER_PORT, dbInfo.getPort()));
+
+    List<AttributeAssertion> additionAttributeAssertions = Arrays.asList(assertions);
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -225,18 +279,9 @@ class OpenTelemetryConnectionTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                maybeStableDbSystemName(dbInfo.getSystem())),
-                            equalTo(maybeStable(DB_NAME), dbInfo.getName()),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : dbInfo.getUser()),
-                            equalTo(
-                                DB_CONNECTION_STRING,
-                                emitStableDatabaseSemconv() ? null : dbInfo.getShortUrl()),
-                            equalTo(maybeStable(DB_STATEMENT), query),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "users"),
-                            equalTo(SERVER_ADDRESS, dbInfo.getHost()),
-                            equalTo(SERVER_PORT, dbInfo.getPort()))));
+                            Stream.concat(
+                                    baseAttributeAssertions.stream(),
+                                    additionAttributeAssertions.stream())
+                                .collect(Collectors.toList()))));
   }
 }

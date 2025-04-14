@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
@@ -26,6 +27,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -53,6 +55,18 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("addBatch").and(takesNoArguments()).and(isPublic()),
         PreparedStatementInstrumentation.class.getName() + "$AddBatchAdvice");
+    transformer.applyAdviceToMethod(
+        nameStartsWith("set")
+            .and(takesArguments(2))
+            .and(takesArgument(0, int.class))
+            .and(isPublic()),
+        PreparedStatementInstrumentation.class.getName() + "$Set2Advice");
+    transformer.applyAdviceToMethod(
+        nameStartsWith("set")
+            .and(takesArguments(3))
+            .and(takesArgument(0, int.class))
+            .and(isPublic()),
+        PreparedStatementInstrumentation.class.getName() + "$Set3Advice");
   }
 
   @SuppressWarnings("unused")
@@ -84,7 +98,8 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
       }
 
       Context parentContext = currentContext();
-      request = DbRequest.create(statement);
+      Map<Integer, Object> parameters = JdbcData.parameters.get(statement);
+      request = DbRequest.create(statement, parameters);
 
       if (request == null || !statementInstrumenter().shouldStart(parentContext, request)) {
         return;
@@ -118,6 +133,29 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addBatch(@Advice.This PreparedStatement statement) {
       JdbcData.addPreparedStatementBatch(statement);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class Set2Advice {
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(
+        @Advice.This PreparedStatement statement,
+        @Advice.Argument(0) int index,
+        @Advice.Argument(1) Object value) {
+      JdbcData.addParameter(statement, index, value);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class Set3Advice {
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(
+        @Advice.This PreparedStatement statement,
+        @Advice.Argument(0) int index,
+        @Advice.Argument(1) Object value1,
+        @Advice.Argument(1) Object value2) {
+      JdbcData.addParameter(statement, index, value1);
     }
   }
 }

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 %%
@@ -37,6 +39,7 @@ DOLLAR_QUOTED_STR    = "$$" [^$]* "$$"
 BACKTICK_QUOTED_STR  = "`" [^`]* "`"
 POSTGRE_PARAM_MARKER = "$"[0-9]*
 WHITESPACE           = [ \t\r\n]+
+QUESTION_MARK        = "?"
 
 %{
   static SqlStatementInfo sanitize(String statement, SqlDialect dialect) {
@@ -53,7 +56,7 @@ WHITESPACE           = [ \t\r\n]+
       return sanitizer.getResult();
     } catch (java.io.IOException e) {
       // should never happen
-      return SqlStatementInfo.create(null, null, null);
+      return SqlStatementInfo.create(null, null, null, null);
     }
   }
 
@@ -65,6 +68,24 @@ WHITESPACE           = [ \t\r\n]+
   private static final String IN_STATEMENT_NORMALIZED = "$1(?)";
 
   private final StringBuilder builder = new StringBuilder();
+
+  private final Map<String, String> parameters = new HashMap<>();
+  private int currentParameterIndex = 0;
+
+  private void storeParameterAndSanitize(boolean isNamed, boolean keepFragment) {
+    String value = yytext();
+    if (isNamed) {
+      parameters.put(value, value);
+    } else {
+      parameters.put(Integer.toString(currentParameterIndex++), value);
+    }
+
+    if (keepFragment) {
+      builder.append(value);
+    } else {
+      builder.append('?');
+    }
+  }
 
   private void appendCurrentFragment() {
     builder.append(zzBuffer, zzStartRead, zzMarkedPos - zzStartRead);
@@ -164,8 +185,13 @@ WHITESPACE           = [ \t\r\n]+
       return false;
     }
 
-    SqlStatementInfo getResult(String fullStatement) {
-      return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT), mainIdentifier);
+    SqlStatementInfo getResult(String fullStatement, Map<String, String> parameters) {
+      return SqlStatementInfo.create(
+          fullStatement,
+          getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT),
+          mainIdentifier,
+          parameters
+          );
     }
   }
 
@@ -195,19 +221,24 @@ WHITESPACE           = [ \t\r\n]+
       return true;
     }
 
-    SqlStatementInfo getResult(String fullStatement) {
+    SqlStatementInfo getResult(String fullStatement, Map<String, String> parameters) {
       if (!"".equals(operationTarget)) {
-        return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT) + " " + operationTarget, mainIdentifier);
+        return SqlStatementInfo.create(
+            fullStatement,
+            getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT) + " " + operationTarget,
+            mainIdentifier,
+            parameters
+            );
       }
-      return super.getResult(fullStatement);
+      return super.getResult(fullStatement, parameters);
     }
   }
 
   private static class NoOp extends Operation {
     static final Operation INSTANCE = new NoOp();
 
-    SqlStatementInfo getResult(String fullStatement) {
-      return SqlStatementInfo.create(fullStatement, null, null);
+    SqlStatementInfo getResult(String fullStatement, Map<String, String> parameters) {
+      return SqlStatementInfo.create(fullStatement, null, null, parameters);
     }
   }
 
@@ -363,9 +394,10 @@ WHITESPACE           = [ \t\r\n]+
     String fullStatement = builder.toString();
 
     // Normalize all 'in (?, ?, ...)' statements to in (?) to reduce cardinality
+    // TODO merge this.parameters in a single list for merged ?
     String normalizedStatement = IN_STATEMENT_PATTERN.matcher(fullStatement).replaceAll(IN_STATEMENT_NORMALIZED);
 
-    return operation.getResult(normalizedStatement);
+    return operation.getResult(normalizedStatement, this.parameters);
   }
 
 %}
@@ -529,13 +561,13 @@ WHITESPACE           = [ \t\r\n]+
 
   // here is where the actual sanitization happens
   {BASIC_NUM} | {HEX_NUM} | {QUOTED_STR} | {DOLLAR_QUOTED_STR} {
-          builder.append('?');
+          storeParameterAndSanitize(false, false);
           if (isOverLimit()) return YYEOF;
       }
 
   {DOUBLE_QUOTED_STR} {
           if (dialect == SqlDialect.COUCHBASE) {
-            builder.append('?');
+            storeParameterAndSanitize(false, false);
           } else {
             if (!insideComment && !extractionDone) {
               extractionDone = operation.handleIdentifier();
@@ -545,13 +577,25 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
 
-  {BACKTICK_QUOTED_STR} | {POSTGRE_PARAM_MARKER} {
+  {BACKTICK_QUOTED_STR} {
         if (!insideComment && !extractionDone) {
           extractionDone = operation.handleIdentifier();
         }
         appendCurrentFragment();
         if (isOverLimit()) return YYEOF;
     }
+
+  {POSTGRE_PARAM_MARKER} {
+        if (!insideComment && !extractionDone) {
+          extractionDone = operation.handleIdentifier();
+        }
+        storeParameterAndSanitize(true, true);
+        if (isOverLimit()) return YYEOF;
+    }
+  {QUESTION_MARK} {
+        storeParameterAndSanitize(false, true);
+        if (isOverLimit()) return YYEOF;
+      }
 
   {WHITESPACE} {
           builder.append(' ');

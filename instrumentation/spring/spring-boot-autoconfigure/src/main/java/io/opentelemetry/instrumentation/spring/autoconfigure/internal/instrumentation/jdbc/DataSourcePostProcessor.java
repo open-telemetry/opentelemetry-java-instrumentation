@@ -55,6 +55,10 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
               InstrumentationConfigUtil.isStatementSanitizationEnabled(
                   configPropertiesProvider.getObject(),
                   "otel.instrumentation.jdbc.statement-sanitizer.enabled"))
+          .setOperationParameterEnabled(
+              InstrumentationConfigUtil.isOperationParameterEnabled(
+                  configPropertiesProvider.getObject(),
+                  "otel.instrumentation.jdbc.operation-parameter.enabled"))
           .build()
           .wrap(dataSource);
     }

@@ -15,6 +15,7 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
@@ -25,45 +26,67 @@ import javax.annotation.Nullable;
 public abstract class DbRequest {
 
   @Nullable
-  public static DbRequest create(PreparedStatement statement) {
-    return create(statement, JdbcData.preparedStatement.get(statement));
+  public static DbRequest create(
+      PreparedStatement statement, Map<Integer, Object> preparedStatementParameters) {
+    return create(
+        statement, JdbcData.preparedStatement.get(statement), preparedStatementParameters);
   }
 
   @Nullable
-  public static DbRequest create(Statement statement, String dbStatementString) {
-    return create(statement, dbStatementString, null);
+  public static DbRequest create(
+      Statement statement,
+      String dbStatementString,
+      Map<Integer, Object> preparedStatementParameters) {
+    return create(statement, dbStatementString, null, preparedStatementParameters);
   }
 
   @Nullable
-  public static DbRequest create(Statement statement, String dbStatementString, Long batchSize) {
+  public static DbRequest create(
+      Statement statement,
+      String dbStatementString,
+      Long batchSize,
+      Map<Integer, Object> preparedStatementParameters) {
     Connection connection = connectionFromStatement(statement);
     if (connection == null) {
       return null;
     }
 
-    return create(extractDbInfo(connection), dbStatementString, batchSize);
+    return create(
+        extractDbInfo(connection), dbStatementString, batchSize, preparedStatementParameters);
   }
 
   public static DbRequest create(
-      Statement statement, Collection<String> queryTexts, Long batchSize) {
+      Statement statement,
+      Collection<String> queryTexts,
+      Long batchSize,
+      Map<Integer, Object> preparedStatementParameters) {
     Connection connection = connectionFromStatement(statement);
     if (connection == null) {
       return null;
     }
 
-    return create(extractDbInfo(connection), queryTexts, batchSize);
+    return create(extractDbInfo(connection), queryTexts, batchSize, preparedStatementParameters);
   }
 
   public static DbRequest create(DbInfo dbInfo, String queryText) {
-    return create(dbInfo, queryText, null);
+    return create(dbInfo, queryText, null, null);
   }
 
-  public static DbRequest create(DbInfo dbInfo, String queryText, Long batchSize) {
-    return create(dbInfo, Collections.singletonList(queryText), batchSize);
+  public static DbRequest create(
+      DbInfo dbInfo,
+      String queryText,
+      Long batchSize,
+      Map<Integer, Object> preparedStatementParameters) {
+    return create(
+        dbInfo, Collections.singletonList(queryText), batchSize, preparedStatementParameters);
   }
 
-  public static DbRequest create(DbInfo dbInfo, Collection<String> queryTexts, Long batchSize) {
-    return new AutoValue_DbRequest(dbInfo, queryTexts, batchSize);
+  public static DbRequest create(
+      DbInfo dbInfo,
+      Collection<String> queryTexts,
+      Long batchSize,
+      Map<Integer, Object> preparedStatementParameters) {
+    return new AutoValue_DbRequest(dbInfo, queryTexts, batchSize, preparedStatementParameters);
   }
 
   public abstract DbInfo getDbInfo();
@@ -72,4 +95,7 @@ public abstract class DbRequest {
 
   @Nullable
   public abstract Long getBatchSize();
+
+  @Nullable
+  public abstract Map<Integer, Object> getPreparedStatementParameters();
 }

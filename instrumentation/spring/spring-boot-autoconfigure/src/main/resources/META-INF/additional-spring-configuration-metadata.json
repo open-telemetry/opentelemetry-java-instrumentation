@@ -352,6 +352,12 @@
       "defaultValue": true
     },
     {
+      "name": "otel.instrumentation.jdbc.operation-parameter.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables the attribute db.operation.parameter.<key>",
+      "defaultValue": false
+    },
+    {
       "name": "otel.instrumentation.kafka.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable the Kafka instrumentation.",
