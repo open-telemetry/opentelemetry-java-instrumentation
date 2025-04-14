@@ -14,12 +14,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.TypeDescription;
 import org.yaml.snakeyaml.Yaml;
 
 public class YamlHelper {
+
+  private static final Logger logger = Logger.getLogger(YamlHelper.class.getName());
 
   private static final Yaml metaDataYaml = new Yaml();
 
@@ -73,22 +76,7 @@ public class YamlHelper {
         (group, modules) -> {
           List<Map<String, Object>> instrumentations = new ArrayList<>();
           for (InstrumentationModule module : modules) {
-            Map<String, Object> moduleMap = baseProperties(module);
-
-            Map<String, Object> targetVersions = new TreeMap<>();
-            if (module.getTargetVersions() != null && !module.getTargetVersions().isEmpty()) {
-              module
-                  .getTargetVersions()
-                  .forEach(
-                      (type, versions) -> {
-                        if (!versions.isEmpty()) {
-                          targetVersions.put(type.toString(), new ArrayList<>(versions));
-                        }
-                      });
-            }
-            moduleMap.put("target_versions", targetVersions);
-
-            instrumentations.add(moduleMap);
+            instrumentations.add(baseProperties(module));
           }
           output.put(group, instrumentations);
         });
@@ -143,6 +131,24 @@ public class YamlHelper {
 
     Map<String, Object> scopeMap = getScopeMap(module);
     moduleMap.put("scope", scopeMap);
+
+    Map<String, Object> targetVersions = new TreeMap<>();
+    if (module.getTargetVersions() != null && !module.getTargetVersions().isEmpty()) {
+      module
+          .getTargetVersions()
+          .forEach(
+              (type, versions) -> {
+                if (!versions.isEmpty()) {
+                  targetVersions.put(type.toString(), new ArrayList<>(versions));
+                }
+              });
+    }
+    if (targetVersions.isEmpty()) {
+      logger.info("No Target versions found for " + module.getInstrumentationName());
+    } else {
+      moduleMap.put("target_versions", targetVersions);
+    }
+
     return moduleMap;
   }
 
