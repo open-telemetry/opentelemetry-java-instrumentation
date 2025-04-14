@@ -65,7 +65,7 @@ public final class HttpClientExperimentalMetrics implements OperationListener {
             .setUnit("By")
             .setDescription("Size of HTTP client response bodies.")
             .ofLongs();
-    HttpExperimentalMetricsAdvice.applyClientRequestSizeAdvice(requestSizeBuilder);
+    HttpExperimentalMetricsAdvice.applyClientRequestSizeAdvice(responseSizeBuilder);
     responseSize = responseSizeBuilder.build();
   }
 

@@ -77,7 +77,7 @@ public final class HttpServerExperimentalMetrics implements OperationListener {
             .setUnit("By")
             .setDescription("Size of HTTP server response bodies.")
             .ofLongs();
-    HttpExperimentalMetricsAdvice.applyServerRequestSizeAdvice(requestSizeBuilder);
+    HttpExperimentalMetricsAdvice.applyServerRequestSizeAdvice(responseSizeBuilder);
     responseSize = responseSizeBuilder.build();
   }
 
