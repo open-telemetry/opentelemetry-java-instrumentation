@@ -18,7 +18,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -57,11 +56,7 @@ public final class HttpClientMetrics implements OperationListener {
             .setUnit("s")
             .setDescription("Duration of HTTP client requests.")
             .setExplicitBucketBoundariesAdvice(HttpMetricsAdvice.DURATION_SECONDS_BUCKETS);
-    if (SemconvStability.emitStableHttpSemconv()) {
-      HttpMetricsAdvice.applyStableClientDurationAdvice(stableDurationBuilder);
-    } else {
-      HttpMetricsAdvice.applyClientDurationAdvice(stableDurationBuilder);
-    }
+    HttpMetricsAdvice.applyClientDurationAdvice(stableDurationBuilder);
     duration = stableDurationBuilder.build();
   }
 

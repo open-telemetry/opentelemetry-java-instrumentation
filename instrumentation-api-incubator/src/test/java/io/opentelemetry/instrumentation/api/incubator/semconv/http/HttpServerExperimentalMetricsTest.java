@@ -33,7 +33,6 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerMetrics;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -109,7 +108,9 @@ class HttpServerExperimentalMetricsTest {
         new ArrayList<>(
             Arrays.asList(
                 equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                equalTo(UrlAttributes.URL_SCHEME, "https")));
+                equalTo(UrlAttributes.URL_SCHEME, "https"),
+                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                equalTo(ServerAttributes.SERVER_PORT, 1234)));
 
     List<AttributeAssertion> bodySizeAssertion =
         new ArrayList<>(
@@ -119,19 +120,10 @@ class HttpServerExperimentalMetricsTest {
                 equalTo(ErrorAttributes.ERROR_TYPE, "500"),
                 equalTo(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
                 equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
-                equalTo(UrlAttributes.URL_SCHEME, "https")));
+                equalTo(UrlAttributes.URL_SCHEME, "https"),
+                equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
+                equalTo(ServerAttributes.SERVER_PORT, 1234)));
 
-    if (SemconvStability.emitStableHttpSemconv()) {
-      activeRequestAssertion.addAll(
-          Arrays.asList(
-              equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-              equalTo(ServerAttributes.SERVER_PORT, 1234)));
-
-      bodySizeAssertion.addAll(
-          Arrays.asList(
-              equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-              equalTo(ServerAttributes.SERVER_PORT, 1234)));
-    }
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactlyInAnyOrder(
             metric ->
@@ -277,9 +269,6 @@ class HttpServerExperimentalMetricsTest {
 
   @Test
   void collectsStableMetrics() {
-    if (!SemconvStability.emitStableHttpSemconv()) {
-      return;
-    }
     InMemoryMetricReader metricReader = InMemoryMetricReader.create();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();

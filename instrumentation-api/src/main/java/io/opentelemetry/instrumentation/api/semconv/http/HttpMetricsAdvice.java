@@ -36,43 +36,11 @@ final class HttpMetricsAdvice {
                 NetworkAttributes.NETWORK_PROTOCOL_NAME,
                 NetworkAttributes.NETWORK_PROTOCOL_VERSION,
                 ServerAttributes.SERVER_ADDRESS,
-                ServerAttributes.SERVER_PORT));
-  }
-
-  static void applyStableClientDurationAdvice(DoubleHistogramBuilder builder) {
-    if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
-      return;
-    }
-    ((ExtendedDoubleHistogramBuilder) builder)
-        .setAttributesAdvice(
-            asList(
-                HttpAttributes.HTTP_REQUEST_METHOD,
-                HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
-                ErrorAttributes.ERROR_TYPE,
-                NetworkAttributes.NETWORK_PROTOCOL_NAME,
-                NetworkAttributes.NETWORK_PROTOCOL_VERSION,
-                ServerAttributes.SERVER_ADDRESS,
                 ServerAttributes.SERVER_PORT,
                 UrlAttributes.URL_SCHEME));
   }
 
   static void applyServerDurationAdvice(DoubleHistogramBuilder builder) {
-    if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
-      return;
-    }
-    ((ExtendedDoubleHistogramBuilder) builder)
-        .setAttributesAdvice(
-            asList(
-                HttpAttributes.HTTP_ROUTE,
-                HttpAttributes.HTTP_REQUEST_METHOD,
-                HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
-                ErrorAttributes.ERROR_TYPE,
-                NetworkAttributes.NETWORK_PROTOCOL_NAME,
-                NetworkAttributes.NETWORK_PROTOCOL_VERSION,
-                UrlAttributes.URL_SCHEME));
-  }
-
-  static void applyStableServerDurationAdvice(DoubleHistogramBuilder builder) {
     if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
       return;
     }

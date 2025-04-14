@@ -18,7 +18,6 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.logging.Logger;
 
 /**
@@ -58,11 +57,7 @@ public final class HttpClientExperimentalMetrics implements OperationListener {
             .setUnit("By")
             .setDescription("Size of HTTP client request bodies.")
             .ofLongs();
-    if (SemconvStability.emitStableHttpSemconv()) {
-      HttpExperimentalMetricsAdvice.applyStableClientRequestSizeAdvice(requestSizeBuilder);
-    } else {
-      HttpExperimentalMetricsAdvice.applyClientRequestSizeAdvice(requestSizeBuilder);
-    }
+    HttpExperimentalMetricsAdvice.applyClientRequestSizeAdvice(requestSizeBuilder);
     requestSize = requestSizeBuilder.build();
     LongHistogramBuilder responseSizeBuilder =
         meter
@@ -70,11 +65,7 @@ public final class HttpClientExperimentalMetrics implements OperationListener {
             .setUnit("By")
             .setDescription("Size of HTTP client response bodies.")
             .ofLongs();
-    if (SemconvStability.emitStableHttpSemconv()) {
-      HttpExperimentalMetricsAdvice.applyStableClientRequestSizeAdvice(responseSizeBuilder);
-    } else {
-      HttpExperimentalMetricsAdvice.applyClientRequestSizeAdvice(responseSizeBuilder);
-    }
+    HttpExperimentalMetricsAdvice.applyClientRequestSizeAdvice(requestSizeBuilder);
     responseSize = responseSizeBuilder.build();
   }
 

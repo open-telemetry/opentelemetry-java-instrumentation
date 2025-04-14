@@ -30,7 +30,6 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientMetrics;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -90,11 +89,8 @@ class HttpClientExperimentalMetricsTest {
                 equalTo(NetworkAttributes.NETWORK_PROTOCOL_NAME, "http"),
                 equalTo(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
                 equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                equalTo(ServerAttributes.SERVER_PORT, 1234)));
-    if (SemconvStability.emitStableHttpSemconv()) {
-      bodySizeAssertion.add(equalTo(UrlAttributes.URL_SCHEME, "https"));
-    }
-
+                equalTo(ServerAttributes.SERVER_PORT, 1234),
+                equalTo(UrlAttributes.URL_SCHEME, "https")));
     Context parent =
         Context.root()
             .with(
@@ -172,9 +168,6 @@ class HttpClientExperimentalMetricsTest {
 
   @Test
   void collectsStableMetrics() {
-    if (!SemconvStability.emitStableHttpSemconv()) {
-      return;
-    }
     InMemoryMetricReader metricReader = InMemoryMetricReader.create();
     SdkMeterProvider meterProvider =
         SdkMeterProvider.builder().registerMetricReader(metricReader).build();
