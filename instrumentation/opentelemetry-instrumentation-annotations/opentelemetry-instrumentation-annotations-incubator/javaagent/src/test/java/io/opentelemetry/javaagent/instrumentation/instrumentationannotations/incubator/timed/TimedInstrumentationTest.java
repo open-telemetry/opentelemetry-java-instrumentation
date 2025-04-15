@@ -42,21 +42,6 @@ class TimedInstrumentationTest {
   }
 
   @Test
-  void testExampleWithUnit() throws InterruptedException {
-    new TimedExample().exampleWithUnit();
-    testing.waitAndAssertMetrics(
-        TIMED_INSTRUMENTATION_NAME,
-        metric ->
-            metric
-                .hasName("example.with.unit.duration")
-                .hasUnit("ms")
-                .satisfies(
-                    metricData ->
-                        assertThat(metricData.getHistogramData().getPoints())
-                            .allMatch(p -> p.getMax() < 5000 && p.getMin() > 0)));
-  }
-
-  @Test
   void testExampleWithStaticAttributes() {
     new TimedExample().exampleWithStaticAttributes();
     testing.waitAndAssertMetrics(

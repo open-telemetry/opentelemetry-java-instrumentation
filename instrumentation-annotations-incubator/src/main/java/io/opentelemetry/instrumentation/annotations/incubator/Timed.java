@@ -9,7 +9,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.concurrent.TimeUnit;
 
 /**
  * This annotation creates a {@link io.opentelemetry.api.metrics.DoubleHistogram Histogram}
@@ -50,11 +49,4 @@ public @interface Timed {
    * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-description">https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-description</a>
    */
   String description() default "";
-
-  /**
-   * The unit for the metric.
-   *
-   * <p>Default is seconds.
-   */
-  TimeUnit unit() default TimeUnit.SECONDS;
 }

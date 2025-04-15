@@ -57,51 +57,30 @@ public final class TimedHelper extends MetricsAnnotationHelper {
     return timers.get(method.getDeclaringClass()).computeIfAbsent(method, MethodTimer::new);
   }
 
-  private static String timeUnitToString(TimeUnit timeUnit) {
-    switch (timeUnit) {
-      case NANOSECONDS:
-        return "ns";
-      case MICROSECONDS:
-        return "us";
-      case MILLISECONDS:
-        return "ms";
-      case SECONDS:
-        return "s";
-      case MINUTES:
-        return "min";
-      case HOURS:
-        return "h";
-      case DAYS:
-        return "d";
-    }
-    throw new IllegalArgumentException("Unsupported time unit " + timeUnit);
-  }
-
-  private static double getDuration(long startNanoTime, TimeUnit unit) {
+  private static double getDurationInSecond(long startNanoTime) {
     long nanoDelta = System.nanoTime() - startNanoTime;
-    return (double) nanoDelta / NANOSECONDS.convert(1, unit);
+    return (double) nanoDelta / NANOSECONDS.convert(1, TimeUnit.SECONDS);
   }
 
   private static class MethodTimer {
-    private final TimeUnit unit;
     private final DoubleHistogram histogram;
     private final MetricAttributeHelper attributeHelper;
 
     MethodTimer(Method method) {
       Timed timedAnnotation = method.getAnnotation(Timed.class);
-      unit = timedAnnotation.unit();
       histogram =
           METER
               .histogramBuilder(timedAnnotation.value())
               .setDescription(timedAnnotation.description())
-              .setUnit(timeUnitToString(unit))
+              .setUnit("s")
               .build();
       attributeHelper = new MetricAttributeHelper(method);
     }
 
     void record(Object returnValue, Object[] arguments, Throwable throwable, long startNanoTime) {
-      double duration = getDuration(startNanoTime, unit);
-      histogram.record(duration, attributeHelper.getAttributes(returnValue, arguments, throwable));
+      double durationInSecond = getDurationInSecond(startNanoTime);
+      histogram.record(
+          durationInSecond, attributeHelper.getAttributes(returnValue, arguments, throwable));
     }
   }
 

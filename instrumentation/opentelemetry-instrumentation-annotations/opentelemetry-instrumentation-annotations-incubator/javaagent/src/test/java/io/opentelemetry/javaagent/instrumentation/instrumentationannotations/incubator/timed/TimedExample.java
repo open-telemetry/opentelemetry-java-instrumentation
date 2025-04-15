@@ -10,7 +10,6 @@ import io.opentelemetry.instrumentation.annotations.incubator.AttributeForReturn
 import io.opentelemetry.instrumentation.annotations.incubator.StaticAttribute;
 import io.opentelemetry.instrumentation.annotations.incubator.Timed;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 public class TimedExample {
   public static final String METRIC_NAME = "name.duration";
@@ -22,11 +21,6 @@ public class TimedExample {
 
   @Timed(value = "example.with.description.duration", description = METRIC_DESCRIPTION)
   public void exampleWithDescription() {}
-
-  @Timed(value = "example.with.unit.duration", unit = TimeUnit.MILLISECONDS)
-  public void exampleWithUnit() throws InterruptedException {
-    Thread.sleep(2000);
-  }
 
   @Timed("example.with.static.attributes.duration")
   @StaticAttribute(name = "key1", value = "value1")
