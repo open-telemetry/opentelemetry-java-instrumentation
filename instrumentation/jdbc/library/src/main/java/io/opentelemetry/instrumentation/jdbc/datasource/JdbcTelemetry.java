@@ -26,16 +26,22 @@ public final class JdbcTelemetry {
 
   private final Instrumenter<DataSource, DbInfo> dataSourceInstrumenter;
   private final Instrumenter<DbRequest, Void> statementInstrumenter;
+  private final boolean sqlCommenterEnabled;
 
   JdbcTelemetry(
       Instrumenter<DataSource, DbInfo> dataSourceInstrumenter,
-      Instrumenter<DbRequest, Void> statementInstrumenter) {
+      Instrumenter<DbRequest, Void> statementInstrumenter,
+      boolean sqlCommenterEnabled) {
     this.dataSourceInstrumenter = dataSourceInstrumenter;
     this.statementInstrumenter = statementInstrumenter;
+    this.sqlCommenterEnabled = sqlCommenterEnabled;
   }
 
   public DataSource wrap(DataSource dataSource) {
     return new OpenTelemetryDataSource(
-        dataSource, this.dataSourceInstrumenter, this.statementInstrumenter);
+        dataSource,
+        this.dataSourceInstrumenter,
+        this.statementInstrumenter,
+        this.sqlCommenterEnabled);
   }
 }

@@ -53,6 +53,7 @@ public final class OpenTelemetryDriver implements Driver {
   static final OpenTelemetryDriver INSTANCE = new OpenTelemetryDriver();
 
   private volatile OpenTelemetry openTelemetry = OpenTelemetry.noop();
+  private boolean sqlCommenterEnabled;
 
   private static final int MAJOR_VERSION;
   private static final int MINOR_VERSION;
@@ -222,6 +223,14 @@ public final class OpenTelemetryDriver implements Driver {
     this.openTelemetry = openTelemetry;
   }
 
+  /**
+   * Sets whether to augment sql query with comment containing the tracing information. See <a
+   * href="https://google.github.io/sqlcommenter/">sqlcommenter</a> for more info.
+   */
+  public void sqlCommenterEnabled(boolean sqlCommenterEnabled) {
+    this.sqlCommenterEnabled = sqlCommenterEnabled;
+  }
+
   @Nullable
   @Override
   public Connection connect(String url, Properties info) throws SQLException {
@@ -244,7 +253,8 @@ public final class OpenTelemetryDriver implements Driver {
 
     Instrumenter<DbRequest, Void> statementInstrumenter =
         JdbcInstrumenterFactory.createStatementInstrumenter(openTelemetry);
-    return OpenTelemetryConnection.create(connection, dbInfo, statementInstrumenter);
+    return OpenTelemetryConnection.create(
+        connection, dbInfo, statementInstrumenter, sqlCommenterEnabled);
   }
 
   @Override

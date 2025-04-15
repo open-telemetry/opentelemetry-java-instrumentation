@@ -37,7 +37,7 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         nameStartsWith("prepare")
             .and(takesArgument(0, String.class))
-            // Also include CallableStatement, which is a sub type of PreparedStatement
+            // Also include CallableStatement, which is a subtype of PreparedStatement
             .and(returns(implementsInterface(named("java.sql.PreparedStatement")))),
         ConnectionInstrumentation.class.getName() + "$PrepareAdvice");
   }
@@ -45,10 +45,18 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class PrepareAdvice {
 
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void processSql(
+        @Advice.Argument(value = 0, readOnly = false) String sql,
+        @Advice.Local("otelSql") String originalSql) {
+      originalSql = sql;
+      sql = JdbcSingletons.processSql(sql);
+    }
+
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addDbInfo(
-        @Advice.Argument(0) String sql, @Advice.Return PreparedStatement statement) {
-      JdbcData.preparedStatement.set(statement, sql);
+        @Advice.Local("otelSql") String originalSql, @Advice.Return PreparedStatement statement) {
+      JdbcData.preparedStatement.set(statement, originalSql);
     }
   }
 }

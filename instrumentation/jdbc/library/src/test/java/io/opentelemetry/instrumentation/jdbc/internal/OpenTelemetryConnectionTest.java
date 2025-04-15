@@ -22,6 +22,8 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -33,30 +35,40 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class OpenTelemetryConnectionTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  @Test
-  void testVerifyCreateStatement() throws SQLException {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testVerifyCreateStatement(boolean sqlCommenterEnabled) throws SQLException {
     Instrumenter<DbRequest, Void> instrumenter =
         createStatementInstrumenter(testing.getOpenTelemetry());
     DbInfo dbInfo = getDbInfo();
+    List<String> executedSql = new ArrayList<>();
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
+        new OpenTelemetryConnection(
+            new TestConnection(executedSql::add), dbInfo, instrumenter, sqlCommenterEnabled);
     String query = "SELECT * FROM users";
     Statement statement = connection.createStatement();
 
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          assertThat(statement.execute(query)).isTrue();
-        });
+    SpanContext spanContext =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              assertThat(statement.execute(query)).isTrue();
+              return Span.current().getSpanContext();
+            });
 
+    assertExecutedSql(executedSql, query, sqlCommenterEnabled, spanContext);
     jdbcTraceAssertion(dbInfo, query);
 
     statement.close();
@@ -69,7 +81,7 @@ class OpenTelemetryConnectionTest {
     OpenTelemetry ot = OpenTelemetry.propagating(ContextPropagators.noop());
     Instrumenter<DbRequest, Void> instrumenter = createStatementInstrumenter(ot);
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), DbInfo.DEFAULT, instrumenter);
+        new OpenTelemetryConnection(new TestConnection(), DbInfo.DEFAULT, instrumenter, false);
 
     assertThat(connection.createStatement()).isInstanceOf(OpenTelemetryStatement.class);
     assertThat(connection.createStatement(0, 0)).isInstanceOf(OpenTelemetryStatement.class);
@@ -80,52 +92,64 @@ class OpenTelemetryConnectionTest {
     connection.close();
   }
 
-  @Test
-  void testVerifyPrepareStatement() throws SQLException {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testVerifyPrepareStatement(boolean sqlCommenterEnabled) throws SQLException {
     Instrumenter<DbRequest, Void> instrumenter =
         createStatementInstrumenter(testing.getOpenTelemetry());
     DbInfo dbInfo = getDbInfo();
+    List<String> executedSql = new ArrayList<>();
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
+        new OpenTelemetryConnection(
+            new TestConnection(executedSql::add), dbInfo, instrumenter, sqlCommenterEnabled);
     String query = "SELECT * FROM users";
-    PreparedStatement statement = connection.prepareStatement(query);
 
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          assertThat(statement.execute()).isTrue();
-          ResultSet resultSet = statement.getResultSet();
-          assertThat(resultSet).isInstanceOf(OpenTelemetryResultSet.class);
-          assertThat(resultSet.getStatement()).isEqualTo(statement);
-        });
+    SpanContext spanContext =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              PreparedStatement statement = connection.prepareStatement(query);
+              assertThat(statement.execute()).isTrue();
+              ResultSet resultSet = statement.getResultSet();
+              assertThat(resultSet).isInstanceOf(OpenTelemetryResultSet.class);
+              assertThat(resultSet.getStatement()).isEqualTo(statement);
+              statement.close();
+              return Span.current().getSpanContext();
+            });
 
+    assertExecutedSql(executedSql, query, sqlCommenterEnabled, spanContext);
     jdbcTraceAssertion(dbInfo, query);
 
-    statement.close();
     connection.close();
   }
 
-  @Test
-  void testVerifyPrepareStatementQuery() throws SQLException {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testVerifyPrepareStatementQuery(boolean sqlCommenterEnabled) throws SQLException {
     Instrumenter<DbRequest, Void> instrumenter =
         createStatementInstrumenter(testing.getOpenTelemetry());
     DbInfo dbInfo = getDbInfo();
+    List<String> executedSql = new ArrayList<>();
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
+        new OpenTelemetryConnection(
+            new TestConnection(executedSql::add), dbInfo, instrumenter, sqlCommenterEnabled);
     String query = "SELECT * FROM users";
-    PreparedStatement statement = connection.prepareStatement(query);
 
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          ResultSet resultSet = statement.executeQuery();
-          assertThat(resultSet).isInstanceOf(OpenTelemetryResultSet.class);
-          assertThat(resultSet.getStatement()).isEqualTo(statement);
-        });
+    SpanContext spanContext =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              PreparedStatement statement = connection.prepareStatement(query);
+              ResultSet resultSet = statement.executeQuery();
+              assertThat(resultSet).isInstanceOf(OpenTelemetryResultSet.class);
+              assertThat(resultSet.getStatement()).isEqualTo(statement);
+              statement.close();
+              return Span.current().getSpanContext();
+            });
 
+    assertExecutedSql(executedSql, query, sqlCommenterEnabled, spanContext);
     jdbcTraceAssertion(dbInfo, query);
 
-    statement.close();
     connection.close();
   }
 
@@ -135,7 +159,7 @@ class OpenTelemetryConnectionTest {
     OpenTelemetry ot = OpenTelemetry.propagating(ContextPropagators.noop());
     Instrumenter<DbRequest, Void> instrumenter = createStatementInstrumenter(ot);
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), DbInfo.DEFAULT, instrumenter);
+        new OpenTelemetryConnection(new TestConnection(), DbInfo.DEFAULT, instrumenter, false);
     String query = "SELECT * FROM users";
 
     assertThat(connection.prepareStatement(query))
@@ -157,25 +181,31 @@ class OpenTelemetryConnectionTest {
     connection.close();
   }
 
-  @Test
-  void testVerifyPrepareCall() throws SQLException {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testVerifyPrepareCall(boolean sqlCommenterEnabled) throws SQLException {
     Instrumenter<DbRequest, Void> instrumenter =
         createStatementInstrumenter(testing.getOpenTelemetry());
     DbInfo dbInfo = getDbInfo();
+    List<String> executedSql = new ArrayList<>();
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
+        new OpenTelemetryConnection(
+            new TestConnection(executedSql::add), dbInfo, instrumenter, sqlCommenterEnabled);
     String query = "SELECT * FROM users";
-    PreparedStatement statement = connection.prepareCall(query);
 
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          assertThat(statement.execute()).isTrue();
-        });
+    SpanContext spanContext =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              PreparedStatement statement = connection.prepareCall(query);
+              assertThat(statement.execute()).isTrue();
+              statement.close();
+              return Span.current().getSpanContext();
+            });
 
+    assertExecutedSql(executedSql, query, sqlCommenterEnabled, spanContext);
     jdbcTraceAssertion(dbInfo, query);
 
-    statement.close();
     connection.close();
   }
 
@@ -185,7 +215,7 @@ class OpenTelemetryConnectionTest {
     OpenTelemetry ot = OpenTelemetry.propagating(ContextPropagators.noop());
     Instrumenter<DbRequest, Void> instrumenter = createStatementInstrumenter(ot);
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), DbInfo.DEFAULT, instrumenter);
+        new OpenTelemetryConnection(new TestConnection(), DbInfo.DEFAULT, instrumenter, false);
     String query = "SELECT * FROM users";
 
     assertThat(connection.prepareCall(query)).isInstanceOf(OpenTelemetryCallableStatement.class);
@@ -238,5 +268,23 @@ class OpenTelemetryConnectionTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "users"),
                             equalTo(SERVER_ADDRESS, dbInfo.getHost()),
                             equalTo(SERVER_PORT, dbInfo.getPort()))));
+  }
+
+  private static void assertExecutedSql(
+      List<String> executedSql,
+      String query,
+      boolean sqlCommenterEnabled,
+      SpanContext spanContext) {
+    assertThat(executedSql).hasSize(1);
+    if (sqlCommenterEnabled) {
+      assertThat(executedSql.get(0))
+          .contains(query)
+          .contains("traceparent")
+          .contains(spanContext.getTraceId())
+          .contains(spanContext.getSpanId());
+      ;
+    } else {
+      assertThat(executedSql.get(0)).isEqualTo(query);
+    }
   }
 }

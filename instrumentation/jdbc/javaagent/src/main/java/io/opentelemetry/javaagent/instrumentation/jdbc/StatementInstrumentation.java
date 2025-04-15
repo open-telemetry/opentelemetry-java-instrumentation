@@ -62,7 +62,7 @@ public class StatementInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.Argument(0) String sql,
+        @Advice.Argument(value = 0, readOnly = false) String sql,
         @Advice.This Statement statement,
         @Advice.Local("otelCallDepth") CallDepth callDepth,
         @Advice.Local("otelRequest") DbRequest request,
@@ -82,6 +82,8 @@ public class StatementInstrumentation implements TypeInstrumentation {
 
       Context parentContext = currentContext();
       request = DbRequest.create(statement, sql);
+
+      sql = JdbcSingletons.processSql(sql);
 
       if (request == null || !statementInstrumenter().shouldStart(parentContext, request)) {
         return;
@@ -112,12 +114,15 @@ public class StatementInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AddBatchAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void addBatch(@Advice.This Statement statement, @Advice.Argument(0) String sql) {
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void addBatch(
+        @Advice.This Statement statement,
+        @Advice.Argument(value = 0, readOnly = false) String sql) {
       if (statement instanceof PreparedStatement) {
         return;
       }
       JdbcData.addStatementBatch(statement, sql);
+      sql = JdbcSingletons.processSql(sql);
     }
   }
 
