@@ -53,7 +53,7 @@ public final class OpenTelemetryDriver implements Driver {
   static final OpenTelemetryDriver INSTANCE = new OpenTelemetryDriver();
 
   private volatile OpenTelemetry openTelemetry = OpenTelemetry.noop();
-  private boolean sqlCommenterEnabled;
+  private volatile boolean sqlCommenterEnabled;
 
   private static final int MAJOR_VERSION;
   private static final int MINOR_VERSION;

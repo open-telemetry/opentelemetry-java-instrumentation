@@ -31,11 +31,14 @@ public final class SqlCommenterUtil {
     if (containsSqlComment(query)) {
       return query;
     }
+
     class State {
       String traceparent;
       String tracestate;
     }
+
     State state = new State();
+
     W3CTraceContextPropagator.getInstance()
         .inject(
             Context.current(),
