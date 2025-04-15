@@ -29,7 +29,7 @@ val byteBuddyVersion = "1.17.5"
 val aetherVersion = "1.1.0"
 
 dependencies {
-  implementation("com.google.guava:guava:33.4.7-jre")
+  implementation("com.google.guava:guava:33.4.8-jre")
   // we need to use byte buddy variant that does not shade asm
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:${byteBuddyVersion}") {
     exclude(group = "net.bytebuddy", module = "byte-buddy")
@@ -44,7 +44,7 @@ dependencies {
 
   testImplementation("org.assertj:assertj-core:3.27.3")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.12.1"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.12.2"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
