@@ -163,6 +163,14 @@ class JvmTargetSystemTest extends TargetSystemTest {
                         .isGauge()
                         .hasDataPointsWithoutAttributes())
             .add(
+                "jvm.file_descriptor.count",
+                metric ->
+                    metric
+                        .hasDescription("Number of open file descriptors.")
+                        .hasUnit("{file_descriptors}")
+                        .isUpDownCounter()
+                        .hasDataPointsWithoutAttributes())
+            .add(
                 "jvm.system.cpu.load_1m",
                 metric ->
                     metric
