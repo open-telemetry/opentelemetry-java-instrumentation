@@ -98,7 +98,11 @@ class SlickTest {
                       if (emitStableDatabaseSemconv()) null else "h2:mem:"
                     ),
                     equalTo(maybeStable(DB_STATEMENT), "SELECT ?"),
-                    equalTo(maybeStable(DB_OPERATION), "SELECT")
+                    equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                    equalTo(
+                      DB_OPERATION_PARAMETER.getAttributeKey("0"),
+                      TestValue.toString
+                    )
                   )
             }
           )

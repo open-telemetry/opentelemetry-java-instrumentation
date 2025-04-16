@@ -21,9 +21,7 @@ public abstract class SqlStatementInfo {
   }
 
   public static SqlStatementInfo create(
-      @Nullable String fullStatement,
-      @Nullable String operation,
-      @Nullable String identifier) {
+      @Nullable String fullStatement, @Nullable String operation, @Nullable String identifier) {
     return new AutoValue_SqlStatementInfo(fullStatement, operation, identifier, null);
   }
 
