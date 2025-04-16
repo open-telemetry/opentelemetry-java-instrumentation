@@ -20,6 +20,13 @@ public abstract class SqlStatementInfo {
     return new AutoValue_SqlStatementInfo(fullStatement, operation, identifier, parameters);
   }
 
+  public static SqlStatementInfo create(
+      @Nullable String fullStatement,
+      @Nullable String operation,
+      @Nullable String identifier) {
+    return new AutoValue_SqlStatementInfo(fullStatement, operation, identifier, null);
+  }
+
   @Nullable
   public abstract String getFullStatement();
 
