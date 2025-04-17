@@ -167,7 +167,7 @@ class JvmTargetSystemTest extends TargetSystemTest {
                 metric ->
                     metric
                         .hasDescription("Number of open file descriptors.")
-                        .hasUnit("{file_descriptors}")
+                        .hasUnit("{file_descriptor}")
                         .isUpDownCounter()
                         .hasDataPointsWithoutAttributes())
             .add(
