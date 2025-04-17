@@ -16,7 +16,7 @@ public final class JdbcTelemetryBuilder {
   private boolean dataSourceInstrumenterEnabled = true;
   private boolean statementInstrumenterEnabled = true;
   private boolean statementSanitizationEnabled = true;
-  private boolean operationParameterEnabled = false;
+  private boolean queryParameterEnabled = false;
 
   JdbcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -44,8 +44,8 @@ public final class JdbcTelemetryBuilder {
   }
 
   @CanIgnoreReturnValue
-  public JdbcTelemetryBuilder setOperationParameterEnabled(boolean enabled) {
-    this.operationParameterEnabled = enabled;
+  public JdbcTelemetryBuilder setQueryParameterEnabled(boolean enabled) {
+    this.queryParameterEnabled = enabled;
     return this;
   }
 
@@ -58,6 +58,6 @@ public final class JdbcTelemetryBuilder {
             openTelemetry,
             statementInstrumenterEnabled,
             statementSanitizationEnabled,
-            operationParameterEnabled));
+            queryParameterEnabled));
   }
 }

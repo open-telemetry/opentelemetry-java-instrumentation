@@ -15,7 +15,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_PARAMETER;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_PARAMETER;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -207,6 +207,8 @@ class OpenTelemetryConnectionTest {
     connection.close();
   }
 
+  // https://github.com/open-telemetry/semantic-conventions/pull/2093
+  @SuppressWarnings("deprecation")
   @Test
   void testVerifyPrepareStatementParameters() throws SQLException {
     Instrumenter<DbRequest, Void> instrumenter =
@@ -231,9 +233,9 @@ class OpenTelemetryConnectionTest {
     jdbcTraceAssertion(
         dbInfo,
         sanitized,
-        equalTo(DB_OPERATION_PARAMETER.getAttributeKey("0"), "1"),
-        equalTo(DB_OPERATION_PARAMETER.getAttributeKey("$2"), "'bob'"),
-        equalTo(DB_OPERATION_PARAMETER.getAttributeKey("1"), "3"));
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "1"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("$2"), "'bob'"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("1"), "3"));
 
     statement.close();
     connection.close();

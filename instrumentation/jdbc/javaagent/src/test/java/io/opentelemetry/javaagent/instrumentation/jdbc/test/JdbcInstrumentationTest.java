@@ -19,7 +19,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_PARAMETER;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_PARAMETER;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -390,8 +390,7 @@ class JdbcInstrumentationTest {
         parameters.entrySet().stream()
             .map(
                 entry ->
-                    equalTo(
-                        DB_OPERATION_PARAMETER.getAttributeKey(entry.getKey()), entry.getValue()))
+                    equalTo(DB_QUERY_PARAMETER.getAttributeKey(entry.getKey()), entry.getValue()))
             .collect(Collectors.toList());
 
     baseAssertions.addAll(
@@ -550,8 +549,7 @@ class JdbcInstrumentationTest {
         parameters.entrySet().stream()
             .map(
                 entry ->
-                    equalTo(
-                        DB_OPERATION_PARAMETER.getAttributeKey(entry.getKey()), entry.getValue()))
+                    equalTo(DB_QUERY_PARAMETER.getAttributeKey(entry.getKey()), entry.getValue()))
             .collect(Collectors.toList());
 
     baseAssertions.addAll(
@@ -605,8 +603,7 @@ class JdbcInstrumentationTest {
         parameters.entrySet().stream()
             .map(
                 entry ->
-                    equalTo(
-                        DB_OPERATION_PARAMETER.getAttributeKey(entry.getKey()), entry.getValue()))
+                    equalTo(DB_QUERY_PARAMETER.getAttributeKey(entry.getKey()), entry.getValue()))
             .collect(Collectors.toList());
 
     baseAssertions.addAll(
@@ -660,8 +657,7 @@ class JdbcInstrumentationTest {
         parameters.entrySet().stream()
             .map(
                 entry ->
-                    equalTo(
-                        DB_OPERATION_PARAMETER.getAttributeKey(entry.getKey()), entry.getValue()))
+                    equalTo(DB_QUERY_PARAMETER.getAttributeKey(entry.getKey()), entry.getValue()))
             .collect(Collectors.toList());
 
     baseAssertions.addAll(
@@ -1093,8 +1089,7 @@ class JdbcInstrumentationTest {
         parameters.entrySet().stream()
             .map(
                 entry ->
-                    equalTo(
-                        DB_OPERATION_PARAMETER.getAttributeKey(entry.getKey()), entry.getValue()))
+                    equalTo(DB_QUERY_PARAMETER.getAttributeKey(entry.getKey()), entry.getValue()))
             .collect(Collectors.toList());
 
     baseAssertions.addAll(
@@ -1240,7 +1235,7 @@ class JdbcInstrumentationTest {
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "testdb://localhost"),
                             equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(DB_OPERATION_PARAMETER.getAttributeKey("0"), "123"))));
+                            equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "123"))));
   }
 
   static Stream<Arguments> spanNameStream() {
@@ -1319,8 +1314,7 @@ class JdbcInstrumentationTest {
         parameters.entrySet().stream()
             .map(
                 entry ->
-                    equalTo(
-                        DB_OPERATION_PARAMETER.getAttributeKey(entry.getKey()), entry.getValue()))
+                    equalTo(DB_QUERY_PARAMETER.getAttributeKey(entry.getKey()), entry.getValue()))
             .collect(Collectors.toList());
 
     baseAssertions.addAll(
@@ -1395,7 +1389,7 @@ class JdbcInstrumentationTest {
                                 "SELECT ? FROM INFORMATION_SCHEMA.SYSTEM_USERS"),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "INFORMATION_SCHEMA.SYSTEM_USERS"),
-                            equalTo(DB_OPERATION_PARAMETER.getAttributeKey("0"), "3")));
+                            equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "3")));
     for (int i = 0; i < numQueries; i++) {
       assertions.add(traceAssertConsumer);
     }
@@ -1708,7 +1702,7 @@ class JdbcInstrumentationTest {
                                 "INSERT INTO " + tableName + " VALUES(?)"),
                             equalTo(maybeStable(DB_OPERATION), "INSERT"),
                             equalTo(maybeStable(DB_SQL_TABLE), tableName),
-                            equalTo(DB_OPERATION_PARAMETER.getAttributeKey("0"), "1"))));
+                            equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "1"))));
   }
 
   @ParameterizedTest

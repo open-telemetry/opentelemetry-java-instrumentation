@@ -100,7 +100,7 @@ class SlickTest {
                     equalTo(maybeStable(DB_STATEMENT), "SELECT ?"),
                     equalTo(maybeStable(DB_OPERATION), "SELECT"),
                     equalTo(
-                      DB_OPERATION_PARAMETER.getAttributeKey("0"),
+                      DB_QUERY_PARAMETER.getAttributeKey("0"),
                       TestValue.toString
                     )
                   )

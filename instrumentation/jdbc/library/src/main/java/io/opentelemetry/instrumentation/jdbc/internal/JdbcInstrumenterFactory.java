@@ -41,15 +41,14 @@ public final class JdbcInstrumenterFactory {
         ConfigPropertiesUtil.getBoolean(
             "otel.instrumentation.common.db-statement-sanitizer.enabled", true),
         // TODO change with common conf key
-        ConfigPropertiesUtil.getBoolean(
-            "otel.instrumentation.jdbc.operation-parameter.enabled", true));
+        ConfigPropertiesUtil.getBoolean("otel.instrumentation.jdbc.query-parameter.enabled", true));
   }
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
       OpenTelemetry openTelemetry,
       boolean enabled,
       boolean statementSanitizationEnabled,
-      boolean operationParameterEnabled) {
+      boolean queryParameterEnabled) {
     return Instrumenter.<DbRequest, Void>builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
@@ -57,7 +56,7 @@ public final class JdbcInstrumenterFactory {
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(dbAttributesGetter)
                 .setStatementSanitizationEnabled(statementSanitizationEnabled)
-                .setOperationParameterEnabled(operationParameterEnabled)
+                .setQueryParameterEnabled(queryParameterEnabled)
                 .build())
         .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
         .addOperationMetrics(DbClientMetrics.get())

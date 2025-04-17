@@ -20,7 +20,7 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   final SqlClientAttributesGetter<REQUEST, RESPONSE> getter;
   AttributeKey<String> oldSemconvTableAttribute = DB_SQL_TABLE;
   boolean statementSanitizationEnabled = true;
-  boolean operationParameterEnabled = false;
+  boolean queryParameterEnabled = false;
 
   SqlClientAttributesExtractorBuilder(SqlClientAttributesGetter<REQUEST, RESPONSE> getter) {
     this.getter = getter;
@@ -50,15 +50,15 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Sets whether the {@code db.operation.parameter.<key>} attributes extracted by the constructed
+   * Sets whether the {@code db.query.parameter.<key>} attributes extracted by the constructed
    * {@link SqlClientAttributesExtractor} should be opted-in. If set to {@code true}, all parameters
    * masked by the sanitization and all parameters from {@code PreparedStatement} will be exposed as
    * attributes. Disabled by default.
    */
   @CanIgnoreReturnValue
-  public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setOperationParameterEnabled(
-      boolean operationParameterEnabled) {
-    this.operationParameterEnabled = operationParameterEnabled;
+  public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setQueryParameterEnabled(
+      boolean queryParameterEnabled) {
+    this.queryParameterEnabled = queryParameterEnabled;
     return this;
   }
 
@@ -68,6 +68,6 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    */
   public AttributesExtractor<REQUEST, RESPONSE> build() {
     return new SqlClientAttributesExtractor<>(
-        getter, oldSemconvTableAttribute, statementSanitizationEnabled, operationParameterEnabled);
+        getter, oldSemconvTableAttribute, statementSanitizationEnabled, queryParameterEnabled);
   }
 }

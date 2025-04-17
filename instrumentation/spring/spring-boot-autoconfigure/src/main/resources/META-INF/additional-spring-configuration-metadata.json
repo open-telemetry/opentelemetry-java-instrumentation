@@ -352,9 +352,9 @@
       "defaultValue": true
     },
     {
-      "name": "otel.instrumentation.jdbc.operation-parameter.enabled",
+      "name": "otel.instrumentation.jdbc.query-parameter.enabled",
       "type": "java.lang.Boolean",
-      "description": "Enables the attribute db.operation.parameter.<key>",
+      "description": "Enables the attribute db.query.parameter.<key>",
       "defaultValue": false
     },
     {

@@ -40,8 +40,8 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       AttributeKey.stringKey("db.collection.name");
   private static final AttributeKey<Long> DB_OPERATION_BATCH_SIZE =
       AttributeKey.longKey("db.operation.batch.size");
-  private static final AttributeKeyTemplate<String> DB_OPERATION_PARAMETER =
-      AttributeKeyTemplate.stringKeyTemplate("db.operation.parameter");
+  private static final AttributeKeyTemplate<String> DB_QUERY_PARAMETER =
+      AttributeKeyTemplate.stringKeyTemplate("db.query.parameter");
 
   /** Creates the SQL client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
@@ -62,17 +62,17 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
 
   private final AttributeKey<String> oldSemconvTableAttribute;
   private final boolean statementSanitizationEnabled;
-  private final boolean operationParameterEnabled;
+  private final boolean queryParameterEnabled;
 
   SqlClientAttributesExtractor(
       SqlClientAttributesGetter<REQUEST, RESPONSE> getter,
       AttributeKey<String> oldSemconvTableAttribute,
       boolean statementSanitizationEnabled,
-      boolean operationParameterEnabled) {
+      boolean queryParameterEnabled) {
     super(getter);
     this.oldSemconvTableAttribute = oldSemconvTableAttribute;
     this.statementSanitizationEnabled = statementSanitizationEnabled;
-    this.operationParameterEnabled = operationParameterEnabled;
+    this.queryParameterEnabled = queryParameterEnabled;
   }
 
   @Override
@@ -81,7 +81,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     super.onStart(attributes, parentContext, request);
 
     Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
-    Map<Integer, Object> preparedStatementParameters = getter.getOperationParameters(request);
+    Map<Integer, Object> preparedStatementParameters = getter.getQueryParameters(request);
 
     if (rawQueryTexts.isEmpty()) {
       return;
@@ -103,8 +103,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         if (!SQL_CALL.equals(operation)) {
           internalSet(attributes, oldSemconvTableAttribute, sanitizedStatement.getMainIdentifier());
         }
-        setOperationParameters(
-            attributes, sanitizedStatement, isBatch, preparedStatementParameters);
+        setQueryParameters(attributes, sanitizedStatement, isBatch, preparedStatementParameters);
       }
     }
 
@@ -124,8 +123,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         if (!SQL_CALL.equals(operation)) {
           internalSet(attributes, DB_COLLECTION_NAME, sanitizedStatement.getMainIdentifier());
         }
-        setOperationParameters(
-            attributes, sanitizedStatement, isBatch, preparedStatementParameters);
+        setQueryParameters(attributes, sanitizedStatement, isBatch, preparedStatementParameters);
       } else {
         MultiQuery multiQuery =
             MultiQuery.analyze(getter.getRawQueryTexts(request), statementSanitizationEnabled);
@@ -143,12 +141,12 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     }
   }
 
-  private void setOperationParameters(
+  private void setQueryParameters(
       AttributesBuilder attributes,
       SqlStatementInfo sanitizedStatement,
       boolean isBatch,
       Map<Integer, Object> preparedStatementParameters) {
-    if (sanitizedStatement.getParameters() != null && operationParameterEnabled && !isBatch) {
+    if (sanitizedStatement.getParameters() != null && queryParameterEnabled && !isBatch) {
       int currentPreparedStatementParametersIndex = 1;
       for (Map.Entry<String, String> entry : sanitizedStatement.getParameters().entrySet()) {
         // in this case it means that the sanitizer parsed an existing ?
@@ -160,11 +158,11 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
             && preparedStatementParameters.containsKey(currentPreparedStatementParametersIndex)) {
           internalSet(
               attributes,
-              DB_OPERATION_PARAMETER.getAttributeKey(key),
+              DB_QUERY_PARAMETER.getAttributeKey(key),
               stringifyParameter(
                   preparedStatementParameters.get(currentPreparedStatementParametersIndex++)));
         } else {
-          internalSet(attributes, DB_OPERATION_PARAMETER.getAttributeKey(key), value);
+          internalSet(attributes, DB_QUERY_PARAMETER.getAttributeKey(key), value);
         }
       }
     }

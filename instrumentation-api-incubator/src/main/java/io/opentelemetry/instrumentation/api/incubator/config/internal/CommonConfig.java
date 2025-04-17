@@ -29,7 +29,7 @@ public final class CommonConfig {
   private final Set<String> knownHttpRequestMethods;
   private final EnduserConfig enduserConfig;
   private final boolean statementSanitizationEnabled;
-  private final boolean operationParameterEnabled;
+  private final boolean queryParameterEnabled;
   private final boolean emitExperimentalHttpClientTelemetry;
   private final boolean emitExperimentalHttpServerTelemetry;
   private final boolean redactQueryParameters;
@@ -58,8 +58,8 @@ public final class CommonConfig {
     statementSanitizationEnabled =
         config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true);
     // TODO change with common conf key
-    operationParameterEnabled =
-        config.getBoolean("otel.instrumentation.jdbc.operation-parameter.enabled", false);
+    queryParameterEnabled =
+        config.getBoolean("otel.instrumentation.jdbc.query-parameter.enabled", false);
     emitExperimentalHttpClientTelemetry =
         config.getBoolean("otel.instrumentation.http.client.emit-experimental-telemetry", false);
     redactQueryParameters =
@@ -111,8 +111,8 @@ public final class CommonConfig {
     return statementSanitizationEnabled;
   }
 
-  public boolean isOperationParameterEnabled() {
-    return operationParameterEnabled;
+  public boolean isQueryParameterEnabled() {
+    return queryParameterEnabled;
   }
 
   public boolean shouldEmitExperimentalHttpClientTelemetry() {

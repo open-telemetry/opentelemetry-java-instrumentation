@@ -60,7 +60,7 @@ tasks {
       includeTestsMatching("SlickTest")
     }
     include("**/SlickTest.*")
-    jvmArgs("-Dotel.instrumentation.jdbc.operation-parameter.enabled=true")
+    jvmArgs("-Dotel.instrumentation.jdbc.query-parameter.enabled=true")
   }
 
   test {
@@ -68,7 +68,7 @@ tasks {
       excludeTestsMatching("SlickTest")
     }
     jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
-    jvmArgs("-Dotel.instrumentation.jdbc.operation-parameter.enabled=true")
+    jvmArgs("-Dotel.instrumentation.jdbc.query-parameter.enabled=true")
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -77,7 +77,7 @@ tasks {
     }
     jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    jvmArgs("-Dotel.instrumentation.jdbc.operation-parameter.enabled=true")
+    jvmArgs("-Dotel.instrumentation.jdbc.query-parameter.enabled=true")
   }
 
   val testSlickStableSemconv by registering(Test::class) {
@@ -86,7 +86,7 @@ tasks {
     }
     include("**/SlickTest.*")
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    jvmArgs("-Dotel.instrumentation.jdbc.operation-parameter.enabled=true")
+    jvmArgs("-Dotel.instrumentation.jdbc.query-parameter.enabled=true")
   }
 
   check {

@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_PARAMETER;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_PARAMETER;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.entry;
@@ -67,8 +67,8 @@ class SqlClientAttributesExtractorTest {
     @SuppressWarnings("EmptyCatch")
     @Nullable
     @Override
-    public Map<Integer, Object> getOperationParameters(Map<String, Object> map) {
-      String parameterString = read(map, "db.operation.parameter");
+    public Map<Integer, Object> getQueryParameters(Map<String, Object> map) {
+      String parameterString = read(map, "db.query.parameter");
 
       if (parameterString == null) {
         return null;
@@ -415,7 +415,7 @@ class SqlClientAttributesExtractorTest {
   }
 
   @Test
-  void shouldExtractOperationParameters() {
+  void shouldExtractQueryParameters() {
     // given
     Map<String, Object> request = new HashMap<>();
     request.put("db.name", "potatoes");
@@ -424,13 +424,13 @@ class SqlClientAttributesExtractorTest {
         "db.statement",
         "SELECT col FROM table WHERE field1=? AND field2='A' AND field3=$2 AND field4=2");
     // a prepared parameters map
-    request.put("db.operation.parameter", "a;1");
+    request.put("db.query.parameter", "a;1");
 
     Context context = Context.root();
 
     AttributesExtractor<Map<String, Object>, Void> underTest =
         SqlClientAttributesExtractor.builder(new TestAttributesGetter())
-            .setOperationParameterEnabled(true)
+            .setQueryParameterEnabled(true)
             .build();
 
     // when
@@ -440,45 +440,45 @@ class SqlClientAttributesExtractorTest {
     AttributesBuilder endAttributes = Attributes.builder();
     underTest.onEnd(endAttributes, context, request, null, null);
 
-    String prefix = DB_OPERATION_PARAMETER.getAttributeKey("").getKey();
-    Attributes operationParameterAttributes =
+    String prefix = DB_QUERY_PARAMETER.getAttributeKey("").getKey();
+    Attributes queryParameterAttributes =
         startAttributes.removeIf(attribute -> !attribute.getKey().startsWith(prefix)).build();
 
     // then
     if (SemconvStability.emitStableDatabaseSemconv() && SemconvStability.emitOldDatabaseSemconv()) {
-      assertThat(operationParameterAttributes)
+      assertThat(queryParameterAttributes)
           .containsOnly(
-              entry(DB_OPERATION_PARAMETER.getAttributeKey("0"), "'a'"),
-              entry(DB_OPERATION_PARAMETER.getAttributeKey("1"), "'A'"),
-              entry(DB_OPERATION_PARAMETER.getAttributeKey("$2"), "1"),
-              entry(DB_OPERATION_PARAMETER.getAttributeKey("2"), "2"));
+              entry(DB_QUERY_PARAMETER.getAttributeKey("0"), "'a'"),
+              entry(DB_QUERY_PARAMETER.getAttributeKey("1"), "'A'"),
+              entry(DB_QUERY_PARAMETER.getAttributeKey("$2"), "1"),
+              entry(DB_QUERY_PARAMETER.getAttributeKey("2"), "2"));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
-      assertThat(operationParameterAttributes)
+      assertThat(queryParameterAttributes)
           .containsOnly(
-              entry(DB_OPERATION_PARAMETER.getAttributeKey("0"), "'a'"),
-              entry(DB_OPERATION_PARAMETER.getAttributeKey("1"), "'A'"),
-              entry(DB_OPERATION_PARAMETER.getAttributeKey("$2"), "1"),
-              entry(DB_OPERATION_PARAMETER.getAttributeKey("2"), "2"));
+              entry(DB_QUERY_PARAMETER.getAttributeKey("0"), "'a'"),
+              entry(DB_QUERY_PARAMETER.getAttributeKey("1"), "'A'"),
+              entry(DB_QUERY_PARAMETER.getAttributeKey("$2"), "1"),
+              entry(DB_QUERY_PARAMETER.getAttributeKey("2"), "2"));
     } else if (SemconvStability.emitStableDatabaseSemconv()) {
-      assertThat(operationParameterAttributes)
+      assertThat(queryParameterAttributes)
           .containsOnly(
-              entry(DB_OPERATION_PARAMETER.getAttributeKey("0"), "'a'"),
-              entry(DB_OPERATION_PARAMETER.getAttributeKey("1"), "'A'"),
-              entry(DB_OPERATION_PARAMETER.getAttributeKey("$2"), "1"),
-              entry(DB_OPERATION_PARAMETER.getAttributeKey("2"), "2"));
+              entry(DB_QUERY_PARAMETER.getAttributeKey("0"), "'a'"),
+              entry(DB_QUERY_PARAMETER.getAttributeKey("1"), "'A'"),
+              entry(DB_QUERY_PARAMETER.getAttributeKey("$2"), "1"),
+              entry(DB_QUERY_PARAMETER.getAttributeKey("2"), "2"));
     }
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
 
   @Test
-  void shouldNotExtractOperationParametersForBatch() {
+  void shouldNotExtractQueryParametersForBatch() {
     // given
     Map<String, Object> request = new HashMap<>();
     request.put("db.name", "potatoes");
     request.put("db.statements", singleton("INSERT INTO potato VALUES(?)"));
     request.put("db.operation.batch.size", 1L);
-    request.put("db.operation.parameter", "1");
+    request.put("db.query.parameter", "1");
 
     Context context = Context.root();
 
@@ -495,13 +495,13 @@ class SqlClientAttributesExtractorTest {
     // then
     if (SemconvStability.emitStableDatabaseSemconv() && SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
-          .doesNotContainKey(DB_OPERATION_PARAMETER.getAttributeKey("0"));
+          .doesNotContainKey(DB_QUERY_PARAMETER.getAttributeKey("0"));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
-          .doesNotContainKey(DB_OPERATION_PARAMETER.getAttributeKey("0"));
+          .doesNotContainKey(DB_QUERY_PARAMETER.getAttributeKey("0"));
     } else if (SemconvStability.emitStableDatabaseSemconv()) {
       assertThat(startAttributes.build())
-          .doesNotContainKey(DB_OPERATION_PARAMETER.getAttributeKey("0"));
+          .doesNotContainKey(DB_QUERY_PARAMETER.getAttributeKey("0"));
     }
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
