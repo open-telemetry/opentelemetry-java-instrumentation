@@ -96,9 +96,9 @@ rules:
         type: gauge
         unit: '1'
         desc: Recent CPU utilization for the whole system as reported by the JVM.
-      # jvm.file_descriptor.count
+      # jvm.file_descriptor.count (experimental)
       OpenFileDescriptorCount:
-        metric: file_descriptor.open
+        metric: file_descriptor.count
         type: updowncounter
         unit: "{file_descriptors}"
         desc: Number of open file descriptors.
