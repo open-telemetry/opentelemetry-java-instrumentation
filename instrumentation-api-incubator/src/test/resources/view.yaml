@@ -1,0 +1,5 @@
+- selector:
+    instrument_name: http.client.request.body.size
+  view:
+    attribute_keys:
+      - server.port
