@@ -29,7 +29,7 @@ No targets are enabled by default. The supported target environments are listed 
 - [camel](camel.md)
 - [jetty](jetty.md)
 - [kafka-broker](kafka-broker.md)
-- [tomcat](tomcat.md)
+- [tomcat](../library/tomcat.md)
 - [wildfly](wildfly.md)
 - [hadoop](hadoop.md)
 
