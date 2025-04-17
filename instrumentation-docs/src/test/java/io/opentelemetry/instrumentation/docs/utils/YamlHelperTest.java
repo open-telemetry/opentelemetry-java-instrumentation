@@ -97,10 +97,8 @@ class YamlHelperTest {
   @Test
   void testGenerateInstrumentationYamlSeparatesClassifications() throws Exception {
     List<InstrumentationModule> modules = new ArrayList<>();
-    Map<InstrumentationType, Set<String>> springTargetVersions = new HashMap<>();
-    springTargetVersions.put(
-        InstrumentationType.JAVAAGENT,
-        new HashSet<>(List.of("org.springframework:spring-web:[6.0.0,)")));
+    Map<InstrumentationType, Set<String>> springTargetVersions =
+        Map.of(InstrumentationType.JAVAAGENT, Set.of("org.springframework:spring-web:[6.0.0,)"));
 
     InstrumentationMetaData springMetadata =
         new InstrumentationMetaData(
@@ -135,6 +133,11 @@ class YamlHelperTest {
     InstrumentationMetaData customMetadata =
         new InstrumentationMetaData(null, InstrumentationClassification.CUSTOM.toString(), null);
 
+    Map<InstrumentationType, Set<String>> externalAnnotationsVersions =
+        Map.of(
+            InstrumentationType.JAVAAGENT,
+            Set.of("io.opentelemetry:opentelemetry-extension-annotations:[0.16.0,)"));
+
     modules.add(
         new InstrumentationModule.Builder()
             .srcPath("instrumentation/opentelemetry-external-annotations-1.0")
@@ -142,7 +145,7 @@ class YamlHelperTest {
             .namespace("opentelemetry-external-annotations")
             .group("opentelemetry-external-annotations")
             .metadata(customMetadata)
-            .targetVersions(new HashMap<>())
+            .targetVersions(externalAnnotationsVersions)
             .build());
 
     StringWriter stringWriter = new StringWriter();
@@ -174,6 +177,9 @@ class YamlHelperTest {
               source_path: instrumentation/opentelemetry-external-annotations-1.0
               scope:
                 name: io.opentelemetry.opentelemetry-external-annotations
+              target_versions:
+                javaagent:
+                - io.opentelemetry:opentelemetry-extension-annotations:[0.16.0,)
             """;
 
     assertThat(expectedYaml).isEqualTo(stringWriter.toString());
