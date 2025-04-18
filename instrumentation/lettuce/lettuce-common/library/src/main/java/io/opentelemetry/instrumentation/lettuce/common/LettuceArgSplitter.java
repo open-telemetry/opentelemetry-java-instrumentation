@@ -14,7 +14,7 @@ import javax.annotation.Nullable;
 
 public final class LettuceArgSplitter {
   private static final Pattern KEY_PATTERN =
-      Pattern.compile("((key|value)<(?<wrapped>[^>]+)>|(?<plain>[0-9A-Za-z=]+))(\\s+|$)");
+      Pattern.compile("((key|value)<(?<wrapped>.*?)>|(?<plain>\\S++))(?:\\s+|$)");
 
   // this method removes the key|value<...> wrappers around redis keys or values and splits the args
   // string
