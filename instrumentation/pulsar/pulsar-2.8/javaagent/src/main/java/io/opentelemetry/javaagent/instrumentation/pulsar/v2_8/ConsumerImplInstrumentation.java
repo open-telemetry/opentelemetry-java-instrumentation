@@ -20,6 +20,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.pulsar.common.VirtualFieldStore;
 import java.util.concurrent.CompletableFuture;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
