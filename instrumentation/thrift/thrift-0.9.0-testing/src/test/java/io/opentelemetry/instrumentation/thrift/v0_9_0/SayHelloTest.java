@@ -1,0 +1,641 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.thrift.v0_9_0;
+
+import com.google.common.base.VerifyException;
+import io.opentelemetry.instrumentation.thrift.v0_9_0.thrift.ThriftService;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import javax.security.sasl.Sasl;
+import org.apache.thrift.TException;
+import org.apache.thrift.async.AsyncMethodCallback;
+import org.apache.thrift.async.TAsyncClientManager;
+import org.apache.thrift.protocol.TBinaryProtocol;
+import org.apache.thrift.protocol.TProtocol;
+import org.apache.thrift.protocol.TProtocolFactory;
+import org.apache.thrift.transport.TFastFramedTransport;
+import org.apache.thrift.transport.TFramedTransport;
+import org.apache.thrift.transport.TNonblockingSocket;
+import org.apache.thrift.transport.TNonblockingTransport;
+import org.apache.thrift.transport.TSaslClientTransport;
+import org.apache.thrift.transport.TSocket;
+import org.apache.thrift.transport.TTransport;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+public class SayHelloTest extends ThriftBaseTest {
+
+  @Test
+  public void syncClientSyncSimpleServerSayHello() throws TException {
+    int port = super.getPort();
+    this.startSyncSimpleServer(port);
+    this.syncClientSayHello(port);
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", 1);
+  }
+
+  @Test
+  public void syncClientSyncSimpleServerSayHelloMuti() throws TException {
+    int port = super.getPort();
+    this.startSyncSimpleServer(port);
+    for (int i = 0; i < 5; ++i) {
+      this.syncClientSayHello(port);
+    }
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", 5);
+  }
+
+  @Test
+  public void syncClientSyncSimpleServerSayHelloParallel() throws TException, InterruptedException {
+    int port = super.getPort();
+    this.startSyncSimpleServer(port);
+    AtomicInteger count = new AtomicInteger(0);
+    int threadCount = 5;
+    CountDownLatch latch = new CountDownLatch(threadCount);
+    for (int i = 0; i < threadCount; ++i) {
+      new Thread(
+              () -> {
+                try {
+                  this.syncClientSayHello(port);
+                } catch (TException e) {
+                  count.incrementAndGet();
+                  Assertions.fail(
+                      "syncClientSimpleServerSayHelloParallel field: " + e.getCause().getMessage());
+                } finally {
+                  latch.countDown();
+                }
+              })
+          .start();
+    }
+    latch.await();
+    Assertions.assertThat(count.get()).isEqualTo(0);
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", threadCount);
+  }
+
+  @Test
+  public void syncClientSyncThreadPoolServerSayHello() throws TException, InterruptedException {
+    int port = super.getPort();
+    this.startSyncThreadPoolServer(port);
+    this.syncClientSayHello(port);
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", 1);
+  }
+
+  @Test
+  public void syncClientSyncThreadPoolServerSayHelloMuti() throws TException {
+    int port = super.getPort();
+    this.startSyncThreadPoolServer(port);
+    for (int i = 0; i < 5; ++i) {
+      this.syncClientSayHello(port);
+    }
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", 5);
+  }
+
+  @Test
+  public void syncClientSyncThreadPoolServerSayHelloParallel()
+      throws TException, InterruptedException {
+    int port = super.getPort();
+    this.startSyncThreadPoolServer(port);
+    AtomicInteger count = new AtomicInteger(0);
+    int threadCount = 5;
+    CountDownLatch latch = new CountDownLatch(threadCount);
+    for (int i = 0; i < threadCount; ++i) {
+      new Thread(
+              () -> {
+                try {
+                  this.syncClientSayHello(port);
+                } catch (TException e) {
+                  count.incrementAndGet();
+                  Assertions.fail(
+                      "syncClientSimpleServerSayHelloParallel field: " + e.getCause().getMessage());
+                } finally {
+                  latch.countDown();
+                }
+              })
+          .start();
+    }
+    latch.await();
+    Assertions.assertThat(count.get()).isEqualTo(0);
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", threadCount);
+  }
+
+  @Test
+  public void syncFramedClientSyncNonblockingServerSayHello() throws TException {
+    int port = super.getPort();
+    this.startSyncNonblockingServer(port);
+    this.syncFramedClientSayHello(port);
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", 1);
+  }
+
+  @Test
+  public void syncFastFramedClientSyncNonblockingServerSayHello() throws TException {
+    int port = super.getPort();
+    this.startSyncNonblockingServer(port);
+    this.syncFastFramedClientSayHello(port);
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", 1);
+  }
+
+  @Test
+  public void syncFramedClientSyncNonblockingFastServerSayHello() throws TException {
+    int port = super.getPort();
+    this.startSyncNonblockingFastServer(port);
+    this.syncFramedClientSayHello(port);
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", 1);
+  }
+
+  @Test
+  public void syncFastFramedClientSyncNonblockingFastServerSayHello() throws TException {
+    int port = super.getPort();
+    this.startSyncNonblockingFastServer(port);
+    this.syncFastFramedClientSayHello(port);
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", 1);
+  }
+
+  @Test
+  public void syncFramedClientSyncNonblockingServerSayHelloMuti() throws TException {
+    int port = super.getPort();
+    this.startSyncNonblockingServer(port);
+    for (int i = 0; i < 5; ++i) {
+      this.syncFramedClientSayHello(port);
+    }
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", 5);
+  }
+
+  @Test
+  public void syncFramedClientSyncNonblockingServerSayHelloParallel()
+      throws TException, InterruptedException {
+    int port = super.getPort();
+    this.startSyncNonblockingServer(port);
+    AtomicInteger count = new AtomicInteger();
+    int threadCount = 5;
+    CountDownLatch latch = new CountDownLatch(threadCount);
+
+    for (int i = 0; i < threadCount; ++i) {
+      new Thread(
+              () -> {
+                try {
+                  this.syncFramedClientSayHello(port);
+                } catch (TException e) {
+                  count.incrementAndGet();
+                  Assertions.fail(
+                      "syncFramedClientSyncNonblockingServerSayHelloParallel field: "
+                          + e.getCause().getMessage());
+                } finally {
+                  latch.countDown();
+                }
+              })
+          .start();
+    }
+
+    latch.await(10L, TimeUnit.SECONDS);
+    Assertions.assertThat(count.get()).isEqualTo(0);
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", threadCount);
+  }
+
+  @Test
+  public void syncFramedClientSyncHsHaServerSayHello() throws TException {
+    int port = super.getPort();
+    this.startSyncHsHaServer(port);
+    this.syncFramedClientSayHello(port);
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", 1);
+  }
+
+  @Test
+  public void syncFastFramedClientSyncHsHaServerSayHello() throws TException {
+    int port = super.getPort();
+    this.startSyncHsHaServer(port);
+    this.syncFastFramedClientSayHello(port);
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", 1);
+  }
+
+  @Test
+  public void syncFramedClientSyncHsHaFastServerSayHello() throws TException {
+    int port = super.getPort();
+    this.startSyncHsHaFastServer(port);
+    this.syncFramedClientSayHello(port);
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", 1);
+  }
+
+  @Test
+  public void syncFastFramedClientSyncHsHaFastServerSayHello() throws TException {
+    int port = super.getPort();
+    this.startSyncHsHaFastServer(port);
+    this.syncFastFramedClientSayHello(port);
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", 1);
+  }
+
+  @Test
+  public void syncFramedClientSyncHsHaServerSayHelloMuti() throws TException {
+    int port = super.getPort();
+    this.startSyncHsHaServer(port);
+
+    for (int i = 0; i < 5; ++i) {
+      this.syncFramedClientSayHello(port);
+    }
+
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", 5);
+  }
+
+  @Test
+  public void syncFramedClientSyncHsHaServerSayHelloParallel()
+      throws TException, InterruptedException {
+    int port = super.getPort();
+    this.startSyncHsHaServer(port);
+    AtomicInteger count = new AtomicInteger();
+    int threadCount = 5;
+    CountDownLatch latch = new CountDownLatch(threadCount);
+
+    for (int i = 0; i < threadCount; ++i) {
+      new Thread(
+              () -> {
+                try {
+                  this.syncFramedClientSayHello(port);
+                } catch (TException e) {
+                  count.incrementAndGet();
+                  Assertions.fail(
+                      "syncFramedClientSyncHsHaServerSayHelloParallel field: "
+                          + e.getCause().getMessage());
+                } finally {
+                  latch.countDown();
+                }
+              })
+          .start();
+    }
+
+    latch.await(10L, TimeUnit.SECONDS);
+    Assertions.assertThat(count.get()).isEqualTo(0);
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", threadCount);
+  }
+
+  @Test
+  public void nonBlockClientSyncNonblockingServerSayHello() throws TException, IOException {
+    int port = super.getPort();
+    this.startSyncNonblockingServer(port);
+    this.nonBlockClientSayHello(port);
+    this.waitAndAssertTracesClientAsyncServerSync("sayHello", 1);
+  }
+
+  @Test
+  public void nonBlockClientSyncNonblockingServerSayHelloMuti() throws TException, IOException {
+    int port = super.getPort();
+    this.startSyncNonblockingServer(port);
+
+    for (int i = 0; i < 5; ++i) {
+      this.nonBlockClientSayHello(port);
+    }
+
+    this.waitAndAssertTracesClientAsyncServerSync("sayHello", 5);
+  }
+
+  @Test
+  public void nonBlockClientSyncNonblockingServerSayHelloParallel()
+      throws TException, InterruptedException {
+    int port = super.getPort();
+    this.startSyncNonblockingServer(port);
+    AtomicInteger count = new AtomicInteger();
+    int threadCount = 5;
+    CountDownLatch latch = new CountDownLatch(threadCount);
+
+    for (int i = 0; i < threadCount; ++i) {
+      new Thread(
+              () -> {
+                try {
+                  this.nonBlockClientSayHello(port);
+                } catch (IOException | TException e) {
+                  count.incrementAndGet();
+                  Assertions.fail(
+                      "nonBlockClientSyncNonblockingServerSayHelloParallel field: "
+                          + e.getCause().getMessage());
+                } finally {
+                  latch.countDown();
+                }
+              })
+          .start();
+    }
+
+    latch.await(10L, TimeUnit.SECONDS);
+    Assertions.assertThat(count.get()).isEqualTo(0);
+    this.waitAndAssertTracesClientAsyncServerSync("sayHello", threadCount);
+  }
+
+  @Test
+  public void nonBlockClientSyncHsHaServerSayHello() throws TException, IOException {
+    int port = super.getPort();
+    this.startSyncHsHaServer(port);
+    this.nonBlockClientSayHello(port);
+    this.waitAndAssertTracesClientAsyncServerSync("sayHello", 1);
+  }
+
+  @Test
+  public void nonBlockClientSyncHsHaServerSayHelloMuti() throws TException, IOException {
+    int port = super.getPort();
+    this.startSyncHsHaServer(port);
+
+    for (int i = 0; i < 5; ++i) {
+      this.nonBlockClientSayHello(port);
+    }
+
+    this.waitAndAssertTracesClientAsyncServerSync("sayHello", 5);
+  }
+
+  @Test
+  public void nonBlockClientSyncHsHaServerSayHelloParallel()
+      throws TException, InterruptedException {
+    int port = super.getPort();
+    this.startSyncHsHaServer(port);
+    AtomicInteger count = new AtomicInteger();
+    int threadCount = 5;
+    CountDownLatch latch = new CountDownLatch(threadCount);
+
+    for (int i = 0; i < threadCount; ++i) {
+      new Thread(
+              () -> {
+                try {
+                  this.nonBlockClientSayHello(port);
+                } catch (IOException | TException e) {
+                  count.incrementAndGet();
+                  Assertions.fail(
+                      "nonBlockClientSyncHsHaServerSayHelloParallel field: "
+                          + e.getCause().getMessage());
+                } finally {
+                  latch.countDown();
+                }
+              })
+          .start();
+    }
+
+    latch.await(10L, TimeUnit.SECONDS);
+    Assertions.assertThat(count.get()).isEqualTo(0);
+    this.waitAndAssertTracesClientAsyncServerSync("sayHello", threadCount);
+  }
+
+  @Test
+  public void syncClientSyncNonblockingServerSayHelloError() {
+    int port = super.getPort();
+    Exception error = null;
+    try {
+      this.startSyncNonblockingServer(port);
+      this.syncClientSayHello(port);
+    } catch (TException e) {
+      error = e;
+    }
+    Assertions.assertThat(error).isNotNull();
+    this.waitAndAssertTracesClientSyncNoServer("sayHello", 1);
+  }
+
+  @Test
+  public void syncClientSyncHsHaServerSayHelloError() {
+    int port = super.getPort();
+    Exception error = null;
+    try {
+      this.startSyncHsHaServer(port);
+      this.syncClientSayHello(port);
+    } catch (TException e) {
+      error = e;
+    }
+    Assertions.assertThat(error).isNotNull();
+    this.waitAndAssertTracesClientSyncNoServer("sayHello", 1);
+  }
+
+  @Test
+  public void syncClientSyncThreadedSelectorServerSayHelloError() {
+    Exception error = null;
+    try {
+      int port = super.getPort();
+      this.startSyncThreadedSelectorServer(port);
+      this.syncClientSayHello(port);
+    } catch (TException e) {
+      error = e;
+    }
+    Assertions.assertThat(error).isNotNull();
+    this.waitAndAssertTracesClientSyncNoServer("sayHello", 1);
+  }
+
+  @Test
+  public void syncFramedClientSyncThreadedSelectorServerSayHello() throws TException {
+    int port = super.getPort();
+    this.startSyncThreadedSelectorServer(port);
+    this.syncFramedClientSayHello(port);
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", 1);
+  }
+
+  @Test
+  public void syncFastFramedClientSyncThreadedSelectorServerSayHello() throws TException {
+    int port = super.getPort();
+    this.startSyncThreadedSelectorServer(port);
+    this.syncFastFramedClientSayHello(port);
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", 1);
+  }
+
+  @Test
+  public void syncFramedClientSyncThreadedSelectorServerSayHelloMuti() throws TException {
+    int port = super.getPort();
+    this.startSyncThreadedSelectorServer(port);
+    for (int i = 0; i < 5; ++i) {
+      this.syncFramedClientSayHello(port);
+    }
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", 5);
+  }
+
+  @Test
+  public void syncFramedClientSyncThreadedSelectorServerSayHelloParallel()
+      throws TException, InterruptedException {
+    int port = super.getPort();
+    this.startSyncThreadedSelectorServer(port);
+    AtomicInteger count = new AtomicInteger();
+    int threadCount = 5;
+    CountDownLatch latch = new CountDownLatch(threadCount);
+    for (int i = 0; i < threadCount; ++i) {
+      new Thread(
+              () -> {
+                try {
+                  this.syncFramedClientSayHello(port);
+                } catch (TException e) {
+                  count.incrementAndGet();
+                  Assertions.fail(
+                      "syncFramedClientSyncThreadedSelectorServerSayHelloParallel field: "
+                          + e.getCause().getMessage());
+                } finally {
+                  latch.countDown();
+                }
+              })
+          .start();
+    }
+
+    latch.await(10L, TimeUnit.SECONDS);
+    Assertions.assertThat(count.get()).isEqualTo(0);
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", threadCount);
+  }
+
+  @Test
+  public void nonBlockClientSyncThreadedSelectorServerSayHello() throws TException, IOException {
+    int port = super.getPort();
+    this.startSyncThreadedSelectorServer(port);
+    this.nonBlockClientSayHello(port);
+    this.waitAndAssertTracesClientAsyncServerSync("sayHello", 1);
+  }
+
+  @Test
+  public void nonBlockClientSyncThreadedSelectorServerSayHelloMuti()
+      throws TException, IOException {
+    int port = super.getPort();
+    this.startSyncThreadedSelectorServer(port);
+    for (int i = 0; i < 5; ++i) {
+      this.nonBlockClientSayHello(port);
+    }
+    this.waitAndAssertTracesClientAsyncServerSync("sayHello", 5);
+  }
+
+  @Test
+  public void nonBlockClientSyncThreadedSelectorServerSayHelloParallel()
+      throws TException, InterruptedException {
+    int port = super.getPort();
+    this.startSyncThreadedSelectorServer(port);
+    AtomicInteger count = new AtomicInteger();
+    int threadCount = 5;
+    CountDownLatch latch = new CountDownLatch(threadCount);
+    for (int i = 0; i < threadCount; ++i) {
+      new Thread(
+              () -> {
+                try {
+                  this.nonBlockClientSayHello(port);
+                } catch (IOException | TException e) {
+                  count.incrementAndGet();
+                  Assertions.fail(
+                      "nonBlockClientSyncThreadedSelectorServerSayHelloParallel field: "
+                          + e.getCause().getMessage());
+                } finally {
+                  latch.countDown();
+                }
+              })
+          .start();
+    }
+
+    latch.await(10L, TimeUnit.SECONDS);
+    Assertions.assertThat(count.get()).isEqualTo(0);
+    this.waitAndAssertTracesClientAsyncServerSync("sayHello", threadCount);
+  }
+
+  @Test
+  public void syncFramedClientSyncThreadedSelectorFastServerSayHello() throws TException {
+    int port = super.getPort();
+    this.startSyncThreadedSelectorFastServer(port);
+    this.syncFramedClientSayHello(port);
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", 1);
+  }
+
+  @Test
+  public void syncFastFramedClientSyncThreadedSelectorFastServerSayHello() throws TException {
+    int port = super.getPort();
+    this.startSyncThreadedSelectorFastServer(port);
+    this.syncFastFramedClientSayHello(port);
+    this.waitAndAssertTracesClientSyncServerSync("sayHello", 1);
+  }
+
+  public void syncClientSayHello(int port) throws TException {
+    TTransport transport = null;
+    try {
+      transport = new TSocket("localhost", port);
+      transport.open();
+      TProtocol protocol = new TBinaryProtocol(transport);
+      ThriftService.Client client = new ThriftService.Client(protocol);
+      String response = this.testing().runWithSpan("parent", () -> client.sayHello("US", "Bob"));
+      Assertions.assertThat(response).isEqualTo("Hello USs' Bob");
+    } finally {
+      if (transport != null) {
+        transport.close();
+      }
+    }
+  }
+
+  public void nonBlockClientSayHello(int port) throws TException, IOException {
+    TNonblockingTransport transport = new TNonblockingSocket("localhost", port);
+    TAsyncClientManager clientManager = new TAsyncClientManager();
+    TProtocolFactory protocolFactory = new TBinaryProtocol.Factory();
+    ThriftService.AsyncClient.Factory factory =
+        new ThriftService.AsyncClient.Factory(clientManager, protocolFactory);
+    ThriftService.AsyncClient asyClient = factory.getAsyncClient(transport);
+    AsyncMethodCallback<ThriftService.AsyncClient.sayHello_call> callback =
+        new AsyncMethodCallback<ThriftService.AsyncClient.sayHello_call>() {
+          @Override
+          public void onComplete(ThriftService.AsyncClient.sayHello_call s) {
+            try {
+              String result = s.getResult();
+              Assertions.assertThat(result).isEqualTo("Hello USs' Bob");
+            } catch (TException e) {
+              throw new VerifyException(e);
+            }
+          }
+
+          @Override
+          public void onError(Exception e) {
+            throw new VerifyException("nonBlockClientSayHello test failed", e);
+          }
+        };
+    this.testing().runWithSpan("parent", () -> asyClient.sayHello("US", "Bob", callback));
+  }
+
+  public void syncFramedClientSayHello(int port) throws TException {
+    TTransport transport = null;
+    try {
+      transport = new TSocket("localhost", port);
+      TFramedTransport framedTransport = new TFramedTransport(transport);
+      framedTransport.open();
+      TProtocol protocol = new TBinaryProtocol(framedTransport);
+      ThriftService.Client client = new ThriftService.Client(protocol);
+      String response = this.testing().runWithSpan("parent", () -> client.sayHello("US", "Bob"));
+      Assertions.assertThat(response).isEqualTo("Hello USs' Bob");
+    } finally {
+      if (transport != null) {
+        transport.close();
+      }
+    }
+  }
+
+  public void syncFastFramedClientSayHello(int port) throws TException {
+    TTransport transport = null;
+    try {
+      transport = new TSocket("localhost", port);
+      TFastFramedTransport framedTransport = new TFastFramedTransport(transport);
+      framedTransport.open();
+      TProtocol protocol = new TBinaryProtocol(framedTransport);
+      ThriftService.Client client = new ThriftService.Client(protocol);
+      String response = this.testing().runWithSpan("parent", () -> client.sayHello("US", "Bob"));
+      Assertions.assertThat(response).isEqualTo("Hello USs' Bob");
+    } finally {
+      if (transport != null) {
+        transport.close();
+      }
+    }
+  }
+
+  public void syncNonblockingSaslClientSayHello(int port) throws TException, IOException {
+    Map<String, String> saslOptions = new HashMap<String, String>();
+    saslOptions.put(Sasl.QOP, "auth");
+    saslOptions.put(Sasl.SERVER_AUTH, "true");
+    TNonblockingTransport nonblockingTransport = new TNonblockingSocket("localhost", port);
+    TTransport transport =
+        new TSaslClientTransport(
+            "PLAIN", // SASL 机制
+            null, // Authorization ID
+            null, // Authentication ID (用户名)
+            null, // Password
+            saslOptions, // SASL properties
+            new TestSaslCallbackHandler("12345"), // Callback handler
+            nonblockingTransport // 底层传输
+            );
+    TProtocol protocol = new TBinaryProtocol(transport);
+    ThriftService.Client client = new ThriftService.Client(protocol);
+    Exception error = null;
+    try {
+      this.testing().runWithSpan("parent", () -> client.sayHello("US", "Bob"));
+    } catch (Exception e) {
+      error = e;
+    }
+    Assertions.assertThat(error).isNotNull();
+  }
+}
