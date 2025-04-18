@@ -13,6 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -35,6 +36,8 @@ public final class JdbcData {
   private static final VirtualField<PreparedStatement, PreparedStatementBatchInfo>
       preparedStatementBatch =
           VirtualField.find(PreparedStatement.class, PreparedStatementBatchInfo.class);
+  public static final VirtualField<PreparedStatement, Map<Integer, Object>> parameters =
+      VirtualField.find(PreparedStatement.class, Map.class);
 
   private JdbcData() {}
 
@@ -93,6 +96,15 @@ public final class JdbcData {
   public static Long getPreparedStatementBatchSize(PreparedStatement statement) {
     PreparedStatementBatchInfo batchInfo = preparedStatementBatch.get(statement);
     return batchInfo != null ? batchInfo.getBatchSize() : null;
+  }
+
+  public static void addParameter(PreparedStatement statement, int index, Object value) {
+    Map<Integer, Object> parametersMap = parameters.get(statement);
+    if (parametersMap == null) {
+      parametersMap = new HashMap<>();
+      parameters.set(statement, parametersMap);
+    }
+    parametersMap.put(index, value);
   }
 
   /**
