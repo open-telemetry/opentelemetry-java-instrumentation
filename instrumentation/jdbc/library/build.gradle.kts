@@ -59,3 +59,9 @@ tasks {
     dependsOn(testStableSemconv)
   }
 }
+
+tasks {
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.jdbc.experimental.txn.enabled=true")
+  }
+}
