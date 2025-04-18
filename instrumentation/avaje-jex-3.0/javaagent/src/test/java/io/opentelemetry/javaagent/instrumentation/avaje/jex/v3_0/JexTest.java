@@ -23,6 +23,11 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+
 import io.avaje.jex.Jex.Server;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
@@ -30,10 +35,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JexTest {
 
@@ -47,7 +48,7 @@ class JexTest {
   @BeforeAll
   static void setup() {
     port = PortUtils.findOpenPort();
-    app = TestJexJavaApplication.initJavalin(port);
+    app = TestJexJavaApplication.initJex(port);
     client = WebClient.of("http://localhost:" + port);
   }
 
@@ -118,7 +119,7 @@ class JexTest {
     String id = "123";
     AggregatedHttpResponse response = client.get("/param/" + id).aggregate().join();
     String content = response.contentUtf8();
-    String instrumentation = "io.opentelemetry.jetty-11.0";
+    String instrumentation = "io.opentelemetry.java-http-server";
 
     assertThat(content).isEqualTo(id);
     assertThat(response.status().code()).isEqualTo(200);
