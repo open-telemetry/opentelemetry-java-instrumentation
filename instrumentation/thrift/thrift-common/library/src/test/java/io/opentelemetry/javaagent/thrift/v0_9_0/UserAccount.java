@@ -1,0 +1,486 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.thrift.v0_9_0;
+
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
+import org.apache.thrift.TException;
+import org.apache.thrift.protocol.TProtocolException;
+import org.apache.thrift.protocol.TTupleProtocol;
+import org.apache.thrift.scheme.IScheme;
+import org.apache.thrift.scheme.SchemeFactory;
+import org.apache.thrift.scheme.StandardScheme;
+import org.apache.thrift.scheme.TupleScheme;
+
+public class UserAccount
+    implements org.apache.thrift.TBase<UserAccount, UserAccount._Fields>,
+        java.io.Serializable,
+        Cloneable {
+  private static final org.apache.thrift.protocol.TStruct STRUCT_DESC =
+      new org.apache.thrift.protocol.TStruct("UserAccount");
+
+  private static final org.apache.thrift.protocol.TField USER_FIELD_DESC =
+      new org.apache.thrift.protocol.TField(
+          "user", org.apache.thrift.protocol.TType.STRUCT, (short) 1);
+  private static final org.apache.thrift.protocol.TField ACCOUNT_FIELD_DESC =
+      new org.apache.thrift.protocol.TField(
+          "account", org.apache.thrift.protocol.TType.STRUCT, (short) 2);
+
+  private static final Map<Class<? extends IScheme>, SchemeFactory> schemes =
+      new HashMap<Class<? extends IScheme>, SchemeFactory>();
+
+  static {
+    schemes.put(StandardScheme.class, new UserAccountStandardSchemeFactory());
+    schemes.put(TupleScheme.class, new UserAccountTupleSchemeFactory());
+  }
+
+  public User user; // required
+  public Account account; // required
+
+  /**
+   * The set of fields this struct contains, along with convenience methods for finding and
+   * manipulating them.
+   */
+  public enum _Fields implements org.apache.thrift.TFieldIdEnum {
+    USER((short) 1, "user"),
+    ACCOUNT((short) 2, "account");
+
+    private static final Map<String, _Fields> byName = new HashMap<String, _Fields>();
+
+    static {
+      for (_Fields field : EnumSet.allOf(_Fields.class)) {
+        byName.put(field.getFieldName(), field);
+      }
+    }
+
+    /** Find the _Fields constant that matches fieldId, or null if its not found. */
+    public static _Fields findByThriftId(int fieldId) {
+      switch (fieldId) {
+        case 1: // USER
+          return USER;
+        case 2: // ACCOUNT
+          return ACCOUNT;
+        default:
+          return null;
+      }
+    }
+
+    /** Find the _Fields constant that matches fieldId, throwing an exception if it is not found. */
+    public static _Fields findByThriftIdOrThrow(int fieldId) {
+      _Fields fields = findByThriftId(fieldId);
+      if (fields == null)
+        throw new IllegalArgumentException("Field " + fieldId + " doesn't exist!");
+      return fields;
+    }
+
+    /** Find the _Fields constant that matches name, or null if its not found. */
+    public static _Fields findByName(String name) {
+      return byName.get(name);
+    }
+
+    private final short _thriftId;
+    private final String _fieldName;
+
+    _Fields(short thriftId, String fieldName) {
+      _thriftId = thriftId;
+      _fieldName = fieldName;
+    }
+
+    public short getThriftFieldId() {
+      return _thriftId;
+    }
+
+    public String getFieldName() {
+      return _fieldName;
+    }
+  }
+
+  // isset id assignments
+  public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
+
+  static {
+    Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap =
+        new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
+    tmpMap.put(
+        _Fields.USER,
+        new org.apache.thrift.meta_data.FieldMetaData(
+            "user",
+            org.apache.thrift.TFieldRequirementType.REQUIRED,
+            new org.apache.thrift.meta_data.StructMetaData(
+                org.apache.thrift.protocol.TType.STRUCT, User.class)));
+    tmpMap.put(
+        _Fields.ACCOUNT,
+        new org.apache.thrift.meta_data.FieldMetaData(
+            "account",
+            org.apache.thrift.TFieldRequirementType.REQUIRED,
+            new org.apache.thrift.meta_data.StructMetaData(
+                org.apache.thrift.protocol.TType.STRUCT, Account.class)));
+    metaDataMap = Collections.unmodifiableMap(tmpMap);
+    org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(UserAccount.class, metaDataMap);
+  }
+
+  public UserAccount() {}
+
+  public UserAccount(User user, Account account) {
+    this();
+    this.user = user;
+    this.account = account;
+  }
+
+  /** Performs a deep copy on <i>other</i>. */
+  public UserAccount(UserAccount other) {
+    if (other.isSetUser()) {
+      this.user = new User(other.user);
+    }
+    if (other.isSetAccount()) {
+      this.account = new Account(other.account);
+    }
+  }
+
+  public UserAccount deepCopy() {
+    return new UserAccount(this);
+  }
+
+  @Override
+  public void clear() {
+    this.user = null;
+    this.account = null;
+  }
+
+  public User getUser() {
+    return this.user;
+  }
+
+  public UserAccount setUser(User user) {
+    this.user = user;
+    return this;
+  }
+
+  public void unsetUser() {
+    this.user = null;
+  }
+
+  /** Returns true if field user is set (has been assigned a value) and false otherwise */
+  public boolean isSetUser() {
+    return this.user != null;
+  }
+
+  public void setUserIsSet(boolean value) {
+    if (!value) {
+      this.user = null;
+    }
+  }
+
+  public Account getAccount() {
+    return this.account;
+  }
+
+  public UserAccount setAccount(Account account) {
+    this.account = account;
+    return this;
+  }
+
+  public void unsetAccount() {
+    this.account = null;
+  }
+
+  /** Returns true if field account is set (has been assigned a value) and false otherwise */
+  public boolean isSetAccount() {
+    return this.account != null;
+  }
+
+  public void setAccountIsSet(boolean value) {
+    if (!value) {
+      this.account = null;
+    }
+  }
+
+  public void setFieldValue(_Fields field, Object value) {
+    switch (field) {
+      case USER:
+        if (value == null) {
+          unsetUser();
+        } else {
+          setUser((User) value);
+        }
+        break;
+
+      case ACCOUNT:
+        if (value == null) {
+          unsetAccount();
+        } else {
+          setAccount((Account) value);
+        }
+        break;
+    }
+  }
+
+  public Object getFieldValue(_Fields field) {
+    switch (field) {
+      case USER:
+        return getUser();
+
+      case ACCOUNT:
+        return getAccount();
+    }
+    throw new IllegalStateException();
+  }
+
+  /**
+   * Returns true if field corresponding to fieldID is set (has been assigned a value) and false
+   * otherwise
+   */
+  public boolean isSet(_Fields field) {
+    if (field == null) {
+      throw new IllegalArgumentException();
+    }
+
+    switch (field) {
+      case USER:
+        return isSetUser();
+      case ACCOUNT:
+        return isSetAccount();
+    }
+    throw new IllegalStateException();
+  }
+
+  @Override
+  public boolean equals(Object that) {
+    if (that == null) return false;
+    if (that instanceof UserAccount) return this.equals((UserAccount) that);
+    return false;
+  }
+
+  public boolean equals(UserAccount that) {
+    if (that == null) return false;
+
+    boolean this_present_user = true && this.isSetUser();
+    boolean that_present_user = true && that.isSetUser();
+    if (this_present_user || that_present_user) {
+      if (!(this_present_user && that_present_user)) return false;
+      if (!this.user.equals(that.user)) return false;
+    }
+
+    boolean this_present_account = true && this.isSetAccount();
+    boolean that_present_account = true && that.isSetAccount();
+    if (this_present_account || that_present_account) {
+      if (!(this_present_account && that_present_account)) return false;
+      if (!this.account.equals(that.account)) return false;
+    }
+
+    return true;
+  }
+
+  @Override
+  public int hashCode() {
+    return 0;
+  }
+
+  public int compareTo(UserAccount other) {
+    if (!getClass().equals(other.getClass())) {
+      return getClass().getName().compareTo(other.getClass().getName());
+    }
+
+    int lastComparison = 0;
+    UserAccount typedOther = (UserAccount) other;
+
+    lastComparison = Boolean.valueOf(isSetUser()).compareTo(typedOther.isSetUser());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetUser()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.user, typedOther.user);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    lastComparison = Boolean.valueOf(isSetAccount()).compareTo(typedOther.isSetAccount());
+    if (lastComparison != 0) {
+      return lastComparison;
+    }
+    if (isSetAccount()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.account, typedOther.account);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    return 0;
+  }
+
+  public _Fields fieldForId(int fieldId) {
+    return _Fields.findByThriftId(fieldId);
+  }
+
+  public void read(org.apache.thrift.protocol.TProtocol iprot) throws TException {
+    schemes.get(iprot.getScheme()).getScheme().read(iprot, this);
+  }
+
+  public void write(org.apache.thrift.protocol.TProtocol oprot) throws TException {
+    schemes.get(oprot.getScheme()).getScheme().write(oprot, this);
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder("UserAccount(");
+    boolean first = true;
+
+    sb.append("user:");
+    if (this.user == null) {
+      sb.append("null");
+    } else {
+      sb.append(this.user);
+    }
+    first = false;
+    if (!first) sb.append(", ");
+    sb.append("account:");
+    if (this.account == null) {
+      sb.append("null");
+    } else {
+      sb.append(this.account);
+    }
+    first = false;
+    sb.append(")");
+    return sb.toString();
+  }
+
+  public void validate() throws TException {
+    // check for required fields
+    if (user == null) {
+      throw new TProtocolException("Required field 'user' was not present! Struct: " + toString());
+    }
+    if (account == null) {
+      throw new TProtocolException(
+          "Required field 'account' was not present! Struct: " + toString());
+    }
+    // check for sub-struct validity
+    if (user != null) {
+      user.validate();
+    }
+    if (account != null) {
+      account.validate();
+    }
+  }
+
+  private void writeObject(java.io.ObjectOutputStream out) throws java.io.IOException {
+    try {
+      write(
+          new org.apache.thrift.protocol.TCompactProtocol(
+              new org.apache.thrift.transport.TIOStreamTransport(out)));
+    } catch (TException te) {
+      throw new java.io.IOException(te);
+    }
+  }
+
+  private void readObject(java.io.ObjectInputStream in)
+      throws java.io.IOException, ClassNotFoundException {
+    try {
+      read(
+          new org.apache.thrift.protocol.TCompactProtocol(
+              new org.apache.thrift.transport.TIOStreamTransport(in)));
+    } catch (TException te) {
+      throw new java.io.IOException(te);
+    }
+  }
+
+  private static class UserAccountStandardSchemeFactory implements SchemeFactory {
+    public UserAccountStandardScheme getScheme() {
+      return new UserAccountStandardScheme();
+    }
+  }
+
+  private static class UserAccountStandardScheme extends StandardScheme<UserAccount> {
+
+    public void read(org.apache.thrift.protocol.TProtocol iprot, UserAccount struct)
+        throws TException {
+      org.apache.thrift.protocol.TField schemeField;
+      iprot.readStructBegin();
+      while (true) {
+        schemeField = iprot.readFieldBegin();
+        if (schemeField.type == org.apache.thrift.protocol.TType.STOP) {
+          break;
+        }
+        switch (schemeField.id) {
+          case 1: // USER
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+              struct.user = new User();
+              struct.user.read(iprot);
+              struct.setUserIsSet(true);
+            } else {
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 2: // ACCOUNT
+            if (schemeField.type == org.apache.thrift.protocol.TType.STRUCT) {
+              struct.account = new Account();
+              struct.account.read(iprot);
+              struct.setAccountIsSet(true);
+            } else {
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          default:
+            org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+        }
+        iprot.readFieldEnd();
+      }
+      iprot.readStructEnd();
+
+      // check for required fields of primitive type, which can't be checked in the validate method
+      struct.validate();
+    }
+
+    public void write(org.apache.thrift.protocol.TProtocol oprot, UserAccount struct)
+        throws TException {
+      struct.validate();
+
+      oprot.writeStructBegin(STRUCT_DESC);
+      if (struct.user != null) {
+        oprot.writeFieldBegin(USER_FIELD_DESC);
+        struct.user.write(oprot);
+        oprot.writeFieldEnd();
+      }
+      if (struct.account != null) {
+        oprot.writeFieldBegin(ACCOUNT_FIELD_DESC);
+        struct.account.write(oprot);
+        oprot.writeFieldEnd();
+      }
+      oprot.writeFieldStop();
+      oprot.writeStructEnd();
+    }
+  }
+
+  private static class UserAccountTupleSchemeFactory implements SchemeFactory {
+    public UserAccountTupleScheme getScheme() {
+      return new UserAccountTupleScheme();
+    }
+  }
+
+  private static class UserAccountTupleScheme extends TupleScheme<UserAccount> {
+
+    @Override
+    public void write(org.apache.thrift.protocol.TProtocol prot, UserAccount struct)
+        throws TException {
+      TTupleProtocol oprot = (TTupleProtocol) prot;
+      struct.user.write(oprot);
+      struct.account.write(oprot);
+    }
+
+    @Override
+    public void read(org.apache.thrift.protocol.TProtocol prot, UserAccount struct)
+        throws TException {
+      TTupleProtocol iprot = (TTupleProtocol) prot;
+      struct.user = new User();
+      struct.user.read(iprot);
+      struct.setUserIsSet(true);
+      struct.account = new Account();
+      struct.account.read(iprot);
+      struct.setAccountIsSet(true);
+    }
+  }
+}
