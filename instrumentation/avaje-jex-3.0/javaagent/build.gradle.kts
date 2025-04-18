@@ -17,5 +17,5 @@ otelJava {
 
 dependencies {
   library("io.avaje:avaje-jex:3.0")
-  testImplementation(project(":instrumentation:java-http-server:testing"))
+  testImplementation(project(":instrumentation:java-http-server:javaagent"))
 }
