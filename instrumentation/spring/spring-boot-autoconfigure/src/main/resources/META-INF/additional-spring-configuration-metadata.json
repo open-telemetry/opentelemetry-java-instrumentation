@@ -285,6 +285,12 @@
       "defaultValue": true
     },
     {
+      "name": "otel.instrumentation.common.experimental.controller-telemetry.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables experimental controller spans.",
+      "defaultValue": false
+    },
+    {
       "name": "otel.instrumentation.common.default-enabled",
       "type": "java.lang.Boolean",
       "description": "Enables all instrumentations. Set to <code>false</code> to disable all instrumentations and then enable specific modules individually, e.g. <code>otel.instrumentation.jdbc.enabled=true</code>.",
