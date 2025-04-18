@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class JexInstrumentationModule extends InstrumentationModule {
 
   public JexInstrumentationModule() {
-    super("jex", "avaje-jex-3.0");
+    super("jex", "avaje-jex");
   }
 
   @Override
