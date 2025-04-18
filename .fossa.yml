@@ -384,6 +384,15 @@ targets:
       target: ':instrumentation:cassandra:cassandra-4.4:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:cats-effect:cats-effect-3.6:bootstrap'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:cats-effect:cats-effect-3.6:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:cats-effect:cats-effect-common-3.6:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:couchbase:couchbase-2-common:javaagent'
     - type: gradle
       path: ./
