@@ -53,8 +53,9 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
       OpenTelemetryConnection connection,
       DbInfo dbInfo,
       String query,
-      Instrumenter<DbRequest, Void> instrumenter) {
-    super(delegate, connection, dbInfo, query, instrumenter);
+      Instrumenter<DbRequest, Void> instrumenter,
+      boolean sqlCommenterEnabled) {
+    super(delegate, connection, dbInfo, query, instrumenter, sqlCommenterEnabled);
   }
 
   @Override

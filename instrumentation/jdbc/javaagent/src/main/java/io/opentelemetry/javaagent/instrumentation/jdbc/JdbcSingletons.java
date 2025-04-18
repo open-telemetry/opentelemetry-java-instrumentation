@@ -11,6 +11,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenterUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -29,6 +30,11 @@ public final class JdbcSingletons {
   private static final Instrumenter<DbRequest, Void> STATEMENT_INSTRUMENTER;
   public static final Instrumenter<DataSource, DbInfo> DATASOURCE_INSTRUMENTER =
       createDataSourceInstrumenter(GlobalOpenTelemetry.get(), true);
+  private static final boolean SQLCOMMENTER_ENABLED =
+      AgentInstrumentationConfig.get()
+          .getBoolean(
+              "otel.instrumentation.jdbc.sqlcommenter.enabled",
+              AgentCommonConfig.get().isSqlCommenterEnabled());
 
   static {
     JdbcAttributesGetter dbAttributesGetter = new JdbcAttributesGetter();
@@ -61,6 +67,10 @@ public final class JdbcSingletons {
 
   public static Instrumenter<DataSource, DbInfo> dataSourceInstrumenter() {
     return DATASOURCE_INSTRUMENTER;
+  }
+
+  public static String processSql(String sql) {
+    return SQLCOMMENTER_ENABLED ? SqlCommenterUtil.processQuery(sql) : sql;
   }
 
   private JdbcSingletons() {}
