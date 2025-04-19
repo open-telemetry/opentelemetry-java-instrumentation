@@ -62,7 +62,6 @@ tasks {
         disable("UnnecessarilyFullyQualified")
 
         // TODO (trask) use animal sniffer
-        disable("Java7ApiChecker")
         disable("Java8ApiChecker")
         disable("AndroidJdkLibsChecker")
 
@@ -124,8 +123,8 @@ tasks {
 
         disable("NonFinalStaticField")
 
-        // We get this warning in modules that compile for old java versions
-        disable("StringConcatToTextBlock")
+        // Requires adding compile dependency to JSpecify
+        disable("AddNullMarkedToPackageInfo")
 
         if (testLatestDeps) {
           // Some latest dep tests are compiled for java 17 although the base version uses an older
