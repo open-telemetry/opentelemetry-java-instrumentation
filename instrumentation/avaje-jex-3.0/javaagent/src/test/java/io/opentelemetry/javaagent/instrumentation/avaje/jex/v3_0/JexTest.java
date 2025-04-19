@@ -118,7 +118,7 @@ class JexTest {
     String id = "123";
     AggregatedHttpResponse response = client.get("/param/" + id).aggregate().join();
     String content = response.contentUtf8();
-    String instrumentation = "io.opentelemetry.java-http-server";
+    String instrumentation = "io.opentelemetry.jetty-12.0";
 
     assertThat(content).isEqualTo(id);
     assertThat(response.status().code()).isEqualTo(200);

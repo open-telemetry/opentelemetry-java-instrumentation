@@ -41,7 +41,7 @@ public class JexInstrumentation implements TypeInstrumentation {
     public static void onAfterExecute(@Advice.Argument(0) Context ctx, @Advice.Thrown Throwable t) {
       HttpServerRoute.update(
           io.opentelemetry.context.Context.current(),
-          HttpServerRouteSource.CONTROLLER,
+          HttpServerRouteSource.SERVER_FILTER,
           ctx.matchedPath());
     }
   }

@@ -17,5 +17,6 @@ otelJava {
 
 dependencies {
   library("io.avaje:avaje-jex:3.0")
-  testImplementation(project(":instrumentation:java-http-server:javaagent"))
+  testLibrary("org.eclipse.jetty:jetty-http-spi:12.0.19")
+  testInstrumentation(project(":instrumentation:jetty:jetty-12.0:javaagent"))
 }
