@@ -67,6 +67,9 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
   * List of supported versions by the module, broken down by `library` or `javaagent` support
 * scope
   * Name: The scope name of the instrumentation, `io.opentelemetry.{instrumentation name}`
+* configurations settings
+  * List of settings that are available for the instrumentation module
+  * Each setting has a name, description, and default value
 
 ## Methodology
 
@@ -81,6 +84,10 @@ As of now, the following fields are supported, all of which are optional:
 description: "Instruments..."   # Description of the instrumentation module
 disabled_by_default: true       # Defaults to `false`
 classification: internal        # instrumentation classification: library | internal | custom
+configurations:
+  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+    description: Enables or disables statement sanitization for database queries.
+    default: true
 ```
 
 ### Gradle File Derived Information

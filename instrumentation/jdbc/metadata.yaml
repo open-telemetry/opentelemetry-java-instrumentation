@@ -1,1 +1,17 @@
 disabled_by_default: true
+description: >
+  Traces JDBC operations such as statements, batches, commits, and rollbacks by injecting byte‑code
+  into JDBC drivers and common connection‑pool proxies. Each call produces a span named after the
+  SQL verb, enriched with standard DB client attributes (system, database, operation, sanitized
+  statement, peer address) and error details if an exception occurs.
+configurations:
+  - name: otel.instrumentation.jdbc.statement-sanitizer.enabled
+    description: Enables or disables statement sanitization for database queries. Takes precedent to 
+      otel.instrumentation.common.db-statement-sanitizer.enabled.
+    default: true
+  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+    description: Enables or disables statement sanitization for database queries.
+    default: true
+  - name: otel.instrumentation.common.peer-service-mapping
+    description: Used to specify a mapping from host names or IP addresses to peer services.
+    default: ""
