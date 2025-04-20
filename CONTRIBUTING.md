@@ -4,11 +4,11 @@ Pull requests for bug fixes are always welcome!
 
 Before submitting new features or changes to current functionality, it is recommended to first
 [open an issue](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/new)
-and discuss your ideas or propose the changes you wish to make.
+and [discuss](https://github.com/open-telemetry/opentelemetry-java-instrumentation/discussions/new?category=q-a) your ideas or propose the changes you wish to make.
 
 ## Building
 
-This project requires Java 21 to build and run tests. Newer JDK's may work, but this version is used in CI.
+This project requires Gradle 8.13 and Java 21 to build and run tests. Newer Gardle and JDK may work, but this version is used in CI.
 
 Some instrumentations and tests may put constraints on which java versions they support.
 See [Running the tests](./docs/contributing/running-tests.md) for more details.
