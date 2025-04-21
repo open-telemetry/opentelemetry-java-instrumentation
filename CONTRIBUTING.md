@@ -8,7 +8,7 @@ and [discuss](https://github.com/open-telemetry/opentelemetry-java-instrumentati
 
 ## Building
 
-This project requires Gradle 8.13+ and Java 21 to build and run tests. Newer Gradle and JDK versions may work, but these are the versions used in CI.
+This project requires Java 21 to build and run tests. Newer JDK's may work, but this version is used in CI.
 
 Some instrumentations and tests may put constraints on which java versions they support.
 See [Running the tests](./docs/contributing/running-tests.md) for more details.
