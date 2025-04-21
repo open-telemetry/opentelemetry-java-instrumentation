@@ -14,6 +14,9 @@ import java.lang.annotation.Target;
  * This annotation allows for adding the method return value as an attribute to metrics recorded
  * using the {@link Timed} and {@link Counted} annotations.
  *
+ * <p>By default, the {@link Object#toString()} will be called on the return value to convert it to
+ * a String.
+ *
  * <p>Application developers can use this annotation to signal OpenTelemetry auto-instrumentation
  * that the attribute should be captured.
  *
@@ -31,8 +34,7 @@ public @interface AttributeReturnValue {
   /**
    * Attribute name for the return value.
    *
-   * <p>The name of the attribute for the return value of the method call. {@link Object#toString()}
-   * may be called on the return value to convert it to a String.
+   * <p>The name of the attribute for the return value of the method call.
    */
   String value();
 }

@@ -14,6 +14,9 @@ import java.lang.annotation.Target;
  * This annotation marks that a parameter of a method or constructor annotated with {@link Timed} or
  * {@link Counted} should be added as an attribute to the metric.
  *
+ * <p>By default, the `{@link Object#toString()}` will be called on the parameter value to convert
+ * it to a String.
+ *
  * <p>Application developers can use this annotation to signal OpenTelemetry auto-instrumentation
  * that the attribute should be captured.
  *
@@ -33,8 +36,7 @@ public @interface Attribute {
    *
    * <p>If not specified and the code is compiled using the `{@code -parameters}` argument to
    * `javac`, the parameter name will be used instead. If the parameter name is not available, e.g.,
-   * because the code was not compiled with that flag, the attribute will be ignored. `{@link
-   * Object#toString()}` may be called on the attribute value to convert it to a String.
+   * because the code was not compiled with that flag, the attribute will be ignored.
    */
   String value() default "";
 }
