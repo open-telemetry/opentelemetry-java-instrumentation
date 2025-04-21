@@ -101,7 +101,7 @@ rules:
         metric: file_descriptor.count
         type: updowncounter
         unit: "{file_descriptor}"
-        desc: Number of open file descriptors.
+        desc: Number of open file descriptors as reported by the JVM.
 
   - bean: java.nio:name=*,type=BufferPool
     prefix: jvm.buffer.
