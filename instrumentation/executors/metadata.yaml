@@ -1,6 +1,13 @@
 description: >
   The executor instrumentation ensures that context is automatically carried across threads by
-  wrapping common Java executors (e.g., Executor, ExecutorService, ForkJoinPool). When a task is
-  submitted, the current context is captured and bound to the task. Then, when the task eventually
-  runs, even if it’s on a different thread, the instrumentation reactivates that context, enabling
-  consistent correlation across concurrent and asynchronous workflows.
+  instrumenting common Java executors (e.g., Executor, ExecutorService, ForkJoinPool). When a task
+  is submitted, the current context is captured and bound to the task. When the task eventually
+  runs, the instrumentation reactivates that context, even if it’s on a different thread.
+
+configurations:
+  - name: otel.instrumentation.executors.include
+    description: List of Executor subclasses to be instrumented.
+    default: ""
+  - name: otel.instrumentation.executors.include-all
+    description: Whether to instrument all classes that implement the Executor interface.
+    default: false
