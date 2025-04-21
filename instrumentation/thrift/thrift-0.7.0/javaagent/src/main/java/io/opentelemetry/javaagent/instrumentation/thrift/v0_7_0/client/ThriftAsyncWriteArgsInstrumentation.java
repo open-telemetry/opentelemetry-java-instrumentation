@@ -1,0 +1,85 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.thrift.v0_7_0.client;
+
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.instrumentation.thrift.v0_7_0.ThriftSingletons.clientInstrumenter;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+
+import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.thrift.common.RequestScopeContext;
+import io.opentelemetry.instrumentation.thrift.common.client.MethodAccessor;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.thrift.v0_7_0.AsyncMethodCallbackWrapper;
+import java.util.Set;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.thrift.async.AsyncMethodCallback;
+import org.apache.thrift.async.TAsyncMethodCall;
+import org.apache.thrift.protocol.TMessageType;
+import org.apache.thrift.protocol.TProtocol;
+
+public final class ThriftAsyncWriteArgsInstrumentation implements TypeInstrumentation {
+
+  @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    return extendsClass(named("org.apache.thrift.async.TAsyncMethodCall"));
+  }
+
+  @Override
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
+        isMethod().and(named("write_args")),
+        ThriftAsyncWriteArgsInstrumentation.class.getName() + "$WriteArgsAdvice");
+  }
+
+  public static class WriteArgsAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void methodEnter(
+        @Advice.Origin("#t") String serviceName, @Advice.Argument(value = 0) TProtocol protocol) {
+      if (protocol instanceof ClientOutProtocolWrapper) {
+        Set<String> methodNames = MethodAccessor.voidMethodNames(serviceName);
+        // Compatible with asynchronous oneway method
+        if (methodNames.contains("getResult")) {
+          ClientOutProtocolWrapper wrapper = (ClientOutProtocolWrapper) protocol;
+          wrapper.setType(TMessageType.ONEWAY);
+        }
+      }
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void methodExit(
+        @Advice.This TAsyncMethodCall<?> methodCall,
+        @Advice.Argument(value = 0) TProtocol protocol,
+        @Advice.Thrown Throwable throwable) {
+      if (protocol instanceof ClientOutProtocolWrapper) {
+        ClientOutProtocolWrapper wrapper = (ClientOutProtocolWrapper) protocol;
+        RequestScopeContext requestScopeContext = wrapper.getRequestScopeContext();
+        if (requestScopeContext == null) {
+          return;
+        }
+        Context context = requestScopeContext.getContext();
+        if (throwable != null) {
+          requestScopeContext.close();
+          clientInstrumenter().end(context, requestScopeContext.getRequest(), null, throwable);
+          wrapper.setRequestScopeContext(null);
+          return;
+        }
+
+        VirtualField<TAsyncMethodCall<?>, AsyncMethodCallback<?>> callbackVirtualField =
+            VirtualField.find(TAsyncMethodCall.class, AsyncMethodCallback.class);
+        AsyncMethodCallback<?> callback = callbackVirtualField.get(methodCall);
+        if (callback instanceof AsyncMethodCallbackWrapper) {
+          ((AsyncMethodCallbackWrapper<?>) callback).setRequestScopeContext(requestScopeContext);
+        }
+      }
+    }
+  }
+}

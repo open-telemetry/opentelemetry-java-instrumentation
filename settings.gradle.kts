@@ -616,7 +616,9 @@ include(":instrumentation:xxl-job:xxl-job-2.3.0:javaagent")
 include(":instrumentation:xxl-job:xxl-job-common:javaagent")
 include(":instrumentation:xxl-job:xxl-job-common:testing")
 include(":instrumentation:zio:zio-2.0:javaagent")
-
+include(":instrumentation:thrift:thrift-0.7.0:javaagent")
+include(":instrumentation:thrift:thrift-0.9.1:javaagent")
+include(":instrumentation:thrift:thrift-common:library")
 // benchmark
 include(":benchmark-overhead-jmh")
 include(":benchmark-jfr-analyzer")
