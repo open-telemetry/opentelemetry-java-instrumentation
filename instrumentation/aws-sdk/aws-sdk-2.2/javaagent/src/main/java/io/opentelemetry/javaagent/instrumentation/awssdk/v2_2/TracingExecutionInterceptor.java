@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure;
+package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.AbstractTracingExecutionInterceptor;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
