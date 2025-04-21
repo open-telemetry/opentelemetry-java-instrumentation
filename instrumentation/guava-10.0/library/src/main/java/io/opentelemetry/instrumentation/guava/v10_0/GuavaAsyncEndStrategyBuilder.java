@@ -7,19 +7,19 @@ package io.opentelemetry.instrumentation.guava.v10_0;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 
-public final class GuavaAsyncOperationEndStrategyBuilder {
+public final class GuavaAsyncEndStrategyBuilder {
   private boolean captureExperimentalSpanAttributes = false;
 
-  GuavaAsyncOperationEndStrategyBuilder() {}
+  GuavaAsyncEndStrategyBuilder() {}
 
   @CanIgnoreReturnValue
-  public GuavaAsyncOperationEndStrategyBuilder setCaptureExperimentalSpanAttributes(
+  public GuavaAsyncEndStrategyBuilder setCaptureExperimentalSpanAttributes(
       boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     return this;
   }
 
-  public GuavaAsyncOperationEndStrategy build() {
-    return new GuavaAsyncOperationEndStrategy(captureExperimentalSpanAttributes);
+  public GuavaAsyncEndStrategy build() {
+    return new GuavaAsyncEndStrategy(captureExperimentalSpanAttributes);
   }
 }

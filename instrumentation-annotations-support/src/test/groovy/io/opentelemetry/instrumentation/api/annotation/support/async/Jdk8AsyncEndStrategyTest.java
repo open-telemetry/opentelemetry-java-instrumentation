@@ -18,10 +18,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class Jdk8AsyncOperationEndStrategyTest {
+class Jdk8AsyncEndStrategyTest {
   @Mock Instrumenter<String, String> instrumenter;
 
-  AsyncOperationEndStrategy underTest = Jdk8AsyncOperationEndStrategy.INSTANCE;
+  AsyncEndStrategy underTest = Jdk8AsyncEndStrategy.INSTANCE;
 
   @Test
   void shouldEndOperationOnAlreadyCompletedFuture() {

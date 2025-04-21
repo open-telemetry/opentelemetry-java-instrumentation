@@ -6,24 +6,23 @@
 package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.flow;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndHandler;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndHandler;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndStrategies;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndStrategy;
 import kotlinx.coroutines.flow.Flow;
 
 public final class FlowInstrumentationHelper {
-  private static final FlowAsyncOperationEndStrategy asyncOperationEndStrategy =
-      new FlowAsyncOperationEndStrategy();
+  private static final FlowAsyncEndStrategy asyncEndStrategy = new FlowAsyncEndStrategy();
 
   static {
-    AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
+    AsyncEndStrategies.instance().registerStrategy(asyncEndStrategy);
   }
 
   public static void initialize() {}
 
   private FlowInstrumentationHelper() {}
 
-  private static final class FlowAsyncOperationEndStrategy implements AsyncOperationEndStrategy {
+  private static final class FlowAsyncEndStrategy implements AsyncEndStrategy {
 
     @Override
     public boolean supports(Class<?> returnType) {
@@ -32,7 +31,7 @@ public final class FlowInstrumentationHelper {
 
     @Override
     public <REQUEST, RESPONSE> Object end(
-        AsyncOperationEndHandler<REQUEST, RESPONSE> handler,
+        AsyncEndHandler<REQUEST, RESPONSE> handler,
         Context context,
         REQUEST request,
         Object asyncValue,

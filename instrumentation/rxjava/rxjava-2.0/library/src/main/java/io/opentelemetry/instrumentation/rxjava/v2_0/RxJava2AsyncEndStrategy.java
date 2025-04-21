@@ -3,42 +3,42 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.rxjava.v3.common;
+package io.opentelemetry.instrumentation.rxjava.v2_0;
 
-import static io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport.tryToGetResponse;
+import static io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndSupport.tryToGetResponse;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndHandler;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
-import io.reactivex.rxjava3.core.Completable;
-import io.reactivex.rxjava3.core.Flowable;
-import io.reactivex.rxjava3.core.Maybe;
-import io.reactivex.rxjava3.core.Observable;
-import io.reactivex.rxjava3.core.Single;
-import io.reactivex.rxjava3.functions.Action;
-import io.reactivex.rxjava3.functions.BiConsumer;
-import io.reactivex.rxjava3.functions.Consumer;
-import io.reactivex.rxjava3.parallel.ParallelFlowable;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndHandler;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndStrategy;
+import io.reactivex.Completable;
+import io.reactivex.Flowable;
+import io.reactivex.Maybe;
+import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.reactivex.functions.Action;
+import io.reactivex.functions.BiConsumer;
+import io.reactivex.functions.Consumer;
+import io.reactivex.parallel.ParallelFlowable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.reactivestreams.Publisher;
 
-public final class RxJava3AsyncOperationEndStrategy implements AsyncOperationEndStrategy {
+public final class RxJava2AsyncEndStrategy implements AsyncEndStrategy {
   private static final AttributeKey<Boolean> CANCELED_ATTRIBUTE_KEY =
       AttributeKey.booleanKey("rxjava.canceled");
 
-  public static RxJava3AsyncOperationEndStrategy create() {
+  public static RxJava2AsyncEndStrategy create() {
     return builder().build();
   }
 
-  public static RxJava3AsyncOperationEndStrategyBuilder builder() {
-    return new RxJava3AsyncOperationEndStrategyBuilder();
+  public static RxJava2AsyncEndStrategyBuilder builder() {
+    return new RxJava2AsyncEndStrategyBuilder();
   }
 
   private final boolean captureExperimentalSpanAttributes;
 
-  RxJava3AsyncOperationEndStrategy(boolean captureExperimentalSpanAttributes) {
+  RxJava2AsyncEndStrategy(boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
   }
 
@@ -55,7 +55,7 @@ public final class RxJava3AsyncOperationEndStrategy implements AsyncOperationEnd
 
   @Override
   public <REQUEST, RESPONSE> Object end(
-      AsyncOperationEndHandler<REQUEST, RESPONSE> handler,
+      AsyncEndHandler<REQUEST, RESPONSE> handler,
       Context context,
       REQUEST request,
       Object asyncValue,

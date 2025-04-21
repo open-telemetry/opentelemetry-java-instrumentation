@@ -22,14 +22,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class AsyncOperationEndSupportTest {
+class AsyncEndSupportTest {
   @Mock Instrumenter<String, String> instrumenter;
 
   @Test
   void shouldEndImmediatelyWhenExceptionWasPassed() {
     // given
-    AsyncOperationEndSupport<String, String> underTest =
-        AsyncOperationEndSupport.create(instrumenter, String.class, CompletableFuture.class);
+    AsyncEndSupport<String, String> underTest =
+        AsyncEndSupport.create(instrumenter, String.class, CompletableFuture.class);
 
     Context context = Context.root();
     Exception exception = new RuntimeException("boom!");
@@ -47,8 +47,8 @@ class AsyncOperationEndSupportTest {
   @Test
   void shouldEndImmediatelyWhenWrongReturnTypeWasPassed() {
     // given
-    AsyncOperationEndSupport<String, String> underTest =
-        AsyncOperationEndSupport.create(instrumenter, String.class, Future.class);
+    AsyncEndSupport<String, String> underTest =
+        AsyncEndSupport.create(instrumenter, String.class, Future.class);
 
     Context context = Context.root();
     CompletableFuture<String> future = new CompletableFuture<>();
@@ -65,8 +65,8 @@ class AsyncOperationEndSupportTest {
   @Test
   void shouldEndImmediatelyWhenAsyncWrapperIsOfWrongType() {
     // given
-    AsyncOperationEndSupport<String, String> underTest =
-        AsyncOperationEndSupport.create(instrumenter, String.class, CompletableFuture.class);
+    AsyncEndSupport<String, String> underTest =
+        AsyncEndSupport.create(instrumenter, String.class, CompletableFuture.class);
 
     Context context = Context.root();
 
@@ -82,8 +82,8 @@ class AsyncOperationEndSupportTest {
   @Test
   void shouldReturnedDecoratedAsyncWrapper() {
     // given
-    AsyncOperationEndSupport<String, String> underTest =
-        AsyncOperationEndSupport.create(instrumenter, String.class, CompletionStage.class);
+    AsyncEndSupport<String, String> underTest =
+        AsyncEndSupport.create(instrumenter, String.class, CompletionStage.class);
 
     Context context = Context.root();
     CompletableFuture<String> future = new CompletableFuture<>();

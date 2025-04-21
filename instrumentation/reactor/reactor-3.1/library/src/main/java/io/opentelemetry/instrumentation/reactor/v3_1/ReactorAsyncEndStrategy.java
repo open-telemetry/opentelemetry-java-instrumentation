@@ -5,35 +5,35 @@
 
 package io.opentelemetry.instrumentation.reactor.v3_1;
 
-import static io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport.tryToGetResponse;
+import static io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndSupport.tryToGetResponse;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndHandler;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndHandler;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndStrategy;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public final class ReactorAsyncOperationEndStrategy implements AsyncOperationEndStrategy {
+public final class ReactorAsyncEndStrategy implements AsyncEndStrategy {
   // Visible for testing
   static final AttributeKey<Boolean> CANCELED_ATTRIBUTE_KEY =
       AttributeKey.booleanKey("reactor.canceled");
 
-  public static ReactorAsyncOperationEndStrategy create() {
+  public static ReactorAsyncEndStrategy create() {
     return builder().build();
   }
 
-  public static ReactorAsyncOperationEndStrategyBuilder builder() {
-    return new ReactorAsyncOperationEndStrategyBuilder();
+  public static ReactorAsyncEndStrategyBuilder builder() {
+    return new ReactorAsyncEndStrategyBuilder();
   }
 
   private final boolean captureExperimentalSpanAttributes;
 
-  ReactorAsyncOperationEndStrategy(boolean captureExperimentalSpanAttributes) {
+  ReactorAsyncEndStrategy(boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
   }
 
@@ -44,7 +44,7 @@ public final class ReactorAsyncOperationEndStrategy implements AsyncOperationEnd
 
   @Override
   public <REQUEST, RESPONSE> Object end(
-      AsyncOperationEndHandler<REQUEST, RESPONSE> handler,
+      AsyncEndHandler<REQUEST, RESPONSE> handler,
       Context context,
       REQUEST request,
       Object asyncValue,

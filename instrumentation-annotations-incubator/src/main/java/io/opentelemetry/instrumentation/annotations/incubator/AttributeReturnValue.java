@@ -26,7 +26,7 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface AttributeForReturnValue {
+public @interface AttributeReturnValue {
 
   /**
    * Attribute name for the return value.

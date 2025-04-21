@@ -24,7 +24,7 @@ package io.opentelemetry.instrumentation.rxjava.v2_0;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndStrategies;
 import io.opentelemetry.instrumentation.api.internal.GuardedBy;
 import io.reactivex.Completable;
 import io.reactivex.CompletableObserver;
@@ -251,15 +251,15 @@ public final class TracingAssembly {
                     }));
   }
 
-  private static RxJava2AsyncOperationEndStrategy asyncOperationEndStrategy;
+  private static RxJava2AsyncEndStrategy asyncEndStrategy;
 
   private static void enableWithSpanStrategy(boolean captureExperimentalSpanAttributes) {
-    asyncOperationEndStrategy =
-        RxJava2AsyncOperationEndStrategy.builder()
+    asyncEndStrategy =
+        RxJava2AsyncEndStrategy.builder()
             .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
             .build();
 
-    AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
+    AsyncEndStrategies.instance().registerStrategy(asyncEndStrategy);
   }
 
   @GuardedBy("TracingAssembly.class")
@@ -301,9 +301,9 @@ public final class TracingAssembly {
   }
 
   private static void disableWithSpanStrategy() {
-    if (asyncOperationEndStrategy != null) {
-      AsyncOperationEndStrategies.instance().unregisterStrategy(asyncOperationEndStrategy);
-      asyncOperationEndStrategy = null;
+    if (asyncEndStrategy != null) {
+      AsyncEndStrategies.instance().unregisterStrategy(asyncEndStrategy);
+      asyncEndStrategy = null;
     }
   }
 
