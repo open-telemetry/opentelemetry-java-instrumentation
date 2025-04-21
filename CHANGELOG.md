@@ -1995,7 +1995,7 @@ too disruptive to adopt right away.
   - `io.opentelemetry.instrumentation.graphql.GraphQLTelemetry`
     → `io.opentelemetry.instrumentation.graphql.v12_0.GraphQLTelemetry`
   - `io.opentelemetry.instrumentation.guava.GuavaAsyncOperationEndStrategy`
-    → `io.opentelemetry.instrumentation.guava.v10_0.GuavaAsyncEndStrategy`
+    → `io.opentelemetry.instrumentation.guava.v10_0.GuavaAsyncOperationEndStrategy`
   - `io.opentelemetry.instrumentation.hikaricp.HikariTelemetry`
     → `io.opentelemetry.instrumentation.hikaricp.v3_0.HikariTelemetry`
   - `io.opentelemetry.instrumentation.kafkaclients.KafkaTelemetry`
