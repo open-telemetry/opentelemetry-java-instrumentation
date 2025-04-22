@@ -75,13 +75,8 @@ class ContainerResourceTest {
       out.write(ibm);
     }
     ContainerResource.Filesystem fs =
-        new ContainerResource.Filesystem() {
-          @Override
-          String getOsName() {
-            // Override to pretend we are on z/OS
-            return "z/OS";
-          }
-        };
+        // pretend we are on z/OS to trigger the routine to detect an alternative encoding
+        new ContainerResource.Filesystem(() -> "z/OS");
     CgroupV1ContainerIdExtractor extractor =
         new CgroupV1ContainerIdExtractor(fs, tempFile.toPath());
     ContainerResource testClass = new ContainerResource(extractor, null);

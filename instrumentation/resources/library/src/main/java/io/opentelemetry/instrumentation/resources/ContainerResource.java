@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -32,7 +33,7 @@ public final class ContainerResource {
   // copied from ContainerIncubatingAttributes
   private static final AttributeKey<String> CONTAINER_ID = AttributeKey.stringKey("container.id");
 
-  static final Filesystem FILESYSTEM_INSTANCE = new Filesystem();
+  static final Filesystem FILESYSTEM_INSTANCE = new Filesystem(Filesystem::getOsName);
   private static final Resource INSTANCE = buildSingleton();
 
   private static Resource buildSingleton() {
@@ -78,6 +79,11 @@ public final class ContainerResource {
   static class Filesystem {
 
     private static final Logger logger = Logger.getLogger(Filesystem.class.getName());
+    private final Supplier<String> osNameSupplier;
+
+    public Filesystem(Supplier<String> osNameSupplier) {
+      this.osNameSupplier = osNameSupplier;
+    }
 
     boolean isReadable(Path path) {
       return Files.isReadable(path);
@@ -86,11 +92,11 @@ public final class ContainerResource {
     @MustBeClosed
     Stream<String> lines(Path path) throws IOException {
 
-      String osName = getOsName();
-      if (!(osName.equalsIgnoreCase("z/OS") || osName.equalsIgnoreCase("OS/390"))) {
-        return Files.lines(path);
-      } else {
+      String osName = osNameSupplier.get();
+      if (osName.equalsIgnoreCase("z/OS") || osName.equalsIgnoreCase("OS/390")) {
         return zosLines(path);
+      } else {
+        return Files.lines(path);
       }
     }
 
@@ -104,10 +110,7 @@ public final class ContainerResource {
       // to get the nativeCharset on java17+
       // rather than System.console().charset().
       if (System.getProperty("native.encoding") != null) {
-        Charset nativeCharset = Charset.forName(System.getProperty("native.encoding"));
-        if (nativeCharset != null) {
-          charsetsToTest.add(nativeCharset);
-        }
+        charsetsToTest.add(Charset.forName(System.getProperty("native.encoding")));
       } else {
         // On older javas that property won't exist but the default charset will be the native
         // encoding.
@@ -152,7 +155,7 @@ public final class ContainerResource {
       }
     }
 
-    String getOsName() {
+    static String getOsName() {
       return System.getProperty("os.name");
     }
   }
