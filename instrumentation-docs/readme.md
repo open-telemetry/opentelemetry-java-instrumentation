@@ -10,8 +10,8 @@ Run the doc generator:
 
 ## Instrumentation Hierarchy
 
-An "InstrumentationEntity" represents a module that that targets specific code in a framework/library/technology.
-Each instrumentation uses muzzle to determine which versions of the target code it supports.
+An "InstrumentationModule" represents a module that that targets specific code in a
+framework/library/technology. Each module will have a name, a namespace, and a group.
 
 Using these structures as examples:
 
@@ -28,8 +28,10 @@ Using these structures as examples:
 │   │   │   └── spring-cloud-gateway-common
 ```
 
-* Name
-  * Ex: `clickhouse-client-05`, `jaxrs-1.0`, `spring-cloud-gateway-2.0`
+Results in the following:
+
+* Name - the full name of the instrumentation module
+  * `clickhouse-client-05`, `jaxrs-1.0`, `spring-cloud-gateway-2.0`
 * Namespace - direct parent. if none, use name and strip version
   * `clickhouse-client`, `jaxrs`, `spring-cloud-gateway`
 * Group - top most parent
@@ -47,6 +49,10 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 
 ## Instrumentation metadata
 
+* classification
+  * `library` - Instrumentation that targets a library
+  * `internal` - Instrumentation that is used internally by the OpenTelemetry Java Agent
+  * `custom` - Utilities that are used to create custom instrumentation
 * name
   * Identifier for instrumentation module, used to enable/disable
   * Configured in `InstrumentationModule` code for each module
@@ -69,15 +75,12 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 Within each instrumentation source directory, a `metadata.yaml` file can be created to provide
 additional information about the instrumentation module.
 
-As of now, the following fields are supported:
+As of now, the following fields are supported, all of which are optional:
 
 ```yaml
-description: "Description of what the instrumentation does."
-disabled_by_default: true
-
-# used to mark modules that do not instrument traditional libraries (e.g. methods, annotations)
-# defaults to true
-isLibraryInstrumentation: false
+description: "Instruments..."   # Description of the instrumentation module
+disabled_by_default: true       # Defaults to `false`
+classification: internal        # instrumentation classification: library | internal | custom
 ```
 
 ### Gradle File Derived Information

@@ -37,6 +37,9 @@ class AdviceTransformer {
   private static final Type OBJECT_TYPE = Type.getType(Object.class);
   private static final Type OBJECT_ARRAY_TYPE = Type.getType(Object[].class);
 
+  static final Type ADVICE_ON_METHOD_ENTER = Type.getType(Advice.OnMethodEnter.class);
+  static final Type ADVICE_ON_METHOD_EXIT = Type.getType(Advice.OnMethodExit.class);
+
   static byte[] transform(byte[] bytes) {
     ClassReader cr = new ClassReader(bytes);
     ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS);
@@ -236,7 +239,6 @@ class AdviceTransformer {
     return result;
   }
 
-  static final Type ADVICE_ON_METHOD_ENTER = Type.getType(Advice.OnMethodEnter.class);
   private static final Type ADVICE_ASSIGN_RETURNED_TO_RETURNED =
       Type.getType(Advice.AssignReturned.ToReturned.class);
   private static final Type ADVICE_ASSIGN_RETURNED_TO_ARGUMENTS =
@@ -265,8 +267,6 @@ class AdviceTransformer {
   private static boolean isEnterAdvice(MethodNode source) {
     return hasAnnotation(source, ADVICE_ON_METHOD_ENTER);
   }
-
-  static final Type ADVICE_ON_METHOD_EXIT = Type.getType(Advice.OnMethodExit.class);
 
   private static boolean isExitAdvice(MethodNode source) {
     return hasAnnotation(source, ADVICE_ON_METHOD_EXIT);

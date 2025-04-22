@@ -25,6 +25,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static java.util.Arrays.asList;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
@@ -61,6 +62,7 @@ import java.util.stream.Stream;
 import javax.sql.DataSource;
 import org.apache.derby.jdbc.EmbeddedDataSource;
 import org.apache.derby.jdbc.EmbeddedDriver;
+import org.assertj.core.api.ThrowingConsumer;
 import org.h2.jdbcx.JdbcDataSource;
 import org.hsqldb.jdbc.JDBCDriver;
 import org.junit.jupiter.api.AfterAll;
@@ -803,10 +805,81 @@ class JdbcInstrumentationTest {
       String url,
       String table)
       throws SQLException {
+    testPreparedStatementUpdateImpl(
+        system,
+        connection,
+        username,
+        query,
+        spanName,
+        url,
+        table,
+        statement -> assertThat(statement.executeUpdate()).isEqualTo(0));
+  }
+
+  static Stream<Arguments> preparedStatementLargeUpdateStream() throws SQLException {
+    return Stream.of(
+        Arguments.of(
+            "h2",
+            new org.h2.Driver().connect(jdbcUrls.get("h2"), null),
+            null,
+            "CREATE TABLE PS_LARGE_H2 (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            "CREATE TABLE jdbcunittest.PS_LARGE_H2",
+            "h2:mem:",
+            "PS_LARGE_H2"),
+        Arguments.of(
+            "h2",
+            cpDatasources.get("tomcat").get("h2").getConnection(),
+            null,
+            "CREATE TABLE PS_LARGE_H2_TOMCAT (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            "CREATE TABLE jdbcunittest.PS_LARGE_H2_TOMCAT",
+            "h2:mem:",
+            "PS_LARGE_H2_TOMCAT"),
+        Arguments.of(
+            "h2",
+            cpDatasources.get("hikari").get("h2").getConnection(),
+            null,
+            "CREATE TABLE PS_LARGE_H2_HIKARI (id INTEGER not NULL, PRIMARY KEY ( id ))",
+            "CREATE TABLE jdbcunittest.PS_LARGE_H2_HIKARI",
+            "h2:mem:",
+            "PS_LARGE_H2_HIKARI"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("preparedStatementLargeUpdateStream")
+  void testPreparedStatementLargeUpdate(
+      String system,
+      Connection connection,
+      String username,
+      String query,
+      String spanName,
+      String url,
+      String table)
+      throws SQLException {
+    testPreparedStatementUpdateImpl(
+        system,
+        connection,
+        username,
+        query,
+        spanName,
+        url,
+        table,
+        statement -> assertThat(statement.executeLargeUpdate()).isEqualTo(0));
+  }
+
+  void testPreparedStatementUpdateImpl(
+      String system,
+      Connection connection,
+      String username,
+      String query,
+      String spanName,
+      String url,
+      String table,
+      ThrowingConsumer<PreparedStatement> action)
+      throws SQLException {
     String sql = connection.nativeSQL(query);
     PreparedStatement statement = connection.prepareStatement(sql);
     cleanup.deferCleanup(statement);
-    testing.runWithSpan("parent", () -> assertThat(statement.executeUpdate()).isEqualTo(0));
+    testing.runWithSpan("parent", () -> action.accept(statement));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -1333,7 +1406,39 @@ class JdbcInstrumentationTest {
   @MethodSource("batchStream")
   void testBatch(String system, Connection connection, String username, String url)
       throws SQLException {
-    String tableName = "simple_batch_test";
+    testBatchImpl(
+        system,
+        connection,
+        username,
+        url,
+        "simple_batch_test",
+        statement -> assertThat(statement.executeBatch()).isEqualTo(new int[] {1, 1}));
+  }
+
+  @ParameterizedTest
+  @MethodSource("batchStream")
+  void testLargeBatch(String system, Connection connection, String username, String url)
+      throws SQLException {
+    // derby and hsqldb used in this test don't support executeLargeBatch
+    assumeTrue("h2".equals(system));
+
+    testBatchImpl(
+        system,
+        connection,
+        username,
+        url,
+        "simple_batch_test_large",
+        statement -> assertThat(statement.executeLargeBatch()).isEqualTo(new long[] {1, 1}));
+  }
+
+  private static void testBatchImpl(
+      String system,
+      Connection connection,
+      String username,
+      String url,
+      String tableName,
+      ThrowingConsumer<Statement> action)
+      throws SQLException {
     Statement createTable = connection.createStatement();
     createTable.execute("CREATE TABLE " + tableName + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
     cleanup.deferCleanup(createTable);
@@ -1347,8 +1452,7 @@ class JdbcInstrumentationTest {
     statement.clearBatch();
     statement.addBatch("INSERT INTO " + tableName + " VALUES(1)");
     statement.addBatch("INSERT INTO " + tableName + " VALUES(2)");
-    testing.runWithSpan(
-        "parent", () -> assertThat(statement.executeBatch()).isEqualTo(new int[] {1, 1}));
+    testing.runWithSpan("parent", () -> action.accept(statement));
 
     testing.waitAndAssertTraces(
         trace ->

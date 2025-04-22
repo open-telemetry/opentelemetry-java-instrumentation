@@ -1,1 +1,4 @@
-isLibraryInstrumentation: false
+classification: custom
+description: >
+  Instruments methods annotated with OpenTelemetry instrumentation annotations, such as @WithSpan
+  and @SpanAttribute.

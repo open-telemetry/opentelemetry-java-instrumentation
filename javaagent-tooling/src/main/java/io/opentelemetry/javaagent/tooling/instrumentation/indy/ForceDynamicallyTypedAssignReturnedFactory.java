@@ -68,7 +68,6 @@ public class ForceDynamicallyTypedAssignReturnedFactory implements Advice.PostPr
   }
 
   private static AnnotationDescription forceDynamicTyping(AnnotationDescription anno) {
-
     String name = anno.getAnnotationType().getName();
     if (name.equals(TO_FIELD_TYPENAME)
         || name.equals(TO_ARGUMENT_TYPENAME)
@@ -101,7 +100,7 @@ public class ForceDynamicallyTypedAssignReturnedFactory implements Advice.PostPr
     return anno;
   }
 
-  private static AnnotationDescription replaceAnnotationValue(
+  static AnnotationDescription replaceAnnotationValue(
       AnnotationDescription anno,
       String propertyName,
       Function<AnnotationValue<?, ?>, AnnotationValue<?, ?>> valueMapper) {

@@ -1,0 +1,126 @@
+---
+
+rules:
+
+  - bean: java.lang:type=MemoryPool,name=*
+    prefix: jvm.memory.
+    type: updowncounter
+    unit: By
+    metricAttribute:
+      jvm.memory.pool.name: param(name)
+      jvm.memory.type: lowercase(beanattr(Type))
+    mapping:
+      # jvm.memory.used
+      Usage.used:
+        metric: used
+        desc: Measure of memory used.
+      # jvm.memory.committed
+      Usage.committed:
+        metric: committed
+        desc: Measure of memory committed.
+      # jvm.memory.limit
+      Usage.max:
+        metric: limit
+        desc: Measure of max obtainable memory.
+      # jvm.memory.init (experimental)
+      Usage.init:
+        metric: init
+        desc: Measure of initial memory requested.
+      # jvm.memory.used_after_last_gc
+      # note: metric attribute "jvm.memory.type" will always be "heap" as GC only manages heap
+      CollectionUsage.used:
+        metric: used_after_last_gc
+        desc: Measure of memory used, as measured after the most recent garbage collection event on this pool.
+
+  - bean: java.lang:type=Threading
+    prefix: jvm.thread.
+    mapping:
+      # jvm.thread.count
+      # limitation: 'jvm.thread.daemon' and 'jvm.thread.state' metric attributes are not provided
+      ThreadCount:
+        metric: count
+        type: updowncounter
+        unit: "{thread}"
+        desc: Number of executing platform threads.
+
+  - bean: java.lang:type=ClassLoading
+    prefix: jvm.class.
+    type: updowncounter
+    unit: "{class}"
+    mapping:
+      # jvm.class.loaded
+      TotalLoadedClassCount:
+        metric: loaded
+        desc: Number of classes loaded since JVM start.
+      # jvm.class.unloaded
+      UnloadedClassCount:
+        metric: unloaded
+        desc: Number of classes unloaded since JVM start.
+      # jvm.class.count
+      LoadedClassCount:
+        metric: count
+        desc: Number of classes currently loaded.
+
+  - bean: java.lang:type=OperatingSystem
+    prefix: jvm.
+    dropNegativeValues: true
+    mapping:
+      # jvm.cpu.count
+      AvailableProcessors:
+        metric: cpu.count
+        type: updowncounter
+        unit: "{cpu}"
+        desc: Number of processors available to the Java virtual machine.
+      # jvm.cpu.time
+      ProcessCpuTime:
+        metric: cpu.time
+        type: counter
+        sourceUnit: ns
+        unit: s
+        desc: CPU time used by the process as reported by the JVM.
+      # jvm.cpu.recent_utilization
+      ProcessCpuLoad:
+        metric: cpu.recent_utilization
+        type: gauge
+        unit: '1'
+        desc: Recent CPU utilization for the process as reported by the JVM.
+      # jvm.system.cpu.load_1m (experimental)
+      SystemLoadAverage:
+        metric: system.cpu.load_1m
+        type: gauge
+        unit: "{run_queue_item}"
+        desc: Average CPU load of the whole system for the last minute as reported by the JVM.
+      # jvm.system.cpu.utilization (experimental)
+      SystemCpuLoad:
+        metric: system.cpu.utilization
+        type: gauge
+        unit: '1'
+        desc: Recent CPU utilization for the whole system as reported by the JVM.
+      # jvm.file_descriptor.count (experimental)
+      OpenFileDescriptorCount:
+        metric: file_descriptor.count
+        type: updowncounter
+        unit: "{file_descriptor}"
+        desc: Number of open file descriptors as reported by the JVM.
+
+  - bean: java.nio:name=*,type=BufferPool
+    prefix: jvm.buffer.
+    type: updowncounter
+    metricAttribute:
+      jvm.buffer.pool.name: param(name)
+    mapping:
+      # jvm.buffer.memory.used (experimental)
+      MemoryUsed:
+        metric: memory.used
+        unit: By
+        desc: Measure of memory used by buffers.
+      # jvm.buffer.memory.limit (experimental)
+      TotalCapacity:
+        metric: memory.limit
+        unit: By
+        desc: Measure of total memory capacity of buffers.
+      # jvm.buffer.count (experimental)
+      Count:
+        metric: count
+        unit: "{buffer}"
+        desc: Number of buffers in the pool.

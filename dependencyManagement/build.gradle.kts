@@ -6,7 +6,7 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.49.0"
-val otelContribVersion = "1.45.0-alpha"
+val otelContribVersion = "1.46.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -28,8 +28,8 @@ val DEPENDENCY_BOMS = listOf(
   // even if they are only used by test dependencies, so not using junit bom since it is LGPL
 
   "com.fasterxml.jackson:jackson-bom:2.18.3",
-  "com.squareup.okio:okio-bom:3.10.2", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
-  "com.google.guava:guava-bom:33.4.6-jre",
+  "com.squareup.okio:okio-bom:3.11.0", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
+  "com.google.guava:guava-bom:33.4.8-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
@@ -38,7 +38,7 @@ val DEPENDENCY_BOMS = listOf(
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
-val errorProneVersion = "2.37.0"
+val errorProneVersion = "2.38.0"
 val byteBuddyVersion = "1.17.5"
 val asmVersion = "9.8"
 val jmhVersion = "1.37"
@@ -81,9 +81,9 @@ val CORE_DEPENDENCIES = listOf(
 // There are dependencies included here that appear to have no usages, but are maintained at
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
-  "org.junit.jupiter:junit-jupiter-api:5.12.1",
-  "org.spockframework:spock-core:2.4-M5-groovy-4.0",
-  "org.spockframework:spock-junit4:2.4-M5-groovy-4.0",
+  "org.junit.jupiter:junit-jupiter-api:5.12.2",
+  "org.spockframework:spock-core:2.4-M6-groovy-4.0",
+  "org.spockframework:spock-junit4:2.4-M6-groovy-4.0",
 
   "io.r2dbc:r2dbc-proxy:1.1.5.RELEASE",
   "ch.qos.logback:logback-classic:1.3.15", // 1.4+ requires Java 11+
@@ -97,7 +97,7 @@ val DEPENDENCIES = listOf(
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
   "commons-fileupload:commons-fileupload:1.5",
-  "commons-io:commons-io:2.18.0",
+  "commons-io:commons-io:2.19.0",
   "commons-lang:commons-lang:2.6",
   "commons-logging:commons-logging:1.3.5",
   "commons-validator:commons-validator:1.9.0",

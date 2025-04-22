@@ -51,7 +51,6 @@ dependencies {
   api("org.assertj:assertj-core")
   // Needs to be api dependency due to Spock restriction.
   api("org.awaitility:awaitility")
-  api("com.google.guava:guava")
   api("org.mockito:mockito-core")
   api("org.slf4j:slf4j-api")
 
