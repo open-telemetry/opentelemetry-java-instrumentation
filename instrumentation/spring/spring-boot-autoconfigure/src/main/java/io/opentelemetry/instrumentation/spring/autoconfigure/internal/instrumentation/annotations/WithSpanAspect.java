@@ -13,7 +13,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.instrumentation.api.annotation.support.MethodSpanAttributesExtractor;
 import io.opentelemetry.instrumentation.api.annotation.support.ParameterAttributeNamesExtractor;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndSupport;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -72,16 +72,17 @@ abstract class WithSpanAspect {
     }
 
     Context context = instrumenter.start(parentContext, request);
-    AsyncEndSupport<JoinPointRequest, Object> asyncEndSupport =
-        AsyncEndSupport.create(instrumenter, Object.class, request.method().getReturnType());
+    AsyncOperationEndSupport<JoinPointRequest, Object> asyncOperationEndSupport =
+        AsyncOperationEndSupport.create(
+            instrumenter, Object.class, request.method().getReturnType());
 
     Object response;
     try (Scope ignored = context.makeCurrent()) {
       response = pjp.proceed();
     } catch (Throwable t) {
-      asyncEndSupport.asyncEnd(context, request, null, t);
+      asyncOperationEndSupport.asyncEnd(context, request, null, t);
       throw t;
     }
-    return asyncEndSupport.asyncEnd(context, request, response, null);
+    return asyncOperationEndSupport.asyncEnd(context, request, response, null);
   }
 }

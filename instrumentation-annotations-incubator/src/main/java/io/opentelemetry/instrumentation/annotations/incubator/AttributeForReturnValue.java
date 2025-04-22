@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface AttributeReturnValue {
+public @interface AttributeForReturnValue {
 
   /**
    * Attribute name for the return value.

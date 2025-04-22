@@ -12,27 +12,27 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.annotation.Nullable;
 
 /** Default strategies' registry implementation that uses strong references. */
-final class AsyncEndStrategiesImpl extends AsyncEndStrategies {
-  private final List<AsyncEndStrategy> strategies = new CopyOnWriteArrayList<>();
+final class AsyncOperationEndStrategiesImpl extends AsyncOperationEndStrategies {
+  private final List<AsyncOperationEndStrategy> strategies = new CopyOnWriteArrayList<>();
 
-  AsyncEndStrategiesImpl() {
-    registerStrategy(Jdk8AsyncEndStrategy.INSTANCE);
+  AsyncOperationEndStrategiesImpl() {
+    registerStrategy(Jdk8AsyncOperationEndStrategy.INSTANCE);
   }
 
   @Override
-  public void registerStrategy(AsyncEndStrategy strategy) {
+  public void registerStrategy(AsyncOperationEndStrategy strategy) {
     strategies.add(requireNonNull(strategy));
   }
 
   @Override
-  public void unregisterStrategy(AsyncEndStrategy strategy) {
+  public void unregisterStrategy(AsyncOperationEndStrategy strategy) {
     strategies.remove(strategy);
   }
 
   @Nullable
   @Override
-  public AsyncEndStrategy resolveStrategy(Class<?> returnType) {
-    for (AsyncEndStrategy strategy : strategies) {
+  public AsyncOperationEndStrategy resolveStrategy(Class<?> returnType) {
+    for (AsyncOperationEndStrategy strategy : strategies) {
       if (strategy.supports(returnType)) {
         return strategy;
       }

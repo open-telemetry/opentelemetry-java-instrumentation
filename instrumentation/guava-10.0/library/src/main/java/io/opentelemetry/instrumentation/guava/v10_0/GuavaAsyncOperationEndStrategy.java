@@ -5,32 +5,32 @@
 
 package io.opentelemetry.instrumentation.guava.v10_0;
 
-import static io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndSupport.tryToGetResponse;
+import static io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport.tryToGetResponse;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.Uninterruptibles;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndHandler;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndStrategy;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndHandler;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
 
-public final class GuavaAsyncEndStrategy implements AsyncEndStrategy {
+public final class GuavaAsyncOperationEndStrategy implements AsyncOperationEndStrategy {
   // Visible for testing
   static final AttributeKey<Boolean> CANCELED_ATTRIBUTE_KEY =
       AttributeKey.booleanKey("guava.canceled");
 
-  public static GuavaAsyncEndStrategy create() {
+  public static GuavaAsyncOperationEndStrategy create() {
     return builder().build();
   }
 
-  public static GuavaAsyncEndStrategyBuilder builder() {
-    return new GuavaAsyncEndStrategyBuilder();
+  public static GuavaAsyncOperationEndStrategyBuilder builder() {
+    return new GuavaAsyncOperationEndStrategyBuilder();
   }
 
   private final boolean captureExperimentalSpanAttributes;
 
-  GuavaAsyncEndStrategy(boolean captureExperimentalSpanAttributes) {
+  GuavaAsyncOperationEndStrategy(boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
   }
 
@@ -41,7 +41,7 @@ public final class GuavaAsyncEndStrategy implements AsyncEndStrategy {
 
   @Override
   public <REQUEST, RESPONSE> Object end(
-      AsyncEndHandler<REQUEST, RESPONSE> handler,
+      AsyncOperationEndHandler<REQUEST, RESPONSE> handler,
       Context context,
       REQUEST request,
       Object asyncValue,
@@ -53,7 +53,7 @@ public final class GuavaAsyncEndStrategy implements AsyncEndStrategy {
   }
 
   private <REQUEST, RESPONSE> void end(
-      AsyncEndHandler<REQUEST, RESPONSE> handler,
+      AsyncOperationEndHandler<REQUEST, RESPONSE> handler,
       Context context,
       REQUEST request,
       ListenableFuture<?> future,

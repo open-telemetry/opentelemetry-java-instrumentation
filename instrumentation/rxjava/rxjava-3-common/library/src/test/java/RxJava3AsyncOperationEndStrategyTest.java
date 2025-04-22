@@ -13,24 +13,24 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndStrategy;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.rxjava.v2_0.RxJava2AsyncEndStrategy;
-import io.reactivex.Completable;
-import io.reactivex.Flowable;
-import io.reactivex.Maybe;
-import io.reactivex.Observable;
-import io.reactivex.Single;
-import io.reactivex.observers.TestObserver;
-import io.reactivex.parallel.ParallelFlowable;
-import io.reactivex.processors.ReplayProcessor;
-import io.reactivex.processors.UnicastProcessor;
-import io.reactivex.subjects.CompletableSubject;
-import io.reactivex.subjects.MaybeSubject;
-import io.reactivex.subjects.ReplaySubject;
-import io.reactivex.subjects.SingleSubject;
-import io.reactivex.subjects.UnicastSubject;
-import io.reactivex.subscribers.TestSubscriber;
+import io.opentelemetry.instrumentation.rxjava.v3.common.RxJava3AsyncOperationEndStrategy;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Flowable;
+import io.reactivex.rxjava3.core.Maybe;
+import io.reactivex.rxjava3.core.Observable;
+import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.observers.TestObserver;
+import io.reactivex.rxjava3.parallel.ParallelFlowable;
+import io.reactivex.rxjava3.processors.ReplayProcessor;
+import io.reactivex.rxjava3.processors.UnicastProcessor;
+import io.reactivex.rxjava3.subjects.CompletableSubject;
+import io.reactivex.rxjava3.subjects.MaybeSubject;
+import io.reactivex.rxjava3.subjects.ReplaySubject;
+import io.reactivex.rxjava3.subjects.SingleSubject;
+import io.reactivex.rxjava3.subjects.UnicastSubject;
+import io.reactivex.rxjava3.subscribers.TestSubscriber;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,14 +41,14 @@ import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
 @ExtendWith(MockitoExtension.class)
-public class RxJava2AsyncEndStrategyTest {
+public class RxJava3AsyncOperationEndStrategyTest {
   private static final AttributeKey<Boolean> CANCELED_ATTRIBUTE_KEY =
       AttributeKey.booleanKey("rxjava.canceled");
   @Mock Instrumenter<String, String> instrumenter;
   @Mock Span span;
-  private final AsyncEndStrategy underTest = RxJava2AsyncEndStrategy.create();
-  private final RxJava2AsyncEndStrategy underTestWithExperimentalAttributes =
-      RxJava2AsyncEndStrategy.builder().setCaptureExperimentalSpanAttributes(true).build();
+  private final AsyncOperationEndStrategy underTest = RxJava3AsyncOperationEndStrategy.create();
+  private final RxJava3AsyncOperationEndStrategy underTestWithExperimentalAttributes =
+      RxJava3AsyncOperationEndStrategy.builder().setCaptureExperimentalSpanAttributes(true).build();
 
   @Nested
   class CompletableTest {

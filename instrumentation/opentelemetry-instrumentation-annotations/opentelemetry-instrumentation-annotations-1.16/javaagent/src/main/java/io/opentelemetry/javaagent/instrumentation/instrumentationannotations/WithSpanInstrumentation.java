@@ -17,7 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.whereAny;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndSupport;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -110,8 +110,8 @@ class WithSpanInstrumentation implements TypeInstrumentation {
       }
       scope.close();
 
-      AsyncEndSupport<Method, Object> operationEndSupport =
-          AsyncEndSupport.create(instrumenter(), Object.class, method.getReturnType());
+      AsyncOperationEndSupport<Method, Object> operationEndSupport =
+          AsyncOperationEndSupport.create(instrumenter(), Object.class, method.getReturnType());
       returnValue = operationEndSupport.asyncEnd(context, method, returnValue, throwable);
     }
   }
@@ -154,8 +154,8 @@ class WithSpanInstrumentation implements TypeInstrumentation {
         return;
       }
       scope.close();
-      AsyncEndSupport<MethodRequest, Object> operationEndSupport =
-          AsyncEndSupport.create(
+      AsyncOperationEndSupport<MethodRequest, Object> operationEndSupport =
+          AsyncOperationEndSupport.create(
               instrumenterWithAttributes(), Object.class, method.getReturnType());
       returnValue = operationEndSupport.asyncEnd(context, request, returnValue, throwable);
     }

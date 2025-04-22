@@ -14,7 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndSupport;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -132,7 +132,7 @@ public class SpringDataInstrumentationModule extends InstrumentationModule {
       if (Object.class == type && MONO_CLASS != null && MONO_CLASS.isInstance(result)) {
         type = MONO_CLASS;
       }
-      return AsyncEndSupport.create(instrumenter(), Void.class, type)
+      return AsyncOperationEndSupport.create(instrumenter(), Void.class, type)
           .asyncEnd(context, classAndMethod, result, null);
     }
   }

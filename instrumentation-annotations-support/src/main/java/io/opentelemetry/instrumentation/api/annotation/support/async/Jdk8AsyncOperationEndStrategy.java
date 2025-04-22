@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.api.annotation.support.async;
 
-import static io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndSupport.tryToGetResponse;
+import static io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport.tryToGetResponse;
 
 import io.opentelemetry.context.Context;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 
-public enum Jdk8AsyncEndStrategy implements AsyncEndStrategy {
+public enum Jdk8AsyncOperationEndStrategy implements AsyncOperationEndStrategy {
   INSTANCE;
 
   @Override
@@ -21,7 +21,7 @@ public enum Jdk8AsyncEndStrategy implements AsyncEndStrategy {
 
   @Override
   public <REQUEST, RESPONSE> Object end(
-      AsyncEndHandler<REQUEST, RESPONSE> handler,
+      AsyncOperationEndHandler<REQUEST, RESPONSE> handler,
       Context context,
       REQUEST request,
       Object asyncValue,
@@ -43,7 +43,7 @@ public enum Jdk8AsyncEndStrategy implements AsyncEndStrategy {
    * notification of completion.
    */
   private static <REQUEST, RESPONSE> boolean tryToEndSynchronously(
-      AsyncEndHandler<REQUEST, RESPONSE> handler,
+      AsyncOperationEndHandler<REQUEST, RESPONSE> handler,
       Context context,
       REQUEST request,
       CompletableFuture<?> future,
@@ -67,7 +67,7 @@ public enum Jdk8AsyncEndStrategy implements AsyncEndStrategy {
    * span will be ended.
    */
   private static <REQUEST, RESPONSE> CompletionStage<?> endWhenComplete(
-      AsyncEndHandler<REQUEST, RESPONSE> handler,
+      AsyncOperationEndHandler<REQUEST, RESPONSE> handler,
       Context context,
       REQUEST request,
       CompletionStage<?> stage,

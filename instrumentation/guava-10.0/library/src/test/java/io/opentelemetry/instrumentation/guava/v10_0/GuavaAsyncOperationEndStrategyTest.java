@@ -18,7 +18,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndStrategy;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,13 +26,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class GuavaAsyncEndStrategyTest {
+class GuavaAsyncOperationEndStrategyTest {
 
   @Mock private Instrumenter<String, String> instrumenter;
 
   @Mock private Span span;
 
-  private final AsyncEndStrategy strategy = GuavaAsyncEndStrategy.create();
+  private final AsyncOperationEndStrategy strategy = GuavaAsyncOperationEndStrategy.create();
 
   @Test
   void listenableFutureSupported() {
@@ -90,13 +90,14 @@ class GuavaAsyncEndStrategyTest {
   @Test
   void endsSpanOnCancelExperimentalAttribute() {
     when(span.storeInContext(any())).thenCallRealMethod();
-    when(span.setAttribute(GuavaAsyncEndStrategy.CANCELED_ATTRIBUTE_KEY, true)).thenReturn(span);
+    when(span.setAttribute(GuavaAsyncOperationEndStrategy.CANCELED_ATTRIBUTE_KEY, true))
+        .thenReturn(span);
 
     SettableFuture<String> future = SettableFuture.create();
     Context context = Context.root().with(span);
 
-    AsyncEndStrategy strategy =
-        GuavaAsyncEndStrategy.builder().setCaptureExperimentalSpanAttributes(true).build();
+    AsyncOperationEndStrategy strategy =
+        GuavaAsyncOperationEndStrategy.builder().setCaptureExperimentalSpanAttributes(true).build();
 
     strategy.end(instrumenter, context, "request", future, String.class);
     future.cancel(true);

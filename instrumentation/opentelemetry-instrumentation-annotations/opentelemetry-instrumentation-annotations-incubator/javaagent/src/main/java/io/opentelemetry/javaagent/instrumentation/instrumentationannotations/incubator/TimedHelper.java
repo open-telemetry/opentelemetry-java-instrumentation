@@ -10,7 +10,7 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import application.io.opentelemetry.instrumentation.annotations.incubator.Timed;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndSupport;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
 import io.opentelemetry.javaagent.instrumentation.instrumentationannotations.MethodRequest;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -44,8 +44,8 @@ public final class TimedHelper extends MetricsAnnotationHelper {
       Throwable throwable,
       long startNanoTime,
       Object[] arguments) {
-    AsyncEndSupport<Method, Object> operationEndSupport =
-        AsyncEndSupport.create(
+    AsyncOperationEndSupport<Method, Object> operationEndSupport =
+        AsyncOperationEndSupport.create(
             (context, m, object, error) ->
                 getMethodTimer(m).record(object, arguments, error, startNanoTime),
             Object.class,

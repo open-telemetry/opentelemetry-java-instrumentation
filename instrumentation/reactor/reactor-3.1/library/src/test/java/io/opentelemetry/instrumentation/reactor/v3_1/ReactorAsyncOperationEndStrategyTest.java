@@ -12,7 +12,7 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndStrategy;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -26,13 +26,13 @@ import reactor.test.StepVerifier;
 
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings("ClassCanBeStatic")
-class ReactorAsyncEndStrategyTest {
+class ReactorAsyncOperationEndStrategyTest {
 
   @Mock private Instrumenter<String, String> instrumenter;
 
   @Mock private Span span;
 
-  private final AsyncEndStrategy strategy = ReactorAsyncEndStrategy.create();
+  private final AsyncOperationEndStrategy strategy = ReactorAsyncOperationEndStrategy.create();
 
   @Nested
   class MonoTest {
@@ -107,11 +107,13 @@ class ReactorAsyncEndStrategyTest {
     @Test
     void endsSpanOnCancelExperimentalAttribute() {
       when(span.storeInContext(any())).thenCallRealMethod();
-      when(span.setAttribute(ReactorAsyncEndStrategy.CANCELED_ATTRIBUTE_KEY, true))
+      when(span.setAttribute(ReactorAsyncOperationEndStrategy.CANCELED_ATTRIBUTE_KEY, true))
           .thenReturn(span);
 
-      AsyncEndStrategy strategy =
-          ReactorAsyncEndStrategy.builder().setCaptureExperimentalSpanAttributes(true).build();
+      AsyncOperationEndStrategy strategy =
+          ReactorAsyncOperationEndStrategy.builder()
+              .setCaptureExperimentalSpanAttributes(true)
+              .build();
 
       UnicastProcessor<String> source = UnicastProcessor.create();
       Mono<String> mono = source.singleOrEmpty();
@@ -248,11 +250,13 @@ class ReactorAsyncEndStrategyTest {
     @Test
     void endsSpanOnCancelExperimentalAttribute() {
       when(span.storeInContext(any())).thenCallRealMethod();
-      when(span.setAttribute(ReactorAsyncEndStrategy.CANCELED_ATTRIBUTE_KEY, true))
+      when(span.setAttribute(ReactorAsyncOperationEndStrategy.CANCELED_ATTRIBUTE_KEY, true))
           .thenReturn(span);
 
-      AsyncEndStrategy strategy =
-          ReactorAsyncEndStrategy.builder().setCaptureExperimentalSpanAttributes(true).build();
+      AsyncOperationEndStrategy strategy =
+          ReactorAsyncOperationEndStrategy.builder()
+              .setCaptureExperimentalSpanAttributes(true)
+              .build();
 
       UnicastProcessor<String> source = UnicastProcessor.create();
       Context context = Context.root().with(span);

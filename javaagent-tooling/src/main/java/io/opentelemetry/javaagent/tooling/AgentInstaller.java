@@ -33,7 +33,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttribute
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.EarlyInstrumentationModule;
-import io.opentelemetry.javaagent.tooling.asyncannotationsupport.WeakRefAsyncEndStrategies;
+import io.opentelemetry.javaagent.tooling.asyncannotationsupport.WeakRefAsyncOperationEndStrategies;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesConfigurer;
 import io.opentelemetry.javaagent.tooling.config.ConfigPropertiesBridge;
@@ -119,7 +119,7 @@ public class AgentInstaller {
       Iterable<AgentListener> agentListeners,
       EarlyInitAgentConfig earlyConfig) {
 
-    WeakRefAsyncEndStrategies.initialize();
+    WeakRefAsyncOperationEndStrategies.initialize();
     EmbeddedInstrumentationProperties.setPropertiesLoader(extensionClassLoader);
     setDefineClassHandler();
     FieldBackedImplementationConfiguration.configure(earlyConfig);

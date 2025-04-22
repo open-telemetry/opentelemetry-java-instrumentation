@@ -3,24 +3,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.rxjava.v3.common;
+package io.opentelemetry.instrumentation.rxjava.v2_0;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 
-public final class RxJava3AsyncEndStrategyBuilder {
+public final class RxJava2AsyncOperationEndStrategyBuilder {
 
   private boolean captureExperimentalSpanAttributes;
 
-  RxJava3AsyncEndStrategyBuilder() {}
+  RxJava2AsyncOperationEndStrategyBuilder() {}
 
   @CanIgnoreReturnValue
-  public RxJava3AsyncEndStrategyBuilder setCaptureExperimentalSpanAttributes(
+  public RxJava2AsyncOperationEndStrategyBuilder setCaptureExperimentalSpanAttributes(
       boolean captureExperimentalSpanAttributes) {
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     return this;
   }
 
-  public RxJava3AsyncEndStrategy build() {
-    return new RxJava3AsyncEndStrategy(captureExperimentalSpanAttributes);
+  public RxJava2AsyncOperationEndStrategy build() {
+    return new RxJava2AsyncOperationEndStrategy(captureExperimentalSpanAttributes);
   }
 }

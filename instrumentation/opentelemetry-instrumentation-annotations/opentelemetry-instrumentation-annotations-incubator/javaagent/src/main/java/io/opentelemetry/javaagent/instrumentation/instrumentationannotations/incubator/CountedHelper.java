@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.in
 import application.io.opentelemetry.instrumentation.annotations.incubator.Counted;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndSupport;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
 import io.opentelemetry.javaagent.instrumentation.instrumentationannotations.MethodRequest;
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -35,8 +35,8 @@ public final class CountedHelper extends MetricsAnnotationHelper {
 
   private static Object record(
       Method method, Object returnValue, Throwable throwable, Object[] arguments) {
-    AsyncEndSupport<Method, Object> operationEndSupport =
-        AsyncEndSupport.create(
+    AsyncOperationEndSupport<Method, Object> operationEndSupport =
+        AsyncOperationEndSupport.create(
             (context, m, object, error) -> getMethodCounter(m).record(object, arguments, error),
             Object.class,
             method.getReturnType());

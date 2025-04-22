@@ -26,7 +26,7 @@ import static java.lang.invoke.MethodType.methodType;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndStrategies;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -95,7 +95,7 @@ public final class ContextPropagationOperator {
     return new ContextPropagationOperatorBuilder();
   }
 
-  private final ReactorAsyncEndStrategy asyncEndStrategy;
+  private final ReactorAsyncOperationEndStrategy asyncOperationEndStrategy;
 
   private static final Object TRACE_CONTEXT_KEY =
       new Object() {
@@ -150,8 +150,8 @@ public final class ContextPropagationOperator {
   }
 
   ContextPropagationOperator(boolean captureExperimentalSpanAttributes) {
-    this.asyncEndStrategy =
-        ReactorAsyncEndStrategy.builder()
+    this.asyncOperationEndStrategy =
+        ReactorAsyncOperationEndStrategy.builder()
             .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
             .build();
   }
@@ -167,8 +167,9 @@ public final class ContextPropagationOperator {
       if (enabled) {
         return;
       }
-      Hooks.onEachOperator(TracingSubscriber.class.getName(), tracingLift(asyncEndStrategy));
-      AsyncEndStrategies.instance().registerStrategy(asyncEndStrategy);
+      Hooks.onEachOperator(
+          TracingSubscriber.class.getName(), tracingLift(asyncOperationEndStrategy));
+      AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
       registerScheduleHook(RunnableWrapper.class.getName(), RunnableWrapper::new);
       enabled = true;
     }
@@ -192,15 +193,15 @@ public final class ContextPropagationOperator {
         return;
       }
       Hooks.resetOnEachOperator(TracingSubscriber.class.getName());
-      AsyncEndStrategies.instance().unregisterStrategy(asyncEndStrategy);
+      AsyncOperationEndStrategies.instance().unregisterStrategy(asyncOperationEndStrategy);
       enabled = false;
     }
   }
 
   private static <T> Function<? super Publisher<T>, ? extends Publisher<T>> tracingLift(
-      ReactorAsyncEndStrategy asyncEndStrategy) {
+      ReactorAsyncOperationEndStrategy asyncOperationEndStrategy) {
     return Operators.lift(
-        ContextPropagationOperator::shouldInstrument, new Lifter<>(asyncEndStrategy));
+        ContextPropagationOperator::shouldInstrument, new Lifter<>(asyncOperationEndStrategy));
   }
 
   /** Forces Mono to run in traceContext scope. */
@@ -275,10 +276,10 @@ public final class ContextPropagationOperator {
 
     /** Holds reference to strategy to prevent it from being collected. */
     @SuppressWarnings({"FieldCanBeLocal", "UnusedVariable"})
-    private final ReactorAsyncEndStrategy asyncEndStrategy;
+    private final ReactorAsyncOperationEndStrategy asyncOperationEndStrategy;
 
-    public Lifter(ReactorAsyncEndStrategy asyncEndStrategy) {
-      this.asyncEndStrategy = asyncEndStrategy;
+    public Lifter(ReactorAsyncOperationEndStrategy asyncOperationEndStrategy) {
+      this.asyncOperationEndStrategy = asyncOperationEndStrategy;
     }
 
     @Override

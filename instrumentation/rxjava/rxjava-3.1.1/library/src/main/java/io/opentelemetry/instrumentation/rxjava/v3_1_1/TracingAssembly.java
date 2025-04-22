@@ -24,9 +24,9 @@ package io.opentelemetry.instrumentation.rxjava.v3_1_1;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncEndStrategies;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
 import io.opentelemetry.instrumentation.api.internal.GuardedBy;
-import io.opentelemetry.instrumentation.rxjava.v3.common.RxJava3AsyncEndStrategy;
+import io.opentelemetry.instrumentation.rxjava.v3.common.RxJava3AsyncOperationEndStrategy;
 import io.opentelemetry.instrumentation.rxjava.v3.common.TracingCompletableObserver;
 import io.opentelemetry.instrumentation.rxjava.v3.common.TracingMaybeObserver;
 import io.opentelemetry.instrumentation.rxjava.v3.common.TracingSingleObserver;
@@ -253,15 +253,15 @@ public final class TracingAssembly {
                     }));
   }
 
-  private static RxJava3AsyncEndStrategy asyncEndStrategy;
+  private static RxJava3AsyncOperationEndStrategy asyncOperationEndStrategy;
 
   private static void enableWithSpanStrategy(boolean captureExperimentalSpanAttributes) {
-    asyncEndStrategy =
-        RxJava3AsyncEndStrategy.builder()
+    asyncOperationEndStrategy =
+        RxJava3AsyncOperationEndStrategy.builder()
             .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes)
             .build();
 
-    AsyncEndStrategies.instance().registerStrategy(asyncEndStrategy);
+    AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
   }
 
   @GuardedBy("TracingAssembly.class")
@@ -303,9 +303,9 @@ public final class TracingAssembly {
   }
 
   private static void disableWithSpanStrategy() {
-    if (asyncEndStrategy != null) {
-      AsyncEndStrategies.instance().unregisterStrategy(asyncEndStrategy);
-      asyncEndStrategy = null;
+    if (asyncOperationEndStrategy != null) {
+      AsyncOperationEndStrategies.instance().unregisterStrategy(asyncOperationEndStrategy);
+      asyncOperationEndStrategy = null;
     }
   }
 
