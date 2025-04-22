@@ -26,6 +26,7 @@ import javax.management.NotificationListener;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junitpioneer.jupiter.SetSystemProperty;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -48,6 +49,7 @@ class GarbageCollectorTest {
 
   @Captor private ArgumentCaptor<NotificationListener> listenerCaptor;
 
+  @SetSystemProperty(key = "otel.instrumentation.runtime-telemetry.enable-jvm-gc-cause-attribute", value = "true")
   @Test
   void registerObservers() {
     GarbageCollector.registerObservers(
@@ -60,11 +62,13 @@ class GarbageCollectorTest {
     NotificationListener listener = listenerCaptor.getValue();
 
     listener.handleNotification(
-        createTestNotification("G1 Young Generation", "end of minor GC", 10), null);
+        createTestNotification("G1 Young Generation", "end of minor GC", "Allocation Failure", 10),
+        null);
     listener.handleNotification(
-        createTestNotification("G1 Young Generation", "end of minor GC", 12), null);
+        createTestNotification("G1 Young Generation", "end of minor GC", "Allocation Failure", 12),
+        null);
     listener.handleNotification(
-        createTestNotification("G1 Old Generation", "end of major GC", 11), null);
+        createTestNotification("G1 Old Generation", "end of major GC", "System.gc()", 11), null);
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
@@ -87,6 +91,7 @@ class GarbageCollectorTest {
                                                 Attributes.builder()
                                                     .put("jvm.gc.name", "G1 Young Generation")
                                                     .put("jvm.gc.action", "end of minor GC")
+                                                    .put("jvm.gc.cause", "Allocation Failure")
                                                     .build())
                                             .hasBucketBoundaries(GC_DURATION_BUCKETS),
                                     point ->
@@ -97,16 +102,18 @@ class GarbageCollectorTest {
                                                 Attributes.builder()
                                                     .put("jvm.gc.name", "G1 Old Generation")
                                                     .put("jvm.gc.action", "end of major GC")
+                                                    .put("jvm.gc.cause", "System.gc()")
                                                     .build())
                                             .hasBucketBoundaries(GC_DURATION_BUCKETS)))));
   }
 
   private static Notification createTestNotification(
-      String gcName, String gcAction, long duration) {
+      String gcName, String gcAction, String gcCause, long duration) {
     GarbageCollectionNotificationInfo gcNotificationInfo =
         mock(GarbageCollectionNotificationInfo.class);
     when(gcNotificationInfo.getGcName()).thenReturn(gcName);
     when(gcNotificationInfo.getGcAction()).thenReturn(gcAction);
+    when(gcNotificationInfo.getGcCause()).thenReturn(gcCause);
     GcInfo gcInfo = mock(GcInfo.class);
     when(gcInfo.getDuration()).thenReturn(duration);
     when(gcNotificationInfo.getGcInfo()).thenReturn(gcInfo);

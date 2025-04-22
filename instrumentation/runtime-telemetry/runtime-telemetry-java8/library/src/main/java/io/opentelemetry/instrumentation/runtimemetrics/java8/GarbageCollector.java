@@ -10,9 +10,11 @@ import static java.util.Collections.unmodifiableList;
 
 import com.sun.management.GarbageCollectionNotificationInfo;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
 import io.opentelemetry.semconv.JvmAttributes;
 import java.lang.management.GarbageCollectorMXBean;
@@ -125,11 +127,17 @@ public final class GarbageCollector {
 
       String gcName = notificationInfo.getGcName();
       String gcAction = notificationInfo.getGcAction();
+      String gcCause = notificationInfo.getGcCause();
       double duration = notificationInfo.getGcInfo().getDuration() / MILLIS_PER_S;
-
-      gcDuration.record(
-          duration,
-          Attributes.of(JvmAttributes.JVM_GC_NAME, gcName, JvmAttributes.JVM_GC_ACTION, gcAction));
+      boolean enableJvmGcCauseAttribute = ConfigPropertiesUtil.getBoolean(
+          "otel.instrumentation.runtime-telemetry.enable-jvm-gc-cause-attribute", false);
+      Attributes gcAttributes =
+          enableJvmGcCauseAttribute ? Attributes.of(JvmAttributes.JVM_GC_NAME, gcName,
+              JvmAttributes.JVM_GC_ACTION, gcAction,
+              AttributeKey.stringKey("jvm.gc.cause"), gcCause)
+              : Attributes.of(JvmAttributes.JVM_GC_NAME, gcName, JvmAttributes.JVM_GC_ACTION,
+                  gcAction);
+      gcDuration.record(duration, gcAttributes);
     }
   }
 
