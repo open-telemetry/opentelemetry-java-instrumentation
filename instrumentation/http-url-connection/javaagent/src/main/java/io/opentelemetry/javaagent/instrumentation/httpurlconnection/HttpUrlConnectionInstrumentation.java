@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpUrlConnectionSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -25,16 +25,15 @@ import java.net.HttpURLConnection;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.ElementMatchers;
 
 public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return nameStartsWith("java.net.")
-        .or(ElementMatchers.<TypeDescription>nameStartsWith("sun.net"))
+        .or(nameStartsWith("sun.net"))
         // In WebLogic, URL.openConnection() returns its own internal implementation of
         // HttpURLConnection, which does not delegate the methods that have to be instrumented to
-        // the JDK superclass. Therefore it needs to be instrumented directly.
+        // the JDK superclass. Therefore, it needs to be instrumented directly.
         .or(named("weblogic.net.http.HttpURLConnection"))
         // This class is a simple delegator. Skip because it does not update its `connected`
         // field.
@@ -45,10 +44,13 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(namedOneOf("connect", "getOutputStream", "getInputStream")),
+        isPublic()
+            .and(namedOneOf("connect", "getOutputStream", "getInputStream"))
+            // ibm https url connection does not delegate connect, it calls plainConnect instead
+            .or(isProtected().and(named("plainConnect"))),
         this.getClass().getName() + "$HttpUrlConnectionAdvice");
     transformer.applyAdviceToMethod(
-        isMethod().and(isPublic()).and(named("getResponseCode")),
+        isPublic().and(named("getResponseCode")),
         this.getClass().getName() + "$GetResponseCodeAdvice");
   }
 
