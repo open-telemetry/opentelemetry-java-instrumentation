@@ -49,7 +49,9 @@ class GarbageCollectorTest {
 
   @Captor private ArgumentCaptor<NotificationListener> listenerCaptor;
 
-  @SetSystemProperty(key = "otel.instrumentation.runtime-telemetry.enable-jvm-gc-cause-attribute", value = "true")
+  @SetSystemProperty(
+      key = "otel.instrumentation.runtime-telemetry.jvm-gc-cause-attribute-enabled",
+      value = "true")
   @Test
   void registerObservers() {
     GarbageCollector.registerObservers(

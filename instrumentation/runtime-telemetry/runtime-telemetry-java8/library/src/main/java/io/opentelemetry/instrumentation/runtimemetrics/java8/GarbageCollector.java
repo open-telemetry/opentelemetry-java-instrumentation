@@ -129,14 +129,20 @@ public final class GarbageCollector {
       String gcAction = notificationInfo.getGcAction();
       String gcCause = notificationInfo.getGcCause();
       double duration = notificationInfo.getGcInfo().getDuration() / MILLIS_PER_S;
-      boolean enableJvmGcCauseAttribute = ConfigPropertiesUtil.getBoolean(
-          "otel.instrumentation.runtime-telemetry.enable-jvm-gc-cause-attribute", false);
+      boolean enableJvmGcCauseAttribute =
+          ConfigPropertiesUtil.getBoolean(
+              "otel.instrumentation.runtime-telemetry.jvm-gc-cause-attribute-enabled", false);
       Attributes gcAttributes =
-          enableJvmGcCauseAttribute ? Attributes.of(JvmAttributes.JVM_GC_NAME, gcName,
-              JvmAttributes.JVM_GC_ACTION, gcAction,
-              AttributeKey.stringKey("jvm.gc.cause"), gcCause)
-              : Attributes.of(JvmAttributes.JVM_GC_NAME, gcName, JvmAttributes.JVM_GC_ACTION,
-                  gcAction);
+          enableJvmGcCauseAttribute
+              ? Attributes.of(
+                  JvmAttributes.JVM_GC_NAME,
+                  gcName,
+                  JvmAttributes.JVM_GC_ACTION,
+                  gcAction,
+                  AttributeKey.stringKey("jvm.gc.cause"),
+                  gcCause)
+              : Attributes.of(
+                  JvmAttributes.JVM_GC_NAME, gcName, JvmAttributes.JVM_GC_ACTION, gcAction);
       gcDuration.record(duration, gcAttributes);
     }
   }
