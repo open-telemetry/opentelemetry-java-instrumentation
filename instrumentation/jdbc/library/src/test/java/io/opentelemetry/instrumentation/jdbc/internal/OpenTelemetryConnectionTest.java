@@ -125,6 +125,35 @@ class OpenTelemetryConnectionTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
+  void testVerifyPrepareStatementUpdate(boolean sqlCommenterEnabled) throws SQLException {
+    Instrumenter<DbRequest, Void> instrumenter =
+        createStatementInstrumenter(testing.getOpenTelemetry());
+    DbInfo dbInfo = getDbInfo();
+    List<String> executedSql = new ArrayList<>();
+    OpenTelemetryConnection connection =
+        new OpenTelemetryConnection(
+            new TestConnection(executedSql::add), dbInfo, instrumenter, sqlCommenterEnabled);
+    String query = "UPDATE users SET name = name";
+
+    SpanContext spanContext =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              PreparedStatement statement = connection.prepareStatement(query);
+              statement.executeUpdate();
+              assertThat(statement.getResultSet()).isNull();
+              statement.close();
+              return Span.current().getSpanContext();
+            });
+
+    assertExecutedSql(executedSql, query, sqlCommenterEnabled, spanContext);
+    jdbcTraceAssertion(dbInfo, query, "UPDATE");
+
+    connection.close();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
   void testVerifyPrepareStatementQuery(boolean sqlCommenterEnabled) throws SQLException {
     Instrumenter<DbRequest, Void> instrumenter =
         createStatementInstrumenter(testing.getOpenTelemetry());
@@ -244,14 +273,18 @@ class OpenTelemetryConnectionTest {
         .build();
   }
 
-  @SuppressWarnings("deprecation") // old semconv
   private static void jdbcTraceAssertion(DbInfo dbInfo, String query) {
+    jdbcTraceAssertion(dbInfo, query, "SELECT");
+  }
+
+  @SuppressWarnings("deprecation") // old semconv
+  private static void jdbcTraceAssertion(DbInfo dbInfo, String query, String operation) {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("SELECT my_name.users")
+                    span.hasName(operation + " my_name.users")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -264,7 +297,7 @@ class OpenTelemetryConnectionTest {
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : dbInfo.getShortUrl()),
                             equalTo(maybeStable(DB_STATEMENT), query),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_OPERATION), operation),
                             equalTo(maybeStable(DB_SQL_TABLE), "users"),
                             equalTo(SERVER_ADDRESS, dbInfo.getHost()),
                             equalTo(SERVER_PORT, dbInfo.getPort()))));

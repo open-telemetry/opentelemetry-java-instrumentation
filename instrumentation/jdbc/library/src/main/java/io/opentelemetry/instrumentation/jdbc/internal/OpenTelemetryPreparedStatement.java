@@ -60,7 +60,7 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
 
   @Override
   public ResultSet executeQuery() throws SQLException {
-    return new OpenTelemetryResultSet(wrapCall(query, delegate::executeQuery), this);
+    return OpenTelemetryResultSet.wrap(wrapCall(query, delegate::executeQuery), this);
   }
 
   @Override

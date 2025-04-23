@@ -13,20 +13,21 @@ import java.sql.Statement;
 import java.util.function.Consumer;
 
 class TestStatement implements Statement {
-  final Connection connection;
-  Consumer<String> sqlConsumer = unused -> {};
-
-  TestStatement() {
-    this.connection = null;
-  }
+  private final Connection connection;
+  private final Consumer<String> sqlConsumer;
 
   TestStatement(Connection connection) {
     this.connection = connection;
+    this.sqlConsumer = unused -> {};
   }
 
   TestStatement(Connection connection, Consumer<String> sqlConsumer) {
     this.connection = connection;
     this.sqlConsumer = sqlConsumer;
+  }
+
+  protected boolean hasResultSet() {
+    return true;
   }
 
   @Override
@@ -81,7 +82,7 @@ class TestStatement implements Statement {
   @Override
   public ResultSet executeQuery(String sql) throws SQLException {
     sqlConsumer.accept(sql);
-    return null;
+    return new TestResultSet(this);
   }
 
   @Override
@@ -125,7 +126,7 @@ class TestStatement implements Statement {
 
   @Override
   public ResultSet getGeneratedKeys() throws SQLException {
-    return null;
+    return new TestResultSet(this);
   }
 
   @Override
@@ -155,7 +156,7 @@ class TestStatement implements Statement {
 
   @Override
   public ResultSet getResultSet() throws SQLException {
-    return null;
+    return hasResultSet() ? new TestResultSet(this) : null;
   }
 
   @Override

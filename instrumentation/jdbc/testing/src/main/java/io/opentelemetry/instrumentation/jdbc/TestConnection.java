@@ -188,14 +188,14 @@ public class TestConnection implements Connection {
   @Override
   public CallableStatement prepareCall(String sql) throws SQLException {
     sqlConsumer.accept(sql);
-    return new TestCallableStatement();
+    return new TestCallableStatement(this);
   }
 
   @Override
   public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency)
       throws SQLException {
     sqlConsumer.accept(sql);
-    return new TestCallableStatement();
+    return new TestCallableStatement(this);
   }
 
   @Override
@@ -203,7 +203,7 @@ public class TestConnection implements Connection {
       String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability)
       throws SQLException {
     sqlConsumer.accept(sql);
-    return new TestCallableStatement();
+    return new TestCallableStatement(this);
   }
 
   @Override
