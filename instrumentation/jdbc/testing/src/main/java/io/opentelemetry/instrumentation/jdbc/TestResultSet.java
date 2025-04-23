@@ -646,16 +646,16 @@ class TestResultSet implements ResultSet {
   }
 
   @Override
-  public void updateNString(int columnIndex, String nString) throws SQLException {}
+  public void updateNString(int columnIndex, String nstring) throws SQLException {}
 
   @Override
-  public void updateNString(String columnLabel, String nString) throws SQLException {}
+  public void updateNString(String columnLabel, String nstring) throws SQLException {}
 
   @Override
-  public void updateNClob(int columnIndex, NClob nClob) throws SQLException {}
+  public void updateNClob(int columnIndex, NClob nclob) throws SQLException {}
 
   @Override
-  public void updateNClob(String columnLabel, NClob nClob) throws SQLException {}
+  public void updateNClob(String columnLabel, NClob nclob) throws SQLException {}
 
   @Override
   public NClob getNClob(int columnIndex) throws SQLException {
