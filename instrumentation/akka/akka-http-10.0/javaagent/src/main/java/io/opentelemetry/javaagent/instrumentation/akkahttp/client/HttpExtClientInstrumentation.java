@@ -101,10 +101,10 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
         instrumenter().end(locals.context, request, null, throwable);
       }
       if (responseFuture != null) {
-        responseFuture =
-            FutureWrapper.wrap(responseFuture, actorSystem.dispatcher(), currentContext());
+        return FutureWrapper.wrap(responseFuture, actorSystem.dispatcher(), currentContext());
+      } else {
+        return null;
       }
-      return responseFuture;
     }
   }
 }
