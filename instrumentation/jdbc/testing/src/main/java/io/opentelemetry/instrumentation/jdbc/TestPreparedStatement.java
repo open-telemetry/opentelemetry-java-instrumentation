@@ -28,13 +28,15 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 
 class TestPreparedStatement extends TestStatement implements PreparedStatement {
-
-  TestPreparedStatement() {
-    super();
-  }
+  boolean hasResultSet = true;
 
   TestPreparedStatement(Connection connection) {
     super(connection);
+  }
+
+  @Override
+  protected boolean hasResultSet() {
+    return hasResultSet;
   }
 
   @Override
@@ -50,11 +52,12 @@ class TestPreparedStatement extends TestStatement implements PreparedStatement {
 
   @Override
   public ResultSet executeQuery() throws SQLException {
-    return null;
+    return new TestResultSet(this);
   }
 
   @Override
   public int executeUpdate() throws SQLException {
+    hasResultSet = false;
     return 0;
   }
 
