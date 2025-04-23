@@ -43,7 +43,7 @@ public class AkkaScheduleInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ScheduleAdvice {
 
-    @AssignReturned.ToArguments({@ToArgument(2)})
+    @AssignReturned.ToArguments(@ToArgument(2))
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Runnable enterSchedule(@Advice.Argument(2) Runnable runnable) {
       Runnable wrapped = AkkaSchedulerTaskWrapper.wrap(runnable);
@@ -54,7 +54,7 @@ public class AkkaScheduleInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ScheduleOnceAdvice {
 
-    @AssignReturned.ToArguments({@ToArgument(1)})
+    @AssignReturned.ToArguments(@ToArgument(1))
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Runnable enterScheduleOnce(@Advice.Argument(1) Runnable runnable) {
       Runnable wrapped = AkkaSchedulerTaskWrapper.wrap(runnable);

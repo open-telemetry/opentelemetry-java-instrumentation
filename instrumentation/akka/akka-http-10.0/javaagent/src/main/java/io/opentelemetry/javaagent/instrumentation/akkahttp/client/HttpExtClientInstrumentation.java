@@ -56,9 +56,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
       public Scope scope;
     }
 
-    @AssignReturned.ToArguments({
-      @ToArgument(value = 0, index = 1, typing = Assigner.Typing.DYNAMIC)
-    })
+    @AssignReturned.ToArguments(@ToArgument(value = 0, index = 1, typing = Assigner.Typing.DYNAMIC))
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Object[] methodEnter(@Advice.Argument(0) HttpRequest request) {
 

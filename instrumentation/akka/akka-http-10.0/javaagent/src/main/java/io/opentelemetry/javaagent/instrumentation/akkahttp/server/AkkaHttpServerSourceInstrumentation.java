@@ -35,7 +35,7 @@ public class AkkaHttpServerSourceInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class AkkaBindAndHandleAdvice {
 
-    @AssignReturned.ToArguments({@ToArgument(0)})
+    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Flow<HttpRequest, HttpResponse, ?> wrapHandler(
         @Advice.Argument(0) Flow<HttpRequest, HttpResponse, ?> handler) {
