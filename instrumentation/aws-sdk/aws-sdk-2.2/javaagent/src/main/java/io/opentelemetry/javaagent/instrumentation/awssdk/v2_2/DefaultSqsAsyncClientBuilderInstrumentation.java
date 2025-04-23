@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.AwsSdkSingletons;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
