@@ -25,7 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.avaje.jex.Jex.Server;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
@@ -46,8 +45,8 @@ class JexTest {
 
   @BeforeAll
   static void setup() {
-    port = PortUtils.findOpenPort();
-    app = TestJexJavaApplication.initJex(port);
+    app = TestJexJavaApplication.initJex();
+    port = app.port();
     client = WebClient.of("http://localhost:" + port);
   }
 
@@ -59,7 +58,7 @@ class JexTest {
   @Test
   void testSpanNameAndHttpRouteSpanWithPathParamResponseSuccessful() {
     String id = "123";
-    AggregatedHttpResponse response = client.get("/param/" + id).aggregate().join();
+    AggregatedHttpResponse response = client.get("/test/param/" + id).aggregate().join();
     String content = response.contentUtf8();
 
     assertThat(content).isEqualTo(id);
@@ -68,16 +67,16 @@ class JexTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GET /param/{id}")
+                    span.hasName("GET /test/param/{id}")
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(URL_SCHEME, "http"),
-                            equalTo(URL_PATH, "/param/" + id),
+                            equalTo(URL_PATH, "/test/param/" + id),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, "/param/{id}"),
+                            equalTo(HTTP_ROUTE, "/test/param/{id}"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, port),
@@ -88,22 +87,22 @@ class JexTest {
 
   @Test
   void testSpanNameAndHttpRouteSpanResponseError() {
-    client.get("/error").aggregate().join();
+    client.get("/test/error").aggregate().join();
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("GET /error")
+                    span.hasName("GET /test/error")
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(URL_SCHEME, "http"),
-                            equalTo(URL_PATH, "/error"),
+                            equalTo(URL_PATH, "/test/error"),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 500),
                             satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, "/error"),
+                            equalTo(HTTP_ROUTE, "/test/error"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, port),
@@ -116,7 +115,7 @@ class JexTest {
   @Test
   void testHttpRouteMetricWithPathParamResponseSuccessful() {
     String id = "123";
-    AggregatedHttpResponse response = client.get("/param/" + id).aggregate().join();
+    AggregatedHttpResponse response = client.get("/test/param/" + id).aggregate().join();
     String content = response.contentUtf8();
     String instrumentation = "io.opentelemetry.jetty-12.0";
 
@@ -132,6 +131,6 @@ class JexTest {
                         .hasHistogramSatisfying(
                             histogram ->
                                 histogram.hasPointsSatisfying(
-                                    point -> point.hasAttribute(HTTP_ROUTE, "/param/{id}")))));
+                                    point -> point.hasAttribute(HTTP_ROUTE, "/test/param/{id}")))));
   }
 }

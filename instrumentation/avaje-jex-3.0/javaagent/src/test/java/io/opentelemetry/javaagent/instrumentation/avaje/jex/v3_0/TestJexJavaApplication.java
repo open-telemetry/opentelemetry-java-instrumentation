@@ -12,8 +12,8 @@ public class TestJexJavaApplication {
 
   private TestJexJavaApplication() {}
 
-  public static Server initJex(int port) {
-    Jex app = Jex.create();
+  public static Server initJex() {
+    Jex app = Jex.create().contextPath("/test");
     app.get(
         "/param/{id}",
         ctx -> {
@@ -25,6 +25,6 @@ public class TestJexJavaApplication {
         ctx -> {
           throw new RuntimeException("boom");
         });
-    return app.port(port).start();
+    return app.port(0).start();
   }
 }

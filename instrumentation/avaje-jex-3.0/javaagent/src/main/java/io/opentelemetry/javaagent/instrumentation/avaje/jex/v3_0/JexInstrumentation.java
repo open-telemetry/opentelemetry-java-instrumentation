@@ -37,11 +37,11 @@ public class JexInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HandlerAdapterAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-    public static void onAfterExecute(@Advice.Argument(0) Context ctx, @Advice.Thrown Throwable t) {
+    @Advice.OnMethodEnter
+    public static void onAfterExecute(@Advice.Argument(0) Context ctx) {
       HttpServerRoute.update(
           io.opentelemetry.context.Context.current(),
-          HttpServerRouteSource.SERVER_FILTER,
+          HttpServerRouteSource.CONTROLLER,
           ctx.matchedPath());
     }
   }
