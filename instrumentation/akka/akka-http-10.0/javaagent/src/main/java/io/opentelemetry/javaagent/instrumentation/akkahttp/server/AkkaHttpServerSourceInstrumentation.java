@@ -39,7 +39,8 @@ public class AkkaHttpServerSourceInstrumentation implements TypeInstrumentation 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Flow<HttpRequest, HttpResponse, ?> wrapHandler(
         @Advice.Argument(0) Flow<HttpRequest, HttpResponse, ?> handler) {
-      return AkkaFlowWrapper.wrap(handler);
+      Flow<HttpRequest, HttpResponse, ?> wrapped = AkkaFlowWrapper.wrap(handler);
+      return wrapped;
     }
   }
 }

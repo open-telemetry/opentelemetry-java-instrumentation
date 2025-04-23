@@ -90,12 +90,14 @@ public class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
         return responsePromise;
       }
       locals.scope.close();
+
+      Promise<HttpResponse> returnValue = responsePromise;
       if (throwable != null) {
         instrumenter().end(locals.context, locals.httpRequest, null, throwable);
       } else {
-        responsePromise = PromiseWrapper.wrap(responsePromise, locals.httpRequest, locals.context);
+        returnValue = PromiseWrapper.wrap(responsePromise, locals.httpRequest, locals.context);
       }
-      return responsePromise;
+      return returnValue;
     }
   }
 }

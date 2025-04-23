@@ -24,6 +24,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import scala.concurrent.Future;
 
@@ -55,7 +56,9 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
       public Scope scope;
     }
 
-    @AssignReturned.ToArguments({@ToArgument(value = 0, index = 1)})
+    @AssignReturned.ToArguments({
+      @ToArgument(value = 0, index = 1, typing = Assigner.Typing.DYNAMIC)
+    })
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Object[] methodEnter(@Advice.Argument(0) HttpRequest request) {
 
@@ -71,8 +74,8 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
       }
       AdviceLocals locals = new AdviceLocals(instrumenter().start(parentContext, request));
       // Request is immutable, so we have to assign new value once we update headers
-      request = setter().inject(request);
-      return new Object[] {locals, request};
+      HttpRequest modifiedRequest = setter().inject(request);
+      return new Object[] {locals, modifiedRequest};
     }
 
     @AssignReturned.ToReturned
@@ -102,9 +105,8 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
       }
       if (responseFuture != null) {
         return FutureWrapper.wrap(responseFuture, actorSystem.dispatcher(), currentContext());
-      } else {
-        return null;
       }
+      return responseFuture;
     }
   }
 }

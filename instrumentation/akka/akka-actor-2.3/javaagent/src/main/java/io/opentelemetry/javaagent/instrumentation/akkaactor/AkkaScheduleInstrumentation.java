@@ -46,7 +46,8 @@ public class AkkaScheduleInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments({@ToArgument(2)})
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Runnable enterSchedule(@Advice.Argument(2) Runnable runnable) {
-      return AkkaSchedulerTaskWrapper.wrap(runnable);
+      Runnable wrapped = AkkaSchedulerTaskWrapper.wrap(runnable);
+      return wrapped;
     }
   }
 
@@ -56,7 +57,8 @@ public class AkkaScheduleInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments({@ToArgument(1)})
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Runnable enterScheduleOnce(@Advice.Argument(1) Runnable runnable) {
-      return AkkaSchedulerTaskWrapper.wrap(runnable);
+      Runnable wrapped = AkkaSchedulerTaskWrapper.wrap(runnable);
+      return wrapped;
     }
   }
 }
