@@ -12,7 +12,7 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 
 class TestStatement implements Statement {
-  final Connection connection;
+  private final Connection connection;
 
   TestStatement(Connection connection) {
     this.connection = connection;

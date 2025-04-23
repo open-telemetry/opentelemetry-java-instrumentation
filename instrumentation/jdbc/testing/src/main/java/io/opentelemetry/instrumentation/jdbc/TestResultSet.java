@@ -29,7 +29,7 @@ import java.util.Map;
 
 @SuppressWarnings({"UngroupedOverloads", "OverloadMethodsDeclarationOrder"})
 class TestResultSet implements ResultSet {
-  final Statement statement;
+  private final Statement statement;
 
   TestResultSet(Statement statement) {
     this.statement = statement;

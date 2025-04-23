@@ -28,7 +28,7 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 
 class TestPreparedStatement extends TestStatement implements PreparedStatement {
-  boolean hasResultSet = true;
+  private boolean hasResultSet = true;
 
   TestPreparedStatement(Connection connection) {
     super(connection);
