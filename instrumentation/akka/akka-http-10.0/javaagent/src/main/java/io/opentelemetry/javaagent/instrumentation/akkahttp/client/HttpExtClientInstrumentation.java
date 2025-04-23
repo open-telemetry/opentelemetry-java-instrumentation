@@ -46,6 +46,11 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
   public static class SingleRequestAdvice {
 
     public static class AdviceLocals {
+      public AdviceLocals(Context context) {
+        this.context = context;
+        this.scope = context.makeCurrent();
+      }
+
       public Context context;
       public Scope scope;
     }
@@ -64,9 +69,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
       if (!instrumenter().shouldStart(parentContext, request)) {
         return new Object[] {null, request};
       }
-      AdviceLocals locals = new AdviceLocals();
-      locals.context = instrumenter().start(parentContext, request);
-      locals.scope = locals.context.makeCurrent();
+      AdviceLocals locals = new AdviceLocals(instrumenter().start(parentContext, request));
       // Request is immutable, so we have to assign new value once we update headers
       request = setter().inject(request);
       return new Object[] {locals, request};

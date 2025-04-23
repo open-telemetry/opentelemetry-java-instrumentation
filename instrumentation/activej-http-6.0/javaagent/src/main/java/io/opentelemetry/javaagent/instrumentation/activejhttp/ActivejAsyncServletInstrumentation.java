@@ -55,9 +55,15 @@ public class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
   public static class ServeAdvice {
 
     public static class AdviceLocals {
-      public HttpRequest httpRequest;
-      public Context context;
-      public Scope scope;
+      public final HttpRequest httpRequest;
+      public final Context context;
+      public final Scope scope;
+
+      public AdviceLocals(Context context, HttpRequest httpRequest) {
+        this.context = context;
+        this.scope = context.makeCurrent();
+        this.httpRequest = httpRequest;
+      }
     }
 
     @Nullable
@@ -69,11 +75,7 @@ public class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
       }
-      AdviceLocals locals = new AdviceLocals();
-      locals.httpRequest = request;
-      locals.context = instrumenter().start(parentContext, request);
-      locals.scope = locals.context.makeCurrent();
-      return locals;
+      return new AdviceLocals(instrumenter().start(parentContext, request), request);
     }
 
     @AssignReturned.ToReturned
