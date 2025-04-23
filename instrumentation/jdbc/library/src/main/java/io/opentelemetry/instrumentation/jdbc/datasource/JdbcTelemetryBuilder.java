@@ -46,6 +46,9 @@ public final class JdbcTelemetryBuilder {
   /**
    * Sets whether to augment sql query with comment containing the tracing information. See <a
    * href="https://google.github.io/sqlcommenter/">sqlcommenter</a> for more info.
+   *
+   * <p>WARNING: augmenting queries with tracing context will make query texts unique, which may
+   * have adverse impact on database performance. Consult with database experts before enabling.
    */
   @CanIgnoreReturnValue
   public JdbcTelemetryBuilder setEnableSqlCommenter(boolean sqlCommenterEnabled) {
