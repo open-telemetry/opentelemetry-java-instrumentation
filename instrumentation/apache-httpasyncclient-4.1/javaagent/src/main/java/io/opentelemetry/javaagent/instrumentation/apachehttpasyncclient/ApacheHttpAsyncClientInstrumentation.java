@@ -25,6 +25,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
@@ -66,8 +67,8 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
   public static class ClientAdvice {
 
     @AssignReturned.ToArguments({
-      @ToArgument(value = 0, index = 0),
-      @ToArgument(value = 3, index = 1)
+      @ToArgument(value = 0, index = 0, typing = Assigner.Typing.DYNAMIC),
+      @ToArgument(value = 3, index = 1, typing = Assigner.Typing.DYNAMIC)
     })
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Object[] methodEnter(
@@ -79,9 +80,9 @@ public class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation
 
       WrappedFutureCallback<?> wrappedFutureCallback =
           new WrappedFutureCallback<>(parentContext, httpContext, futureCallback);
-      requestProducer =
+      HttpAsyncRequestProducer modifiedRequestProducer =
           new DelegatingRequestProducer(parentContext, requestProducer, wrappedFutureCallback);
-      return new Object[] {requestProducer, wrappedFutureCallback};
+      return new Object[] {modifiedRequestProducer, wrappedFutureCallback};
     }
   }
 
