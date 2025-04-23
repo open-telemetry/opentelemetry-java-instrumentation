@@ -54,7 +54,6 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Object[] methodEnter(@Advice.Argument(0) HttpRequest request) {
 
-      AdviceLocals locals = new AdviceLocals();
       /*
       Versions 10.0 and 10.1 have slightly different structure that is hard to distinguish so here
       we cast 'wider net' and avoid instrumenting twice.
@@ -63,9 +62,9 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
        */
       Context parentContext = currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
-        return new Object[] {locals, request};
+        return new Object[] {null, request};
       }
-
+      AdviceLocals locals = new AdviceLocals();
       locals.context = instrumenter().start(parentContext, request);
       locals.scope = locals.context.makeCurrent();
       // Request is immutable, so we have to assign new value once we update headers
@@ -83,7 +82,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
         @Advice.Enter Object[] enterResult) {
 
       AdviceLocals locals = (AdviceLocals) enterResult[0];
-      if (locals.scope == null) {
+      if (locals == null || locals.scope == null) {
         return responseFuture;
       }
 
