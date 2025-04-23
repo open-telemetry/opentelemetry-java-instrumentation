@@ -21,6 +21,8 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import scala.concurrent.Future;
@@ -43,11 +45,16 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SingleRequestAdvice {
 
+    public static class AdviceLocals {
+      public Context context;
+      public Scope scope;
+    }
+
+    @AssignReturned.ToArguments({@ToArgument(value = 0, index = 1)})
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
-        @Advice.Argument(value = 0, readOnly = false) HttpRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+    public static Object[] methodEnter(@Advice.Argument(0) HttpRequest request) {
+
+      AdviceLocals locals = new AdviceLocals();
       /*
       Versions 10.0 and 10.1 have slightly different structure that is hard to distinguish so here
       we cast 'wider net' and avoid instrumenting twice.
@@ -56,42 +63,46 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
        */
       Context parentContext = currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
+        return new Object[] {locals, request};
       }
 
-      context = instrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+      locals.context = instrumenter().start(parentContext, request);
+      locals.scope = locals.context.makeCurrent();
       // Request is immutable, so we have to assign new value once we update headers
       request = setter().inject(request);
+      return new Object[] {locals, request};
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(
+    public static Future<HttpResponse> methodExit(
         @Advice.Argument(0) HttpRequest request,
         @Advice.This HttpExt thiz,
-        @Advice.Return(readOnly = false) Future<HttpResponse> responseFuture,
+        @Advice.Return Future<HttpResponse> responseFuture,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
+        @Advice.Enter Object[] enterResult) {
+
+      AdviceLocals locals = (AdviceLocals) enterResult[0];
+      if (locals.scope == null) {
+        return responseFuture;
       }
 
-      scope.close();
+      locals.scope.close();
       ActorSystem actorSystem = AkkaHttpClientUtil.getActorSystem(thiz);
       if (actorSystem == null) {
-        return;
+        return responseFuture;
       }
       if (throwable == null) {
         responseFuture.onComplete(
-            new OnCompleteHandler(context, request), actorSystem.dispatcher());
+            new OnCompleteHandler(locals.context, request), actorSystem.dispatcher());
       } else {
-        instrumenter().end(context, request, null, throwable);
+        instrumenter().end(locals.context, request, null, throwable);
       }
       if (responseFuture != null) {
         responseFuture =
             FutureWrapper.wrap(responseFuture, actorSystem.dispatcher(), currentContext());
       }
+      return responseFuture;
     }
   }
 }
