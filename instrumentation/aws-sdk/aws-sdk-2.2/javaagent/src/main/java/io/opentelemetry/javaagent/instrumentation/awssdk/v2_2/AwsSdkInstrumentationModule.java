@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecutionInterceptor;
 import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -32,7 +31,7 @@ public class AwsSdkInstrumentationModule extends AbstractAwsSdkInstrumentationMo
   public void injectClasses(ClassInjector injector) {
     injector
         .proxyBuilder(
-            "io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecutionInterceptor")
+            "io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.TracingExecutionInterceptor")
         .inject(InjectionMode.CLASS_ONLY);
   }
 
