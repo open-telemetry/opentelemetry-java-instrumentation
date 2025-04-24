@@ -21,7 +21,7 @@ public enum Jdk8AsyncOperationEndStrategy implements AsyncOperationEndStrategy {
 
   @Override
   public <REQUEST, RESPONSE> Object end(
-      AsyncOperationEndHandler<REQUEST, RESPONSE> handler,
+      AsyncOperationCallback<REQUEST, RESPONSE> handler,
       Context context,
       REQUEST request,
       Object asyncValue,
@@ -43,7 +43,7 @@ public enum Jdk8AsyncOperationEndStrategy implements AsyncOperationEndStrategy {
    * notification of completion.
    */
   private static <REQUEST, RESPONSE> boolean tryToEndSynchronously(
-      AsyncOperationEndHandler<REQUEST, RESPONSE> handler,
+      AsyncOperationCallback<REQUEST, RESPONSE> handler,
       Context context,
       REQUEST request,
       CompletableFuture<?> future,
@@ -55,9 +55,9 @@ public enum Jdk8AsyncOperationEndStrategy implements AsyncOperationEndStrategy {
 
     try {
       Object potentialResponse = future.join();
-      handler.handle(context, request, tryToGetResponse(responseType, potentialResponse), null);
+      handler.onEnd(context, request, tryToGetResponse(responseType, potentialResponse), null);
     } catch (Throwable t) {
-      handler.handle(context, request, null, t);
+      handler.onEnd(context, request, null, t);
     }
     return true;
   }
@@ -67,13 +67,13 @@ public enum Jdk8AsyncOperationEndStrategy implements AsyncOperationEndStrategy {
    * span will be ended.
    */
   private static <REQUEST, RESPONSE> CompletionStage<?> endWhenComplete(
-      AsyncOperationEndHandler<REQUEST, RESPONSE> handler,
+      AsyncOperationCallback<REQUEST, RESPONSE> handler,
       Context context,
       REQUEST request,
       CompletionStage<?> stage,
       Class<RESPONSE> responseType) {
     return stage.whenComplete(
         (result, exception) ->
-            handler.handle(context, request, tryToGetResponse(responseType, result), exception));
+            handler.onEnd(context, request, tryToGetResponse(responseType, result), exception));
   }
 }

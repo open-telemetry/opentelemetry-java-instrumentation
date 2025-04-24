@@ -10,7 +10,7 @@ import static io.opentelemetry.instrumentation.api.annotation.support.async.Asyn
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndHandler;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationCallback;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -44,7 +44,7 @@ public final class ReactorAsyncOperationEndStrategy implements AsyncOperationEnd
 
   @Override
   public <REQUEST, RESPONSE> Object end(
-      AsyncOperationEndHandler<REQUEST, RESPONSE> handler,
+      AsyncOperationCallback<REQUEST, RESPONSE> handler,
       Context context,
       REQUEST request,
       Object asyncValue,
@@ -54,7 +54,7 @@ public final class ReactorAsyncOperationEndStrategy implements AsyncOperationEnd
         new EndOnFirstNotificationConsumer(context) {
           @Override
           protected void end(Object result, Throwable error) {
-            handler.handle(context, request, tryToGetResponse(responseType, result), error);
+            handler.onEnd(context, request, tryToGetResponse(responseType, result), error);
           }
         };
 

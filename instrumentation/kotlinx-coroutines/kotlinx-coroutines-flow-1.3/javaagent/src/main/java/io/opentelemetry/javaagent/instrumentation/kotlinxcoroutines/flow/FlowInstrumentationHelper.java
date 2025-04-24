@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.flow;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndHandler;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationCallback;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
 import kotlinx.coroutines.flow.Flow;
@@ -32,7 +32,7 @@ public final class FlowInstrumentationHelper {
 
     @Override
     public <REQUEST, RESPONSE> Object end(
-        AsyncOperationEndHandler<REQUEST, RESPONSE> handler,
+        AsyncOperationCallback<REQUEST, RESPONSE> handler,
         Context context,
         REQUEST request,
         Object asyncValue,

@@ -10,9 +10,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import javax.annotation.Nullable;
 
 /**
- * A wrapper over {@link AsyncOperationEndHandler} that is able to defer {@link
- * AsyncOperationEndHandler#handle(Context, Object, Object, Throwable)} until asynchronous
- * computation finishes.
+ * A wrapper over {@link AsyncOperationCallback} that is able to defer {@link
+ * AsyncOperationCallback#onEnd(Context, Object, Object, Throwable)} until asynchronous computation
+ * finishes.
  */
 public final class AsyncOperationEndSupport<REQUEST, RESPONSE> {
 
@@ -42,7 +42,7 @@ public final class AsyncOperationEndSupport<REQUEST, RESPONSE> {
    * used as the response.
    */
   public static <REQUEST, RESPONSE> AsyncOperationEndSupport<REQUEST, RESPONSE> create(
-      AsyncOperationEndHandler<REQUEST, RESPONSE> handler,
+      AsyncOperationCallback<REQUEST, RESPONSE> handler,
       Class<RESPONSE> responseType,
       Class<?> asyncType) {
     return new AsyncOperationEndSupport<>(
@@ -52,13 +52,13 @@ public final class AsyncOperationEndSupport<REQUEST, RESPONSE> {
         AsyncOperationEndStrategies.instance().resolveStrategy(asyncType));
   }
 
-  private final AsyncOperationEndHandler<REQUEST, RESPONSE> handler;
+  private final AsyncOperationCallback<REQUEST, RESPONSE> handler;
   private final Class<RESPONSE> responseType;
   private final Class<?> asyncType;
   @Nullable private final AsyncOperationEndStrategy asyncOperationEndStrategy;
 
   private AsyncOperationEndSupport(
-      AsyncOperationEndHandler<REQUEST, RESPONSE> handler,
+      AsyncOperationCallback<REQUEST, RESPONSE> handler,
       Class<RESPONSE> responseType,
       Class<?> asyncType,
       @Nullable AsyncOperationEndStrategy asyncOperationEndStrategy) {
@@ -87,7 +87,7 @@ public final class AsyncOperationEndSupport<REQUEST, RESPONSE> {
       Context context, REQUEST request, @Nullable ASYNC asyncValue, @Nullable Throwable throwable) {
     // we can end early if an exception was thrown
     if (throwable != null) {
-      handler.handle(context, request, null, throwable);
+      handler.onEnd(context, request, null, throwable);
       return asyncValue;
     }
 
@@ -98,7 +98,7 @@ public final class AsyncOperationEndSupport<REQUEST, RESPONSE> {
     }
 
     // fall back to sync end() if asyncValue type doesn't match
-    handler.handle(context, request, tryToGetResponse(responseType, asyncValue), null);
+    handler.onEnd(context, request, tryToGetResponse(responseType, asyncValue), null);
     return asyncValue;
   }
 

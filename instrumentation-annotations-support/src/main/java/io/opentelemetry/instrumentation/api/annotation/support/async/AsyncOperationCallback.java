@@ -9,7 +9,7 @@ import io.opentelemetry.context.Context;
 import javax.annotation.Nullable;
 
 /** Callback that is called when async computation completes. */
-public interface AsyncOperationEndHandler<REQUEST, RESPONSE> {
-  void handle(
+public interface AsyncOperationCallback<REQUEST, RESPONSE> {
+  void onEnd(
       Context context, REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error);
 }

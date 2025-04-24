@@ -12,7 +12,7 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndHandler;
+import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationCallback;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
 
 public final class GuavaAsyncOperationEndStrategy implements AsyncOperationEndStrategy {
@@ -41,7 +41,7 @@ public final class GuavaAsyncOperationEndStrategy implements AsyncOperationEndSt
 
   @Override
   public <REQUEST, RESPONSE> Object end(
-      AsyncOperationEndHandler<REQUEST, RESPONSE> handler,
+      AsyncOperationCallback<REQUEST, RESPONSE> handler,
       Context context,
       REQUEST request,
       Object asyncValue,
@@ -53,7 +53,7 @@ public final class GuavaAsyncOperationEndStrategy implements AsyncOperationEndSt
   }
 
   private <REQUEST, RESPONSE> void end(
-      AsyncOperationEndHandler<REQUEST, RESPONSE> handler,
+      AsyncOperationCallback<REQUEST, RESPONSE> handler,
       Context context,
       REQUEST request,
       ListenableFuture<?> future,
@@ -63,13 +63,13 @@ public final class GuavaAsyncOperationEndStrategy implements AsyncOperationEndSt
         if (captureExperimentalSpanAttributes) {
           Span.fromContext(context).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
         }
-        handler.handle(context, request, null, null);
+        handler.onEnd(context, request, null, null);
       } else {
         try {
           Object response = Uninterruptibles.getUninterruptibly(future);
-          handler.handle(context, request, tryToGetResponse(responseType, response), null);
+          handler.onEnd(context, request, tryToGetResponse(responseType, response), null);
         } catch (Throwable exception) {
-          handler.handle(context, request, null, exception);
+          handler.onEnd(context, request, null, exception);
         }
       }
     } else {
