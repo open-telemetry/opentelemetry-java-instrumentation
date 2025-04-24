@@ -38,7 +38,7 @@ public class JexInstrumentation implements TypeInstrumentation {
   public static class HandlerAdapterAdvice {
 
     @Advice.OnMethodEnter
-    public static void onAfterExecute(@Advice.Argument(0) Context ctx) {
+    public static void onMethodExecute(@Advice.Argument(0) Context ctx) {
       HttpServerRoute.update(
           io.opentelemetry.context.Context.current(),
           HttpServerRouteSource.CONTROLLER,
