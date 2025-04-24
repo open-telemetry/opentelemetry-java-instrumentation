@@ -122,13 +122,17 @@ public class TomcatIntegrationTest extends TargetSystemTest {
             "tomcat.thread.count",
             metric ->
                 metric
-                    .hasDescription("Thread count of the thread pool.")
+                    .hasDescription("Total thread count of the thread pool.")
                     .hasUnit("{thread}")
                     .isUpDownCounter()
-                    .hasDataPointsWithAttributes(
-                        attributeGroup(
-                            attribute("tomcat.thread.state", "idle"), threadPoolNameAttribute),
-                        attributeGroup(
-                            attribute("tomcat.thread.state", "busy"), threadPoolNameAttribute)));
+                    .hasDataPointsWithOneAttribute(threadPoolNameAttribute))
+        .add(
+            "tomcat.thread.busy.count",
+            metric ->
+                metric
+                    .hasDescription("Number of busy threads in the thread pool.")
+                    .hasUnit("{thread}")
+                    .isUpDownCounter()
+                    .hasDataPointsWithOneAttribute(threadPoolNameAttribute));
   }
 }

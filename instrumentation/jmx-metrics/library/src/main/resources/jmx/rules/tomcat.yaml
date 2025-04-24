@@ -64,19 +64,15 @@ rules:
     - Catalina:type=ThreadPool,name=*
     - Tomcat:type=ThreadPool,name=*
     unit: "{thread}"
-    prefix: tomcat.
+    prefix: tomcat.thread.
     type: updowncounter
     metricAttribute:
       tomcat.thread_pool.name: param(name)
     mapping:
       currentThreadCount:
-        metric: &metric thread.count
-        desc: &desc Thread count of the thread pool.
-        metricAttribute:
-          tomcat.thread.state: const(idle)
+        metric: count
+        desc: Total thread count of the thread pool.
       currentThreadsBusy:
-        metric: *metric
-        desc: *desc
-        metricAttribute:
-          tomcat.thread.state: const(busy)
+        metric: busy.count
+        desc: Number of busy threads in the thread pool.
 
