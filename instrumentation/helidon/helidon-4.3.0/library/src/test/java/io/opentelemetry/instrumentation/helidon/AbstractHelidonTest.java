@@ -42,7 +42,7 @@ public abstract class AbstractHelidonTest extends AbstractHttpServerTest<WebServ
 
     exchange.header("Content-Type", "text/plain");
     headers.forEach(exchange::header);
-    exchange.send(response);
+    exchange.status(status).send(response);
   }
 
   private static String getUrlQuery(ServerRequest exchange) {
@@ -147,6 +147,7 @@ public abstract class AbstractHelidonTest extends AbstractHttpServerTest<WebServ
   protected void configure(HttpServerTestOptions options) {
     // filter isn't called for non-standard method
     options.disableTestNonStandardHttpMethod();
+    options.setTestException(false);
     options.setTestHttpPipelining(true);
     options.setExpectedHttpRoute(
         (endpoint, method) -> {

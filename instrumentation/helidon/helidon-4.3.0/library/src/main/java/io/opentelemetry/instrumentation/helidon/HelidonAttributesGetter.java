@@ -5,16 +5,14 @@
 
 package io.opentelemetry.instrumentation.helidon;
 
-import java.net.InetSocketAddress;
-import java.util.List;
-import java.util.Objects;
-
-import javax.annotation.Nullable;
-
 import io.helidon.http.HeaderNames;
 import io.helidon.webserver.http.ServerRequest;
 import io.helidon.webserver.http.ServerResponse;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
+import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.Objects;
+import javax.annotation.Nullable;
 
 enum HelidonAttributesGetter implements HttpServerAttributesGetter<ServerRequest, ServerResponse> {
   INSTANCE;
@@ -63,7 +61,7 @@ enum HelidonAttributesGetter implements HttpServerAttributesGetter<ServerRequest
   @Override
   public String getHttpRoute(ServerRequest req) {
 
-    return req.matchingPattern().orElse(null);
+    return null;
   }
 
   @Override
