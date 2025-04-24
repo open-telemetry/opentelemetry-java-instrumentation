@@ -24,7 +24,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import scala.concurrent.Future;
 
@@ -81,7 +80,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @AssignReturned.ToArguments(@ToArgument(value = 0, index = 1, typing = Assigner.Typing.DYNAMIC))
+    @AssignReturned.ToArguments(@ToArgument(value = 0, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Object[] methodEnter(@Advice.Argument(0) HttpRequest request) {
 
