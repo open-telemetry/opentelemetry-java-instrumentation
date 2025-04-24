@@ -46,14 +46,39 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SingleRequestAdvice {
 
-    public static class AdviceLocals {
-      public AdviceLocals(Context context) {
+    public static class AdviceScope {
+      private final Context context;
+      private final Scope scope;
+      private final HttpRequest request;
+
+      private AdviceScope(Context context, Scope scope, HttpRequest request) {
         this.context = context;
-        this.scope = context.makeCurrent();
+        this.scope = scope;
+        this.request = request;
       }
 
-      public Context context;
-      public Scope scope;
+      public static Object[] start(HttpRequest request) {
+        Context parentContext = currentContext();
+        if (!instrumenter().shouldStart(parentContext, request)) {
+          return new Object[] {null, request};
+        }
+        Context context = instrumenter().start(parentContext, request);
+        // Request is immutable, so we have to assign new value once we update headers
+        HttpRequest modifiedRequest = setter().inject(request);
+        AdviceScope adviceScope = new AdviceScope(context, context.makeCurrent(), modifiedRequest);
+        return new Object[] {adviceScope, modifiedRequest};
+      }
+
+      public void end(ActorSystem actorSystem, Future<HttpResponse> responseFuture,
+          Throwable throwable) {
+        scope.close();
+        if (throwable == null) {
+          responseFuture.onComplete(
+              new OnCompleteHandler(context, request), actorSystem.dispatcher());
+        } else {
+          instrumenter().end(context, request, null, throwable);
+        }
+      }
     }
 
     @AssignReturned.ToArguments(@ToArgument(value = 0, index = 1, typing = Assigner.Typing.DYNAMIC))
@@ -66,14 +91,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
       In the future we may want to separate these, but since lots of code is reused we would need to come up
       with way of continuing to reusing it.
        */
-      Context parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return new Object[] {null, request};
-      }
-      AdviceLocals locals = new AdviceLocals(instrumenter().start(parentContext, request));
-      // Request is immutable, so we have to assign new value once we update headers
-      HttpRequest modifiedRequest = setter().inject(request);
-      return new Object[] {locals, modifiedRequest};
+      return AdviceScope.start(request);
     }
 
     @AssignReturned.ToReturned
@@ -85,22 +103,16 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable,
         @Advice.Enter Object[] enterResult) {
 
-      AdviceLocals locals = (AdviceLocals) enterResult[0];
-      if (locals == null || locals.scope == null) {
+      AdviceScope adviceScope = (AdviceScope) enterResult[0];
+      if (adviceScope == null) {
         return responseFuture;
       }
-
-      locals.scope.close();
       ActorSystem actorSystem = AkkaHttpClientUtil.getActorSystem(thiz);
       if (actorSystem == null) {
         return responseFuture;
       }
-      if (throwable == null) {
-        responseFuture.onComplete(
-            new OnCompleteHandler(locals.context, request), actorSystem.dispatcher());
-      } else {
-        instrumenter().end(locals.context, request, null, throwable);
-      }
+      adviceScope.end(actorSystem, responseFuture, throwable);
+
       if (responseFuture != null) {
         return FutureWrapper.wrap(responseFuture, actorSystem.dispatcher(), currentContext());
       }
