@@ -176,7 +176,7 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
 
   @Override
   public ResultSet getResultSet() throws SQLException {
-    return new OpenTelemetryResultSet(delegate.getResultSet(), this);
+    return OpenTelemetryResultSet.wrap(delegate.getResultSet(), this);
   }
 
   @Override
@@ -246,7 +246,7 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
 
   @Override
   public ResultSet getGeneratedKeys() throws SQLException {
-    return new OpenTelemetryResultSet(delegate.getGeneratedKeys(), this);
+    return OpenTelemetryResultSet.wrap(delegate.getGeneratedKeys(), this);
   }
 
   @Override

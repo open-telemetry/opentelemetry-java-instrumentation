@@ -33,12 +33,12 @@ val DEPENDENCY_BOMS = listOf(
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
-  "org.testcontainers:testcontainers-bom:1.20.6"
+  "org.testcontainers:testcontainers-bom:1.21.0"
 )
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
-val errorProneVersion = "2.37.0"
+val errorProneVersion = "2.38.0"
 val byteBuddyVersion = "1.17.5"
 val asmVersion = "9.8"
 val jmhVersion = "1.37"
@@ -82,8 +82,8 @@ val CORE_DEPENDENCIES = listOf(
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
   "org.junit.jupiter:junit-jupiter-api:5.12.2",
-  "org.spockframework:spock-core:2.4-M5-groovy-4.0",
-  "org.spockframework:spock-junit4:2.4-M5-groovy-4.0",
+  "org.spockframework:spock-core:2.4-M6-groovy-4.0",
+  "org.spockframework:spock-junit4:2.4-M6-groovy-4.0",
 
   "io.r2dbc:r2dbc-proxy:1.1.5.RELEASE",
   "ch.qos.logback:logback-classic:1.3.15", // 1.4+ requires Java 11+

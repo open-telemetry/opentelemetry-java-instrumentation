@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure;
+package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
-import static java.util.Collections.emptyList;
-
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.AbstractAwsSdkTelemetryFactory;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import java.util.List;
 
 public final class AwsSdkSingletons {
@@ -24,19 +23,17 @@ public final class AwsSdkSingletons {
 
     @Override
     protected List<String> getCapturedHeaders() {
-      return ConfigPropertiesUtil.getList(
-          "otel.instrumentation.messaging.experimental.capture-headers", emptyList());
+      return ExperimentalConfig.get().getMessagingHeaders();
     }
 
     @Override
     protected boolean messagingReceiveInstrumentationEnabled() {
-      return ConfigPropertiesUtil.getBoolean(
-          "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false);
+      return ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
     }
 
     @Override
     protected boolean getBoolean(String name, boolean defaultValue) {
-      return ConfigPropertiesUtil.getBoolean(name, defaultValue);
+      return AgentInstrumentationConfig.get().getBoolean(name, defaultValue);
     }
   }
 

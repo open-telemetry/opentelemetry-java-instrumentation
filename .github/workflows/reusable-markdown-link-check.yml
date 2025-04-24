@@ -17,7 +17,7 @@ jobs:
           # excluding links to pull requests and issues is done for performance
           args: >
             --include-fragments
-            --exclude "^https://github.com/open-telemetry/opentelemetry-java-instrumentation/(issue|pull)/\\d+$"
+            --exclude "^https://github.com/open-telemetry/opentelemetry-java-instrumentation/(issues|pull)/\\d+$"
             --exclude "^http://code.google.com/p/concurrentlinkedhashmap$"
             --max-retries 6
             .
