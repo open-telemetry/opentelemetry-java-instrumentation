@@ -2,7 +2,7 @@
 
 | System property                                                          | Type    | Default | Description                                                                         |
 |--------------------------------------------------------------------------|---------|---------|-------------------------------------------------------------------------------------|
-| `otel.instrumentation.runtime-telemetry.capture-gc-cause-enabled`        | Boolean | `false` | Enable the capture of the jvm.gc.cause attribute within the jvm.gc.duration metric.
+| `otel.instrumentation.runtime-telemetry.capture-gc-cause`        | Boolean | `false` | Enable the capture of the jvm.gc.cause attribute within the jvm.gc.duration metric.
 | `otel.instrumentation.runtime-telemetry.emit-experimental-telemetry`     | Boolean | `false` | Enable the capture of experimental metrics.                                         |
 | `otel.instrumentation.runtime-telemetry-java17.enable-all`               | Boolean | `false` | Enable the capture of all JFR based metrics.                                        |
 | `otel.instrumentation.runtime-telemetry-java17.enabled`                  | Boolean | `false` | Enable the capture of JFR based metrics.                                            |
