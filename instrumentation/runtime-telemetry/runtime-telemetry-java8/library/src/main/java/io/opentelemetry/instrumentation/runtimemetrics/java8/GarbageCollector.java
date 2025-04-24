@@ -56,8 +56,6 @@ public final class GarbageCollector {
 
   static final List<Double> GC_DURATION_BUCKETS = unmodifiableList(asList(0.01, 0.1, 1., 10.));
 
-  public static boolean captureGcCauseEnabled = false;
-
   private static final NotificationFilter GC_FILTER =
       notification ->
           notification
@@ -65,7 +63,8 @@ public final class GarbageCollector {
               .equals(GarbageCollectionNotificationInfo.GARBAGE_COLLECTION_NOTIFICATION);
 
   /** Register observers for java runtime memory metrics. */
-  public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
+  public static List<AutoCloseable> registerObservers(
+      OpenTelemetry openTelemetry, boolean enableCaptureGcCause) {
     if (!isNotificationClassPresent()) {
       logger.fine(
           "The com.sun.management.GarbageCollectionNotificationInfo class is not available;"
@@ -76,14 +75,16 @@ public final class GarbageCollector {
     return registerObservers(
         openTelemetry,
         ManagementFactory.getGarbageCollectorMXBeans(),
-        GarbageCollector::extractNotificationInfo);
+        GarbageCollector::extractNotificationInfo,
+        enableCaptureGcCause);
   }
 
   // Visible for testing
   static List<AutoCloseable> registerObservers(
       OpenTelemetry openTelemetry,
       List<GarbageCollectorMXBean> gcBeans,
-      Function<Notification, GarbageCollectionNotificationInfo> notificationInfoExtractor) {
+      Function<Notification, GarbageCollectionNotificationInfo> notificationInfoExtractor,
+      boolean captureGcCauseEnabled) {
     Meter meter = JmxRuntimeMetricsUtil.getMeter(openTelemetry);
 
     DoubleHistogram gcDuration =
@@ -101,7 +102,7 @@ public final class GarbageCollector {
       }
       NotificationEmitter notificationEmitter = (NotificationEmitter) gcBean;
       GcNotificationListener listener =
-          new GcNotificationListener(gcDuration, notificationInfoExtractor);
+          new GcNotificationListener(gcDuration, notificationInfoExtractor, captureGcCauseEnabled);
       notificationEmitter.addNotificationListener(listener, GC_FILTER, null);
       result.add(() -> notificationEmitter.removeNotificationListener(listener));
     }
@@ -110,13 +111,16 @@ public final class GarbageCollector {
 
   private static final class GcNotificationListener implements NotificationListener {
 
+    private final boolean enableCaptureGcCause;
     private final DoubleHistogram gcDuration;
     private final Function<Notification, GarbageCollectionNotificationInfo>
         notificationInfoExtractor;
 
     private GcNotificationListener(
         DoubleHistogram gcDuration,
-        Function<Notification, GarbageCollectionNotificationInfo> notificationInfoExtractor) {
+        Function<Notification, GarbageCollectionNotificationInfo> notificationInfoExtractor,
+        boolean enableCaptureGcCause) {
+      this.enableCaptureGcCause = enableCaptureGcCause;
       this.gcDuration = gcDuration;
       this.notificationInfoExtractor = notificationInfoExtractor;
     }
@@ -131,7 +135,7 @@ public final class GarbageCollector {
       String gcCause = notificationInfo.getGcCause();
       double duration = notificationInfo.getGcInfo().getDuration() / MILLIS_PER_S;
       Attributes gcAttributes =
-          captureGcCauseEnabled
+          enableCaptureGcCause
               ? Attributes.of(
                   JvmAttributes.JVM_GC_NAME,
                   gcName,

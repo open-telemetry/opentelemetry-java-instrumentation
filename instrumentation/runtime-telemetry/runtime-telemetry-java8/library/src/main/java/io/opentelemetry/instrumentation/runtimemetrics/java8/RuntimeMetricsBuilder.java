@@ -17,6 +17,8 @@ public final class RuntimeMetricsBuilder {
 
   private boolean enableExperimentalJmxTelemetry = false;
 
+  private boolean enableCaptureGcCause = false;
+
   RuntimeMetricsBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
   }
@@ -28,10 +30,18 @@ public final class RuntimeMetricsBuilder {
     return this;
   }
 
+  /** Enable capture GC cause. */
+  @CanIgnoreReturnValue
+  public RuntimeMetricsBuilder enableCaptureGcCause() {
+    enableCaptureGcCause = true;
+    return this;
+  }
+
   /** Build and start an {@link RuntimeMetrics} with the config from this builder. */
   public RuntimeMetrics build() {
     List<AutoCloseable> observables =
-        JmxRuntimeMetricsFactory.buildObservables(openTelemetry, enableExperimentalJmxTelemetry);
+        JmxRuntimeMetricsFactory.buildObservables(
+            openTelemetry, enableExperimentalJmxTelemetry, enableCaptureGcCause);
     return new RuntimeMetrics(observables);
   }
 }

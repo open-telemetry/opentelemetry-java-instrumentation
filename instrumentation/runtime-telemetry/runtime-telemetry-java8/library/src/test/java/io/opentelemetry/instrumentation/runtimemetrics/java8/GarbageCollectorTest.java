@@ -53,13 +53,12 @@ class GarbageCollectorTest {
     GarbageCollector.registerObservers(
         testing.getOpenTelemetry(),
         singletonList(gcBean),
-        GarbageCollectorTest::getGcNotificationInfo);
+        GarbageCollectorTest::getGcNotificationInfo,
+        true);
 
     NotificationEmitter notificationEmitter = (NotificationEmitter) gcBean;
     verify(notificationEmitter).addNotificationListener(listenerCaptor.capture(), any(), any());
     NotificationListener listener = listenerCaptor.getValue();
-
-    GarbageCollector.captureGcCauseEnabled = true;
 
     listener.handleNotification(
         createTestNotification("G1 Young Generation", "end of minor GC", "Allocation Failure", 10),

@@ -21,12 +21,14 @@ import java.util.List;
 public class JmxRuntimeMetricsFactory {
   @SuppressWarnings("CatchingUnchecked")
   public static List<AutoCloseable> buildObservables(
-      OpenTelemetry openTelemetry, boolean enableExperimentalJmxTelemetry) {
+      OpenTelemetry openTelemetry,
+      boolean enableExperimentalJmxTelemetry,
+      boolean enableCaptureGcCause) {
     // Set up metrics gathered by JMX
     List<AutoCloseable> observables = new ArrayList<>();
     observables.addAll(Classes.registerObservers(openTelemetry));
     observables.addAll(Cpu.registerObservers(openTelemetry));
-    observables.addAll(GarbageCollector.registerObservers(openTelemetry));
+    observables.addAll(GarbageCollector.registerObservers(openTelemetry, enableCaptureGcCause));
     observables.addAll(MemoryPools.registerObservers(openTelemetry));
     observables.addAll(Threads.registerObservers(openTelemetry));
     if (enableExperimentalJmxTelemetry) {
