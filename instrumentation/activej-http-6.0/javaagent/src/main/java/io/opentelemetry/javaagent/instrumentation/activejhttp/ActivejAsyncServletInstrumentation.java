@@ -54,11 +54,11 @@ public class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
   public static class ServeAdvice {
 
     public static class AdviceScope {
-      public final HttpRequest httpRequest;
-      public final Context context;
-      public final Scope scope;
+      private final HttpRequest httpRequest;
+      private final Context context;
+      private final Scope scope;
 
-      public AdviceScope(Context context, Scope scope, HttpRequest httpRequest) {
+      private AdviceScope(Context context, Scope scope, HttpRequest httpRequest) {
         this.context = context;
         this.scope = scope;
         this.httpRequest = httpRequest;

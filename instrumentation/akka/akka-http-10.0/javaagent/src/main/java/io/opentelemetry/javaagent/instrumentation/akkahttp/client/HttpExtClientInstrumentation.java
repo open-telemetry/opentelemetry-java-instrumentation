@@ -69,8 +69,8 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
         return new Object[] {adviceScope, modifiedRequest};
       }
 
-      public void end(ActorSystem actorSystem, Future<HttpResponse> responseFuture,
-          Throwable throwable) {
+      public void end(
+          ActorSystem actorSystem, Future<HttpResponse> responseFuture, Throwable throwable) {
         scope.close();
         if (throwable == null) {
           responseFuture.onComplete(
