@@ -26,7 +26,6 @@ import javax.management.NotificationListener;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junitpioneer.jupiter.SetSystemProperty;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -49,9 +48,6 @@ class GarbageCollectorTest {
 
   @Captor private ArgumentCaptor<NotificationListener> listenerCaptor;
 
-  @SetSystemProperty(
-      key = "otel.instrumentation.runtime-telemetry.jvm-gc-cause-attribute-enabled",
-      value = "true")
   @Test
   void registerObservers() {
     GarbageCollector.registerObservers(
@@ -62,6 +58,8 @@ class GarbageCollectorTest {
     NotificationEmitter notificationEmitter = (NotificationEmitter) gcBean;
     verify(notificationEmitter).addNotificationListener(listenerCaptor.capture(), any(), any());
     NotificationListener listener = listenerCaptor.getValue();
+
+    GarbageCollector.captureGcCauseEnabled = true;
 
     listener.handleNotification(
         createTestNotification("G1 Young Generation", "end of minor GC", "Allocation Failure", 10),

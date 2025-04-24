@@ -14,7 +14,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
 import io.opentelemetry.semconv.JvmAttributes;
 import java.lang.management.GarbageCollectorMXBean;
@@ -56,6 +55,8 @@ public final class GarbageCollector {
   private static final double MILLIS_PER_S = TimeUnit.SECONDS.toMillis(1);
 
   static final List<Double> GC_DURATION_BUCKETS = unmodifiableList(asList(0.01, 0.1, 1., 10.));
+
+  public static boolean captureGcCauseEnabled = false;
 
   private static final NotificationFilter GC_FILTER =
       notification ->
@@ -129,11 +130,8 @@ public final class GarbageCollector {
       String gcAction = notificationInfo.getGcAction();
       String gcCause = notificationInfo.getGcCause();
       double duration = notificationInfo.getGcInfo().getDuration() / MILLIS_PER_S;
-      boolean enableJvmGcCauseAttribute =
-          ConfigPropertiesUtil.getBoolean(
-              "otel.instrumentation.runtime-telemetry.jvm-gc-cause-attribute-enabled", false);
       Attributes gcAttributes =
-          enableJvmGcCauseAttribute
+          captureGcCauseEnabled
               ? Attributes.of(
                   JvmAttributes.JVM_GC_NAME,
                   gcName,

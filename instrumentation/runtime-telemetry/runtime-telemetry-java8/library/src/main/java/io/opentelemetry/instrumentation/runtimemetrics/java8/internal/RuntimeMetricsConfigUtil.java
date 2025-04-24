@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
 
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.instrumentation.runtimemetrics.java8.GarbageCollector;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.RuntimeMetrics;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.RuntimeMetricsBuilder;
 import javax.annotation.Nullable;
@@ -29,6 +30,11 @@ public final class RuntimeMetricsConfigUtil {
     if (config.getBoolean(
         "otel.instrumentation.runtime-telemetry.emit-experimental-telemetry", false)) {
       builder.enableExperimentalJmxTelemetry();
+    }
+
+    if (config.getBoolean(
+        "otel.instrumentation.runtime-telemetry.capture-gc-cause-enabled", false)) {
+      GarbageCollector.captureGcCauseEnabled = true;
     }
 
     return builder.build();
