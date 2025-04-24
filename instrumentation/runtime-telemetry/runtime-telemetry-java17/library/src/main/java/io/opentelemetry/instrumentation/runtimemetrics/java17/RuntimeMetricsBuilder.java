@@ -82,7 +82,7 @@ public final class RuntimeMetricsBuilder {
     return this;
   }
 
-  /** Enable capture GC cause. */
+  /** Enable the capture of the jvm.gc.cause attribute with the jvm.gc.duration metric. */
   @CanIgnoreReturnValue
   public RuntimeMetricsBuilder enableCaptureGcCause() {
     enableCaptureGcCause = true;

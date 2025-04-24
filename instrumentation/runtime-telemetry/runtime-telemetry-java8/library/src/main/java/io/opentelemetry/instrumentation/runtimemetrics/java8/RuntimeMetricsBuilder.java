@@ -16,7 +16,6 @@ public final class RuntimeMetricsBuilder {
   private final OpenTelemetry openTelemetry;
 
   private boolean enableExperimentalJmxTelemetry = false;
-
   private boolean enableCaptureGcCause = false;
 
   RuntimeMetricsBuilder(OpenTelemetry openTelemetry) {
@@ -30,7 +29,7 @@ public final class RuntimeMetricsBuilder {
     return this;
   }
 
-  /** Enable capture GC cause. */
+  /** Enable the capture of the jvm.gc.cause attribute with the jvm.gc.duration metric. */
   @CanIgnoreReturnValue
   public RuntimeMetricsBuilder enableCaptureGcCause() {
     enableCaptureGcCause = true;
