@@ -22,7 +22,7 @@ import java.util.function.UnaryOperator;
 
 public final class HelidonTelemetryBuilder {
 
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.helidon-4.2.0";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.helidon-4.3.0";
 
   private final DefaultHttpServerInstrumenterBuilder<ServerRequest, ServerResponse> builder;
 

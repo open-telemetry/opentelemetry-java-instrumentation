@@ -62,8 +62,8 @@ enum HelidonAttributesGetter implements HttpServerAttributesGetter<ServerRequest
   @Nullable
   @Override
   public String getHttpRoute(ServerRequest req) {
-    // TODO Wait for helidon
-    return null;
+
+    return req.matchingPattern().orElse(null);
   }
 
   @Override
