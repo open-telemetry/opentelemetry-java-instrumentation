@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("io.helidon.webserver")
     module.set("helidon-webserver")
-    versions.set("[4.2.0,)")
+    versions.set("[4.3.0,)")
     assertInverse.set(true)
   }
 }
@@ -16,7 +16,7 @@ otelJava {
 }
 
 dependencies {
-  library("io.helidon.webserver:helidon-webserver:4.2.0")
-  implementation(project(":instrumentation:helidon:helidon-4.2.0:library"))
-  testImplementation(project(":instrumentation:helidon:helidon-4.2.0:testing"))
+  library("io.helidon.webserver:helidon-webserver:4.3.0")
+  implementation(project(":instrumentation:helidon:helidon-4.3.0:library"))
+  testImplementation(project(":instrumentation:helidon:helidon-4.3.0:testing"))
 }
