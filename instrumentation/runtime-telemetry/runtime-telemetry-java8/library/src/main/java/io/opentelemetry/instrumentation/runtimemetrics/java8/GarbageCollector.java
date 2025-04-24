@@ -84,7 +84,7 @@ public final class GarbageCollector {
       OpenTelemetry openTelemetry,
       List<GarbageCollectorMXBean> gcBeans,
       Function<Notification, GarbageCollectionNotificationInfo> notificationInfoExtractor,
-      boolean captureGcCauseEnabled) {
+      boolean enableCaptureGcCause) {
     Meter meter = JmxRuntimeMetricsUtil.getMeter(openTelemetry);
 
     DoubleHistogram gcDuration =
@@ -102,7 +102,7 @@ public final class GarbageCollector {
       }
       NotificationEmitter notificationEmitter = (NotificationEmitter) gcBean;
       GcNotificationListener listener =
-          new GcNotificationListener(gcDuration, notificationInfoExtractor, captureGcCauseEnabled);
+          new GcNotificationListener(gcDuration, notificationInfoExtractor, enableCaptureGcCause);
       notificationEmitter.addNotificationListener(listener, GC_FILTER, null);
       result.add(() -> notificationEmitter.removeNotificationListener(listener));
     }

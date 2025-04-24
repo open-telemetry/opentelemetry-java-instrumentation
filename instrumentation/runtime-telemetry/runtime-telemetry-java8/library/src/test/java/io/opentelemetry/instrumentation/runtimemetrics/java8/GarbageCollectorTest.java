@@ -16,6 +16,7 @@ import static org.mockito.Mockito.when;
 import com.sun.management.GarbageCollectionNotificationInfo;
 import com.sun.management.GcInfo;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.lang.management.GarbageCollectorMXBean;
@@ -23,9 +24,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import javax.management.Notification;
 import javax.management.NotificationEmitter;
 import javax.management.NotificationListener;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -48,13 +50,14 @@ class GarbageCollectorTest {
 
   @Captor private ArgumentCaptor<NotificationListener> listenerCaptor;
 
-  @Test
-  void registerObservers() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void registerObservers(boolean enableCaptureGcCause) {
     GarbageCollector.registerObservers(
         testing.getOpenTelemetry(),
         singletonList(gcBean),
         GarbageCollectorTest::getGcNotificationInfo,
-        true);
+        enableCaptureGcCause);
 
     NotificationEmitter notificationEmitter = (NotificationEmitter) gcBean;
     verify(notificationEmitter).addNotificationListener(listenerCaptor.capture(), any(), any());
@@ -68,6 +71,19 @@ class GarbageCollectorTest {
         null);
     listener.handleNotification(
         createTestNotification("G1 Old Generation", "end of major GC", "System.gc()", 11), null);
+
+    AttributesBuilder attributesBuilder1 =
+        Attributes.builder()
+            .put("jvm.gc.name", "G1 Young Generation")
+            .put("jvm.gc.action", "end of minor GC");
+    AttributesBuilder attributesBuilder2 =
+        Attributes.builder()
+            .put("jvm.gc.name", "G1 Old Generation")
+            .put("jvm.gc.action", "end of major GC");
+    if (enableCaptureGcCause) {
+      attributesBuilder1.put("jvm.gc.cause", "Allocation Failure");
+      attributesBuilder2.put("jvm.gc.cause", "System.gc()");
+    }
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
@@ -86,23 +102,13 @@ class GarbageCollectorTest {
                                         point
                                             .hasCount(2)
                                             .hasSum(0.022)
-                                            .hasAttributes(
-                                                Attributes.builder()
-                                                    .put("jvm.gc.name", "G1 Young Generation")
-                                                    .put("jvm.gc.action", "end of minor GC")
-                                                    .put("jvm.gc.cause", "Allocation Failure")
-                                                    .build())
+                                            .hasAttributes(attributesBuilder1.build())
                                             .hasBucketBoundaries(GC_DURATION_BUCKETS),
                                     point ->
                                         point
                                             .hasCount(1)
                                             .hasSum(0.011)
-                                            .hasAttributes(
-                                                Attributes.builder()
-                                                    .put("jvm.gc.name", "G1 Old Generation")
-                                                    .put("jvm.gc.action", "end of major GC")
-                                                    .put("jvm.gc.cause", "System.gc()")
-                                                    .build())
+                                            .hasAttributes(attributesBuilder2.build())
                                             .hasBucketBoundaries(GC_DURATION_BUCKETS)))));
   }
 
