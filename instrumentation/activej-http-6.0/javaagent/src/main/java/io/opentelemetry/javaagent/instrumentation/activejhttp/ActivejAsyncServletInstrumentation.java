@@ -16,7 +16,6 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.activej.http.AsyncServlet;
 import io.activej.http.HttpRequest;
 import io.activej.http.HttpResponse;
 import io.activej.promise.Promise;
@@ -54,50 +53,57 @@ public class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ServeAdvice {
 
-    public static class AdviceLocals {
+    public static class AdviceScope {
       public final HttpRequest httpRequest;
       public final Context context;
       public final Scope scope;
 
-      public AdviceLocals(Context context, HttpRequest httpRequest) {
+      public AdviceScope(Context context, Scope scope, HttpRequest httpRequest) {
         this.context = context;
-        this.scope = context.makeCurrent();
+        this.scope = scope;
         this.httpRequest = httpRequest;
+      }
+
+      @Nullable
+      public static AdviceScope start(HttpRequest request) {
+        Context parentContext = currentContext();
+        if (!instrumenter().shouldStart(parentContext, request)) {
+          return null;
+        }
+        Context context = instrumenter().start(parentContext, request);
+        return new AdviceScope(context, context.makeCurrent(), request);
+      }
+
+      public Promise<HttpResponse> end(Promise<HttpResponse> responsePromise, Throwable throwable) {
+        scope.close();
+        Promise<HttpResponse> returnValue = responsePromise;
+        if (throwable != null) {
+          instrumenter().end(context, httpRequest, null, throwable);
+        } else {
+          returnValue = PromiseWrapper.wrap(responsePromise, httpRequest, context);
+        }
+        return returnValue;
       }
     }
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AdviceLocals methodEnter(
-        @Advice.This AsyncServlet asyncServlet, @Advice.Argument(0) HttpRequest request) {
-
-      Context parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return null;
-      }
-      return new AdviceLocals(instrumenter().start(parentContext, request), request);
+    public static AdviceScope methodEnter(@Advice.Argument(0) HttpRequest request) {
+      return AdviceScope.start(request);
     }
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static Promise<HttpResponse> methodExit(
-        @Advice.This AsyncServlet asyncServlet,
         @Advice.Return Promise<HttpResponse> responsePromise,
         @Advice.Thrown Throwable throwable,
-        @Advice.Enter @Nullable AdviceLocals locals) {
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
 
-      if (locals == null || locals.scope == null) {
+      if (adviceScope == null) {
         return responsePromise;
       }
-      locals.scope.close();
 
-      Promise<HttpResponse> returnValue = responsePromise;
-      if (throwable != null) {
-        instrumenter().end(locals.context, locals.httpRequest, null, throwable);
-      } else {
-        returnValue = PromiseWrapper.wrap(responsePromise, locals.httpRequest, locals.context);
-      }
-      return returnValue;
+      return adviceScope.end(responsePromise, throwable);
     }
   }
 }
