@@ -733,7 +733,7 @@ libraries:
   jdbc:
   - name: jdbc
     description: |
-      Traces JDBC operations such as statements, batches, commits, and rollbacks by injecting byte‑code into JDBC drivers and common connection‑pool proxies. Each call produces a span named after the SQL verb, enriched with standard DB client attributes (system, database, operation, sanitized statement, peer address) and error details if an exception occurs.
+      The JDBC instrumentation provides database client spans and metrics. Each call produces a span named after the SQL verb, enriched with standard DB client attributes (system, database, operation, sanitized statement, peer address) and error details if an exception occurs.
     disabled_by_default: true
     source_path: instrumentation/jdbc
     scope:
