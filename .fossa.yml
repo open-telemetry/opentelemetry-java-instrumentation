@@ -78,6 +78,9 @@ targets:
       target: ':instrumentation:apache-shenyu-2.4:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:avaje-jex-3.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:c3p0-0.9:javaagent'
     - type: gradle
       path: ./
