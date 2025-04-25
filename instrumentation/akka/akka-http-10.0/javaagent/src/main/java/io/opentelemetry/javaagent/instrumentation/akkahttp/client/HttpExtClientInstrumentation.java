@@ -78,16 +78,14 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
           @Nullable Throwable throwable) {
 
         scope.close();
-        if (actorSystem == null) {
-          return responseFuture;
-        }
-        if (throwable == null) {
-          responseFuture.onComplete(
-              new OnCompleteHandler(context, request), actorSystem.dispatcher());
-          responseFuture =
-              FutureWrapper.wrap(responseFuture, actorSystem.dispatcher(), currentContext());
-        } else {
-          instrumenter().end(context, request, null, throwable);
+        if (actorSystem != null) {
+          if (throwable == null) {
+            responseFuture.onComplete(
+                new OnCompleteHandler(context, request), actorSystem.dispatcher());
+            return FutureWrapper.wrap(responseFuture, actorSystem.dispatcher(), currentContext());
+          } else {
+            instrumenter().end(context, request, null, throwable);
+          }
         }
         return responseFuture;
       }
