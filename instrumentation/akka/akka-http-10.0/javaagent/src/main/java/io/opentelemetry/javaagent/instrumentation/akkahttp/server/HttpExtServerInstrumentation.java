@@ -39,8 +39,7 @@ public class HttpExtServerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Flow<HttpRequest, HttpResponse, ?> wrapHandler(
         @Advice.Argument(0) Flow<HttpRequest, HttpResponse, ?> handler) {
-      Flow<HttpRequest, HttpResponse, ?> wrapped = AkkaFlowWrapper.wrap(handler);
-      return wrapped;
+      return AkkaFlowWrapper.wrap(handler);
     }
   }
 }
