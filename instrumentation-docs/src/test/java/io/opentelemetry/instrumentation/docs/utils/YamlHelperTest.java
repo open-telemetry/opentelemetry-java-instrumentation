@@ -208,7 +208,7 @@ class YamlHelperTest {
             disabled_by_default: true
             configurations:
               - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-                description: Enables or disables statement sanitization for database queries.
+                description: Enables statement sanitization for database queries.
                 default: true
             """;
 
@@ -218,7 +218,7 @@ class YamlHelperTest {
     assertThat(config.name())
         .isEqualTo("otel.instrumentation.common.db-statement-sanitizer.enabled");
     assertThat(config.description())
-        .isEqualTo("Enables or disables statement sanitization for database queries.");
+        .isEqualTo("Enables statement sanitization for database queries.");
     assertThat(config.defaultValue()).isEqualTo("true");
 
     assertThat(metadata.getClassification()).isEqualTo(InstrumentationClassification.INTERNAL);
@@ -261,7 +261,7 @@ class YamlHelperTest {
         """
             configurations:
               - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-                description: Enables or disables statement sanitization for database queries.
+                description: Enables statement sanitization for database queries.
                 default: true
         """;
     InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
@@ -274,7 +274,7 @@ class YamlHelperTest {
     assertThat(config.name())
         .isEqualTo("otel.instrumentation.common.db-statement-sanitizer.enabled");
     assertThat(config.description())
-        .isEqualTo("Enables or disables statement sanitization for database queries.");
+        .isEqualTo("Enables statement sanitization for database queries.");
     assertThat(config.defaultValue()).isEqualTo("true");
   }
 }

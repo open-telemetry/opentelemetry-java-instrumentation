@@ -86,7 +86,7 @@ disabled_by_default: true       # Defaults to `false`
 classification: internal        # instrumentation classification: library | internal | custom
 configurations:
   - name: otel.instrumentation.common.db-statement-sanitizer.enabled
-    description: Enables or disables statement sanitization for database queries.
+    description: Enables statement sanitization for database queries.
     default: true
 ```
 
