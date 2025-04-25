@@ -20,6 +20,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
@@ -62,21 +63,31 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
           return new Object[] {null, request};
         }
         Context context = instrumenter().start(parentContext, request);
+        Scope scope = context.makeCurrent();
         // Request is immutable, so we have to assign new value once we update headers
         HttpRequest modifiedRequest = setter().inject(request);
-        AdviceScope adviceScope = new AdviceScope(context, context.makeCurrent(), modifiedRequest);
+        AdviceScope adviceScope = new AdviceScope(context, scope, modifiedRequest);
         return new Object[] {adviceScope, modifiedRequest};
       }
 
-      public void end(
-          ActorSystem actorSystem, Future<HttpResponse> responseFuture, Throwable throwable) {
+      public Future<HttpResponse> end(
+          @Nullable ActorSystem actorSystem,
+          @Nullable Future<HttpResponse> responseFuture,
+          @Nullable Throwable throwable) {
+
         scope.close();
+        if (actorSystem == null) {
+          return responseFuture;
+        }
         if (throwable == null) {
           responseFuture.onComplete(
               new OnCompleteHandler(context, request), actorSystem.dispatcher());
+          responseFuture =
+              FutureWrapper.wrap(responseFuture, actorSystem.dispatcher(), currentContext());
         } else {
           instrumenter().end(context, request, null, throwable);
         }
+        return responseFuture;
       }
     }
 
@@ -107,15 +118,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
         return responseFuture;
       }
       ActorSystem actorSystem = AkkaHttpClientUtil.getActorSystem(thiz);
-      if (actorSystem == null) {
-        return responseFuture;
-      }
-      adviceScope.end(actorSystem, responseFuture, throwable);
-
-      if (responseFuture != null) {
-        return FutureWrapper.wrap(responseFuture, actorSystem.dispatcher(), currentContext());
-      }
-      return responseFuture;
+      return adviceScope.end(actorSystem, responseFuture, throwable);
     }
   }
 }
