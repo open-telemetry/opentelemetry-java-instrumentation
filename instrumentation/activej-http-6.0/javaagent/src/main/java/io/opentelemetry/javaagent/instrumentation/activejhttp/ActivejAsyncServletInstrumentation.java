@@ -79,10 +79,10 @@ public class ActivejAsyncServletInstrumentation implements TypeInstrumentation {
         Promise<HttpResponse> returnValue = responsePromise;
         if (throwable != null) {
           instrumenter().end(context, httpRequest, null, throwable);
+          return responsePromise;
         } else {
-          returnValue = PromiseWrapper.wrap(responsePromise, httpRequest, context);
+          return PromiseWrapper.wrap(responsePromise, httpRequest, context);
         }
-        return returnValue;
       }
     }
 
