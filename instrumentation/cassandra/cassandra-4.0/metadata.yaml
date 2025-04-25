@@ -1,4 +1,6 @@
-description: Instruments the V1 ClickHouseClient, providing database client spans and metrics.
+description: >
+  Instruments the Cassandra database client, providing database client spans and metrics for
+  Cassandra queries.
 configurations:
   - name: otel.instrumentation.common.db-statement-sanitizer.enabled
     description: Enables statement sanitization for database queries.
