@@ -49,31 +49,32 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
     public static class AdviceScope {
       private final Context context;
       private final Scope scope;
-      private final HttpRequest request;
 
-      private AdviceScope(Context context, Scope scope, HttpRequest request) {
+      private AdviceScope(Context context, Scope scope) {
         this.context = context;
         this.scope = scope;
-        this.request = request;
       }
 
-      public static Object[] start(HttpRequest request) {
+      public static AdviceScope start(HttpRequest request) {
         Context parentContext = currentContext();
         if (!instrumenter().shouldStart(parentContext, request)) {
-          return new Object[] {null, request};
+          return null;
         }
         Context context = instrumenter().start(parentContext, request);
         // Making context current is required for header context propagation to work as expected
         // because it implicitly relies on the current context when injecting headers.
         Scope scope = context.makeCurrent();
-        // Request is immutable, so we have to assign new value once we update headers
-        HttpRequest modifiedRequest = setter().inject(request);
-        AdviceScope adviceScope = new AdviceScope(context, scope, modifiedRequest);
-        return new Object[] {adviceScope, modifiedRequest};
+        return new AdviceScope(context, scope);
+      }
+
+      public HttpRequest injectHeaders(HttpRequest request) {
+        // Request is immutable, so we have to assign a new value once we update headers
+        return setter().inject(request);
       }
 
       public Future<HttpResponse> end(
           @Nullable ActorSystem actorSystem,
+          HttpRequest request,
           @Nullable Future<HttpResponse> responseFuture,
           @Nullable Throwable throwable) {
 
@@ -101,16 +102,18 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
       In the future we may want to separate these, but since lots of code is reused we would need to come up
       with way of continuing to reusing it.
        */
-      return AdviceScope.start(request);
+      AdviceScope adviceScope = AdviceScope.start(request);
+      return new Object[] {
+        adviceScope, adviceScope == null ? request : adviceScope.injectHeaders(request)
+      };
     }
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static Future<HttpResponse> methodExit(
-        @Advice.Argument(0) HttpRequest request,
         @Advice.This HttpExt thiz,
-        @Advice.Return Future<HttpResponse> responseFuture,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Return @Nullable Future<HttpResponse> responseFuture,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter Object[] enterResult) {
 
       AdviceScope adviceScope = (AdviceScope) enterResult[0];
@@ -118,7 +121,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
         return responseFuture;
       }
       ActorSystem actorSystem = AkkaHttpClientUtil.getActorSystem(thiz);
-      return adviceScope.end(actorSystem, responseFuture, throwable);
+      return adviceScope.end(actorSystem, (HttpRequest) enterResult[1], responseFuture, throwable);
     }
   }
 }
