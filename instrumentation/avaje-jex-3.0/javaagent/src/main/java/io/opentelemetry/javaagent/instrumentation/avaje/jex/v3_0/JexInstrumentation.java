@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.avaje.jex.v3_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -23,6 +24,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class JexInstrumentation implements TypeInstrumentation {
 
   @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("io.avaje.jex.http.ExchangeHandler");
+  }
+
+  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return hasSuperType(named("io.avaje.jex.http.ExchangeHandler")).and(not(isInterface()));
   }
@@ -37,7 +43,7 @@ public class JexInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HandlerAdapterAdvice {
 
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onMethodExecute(@Advice.Argument(0) Context ctx) {
       HttpServerRoute.update(
           io.opentelemetry.context.Context.current(),
