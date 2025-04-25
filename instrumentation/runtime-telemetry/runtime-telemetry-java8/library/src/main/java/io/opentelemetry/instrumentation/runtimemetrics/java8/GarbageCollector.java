@@ -56,6 +56,8 @@ public final class GarbageCollector {
 
   static final List<Double> GC_DURATION_BUCKETS = unmodifiableList(asList(0.01, 0.1, 1., 10.));
 
+  private static final AttributeKey<String> JVM_GC_CAUSE = AttributeKey.stringKey("jvm.gc.cause");
+
   private static final NotificationFilter GC_FILTER =
       notification ->
           notification
@@ -141,7 +143,7 @@ public final class GarbageCollector {
                   gcName,
                   JvmAttributes.JVM_GC_ACTION,
                   gcAction,
-                  AttributeKey.stringKey("jvm.gc.cause"),
+                  JVM_GC_CAUSE,
                   gcCause)
               : Attributes.of(
                   JvmAttributes.JVM_GC_NAME, gcName, JvmAttributes.JVM_GC_ACTION, gcAction);
