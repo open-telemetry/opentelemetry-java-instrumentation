@@ -63,6 +63,8 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
           return new Object[] {null, request};
         }
         Context context = instrumenter().start(parentContext, request);
+        // Making context current is required for header context propagation to work as expected
+        // because it implicitly relies on the current context when injecting headers.
         Scope scope = context.makeCurrent();
         // Request is immutable, so we have to assign new value once we update headers
         HttpRequest modifiedRequest = setter().inject(request);
