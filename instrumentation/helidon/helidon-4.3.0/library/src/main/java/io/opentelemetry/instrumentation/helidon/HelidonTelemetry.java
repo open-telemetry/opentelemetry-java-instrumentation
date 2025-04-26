@@ -11,7 +11,7 @@ import io.helidon.webserver.http.ServerResponse;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
-/** Entrypoint for instrumenting Java HTTP Server services. */
+/** Entrypoint for instrumenting Helidon services. */
 public final class HelidonTelemetry {
 
   /** Returns a new {@link HelidonTelemetry} configured with the given {@link OpenTelemetry}. */
