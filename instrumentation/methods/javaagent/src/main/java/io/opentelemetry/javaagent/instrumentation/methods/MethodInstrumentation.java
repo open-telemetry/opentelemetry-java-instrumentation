@@ -19,7 +19,6 @@ import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperat
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.lang.reflect.Method;
 import java.util.Set;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -57,8 +56,17 @@ public class MethodInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         namedOneOf(methodNames.toArray(new String[0])),
+        mapping ->
+            mapping.bind(
+                MethodReturnType.class,
+                (instrumentedType, instrumentedMethod, assigner, argumentHandler, sort) ->
+                    Advice.OffsetMapping.Target.ForStackManipulation.of(
+                        instrumentedMethod.getReturnType().asErasure())),
         MethodInstrumentation.class.getName() + "$MethodAdvice");
   }
+
+  // custom annotation that represents the return type of the method
+  @interface MethodReturnType {}
 
   @SuppressWarnings("unused")
   public static class MethodAdvice {
@@ -82,7 +90,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Origin Method method,
+        @MethodReturnType Class<?> methodReturnType,
         @Advice.Local("otelMethod") ClassAndMethod classAndMethod,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope,
@@ -94,7 +102,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
       scope.close();
 
       returnValue =
-          AsyncOperationEndSupport.create(instrumenter(), Void.class, method.getReturnType())
+          AsyncOperationEndSupport.create(instrumenter(), Void.class, methodReturnType)
               .asyncEnd(context, classAndMethod, returnValue, throwable);
     }
   }

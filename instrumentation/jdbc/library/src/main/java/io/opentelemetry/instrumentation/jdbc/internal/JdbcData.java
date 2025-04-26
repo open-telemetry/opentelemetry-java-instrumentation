@@ -95,6 +95,17 @@ public final class JdbcData {
     return batchInfo != null ? batchInfo.getBatchSize() : null;
   }
 
+  public static void close(Statement statement) {
+    // when statement is closed remove all of our virtual fields in case the JDBC driver reuses the
+    // same statement instance for a subsequent query
+    statementBatch.set(statement, null);
+    if (statement instanceof PreparedStatement) {
+      PreparedStatement prepared = (PreparedStatement) statement;
+      preparedStatement.set(prepared, null);
+      preparedStatementBatch.set(prepared, null);
+    }
+  }
+
   /**
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
    * any time.

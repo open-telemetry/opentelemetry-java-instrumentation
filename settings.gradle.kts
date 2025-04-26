@@ -20,7 +20,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "9.4.0" apply false
-  id("com.gradle.develocity") version "4.0"
+  id("com.gradle.develocity") version "4.0.1"
 }
 
 dependencyResolutionManagement {
@@ -156,6 +156,7 @@ include(":instrumentation:armeria:armeria-1.3:testing")
 include(":instrumentation:armeria:armeria-grpc-1.14:javaagent")
 include(":instrumentation:async-http-client:async-http-client-1.9:javaagent")
 include(":instrumentation:async-http-client:async-http-client-2.0:javaagent")
+include(":instrumentation:avaje-jex-3.0:javaagent")
 include(":instrumentation:aws-lambda:aws-lambda-core-1.0:javaagent")
 include(":instrumentation:aws-lambda:aws-lambda-core-1.0:library")
 include(":instrumentation:aws-lambda:aws-lambda-core-1.0:testing")

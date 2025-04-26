@@ -12,6 +12,7 @@ import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -49,13 +50,15 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
 
   @Override
   public void applyAdviceToMethod(
-      ElementMatcher<? super MethodDescription> methodMatcher, String adviceClassName) {
+      ElementMatcher<? super MethodDescription> methodMatcher,
+      Function<Advice.WithCustomMapping, Advice.WithCustomMapping> mappingCustomizer,
+      String adviceClassName) {
     // default strategy used by AgentBuilder.Transformer.ForAdvice
     AgentBuilder.PoolStrategy poolStrategy = AgentBuilder.PoolStrategy.Default.FAST;
 
     agentBuilder =
         agentBuilder.transform(
-            new AgentBuilder.Transformer.ForAdvice(adviceMapping)
+            new AgentBuilder.Transformer.ForAdvice(mappingCustomizer.apply(adviceMapping))
                 .advice(methodMatcher, adviceClassName)
                 // advice transformation already performs uninlining
                 .with(

@@ -239,13 +239,21 @@ libraries:
       - org.apache.camel:camel-core:[2.19,3)
   cassandra:
   - name: cassandra-4.0
+    description: |
+      Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
     source_path: instrumentation/cassandra/cassandra-4.0
     scope:
       name: io.opentelemetry.cassandra-4.0
     target_versions:
       javaagent:
       - com.datastax.oss:java-driver-core:[4.0,4.4)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      default: 'true'
   - name: cassandra-4.4
+    description: |
+      Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
     source_path: instrumentation/cassandra/cassandra-4.4
     scope:
       name: io.opentelemetry.cassandra-4.4
@@ -254,13 +262,23 @@ libraries:
       - com.datastax.oss:java-driver-core:[4.4,]
       library:
       - com.datastax.oss:java-driver-core:4.4.0
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      default: 'true'
   - name: cassandra-3.0
+    description: |
+      Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
     source_path: instrumentation/cassandra/cassandra-3.0
     scope:
       name: io.opentelemetry.cassandra-3.0
     target_versions:
       javaagent:
       - com.datastax.cassandra:cassandra-driver-core:[3.0,4.0)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      default: 'true'
   clickhouse:
   - name: clickhouse-client-0.5
     description: Instruments the V1 ClickHouseClient, providing database client spans
@@ -271,6 +289,10 @@ libraries:
     target_versions:
       javaagent:
       - com.clickhouse.client:clickhouse-client:[0.5.0,)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      default: 'true'
   couchbase:
   - name: couchbase-3.1.6
     source_path: instrumentation/couchbase/couchbase-3.1.6
@@ -382,12 +404,21 @@ libraries:
       - org.elasticsearch:elasticsearch:[5.3.0,6.0.0)
   executors:
   - name: executors
+    description: |
+      The executor instrumentation ensures that context is automatically propagated when using common Java executors (e.g., ThreadPoolExecutor, ScheduledThreadPoolExecutor, ForkJoinPool). When a task is submitted, the current context is captured and bound to the task. Then, when the task eventually runs, even if it’s on a different thread, the instrumentation reactivates that context, enabling consistent correlation across concurrent and asynchronous workflows.
     source_path: instrumentation/executors
     scope:
       name: io.opentelemetry.executors
     target_versions:
       javaagent:
       - Java 8+
+    configurations:
+    - name: otel.instrumentation.executors.include
+      description: List of Executor subclasses to be instrumented.
+      default: ''
+    - name: otel.instrumentation.executors.include-all
+      description: Whether to instrument all classes that implement the Executor interface.
+      default: 'false'
   finagle:
   - name: finagle-http-23.11
     source_path: instrumentation/finagle-http-23.11
@@ -708,6 +739,8 @@ libraries:
       - org.jboss.logmanager:jboss-logmanager:[1.1.0.GA,)
   jdbc:
   - name: jdbc
+    description: |
+      The JDBC instrumentation provides database client spans and metrics. Each call produces a span named after the SQL verb, enriched with standard DB client attributes (system, database, operation, sanitized statement, peer address) and error details if an exception occurs.
     disabled_by_default: true
     source_path: instrumentation/jdbc
     scope:
@@ -715,6 +748,18 @@ libraries:
     target_versions:
       javaagent:
       - Java 8+
+    configurations:
+    - name: otel.instrumentation.jdbc.statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries. Takes precedent
+        to otel.instrumentation.common.db-statement-sanitizer.enabled.
+      default: 'true'
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      default: 'true'
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      default: ''
   jedis:
   - name: jedis-1.4
     source_path: instrumentation/jedis/jedis-1.4

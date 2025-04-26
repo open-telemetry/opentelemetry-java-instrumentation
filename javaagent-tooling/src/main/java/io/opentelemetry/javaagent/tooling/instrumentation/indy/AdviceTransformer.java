@@ -155,8 +155,12 @@ class AdviceTransformer {
   private static List<OutputArgument> getWritableArguments(MethodNode source) {
     List<OutputArgument> result = new ArrayList<>();
     if (source.visibleParameterAnnotations != null) {
-      int i = 0;
-      for (List<AnnotationNode> list : source.visibleParameterAnnotations) {
+      for (int i = 0; i < source.visibleParameterAnnotations.length; i++) {
+        List<AnnotationNode> list = source.visibleParameterAnnotations[i];
+        if (list == null) {
+          continue;
+        }
+
         for (AnnotationNode annotationNode : list) {
           Type annotationType = Type.getType(annotationNode.desc);
           if (ADVICE_ARGUMENT.equals(annotationType) && isWriteable(annotationNode)) {
@@ -166,7 +170,6 @@ class AdviceTransformer {
             }
           }
         }
-        i++;
       }
     }
 
@@ -178,15 +181,18 @@ class AdviceTransformer {
   /** Argument annotated with {@code @Advice.Return(readOnly = false)} or {@code null}. */
   private static OutputArgument getWritableReturnValue(MethodNode source) {
     if (source.visibleParameterAnnotations != null) {
-      int i = 0;
-      for (List<AnnotationNode> list : source.visibleParameterAnnotations) {
+      for (int i = 0; i < source.visibleParameterAnnotations.length; i++) {
+        List<AnnotationNode> list = source.visibleParameterAnnotations[i];
+        if (list == null) {
+          continue;
+        }
+
         for (AnnotationNode annotationNode : list) {
           Type annotationType = Type.getType(annotationNode.desc);
           if (ADVICE_RETURN.equals(annotationType) && isWriteable(annotationNode)) {
             return new OutputArgument(i, -1);
           }
         }
-        i++;
       }
     }
 
@@ -199,8 +205,12 @@ class AdviceTransformer {
   private static OutputArgument getEnterArgument(MethodNode source) {
     Type[] argumentTypes = Type.getArgumentTypes(source.desc);
     if (source.visibleParameterAnnotations != null) {
-      int i = 0;
-      for (List<AnnotationNode> list : source.visibleParameterAnnotations) {
+      for (int i = 0; i < source.visibleParameterAnnotations.length; i++) {
+        List<AnnotationNode> list = source.visibleParameterAnnotations[i];
+        if (list == null) {
+          continue;
+        }
+
         for (AnnotationNode annotationNode : list) {
           Type annotationType = Type.getType(annotationNode.desc);
           if (ADVICE_ENTER.equals(annotationType)
@@ -208,7 +218,6 @@ class AdviceTransformer {
             return new OutputArgument(i, -1);
           }
         }
-        i++;
       }
     }
 
@@ -221,8 +230,12 @@ class AdviceTransformer {
   private static List<AdviceLocal> getLocals(MethodNode source) {
     List<AdviceLocal> result = new ArrayList<>();
     if (source.visibleParameterAnnotations != null) {
-      int i = 0;
-      for (List<AnnotationNode> list : source.visibleParameterAnnotations) {
+      for (int i = 0; i < source.visibleParameterAnnotations.length; i++) {
+        List<AnnotationNode> list = source.visibleParameterAnnotations[i];
+        if (list == null) {
+          continue;
+        }
+
         for (AnnotationNode annotationNode : list) {
           Type annotationType = Type.getType(annotationNode.desc);
           if (ADVICE_LOCAL.equals(annotationType)) {
@@ -232,7 +245,6 @@ class AdviceTransformer {
             }
           }
         }
-        i++;
       }
     }
 
