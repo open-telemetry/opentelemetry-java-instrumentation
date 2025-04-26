@@ -27,26 +27,26 @@ import java.util.Map;
 
 public abstract class AbstractHelidonTest extends AbstractHttpServerTest<WebServer> {
 
-  protected void configureContexts(HttpRouting.Builder routing) {}
+  protected void configureRoutes(HttpRouting.Builder routing) {}
 
-  static void sendResponse(ServerResponse exchange, int status, String response) {
-    sendResponse(exchange, status, Collections.emptyMap(), response);
+  static void sendResponse(ServerResponse res, int status, String response) {
+    sendResponse(res, status, Collections.emptyMap(), response);
   }
 
-  static void sendResponse(ServerResponse exchange, int status, Map<String, String> headers) {
-    sendResponse(exchange, status, headers, "");
+  static void sendResponse(ServerResponse res, int status, Map<String, String> headers) {
+    sendResponse(res, status, headers, "");
   }
 
   static void sendResponse(
-      ServerResponse exchange, int status, Map<String, String> headers, String response) {
+      ServerResponse res, int status, Map<String, String> headers, String response) {
 
-    exchange.header("Content-Type", "text/plain");
-    headers.forEach(exchange::header);
-    exchange.send(response);
+    res.header("Content-Type", "text/plain");
+    headers.forEach(res::header);
+    res.status(status).send(response);
   }
 
-  private static String getUrlQuery(ServerRequest exchange) {
-    return exchange.query().rawValue();
+  private static String getUrlQuery(ServerRequest req) {
+    return req.query().rawValue();
   }
 
   @Override
@@ -132,8 +132,7 @@ public abstract class AbstractHelidonTest extends AbstractHttpServerTest<WebServ
                     }));
 
     routing.get("/", (req, res) -> sendResponse(res, NOT_FOUND.getStatus(), NOT_FOUND.getBody()));
-
-    configureContexts(routing);
+    configureRoutes(routing);
 
     return server.routing(routing).build().start();
   }
@@ -147,6 +146,7 @@ public abstract class AbstractHelidonTest extends AbstractHttpServerTest<WebServ
   protected void configure(HttpServerTestOptions options) {
     // filter isn't called for non-standard method
     options.disableTestNonStandardHttpMethod();
+    options.setTestException(false);
     options.setTestHttpPipelining(true);
     options.setExpectedHttpRoute(
         (endpoint, method) -> {

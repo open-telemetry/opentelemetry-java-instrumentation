@@ -5,13 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.helidon;
 
-import java.util.List;
-
 import io.helidon.webserver.http.Filter;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.helidon.HelidonTelemetry;
 import io.opentelemetry.instrumentation.helidon.internal.HelidonInstrumenterBuilderUtil;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import java.util.List;
 
 public final class HelidonSingletons {
 

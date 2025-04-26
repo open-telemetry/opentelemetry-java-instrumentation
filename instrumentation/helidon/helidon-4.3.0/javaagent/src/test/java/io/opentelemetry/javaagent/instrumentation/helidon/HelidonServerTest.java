@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.helidon;
 
-import org.junit.jupiter.api.extension.RegisterExtension;
-
 import io.opentelemetry.instrumentation.helidon.AbstractHelidonTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class HelidonServerTest extends AbstractHelidonTest {
 
@@ -20,8 +19,8 @@ class HelidonServerTest extends AbstractHelidonTest {
   @Override
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
-
     options.setHasResponseCustomizer(serverEndpoint -> true);
-    options.setTestException(false);
+
+    options.setTestNotFound(false);
   }
 }
