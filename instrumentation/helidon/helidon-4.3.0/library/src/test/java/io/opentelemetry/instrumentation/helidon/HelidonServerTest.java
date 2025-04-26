@@ -20,7 +20,7 @@ class HelidonServerTest extends AbstractHelidonTest {
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forLibrary();
 
   @Override
-  protected void configureContexts(HttpRouting.Builder routing) {
+  protected void configureRoutes(HttpRouting.Builder routing) {
 
     var feature =
         HelidonTelemetry.builder(testing.getOpenTelemetry())

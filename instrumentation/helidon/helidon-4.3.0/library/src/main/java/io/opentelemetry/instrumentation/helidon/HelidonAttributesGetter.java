@@ -5,37 +5,39 @@
 
 package io.opentelemetry.instrumentation.helidon;
 
+import java.net.InetSocketAddress;
+import java.util.List;
+import java.util.Objects;
+
+import javax.annotation.Nullable;
+
 import io.helidon.http.HeaderNames;
 import io.helidon.webserver.http.ServerRequest;
 import io.helidon.webserver.http.ServerResponse;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
-import java.net.InetSocketAddress;
-import java.util.List;
-import java.util.Objects;
-import javax.annotation.Nullable;
 
 enum HelidonAttributesGetter implements HttpServerAttributesGetter<ServerRequest, ServerResponse> {
   INSTANCE;
 
   @Override
-  public String getHttpRequestMethod(ServerRequest exchange) {
-    return exchange.prologue().method().text();
+  public String getHttpRequestMethod(ServerRequest req) {
+    return req.prologue().method().text();
   }
 
   @Override
-  public String getUrlScheme(ServerRequest exchange) {
-    return exchange.requestedUri().scheme();
+  public String getUrlScheme(ServerRequest req) {
+    return req.requestedUri().scheme();
   }
 
   @Override
-  public String getUrlPath(ServerRequest exchange) {
-    return exchange.path().rawPath();
+  public String getUrlPath(ServerRequest req) {
+    return req.path().rawPath();
   }
 
   @Nullable
   @Override
-  public String getUrlQuery(ServerRequest exchange) {
-    return exchange.query().rawValue();
+  public String getUrlQuery(ServerRequest req) {
+    return req.query().rawValue();
   }
 
   @Override
@@ -60,7 +62,6 @@ enum HelidonAttributesGetter implements HttpServerAttributesGetter<ServerRequest
   @Nullable
   @Override
   public String getHttpRoute(ServerRequest req) {
-
     return null;
   }
 
