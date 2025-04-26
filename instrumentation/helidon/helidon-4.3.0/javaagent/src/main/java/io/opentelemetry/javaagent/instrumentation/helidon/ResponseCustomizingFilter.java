@@ -19,7 +19,7 @@ final class ResponseCustomizingFilter implements Filter {
   @Override
   public void filter(FilterChain chain, RoutingRequest req, RoutingResponse res) {
 
-    Context context = Context.current();
+    var context = Context.current();
     HttpServerResponseCustomizerHolder.getCustomizer()
         .customize(context, res, HelidonServerResponseMutator.INSTANCE);
     chain.proceed();

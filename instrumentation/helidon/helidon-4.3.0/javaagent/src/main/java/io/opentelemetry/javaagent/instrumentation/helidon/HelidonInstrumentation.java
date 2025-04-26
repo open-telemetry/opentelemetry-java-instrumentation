@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.helidon;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
@@ -22,7 +21,7 @@ public class HelidonInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return extendsClass(named("io.helidon.webserver.http.HttpRouting"));
+    return named("io.helidon.webserver.http.HttpRouting");
   }
 
   @Override
@@ -37,7 +36,7 @@ public class HelidonInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.Return HttpRouting.Builder httpContext) {
-      HelidonSingletons.FILTERS.forEach(httpContext::addFeature);
+      HelidonSingletons.FILTERS.forEach(httpContext::addFilter);
     }
   }
 }
