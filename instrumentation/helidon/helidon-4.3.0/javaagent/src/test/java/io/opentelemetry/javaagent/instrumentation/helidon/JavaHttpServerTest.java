@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.javahttpserver;
+package io.opentelemetry.javaagent.instrumentation.helidon;
 
 import io.opentelemetry.instrumentation.javahttpserver.AbstractJavaHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
