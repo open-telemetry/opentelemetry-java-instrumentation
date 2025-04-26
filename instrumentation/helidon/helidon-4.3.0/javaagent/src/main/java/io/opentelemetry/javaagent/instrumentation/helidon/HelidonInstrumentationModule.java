@@ -7,17 +7,15 @@ package io.opentelemetry.javaagent.instrumentation.helidon;
 
 import static java.util.Collections.singletonList;
 
-import java.util.List;
-
 import com.google.auto.service.AutoService;
-
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import java.util.List;
 
 @AutoService(InstrumentationModule.class)
 public class HelidonInstrumentationModule extends InstrumentationModule {
   public HelidonInstrumentationModule() {
-    super("helidon");
+    super("helidon", "helidon-4.3.0");
   }
 
   @Override

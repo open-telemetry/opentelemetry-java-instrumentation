@@ -5,15 +5,14 @@
 
 package io.opentelemetry.instrumentation.helidon;
 
-import io.helidon.webserver.http.HttpFeature;
-import io.helidon.webserver.http.HttpRouting;
+import io.helidon.webserver.http.Filter;
 import io.helidon.webserver.http.ServerRequest;
 import io.helidon.webserver.http.ServerResponse;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
 /** Entrypoint for instrumenting Java HTTP Server services. */
-public final class HelidonTelemetry implements HttpFeature {
+public final class HelidonTelemetry {
 
   /** Returns a new {@link HelidonTelemetry} configured with the given {@link OpenTelemetry}. */
   public static HelidonTelemetry create(OpenTelemetry openTelemetry) {
@@ -30,8 +29,7 @@ public final class HelidonTelemetry implements HttpFeature {
     this.instrumenter = instrumenter;
   }
 
-  @Override
-  public void setup(HttpRouting.Builder routing) {
-    routing.addFilter(new OpenTelemetryFilter(instrumenter));
+  public Filter createFilter() {
+    return new OpenTelemetryFilter(instrumenter);
   }
 }
