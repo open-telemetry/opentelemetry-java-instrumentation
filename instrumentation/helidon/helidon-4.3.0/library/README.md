@@ -1,13 +1,13 @@
-# Library Instrumentation for Java HTTP Server
+# Library Instrumentation for Helidon
 
-Provides OpenTelemetry instrumentation for [Java HTTP Server](https://docs.oracle.com/en/java/javase/21/docs/api/jdk.httpserver/module-summary.html).
+Provides OpenTelemetry instrumentation for [Helidon](https://helidon.io/).
 
 ## Quickstart
 
 ### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
-release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-java-http-server).
+release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-helidon-4.3.0).
 
 For Maven, add to your `pom.xml` dependencies:
 
@@ -15,7 +15,7 @@ For Maven, add to your `pom.xml` dependencies:
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
-    <artifactId>opentelemetry-java-http-server</artifactId>
+    <artifactId>opentelemetry-helidon-4.3.0</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 </dependencies>
@@ -24,40 +24,32 @@ For Maven, add to your `pom.xml` dependencies:
 For Gradle, add to your dependencies:
 
 ```groovy
-implementation("io.opentelemetry.instrumentation:opentelemetry-java-http-server:OPENTELEMETRY_VERSION")
+implementation("io.opentelemetry.instrumentation:opentelemetry-helidon-4.3.0:OPENTELEMETRY_VERSION")
 ```
 
 ### Usage
 
-The instrumentation library contains a `Filter` wrapper that provides OpenTelemetry-based spans
+The instrumentation library contains an `HttpFeature` that provides OpenTelemetry-based spans
 and context propagation.
 
 ```java
-
 import java.io.IOException;
-import java.net.InetSocketAddress;
 
-import com.sun.net.httpserver.HttpContext;
-import com.sun.net.httpserver.HttpServer;
-
+import io.helidon.webserver.WebServer;
+import io.helidon.webserver.http.HttpRouting;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
 
 public class Application {
 
   static void main(String args) throws IOException {
 
-    final HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
-    final HttpContext context =
-        server.createContext(
-            "/",
-            ctx -> {
-              // http logic
-            });
-
-    OpenTelemetry openTelemetry = //...
-
-    JavaHttpServerTelemetry.create(openTelemetry).configure(context);
+    OpenTelemetry openTelemetry = // ...
+    WebServer.builder()
+        .addRouting(
+            HttpRouting.builder()
+                .addFeature(HelidonTelemetry.create(openTelemetry))
+                .get("/greet", (req, res) -> res.send("Hello World!")))
+        .build();
   }
 }
 ```
