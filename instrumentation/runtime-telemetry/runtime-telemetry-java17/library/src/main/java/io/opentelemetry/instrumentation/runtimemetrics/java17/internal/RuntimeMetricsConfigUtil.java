@@ -44,7 +44,7 @@ public final class RuntimeMetricsConfigUtil {
     }
 
     if (config.getBoolean("otel.instrumentation.runtime-telemetry.capture-gc-cause", false)) {
-      builder.enableCaptureGcCause();
+      builder.captureGcCause();
     }
 
     return builder.build();

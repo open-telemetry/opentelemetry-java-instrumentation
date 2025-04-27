@@ -52,12 +52,12 @@ class GarbageCollectorTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
-  void registerObservers(boolean enableCaptureGcCause) {
+  void registerObservers(boolean captureGcCause) {
     GarbageCollector.registerObservers(
         testing.getOpenTelemetry(),
         singletonList(gcBean),
         GarbageCollectorTest::getGcNotificationInfo,
-        enableCaptureGcCause);
+        captureGcCause);
 
     NotificationEmitter notificationEmitter = (NotificationEmitter) gcBean;
     verify(notificationEmitter).addNotificationListener(listenerCaptor.capture(), any(), any());
@@ -80,7 +80,7 @@ class GarbageCollectorTest {
         Attributes.builder()
             .put("jvm.gc.name", "G1 Old Generation")
             .put("jvm.gc.action", "end of major GC");
-    if (enableCaptureGcCause) {
+    if (captureGcCause) {
       attributesBuilder1.put("jvm.gc.cause", "Allocation Failure");
       attributesBuilder2.put("jvm.gc.cause", "System.gc()");
     }
