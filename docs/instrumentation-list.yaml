@@ -149,6 +149,17 @@ libraries:
     target_versions:
       javaagent:
       - org.asynchttpclient:async-http-client:[2.0.0,)
+  avaje:
+  - name: avaje-jex-3.0
+    description: |
+      This instrumentation does not emit telemetry on its own. Instead, it hooks into the Avaje Jex Context to extract the HTTP route and attach it to existing SERVER span and HTTP-server metrics.
+    source_path: instrumentation/avaje-jex-3.0
+    minimum_java_version: 21
+    scope:
+      name: io.opentelemetry.avaje-jex-3.0
+    target_versions:
+      javaagent:
+      - io.avaje:avaje-jex:[3.0,)
   aws:
   - name: aws-lambda-events-2.2
     source_path: instrumentation/aws-lambda/aws-lambda-events-2.2

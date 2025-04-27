@@ -1,0 +1,2 @@
+description: >
+  The Druid instrumentation generates database connection pool metrics for druid data sources.
