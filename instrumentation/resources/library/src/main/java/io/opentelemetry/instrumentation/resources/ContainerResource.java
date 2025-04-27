@@ -9,13 +9,11 @@ import com.google.errorprone.annotations.MustBeClosed;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.UnsupportedCharsetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -94,59 +92,17 @@ public final class ContainerResource {
 
       String osName = osNameSupplier.get();
       if (osName.equalsIgnoreCase("z/OS") || osName.equalsIgnoreCase("OS/390")) {
-        return zosLines(path);
+        try {
+          // On z/OS the /proc tree is always ecoded with IBM1047 (Canonical name: Cp1047).
+          return Files.lines(path, Charset.forName("Cp1047"));
+        } catch (UnsupportedCharsetException e) {
+          // What charsets are available depends on the instance of the JVM
+          logger.log(Level.WARNING, "Unable to find charset Cp1047", e);
+          return Stream.empty();
+        }
       } else {
         return Files.lines(path);
       }
-    }
-
-    // This method reads the /proc system using the correct Charset for z/OS
-    @MustBeClosed
-    Stream<String> zosLines(Path path) throws IOException {
-
-      List<Charset> charsetsToTest = new ArrayList<Charset>();
-
-      // Since this class needs to be compatible with Java9&11, use the 'native.encoding' property
-      // to get the nativeCharset on java17+
-      // rather than System.console().charset().
-      if (System.getProperty("native.encoding") != null) {
-        charsetsToTest.add(Charset.forName(System.getProperty("native.encoding")));
-      } else {
-        // On older javas that property won't exist but the default charset will be the native
-        // encoding.
-        charsetsToTest.add(Charset.defaultCharset());
-      }
-
-      // As a fallback value, add a hardcoded reference to IBM1047 (Canonical name: Cp1047).
-      Charset ibm1047 = Charset.forName("Cp1047");
-      if (ibm1047 != null) { // safety check
-        charsetsToTest.add(ibm1047);
-      }
-
-      // The odds of /proc being UTF-8 but the native encoding saying otherwise is extremely low
-      // but since UTF-8 is the standard it should be checked.
-      charsetsToTest.add(StandardCharsets.UTF_8);
-
-      IOException exception = null;
-      for (Charset charset : charsetsToTest) {
-        try (BufferedReader charsetTester = Files.newBufferedReader(path, charset)) {
-          @SuppressWarnings("unused")
-          String line = charsetTester.readLine();
-
-          return Files.lines(path, charset);
-        } catch (IOException e) {
-          if (exception == null) {
-            exception = e;
-          } else {
-            exception.addSuppressed(e);
-          }
-        }
-      }
-
-      // If none of the charsets matched, log a warning and return an empty Stream
-      logger.log(
-          Level.WARNING, "Unable to read file " + path.toAbsolutePath().toString(), exception);
-      return Stream.empty();
     }
 
     List<String> lineList(Path path) throws IOException {
