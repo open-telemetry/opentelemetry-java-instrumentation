@@ -5,6 +5,10 @@
 
 package io.opentelemetry.instrumentation.docs.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationClassification;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
@@ -17,23 +21,13 @@ import java.util.TreeMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.yaml.snakeyaml.DumperOptions;
-import org.yaml.snakeyaml.TypeDescription;
 import org.yaml.snakeyaml.Yaml;
 
 public class YamlHelper {
 
   private static final Logger logger = Logger.getLogger(YamlHelper.class.getName());
 
-  private static final Yaml metaDataYaml = new Yaml();
-
-  static {
-    TypeDescription customDescriptor = new TypeDescription(InstrumentationMetaData.class);
-    customDescriptor.substituteProperty(
-        "disabled_by_default", Boolean.class, "getDisabledByDefault", "setDisabledByDefault");
-    customDescriptor.substituteProperty(
-        "classification", String.class, "getClassification", "setClassification");
-    metaDataYaml.addTypeDescription(customDescriptor);
-  }
+  private static final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
   public static void generateInstrumentationYaml(
       List<InstrumentationModule> list, BufferedWriter writer) {
@@ -149,6 +143,18 @@ public class YamlHelper {
       moduleMap.put("target_versions", targetVersions);
     }
 
+    if (module.getMetadata() != null && !module.getMetadata().getConfigurations().isEmpty()) {
+      List<Map<String, String>> configurations = new ArrayList<>();
+      for (ConfigurationOption configuration : module.getMetadata().getConfigurations()) {
+        Map<String, String> conf = new LinkedHashMap<>();
+        conf.put("name", configuration.name());
+        conf.put("description", configuration.description());
+        conf.put("default", configuration.defaultValue());
+        configurations.add(conf);
+      }
+      moduleMap.put("configurations", configurations);
+    }
+
     return moduleMap;
   }
 
@@ -158,8 +164,9 @@ public class YamlHelper {
     return scopeMap;
   }
 
-  public static InstrumentationMetaData metaDataParser(String input) {
-    return metaDataYaml.loadAs(input, InstrumentationMetaData.class);
+  public static InstrumentationMetaData metaDataParser(String input)
+      throws JsonProcessingException {
+    return mapper.readValue(input, InstrumentationMetaData.class);
   }
 
   private YamlHelper() {}

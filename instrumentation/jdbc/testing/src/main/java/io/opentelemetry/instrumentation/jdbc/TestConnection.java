@@ -183,20 +183,20 @@ public class TestConnection implements Connection {
 
   @Override
   public CallableStatement prepareCall(String sql) throws SQLException {
-    return new TestCallableStatement();
+    return new TestCallableStatement(this);
   }
 
   @Override
   public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency)
       throws SQLException {
-    return new TestCallableStatement();
+    return new TestCallableStatement(this);
   }
 
   @Override
   public CallableStatement prepareCall(
       String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability)
       throws SQLException {
-    return new TestCallableStatement();
+    return new TestCallableStatement(this);
   }
 
   @Override
