@@ -49,7 +49,7 @@ import java.util.concurrent.Executor;
  * any time.
  */
 public class OpenTelemetryConnection implements Connection {
-  
+
   private static final boolean hasJdbc43 = hasJdbc43();
   protected final Connection delegate;
   private final DbInfo dbInfo;

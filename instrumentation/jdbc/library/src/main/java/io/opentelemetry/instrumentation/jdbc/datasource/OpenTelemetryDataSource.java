@@ -99,14 +99,16 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
   public Connection getConnection() throws SQLException {
     Connection connection = wrapCall(delegate::getConnection);
     DbInfo dbInfo = getDbInfo(connection);
-    return OpenTelemetryConnection.create(connection, dbInfo, statementInstrumenter, transactionInstrumenter);
+    return OpenTelemetryConnection.create(
+        connection, dbInfo, statementInstrumenter, transactionInstrumenter);
   }
 
   @Override
   public Connection getConnection(String username, String password) throws SQLException {
     Connection connection = wrapCall(() -> delegate.getConnection(username, password));
     DbInfo dbInfo = getDbInfo(connection);
-    return OpenTelemetryConnection.create(connection, dbInfo, statementInstrumenter, transactionInstrumenter);
+    return OpenTelemetryConnection.create(
+        connection, dbInfo, statementInstrumenter, transactionInstrumenter);
   }
 
   @Override
