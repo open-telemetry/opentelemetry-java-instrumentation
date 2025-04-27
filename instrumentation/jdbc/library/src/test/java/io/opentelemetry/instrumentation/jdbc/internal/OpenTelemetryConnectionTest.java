@@ -117,11 +117,14 @@ class OpenTelemetryConnectionTest {
 
   @Test
   void testVerifyPrepareStatementUpdate() throws SQLException {
-    Instrumenter<DbRequest, Void> instrumenter =
+    Instrumenter<DbRequest, Void> statementInstrumenter =
         createStatementInstrumenter(testing.getOpenTelemetry());
+    Instrumenter<TransactionRequest, Void> transactionInstrumenter =
+        createTransactionInstrumenter(testing.getOpenTelemetry(), true);
     DbInfo dbInfo = getDbInfo();
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
+        new OpenTelemetryConnection(
+            new TestConnection(), dbInfo, statementInstrumenter, transactionInstrumenter);
     String query = "UPDATE users SET name = name";
     PreparedStatement statement = connection.prepareStatement(query);
 
