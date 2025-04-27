@@ -25,9 +25,14 @@ import javax.sql.DataSource;
  */
 public final class JdbcInstrumenterFactory {
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
-  private static final JdbcAttributesGetter dbAttributesGetter = new JdbcAttributesGetter();
-  private static final JdbcNetworkAttributesGetter netAttributesGetter =
-      new JdbcNetworkAttributesGetter();
+  private static final JdbcStatementAttributesGetter statementAttributesGetter =
+      new JdbcStatementAttributesGetter();
+  private static final JdbcTransactionAttributesGetter transactionAttributesGetter =
+      new JdbcTransactionAttributesGetter();
+  private static final StatementNetworkAttributesGetter statementNetAttributesGetter =
+      new StatementNetworkAttributesGetter();
+  private static final TransactionNetworkAttributesGetter transactionNetAttributesGetter =
+      new TransactionNetworkAttributesGetter();
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter() {
     return createStatementInstrumenter(GlobalOpenTelemetry.get());
@@ -47,12 +52,12 @@ public final class JdbcInstrumenterFactory {
     return Instrumenter.<DbRequest, Void>builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
-            DbClientSpanNameExtractor.create(dbAttributesGetter))
+            DbClientSpanNameExtractor.create(statementAttributesGetter))
         .addAttributesExtractor(
-            SqlClientAttributesExtractor.builder(dbAttributesGetter)
+            SqlClientAttributesExtractor.builder(statementAttributesGetter)
                 .setStatementSanitizationEnabled(statementSanitizationEnabled)
                 .build())
-        .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
+        .addAttributesExtractor(ServerAttributesExtractor.create(statementNetAttributesGetter))
         .addOperationMetrics(DbClientMetrics.get())
         .setEnabled(enabled)
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
@@ -67,6 +72,18 @@ public final class JdbcInstrumenterFactory {
         .addAttributesExtractor(DataSourceDbAttributesExtractor.INSTANCE)
         .setEnabled(enabled)
         .buildInstrumenter();
+  }
+
+  public static Instrumenter<TransactionRequest, Void> createTransactionInstrumenter(
+      OpenTelemetry openTelemetry, boolean enabled) {
+    return Instrumenter.<TransactionRequest, Void>builder(
+            openTelemetry, INSTRUMENTATION_NAME, TransactionRequest::spanName)
+        .addAttributesExtractor(
+            SqlClientAttributesExtractor.builder(transactionAttributesGetter).build())
+        .addAttributesExtractor(ServerAttributesExtractor.create(transactionNetAttributesGetter))
+        .addOperationMetrics(DbClientMetrics.get())
+        .setEnabled(enabled)
+        .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   private JdbcInstrumenterFactory() {}

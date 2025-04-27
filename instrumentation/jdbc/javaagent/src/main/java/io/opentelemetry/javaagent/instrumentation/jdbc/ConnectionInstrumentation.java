@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcSingletons.statementInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcSingletons.transactionInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -19,10 +19,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcData;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcUtils;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.instrumentation.jdbc.internal.TransactionRequest;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -34,10 +33,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class ConnectionInstrumentation implements TypeInstrumentation {
-
-  private static final boolean TXN_ENABLED =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.jdbc.experimental.txn.enabled", false);
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
@@ -57,11 +52,9 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
             // Also include CallableStatement, which is a sub type of PreparedStatement
             .and(returns(implementsInterface(named("java.sql.PreparedStatement")))),
         ConnectionInstrumentation.class.getName() + "$PrepareAdvice");
-    if (TXN_ENABLED) {
       transformer.applyAdviceToMethod(
           namedOneOf("commit", "rollback").and(takesNoArguments()).and(isPublic()),
           ConnectionInstrumentation.class.getName() + "$TxnAdvice");
-    }
   }
 
   @SuppressWarnings("unused")
@@ -92,28 +85,28 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
       if (dbInfo == null) {
         return;
       }
-      DbRequest request = DbRequest.create(dbInfo, methodName.toUpperCase(Locale.ROOT));
+      TransactionRequest request =
+          TransactionRequest.create(dbInfo, methodName.toUpperCase(Locale.ROOT));
 
-      if (!statementInstrumenter().shouldStart(parentContext, request)) {
+      if (!transactionInstrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
-      request = DbRequest.create(request.getDbInfo(), methodName.toUpperCase(Locale.ROOT));
-      context = statementInstrumenter().start(parentContext, request);
+      context = transactionInstrumenter().start(parentContext, request);
       scope = context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelRequest") DbRequest request,
+        @Advice.Local("otelRequest") TransactionRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {
         return;
       }
       scope.close();
-      statementInstrumenter().end(context, request, null, throwable);
+      transactionInstrumenter().end(context, request, null, throwable);
     }
   }
 }

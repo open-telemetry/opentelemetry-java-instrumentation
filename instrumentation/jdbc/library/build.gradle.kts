@@ -62,6 +62,6 @@ tasks {
 
 tasks {
   withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.jdbc.experimental.txn.enabled=true")
+    jvmArgs("-Dotel.instrumentation.jdbc.experimental.transaction.enabled=true")
   }
 }

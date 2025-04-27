@@ -23,7 +23,6 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.Array;
 import java.sql.Blob;
@@ -50,19 +49,22 @@ import java.util.concurrent.Executor;
  * any time.
  */
 public class OpenTelemetryConnection implements Connection {
-
-  private static final boolean TXN_ENABLED =
-      ConfigPropertiesUtil.getBoolean("otel.instrumentation.jdbc.experimental.txn.enabled", false);
+  
   private static final boolean hasJdbc43 = hasJdbc43();
   protected final Connection delegate;
   private final DbInfo dbInfo;
   protected final Instrumenter<DbRequest, Void> statementInstrumenter;
+  protected final Instrumenter<TransactionRequest, Void> transactionInstrumenter;
 
   protected OpenTelemetryConnection(
-      Connection delegate, DbInfo dbInfo, Instrumenter<DbRequest, Void> statementInstrumenter) {
+      Connection delegate,
+      DbInfo dbInfo,
+      Instrumenter<DbRequest, Void> statementInstrumenter,
+      Instrumenter<TransactionRequest, Void> transactionInstrumenter) {
     this.delegate = delegate;
     this.dbInfo = dbInfo;
     this.statementInstrumenter = statementInstrumenter;
+    this.transactionInstrumenter = transactionInstrumenter;
   }
 
   // visible for testing
@@ -76,11 +78,16 @@ public class OpenTelemetryConnection implements Connection {
   }
 
   public static Connection create(
-      Connection delegate, DbInfo dbInfo, Instrumenter<DbRequest, Void> statementInstrumenter) {
+      Connection delegate,
+      DbInfo dbInfo,
+      Instrumenter<DbRequest, Void> statementInstrumenter,
+      Instrumenter<TransactionRequest, Void> transactionInstrumenter) {
     if (hasJdbc43) {
-      return new OpenTelemetryConnectionJdbc43(delegate, dbInfo, statementInstrumenter);
+      return new OpenTelemetryConnectionJdbc43(
+          delegate, dbInfo, statementInstrumenter, transactionInstrumenter);
     }
-    return new OpenTelemetryConnection(delegate, dbInfo, statementInstrumenter);
+    return new OpenTelemetryConnection(
+        delegate, dbInfo, statementInstrumenter, transactionInstrumenter);
   }
 
   @Override
@@ -178,11 +185,7 @@ public class OpenTelemetryConnection implements Connection {
 
   @Override
   public void commit() throws SQLException {
-    if (TXN_ENABLED) {
-      wrapCall(delegate::commit, "COMMIT");
-    } else {
-      delegate.commit();
-    }
+    wrapCall(delegate::commit, "COMMIT");
   }
 
   @Override
@@ -288,21 +291,13 @@ public class OpenTelemetryConnection implements Connection {
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void rollback() throws SQLException {
-    if (TXN_ENABLED) {
-      wrapCall(delegate::rollback, "ROLLBACK");
-    } else {
-      delegate.rollback();
-    }
+    wrapCall(delegate::rollback, "ROLLBACK");
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void rollback(Savepoint savepoint) throws SQLException {
-    if (TXN_ENABLED) {
-      wrapCall(() -> delegate.rollback(savepoint), "ROLLBACK");
-    } else {
-      delegate.rollback(savepoint);
-    }
+    wrapCall(() -> delegate.rollback(savepoint), "ROLLBACK");
   }
 
   @Override
@@ -410,8 +405,11 @@ public class OpenTelemetryConnection implements Connection {
   // JDBC 4.3
   static class OpenTelemetryConnectionJdbc43 extends OpenTelemetryConnection {
     OpenTelemetryConnectionJdbc43(
-        Connection delegate, DbInfo dbInfo, Instrumenter<DbRequest, Void> statementInstrumenter) {
-      super(delegate, dbInfo, statementInstrumenter);
+        Connection delegate,
+        DbInfo dbInfo,
+        Instrumenter<DbRequest, Void> statementInstrumenter,
+        Instrumenter<TransactionRequest, Void> transactionInstrumenter) {
+      super(delegate, dbInfo, statementInstrumenter, transactionInstrumenter);
     }
 
     @SuppressWarnings("Since15")
@@ -453,23 +451,23 @@ public class OpenTelemetryConnection implements Connection {
     }
   }
 
-  protected <E extends Exception> void wrapCall(ThrowingSupplier<E> callable, String statement)
+  protected <E extends Exception> void wrapCall(ThrowingSupplier<E> callable, String operation)
       throws E {
     Context parentContext = Context.current();
-    DbRequest request = DbRequest.create(dbInfo, statement);
-    if (!this.statementInstrumenter.shouldStart(parentContext, request)) {
+    TransactionRequest request = TransactionRequest.create(dbInfo, operation);
+    if (!this.transactionInstrumenter.shouldStart(parentContext, request)) {
       callable.call();
       return;
     }
 
-    Context context = this.statementInstrumenter.start(parentContext, request);
+    Context context = this.transactionInstrumenter.start(parentContext, request);
     try (Scope ignored = context.makeCurrent()) {
       callable.call();
     } catch (Throwable t) {
-      this.statementInstrumenter.end(context, request, null, t);
+      this.transactionInstrumenter.end(context, request, null, t);
       throw t;
     }
-    this.statementInstrumenter.end(context, request, null, null);
+    this.transactionInstrumenter.end(context, request, null, null);
   }
 
   protected interface ThrowingSupplier<E extends Exception> {

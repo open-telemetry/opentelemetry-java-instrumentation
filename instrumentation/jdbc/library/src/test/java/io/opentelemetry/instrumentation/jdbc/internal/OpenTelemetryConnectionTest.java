@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createStatementInstrumenter;
+import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createTransactionInstrumenter;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -43,11 +44,14 @@ class OpenTelemetryConnectionTest {
 
   @Test
   void testVerifyCreateStatement() throws SQLException {
-    Instrumenter<DbRequest, Void> instrumenter =
+    Instrumenter<DbRequest, Void> statementInstrumenter =
         createStatementInstrumenter(testing.getOpenTelemetry());
+    Instrumenter<TransactionRequest, Void> transactionInstrumenter =
+        createTransactionInstrumenter(testing.getOpenTelemetry(), true);
     DbInfo dbInfo = getDbInfo();
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
+        new OpenTelemetryConnection(
+            new TestConnection(), dbInfo, statementInstrumenter, transactionInstrumenter);
     String query = "SELECT * FROM users";
     Statement statement = connection.createStatement();
 
@@ -67,26 +71,32 @@ class OpenTelemetryConnectionTest {
   @Test
   void testVerifyCreateStatementReturnsOtelWrapper() throws Exception {
     OpenTelemetry ot = OpenTelemetry.propagating(ContextPropagators.noop());
-    Instrumenter<DbRequest, Void> instrumenter = createStatementInstrumenter(ot);
+    Instrumenter<DbRequest, Void> statementInstrumenter = createStatementInstrumenter(ot);
+    Instrumenter<TransactionRequest, Void> transactionInstrumenter =
+        createTransactionInstrumenter(ot, true);
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), DbInfo.DEFAULT, instrumenter);
+        new OpenTelemetryConnection(
+            new TestConnection(), DbInfo.DEFAULT, statementInstrumenter, transactionInstrumenter);
 
     assertThat(connection.createStatement()).isInstanceOf(OpenTelemetryStatement.class);
     assertThat(connection.createStatement(0, 0)).isInstanceOf(OpenTelemetryStatement.class);
     assertThat(connection.createStatement(0, 0, 0)).isInstanceOf(OpenTelemetryStatement.class);
     assertThat(((OpenTelemetryStatement<Statement>) connection.createStatement()).instrumenter)
-        .isEqualTo(instrumenter);
+        .isEqualTo(statementInstrumenter);
 
     connection.close();
   }
 
   @Test
   void testVerifyPrepareStatement() throws SQLException {
-    Instrumenter<DbRequest, Void> instrumenter =
+    Instrumenter<DbRequest, Void> statementInstrumenter =
         createStatementInstrumenter(testing.getOpenTelemetry());
+    Instrumenter<TransactionRequest, Void> transactionInstrumenter =
+        createTransactionInstrumenter(testing.getOpenTelemetry(), true);
     DbInfo dbInfo = getDbInfo();
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
+        new OpenTelemetryConnection(
+            new TestConnection(), dbInfo, statementInstrumenter, transactionInstrumenter);
     String query = "SELECT * FROM users";
     PreparedStatement statement = connection.prepareStatement(query);
 
@@ -107,11 +117,14 @@ class OpenTelemetryConnectionTest {
 
   @Test
   void testVerifyPrepareStatementQuery() throws SQLException {
-    Instrumenter<DbRequest, Void> instrumenter =
+    Instrumenter<DbRequest, Void> statementInstrumenter =
         createStatementInstrumenter(testing.getOpenTelemetry());
+    Instrumenter<TransactionRequest, Void> transactionInstrumenter =
+        createTransactionInstrumenter(testing.getOpenTelemetry(), true);
     DbInfo dbInfo = getDbInfo();
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
+        new OpenTelemetryConnection(
+            new TestConnection(), dbInfo, statementInstrumenter, transactionInstrumenter);
     String query = "SELECT * FROM users";
     PreparedStatement statement = connection.prepareStatement(query);
 
@@ -133,9 +146,12 @@ class OpenTelemetryConnectionTest {
   @Test
   void testVerifyPrepareStatementReturnsOtelWrapper() throws Exception {
     OpenTelemetry ot = OpenTelemetry.propagating(ContextPropagators.noop());
-    Instrumenter<DbRequest, Void> instrumenter = createStatementInstrumenter(ot);
+    Instrumenter<DbRequest, Void> statementInstrumenter = createStatementInstrumenter(ot);
+    Instrumenter<TransactionRequest, Void> transactionInstrumenter =
+        createTransactionInstrumenter(ot, true);
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), DbInfo.DEFAULT, instrumenter);
+        new OpenTelemetryConnection(
+            new TestConnection(), DbInfo.DEFAULT, statementInstrumenter, transactionInstrumenter);
     String query = "SELECT * FROM users";
 
     assertThat(connection.prepareStatement(query))
@@ -152,18 +168,21 @@ class OpenTelemetryConnectionTest {
         .isInstanceOf(OpenTelemetryPreparedStatement.class);
     assertThat(
             ((OpenTelemetryStatement<Statement>) connection.prepareStatement(query)).instrumenter)
-        .isEqualTo(instrumenter);
+        .isEqualTo(statementInstrumenter);
 
     connection.close();
   }
 
   @Test
   void testVerifyPrepareCall() throws SQLException {
-    Instrumenter<DbRequest, Void> instrumenter =
+    Instrumenter<DbRequest, Void> statementInstrumenter =
         createStatementInstrumenter(testing.getOpenTelemetry());
+    Instrumenter<TransactionRequest, Void> transactionInstrumenter =
+        createTransactionInstrumenter(testing.getOpenTelemetry(), true);
     DbInfo dbInfo = getDbInfo();
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
+        new OpenTelemetryConnection(
+            new TestConnection(), dbInfo, statementInstrumenter, transactionInstrumenter);
     String query = "SELECT * FROM users";
     PreparedStatement statement = connection.prepareCall(query);
 
@@ -183,9 +202,12 @@ class OpenTelemetryConnectionTest {
   @Test
   void testVerifyPrepareCallReturnsOtelWrapper() throws Exception {
     OpenTelemetry ot = OpenTelemetry.propagating(ContextPropagators.noop());
-    Instrumenter<DbRequest, Void> instrumenter = createStatementInstrumenter(ot);
+    Instrumenter<DbRequest, Void> statementInstrumenter = createStatementInstrumenter(ot);
+    Instrumenter<TransactionRequest, Void> transactionInstrumenter =
+        createTransactionInstrumenter(ot, true);
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), DbInfo.DEFAULT, instrumenter);
+        new OpenTelemetryConnection(
+            new TestConnection(), DbInfo.DEFAULT, statementInstrumenter, transactionInstrumenter);
     String query = "SELECT * FROM users";
 
     assertThat(connection.prepareCall(query)).isInstanceOf(OpenTelemetryCallableStatement.class);
@@ -196,50 +218,42 @@ class OpenTelemetryConnectionTest {
     assertThat(connection.prepareCall(query, 0, 0, 0))
         .isInstanceOf(OpenTelemetryCallableStatement.class);
     assertThat(((OpenTelemetryStatement<Statement>) connection.prepareCall(query)).instrumenter)
-        .isEqualTo(instrumenter);
+        .isEqualTo(statementInstrumenter);
 
     connection.close();
   }
 
   @Test
   void testVerifyCommit() throws Exception {
-    Instrumenter<DbRequest, Void> instrumenter =
+    Instrumenter<DbRequest, Void> statementInstrumenter =
         createStatementInstrumenter(testing.getOpenTelemetry());
+    Instrumenter<TransactionRequest, Void> transactionInstrumenter =
+        createTransactionInstrumenter(testing.getOpenTelemetry(), true);
     DbInfo dbInfo = getDbInfo();
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
-    String query = "COMMIT";
-    Statement statement = connection.createStatement();
+        new OpenTelemetryConnection(
+            new TestConnection(), dbInfo, statementInstrumenter, transactionInstrumenter);
 
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          assertThat(statement.execute(query)).isTrue();
-        });
-    transactionTraceAssertion(dbInfo, query);
+    testing.runWithSpan("parent", connection::commit);
+    transactionTraceAssertion(dbInfo, "COMMIT");
 
-    statement.close();
     connection.close();
   }
 
   @Test
   void testVerifyRollback() throws Exception {
-    Instrumenter<DbRequest, Void> instrumenter =
+    Instrumenter<DbRequest, Void> statementInstrumenter =
         createStatementInstrumenter(testing.getOpenTelemetry());
+    Instrumenter<TransactionRequest, Void> transactionInstrumenter =
+        createTransactionInstrumenter(testing.getOpenTelemetry(), true);
     DbInfo dbInfo = getDbInfo();
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
-    String query = "ROLLBACK";
-    Statement statement = connection.createStatement();
+        new OpenTelemetryConnection(
+            new TestConnection(), dbInfo, statementInstrumenter, transactionInstrumenter);
 
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          assertThat(statement.execute(query)).isTrue();
-        });
-    transactionTraceAssertion(dbInfo, query);
+    testing.runWithSpan("parent", () -> connection.rollback());
+    transactionTraceAssertion(dbInfo, "ROLLBACK");
 
-    statement.close();
     connection.close();
   }
 
@@ -283,13 +297,13 @@ class OpenTelemetryConnectionTest {
   }
 
   @SuppressWarnings("deprecation") // old semconv
-  private static void transactionTraceAssertion(DbInfo dbInfo, String query) {
+  private static void transactionTraceAssertion(DbInfo dbInfo, String operation) {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(query + " " + dbInfo.getName())
+                    span.hasName(operation)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -301,8 +315,6 @@ class OpenTelemetryConnectionTest {
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : dbInfo.getShortUrl()),
-                            equalTo(maybeStable(DB_STATEMENT), query),
-                            equalTo(maybeStable(DB_OPERATION), query),
                             equalTo(SERVER_ADDRESS, dbInfo.getHost()),
                             equalTo(SERVER_PORT, dbInfo.getPort()))));
   }

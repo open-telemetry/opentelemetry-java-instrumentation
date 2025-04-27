@@ -16,6 +16,7 @@ public final class JdbcTelemetryBuilder {
   private boolean dataSourceInstrumenterEnabled = true;
   private boolean statementInstrumenterEnabled = true;
   private boolean statementSanitizationEnabled = true;
+  private boolean transactionInstrumenterEnabled = false;
 
   JdbcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -42,12 +43,21 @@ public final class JdbcTelemetryBuilder {
     return this;
   }
 
+  /** Configures whether spans are created for JDBC Transactions. Enabled by default. */
+  @CanIgnoreReturnValue
+  public JdbcTelemetryBuilder setTransactionInstrumenterEnabled(boolean enabled) {
+    this.transactionInstrumenterEnabled = enabled;
+    return this;
+  }
+
   /** Returns a new {@link JdbcTelemetry} with the settings of this {@link JdbcTelemetryBuilder}. */
   public JdbcTelemetry build() {
     return new JdbcTelemetry(
         JdbcInstrumenterFactory.createDataSourceInstrumenter(
             openTelemetry, dataSourceInstrumenterEnabled),
         JdbcInstrumenterFactory.createStatementInstrumenter(
-            openTelemetry, statementInstrumenterEnabled, statementSanitizationEnabled));
+            openTelemetry, statementInstrumenterEnabled, statementSanitizationEnabled),
+        JdbcInstrumenterFactory.createTransactionInstrumenter(
+            openTelemetry, transactionInstrumenterEnabled));
   }
 }

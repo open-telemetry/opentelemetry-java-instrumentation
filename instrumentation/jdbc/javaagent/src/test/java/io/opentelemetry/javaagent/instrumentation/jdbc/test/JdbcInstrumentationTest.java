@@ -19,7 +19,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -1681,18 +1680,16 @@ class JdbcInstrumentationTest {
                               equalTo(maybeStable(DB_OPERATION), "INSERT"),
                               equalTo(maybeStable(DB_SQL_TABLE), tableName)),
                   span ->
-                      span.hasName("COMMIT " + dbNameLower)
+                      span.hasName("COMMIT")
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
                               equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
                               equalTo(maybeStable(DB_NAME), dbNameLower),
                               equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                              equalTo(DB_STATEMENT, emitStableDatabaseSemconv() ? null : "COMMIT"),
-                              equalTo(DB_QUERY_TEXT, emitStableDatabaseSemconv() ? "COMMIT" : null),
                               equalTo(
-                                  DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                              equalTo(maybeStable(DB_OPERATION), "COMMIT"))));
+                                  DB_CONNECTION_STRING,
+                                  emitStableDatabaseSemconv() ? null : url))));
     } finally {
       connection.setAutoCommit(originalAutoCommit);
     }
@@ -1745,7 +1742,7 @@ class JdbcInstrumentationTest {
                               equalTo(maybeStable(DB_OPERATION), "INSERT"),
                               equalTo(maybeStable(DB_SQL_TABLE), tableName)),
                   span ->
-                      span.hasName("ROLLBACK " + dbNameLower)
+                      span.hasName("ROLLBACK")
                           .hasKind(SpanKind.CLIENT)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
@@ -1753,12 +1750,8 @@ class JdbcInstrumentationTest {
                               equalTo(maybeStable(DB_NAME), dbNameLower),
                               equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                               equalTo(
-                                  DB_STATEMENT, emitStableDatabaseSemconv() ? null : "ROLLBACK"),
-                              equalTo(
-                                  DB_QUERY_TEXT, emitStableDatabaseSemconv() ? "ROLLBACK" : null),
-                              equalTo(
-                                  DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                              equalTo(maybeStable(DB_OPERATION), "ROLLBACK"))));
+                                  DB_CONNECTION_STRING,
+                                  emitStableDatabaseSemconv() ? null : url))));
 
       Statement selectStatement = connection.createStatement();
       cleanup.deferCleanup(selectStatement);
