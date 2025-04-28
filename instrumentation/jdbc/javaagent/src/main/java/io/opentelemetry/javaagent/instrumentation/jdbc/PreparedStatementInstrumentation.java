@@ -126,13 +126,13 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
         PreparedStatementInstrumentation.class.getName() + "$SetTimestamp3Advice");
     transformer.applyAdviceToMethod(
         named("setURL").and(takesArgument(0, int.class)).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetURLAdvice");
+        PreparedStatementInstrumentation.class.getName() + "$SetUrlAdvice");
     transformer.applyAdviceToMethod(
         named("setRowId").and(takesArgument(0, int.class)).and(isPublic()),
         PreparedStatementInstrumentation.class.getName() + "$SetRowIdAdvice");
     transformer.applyAdviceToMethod(
         named("setNString").and(takesArgument(0, int.class)).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetNStringAdvice");
+        PreparedStatementInstrumentation.class.getName() + "$SetNstringAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -405,7 +405,7 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings({"unused", "IdentifierName"})
-  public static class SetURLAdvice {
+  public static class SetUrlAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This PreparedStatement statement,
@@ -427,7 +427,7 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class SetNStringAdvice {
+  public static class SetNstringAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This PreparedStatement statement,

@@ -26,7 +26,6 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.math.BigDecimal;
-import java.net.URI;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -42,7 +41,6 @@ import java.util.Properties;
 import java.util.stream.Stream;
 import org.apache.derby.jdbc.EmbeddedDriver;
 import org.hsqldb.jdbc.JDBCDriver;
-import org.junit.Ignore;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -89,7 +87,7 @@ class PreparedStatementParametersTest {
     return Stream.of(
         Arguments.of(
             "h2",
-            new org.h2.Driver().connect(jdbcUrls.get("h2"), connectionProps),
+            new org.h2.Driver().connect(jdbcUrls.get("h2"), null),
             null,
             "SELECT 3, ?",
             "SELECT 3, ?",
@@ -107,7 +105,7 @@ class PreparedStatementParametersTest {
             "SYSIBM.SYSDUMMY1"),
         Arguments.of(
             "hsqldb",
-            new JDBCDriver().connect(jdbcUrls.get("hsqldb"), connectionProps),
+            new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null),
             "SA",
             "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS WHERE USER_NAME=? OR 1=1",
             "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS WHERE USER_NAME=? OR 1=1",
@@ -917,56 +915,9 @@ class PreparedStatementParametersTest {
                                 "'2000-01-01 00:00:00.0'"))));
   }
 
-  @Ignore("not supported by tested drivers")
-  void testURLPreparedStatementParameter(
-      String system,
-      Connection connection,
-      String username,
-      String query,
-      String sanitizedQuery,
-      String spanName,
-      String url,
-      String table)
-      throws Exception {
-    PreparedStatement statement = connection.prepareStatement(query);
-    cleanup.deferCleanup(statement);
-
-    ResultSet resultSet =
-        testing.runWithSpan(
-            "parent",
-            () -> {
-              statement.setURL(1, URI.create("http://localhost:8080").toURL());
-              statement.execute();
-              return statement.getResultSet();
-            });
-
-    resultSet.next();
-    assertThat(resultSet.getInt(1)).isEqualTo(3);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName(spanName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                            equalTo(maybeStable(DB_NAME), dbNameLower),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                            equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), table),
-                            equalTo(
-                                DB_QUERY_PARAMETER.getAttributeKey("0"),
-                                "'http://localhost:8080'"))));
-  }
-
   @ParameterizedTest
   @MethodSource("preparedStatementStream")
-  void testNStringPreparedStatementParameter(
+  void testNstringPreparedStatementParameter(
       String system,
       Connection connection,
       String username,
