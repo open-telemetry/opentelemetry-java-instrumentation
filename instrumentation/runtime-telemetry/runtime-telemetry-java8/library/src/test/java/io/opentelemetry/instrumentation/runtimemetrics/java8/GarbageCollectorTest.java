@@ -5,8 +5,12 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java8;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.runtimemetrics.java8.ScopeUtil.EXPECTED_SCOPE;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_ACTION;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_NAME;
 import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -15,8 +19,6 @@ import static org.mockito.Mockito.when;
 
 import com.sun.management.GarbageCollectionNotificationInfo;
 import com.sun.management.GcInfo;
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.lang.management.GarbageCollectorMXBean;
@@ -72,19 +74,6 @@ class GarbageCollectorTest {
     listener.handleNotification(
         createTestNotification("G1 Old Generation", "end of major GC", "System.gc()", 11), null);
 
-    AttributesBuilder attributesBuilder1 =
-        Attributes.builder()
-            .put("jvm.gc.name", "G1 Young Generation")
-            .put("jvm.gc.action", "end of minor GC");
-    AttributesBuilder attributesBuilder2 =
-        Attributes.builder()
-            .put("jvm.gc.name", "G1 Old Generation")
-            .put("jvm.gc.action", "end of major GC");
-    if (captureGcCause) {
-      attributesBuilder1.put("jvm.gc.cause", "Allocation Failure");
-      attributesBuilder2.put("jvm.gc.cause", "System.gc()");
-    }
-
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
         "jvm.gc.duration",
@@ -102,13 +91,23 @@ class GarbageCollectorTest {
                                         point
                                             .hasCount(2)
                                             .hasSum(0.022)
-                                            .hasAttributes(attributesBuilder1.build())
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(JVM_GC_NAME, "G1 Young Generation"),
+                                                equalTo(JVM_GC_ACTION, "end of minor GC"),
+                                                equalTo(
+                                                    stringKey("jvm.gc.cause"),
+                                                    captureGcCause ? "Allocation Failure" : null))
                                             .hasBucketBoundaries(GC_DURATION_BUCKETS),
                                     point ->
                                         point
                                             .hasCount(1)
                                             .hasSum(0.011)
-                                            .hasAttributes(attributesBuilder2.build())
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(JVM_GC_NAME, "G1 Old Generation"),
+                                                equalTo(JVM_GC_ACTION, "end of major GC"),
+                                                equalTo(
+                                                    stringKey("jvm.gc.cause"),
+                                                    captureGcCause ? "System.gc()" : null))
                                             .hasBucketBoundaries(GC_DURATION_BUCKETS)))));
   }
 
