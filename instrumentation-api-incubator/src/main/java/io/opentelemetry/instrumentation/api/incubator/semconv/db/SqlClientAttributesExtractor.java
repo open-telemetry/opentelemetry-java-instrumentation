@@ -28,7 +28,7 @@ import java.util.Map;
  */
 public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     extends DbClientCommonAttributesExtractor<
-    REQUEST, RESPONSE, SqlClientAttributesGetter<REQUEST, RESPONSE>> {
+        REQUEST, RESPONSE, SqlClientAttributesGetter<REQUEST, RESPONSE>> {
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
@@ -166,5 +166,4 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     }
     return builder.toString();
   }
-
 }

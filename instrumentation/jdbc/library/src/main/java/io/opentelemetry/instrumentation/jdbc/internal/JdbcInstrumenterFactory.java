@@ -45,9 +45,7 @@ public final class JdbcInstrumenterFactory {
   }
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
-      OpenTelemetry openTelemetry,
-      boolean captureQueryParameters
-  ) {
+      OpenTelemetry openTelemetry, boolean captureQueryParameters) {
     return createStatementInstrumenter(
         openTelemetry,
         true,

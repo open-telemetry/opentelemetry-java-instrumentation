@@ -113,11 +113,15 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
         named("setTime").and(takesArgument(0, int.class)).and(takesArguments(3)).and(isPublic()),
         PreparedStatementInstrumentation.class.getName() + "$SetTime3Advice");
     transformer.applyAdviceToMethod(
-        named("setTimestamp").and(takesArgument(0, int.class)).and(takesArguments(2))
+        named("setTimestamp")
+            .and(takesArgument(0, int.class))
+            .and(takesArguments(2))
             .and(isPublic()),
         PreparedStatementInstrumentation.class.getName() + "$SetTimestamp2Advice");
     transformer.applyAdviceToMethod(
-        named("setTimestamp").and(takesArgument(0, int.class)).and(takesArguments(3))
+        named("setTimestamp")
+            .and(takesArgument(0, int.class))
+            .and(takesArguments(3))
             .and(isPublic()),
         PreparedStatementInstrumentation.class.getName() + "$SetTimestamp3Advice");
     transformer.applyAdviceToMethod(

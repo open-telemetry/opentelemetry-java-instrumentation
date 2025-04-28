@@ -20,6 +20,9 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import static io.opentelemetry.instrumentation.jdbc.internal.JdbcPreparedStatementStringifier.stringifyNullParameter;
+import static io.opentelemetry.instrumentation.jdbc.internal.JdbcPreparedStatementStringifier.stringifyParameter;
+
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.io.InputStream;
@@ -45,9 +48,6 @@ import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
-
-import static io.opentelemetry.instrumentation.jdbc.internal.JdbcPreparedStatementStringifier.stringifyNullParameter;
-import static io.opentelemetry.instrumentation.jdbc.internal.JdbcPreparedStatementStringifier.stringifyParameter;
 
 @SuppressWarnings("OverloadMethodsDeclarationOrder")
 class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTelemetryStatement<S>

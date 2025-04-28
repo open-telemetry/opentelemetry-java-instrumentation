@@ -53,8 +53,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 @SuppressWarnings("deprecation") // using deprecated semconv
 class PreparedStatementParametersTest {
 
-  @RegisterExtension
-  static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -114,8 +113,7 @@ class PreparedStatementParametersTest {
             "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS WHERE USER_NAME=? OR 1=1",
             "SELECT INFORMATION_SCHEMA.SYSTEM_USERS",
             "hsqldb:mem:",
-            "INFORMATION_SCHEMA.SYSTEM_USERS")
-    );
+            "INFORMATION_SCHEMA.SYSTEM_USERS"));
   }
 
   @ParameterizedTest
@@ -133,13 +131,14 @@ class PreparedStatementParametersTest {
     PreparedStatement statement = connection.prepareStatement(query);
     cleanup.deferCleanup(statement);
 
-    ResultSet resultSet = testing.runWithSpan(
-        "parent",
-        () -> {
-          statement.setNull(1, Types.INTEGER);
-          statement.execute();
-          return statement.getResultSet();
-        });
+    ResultSet resultSet =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              statement.setNull(1, Types.INTEGER);
+              statement.execute();
+              return statement.getResultSet();
+            });
 
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
@@ -178,13 +177,14 @@ class PreparedStatementParametersTest {
     PreparedStatement statement = connection.prepareStatement(query);
     cleanup.deferCleanup(statement);
 
-    ResultSet resultSet = testing.runWithSpan(
-        "parent",
-        () -> {
-          statement.setNull(1, Types.INTEGER, "Integer");
-          statement.execute();
-          return statement.getResultSet();
-        });
+    ResultSet resultSet =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              statement.setNull(1, Types.INTEGER, "Integer");
+              statement.execute();
+              return statement.getResultSet();
+            });
 
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
@@ -223,13 +223,14 @@ class PreparedStatementParametersTest {
     PreparedStatement statement = connection.prepareStatement(query);
     cleanup.deferCleanup(statement);
 
-    ResultSet resultSet = testing.runWithSpan(
-        "parent",
-        () -> {
-          statement.setByte(1, (byte) 0);
-          statement.execute();
-          return statement.getResultSet();
-        });
+    ResultSet resultSet =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              statement.setByte(1, (byte) 0);
+              statement.execute();
+              return statement.getResultSet();
+            });
 
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
@@ -270,13 +271,14 @@ class PreparedStatementParametersTest {
     PreparedStatement statement = connection.prepareStatement(updatedColumn);
     cleanup.deferCleanup(statement);
 
-    ResultSet resultSet = testing.runWithSpan(
-        "parent",
-        () -> {
-          statement.setBytes(1, new byte[] {(byte) 0, 0});
-          statement.execute();
-          return statement.getResultSet();
-        });
+    ResultSet resultSet =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              statement.setBytes(1, new byte[] {(byte) 0, 0});
+              statement.execute();
+              return statement.getResultSet();
+            });
 
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
@@ -315,13 +317,14 @@ class PreparedStatementParametersTest {
     PreparedStatement statement = connection.prepareStatement(query);
     cleanup.deferCleanup(statement);
 
-    ResultSet resultSet = testing.runWithSpan(
-        "parent",
-        () -> {
-          statement.setShort(1, (short)0);
-          statement.execute();
-          return statement.getResultSet();
-        });
+    ResultSet resultSet =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              statement.setShort(1, (short) 0);
+              statement.execute();
+              return statement.getResultSet();
+            });
 
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
@@ -360,13 +363,14 @@ class PreparedStatementParametersTest {
     PreparedStatement statement = connection.prepareStatement(query);
     cleanup.deferCleanup(statement);
 
-    ResultSet resultSet = testing.runWithSpan(
-        "parent",
-        () -> {
-          statement.setInt(1, 0);
-          statement.execute();
-          return statement.getResultSet();
-        });
+    ResultSet resultSet =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              statement.setInt(1, 0);
+              statement.execute();
+              return statement.getResultSet();
+            });
 
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
@@ -405,13 +409,14 @@ class PreparedStatementParametersTest {
     PreparedStatement statement = connection.prepareStatement(query);
     cleanup.deferCleanup(statement);
 
-    ResultSet resultSet = testing.runWithSpan(
-        "parent",
-        () -> {
-          statement.setLong(1, 0);
-          statement.execute();
-          return statement.getResultSet();
-        });
+    ResultSet resultSet =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              statement.setLong(1, 0);
+              statement.execute();
+              return statement.getResultSet();
+            });
 
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
@@ -450,13 +455,14 @@ class PreparedStatementParametersTest {
     PreparedStatement statement = connection.prepareStatement(query);
     cleanup.deferCleanup(statement);
 
-    ResultSet resultSet = testing.runWithSpan(
-        "parent",
-        () -> {
-          statement.setFloat(1, (float) 0.1);
-          statement.execute();
-          return statement.getResultSet();
-        });
+    ResultSet resultSet =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              statement.setFloat(1, (float) 0.1);
+              statement.execute();
+              return statement.getResultSet();
+            });
 
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
@@ -495,13 +501,14 @@ class PreparedStatementParametersTest {
     PreparedStatement statement = connection.prepareStatement(query);
     cleanup.deferCleanup(statement);
 
-    ResultSet resultSet = testing.runWithSpan(
-        "parent",
-        () -> {
-          statement.setDouble(1, 0.1);
-          statement.execute();
-          return statement.getResultSet();
-        });
+    ResultSet resultSet =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              statement.setDouble(1, 0.1);
+              statement.execute();
+              return statement.getResultSet();
+            });
 
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
@@ -540,13 +547,14 @@ class PreparedStatementParametersTest {
     PreparedStatement statement = connection.prepareStatement(query);
     cleanup.deferCleanup(statement);
 
-    ResultSet resultSet = testing.runWithSpan(
-        "parent",
-        () -> {
-          statement.setBigDecimal(1, BigDecimal.ZERO);
-          statement.execute();
-          return statement.getResultSet();
-        });
+    ResultSet resultSet =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              statement.setBigDecimal(1, BigDecimal.ZERO);
+              statement.execute();
+              return statement.getResultSet();
+            });
 
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
@@ -585,13 +593,14 @@ class PreparedStatementParametersTest {
     PreparedStatement statement = connection.prepareStatement(query);
     cleanup.deferCleanup(statement);
 
-    ResultSet resultSet = testing.runWithSpan(
-        "parent",
-        () -> {
-          statement.setString(1, "S");
-          statement.execute();
-          return statement.getResultSet();
-        });
+    ResultSet resultSet =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              statement.setString(1, "S");
+              statement.execute();
+              return statement.getResultSet();
+            });
 
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
@@ -632,13 +641,14 @@ class PreparedStatementParametersTest {
     PreparedStatement statement = connection.prepareStatement(updatedColumn);
     cleanup.deferCleanup(statement);
 
-    ResultSet resultSet = testing.runWithSpan(
-        "parent",
-        () -> {
-          statement.setDate(1, Date.valueOf("2000-01-01"));
-          statement.execute();
-          return statement.getResultSet();
-        });
+    ResultSet resultSet =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              statement.setDate(1, Date.valueOf("2000-01-01"));
+              statement.execute();
+              return statement.getResultSet();
+            });
 
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
@@ -679,13 +689,14 @@ class PreparedStatementParametersTest {
     PreparedStatement statement = connection.prepareStatement(updatedColumn);
     cleanup.deferCleanup(statement);
 
-    ResultSet resultSet = testing.runWithSpan(
-        "parent",
-        () -> {
-          statement.setDate(1, Date.valueOf("2000-01-01"), Calendar.getInstance());
-          statement.execute();
-          return statement.getResultSet();
-        });
+    ResultSet resultSet =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              statement.setDate(1, Date.valueOf("2000-01-01"), Calendar.getInstance());
+              statement.execute();
+              return statement.getResultSet();
+            });
 
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
@@ -726,13 +737,14 @@ class PreparedStatementParametersTest {
     PreparedStatement statement = connection.prepareStatement(updatedColumn);
     cleanup.deferCleanup(statement);
 
-    ResultSet resultSet = testing.runWithSpan(
-        "parent",
-        () -> {
-          statement.setTime(1, Time.valueOf("00:00:00"));
-          statement.execute();
-          return statement.getResultSet();
-        });
+    ResultSet resultSet =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              statement.setTime(1, Time.valueOf("00:00:00"));
+              statement.execute();
+              return statement.getResultSet();
+            });
 
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
@@ -773,13 +785,14 @@ class PreparedStatementParametersTest {
     PreparedStatement statement = connection.prepareStatement(updatedColumn);
     cleanup.deferCleanup(statement);
 
-    ResultSet resultSet = testing.runWithSpan(
-        "parent",
-        () -> {
-          statement.setTime(1, Time.valueOf("00:00:00"), Calendar.getInstance());
-          statement.execute();
-          return statement.getResultSet();
-        });
+    ResultSet resultSet =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              statement.setTime(1, Time.valueOf("00:00:00"), Calendar.getInstance());
+              statement.execute();
+              return statement.getResultSet();
+            });
 
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
@@ -820,13 +833,14 @@ class PreparedStatementParametersTest {
     PreparedStatement statement = connection.prepareStatement(updatedColumn);
     cleanup.deferCleanup(statement);
 
-    ResultSet resultSet = testing.runWithSpan(
-        "parent",
-        () -> {
-          statement.setTimestamp(1, Timestamp.valueOf("2000-01-01 00:00:00"));
-          statement.execute();
-          return statement.getResultSet();
-        });
+    ResultSet resultSet =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              statement.setTimestamp(1, Timestamp.valueOf("2000-01-01 00:00:00"));
+              statement.execute();
+              return statement.getResultSet();
+            });
 
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
@@ -847,7 +861,9 @@ class PreparedStatementParametersTest {
                             equalTo(maybeStable(DB_STATEMENT), updatedColumnSanitized),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), table),
-                            equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "'2000-01-01 00:00:00.0'"))));
+                            equalTo(
+                                DB_QUERY_PARAMETER.getAttributeKey("0"),
+                                "'2000-01-01 00:00:00.0'"))));
   }
 
   @ParameterizedTest
@@ -867,13 +883,15 @@ class PreparedStatementParametersTest {
     PreparedStatement statement = connection.prepareStatement(updatedColumn);
     cleanup.deferCleanup(statement);
 
-    ResultSet resultSet = testing.runWithSpan(
-        "parent",
-        () -> {
-          statement.setTimestamp(1, Timestamp.valueOf("2000-01-01 00:00:00"), Calendar.getInstance());
-          statement.execute();
-          return statement.getResultSet();
-        });
+    ResultSet resultSet =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              statement.setTimestamp(
+                  1, Timestamp.valueOf("2000-01-01 00:00:00"), Calendar.getInstance());
+              statement.execute();
+              return statement.getResultSet();
+            });
 
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
@@ -894,7 +912,9 @@ class PreparedStatementParametersTest {
                             equalTo(maybeStable(DB_STATEMENT), updatedColumnSanitized),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), table),
-                            equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "'2000-01-01 00:00:00.0'"))));
+                            equalTo(
+                                DB_QUERY_PARAMETER.getAttributeKey("0"),
+                                "'2000-01-01 00:00:00.0'"))));
   }
 
   @Ignore("not supported by tested drivers")
@@ -911,13 +931,14 @@ class PreparedStatementParametersTest {
     PreparedStatement statement = connection.prepareStatement(query);
     cleanup.deferCleanup(statement);
 
-    ResultSet resultSet = testing.runWithSpan(
-        "parent",
-        () -> {
-          statement.setURL(1, URI.create("http://localhost:8080").toURL());
-          statement.execute();
-          return statement.getResultSet();
-        });
+    ResultSet resultSet =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              statement.setURL(1, URI.create("http://localhost:8080").toURL());
+              statement.execute();
+              return statement.getResultSet();
+            });
 
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
@@ -938,7 +959,9 @@ class PreparedStatementParametersTest {
                             equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), table),
-                            equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "'http://localhost:8080'"))));
+                            equalTo(
+                                DB_QUERY_PARAMETER.getAttributeKey("0"),
+                                "'http://localhost:8080'"))));
   }
 
   @ParameterizedTest
@@ -953,17 +976,18 @@ class PreparedStatementParametersTest {
       String url,
       String table)
       throws SQLException {
-    if (!system.equalsIgnoreCase( "derby")) {
+    if (!system.equalsIgnoreCase("derby")) {
       PreparedStatement statement = connection.prepareStatement(query);
       cleanup.deferCleanup(statement);
 
-      ResultSet resultSet = testing.runWithSpan(
-          "parent",
-          () -> {
-            statement.setNString(1, "S");
-            statement.execute();
-            return statement.getResultSet();
-          });
+      ResultSet resultSet =
+          testing.runWithSpan(
+              "parent",
+              () -> {
+                statement.setNString(1, "S");
+                statement.execute();
+                return statement.getResultSet();
+              });
 
       resultSet.next();
       assertThat(resultSet.getInt(1)).isEqualTo(3);
@@ -980,13 +1004,12 @@ class PreparedStatementParametersTest {
                               equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
                               equalTo(maybeStable(DB_NAME), dbNameLower),
                               equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                              equalTo(DB_CONNECTION_STRING,
-                                  emitStableDatabaseSemconv() ? null : url),
+                              equalTo(
+                                  DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
                               equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
                               equalTo(maybeStable(DB_OPERATION), "SELECT"),
                               equalTo(maybeStable(DB_SQL_TABLE), table),
                               equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "'S'"))));
     }
   }
-
 }

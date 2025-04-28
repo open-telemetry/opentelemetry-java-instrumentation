@@ -56,9 +56,8 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   /**
    * Sets whether the {@code db.query.parameter.<key>} attributes extracted by the constructed
-   * {@link SqlClientAttributesExtractor} should be opted-in. If set to {@code true},
-   * all parameters from {@code PreparedStatement} will be exposed as attributes.
-   * Disabled by default.
+   * {@link SqlClientAttributesExtractor} should be opted-in. If set to {@code true}, all parameters
+   * from {@code PreparedStatement} will be exposed as attributes. Disabled by default.
    */
   @CanIgnoreReturnValue
   public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCaptureQueryParameters(

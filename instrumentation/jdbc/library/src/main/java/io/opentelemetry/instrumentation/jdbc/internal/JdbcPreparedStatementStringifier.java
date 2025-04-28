@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import java.net.URL;
@@ -64,5 +69,4 @@ public class JdbcPreparedStatementStringifier {
   public static String stringifyNullParameter() {
     return "<null>";
   }
-
 }

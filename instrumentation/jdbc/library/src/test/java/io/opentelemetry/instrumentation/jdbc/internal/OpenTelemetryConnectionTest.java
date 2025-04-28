@@ -282,7 +282,8 @@ class OpenTelemetryConnectionTest {
   }
 
   @SuppressWarnings("deprecation") // old semconv
-  private static void jdbcTraceAssertion(DbInfo dbInfo, String query, String operation, AttributeAssertion... assertions) {
+  private static void jdbcTraceAssertion(
+      DbInfo dbInfo, String query, String operation, AttributeAssertion... assertions) {
     List<AttributeAssertion> baseAttributeAssertions =
         Arrays.asList(
             equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(dbInfo.getSystem())),
