@@ -31,7 +31,7 @@ public final class ContainerResource {
   // copied from ContainerIncubatingAttributes
   private static final AttributeKey<String> CONTAINER_ID = AttributeKey.stringKey("container.id");
 
-  static final Filesystem FILESYSTEM_INSTANCE = new Filesystem(Filesystem::getOsName);
+  static final Filesystem FILESYSTEM_INSTANCE = new Filesystem();
   private static final Resource INSTANCE = buildSingleton();
 
   private static Resource buildSingleton() {
@@ -75,11 +75,15 @@ public final class ContainerResource {
 
   // Exists for testing
   static class Filesystem {
-
     private static final Logger logger = Logger.getLogger(Filesystem.class.getName());
+
     private final Supplier<String> osNameSupplier;
 
-    public Filesystem(Supplier<String> osNameSupplier) {
+    Filesystem() {
+      this(() -> System.getProperty("os.name"));
+    }
+
+    Filesystem(Supplier<String> osNameSupplier) {
       this.osNameSupplier = osNameSupplier;
     }
 
@@ -89,11 +93,10 @@ public final class ContainerResource {
 
     @MustBeClosed
     Stream<String> lines(Path path) throws IOException {
-
       String osName = osNameSupplier.get();
       if (osName.equalsIgnoreCase("z/OS") || osName.equalsIgnoreCase("OS/390")) {
         try {
-          // On z/OS the /proc tree is always ecoded with IBM1047 (Canonical name: Cp1047).
+          // On z/OS the /proc tree is always encoded with IBM1047 (Canonical name: Cp1047).
           return Files.lines(path, Charset.forName("Cp1047"));
         } catch (UnsupportedCharsetException e) {
           // What charsets are available depends on the instance of the JVM
@@ -109,10 +112,6 @@ public final class ContainerResource {
       try (Stream<String> lines = lines(path)) {
         return lines.collect(Collectors.toList());
       }
-    }
-
-    static String getOsName() {
-      return System.getProperty("os.name");
     }
   }
 }
