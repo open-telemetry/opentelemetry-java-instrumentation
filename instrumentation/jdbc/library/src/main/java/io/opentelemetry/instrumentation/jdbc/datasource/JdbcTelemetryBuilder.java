@@ -43,7 +43,7 @@ public final class JdbcTelemetryBuilder {
     return this;
   }
 
-  /** Configures whether spans are created for JDBC Transactions. Enabled by default. */
+  /** Configures whether spans are created for JDBC Transactions. Disabled by default. */
   @CanIgnoreReturnValue
   public JdbcTelemetryBuilder setTransactionInstrumenterEnabled(boolean enabled) {
     this.transactionInstrumenterEnabled = enabled;

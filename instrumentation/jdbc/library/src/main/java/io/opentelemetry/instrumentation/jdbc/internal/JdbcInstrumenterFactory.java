@@ -81,7 +81,6 @@ public final class JdbcInstrumenterFactory {
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(transactionAttributesGetter).build())
         .addAttributesExtractor(ServerAttributesExtractor.create(transactionNetAttributesGetter))
-        .addOperationMetrics(DbClientMetrics.get())
         .setEnabled(enabled)
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }

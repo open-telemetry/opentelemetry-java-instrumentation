@@ -54,7 +54,7 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
         ConnectionInstrumentation.class.getName() + "$PrepareAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("commit", "rollback").and(takesNoArguments()).and(isPublic()),
-        ConnectionInstrumentation.class.getName() + "$TxnAdvice");
+        ConnectionInstrumentation.class.getName() + "$TransactionAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -68,7 +68,7 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class TxnAdvice {
+  public static class TransactionAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(

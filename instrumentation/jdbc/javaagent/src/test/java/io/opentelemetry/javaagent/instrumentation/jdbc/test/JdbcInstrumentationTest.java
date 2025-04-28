@@ -1643,56 +1643,49 @@ class JdbcInstrumentationTest {
     createTable.execute("CREATE TABLE " + tableName + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
     cleanup.deferCleanup(createTable);
 
-    boolean originalAutoCommit = connection.getAutoCommit();
     connection.setAutoCommit(false);
 
     testing.waitForTraces(1);
     testing.clearData();
 
-    try {
-      Statement insertStatement = connection.createStatement();
-      cleanup.deferCleanup(insertStatement);
+    Statement insertStatement = connection.createStatement();
+    cleanup.deferCleanup(insertStatement);
 
-      testing.runWithSpan(
-          "parent",
-          () -> {
-            insertStatement.executeUpdate("INSERT INTO " + tableName + " VALUES(1)");
-            connection.commit();
-          });
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          insertStatement.executeUpdate("INSERT INTO " + tableName + " VALUES(1)");
+          connection.commit();
+        });
 
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                  span ->
-                      span.hasName("INSERT jdbcunittest." + tableName)
-                          .hasKind(SpanKind.CLIENT)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                              equalTo(maybeStable(DB_NAME), dbNameLower),
-                              equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                              equalTo(
-                                  DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                              equalTo(
-                                  maybeStable(DB_STATEMENT),
-                                  "INSERT INTO " + tableName + " VALUES(?)"),
-                              equalTo(maybeStable(DB_OPERATION), "INSERT"),
-                              equalTo(maybeStable(DB_SQL_TABLE), tableName)),
-                  span ->
-                      span.hasName("COMMIT")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                              equalTo(maybeStable(DB_NAME), dbNameLower),
-                              equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                              equalTo(
-                                  DB_CONNECTION_STRING,
-                                  emitStableDatabaseSemconv() ? null : url))));
-    } finally {
-      connection.setAutoCommit(originalAutoCommit);
-    }
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("INSERT jdbcunittest." + tableName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
+                            equalTo(maybeStable(DB_NAME), dbNameLower),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
+                            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                "INSERT INTO " + tableName + " VALUES(?)"),
+                            equalTo(maybeStable(DB_OPERATION), "INSERT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), tableName)),
+                span ->
+                    span.hasName("COMMIT")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
+                            equalTo(maybeStable(DB_NAME), dbNameLower),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
+                            equalTo(
+                                DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url))));
   }
 
   @ParameterizedTest
@@ -1705,62 +1698,49 @@ class JdbcInstrumentationTest {
     createTable.execute("CREATE TABLE " + tableName + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
     cleanup.deferCleanup(createTable);
 
-    boolean originalAutoCommit = connection.getAutoCommit();
     connection.setAutoCommit(false);
 
     testing.waitForTraces(1);
     testing.clearData();
 
-    try {
-      Statement insertStatement = connection.createStatement();
-      cleanup.deferCleanup(insertStatement);
+    Statement insertStatement = connection.createStatement();
+    cleanup.deferCleanup(insertStatement);
 
-      testing.runWithSpan(
-          "parent",
-          () -> {
-            insertStatement.executeUpdate("INSERT INTO " + tableName + " VALUES(1)");
-            connection.rollback();
-          });
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          insertStatement.executeUpdate("INSERT INTO " + tableName + " VALUES(1)");
+          connection.rollback();
+        });
 
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                  span ->
-                      span.hasName("INSERT jdbcunittest." + tableName)
-                          .hasKind(SpanKind.CLIENT)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                              equalTo(maybeStable(DB_NAME), dbNameLower),
-                              equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                              equalTo(
-                                  DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                              equalTo(
-                                  maybeStable(DB_STATEMENT),
-                                  "INSERT INTO " + tableName + " VALUES(?)"),
-                              equalTo(maybeStable(DB_OPERATION), "INSERT"),
-                              equalTo(maybeStable(DB_SQL_TABLE), tableName)),
-                  span ->
-                      span.hasName("ROLLBACK")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                              equalTo(maybeStable(DB_NAME), dbNameLower),
-                              equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                              equalTo(
-                                  DB_CONNECTION_STRING,
-                                  emitStableDatabaseSemconv() ? null : url))));
-
-      Statement selectStatement = connection.createStatement();
-      cleanup.deferCleanup(selectStatement);
-      ResultSet resultSet = selectStatement.executeQuery("SELECT COUNT(*) FROM " + tableName);
-      resultSet.next();
-      assertThat(resultSet.getInt(1)).isEqualTo(0);
-    } finally {
-      connection.setAutoCommit(originalAutoCommit);
-    }
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("INSERT jdbcunittest." + tableName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
+                            equalTo(maybeStable(DB_NAME), dbNameLower),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
+                            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                "INSERT INTO " + tableName + " VALUES(?)"),
+                            equalTo(maybeStable(DB_OPERATION), "INSERT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), tableName)),
+                span ->
+                    span.hasName("ROLLBACK")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
+                            equalTo(maybeStable(DB_NAME), dbNameLower),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
+                            equalTo(
+                                DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url))));
   }
 
   static Stream<Arguments> transactionOperationsStream() throws SQLException {
