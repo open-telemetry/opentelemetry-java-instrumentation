@@ -44,6 +44,9 @@ public class ResourceProviderPropertiesCustomizer implements AutoConfigurationCu
         "io.opentelemetry.contrib.aws.resource.LambdaResourceProvider", "aws");
     DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
         "io.opentelemetry.contrib.gcp.resource.GCPResourceProvider", "gcp");
+    DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
+        "io.opentelemetry.contrib.cloudfoundry.resources.CloudFoundryResourceProvider",
+        "cloudfoundry");
     // for testing
     DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
         "io.opentelemetry.instrumentation.resources.ResourceProviderPropertiesCustomizerTest$Provider",

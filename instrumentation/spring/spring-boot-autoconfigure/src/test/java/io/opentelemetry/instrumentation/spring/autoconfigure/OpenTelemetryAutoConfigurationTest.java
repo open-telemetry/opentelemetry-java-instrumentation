@@ -99,6 +99,7 @@ class OpenTelemetryAutoConfigurationTest {
                                   "io.opentelemetry.contrib.aws.resource.EksResourceProvider",
                                   "io.opentelemetry.contrib.aws.resource.LambdaResourceProvider",
                                   "io.opentelemetry.contrib.gcp.resource.GCPResourceProvider",
+                                  "io.opentelemetry.contrib.cloudfoundry.resources.CloudFoundryResourceProvider",
                                   "io.opentelemetry.instrumentation.resources.ResourceProviderPropertiesCustomizerTest$Provider");
                         }));
   }
