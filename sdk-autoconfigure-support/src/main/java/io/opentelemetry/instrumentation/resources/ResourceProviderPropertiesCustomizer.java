@@ -71,10 +71,10 @@ public class ResourceProviderPropertiesCustomizer implements AutoConfigurationCu
         DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.entrySet()) {
       String providerName = providerEntry.getKey();
       String providerGroup = providerEntry.getValue();
-      Boolean explictEnabled =
+      Boolean explicitEnabled =
           config.getBoolean(String.format("otel.resource.providers.%s.enabled", providerGroup));
 
-      if (isEnabled(providerName, enabledProviders, explictEnabled)) {
+      if (isEnabled(providerName, enabledProviders, explicitEnabled)) {
         enabled.add(providerName);
       } else {
         disabled.add(providerName);
