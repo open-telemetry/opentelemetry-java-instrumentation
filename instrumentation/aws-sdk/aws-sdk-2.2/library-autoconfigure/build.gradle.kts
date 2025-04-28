@@ -5,8 +5,6 @@ plugins {
 base.archivesName.set("${base.archivesName.get()}-autoconfigure")
 
 dependencies {
-  compileOnly(project(":javaagent-extension-api"))
-
   implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
 
   library("software.amazon.awssdk:aws-core:2.2.0")

@@ -22,6 +22,7 @@ import io.opentelemetry.util.NamingConventions;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -145,11 +146,11 @@ public class OverheadTests {
         System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(testConfig.getWarmupSeconds());
     while (System.currentTimeMillis() < deadline) {
       GenericContainer<?> k6 =
-          new GenericContainer<>(DockerImageName.parse("loadimpact/k6"))
+          new GenericContainer<>(DockerImageName.parse("grafana/k6"))
               .withNetwork(NETWORK)
               .withCopyFileToContainer(MountableFile.forHostPath("./k6"), "/app")
               .withCommand("run", "-u", "5", "-i", "200", "/app/basic.js")
-              .withStartupCheckStrategy(new OneShotStartupCheckStrategy());
+              .withStartupCheckStrategy(new OneShotStartupCheckStrategy().withTimeout(Duration.ofMinutes(5)));
       k6.start();
     }
 

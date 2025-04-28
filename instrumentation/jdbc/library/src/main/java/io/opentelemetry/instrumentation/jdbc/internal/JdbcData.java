@@ -98,6 +98,17 @@ public final class JdbcData {
     return batchInfo != null ? batchInfo.getBatchSize() : null;
   }
 
+  public static void close(Statement statement) {
+    // when statement is closed remove all of our virtual fields in case the JDBC driver reuses the
+    // same statement instance for a subsequent query
+    statementBatch.set(statement, null);
+    if (statement instanceof PreparedStatement) {
+      PreparedStatement prepared = (PreparedStatement) statement;
+      preparedStatement.set(prepared, null);
+      preparedStatementBatch.set(prepared, null);
+    }
+  }
+
   public static void addParameter(PreparedStatement statement, String index, String value) {
     Map<String, String> parametersMap = parameters.get(statement);
     if (parametersMap == null) {

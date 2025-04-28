@@ -112,6 +112,29 @@ class OpenTelemetryConnectionTest {
   }
 
   @Test
+  void testVerifyPrepareStatementUpdate() throws SQLException {
+    Instrumenter<DbRequest, Void> instrumenter =
+        createStatementInstrumenter(testing.getOpenTelemetry());
+    DbInfo dbInfo = getDbInfo();
+    OpenTelemetryConnection connection =
+        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
+    String query = "UPDATE users SET name = name";
+    PreparedStatement statement = connection.prepareStatement(query);
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          statement.executeUpdate();
+          assertThat(statement.getResultSet()).isNull();
+        });
+
+    jdbcTraceAssertion(dbInfo, query, "UPDATE");
+
+    statement.close();
+    connection.close();
+  }
+
+  @Test
   void testVerifyPrepareStatementQuery() throws SQLException {
     Instrumenter<DbRequest, Void> instrumenter =
         createStatementInstrumenter(testing.getOpenTelemetry());
@@ -233,6 +256,7 @@ class OpenTelemetryConnectionTest {
     jdbcTraceAssertion(
         dbInfo,
         sanitized,
+        "SELECT",
         equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "1"),
         equalTo(DB_QUERY_PARAMETER.getAttributeKey("1"), "'bob'"));
 
@@ -253,9 +277,12 @@ class OpenTelemetryConnectionTest {
         .build();
   }
 
+  private static void jdbcTraceAssertion(DbInfo dbInfo, String query) {
+    jdbcTraceAssertion(dbInfo, query, "SELECT");
+  }
+
   @SuppressWarnings("deprecation") // old semconv
-  private static void jdbcTraceAssertion(
-      DbInfo dbInfo, String query, AttributeAssertion... assertions) {
+  private static void jdbcTraceAssertion(DbInfo dbInfo, String query, String operation, AttributeAssertion... assertions) {
     List<AttributeAssertion> baseAttributeAssertions =
         Arrays.asList(
             equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(dbInfo.getSystem())),
@@ -264,19 +291,18 @@ class OpenTelemetryConnectionTest {
             equalTo(
                 DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : dbInfo.getShortUrl()),
             equalTo(maybeStable(DB_STATEMENT), query),
-            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+            equalTo(maybeStable(DB_OPERATION), operation),
             equalTo(maybeStable(DB_SQL_TABLE), "users"),
             equalTo(SERVER_ADDRESS, dbInfo.getHost()),
             equalTo(SERVER_PORT, dbInfo.getPort()));
 
     List<AttributeAssertion> additionAttributeAssertions = Arrays.asList(assertions);
-
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("SELECT my_name.users")
+                    span.hasName(operation + " my_name.users")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(

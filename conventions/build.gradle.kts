@@ -59,7 +59,7 @@ dependencies {
   implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.18")
   implementation("com.gradleup.shadow:shadow-gradle-plugin:8.3.6")
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
-  implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:4.0")
+  implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:4.0.1")
   implementation("org.owasp:dependency-check-gradle:12.1.1")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:2.0.0")
   implementation("org.spdx:spdx-gradle-plugin:0.9.0")
@@ -67,7 +67,7 @@ dependencies {
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.17.5")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.3")
-  implementation("net.ltgt.gradle:gradle-errorprone-plugin:4.1.0")
+  implementation("net.ltgt.gradle:gradle-errorprone-plugin:4.2.0")
   implementation("net.ltgt.gradle:gradle-nullaway-plugin:2.2.0")
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.6")
 

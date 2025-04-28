@@ -30,16 +30,17 @@ import java.util.HashMap;
 import java.util.Map;
 
 class TestPreparedStatement extends TestStatement implements PreparedStatement {
+  private boolean hasResultSet = true;
   Map<String, String> parameters;
-
-  TestPreparedStatement() {
-    super();
-    this.parameters = new HashMap<>();
-  }
 
   TestPreparedStatement(Connection connection) {
     super(connection);
     this.parameters = new HashMap<>();
+  }
+
+  @Override
+  protected boolean hasResultSet() {
+    return hasResultSet;
   }
 
   @Override
@@ -55,11 +56,12 @@ class TestPreparedStatement extends TestStatement implements PreparedStatement {
 
   @Override
   public ResultSet executeQuery() throws SQLException {
-    return null;
+    return new TestResultSet(this);
   }
 
   @Override
   public int executeUpdate() throws SQLException {
+    hasResultSet = false;
     return 0;
   }
 
