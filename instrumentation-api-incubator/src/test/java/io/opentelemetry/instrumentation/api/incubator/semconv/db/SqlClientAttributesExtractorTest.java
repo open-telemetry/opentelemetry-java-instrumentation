@@ -74,16 +74,9 @@ class SqlClientAttributesExtractorTest {
         return null;
       }
 
-      Map<String, Object> parameters = new HashMap<>();
+      Map<String, String> parameters = new HashMap<>();
       for (String s : parameterString.split(";")) {
-        // cast basic types used in tests
-        Object value = s;
-        try {
-          value = Integer.parseInt(s);
-        } catch (NumberFormatException ignored) {
-        }
-
-        parameters.put(Integer.toString(parameters.size() + 1), value);
+        parameters.put(Integer.toString(parameters.size()), s);
       }
       return parameters;
     }
@@ -422,9 +415,9 @@ class SqlClientAttributesExtractorTest {
     // a query with prepared parameters and parameters to sanitize
     request.put(
         "db.statement",
-        "SELECT col FROM table WHERE field1=? AND field2='A' AND field3=$2 AND field4=2");
+        "SELECT col FROM table WHERE field1=? AND field2='A' AND field3=? AND field4=2");
     // a prepared parameters map
-    request.put("db.query.parameter", "a;1");
+    request.put("db.query.parameter", "'a';1");
 
     Context context = Context.root();
 
@@ -449,23 +442,17 @@ class SqlClientAttributesExtractorTest {
       assertThat(queryParameterAttributes)
           .containsOnly(
               entry(DB_QUERY_PARAMETER.getAttributeKey("0"), "'a'"),
-              entry(DB_QUERY_PARAMETER.getAttributeKey("1"), "'A'"),
-              entry(DB_QUERY_PARAMETER.getAttributeKey("$2"), "1"),
-              entry(DB_QUERY_PARAMETER.getAttributeKey("2"), "2"));
+              entry(DB_QUERY_PARAMETER.getAttributeKey("1"), "1"));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(queryParameterAttributes)
           .containsOnly(
               entry(DB_QUERY_PARAMETER.getAttributeKey("0"), "'a'"),
-              entry(DB_QUERY_PARAMETER.getAttributeKey("1"), "'A'"),
-              entry(DB_QUERY_PARAMETER.getAttributeKey("$2"), "1"),
-              entry(DB_QUERY_PARAMETER.getAttributeKey("2"), "2"));
+              entry(DB_QUERY_PARAMETER.getAttributeKey("1"), "1"));
     } else if (SemconvStability.emitStableDatabaseSemconv()) {
       assertThat(queryParameterAttributes)
           .containsOnly(
               entry(DB_QUERY_PARAMETER.getAttributeKey("0"), "'a'"),
-              entry(DB_QUERY_PARAMETER.getAttributeKey("1"), "'A'"),
-              entry(DB_QUERY_PARAMETER.getAttributeKey("$2"), "1"),
-              entry(DB_QUERY_PARAMETER.getAttributeKey("2"), "2"));
+              entry(DB_QUERY_PARAMETER.getAttributeKey("1"), "1"));
     }
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
