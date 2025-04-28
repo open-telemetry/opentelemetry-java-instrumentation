@@ -157,7 +157,7 @@ public class StatementInstrumentation implements TypeInstrumentation {
       if (statement instanceof PreparedStatement) {
         Long batchSize = JdbcData.getPreparedStatementBatchSize((PreparedStatement) statement);
         String sql = JdbcData.preparedStatement.get((PreparedStatement) statement);
-        Map<Integer, Object> parameters = JdbcData.parameters.get((PreparedStatement) statement);
+        Map<String, String> parameters = JdbcData.parameters.get((PreparedStatement) statement);
         if (sql == null) {
           return;
         }

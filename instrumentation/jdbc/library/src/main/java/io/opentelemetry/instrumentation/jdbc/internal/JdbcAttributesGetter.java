@@ -66,7 +66,7 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
 
   @Nullable
   @Override
-  public Map<Integer, Object> getQueryParameters(DbRequest request) {
+  public Map<String, String> getQueryParameters(DbRequest request) {
     return request.getPreparedStatementParameters();
   }
 }

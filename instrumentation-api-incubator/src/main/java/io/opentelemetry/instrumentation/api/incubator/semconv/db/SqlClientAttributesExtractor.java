@@ -28,7 +28,7 @@ import java.util.Map;
  */
 public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     extends DbClientCommonAttributesExtractor<
-        REQUEST, RESPONSE, SqlClientAttributesGetter<REQUEST, RESPONSE>> {
+    REQUEST, RESPONSE, SqlClientAttributesGetter<REQUEST, RESPONSE>> {
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
@@ -62,17 +62,18 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
 
   private final AttributeKey<String> oldSemconvTableAttribute;
   private final boolean statementSanitizationEnabled;
-  private final boolean queryParameterEnabled;
+  private final boolean captureQueryParameters;
 
   SqlClientAttributesExtractor(
       SqlClientAttributesGetter<REQUEST, RESPONSE> getter,
       AttributeKey<String> oldSemconvTableAttribute,
       boolean statementSanitizationEnabled,
-      boolean queryParameterEnabled) {
+      boolean captureQueryParameters) {
     super(getter);
     this.oldSemconvTableAttribute = oldSemconvTableAttribute;
-    this.statementSanitizationEnabled = statementSanitizationEnabled;
-    this.queryParameterEnabled = queryParameterEnabled;
+    // captureQueryParameters disables statementSanitizationEnabled
+    this.statementSanitizationEnabled = !captureQueryParameters && statementSanitizationEnabled;
+    this.captureQueryParameters = captureQueryParameters;
   }
 
   @Override
@@ -81,7 +82,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     super.onStart(attributes, parentContext, request);
 
     Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
-    Map<Integer, Object> preparedStatementParameters = getter.getQueryParameters(request);
+    Map<String, String> preparedStatementParameters = getter.getQueryParameters(request);
 
     if (rawQueryTexts.isEmpty()) {
       return;
@@ -103,7 +104,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         if (!SQL_CALL.equals(operation)) {
           internalSet(attributes, oldSemconvTableAttribute, sanitizedStatement.getMainIdentifier());
         }
-        setQueryParameters(attributes, sanitizedStatement, isBatch, preparedStatementParameters);
+        setQueryParameters(attributes, isBatch, preparedStatementParameters);
       }
     }
 
@@ -123,7 +124,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         if (!SQL_CALL.equals(operation)) {
           internalSet(attributes, DB_COLLECTION_NAME, sanitizedStatement.getMainIdentifier());
         }
-        setQueryParameters(attributes, sanitizedStatement, isBatch, preparedStatementParameters);
+        setQueryParameters(attributes, isBatch, preparedStatementParameters);
       } else {
         MultiQuery multiQuery =
             MultiQuery.analyze(getter.getRawQueryTexts(request), statementSanitizationEnabled);
@@ -143,27 +144,13 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
 
   private void setQueryParameters(
       AttributesBuilder attributes,
-      SqlStatementInfo sanitizedStatement,
       boolean isBatch,
-      Map<Integer, Object> preparedStatementParameters) {
-    if (sanitizedStatement.getParameters() != null && queryParameterEnabled && !isBatch) {
-      int currentPreparedStatementParametersIndex = 1;
-      for (Map.Entry<String, String> entry : sanitizedStatement.getParameters().entrySet()) {
-        // in this case it means that the sanitizer parsed an existing ?
-        // or a postgres marked parameter. So we'll replace with data from the REQUEST
+      Map<String, String> preparedStatementParameters) {
+    if (captureQueryParameters && !isBatch && preparedStatementParameters != null) {
+      for (Map.Entry<String, String> entry : preparedStatementParameters.entrySet()) {
         String key = entry.getKey();
         String value = entry.getValue();
-        if (preparedStatementParameters != null
-            && (value.equalsIgnoreCase("?") || value.startsWith("$"))
-            && preparedStatementParameters.containsKey(currentPreparedStatementParametersIndex)) {
-          internalSet(
-              attributes,
-              DB_QUERY_PARAMETER.getAttributeKey(key),
-              stringifyParameter(
-                  preparedStatementParameters.get(currentPreparedStatementParametersIndex++)));
-        } else {
-          internalSet(attributes, DB_QUERY_PARAMETER.getAttributeKey(key), value);
-        }
+        internalSet(attributes, DB_QUERY_PARAMETER.getAttributeKey(key), value);
       }
     }
   }
@@ -180,17 +167,4 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     return builder.toString();
   }
 
-  // TODO define all string repr of objects
-  public static String stringifyParameter(Object object) {
-    if (object == null) {
-      return "<null>";
-    } else if (object instanceof String) {
-      return String.format("'%s'", object);
-    } else if (object instanceof Number) {
-      Number number = (Number) object;
-      return String.format("%s", number);
-    }
-
-    return String.format("<%s>", object.getClass().getSimpleName());
-  }
 }

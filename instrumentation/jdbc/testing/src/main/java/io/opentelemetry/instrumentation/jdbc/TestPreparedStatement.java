@@ -30,7 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 class TestPreparedStatement extends TestStatement implements PreparedStatement {
-  Map<Integer, Object> parameters;
+  Map<String, String> parameters;
 
   TestPreparedStatement() {
     super();
@@ -150,7 +150,7 @@ class TestPreparedStatement extends TestStatement implements PreparedStatement {
 
   @Override
   public void setInt(int parameterIndex, int x) throws SQLException {
-    parameters.put(parameterIndex, x);
+    parameters.put(Integer.toString(parameterIndex), Integer.toString(x));
   }
 
   @Override

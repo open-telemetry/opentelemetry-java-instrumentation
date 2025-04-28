@@ -39,7 +39,7 @@ public final class SqlStatementSanitizer {
 
   public SqlStatementInfo sanitize(@Nullable String statement, SqlDialect dialect) {
     if (!statementSanitizationEnabled || statement == null) {
-      return SqlStatementInfo.create(statement, null, null, null);
+      return SqlStatementInfo.create(statement, null, null);
     }
     // sanitization result will not be cached for statements larger than the threshold to avoid
     // cache growing too large

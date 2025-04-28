@@ -212,12 +212,12 @@ class OpenTelemetryConnectionTest {
   @Test
   void testVerifyPrepareStatementParameters() throws SQLException {
     Instrumenter<DbRequest, Void> instrumenter =
-        createStatementInstrumenter(testing.getOpenTelemetry());
+        createStatementInstrumenter(testing.getOpenTelemetry(), true);
     DbInfo dbInfo = getDbInfo();
     OpenTelemetryConnection connection =
         new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
-    String query = "SELECT * FROM users WHERE id=? AND name=$2 AND age=3";
-    String sanitized = "SELECT * FROM users WHERE id=? AND name=$2 AND age=?";
+    String query = "SELECT * FROM users WHERE id=? AND name=? AND age=3";
+    String sanitized = "SELECT * FROM users WHERE id=? AND name=? AND age=3";
     PreparedStatement statement = connection.prepareStatement(query);
     statement.setInt(1, 1);
     statement.setString(2, "bob");
@@ -234,8 +234,7 @@ class OpenTelemetryConnectionTest {
         dbInfo,
         sanitized,
         equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "1"),
-        equalTo(DB_QUERY_PARAMETER.getAttributeKey("$2"), "'bob'"),
-        equalTo(DB_QUERY_PARAMETER.getAttributeKey("1"), "3"));
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("1"), "'bob'"));
 
     statement.close();
     connection.close();

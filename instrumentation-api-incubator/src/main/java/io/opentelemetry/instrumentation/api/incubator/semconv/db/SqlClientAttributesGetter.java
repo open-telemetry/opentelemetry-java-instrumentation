@@ -68,10 +68,9 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
     return null;
   }
 
-  /** TODO */
   // TODO: make this required to implement
   @Nullable
-  default Map<Integer, Object> getQueryParameters(REQUEST request) {
+  default Map<String, String> getQueryParameters(REQUEST request) {
     return null;
   }
 }

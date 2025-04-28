@@ -27,7 +27,7 @@ public abstract class DbRequest {
 
   @Nullable
   public static DbRequest create(
-      PreparedStatement statement, Map<Integer, Object> preparedStatementParameters) {
+      PreparedStatement statement, Map<String, String> preparedStatementParameters) {
     return create(
         statement, JdbcData.preparedStatement.get(statement), preparedStatementParameters);
   }
@@ -36,7 +36,7 @@ public abstract class DbRequest {
   public static DbRequest create(
       Statement statement,
       String dbStatementString,
-      Map<Integer, Object> preparedStatementParameters) {
+      Map<String, String> preparedStatementParameters) {
     return create(statement, dbStatementString, null, preparedStatementParameters);
   }
 
@@ -45,7 +45,7 @@ public abstract class DbRequest {
       Statement statement,
       String dbStatementString,
       Long batchSize,
-      Map<Integer, Object> preparedStatementParameters) {
+      Map<String, String> preparedStatementParameters) {
     Connection connection = connectionFromStatement(statement);
     if (connection == null) {
       return null;
@@ -59,7 +59,7 @@ public abstract class DbRequest {
       Statement statement,
       Collection<String> queryTexts,
       Long batchSize,
-      Map<Integer, Object> preparedStatementParameters) {
+      Map<String, String> preparedStatementParameters) {
     Connection connection = connectionFromStatement(statement);
     if (connection == null) {
       return null;
@@ -76,7 +76,7 @@ public abstract class DbRequest {
       DbInfo dbInfo,
       String queryText,
       Long batchSize,
-      Map<Integer, Object> preparedStatementParameters) {
+      Map<String, String> preparedStatementParameters) {
     return create(
         dbInfo, Collections.singletonList(queryText), batchSize, preparedStatementParameters);
   }
@@ -85,7 +85,7 @@ public abstract class DbRequest {
       DbInfo dbInfo,
       Collection<String> queryTexts,
       Long batchSize,
-      Map<Integer, Object> preparedStatementParameters) {
+      Map<String, String> preparedStatementParameters) {
     return new AutoValue_DbRequest(dbInfo, queryTexts, batchSize, preparedStatementParameters);
   }
 
@@ -97,5 +97,5 @@ public abstract class DbRequest {
   public abstract Long getBatchSize();
 
   @Nullable
-  public abstract Map<Integer, Object> getPreparedStatementParameters();
+  public abstract Map<String, String> getPreparedStatementParameters();
 }

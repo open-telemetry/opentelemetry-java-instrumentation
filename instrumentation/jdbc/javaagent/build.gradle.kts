@@ -60,24 +60,23 @@ tasks {
       includeTestsMatching("SlickTest")
     }
     include("**/SlickTest.*")
-    jvmArgs("-Dotel.instrumentation.jdbc.query-parameter.enabled=true")
   }
 
   test {
     filter {
       excludeTestsMatching("SlickTest")
+      excludeTestsMatching("PreparedStatementParametersTest")
     }
     jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
-    jvmArgs("-Dotel.instrumentation.jdbc.query-parameter.enabled=true")
   }
 
   val testStableSemconv by registering(Test::class) {
     filter {
       excludeTestsMatching("SlickTest")
+      excludeTestsMatching("PreparedStatementParametersTest")
     }
     jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    jvmArgs("-Dotel.instrumentation.jdbc.query-parameter.enabled=true")
   }
 
   val testSlickStableSemconv by registering(Test::class) {
@@ -86,12 +85,20 @@ tasks {
     }
     include("**/SlickTest.*")
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    jvmArgs("-Dotel.instrumentation.jdbc.query-parameter.enabled=true")
+  }
+
+  val testCaptureParameters by registering(Test::class) {
+    filter {
+      includeTestsMatching("PreparedStatementParametersTest")
+    }
+    jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
+    jvmArgs("-Dotel.instrumentation.jdbc.capture-query-parameters=true")
   }
 
   check {
     dependsOn(testSlick)
     dependsOn(testStableSemconv)
     dependsOn(testSlickStableSemconv)
+    dependsOn(testCaptureParameters)
   }
 }

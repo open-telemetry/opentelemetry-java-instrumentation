@@ -67,14 +67,14 @@ class SqlClientAttributesExtractorTest {
     @SuppressWarnings("EmptyCatch")
     @Nullable
     @Override
-    public Map<Integer, Object> getQueryParameters(Map<String, Object> map) {
+    public Map<String, String> getQueryParameters(Map<String, Object> map) {
       String parameterString = read(map, "db.query.parameter");
 
       if (parameterString == null) {
         return null;
       }
 
-      Map<Integer, Object> parameters = new HashMap<>();
+      Map<String, Object> parameters = new HashMap<>();
       for (String s : parameterString.split(";")) {
         // cast basic types used in tests
         Object value = s;
@@ -83,7 +83,7 @@ class SqlClientAttributesExtractorTest {
         } catch (NumberFormatException ignored) {
         }
 
-        parameters.put(parameters.size() + 1, value);
+        parameters.put(Integer.toString(parameters.size() + 1), value);
       }
       return parameters;
     }
@@ -430,7 +430,7 @@ class SqlClientAttributesExtractorTest {
 
     AttributesExtractor<Map<String, Object>, Void> underTest =
         SqlClientAttributesExtractor.builder(new TestAttributesGetter())
-            .setQueryParameterEnabled(true)
+            .setCaptureQueryParameters(true)
             .build();
 
     // when

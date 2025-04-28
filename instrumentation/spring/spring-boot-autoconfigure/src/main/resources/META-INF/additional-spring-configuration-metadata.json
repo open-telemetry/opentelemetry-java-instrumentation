@@ -352,9 +352,9 @@
       "defaultValue": true
     },
     {
-      "name": "otel.instrumentation.jdbc.query-parameter.enabled",
+      "name": "otel.instrumentation.jdbc.capture-query-parameters",
       "type": "java.lang.Boolean",
-      "description": "Enables the attribute db.query.parameter.<key>",
+      "description": "Enables the attribute db.query.parameter.\\<key\\>.<br/><br/>WARNING: captured query parameters may contain sensitive information such as passwords, personally identifiable information or protected health info. Exposing such info may result in substantial fines and penalties or criminal liability. Consult your peers, superiors and a legal counsel before enabling this option.<br/><br/>This option will disable otel.instrumentation.jdbc.statement-sanitizer",
       "defaultValue": false
     },
     {

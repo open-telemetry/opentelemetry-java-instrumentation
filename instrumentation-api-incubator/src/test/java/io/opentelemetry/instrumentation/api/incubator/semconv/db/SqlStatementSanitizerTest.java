@@ -7,9 +7,6 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -50,19 +47,13 @@ public class SqlStatementSanitizerTest {
   @Test
   void veryLongSelectStatementsAreOk() {
     StringBuilder sb = new StringBuilder("SELECT * FROM table WHERE");
-    Map<String, String> parameters = new HashMap<>();
     for (int i = 0; i < 2000; i++) {
       sb.append(" column").append(i).append("=123 and");
     }
     String query = sb.toString();
 
     String sanitizedQuery = query.replace("=123", "=?").substring(0, AutoSqlSanitizer.LIMIT);
-    sanitizedQuery
-        .chars()
-        .filter(c -> c == '?')
-        .forEach(c -> parameters.put(Integer.toString(parameters.size()), "123"));
-    SqlStatementInfo expected =
-        SqlStatementInfo.create(sanitizedQuery, "SELECT", "table", parameters);
+    SqlStatementInfo expected = SqlStatementInfo.create(sanitizedQuery, "SELECT", "table");
 
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(query);
 
@@ -165,36 +156,6 @@ public class SqlStatementSanitizerTest {
         SqlStatementSanitizer.create(true).sanitize(largeStatement).getFullStatement();
     assertThat(sanitizedLarge).doesNotContain("1234");
     assertThat(SqlStatementSanitizer.isCached(largeStatement)).isFalse();
-  }
-
-  @Test
-  public void parametersAreExtractedForEachSanitization() {
-    String s = "SELECT col FROM table WHERE field=1 AND field2=? AND field3=$1";
-    Map<String, String> parameters = new HashMap<>();
-    parameters.put("0", "1");
-    parameters.put("1", "?");
-    parameters.put("$1", "$1");
-
-    SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(s);
-
-    assertThat(result.getParameters()).isEqualTo(parameters);
-  }
-
-  @Test
-  public void parametersShouldNotCollideWithPreparedStatement() {
-    String s = "SELECT col FROM table WHERE field1=? AND field2='A' AND field3=$2 AND field4=2";
-    String sanitized =
-        "SELECT col FROM table WHERE field1=? AND field2=? AND field3=$2 AND field4=?";
-    Map<String, String> parameters = new HashMap<>();
-    parameters.put("0", "?");
-    parameters.put("1", "'A'");
-    parameters.put("$2", "$2");
-    parameters.put("2", "2");
-
-    SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(s);
-
-    assertThat(result.getFullStatement()).isEqualTo(sanitized);
-    assertThat(result.getParameters()).isEqualTo(parameters);
   }
 
   static class SqlArgs implements ArgumentsProvider {
@@ -323,12 +284,12 @@ public class SqlStatementSanitizerTest {
   static class SimplifyArgs implements ArgumentsProvider {
 
     static Function<String, SqlStatementInfo> expect(String operation, String identifier) {
-      return sql -> SqlStatementInfo.create(sql, operation, identifier, Collections.emptyMap());
+      return sql -> SqlStatementInfo.create(sql, operation, identifier);
     }
 
     static Function<String, SqlStatementInfo> expect(
         String sql, String operation, String identifier) {
-      return ignored -> SqlStatementInfo.create(sql, operation, identifier, Collections.emptyMap());
+      return ignored -> SqlStatementInfo.create(sql, operation, identifier);
     }
 
     @Override
@@ -440,12 +401,12 @@ public class SqlStatementSanitizerTest {
   static class DdlArgs implements ArgumentsProvider {
 
     static Function<String, SqlStatementInfo> expect(String operation, String identifier) {
-      return sql -> SqlStatementInfo.create(sql, operation, identifier, Collections.emptyMap());
+      return sql -> SqlStatementInfo.create(sql, operation, identifier);
     }
 
     static Function<String, SqlStatementInfo> expect(
         String sql, String operation, String identifier) {
-      return ignored -> SqlStatementInfo.create(sql, operation, identifier, Collections.emptyMap());
+      return ignored -> SqlStatementInfo.create(sql, operation, identifier);
     }
 
     @Override

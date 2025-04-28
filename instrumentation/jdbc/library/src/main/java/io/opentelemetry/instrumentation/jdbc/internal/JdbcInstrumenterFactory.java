@@ -40,15 +40,28 @@ public final class JdbcInstrumenterFactory {
         true,
         ConfigPropertiesUtil.getBoolean(
             "otel.instrumentation.common.db-statement-sanitizer.enabled", true),
-        // TODO change with common conf key
-        ConfigPropertiesUtil.getBoolean("otel.instrumentation.jdbc.query-parameter.enabled", true));
+        ConfigPropertiesUtil.getBoolean(
+            "otel.instrumentation.jdbc.capture-query-parameters", false));
+  }
+
+  public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
+      OpenTelemetry openTelemetry,
+      boolean captureQueryParameters
+  ) {
+    return createStatementInstrumenter(
+        openTelemetry,
+        true,
+        ConfigPropertiesUtil.getBoolean(
+            "otel.instrumentation.common.db-statement-sanitizer.enabled", true),
+        ConfigPropertiesUtil.getBoolean(
+            "otel.instrumentation.jdbc.capture-query-parameters", captureQueryParameters));
   }
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
       OpenTelemetry openTelemetry,
       boolean enabled,
       boolean statementSanitizationEnabled,
-      boolean queryParameterEnabled) {
+      boolean captureQueryParameters) {
     return Instrumenter.<DbRequest, Void>builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
@@ -56,7 +69,7 @@ public final class JdbcInstrumenterFactory {
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(dbAttributesGetter)
                 .setStatementSanitizationEnabled(statementSanitizationEnabled)
-                .setQueryParameterEnabled(queryParameterEnabled)
+                .setCaptureQueryParameters(captureQueryParameters)
                 .build())
         .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
         .addOperationMetrics(DbClientMetrics.get())

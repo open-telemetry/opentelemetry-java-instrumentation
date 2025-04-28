@@ -46,11 +46,10 @@ public final class JdbcSingletons {
                             .getBoolean(
                                 "otel.instrumentation.jdbc.statement-sanitizer.enabled",
                                 AgentCommonConfig.get().isStatementSanitizationEnabled()))
-                    .setQueryParameterEnabled(
+                    .setCaptureQueryParameters(
                         AgentInstrumentationConfig.get()
                             .getBoolean(
-                                "otel.instrumentation.jdbc.query-parameter.enabled",
-                                AgentCommonConfig.get().isQueryParameterEnabled()))
+                                "otel.instrumentation.jdbc.capture-query-parameters", false))
                     .build())
             .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(

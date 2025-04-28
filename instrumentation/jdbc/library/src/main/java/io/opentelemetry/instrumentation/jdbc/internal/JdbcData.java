@@ -36,7 +36,7 @@ public final class JdbcData {
   private static final VirtualField<PreparedStatement, PreparedStatementBatchInfo>
       preparedStatementBatch =
           VirtualField.find(PreparedStatement.class, PreparedStatementBatchInfo.class);
-  public static final VirtualField<PreparedStatement, Map<Integer, Object>> parameters =
+  public static final VirtualField<PreparedStatement, Map<String, String>> parameters =
       VirtualField.find(PreparedStatement.class, Map.class);
 
   private JdbcData() {}
@@ -98,8 +98,8 @@ public final class JdbcData {
     return batchInfo != null ? batchInfo.getBatchSize() : null;
   }
 
-  public static void addParameter(PreparedStatement statement, int index, Object value) {
-    Map<Integer, Object> parametersMap = parameters.get(statement);
+  public static void addParameter(PreparedStatement statement, String index, String value) {
+    Map<String, String> parametersMap = parameters.get(statement);
     if (parametersMap == null) {
       parametersMap = new HashMap<>();
       parameters.set(statement, parametersMap);

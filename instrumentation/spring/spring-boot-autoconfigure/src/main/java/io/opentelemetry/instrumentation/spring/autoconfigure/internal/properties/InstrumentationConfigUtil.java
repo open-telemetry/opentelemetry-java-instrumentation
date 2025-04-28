@@ -45,10 +45,4 @@ public final class InstrumentationConfigUtil {
     return config.getBoolean(
         key, config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true));
   }
-
-  public static boolean isQueryParameterEnabled(ConfigProperties config, String key) {
-    // TODO change with common conf key
-    return config.getBoolean(
-        key, config.getBoolean("otel.instrumentation.jdbc.query-parameter.enabled", false));
-  }
 }
