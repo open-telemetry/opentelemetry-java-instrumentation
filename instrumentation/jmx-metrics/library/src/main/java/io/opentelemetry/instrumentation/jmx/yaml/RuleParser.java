@@ -75,11 +75,11 @@ public class RuleParser {
 
     String bean = (String) ruleYaml.remove("bean");
     if (bean != null) {
-      jmxRule.setBean(bean);
+      jmxRule.addBean(bean);
     }
     List<String> beans = (List<String>) ruleYaml.remove("beans");
     if (beans != null) {
-      jmxRule.setBeans(beans);
+      beans.forEach(jmxRule::addBean);
     }
     String prefix = (String) ruleYaml.remove("prefix");
     if (prefix != null) {

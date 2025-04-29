@@ -145,7 +145,7 @@ class RuleParserTest {
     assertThat(defs).hasSize(1);
 
     JmxRule def1 = defs.get(0);
-    assertThat(def1.getBean()).isNotNull();
+    assertThat(def1.getBeans()).containsExactly("BJECT:NAME3=*");
     assertThat(def1.getMetricAttribute()).isNull();
 
     Map<String, Metric> attr = def1.getMapping();
@@ -404,7 +404,7 @@ class RuleParserTest {
     assertThat(rules).hasSize(1);
 
     JmxRule jmxRule = rules.get(0);
-    assertThat(jmxRule.getBean()).isEqualTo("my-test:type=9");
+    assertThat(jmxRule.getBeans()).containsExactly("my-test:type=9");
     Metric metric = jmxRule.getMapping().get("jmxStateAttribute");
     assertThat(metric.getMetricType()).isEqualTo(MetricInfo.Type.STATE);
 
@@ -420,7 +420,8 @@ class RuleParserTest {
     assertThat(metricAttributeMap).containsKey("state_attribute").hasSize(1);
     assertThat(metricAttributeMap.get("state_attribute")).isInstanceOf(Map.class);
 
-    ObjectName objectName = new ObjectName(jmxRule.getBean());
+    assertThat(jmxRule.getBeans()).containsExactly("my-test:type=9");
+    ObjectName objectName = new ObjectName(jmxRule.getBeans().get(0));
     MBeanServerConnection mockConnection = mock(MBeanServerConnection.class);
 
     // mock attribute value
@@ -493,7 +494,7 @@ class RuleParserTest {
     assertThat(rules).hasSize(1);
     JmxRule jmxRule = rules.get(0);
 
-    assertThat(jmxRule.getBean()).isEqualTo("my-test:type=10_Hello");
+    assertThat(jmxRule.getBeans()).containsExactly("my-test:type=10_Hello");
     Metric metric = jmxRule.getMapping().get("jmxAttribute");
     assertThat(metric.getMetricType()).isEqualTo(MetricInfo.Type.COUNTER);
     assertThat(metric.getMetric()).isEqualTo("my_metric");
@@ -532,7 +533,7 @@ class RuleParserTest {
     assertThat(rules).hasSize(1);
     JmxRule rule = rules.get(0);
 
-    assertThat(rule.getBean()).isEqualTo("my-test:type=11_Hello");
+    assertThat(rule.getBeans()).containsExactly("my-test:type=11_Hello");
 
     // test that negative filtering is being applied
 
@@ -540,7 +541,8 @@ class RuleParserTest {
     assertThat(metricDef).isNotNull();
 
     MBeanServerConnection mockConnection = mock(MBeanServerConnection.class);
-    ObjectName objectName = new ObjectName(rule.getBean());
+    assertThat(rule.getBeans()).containsExactly("my-test:type=11_Hello");
+    ObjectName objectName = new ObjectName(rule.getBeans().get(0));
 
     // mock attribute values
     when(mockConnection.getAttribute(objectName, "negativeDropped")).thenReturn(value);
