@@ -5,11 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.thrift.v0_9_1.server;
 
-import io.opentelemetry.javaagent.instrumentation.thrift.v0_9_1.thrift.Account;
 import io.opentelemetry.javaagent.instrumentation.thrift.v0_9_1.thrift.ThriftService;
-import io.opentelemetry.javaagent.instrumentation.thrift.v0_9_1.thrift.User;
-import io.opentelemetry.javaagent.instrumentation.thrift.v0_9_1.thrift.UserAccount;
-import java.util.concurrent.TimeUnit;
 import org.apache.thrift.TException;
 import org.testcontainers.shaded.com.google.common.base.VerifyException;
 
@@ -24,37 +20,12 @@ public class ThriftServiceImpl implements ThriftService.Iface {
   }
 
   @Override
-  public String withDelay(int delay) {
-    try {
-      TimeUnit.SECONDS.sleep((long) delay);
-    } catch (InterruptedException var3) {
-      InterruptedException e = var3;
-      throw new VerifyException(e);
-    }
-
-    return "delay " + delay;
-  }
-
-  @Override
-  public String withoutArgs() {
-    return "no args";
-  }
-
-  @Override
   public String withError() {
     throw new VerifyException("fail");
   }
 
   @Override
-  public String withCollisioin(String input) {
-    return input;
-  }
-
-  @Override
   public void noReturn(int delay) throws TException {}
-
-  @Override
-  public void oneWayHasArgs(int delay) throws TException {}
 
   @Override
   public void oneWay() {}
@@ -62,10 +33,5 @@ public class ThriftServiceImpl implements ThriftService.Iface {
   @Override
   public void oneWayWithError() {
     throw new VerifyException("fail");
-  }
-
-  @Override
-  public UserAccount data(User user, Account account) {
-    return new UserAccount(user, account);
   }
 }
