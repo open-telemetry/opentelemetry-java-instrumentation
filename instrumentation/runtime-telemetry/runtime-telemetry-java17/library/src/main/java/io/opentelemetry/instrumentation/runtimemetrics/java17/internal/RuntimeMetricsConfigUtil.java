@@ -41,7 +41,6 @@ public final class RuntimeMetricsConfigUtil {
     if (config.getBoolean(
         "otel.instrumentation.runtime-telemetry.emit-experimental-telemetry", false)) {
       builder.emitExperimentalTelemetry();
-      builder.enableExperimentalJmxTelemetry();
     }
 
     if (config.getBoolean("otel.instrumentation.runtime-telemetry.capture-gc-cause", false)) {
