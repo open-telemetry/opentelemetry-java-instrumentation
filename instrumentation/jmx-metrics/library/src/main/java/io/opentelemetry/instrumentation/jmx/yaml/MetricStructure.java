@@ -48,7 +48,7 @@ abstract class MetricStructure {
   private StateMapping stateMapping = StateMapping.empty();
   private static final String STATE_MAPPING_DEFAULT = "*";
   private String sourceUnit;
-  private String unit;
+  private String unit = "";
   @Nullable private Boolean dropNegativeValues;
 
   private MetricInfo.Type metricType;
@@ -75,7 +75,7 @@ abstract class MetricStructure {
   }
 
   public void setUnit(String unit) {
-    this.unit = validateUnit(unit.trim());
+    this.unit = unit.trim();
   }
 
   public void setDropNegativeValues(Boolean dropNegativeValues) {

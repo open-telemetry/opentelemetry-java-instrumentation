@@ -123,7 +123,7 @@ class RuleParserTest {
     assertThat(def2.getMapping()).hasSize(1);
     Metric m3 = def2.getMapping().get("ATTRIBUTE3");
     assertThat(m3.getMetric()).isEqualTo("METRIC_NAME3");
-    assertThat(m3.getUnit()).isNull();
+    assertThat(m3.getUnit()).isEmpty();
   }
 
   private static final String CONF3 =
@@ -281,7 +281,7 @@ class RuleParserTest {
     MetricInfo mb1 = m1.getInfo();
     assertThat(mb1.getMetricName()).isEqualTo("ATTRIBUTE");
     assertThat(mb1.getType()).isEqualTo(MetricInfo.Type.GAUGE);
-    assertThat(mb1.getUnit()).isNull();
+    assertThat(mb1.getUnit()).isEmpty();
   }
 
   private static final String CONF6 = // merging metric attribute sets with same keys
@@ -378,7 +378,7 @@ class RuleParserTest {
     // Make sure the metric name has no backslash
     assertThat(mb1.getMetricName()).isEqualTo("Attr.with.dot");
     assertThat(mb1.getType()).isEqualTo(MetricInfo.Type.GAUGE);
-    assertThat(mb1.getUnit()).isNull();
+    assertThat(mb1.getUnit()).isEmpty();
   }
 
   private static final String CONF9 =
