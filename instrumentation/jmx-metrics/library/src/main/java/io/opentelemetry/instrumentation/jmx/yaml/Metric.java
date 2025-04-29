@@ -70,7 +70,7 @@ public class Metric extends MetricStructure {
     }
 
     String unit = getUnit();
-    if (unit == null) {
+    if (unit.isEmpty()) {
       unit = defaultUnit;
     }
 
