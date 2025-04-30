@@ -33,6 +33,11 @@ public abstract class DbRequest {
   }
 
   @Nullable
+  public static DbRequest create(Statement statement, String dbStatementString) {
+    return create(statement, dbStatementString, null, Collections.emptyMap());
+  }
+
+  @Nullable
   public static DbRequest create(
       Statement statement,
       String dbStatementString,
@@ -56,20 +61,17 @@ public abstract class DbRequest {
   }
 
   public static DbRequest create(
-      Statement statement,
-      Collection<String> queryTexts,
-      Long batchSize,
-      Map<String, String> preparedStatementParameters) {
+      Statement statement, Collection<String> queryTexts, Long batchSize) {
     Connection connection = connectionFromStatement(statement);
     if (connection == null) {
       return null;
     }
 
-    return create(extractDbInfo(connection), queryTexts, batchSize, preparedStatementParameters);
+    return create(extractDbInfo(connection), queryTexts, batchSize, Collections.emptyMap());
   }
 
   public static DbRequest create(DbInfo dbInfo, String queryText) {
-    return create(dbInfo, queryText, null, null);
+    return create(dbInfo, queryText, null, Collections.emptyMap());
   }
 
   public static DbRequest create(

@@ -29,6 +29,11 @@ public final class JdbcInstrumenterFactory {
   private static final JdbcNetworkAttributesGetter netAttributesGetter =
       new JdbcNetworkAttributesGetter();
 
+  public static boolean captureQueryParameters() {
+    return ConfigPropertiesUtil.getBoolean(
+        "otel.instrumentation.jdbc.capture-query-parameters", false);
+  }
+
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter() {
     return createStatementInstrumenter(GlobalOpenTelemetry.get());
   }
@@ -40,8 +45,7 @@ public final class JdbcInstrumenterFactory {
         true,
         ConfigPropertiesUtil.getBoolean(
             "otel.instrumentation.common.db-statement-sanitizer.enabled", true),
-        ConfigPropertiesUtil.getBoolean(
-            "otel.instrumentation.jdbc.capture-query-parameters", false));
+        captureQueryParameters());
   }
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter(

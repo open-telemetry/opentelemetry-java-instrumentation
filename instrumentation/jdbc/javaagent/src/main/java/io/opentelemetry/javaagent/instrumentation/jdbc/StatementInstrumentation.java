@@ -85,7 +85,7 @@ public class StatementInstrumentation implements TypeInstrumentation {
       }
 
       Context parentContext = currentContext();
-      request = DbRequest.create(statement, sql, null);
+      request = DbRequest.create(statement, sql);
 
       if (request == null || !statementInstrumenter().shouldStart(parentContext, request)) {
         return;
@@ -168,11 +168,10 @@ public class StatementInstrumentation implements TypeInstrumentation {
       } else {
         JdbcData.StatementBatchInfo batchInfo = JdbcData.getStatementBatchInfo(statement);
         if (batchInfo == null) {
-          request = DbRequest.create(statement, null, null);
+          request = DbRequest.create(statement, null);
         } else {
           request =
-              DbRequest.create(
-                  statement, batchInfo.getStatements(), batchInfo.getBatchSize(), null);
+              DbRequest.create(statement, batchInfo.getStatements(), batchInfo.getBatchSize());
         }
       }
 

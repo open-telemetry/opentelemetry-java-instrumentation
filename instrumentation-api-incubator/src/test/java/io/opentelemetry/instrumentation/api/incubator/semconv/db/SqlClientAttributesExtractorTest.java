@@ -64,7 +64,6 @@ class SqlClientAttributesExtractorTest {
       return read(map, "db.operation.batch.size", Long.class);
     }
 
-    @SuppressWarnings("EmptyCatch")
     @Nullable
     @Override
     public Map<String, String> getQueryParameters(Map<String, Object> map) {
@@ -438,22 +437,10 @@ class SqlClientAttributesExtractorTest {
         startAttributes.removeIf(attribute -> !attribute.getKey().startsWith(prefix)).build();
 
     // then
-    if (SemconvStability.emitStableDatabaseSemconv() && SemconvStability.emitOldDatabaseSemconv()) {
-      assertThat(queryParameterAttributes)
-          .containsOnly(
-              entry(DB_QUERY_PARAMETER.getAttributeKey("0"), "'a'"),
-              entry(DB_QUERY_PARAMETER.getAttributeKey("1"), "1"));
-    } else if (SemconvStability.emitOldDatabaseSemconv()) {
-      assertThat(queryParameterAttributes)
-          .containsOnly(
-              entry(DB_QUERY_PARAMETER.getAttributeKey("0"), "'a'"),
-              entry(DB_QUERY_PARAMETER.getAttributeKey("1"), "1"));
-    } else if (SemconvStability.emitStableDatabaseSemconv()) {
-      assertThat(queryParameterAttributes)
-          .containsOnly(
-              entry(DB_QUERY_PARAMETER.getAttributeKey("0"), "'a'"),
-              entry(DB_QUERY_PARAMETER.getAttributeKey("1"), "1"));
-    }
+    assertThat(queryParameterAttributes)
+        .containsOnly(
+            entry(DB_QUERY_PARAMETER.getAttributeKey("0"), "'a'"),
+            entry(DB_QUERY_PARAMETER.getAttributeKey("1"), "1"));
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }

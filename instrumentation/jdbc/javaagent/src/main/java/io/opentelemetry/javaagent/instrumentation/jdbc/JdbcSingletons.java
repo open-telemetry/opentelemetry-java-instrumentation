@@ -29,10 +29,15 @@ public final class JdbcSingletons {
   private static final Instrumenter<DbRequest, Void> STATEMENT_INSTRUMENTER;
   public static final Instrumenter<DataSource, DbInfo> DATASOURCE_INSTRUMENTER =
       createDataSourceInstrumenter(GlobalOpenTelemetry.get(), true);
+  public static final boolean CAPTURE_QUERY_PARAMETERS;
 
   static {
     JdbcAttributesGetter dbAttributesGetter = new JdbcAttributesGetter();
     JdbcNetworkAttributesGetter netAttributesGetter = new JdbcNetworkAttributesGetter();
+
+    CAPTURE_QUERY_PARAMETERS =
+        AgentInstrumentationConfig.get()
+            .getBoolean("otel.instrumentation.jdbc.capture-query-parameters", false);
 
     STATEMENT_INSTRUMENTER =
         Instrumenter.<DbRequest, Void>builder(
@@ -46,10 +51,7 @@ public final class JdbcSingletons {
                             .getBoolean(
                                 "otel.instrumentation.jdbc.statement-sanitizer.enabled",
                                 AgentCommonConfig.get().isStatementSanitizationEnabled()))
-                    .setCaptureQueryParameters(
-                        AgentInstrumentationConfig.get()
-                            .getBoolean(
-                                "otel.instrumentation.jdbc.capture-query-parameters", false))
+                    .setCaptureQueryParameters(CAPTURE_QUERY_PARAMETERS)
                     .build())
             .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(

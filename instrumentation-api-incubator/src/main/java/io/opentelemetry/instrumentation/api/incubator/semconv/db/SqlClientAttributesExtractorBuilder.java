@@ -46,11 +46,6 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setStatementSanitizationEnabled(
       boolean statementSanitizationEnabled) {
     this.statementSanitizationEnabled = statementSanitizationEnabled;
-
-    if (statementSanitizationEnabled) {
-      this.captureQueryParameters = false;
-    }
-
     return this;
   }
 
@@ -63,11 +58,6 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCaptureQueryParameters(
       boolean captureQueryParameters) {
     this.captureQueryParameters = captureQueryParameters;
-
-    if (captureQueryParameters) {
-      this.statementSanitizationEnabled = false;
-    }
-
     return this;
   }
 

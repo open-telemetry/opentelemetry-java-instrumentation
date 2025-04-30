@@ -33,7 +33,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.sql.Types;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.Map;
@@ -116,7 +115,7 @@ class PreparedStatementParametersTest {
 
   @ParameterizedTest
   @MethodSource("preparedStatementStream")
-  void testNull2PreparedStatementParameter(
+  void testBooleanPreparedStatementParameter(
       String system,
       Connection connection,
       String username,
@@ -133,7 +132,7 @@ class PreparedStatementParametersTest {
         testing.runWithSpan(
             "parent",
             () -> {
-              statement.setNull(1, Types.INTEGER);
+              statement.setBoolean(1, true);
               statement.execute();
               return statement.getResultSet();
             });
@@ -157,147 +156,7 @@ class PreparedStatementParametersTest {
                             equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), table),
-                            equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "<null>"))));
-  }
-
-  @ParameterizedTest
-  @MethodSource("preparedStatementStream")
-  void testNull3PreparedStatementParameter(
-      String system,
-      Connection connection,
-      String username,
-      String query,
-      String sanitizedQuery,
-      String spanName,
-      String url,
-      String table)
-      throws SQLException {
-    PreparedStatement statement = connection.prepareStatement(query);
-    cleanup.deferCleanup(statement);
-
-    ResultSet resultSet =
-        testing.runWithSpan(
-            "parent",
-            () -> {
-              statement.setNull(1, Types.INTEGER, "Integer");
-              statement.execute();
-              return statement.getResultSet();
-            });
-
-    resultSet.next();
-    assertThat(resultSet.getInt(1)).isEqualTo(3);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName(spanName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                            equalTo(maybeStable(DB_NAME), dbNameLower),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                            equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), table),
-                            equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "<null>"))));
-  }
-
-  @ParameterizedTest
-  @MethodSource("preparedStatementStream")
-  void testBytePreparedStatementParameter(
-      String system,
-      Connection connection,
-      String username,
-      String query,
-      String sanitizedQuery,
-      String spanName,
-      String url,
-      String table)
-      throws SQLException {
-    PreparedStatement statement = connection.prepareStatement(query);
-    cleanup.deferCleanup(statement);
-
-    ResultSet resultSet =
-        testing.runWithSpan(
-            "parent",
-            () -> {
-              statement.setByte(1, (byte) 0);
-              statement.execute();
-              return statement.getResultSet();
-            });
-
-    resultSet.next();
-    assertThat(resultSet.getInt(1)).isEqualTo(3);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName(spanName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                            equalTo(maybeStable(DB_NAME), dbNameLower),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                            equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), table),
-                            equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "0x00"))));
-  }
-
-  @ParameterizedTest
-  @MethodSource("preparedStatementStream")
-  void testBytesPreparedStatementParameter(
-      String system,
-      Connection connection,
-      String username,
-      String query,
-      String sanitizedQuery,
-      String spanName,
-      String url,
-      String table)
-      throws SQLException {
-    String updatedColumn = query.replace("USER_NAME=?", "HEXTORAW('FF')=?");
-    String updatedColumnSanitized = sanitizedQuery.replace("USER_NAME=?", "HEXTORAW('FF')=?");
-    PreparedStatement statement = connection.prepareStatement(updatedColumn);
-    cleanup.deferCleanup(statement);
-
-    ResultSet resultSet =
-        testing.runWithSpan(
-            "parent",
-            () -> {
-              statement.setBytes(1, new byte[] {(byte) 0, 0});
-              statement.execute();
-              return statement.getResultSet();
-            });
-
-    resultSet.next();
-    assertThat(resultSet.getInt(1)).isEqualTo(3);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName(spanName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                            equalTo(maybeStable(DB_NAME), dbNameLower),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                            equalTo(maybeStable(DB_STATEMENT), updatedColumnSanitized),
-                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), table),
-                            equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "0x0000"))));
+                            equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "true"))));
   }
 
   @ParameterizedTest
@@ -619,7 +478,7 @@ class PreparedStatementParametersTest {
                             equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), table),
-                            equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "'S'"))));
+                            equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "S"))));
   }
 
   @ParameterizedTest
@@ -667,7 +526,7 @@ class PreparedStatementParametersTest {
                             equalTo(maybeStable(DB_STATEMENT), updatedColumnSanitized),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), table),
-                            equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "'2000-01-01'"))));
+                            equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "2000-01-01"))));
   }
 
   @ParameterizedTest
@@ -715,7 +574,7 @@ class PreparedStatementParametersTest {
                             equalTo(maybeStable(DB_STATEMENT), updatedColumnSanitized),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), table),
-                            equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "'2000-01-01'"))));
+                            equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "2000-01-01"))));
   }
 
   @ParameterizedTest
@@ -763,7 +622,7 @@ class PreparedStatementParametersTest {
                             equalTo(maybeStable(DB_STATEMENT), updatedColumnSanitized),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), table),
-                            equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "'00:00:00'"))));
+                            equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "00:00:00"))));
   }
 
   @ParameterizedTest
@@ -811,7 +670,7 @@ class PreparedStatementParametersTest {
                             equalTo(maybeStable(DB_STATEMENT), updatedColumnSanitized),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), table),
-                            equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "'00:00:00'"))));
+                            equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "00:00:00"))));
   }
 
   @ParameterizedTest
@@ -861,7 +720,7 @@ class PreparedStatementParametersTest {
                             equalTo(maybeStable(DB_SQL_TABLE), table),
                             equalTo(
                                 DB_QUERY_PARAMETER.getAttributeKey("0"),
-                                "'2000-01-01 00:00:00.0'"))));
+                                "2000-01-01 00:00:00.0"))));
   }
 
   @ParameterizedTest
@@ -912,7 +771,7 @@ class PreparedStatementParametersTest {
                             equalTo(maybeStable(DB_SQL_TABLE), table),
                             equalTo(
                                 DB_QUERY_PARAMETER.getAttributeKey("0"),
-                                "'2000-01-01 00:00:00.0'"))));
+                                "2000-01-01 00:00:00.0"))));
   }
 
   @ParameterizedTest
@@ -960,7 +819,7 @@ class PreparedStatementParametersTest {
                               equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
                               equalTo(maybeStable(DB_OPERATION), "SELECT"),
                               equalTo(maybeStable(DB_SQL_TABLE), table),
-                              equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "'S'"))));
+                              equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "S"))));
     }
   }
 }

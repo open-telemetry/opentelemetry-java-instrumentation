@@ -82,7 +82,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     super.onStart(attributes, parentContext, request);
 
     Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
-    Map<String, String> preparedStatementParameters = getter.getQueryParameters(request);
+    Map<String, String> queryParameters = getter.getQueryParameters(request);
 
     if (rawQueryTexts.isEmpty()) {
       return;
@@ -104,7 +104,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         if (!SQL_CALL.equals(operation)) {
           internalSet(attributes, oldSemconvTableAttribute, sanitizedStatement.getMainIdentifier());
         }
-        setQueryParameters(attributes, isBatch, preparedStatementParameters);
+        setQueryParameters(attributes, isBatch, queryParameters);
       }
     }
 
@@ -124,7 +124,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         if (!SQL_CALL.equals(operation)) {
           internalSet(attributes, DB_COLLECTION_NAME, sanitizedStatement.getMainIdentifier());
         }
-        setQueryParameters(attributes, isBatch, preparedStatementParameters);
+        setQueryParameters(attributes, isBatch, queryParameters);
       } else {
         MultiQuery multiQuery =
             MultiQuery.analyze(getter.getRawQueryTexts(request), statementSanitizationEnabled);
@@ -143,14 +143,14 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   }
 
   private void setQueryParameters(
-      AttributesBuilder attributes,
-      boolean isBatch,
-      Map<String, String> preparedStatementParameters) {
-    if (captureQueryParameters && !isBatch && preparedStatementParameters != null) {
-      for (Map.Entry<String, String> entry : preparedStatementParameters.entrySet()) {
+      AttributesBuilder attributes, boolean isBatch, Map<String, String> queryParameters) {
+    if (captureQueryParameters && !isBatch && queryParameters != null) {
+      for (Map.Entry<String, String> entry : queryParameters.entrySet()) {
         String key = entry.getKey();
         String value = entry.getValue();
-        internalSet(attributes, DB_QUERY_PARAMETER.getAttributeKey(key), value);
+        if (value != null) {
+          internalSet(attributes, DB_QUERY_PARAMETER.getAttributeKey(key), value);
+        }
       }
     }
   }

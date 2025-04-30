@@ -68,6 +68,7 @@ public final class JdbcTelemetryBuilder {
             openTelemetry,
             statementInstrumenterEnabled,
             statementSanitizationEnabled,
-            captureQueryParameters));
+            captureQueryParameters),
+        captureQueryParameters);
   }
 }

@@ -106,16 +106,19 @@ public final class JdbcData {
       PreparedStatement prepared = (PreparedStatement) statement;
       preparedStatement.set(prepared, null);
       preparedStatementBatch.set(prepared, null);
+      parameters.set(prepared, null);
     }
   }
 
-  public static void addParameter(PreparedStatement statement, String index, String value) {
-    Map<String, String> parametersMap = parameters.get(statement);
-    if (parametersMap == null) {
-      parametersMap = new HashMap<>();
-      parameters.set(statement, parametersMap);
+  public static void addParameter(PreparedStatement statement, String key, String value) {
+    if (value != null) {
+      Map<String, String> parametersMap = parameters.get(statement);
+      if (parametersMap == null) {
+        parametersMap = new HashMap<>();
+        parameters.set(statement, parametersMap);
+      }
+      parametersMap.put(key, value);
     }
-    parametersMap.put(index, value);
   }
 
   /**

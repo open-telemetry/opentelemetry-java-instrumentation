@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttrib
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -64,9 +65,14 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
     return null;
   }
 
-  @Nullable
   @Override
   public Map<String, String> getQueryParameters(DbRequest request) {
-    return request.getPreparedStatementParameters();
+    Map<String, String> parameters = request.getPreparedStatementParameters();
+
+    if (parameters == null) {
+      return Collections.emptyMap();
+    }
+
+    return parameters;
   }
 }

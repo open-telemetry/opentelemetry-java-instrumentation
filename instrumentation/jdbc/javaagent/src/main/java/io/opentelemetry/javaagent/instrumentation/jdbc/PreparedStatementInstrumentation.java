@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.JdbcPreparedStatementStringifier.stringifyNullParameter;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcPreparedStatementStringifier.stringifyParameter;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcSingletons.CAPTURE_QUERY_PARAMETERS;
 import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcSingletons.statementInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -27,7 +27,6 @@ import io.opentelemetry.instrumentation.jdbc.internal.JdbcData;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -65,74 +64,32 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
         named("addBatch").and(takesNoArguments()).and(isPublic()),
         PreparedStatementInstrumentation.class.getName() + "$AddBatchAdvice");
     transformer.applyAdviceToMethod(
-        named("setNull").and(takesArgument(0, int.class)).and(takesArguments(2)).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetNull2Advice");
-    transformer.applyAdviceToMethod(
-        named("setNull").and(takesArgument(0, int.class)).and(takesArguments(3)).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetNull3Advice");
-    transformer.applyAdviceToMethod(
-        named("setBoolean").and(takesArgument(0, int.class)).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetBooleanAdvice");
-    transformer.applyAdviceToMethod(
-        named("setByte").and(takesArgument(0, int.class)).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetByteAdvice");
-    transformer.applyAdviceToMethod(
-        named("setShort").and(takesArgument(0, int.class)).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetShortAdvice");
-    transformer.applyAdviceToMethod(
-        named("setInt").and(takesArgument(0, int.class)).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetIntAdvice");
-    transformer.applyAdviceToMethod(
-        named("setLong").and(takesArgument(0, int.class)).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetLongAdvice");
-    transformer.applyAdviceToMethod(
-        named("setFloat").and(takesArgument(0, int.class)).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetFloatAdvice");
-    transformer.applyAdviceToMethod(
-        named("setDouble").and(takesArgument(0, int.class)).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetDoubleAdvice");
-    transformer.applyAdviceToMethod(
-        named("setBigDecimal").and(takesArgument(0, int.class)).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetBigDecimalAdvice");
-    transformer.applyAdviceToMethod(
-        named("setString").and(takesArgument(0, int.class)).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetStringAdvice");
-    transformer.applyAdviceToMethod(
-        named("setBytes").and(takesArgument(0, int.class)).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetBytesAdvice");
-    transformer.applyAdviceToMethod(
-        named("setDate").and(takesArgument(0, int.class)).and(takesArguments(2)).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetDate2Advice");
-    transformer.applyAdviceToMethod(
-        named("setDate").and(takesArgument(0, int.class)).and(takesArguments(3)).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetDate3Advice");
-    transformer.applyAdviceToMethod(
-        named("setTime").and(takesArgument(0, int.class)).and(takesArguments(2)).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetTime2Advice");
-    transformer.applyAdviceToMethod(
-        named("setTime").and(takesArgument(0, int.class)).and(takesArguments(3)).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetTime3Advice");
-    transformer.applyAdviceToMethod(
-        named("setTimestamp")
+        namedOneOf(
+                "setBoolean",
+                "setShort",
+                "setInt",
+                "setLong",
+                "setFloat",
+                "setDouble",
+                "setBigDecimal",
+                "setString",
+                "setDate",
+                "setTime",
+                "setTimestamp",
+                "setURL",
+                "setRowId",
+                "setNString")
             .and(takesArgument(0, int.class))
             .and(takesArguments(2))
             .and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetTimestamp2Advice");
+        PreparedStatementInstrumentation.class.getName() + "$SetParameter2Advice");
     transformer.applyAdviceToMethod(
-        named("setTimestamp")
+        namedOneOf("setDate", "setTime", "setTimestamp")
             .and(takesArgument(0, int.class))
+            .and(takesArgument(2, Calendar.class))
             .and(takesArguments(3))
             .and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetTimestamp3Advice");
-    transformer.applyAdviceToMethod(
-        named("setURL").and(takesArgument(0, int.class)).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetUrlAdvice");
-    transformer.applyAdviceToMethod(
-        named("setRowId").and(takesArgument(0, int.class)).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetRowIdAdvice");
-    transformer.applyAdviceToMethod(
-        named("setNString").and(takesArgument(0, int.class)).and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetNstringAdvice");
+        PreparedStatementInstrumentation.class.getName() + "$SetTimeParameter3Advice");
   }
 
   @SuppressWarnings("unused")
@@ -203,237 +160,68 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class SetNull2Advice {
+  public static class SetParameter2Advice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This PreparedStatement statement,
         @Advice.Argument(0) int index,
-        @Advice.Argument(1) int sqlType) {
-      JdbcData.addParameter(statement, Integer.toString(index - 1), stringifyNullParameter());
+        @Advice.Argument(1) Object value) {
+      if (!CAPTURE_QUERY_PARAMETERS) {
+        return;
+      }
+
+      String str = null;
+
+      if (value instanceof Boolean) {
+        str = stringifyParameter((Boolean) value);
+      } else if (value instanceof Number) {
+        // Short, Int, Long, Float, Double, BigDecimal
+        str = stringifyParameter((Number) value);
+      } else if (value instanceof String) {
+        str = stringifyParameter((String) value);
+      } else if (value instanceof Date) {
+        str = stringifyParameter((Date) value);
+      } else if (value instanceof Time) {
+        str = stringifyParameter((Time) value);
+      } else if (value instanceof Timestamp) {
+        str = stringifyParameter((Timestamp) value);
+      } else if (value instanceof URL) {
+        str = stringifyParameter((URL) value);
+      } else if (value instanceof RowId) {
+        str = stringifyParameter((RowId) value);
+      }
+
+      if (str != null) {
+        JdbcData.addParameter(statement, Integer.toString(index - 1), str);
+      }
     }
   }
 
   @SuppressWarnings("unused")
-  public static class SetNull3Advice {
+  public static class SetTimeParameter3Advice {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.This PreparedStatement statement,
         @Advice.Argument(0) int index,
-        @Advice.Argument(1) int sqlType,
-        @Advice.Argument(2) String typeName) {
-      JdbcData.addParameter(statement, Integer.toString(index - 1), stringifyNullParameter());
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class SetBooleanAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This PreparedStatement statement,
-        @Advice.Argument(0) int index,
-        @Advice.Argument(1) boolean value) {
-      JdbcData.addParameter(statement, Integer.toString(index - 1), stringifyParameter(value));
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class SetByteAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This PreparedStatement statement,
-        @Advice.Argument(0) int index,
-        @Advice.Argument(1) byte value) {
-      JdbcData.addParameter(statement, Integer.toString(index - 1), stringifyParameter(value));
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class SetShortAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This PreparedStatement statement,
-        @Advice.Argument(0) int index,
-        @Advice.Argument(1) short value) {
-      JdbcData.addParameter(statement, Integer.toString(index - 1), stringifyParameter(value));
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class SetIntAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This PreparedStatement statement,
-        @Advice.Argument(0) int index,
-        @Advice.Argument(1) int value) {
-      JdbcData.addParameter(statement, Integer.toString(index - 1), stringifyParameter(value));
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class SetLongAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This PreparedStatement statement,
-        @Advice.Argument(0) int index,
-        @Advice.Argument(1) long value) {
-      JdbcData.addParameter(statement, Integer.toString(index - 1), stringifyParameter(value));
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class SetFloatAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This PreparedStatement statement,
-        @Advice.Argument(0) int index,
-        @Advice.Argument(1) float value) {
-      JdbcData.addParameter(statement, Integer.toString(index - 1), stringifyParameter(value));
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class SetDoubleAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This PreparedStatement statement,
-        @Advice.Argument(0) int index,
-        @Advice.Argument(1) double value) {
-      JdbcData.addParameter(statement, Integer.toString(index - 1), stringifyParameter(value));
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class SetBigDecimalAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This PreparedStatement statement,
-        @Advice.Argument(0) int index,
-        @Advice.Argument(1) BigDecimal value) {
-      JdbcData.addParameter(statement, Integer.toString(index - 1), stringifyParameter(value));
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class SetStringAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This PreparedStatement statement,
-        @Advice.Argument(0) int index,
-        @Advice.Argument(1) String value) {
-      JdbcData.addParameter(statement, Integer.toString(index - 1), stringifyParameter(value));
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class SetBytesAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This PreparedStatement statement,
-        @Advice.Argument(0) int index,
-        @Advice.Argument(1) byte[] value) {
-      JdbcData.addParameter(statement, Integer.toString(index - 1), stringifyParameter(value));
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class SetDate2Advice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This PreparedStatement statement,
-        @Advice.Argument(0) int index,
-        @Advice.Argument(1) Date value) {
-      JdbcData.addParameter(statement, Integer.toString(index - 1), stringifyParameter(value));
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class SetDate3Advice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This PreparedStatement statement,
-        @Advice.Argument(0) int index,
-        @Advice.Argument(1) Date value,
+        @Advice.Argument(1) Object value,
         @Advice.Argument(2) Calendar calendar) {
-      JdbcData.addParameter(statement, Integer.toString(index - 1), stringifyParameter(value));
-    }
-  }
+      if (!CAPTURE_QUERY_PARAMETERS) {
+        return;
+      }
 
-  @SuppressWarnings("unused")
-  public static class SetTime2Advice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This PreparedStatement statement,
-        @Advice.Argument(0) int index,
-        @Advice.Argument(1) Time value) {
-      JdbcData.addParameter(statement, Integer.toString(index - 1), stringifyParameter(value));
-    }
-  }
+      String str = null;
 
-  @SuppressWarnings("unused")
-  public static class SetTime3Advice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This PreparedStatement statement,
-        @Advice.Argument(0) int index,
-        @Advice.Argument(1) Time value,
-        @Advice.Argument(2) Calendar calendar) {
-      JdbcData.addParameter(statement, Integer.toString(index - 1), stringifyParameter(value));
-    }
-  }
+      if (value instanceof Date) {
+        str = stringifyParameter((Date) value);
+      } else if (value instanceof Time) {
+        str = stringifyParameter((Time) value);
+      } else if (value instanceof Timestamp) {
+        str = stringifyParameter((Timestamp) value);
+      }
 
-  @SuppressWarnings("unused")
-  public static class SetTimestamp2Advice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This PreparedStatement statement,
-        @Advice.Argument(0) int index,
-        @Advice.Argument(1) Timestamp value) {
-      JdbcData.addParameter(statement, Integer.toString(index - 1), stringifyParameter(value));
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class SetTimestamp3Advice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This PreparedStatement statement,
-        @Advice.Argument(0) int index,
-        @Advice.Argument(1) Timestamp value,
-        @Advice.Argument(2) Calendar calendar) {
-      JdbcData.addParameter(statement, Integer.toString(index - 1), stringifyParameter(value));
-    }
-  }
-
-  @SuppressWarnings({"unused", "IdentifierName"})
-  public static class SetUrlAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This PreparedStatement statement,
-        @Advice.Argument(0) int index,
-        @Advice.Argument(1) URL value) {
-      JdbcData.addParameter(statement, Integer.toString(index - 1), stringifyParameter(value));
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class SetRowIdAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This PreparedStatement statement,
-        @Advice.Argument(0) int index,
-        @Advice.Argument(1) RowId value) {
-      JdbcData.addParameter(statement, Integer.toString(index - 1), stringifyParameter(value));
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class SetNstringAdvice {
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This PreparedStatement statement,
-        @Advice.Argument(0) int index,
-        @Advice.Argument(1) String value) {
-      JdbcData.addParameter(statement, Integer.toString(index - 1), stringifyParameter(value));
+      if (str != null) {
+        JdbcData.addParameter(statement, Integer.toString(index - 1), str);
+      }
     }
   }
 }

@@ -20,53 +20,34 @@ public class JdbcPreparedStatementStringifier {
   private JdbcPreparedStatementStringifier() {}
 
   public static String stringifyParameter(String value) {
-    return String.format("'%s'", value);
+    return value;
   }
 
   public static String stringifyParameter(Number value) {
-    return String.format("%s", value);
+    return value != null ? value.toString() : null;
   }
 
   public static String stringifyParameter(boolean value) {
-    return String.format("%s", value);
-  }
-
-  @SuppressWarnings("DefaultLocale")
-  public static String stringifyParameter(byte value) {
-    return String.format("0x%02x", value);
-  }
-
-  @SuppressWarnings("DefaultLocale")
-  public static String stringifyParameter(byte[] value) {
-    StringBuilder builder = new StringBuilder();
-    builder.append("0x");
-    for (Byte b : value) {
-      builder.append(String.format("%02x", b));
-    }
-    return builder.toString();
+    return value ? Boolean.TRUE.toString() : Boolean.FALSE.toString();
   }
 
   public static String stringifyParameter(Date value) {
-    return String.format("'%s'", value.toString());
+    return value != null ? value.toString() : null;
   }
 
   public static String stringifyParameter(Time value) {
-    return String.format("'%s'", value.toString());
+    return value != null ? value.toString() : null;
   }
 
   public static String stringifyParameter(Timestamp value) {
-    return String.format("'%s'", value.toString());
+    return value != null ? value.toString() : null;
   }
 
   public static String stringifyParameter(URL value) {
-    return String.format("'%s'", value.toString());
+    return value != null ? value.toString() : null;
   }
 
   public static String stringifyParameter(RowId value) {
-    return String.format("'%s'", value.toString());
-  }
-
-  public static String stringifyNullParameter() {
-    return "<null>";
+    return value != null ? value.toString() : null;
   }
 }

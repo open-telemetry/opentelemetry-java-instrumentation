@@ -20,7 +20,6 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.JdbcPreparedStatementStringifier.stringifyNullParameter;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcPreparedStatementStringifier.stringifyParameter;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -52,6 +51,7 @@ import java.util.Map;
 @SuppressWarnings("OverloadMethodsDeclarationOrder")
 class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTelemetryStatement<S>
     implements PreparedStatement {
+  private final boolean captureQueryParameters;
   private final Map<String, String> parameters;
 
   public OpenTelemetryPreparedStatement(
@@ -59,13 +59,17 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
       OpenTelemetryConnection connection,
       DbInfo dbInfo,
       String query,
-      Instrumenter<DbRequest, Void> instrumenter) {
+      Instrumenter<DbRequest, Void> instrumenter,
+      boolean captureQueryParameters) {
     super(delegate, connection, dbInfo, query, instrumenter);
+    this.captureQueryParameters = captureQueryParameters;
     this.parameters = new HashMap<>();
   }
 
   private void putParameter(int index, String value) {
-    parameters.put(Integer.toString(index - 1), value);
+    if (this.captureQueryParameters) {
+      parameters.put(Integer.toString(index - 1), value);
+    }
   }
 
   @Override
@@ -87,14 +91,12 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
   @Override
   public void setNull(int parameterIndex, int sqlType) throws SQLException {
     delegate.setNull(parameterIndex, sqlType);
-    putParameter(parameterIndex, stringifyNullParameter());
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setNull(int parameterIndex, int sqlType, String typeName) throws SQLException {
     delegate.setNull(parameterIndex, sqlType, typeName);
-    putParameter(parameterIndex, stringifyNullParameter());
   }
 
   @Override
@@ -106,7 +108,6 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
   @Override
   public void setByte(int parameterIndex, byte x) throws SQLException {
     delegate.setByte(parameterIndex, x);
-    putParameter(parameterIndex, stringifyParameter(x));
   }
 
   @Override
@@ -154,7 +155,6 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
   @Override
   public void setBytes(int parameterIndex, byte[] x) throws SQLException {
     delegate.setBytes(parameterIndex, x);
-    putParameter(parameterIndex, stringifyParameter(x));
   }
 
   @SuppressWarnings("UngroupedOverloads")

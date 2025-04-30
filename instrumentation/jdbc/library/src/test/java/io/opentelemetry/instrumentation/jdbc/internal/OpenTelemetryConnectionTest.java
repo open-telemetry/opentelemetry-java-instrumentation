@@ -31,11 +31,18 @@ import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import java.math.BigDecimal;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -53,7 +60,7 @@ class OpenTelemetryConnectionTest {
         createStatementInstrumenter(testing.getOpenTelemetry());
     DbInfo dbInfo = getDbInfo();
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
+        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter, false);
     String query = "SELECT * FROM users";
     Statement statement = connection.createStatement();
 
@@ -75,7 +82,7 @@ class OpenTelemetryConnectionTest {
     OpenTelemetry ot = OpenTelemetry.propagating(ContextPropagators.noop());
     Instrumenter<DbRequest, Void> instrumenter = createStatementInstrumenter(ot);
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), DbInfo.DEFAULT, instrumenter);
+        new OpenTelemetryConnection(new TestConnection(), DbInfo.DEFAULT, instrumenter, false);
 
     assertThat(connection.createStatement()).isInstanceOf(OpenTelemetryStatement.class);
     assertThat(connection.createStatement(0, 0)).isInstanceOf(OpenTelemetryStatement.class);
@@ -92,7 +99,7 @@ class OpenTelemetryConnectionTest {
         createStatementInstrumenter(testing.getOpenTelemetry());
     DbInfo dbInfo = getDbInfo();
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
+        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter, false);
     String query = "SELECT * FROM users";
     PreparedStatement statement = connection.prepareStatement(query);
 
@@ -117,7 +124,7 @@ class OpenTelemetryConnectionTest {
         createStatementInstrumenter(testing.getOpenTelemetry());
     DbInfo dbInfo = getDbInfo();
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
+        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter, false);
     String query = "UPDATE users SET name = name";
     PreparedStatement statement = connection.prepareStatement(query);
 
@@ -140,7 +147,7 @@ class OpenTelemetryConnectionTest {
         createStatementInstrumenter(testing.getOpenTelemetry());
     DbInfo dbInfo = getDbInfo();
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
+        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter, false);
     String query = "SELECT * FROM users";
     PreparedStatement statement = connection.prepareStatement(query);
 
@@ -164,7 +171,7 @@ class OpenTelemetryConnectionTest {
     OpenTelemetry ot = OpenTelemetry.propagating(ContextPropagators.noop());
     Instrumenter<DbRequest, Void> instrumenter = createStatementInstrumenter(ot);
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), DbInfo.DEFAULT, instrumenter);
+        new OpenTelemetryConnection(new TestConnection(), DbInfo.DEFAULT, instrumenter, false);
     String query = "SELECT * FROM users";
 
     assertThat(connection.prepareStatement(query))
@@ -192,7 +199,7 @@ class OpenTelemetryConnectionTest {
         createStatementInstrumenter(testing.getOpenTelemetry());
     DbInfo dbInfo = getDbInfo();
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
+        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter, false);
     String query = "SELECT * FROM users";
     PreparedStatement statement = connection.prepareCall(query);
 
@@ -214,7 +221,7 @@ class OpenTelemetryConnectionTest {
     OpenTelemetry ot = OpenTelemetry.propagating(ContextPropagators.noop());
     Instrumenter<DbRequest, Void> instrumenter = createStatementInstrumenter(ot);
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), DbInfo.DEFAULT, instrumenter);
+        new OpenTelemetryConnection(new TestConnection(), DbInfo.DEFAULT, instrumenter, false);
     String query = "SELECT * FROM users";
 
     assertThat(connection.prepareCall(query)).isInstanceOf(OpenTelemetryCallableStatement.class);
@@ -233,17 +240,32 @@ class OpenTelemetryConnectionTest {
   // https://github.com/open-telemetry/semantic-conventions/pull/2093
   @SuppressWarnings("deprecation")
   @Test
-  void testVerifyPrepareStatementParameters() throws SQLException {
+  void testVerifyPrepareStatementParameters() throws SQLException, MalformedURLException {
     Instrumenter<DbRequest, Void> instrumenter =
         createStatementInstrumenter(testing.getOpenTelemetry(), true);
     DbInfo dbInfo = getDbInfo();
     OpenTelemetryConnection connection =
-        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter);
-    String query = "SELECT * FROM users WHERE id=? AND name=? AND age=3";
-    String sanitized = "SELECT * FROM users WHERE id=? AND name=? AND age=3";
+        new OpenTelemetryConnection(new TestConnection(), dbInfo, instrumenter, true);
+    String query = "SELECT * FROM users WHERE id=? AND age=3";
+    String sanitized = "SELECT * FROM users WHERE id=? AND age=3";
     PreparedStatement statement = connection.prepareStatement(query);
-    statement.setInt(1, 1);
-    statement.setString(2, "bob");
+    // doesn't need to match the number of placeholders in this context
+    statement.setBoolean(1, true);
+    statement.setShort(2, (short) 1);
+    statement.setInt(3, 2);
+    statement.setLong(4, 3);
+    statement.setFloat(5, 4);
+    statement.setDouble(6, 5.5);
+    statement.setBigDecimal(7, BigDecimal.valueOf(6));
+    statement.setString(8, "S");
+    statement.setDate(9, Date.valueOf("2000-01-01"));
+    statement.setDate(10, Date.valueOf("2000-01-02"), Calendar.getInstance());
+    statement.setTime(11, Time.valueOf("00:00:00"));
+    statement.setTime(12, Time.valueOf("00:00:01"), Calendar.getInstance());
+    statement.setTimestamp(13, Timestamp.valueOf("2000-01-01 00:00:00"));
+    statement.setTimestamp(14, Timestamp.valueOf("2000-01-01 00:00:01"), Calendar.getInstance());
+    statement.setURL(15, URI.create("http://localhost:8080").toURL());
+    statement.setNString(16, "S");
 
     testing.runWithSpan(
         "parent",
@@ -257,8 +279,22 @@ class OpenTelemetryConnectionTest {
         dbInfo,
         sanitized,
         "SELECT",
-        equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "1"),
-        equalTo(DB_QUERY_PARAMETER.getAttributeKey("1"), "'bob'"));
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "true"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("1"), "1"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("2"), "2"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("3"), "3"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("4"), "4.0"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("5"), "5.5"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("6"), "6"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("7"), "S"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("8"), "2000-01-01"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("9"), "2000-01-02"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("10"), "00:00:00"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("11"), "00:00:01"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("12"), "2000-01-01 00:00:00.0"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("13"), "2000-01-01 00:00:01.0"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("14"), "http://localhost:8080"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("15"), "S"));
 
     statement.close();
     connection.close();
