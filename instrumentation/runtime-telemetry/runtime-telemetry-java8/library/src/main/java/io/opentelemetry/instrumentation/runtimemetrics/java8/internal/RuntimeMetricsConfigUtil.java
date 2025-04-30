@@ -31,6 +31,10 @@ public final class RuntimeMetricsConfigUtil {
       builder.enableExperimentalJmxTelemetry();
     }
 
+    if (config.getBoolean("otel.instrumentation.runtime-telemetry.capture-gc-cause", false)) {
+      builder.captureGcCause();
+    }
+
     return builder.build();
   }
 }

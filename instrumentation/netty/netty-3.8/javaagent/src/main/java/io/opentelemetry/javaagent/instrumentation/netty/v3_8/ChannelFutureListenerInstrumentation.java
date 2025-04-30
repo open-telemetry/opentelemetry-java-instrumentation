@@ -54,7 +54,7 @@ public class ChannelFutureListenerInstrumentation implements TypeInstrumentation
        - To capture scope only in case of error.
        */
       Throwable cause = future.getCause();
-      if (cause == null) {
+      if (cause == null || future.getChannel() == null) {
         return null;
       }
 

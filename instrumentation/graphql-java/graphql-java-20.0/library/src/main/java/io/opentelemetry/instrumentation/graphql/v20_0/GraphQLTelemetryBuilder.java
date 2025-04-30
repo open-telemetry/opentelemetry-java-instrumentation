@@ -15,10 +15,9 @@ public final class GraphQLTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
 
   private boolean sanitizeQuery = true;
-
   private boolean dataFetcherInstrumentationEnabled = false;
-
   private boolean trivialDataFetcherInstrumentationEnabled = false;
+  private boolean addOperationNameToSpanName = false;
 
   GraphQLTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -51,6 +50,18 @@ public final class GraphQLTelemetryBuilder {
   }
 
   /**
+   * Sets whether GraphQL operation name is added to the span name. Default is {@code false}.
+   *
+   * <p>WARNING: GraphQL operation name is provided by the client and can have high cardinality. Use
+   * only when the server is not exposed to malicious clients.
+   */
+  @CanIgnoreReturnValue
+  public GraphQLTelemetryBuilder setAddOperationNameToSpanName(boolean addOperationNameToSpanName) {
+    this.addOperationNameToSpanName = addOperationNameToSpanName;
+    return this;
+  }
+
+  /**
    * Returns a new {@link GraphQLTelemetry} with the settings of this {@link
    * GraphQLTelemetryBuilder}.
    */
@@ -60,6 +71,7 @@ public final class GraphQLTelemetryBuilder {
         sanitizeQuery,
         GraphqlInstrumenterFactory.createDataFetcherInstrumenter(
             openTelemetry, dataFetcherInstrumentationEnabled),
-        trivialDataFetcherInstrumentationEnabled);
+        trivialDataFetcherInstrumentationEnabled,
+        addOperationNameToSpanName);
   }
 }
