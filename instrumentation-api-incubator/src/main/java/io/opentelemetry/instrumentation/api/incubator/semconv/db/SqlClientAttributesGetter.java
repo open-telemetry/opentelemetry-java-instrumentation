@@ -9,6 +9,7 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -69,8 +70,7 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
   }
 
   // TODO: make this required to implement
-  @Nullable
   default Map<String, String> getQueryParameters(REQUEST request) {
-    return null;
+    return Collections.emptyMap();
   }
 }

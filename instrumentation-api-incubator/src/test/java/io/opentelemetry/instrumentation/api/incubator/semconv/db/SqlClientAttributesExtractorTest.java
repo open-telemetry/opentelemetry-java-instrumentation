@@ -70,7 +70,7 @@ class SqlClientAttributesExtractorTest {
       String parameterString = read(map, "db.query.parameter");
 
       if (parameterString == null) {
-        return null;
+        return Collections.emptyMap();
       }
 
       Map<String, String> parameters = new HashMap<>();
