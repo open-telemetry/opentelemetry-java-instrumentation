@@ -145,7 +145,7 @@ class RuleParserTest {
     assertThat(defs).hasSize(1);
 
     JmxRule def1 = defs.get(0);
-    assertThat(def1.getBeans()).containsExactly("BJECT:NAME3=*");
+    assertThat(def1.getBeans()).containsExactly("OBJECT:NAME3=*");
     assertThat(def1.getMetricAttribute()).isNull();
 
     Map<String, Metric> attr = def1.getMapping();
