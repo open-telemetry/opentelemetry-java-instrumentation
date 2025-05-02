@@ -24,61 +24,106 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-class NatsPublishTest {
+class NatsTelemetryPublishTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
+  static final NatsTelemetry telemetry = NatsTelemetry.create(testing.getOpenTelemetry());
+
+  @Test
+  void testPublishBodyNoHeaders() {
+    // given
+    TestConnection testConnection = new TestConnection();
+    OpenTelemetryConnection connection = telemetry.wrap(testConnection);
+
+    // when
+    testing.runWithSpan("parent", () -> connection.publish("sub", new byte[] {0}));
+
+    // then
+    assertPublishSpan();
+    assertNoHeaders(testConnection);
+  }
+
+  @Test
+  void testPublishBodyWithHeaders() {
+    // given
+    TestConnection testConnection = new TestConnection();
+    OpenTelemetryConnection connection = telemetry.wrap(testConnection);
+
+    // when
+    testing.runWithSpan("parent", () -> connection.publish("sub", new Headers(), new byte[] {0}));
+
+    // then
+    assertPublishSpan();
+    assertTraceparentHeader(testConnection);
+  }
+
+  @Test
+  void testPublishBodyReplyToNoHeaders() {
+    // given
+    TestConnection testConnection = new TestConnection();
+    OpenTelemetryConnection connection = telemetry.wrap(testConnection);
+
+    // when
+    testing.runWithSpan("parent", () -> connection.publish("sub", "rt", new byte[] {0}));
+
+    // then
+    assertPublishSpan();
+    assertNoHeaders(testConnection);
+  }
+
+  @Test
+  void testPublishBodyReplyToWithHeaders() {
+    // given
+    TestConnection testConnection = new TestConnection();
+    OpenTelemetryConnection connection = telemetry.wrap(testConnection);
+
+    // when
+    testing.runWithSpan(
+        "parent", () -> connection.publish("sub", "rt", new Headers(), new byte[] {0}));
+
+    // then
+    assertPublishSpan();
+    assertTraceparentHeader(testConnection);
+  }
+
   @Test
   void testPublishMessageNoHeaders() {
     // given
-    NatsTelemetry telemetry = NatsTelemetry.create(testing.getOpenTelemetry());
     TestConnection testConnection = new TestConnection();
     OpenTelemetryConnection connection = telemetry.wrap(testConnection);
     NatsMessage message = NatsMessage.builder().subject("sub").data("x").build();
 
     // when
-    testing.runWithSpan("testPublishMessage", () -> connection.publish(message));
+    testing.runWithSpan("parent", () -> connection.publish(message));
 
     // then
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("testPublishMessage").hasNoParent(),
-                span ->
-                    span.hasName("sub publish")
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_OPERATION, "publish"),
-                            equalTo(MESSAGING_SYSTEM, "nats"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "sub"),
-                            equalTo(MESSAGING_MESSAGE_BODY_SIZE, 1),
-                            equalTo(AttributeKey.stringKey("messaging.client_id"), "1"))));
-
-    // and
-    Message published = testConnection.publishedMessages.peekLast();
-    assertNotNull(published);
-    assertThat(published.getHeaders()).isNull();
+    assertPublishSpan();
+    assertNoHeaders(testConnection);
   }
 
   @Test
   void testPublishMessageWithHeaders() {
     // given
-    NatsTelemetry telemetry = NatsTelemetry.create(testing.getOpenTelemetry());
     TestConnection testConnection = new TestConnection();
     OpenTelemetryConnection connection = telemetry.wrap(testConnection);
     NatsMessage message =
         NatsMessage.builder().subject("sub").headers(new Headers()).data("x").build();
 
     // when
-    testing.runWithSpan("testPublishMessage", () -> connection.publish(message));
+    testing.runWithSpan("parent", () -> connection.publish(message));
 
     // then
+    assertPublishSpan();
+    assertTraceparentHeader(testConnection);
+  }
+
+  private static void assertPublishSpan() {
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("testPublishMessage").hasNoParent(),
+                span -> span.hasName("parent").hasNoParent(),
                 span ->
                     span.hasName("sub publish")
                         .hasKind(SpanKind.PRODUCER)
@@ -89,9 +134,16 @@ class NatsPublishTest {
                             equalTo(MESSAGING_DESTINATION_NAME, "sub"),
                             equalTo(MESSAGING_MESSAGE_BODY_SIZE, 1),
                             equalTo(AttributeKey.stringKey("messaging.client_id"), "1"))));
+  }
 
-    // and
-    Message published = testConnection.publishedMessages.peekLast();
+  private static void assertNoHeaders(TestConnection connection) {
+    Message published = connection.publishedMessages.peekLast();
+    assertNotNull(published);
+    assertThat(published.getHeaders()).isNull();
+  }
+
+  private static void assertTraceparentHeader(TestConnection connection) {
+    Message published = connection.publishedMessages.peekLast();
     assertNotNull(published);
     assertThat(published.getHeaders().get("traceparent")).isNotEmpty();
   }
