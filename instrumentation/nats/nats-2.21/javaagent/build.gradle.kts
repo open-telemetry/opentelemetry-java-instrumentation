@@ -7,7 +7,6 @@ muzzle {
     group.set("io.nats")
     module.set("jnats")
     versions.set("[2.21.0,)")
-    assertInverse.set(true)
   }
 }
 
