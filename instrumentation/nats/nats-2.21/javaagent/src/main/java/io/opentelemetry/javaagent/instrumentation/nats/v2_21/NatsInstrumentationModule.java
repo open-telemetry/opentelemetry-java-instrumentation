@@ -22,6 +22,6 @@ public class NatsInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return Collections.singletonList(new ConnectionInstrumentation());
+    return Collections.singletonList(new ConnectionPublishInstrumentation());
   }
 }
