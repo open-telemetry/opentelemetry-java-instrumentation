@@ -6,9 +6,9 @@
 package io.opentelemetry.instrumentation.nats.v2_21;
 
 import io.nats.client.Connection;
-import io.nats.client.Message;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.nats.v2_21.internal.NatsRequest;
 
 public final class NatsTelemetry {
 
@@ -20,9 +20,9 @@ public final class NatsTelemetry {
     return new NatsTelemetryBuilder(openTelemetry);
   }
 
-  private final Instrumenter<Message, Void> producerInstrumenter;
+  private final Instrumenter<NatsRequest, Void> producerInstrumenter;
 
-  public NatsTelemetry(Instrumenter<Message, Void> producerInstrumenter) {
+  public NatsTelemetry(Instrumenter<NatsRequest, Void> producerInstrumenter) {
     this.producerInstrumenter = producerInstrumenter;
   }
 

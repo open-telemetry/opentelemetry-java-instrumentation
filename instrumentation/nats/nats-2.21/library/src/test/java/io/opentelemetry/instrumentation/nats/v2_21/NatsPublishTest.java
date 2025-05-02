@@ -14,6 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.nats.client.Message;
+import io.nats.client.impl.Headers;
 import io.nats.client.impl.NatsMessage;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
@@ -23,18 +24,52 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-class NatsTelemetryTest {
+class NatsPublishTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Test
-  void testPublishMessage() {
+  void testPublishMessageNoHeaders() {
     // given
     NatsTelemetry telemetry = NatsTelemetry.create(testing.getOpenTelemetry());
     TestConnection testConnection = new TestConnection();
     OpenTelemetryConnection connection = telemetry.wrap(testConnection);
     NatsMessage message = NatsMessage.builder().subject("sub").data("x").build();
+
+    // when
+    testing.runWithSpan("testPublishMessage", () -> connection.publish(message));
+
+    // then
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("testPublishMessage").hasNoParent(),
+                span ->
+                    span.hasName("sub publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_OPERATION, "publish"),
+                            equalTo(MESSAGING_SYSTEM, "nats"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "sub"),
+                            equalTo(MESSAGING_MESSAGE_BODY_SIZE, 1),
+                            equalTo(AttributeKey.stringKey("messaging.client_id"), "1"))));
+
+    // and
+    Message published = testConnection.publishedMessages.peekLast();
+    assertNotNull(published);
+    assertThat(published.getHeaders()).isNull();
+  }
+
+  @Test
+  void testPublishMessageWithHeaders() {
+    // given
+    NatsTelemetry telemetry = NatsTelemetry.create(testing.getOpenTelemetry());
+    TestConnection testConnection = new TestConnection();
+    OpenTelemetryConnection connection = telemetry.wrap(testConnection);
+    NatsMessage message =
+        NatsMessage.builder().subject("sub").headers(new Headers()).data("x").build();
 
     // when
     testing.runWithSpan("testPublishMessage", () -> connection.publish(message));
