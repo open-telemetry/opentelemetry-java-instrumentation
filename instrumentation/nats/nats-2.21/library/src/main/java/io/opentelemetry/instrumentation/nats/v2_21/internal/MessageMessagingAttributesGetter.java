@@ -5,80 +5,82 @@
 
 package io.opentelemetry.instrumentation.nats.v2_21.internal;
 
-import io.nats.client.Message;
+import io.nats.client.impl.Headers;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum MessageMessagingAttributesGetter implements MessagingAttributesGetter<Message, Void> {
+enum MessageMessagingAttributesGetter implements MessagingAttributesGetter<NatsRequest, Void> {
   INSTANCE;
 
   @Nullable
   @Override
-  public String getSystem(Message message) {
+  public String getSystem(NatsRequest request) {
     return "nats";
   }
 
   @Nullable
   @Override
-  public String getDestination(Message message) {
-    return message.getSubject();
+  public String getDestination(NatsRequest request) {
+    return request.getSubject();
   }
 
   @Nullable
   @Override
-  public String getDestinationTemplate(Message message) {
+  public String getDestinationTemplate(NatsRequest request) {
     return null;
   }
 
   @Override
-  public boolean isTemporaryDestination(Message message) {
+  public boolean isTemporaryDestination(NatsRequest request) {
     return false;
   }
 
   @Override
-  public boolean isAnonymousDestination(Message message) {
+  public boolean isAnonymousDestination(NatsRequest request) {
     return false;
   }
 
   @Nullable
   @Override
-  public String getConversationId(Message message) {
+  public String getConversationId(NatsRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long getMessageBodySize(Message message) {
-    return (long) message.getData().length;
+  public Long getMessageBodySize(NatsRequest request) {
+    return request.getDataSize();
   }
 
   @Nullable
   @Override
-  public Long getMessageEnvelopeSize(Message message) {
+  public Long getMessageEnvelopeSize(NatsRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public String getMessageId(Message message, @Nullable Void unused) {
+  public String getMessageId(NatsRequest request, @Nullable Void unused) {
     return null;
   }
 
   @Nullable
   @Override
-  public String getClientId(Message message) {
-    return String.valueOf(message.getConnection().getServerInfo().getClientId());
+  public String getClientId(NatsRequest request) {
+    return String.valueOf(request.getConnection().getServerInfo().getClientId());
   }
 
   @Nullable
   @Override
-  public Long getBatchMessageCount(Message message, @Nullable Void unused) {
+  public Long getBatchMessageCount(NatsRequest request, @Nullable Void unused) {
     return null;
   }
 
   @Override
-  public List<String> getMessageHeader(Message message, String name) {
-    return message.getHeaders().get(name);
+  public List<String> getMessageHeader(NatsRequest request, String name) {
+    Headers headers = request.getHeaders();
+    return headers == null ? Collections.emptyList() : headers.get(name);
   }
 }

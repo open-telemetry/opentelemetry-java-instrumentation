@@ -28,11 +28,11 @@ import io.nats.client.StreamContext;
 import io.nats.client.Subscription;
 import io.nats.client.api.ServerInfo;
 import io.nats.client.impl.Headers;
-import io.nats.client.impl.NatsMessage;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.nats.v2_21.internal.NatsRequest;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.time.Duration;
@@ -43,58 +43,42 @@ import java.util.concurrent.TimeoutException;
 public class OpenTelemetryConnection implements Connection {
 
   private final Connection delegate;
-  private final Instrumenter<Message, Void> producerInstrumenter;
+  private final Instrumenter<NatsRequest, Void> producerInstrumenter;
 
   public OpenTelemetryConnection(
-      Connection connection, Instrumenter<Message, Void> producerInstrumenter) {
+      Connection connection, Instrumenter<NatsRequest, Void> producerInstrumenter) {
     this.delegate = connection;
     this.producerInstrumenter = producerInstrumenter;
   }
 
   @Override
   public void publish(String subject, byte[] body) {
-    this.publish(NatsMessage.builder().subject(subject).data(body).build());
+    wrapPublish(NatsRequest.create(this, subject, body), () -> delegate.publish(subject, body));
   }
 
   @Override
   public void publish(String subject, Headers headers, byte[] body) {
-    this.publish(NatsMessage.builder().subject(subject).headers(headers).data(body).build());
+    wrapPublish(
+        NatsRequest.create(this, subject, headers, body),
+        () -> delegate.publish(subject, headers, body));
   }
 
   @Override
   public void publish(String subject, String replyTo, byte[] body) {
-    this.publish(NatsMessage.builder().subject(subject).replyTo(replyTo).data(body).build());
+    wrapPublish(
+        NatsRequest.create(this, subject, body), () -> delegate.publish(subject, replyTo, body));
   }
 
   @Override
   public void publish(String subject, String replyTo, Headers headers, byte[] body) {
-    this.publish(
-        NatsMessage.builder()
-            .subject(subject)
-            .replyTo(replyTo)
-            .headers(headers)
-            .data(body)
-            .build());
+    wrapPublish(
+        NatsRequest.create(this, subject, headers, body),
+        () -> delegate.publish(subject, replyTo, headers, body));
   }
 
   @Override
   public void publish(Message message) {
-    Context parentContext = Context.current();
-
-    if (!Span.fromContext(parentContext).getSpanContext().isValid()
-        || !producerInstrumenter.shouldStart(parentContext, message)) {
-      delegate.publish(message);
-      return;
-    }
-
-    Message otelMessage = new OpenTelemetryMessage(this, message);
-    Context context = producerInstrumenter.start(parentContext, otelMessage);
-
-    try (Scope ignored = context.makeCurrent()) {
-      delegate.publish(otelMessage);
-    } finally {
-      producerInstrumenter.end(context, otelMessage, null, null);
-    }
+    wrapPublish(NatsRequest.create(this, message), () -> delegate.publish(message));
   }
 
   @Override
@@ -355,5 +339,22 @@ public class OpenTelemetryConnection implements Connection {
   public ObjectStoreManagement objectStoreManagement(ObjectStoreOptions objectStoreOptions)
       throws IOException {
     return delegate.objectStoreManagement(objectStoreOptions);
+  }
+
+  private void wrapPublish(NatsRequest natsRequest, Runnable publish) {
+    Context parentContext = Context.current();
+
+    if (!Span.fromContext(parentContext).getSpanContext().isValid()
+        || !producerInstrumenter.shouldStart(parentContext, natsRequest)) {
+      publish.run();
+      return;
+    }
+
+    Context context = producerInstrumenter.start(parentContext, natsRequest);
+    try (Scope ignored = context.makeCurrent()) {
+      publish.run();
+    } finally {
+      producerInstrumenter.end(context, natsRequest, null, null);
+    }
   }
 }

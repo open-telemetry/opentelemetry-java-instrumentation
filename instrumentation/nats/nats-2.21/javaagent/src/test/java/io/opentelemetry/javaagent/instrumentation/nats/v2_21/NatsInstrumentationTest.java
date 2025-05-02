@@ -16,6 +16,7 @@ import io.nats.client.Connection;
 import io.nats.client.Message;
 import io.nats.client.Nats;
 import io.nats.client.Subscription;
+import io.nats.client.impl.Headers;
 import io.nats.client.impl.NatsMessage;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
@@ -64,10 +65,43 @@ class NatsInstrumentationTest {
   }
 
   @Test
-  void testPublishMessage() throws InterruptedException {
+  void testPublishMessageNoHeaders() throws InterruptedException {
     // given
-    NatsMessage message = NatsMessage.builder().subject("sub").data("x").build();
     int clientId = connection.getServerInfo().getClientId();
+    NatsMessage message = NatsMessage.builder().subject("sub").data("x").build();
+
+    // when
+    testing.runWithSpan("testPublishMessage", () -> connection.publish(message));
+
+    // then
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("testPublishMessage").hasNoParent(),
+                span ->
+                    span.hasName("sub publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_OPERATION, "publish"),
+                            equalTo(MESSAGING_SYSTEM, "nats"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "sub"),
+                            equalTo(MESSAGING_MESSAGE_BODY_SIZE, 1),
+                            equalTo(
+                                AttributeKey.stringKey("messaging.client_id"),
+                                String.valueOf(clientId)))));
+
+    // and
+    Message published = subscription.nextMessage(Duration.ofSeconds(1));
+    assertThat(published.getHeaders()).isNull();
+  }
+
+  @Test
+  void testPublishMessageWithHeaders() throws InterruptedException {
+    // given
+    int clientId = connection.getServerInfo().getClientId();
+    NatsMessage message =
+        NatsMessage.builder().subject("sub").data("x").headers(new Headers()).build();
 
     // when
     testing.runWithSpan("testPublishMessage", () -> connection.publish(message));

@@ -7,13 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.nats.v2_21;
 
 import static io.opentelemetry.instrumentation.nats.v2_21.internal.NatsInstrumenterFactory.createProducerInstrumenter;
 
-import io.nats.client.Message;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.nats.v2_21.internal.NatsRequest;
 
 public final class NatsSingletons {
 
-  public static final Instrumenter<Message, Void> PRODUCER_INSTRUMENTER =
+  public static final Instrumenter<NatsRequest, Void> PRODUCER_INSTRUMENTER =
       createProducerInstrumenter(GlobalOpenTelemetry.get());
 
   private NatsSingletons() {}

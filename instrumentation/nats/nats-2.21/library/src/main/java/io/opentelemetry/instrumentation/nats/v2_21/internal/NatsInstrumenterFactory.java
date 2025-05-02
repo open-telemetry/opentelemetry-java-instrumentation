@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.nats.v2_21.internal;
 
-import io.nats.client.Message;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
@@ -23,17 +22,17 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 public final class NatsInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.nats-2.21";
 
-  public static final SpanNameExtractor<Message> PRODUCER_SPAN_NAME_EXTRACTOR =
+  public static final SpanNameExtractor<NatsRequest> PRODUCER_SPAN_NAME_EXTRACTOR =
       MessagingSpanNameExtractor.create(
           MessageMessagingAttributesGetter.INSTANCE, MessageOperation.PUBLISH);
 
-  public static final AttributesExtractor<Message, Void> PUBLISH_ATTRIBUTES_EXTRACTOR =
+  public static final AttributesExtractor<NatsRequest, Void> PUBLISH_ATTRIBUTES_EXTRACTOR =
       MessagingAttributesExtractor.create(
           MessageMessagingAttributesGetter.INSTANCE, MessageOperation.PUBLISH);
 
-  public static Instrumenter<Message, Void> createProducerInstrumenter(
+  public static Instrumenter<NatsRequest, Void> createProducerInstrumenter(
       OpenTelemetry openTelemetry) {
-    return Instrumenter.<Message, Void>builder(
+    return Instrumenter.<NatsRequest, Void>builder(
             openTelemetry, INSTRUMENTATION_NAME, PRODUCER_SPAN_NAME_EXTRACTOR)
         .addAttributesExtractor(PUBLISH_ATTRIBUTES_EXTRACTOR)
         .buildProducerInstrumenter(MessageTextMapSetter.INSTANCE);

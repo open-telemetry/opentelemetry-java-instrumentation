@@ -16,11 +16,10 @@ import io.nats.client.Connection;
 import io.nats.client.Message;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.nats.v2_21.OpenTelemetryMessage;
+import io.opentelemetry.instrumentation.nats.v2_21.internal.NatsRequest;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -38,31 +37,28 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
             .and(named("publish"))
             .and(takesArguments(1))
             .and(takesArgument(0, named("io.nats.client.Message"))),
-        ConnectionInstrumentation.class.getName() + "$PublishAdvice");
+        ConnectionInstrumentation.class.getName() + "$PublishMessageAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class PublishAdvice {
+  public static class PublishMessageAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    @Advice.AssignReturned.ToArguments(@ToArgument(0))
-    public static Message onEnter(
+    public static void onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) Message message,
         @Advice.Local("otelContext") Context otelContext,
-        @Advice.Local("otelScope") Scope otelScope) {
+        @Advice.Local("otelScope") Scope otelScope,
+        @Advice.Local("natsRequest") NatsRequest natsRequest) {
       Context parentContext = Context.current();
+      natsRequest = NatsRequest.create(connection, message);
 
-      if (!PRODUCER_INSTRUMENTER.shouldStart(parentContext, message)) {
-        return message;
+      if (!PRODUCER_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
+        return;
       }
 
-      OpenTelemetryMessage otelMessage = new OpenTelemetryMessage(connection, message);
-
-      otelContext = PRODUCER_INSTRUMENTER.start(parentContext, otelMessage);
+      otelContext = PRODUCER_INSTRUMENTER.start(parentContext, natsRequest);
       otelScope = otelContext.makeCurrent();
-
-      return otelMessage;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -71,13 +67,14 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
         @Advice.This Connection connection,
         @Advice.Argument(0) Message message,
         @Advice.Local("otelContext") Context otelContext,
-        @Advice.Local("otelScope") Scope otelScope) {
+        @Advice.Local("otelScope") Scope otelScope,
+        @Advice.Local("natsRequest") NatsRequest natsRequest) {
       if (otelScope == null) {
         return;
       }
 
       otelScope.close();
-      PRODUCER_INSTRUMENTER.end(otelContext, message, null, throwable);
+      PRODUCER_INSTRUMENTER.end(otelContext, natsRequest, null, throwable);
     }
   }
 }
