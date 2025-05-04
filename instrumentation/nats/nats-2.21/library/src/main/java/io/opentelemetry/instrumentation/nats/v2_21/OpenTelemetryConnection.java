@@ -44,11 +44,15 @@ public class OpenTelemetryConnection implements Connection {
 
   private final Connection delegate;
   private final Instrumenter<NatsRequest, Void> producerInstrumenter;
+  private final Instrumenter<NatsRequest, Void> consumerInstrumenter;
 
   public OpenTelemetryConnection(
-      Connection connection, Instrumenter<NatsRequest, Void> producerInstrumenter) {
+      Connection connection,
+      Instrumenter<NatsRequest, Void> producerInstrumenter,
+      Instrumenter<NatsRequest, Void> consumerInstrumenter) {
     this.delegate = connection;
     this.producerInstrumenter = producerInstrumenter;
+    this.consumerInstrumenter = consumerInstrumenter;
   }
 
   @Override
@@ -82,24 +86,25 @@ public class OpenTelemetryConnection implements Connection {
   }
 
   @Override
-  public CompletableFuture<Message> request(String s, byte[] bytes) {
-    return delegate.request(s, bytes);
+  public CompletableFuture<Message> request(String subject, byte[] body) {
+    return delegate.request(subject, body);
   }
 
   @Override
-  public Message request(String s, byte[] bytes, Duration duration) throws InterruptedException {
-    return delegate.request(s, bytes, duration);
-  }
-
-  @Override
-  public CompletableFuture<Message> request(String s, Headers headers, byte[] bytes) {
-    return delegate.request(s, headers, bytes);
-  }
-
-  @Override
-  public Message request(String s, Headers headers, byte[] bytes, Duration duration)
+  public Message request(String subject, byte[] body, Duration timeout)
       throws InterruptedException {
-    return delegate.request(s, headers, bytes, duration);
+    return delegate.request(subject, body, timeout);
+  }
+
+  @Override
+  public CompletableFuture<Message> request(String subject, Headers headers, byte[] body) {
+    return delegate.request(subject, headers, body);
+  }
+
+  @Override
+  public Message request(String subject, Headers headers, byte[] body, Duration timeout)
+      throws InterruptedException {
+    return delegate.request(subject, headers, body, timeout);
   }
 
   @Override
@@ -108,34 +113,37 @@ public class OpenTelemetryConnection implements Connection {
   }
 
   @Override
-  public Message request(Message message, Duration duration) throws InterruptedException {
-    return delegate.request(message, duration);
-  }
-
-  @Override
-  public CompletableFuture<Message> requestWithTimeout(String s, byte[] bytes, Duration duration) {
-    return delegate.requestWithTimeout(s, bytes, duration);
+  public Message request(Message message, Duration timeout) throws InterruptedException {
+    return delegate.request(message, timeout);
   }
 
   @Override
   public CompletableFuture<Message> requestWithTimeout(
-      String s, Headers headers, byte[] bytes, Duration duration) {
-    return delegate.requestWithTimeout(s, headers, bytes, duration);
+      String subject, byte[] body, Duration timeout) {
+    return delegate.requestWithTimeout(subject, body, timeout);
   }
 
   @Override
-  public CompletableFuture<Message> requestWithTimeout(Message message, Duration duration) {
-    return delegate.requestWithTimeout(message, duration);
+  public CompletableFuture<Message> requestWithTimeout(
+      String subject, Headers headers, byte[] body, Duration timeout) {
+    return delegate.requestWithTimeout(subject, headers, body, timeout);
   }
 
   @Override
-  public Subscription subscribe(String s) {
-    return delegate.subscribe(s);
+  public CompletableFuture<Message> requestWithTimeout(Message message, Duration timeout) {
+    return delegate.requestWithTimeout(message, timeout);
   }
 
   @Override
-  public Subscription subscribe(String s, String s1) {
-    return delegate.subscribe(s, s1);
+  public Subscription subscribe(String subject) {
+    return new OpenTelemetrySubscription(
+        this, delegate.subscribe(subject), this.consumerInstrumenter);
+  }
+
+  @Override
+  public Subscription subscribe(String subject, String queueName) {
+    return new OpenTelemetrySubscription(
+        this, delegate.subscribe(subject, queueName), this.consumerInstrumenter);
   }
 
   @Override
@@ -164,14 +172,14 @@ public class OpenTelemetryConnection implements Connection {
   }
 
   @Override
-  public void flush(Duration duration) throws TimeoutException, InterruptedException {
-    delegate.flush(duration);
+  public void flush(Duration timeout) throws TimeoutException, InterruptedException {
+    delegate.flush(timeout);
   }
 
   @Override
-  public CompletableFuture<Boolean> drain(Duration duration)
+  public CompletableFuture<Boolean> drain(Duration timeout)
       throws TimeoutException, InterruptedException {
-    return delegate.drain(duration);
+    return delegate.drain(timeout);
   }
 
   @Override
@@ -256,26 +264,28 @@ public class OpenTelemetryConnection implements Connection {
   }
 
   @Override
-  public StreamContext getStreamContext(String s) throws IOException, JetStreamApiException {
-    return delegate.getStreamContext(s);
+  public StreamContext getStreamContext(String streamName)
+      throws IOException, JetStreamApiException {
+    return delegate.getStreamContext(streamName);
   }
 
   @Override
-  public StreamContext getStreamContext(String s, JetStreamOptions jetStreamOptions)
+  public StreamContext getStreamContext(String streamName, JetStreamOptions jetStreamOptions)
       throws IOException, JetStreamApiException {
-    return delegate.getStreamContext(s, jetStreamOptions);
+    return delegate.getStreamContext(streamName, jetStreamOptions);
   }
 
   @Override
-  public ConsumerContext getConsumerContext(String s, String s1)
+  public ConsumerContext getConsumerContext(String streamName, String consumerName)
       throws IOException, JetStreamApiException {
-    return delegate.getConsumerContext(s, s1);
+    return delegate.getConsumerContext(streamName, consumerName);
   }
 
   @Override
-  public ConsumerContext getConsumerContext(String s, String s1, JetStreamOptions jetStreamOptions)
+  public ConsumerContext getConsumerContext(
+      String streamName, String consumerName, JetStreamOptions jetStreamOptions)
       throws IOException, JetStreamApiException {
-    return delegate.getConsumerContext(s, s1, jetStreamOptions);
+    return delegate.getConsumerContext(streamName, consumerName, jetStreamOptions);
   }
 
   @Override
@@ -300,8 +310,8 @@ public class OpenTelemetryConnection implements Connection {
   }
 
   @Override
-  public KeyValue keyValue(String s) throws IOException {
-    return delegate.keyValue(s);
+  public KeyValue keyValue(String bucketName) throws IOException {
+    return delegate.keyValue(bucketName);
   }
 
   @Override
@@ -320,14 +330,14 @@ public class OpenTelemetryConnection implements Connection {
   }
 
   @Override
-  public ObjectStore objectStore(String s) throws IOException {
-    return delegate.objectStore(s);
+  public ObjectStore objectStore(String bucketName) throws IOException {
+    return delegate.objectStore(bucketName);
   }
 
   @Override
-  public ObjectStore objectStore(String s, ObjectStoreOptions objectStoreOptions)
+  public ObjectStore objectStore(String bucketName, ObjectStoreOptions objectStoreOptions)
       throws IOException {
-    return delegate.objectStore(s, objectStoreOptions);
+    return delegate.objectStore(bucketName, objectStoreOptions);
   }
 
   @Override

@@ -35,12 +35,26 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeoutException;
 
 public class TestConnection implements Connection {
 
-  public final LinkedList<Message> publishedMessages = new LinkedList<>();
+  private final List<TestSubscription> subscriptions =
+      Collections.synchronizedList(new LinkedList<>());
+
+  public final Queue<Message> publishedMessages = new ConcurrentLinkedQueue<>();
+
+  public void deliver(Message message) {
+    subscriptions.stream()
+        .filter(subscription -> message.getSubject().equalsIgnoreCase(subscription.getSubject()))
+        .forEach(
+            subscription ->
+                subscription.messages.add(new TestMessage(this, subscription, message)));
+  }
 
   @Override
   public void publish(String subject, byte[] body) {
@@ -124,12 +138,16 @@ public class TestConnection implements Connection {
 
   @Override
   public Subscription subscribe(String subject) {
-    return null;
+    TestSubscription subscription = new TestSubscription(subject);
+    subscriptions.add(subscription);
+    return subscription;
   }
 
   @Override
   public Subscription subscribe(String subject, String queueName) {
-    return null;
+    TestSubscription subscription = new TestSubscription(subject, queueName);
+    subscriptions.add(subscription);
+    return subscription;
   }
 
   @Override

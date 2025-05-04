@@ -21,12 +21,17 @@ public final class NatsTelemetry {
   }
 
   private final Instrumenter<NatsRequest, Void> producerInstrumenter;
+  private final Instrumenter<NatsRequest, Void> consumerInstrumenter;
 
-  public NatsTelemetry(Instrumenter<NatsRequest, Void> producerInstrumenter) {
+  public NatsTelemetry(
+      Instrumenter<NatsRequest, Void> producerInstrumenter,
+      Instrumenter<NatsRequest, Void> consumerInstrumenter) {
     this.producerInstrumenter = producerInstrumenter;
+    this.consumerInstrumenter = consumerInstrumenter;
   }
 
   public OpenTelemetryConnection wrap(Connection connection) {
-    return new OpenTelemetryConnection(connection, this.producerInstrumenter);
+    return new OpenTelemetryConnection(
+        connection, this.producerInstrumenter, this.consumerInstrumenter);
   }
 }
