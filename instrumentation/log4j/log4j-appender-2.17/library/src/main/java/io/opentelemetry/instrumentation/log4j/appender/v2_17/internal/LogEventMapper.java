@@ -7,8 +7,10 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_17.internal;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.incubator.common.ExtendedAttributeKey;
+import io.opentelemetry.api.incubator.common.ExtendedAttributeType;
 import io.opentelemetry.api.incubator.common.ExtendedAttributes;
 import io.opentelemetry.api.incubator.common.ExtendedAttributesBuilder;
+import io.opentelemetry.api.incubator.internal.InternalExtendedAttributeKeyImpl;
 import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
@@ -49,9 +51,9 @@ public final class LogEventMapper<T> {
 
   private static final String SPECIAL_MAP_MESSAGE_ATTRIBUTE = "message";
 
-  private static final Cache<String, AttributeKey<String>> contextDataAttributeKeyCache =
+  private static final Cache<String, ExtendedAttributeKey<?>> contextDataAttributeKeyCache =
       Cache.bounded(100);
-  private static final Cache<String, AttributeKey<String>> mapMessageAttributeKeyCache =
+  private static final Cache<String, ExtendedAttributeKey<?>> mapMessageAttributeKeyCache =
       Cache.bounded(100);
 
   private static final AttributeKey<String> LOG_MARKER = AttributeKey.stringKey("log4j.marker");
@@ -222,13 +224,14 @@ public final class LogEventMapper<T> {
   @SuppressWarnings({"unchecked"})
   private static void consumeEntry(String key, Object value, ExtendedAttributesBuilder attributes) {
     if (value instanceof String) {
-      attributes.put(key, (String) value);
+      attributes.put(getMapMessageAttributeKey(key, ExtendedAttributeType.STRING), (String) value);
     } else if (value instanceof Boolean) {
-      attributes.put(key, (Boolean) value);
+      attributes.put(
+          getMapMessageAttributeKey(key, ExtendedAttributeType.BOOLEAN), (Boolean) value);
     } else if ((value instanceof Long) || (value instanceof Integer)) {
-      attributes.put(key, (long) value);
+      attributes.put(getMapMessageAttributeKey(key, ExtendedAttributeType.LONG), (long) value);
     } else if ((value instanceof Double) || (value instanceof Float)) {
-      attributes.put(key, (double) value);
+      attributes.put(getMapMessageAttributeKey(key, ExtendedAttributeType.DOUBLE), (double) value);
     } else if (value instanceof List) {
       List<?> list = (List<?>) value;
       if (list.isEmpty()) {
@@ -237,34 +240,49 @@ public final class LogEventMapper<T> {
 
       Object first = list.get(0);
       if (first instanceof String) {
-        attributes.put(ExtendedAttributeKey.stringArrayKey(key), (List<String>) value);
+        attributes.put(
+            getMapMessageAttributeKey(key, ExtendedAttributeType.STRING_ARRAY),
+            (List<String>) value);
       } else if (first instanceof Boolean) {
-        attributes.put(ExtendedAttributeKey.booleanArrayKey(key), (List<Boolean>) value);
+        attributes.put(
+            getMapMessageAttributeKey(key, ExtendedAttributeType.BOOLEAN_ARRAY),
+            (List<Boolean>) value);
       } else if ((first instanceof Long) || (first instanceof Integer)) {
-        attributes.put(ExtendedAttributeKey.longArrayKey(key), (List<Long>) value);
+        attributes.put(
+            getMapMessageAttributeKey(key, ExtendedAttributeType.LONG_ARRAY), (List<Long>) value);
       } else if ((first instanceof Double) || (first instanceof Float)) {
-        attributes.put(ExtendedAttributeKey.doubleArrayKey(key), (List<Double>) value);
+        attributes.put(
+            getMapMessageAttributeKey(key, ExtendedAttributeType.DOUBLE_ARRAY),
+            (List<Double>) value);
       }
     } else if (value instanceof String[]) {
-      attributes.put(key, (String[]) value);
+      attributes.put(
+          getMapMessageAttributeKey(key, ExtendedAttributeType.STRING_ARRAY), (String[]) value);
     } else if (value instanceof boolean[]) {
-      attributes.put(key, (boolean[]) value);
+      attributes.put(
+          getMapMessageAttributeKey(key, ExtendedAttributeType.BOOLEAN_ARRAY), (boolean[]) value);
     } else if (value instanceof long[]) {
-      attributes.put(key, (long[]) value);
+      attributes.put(
+          getMapMessageAttributeKey(key, ExtendedAttributeType.LONG_ARRAY), (long[]) value);
     } else if (value instanceof int[]) {
-      attributes.put(key, Arrays.stream((int[]) value).asLongStream().toArray());
+      attributes.put(
+          getMapMessageAttributeKey(key, ExtendedAttributeType.LONG_ARRAY),
+          Arrays.stream((int[]) value).asLongStream().toArray());
     } else if (value instanceof double[]) {
-      attributes.put(key, (double[]) value);
+      attributes.put(
+          getMapMessageAttributeKey(key, ExtendedAttributeType.DOUBLE_ARRAY), (double[]) value);
     } else if (value instanceof float[]) {
       double[] arr = new double[((float[]) value).length];
       for (int i = 0; i < arr.length; ++i) {
         arr[i] = ((float[]) value)[i];
       }
-      attributes.put(key, arr);
+      attributes.put(getMapMessageAttributeKey(key, ExtendedAttributeType.DOUBLE_ARRAY), arr);
     } else if ((value instanceof Map)) {
       ExtendedAttributesBuilder nestedAttribute = ExtendedAttributes.builder();
       consumeAttributes(((Map<?, ?>) value)::forEach, nestedAttribute, false);
-      attributes.put(ExtendedAttributeKey.extendedAttributesKey(key), nestedAttribute.build());
+      attributes.put(
+          getMapMessageAttributeKey(key, ExtendedAttributeType.EXTENDED_ATTRIBUTES),
+          nestedAttribute.build());
     } else {
       throw new IllegalArgumentException("Unrecognized value type: " + value.getClass());
     }
@@ -277,7 +295,7 @@ public final class LogEventMapper<T> {
           contextData,
           (key, value) -> {
             if (value != null) {
-              attributes.put(getContextDataAttributeKey(key), value);
+              attributes.put(getContextDataAttributeKey(key, ExtendedAttributeType.STRING), value);
             }
           });
       return;
@@ -286,18 +304,31 @@ public final class LogEventMapper<T> {
     for (String key : captureContextDataAttributes) {
       String value = contextDataAccessor.getValue(contextData, key);
       if (value != null) {
-        attributes.put(getContextDataAttributeKey(key), value);
+        attributes.put(getContextDataAttributeKey(key, ExtendedAttributeType.STRING), value);
       }
     }
   }
 
-  public static AttributeKey<String> getContextDataAttributeKey(String key) {
-    return contextDataAttributeKeyCache.computeIfAbsent(key, AttributeKey::stringKey);
+  private static <T> ExtendedAttributeKey<T> getContextDataAttributeKey(
+      String key, ExtendedAttributeType type) {
+    return getAttributeKey(key, type, contextDataAttributeKeyCache);
   }
 
-  public static AttributeKey<String> getMapMessageAttributeKey(String key) {
-    return mapMessageAttributeKeyCache.computeIfAbsent(
-        key, k -> AttributeKey.stringKey("log4j.map_message." + k));
+  private static <T> ExtendedAttributeKey<T> getMapMessageAttributeKey(
+      String key, ExtendedAttributeType type) {
+    return getAttributeKey("log4j.map_message." + key, type, mapMessageAttributeKeyCache);
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <T> ExtendedAttributeKey<T> getAttributeKey(
+      String key, ExtendedAttributeType type, Cache<String, ExtendedAttributeKey<?>> cache) {
+    ExtendedAttributeKey<?> output =
+        cache.computeIfAbsent(key, k -> InternalExtendedAttributeKeyImpl.create(key, type));
+    if (output.getType() != type) {
+      output = InternalExtendedAttributeKeyImpl.create(key, type);
+      cache.put(key, output);
+    }
+    return (ExtendedAttributeKey<T>) output;
   }
 
   private static void setThrowable(ExtendedAttributesBuilder attributes, Throwable throwable) {

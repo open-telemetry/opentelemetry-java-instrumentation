@@ -11,6 +11,8 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
+import org.apache.logging.log4j.ThreadContext;
+import org.apache.logging.log4j.spi.ObjectThreadContextMap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -41,6 +43,9 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
         testing.runWithSpan(
             "span1",
             () -> {
+              ObjectThreadContextMap map =
+                  (ObjectThreadContextMap) ThreadContext.getThreadContextMap();
+              map.putValue("stuff", new int[] {1, 2, 3});
               logger.info("log message");
               return Span.current();
             });
