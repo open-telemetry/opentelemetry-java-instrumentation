@@ -30,10 +30,10 @@ class LogEventMapperTest {
   @Test
   void testDefault() {
     // given
-    LogEventMapper<Map<String, String>> mapper =
+    LogEventMapper<Map<String, Object>> mapper =
         new LogEventMapper<>(
             ContextDataAccessorImpl.INSTANCE, false, false, false, false, emptyList());
-    Map<String, String> contextData = new HashMap<>();
+    Map<String, Object> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
     ExtendedAttributesBuilder attributes = ExtendedAttributes.builder();
@@ -48,10 +48,10 @@ class LogEventMapperTest {
   @Test
   void testSome() {
     // given
-    LogEventMapper<Map<String, String>> mapper =
+    LogEventMapper<Map<String, Object>> mapper =
         new LogEventMapper<>(
             ContextDataAccessorImpl.INSTANCE, false, false, false, false, singletonList("key2"));
-    Map<String, String> contextData = new HashMap<>();
+    Map<String, Object> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
     ExtendedAttributesBuilder attributes = ExtendedAttributes.builder();
@@ -66,10 +66,10 @@ class LogEventMapperTest {
   @Test
   void testAll() {
     // given
-    LogEventMapper<Map<String, String>> mapper =
+    LogEventMapper<Map<String, Object>> mapper =
         new LogEventMapper<>(
             ContextDataAccessorImpl.INSTANCE, false, false, false, false, singletonList("*"));
-    Map<String, String> contextData = new HashMap<>();
+    Map<String, Object> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
     ExtendedAttributesBuilder attributes = ExtendedAttributes.builder();
@@ -85,7 +85,7 @@ class LogEventMapperTest {
   @Test
   void testCaptureMapMessageDisabled() {
     // given
-    LogEventMapper<Map<String, String>> mapper =
+    LogEventMapper<Map<String, Object>> mapper =
         new LogEventMapper<>(
             ContextDataAccessorImpl.INSTANCE, false, false, false, false, singletonList("*"));
 
@@ -107,7 +107,7 @@ class LogEventMapperTest {
   @Test
   void testCaptureMapMessageWithSpecialAttribute() {
     // given
-    LogEventMapper<Map<String, String>> mapper =
+    LogEventMapper<Map<String, Object>> mapper =
         new LogEventMapper<>(
             ContextDataAccessorImpl.INSTANCE, false, false, true, false, singletonList("*"));
 
@@ -130,7 +130,7 @@ class LogEventMapperTest {
   @Test
   void testCaptureMapMessageWithoutSpecialAttribute() {
     // given
-    LogEventMapper<Map<String, String>> mapper =
+    LogEventMapper<Map<String, Object>> mapper =
         new LogEventMapper<>(
             ContextDataAccessorImpl.INSTANCE, false, false, true, false, singletonList("*"));
 
@@ -155,7 +155,7 @@ class LogEventMapperTest {
   @Test
   void testCaptureStructuredDataMessage() {
     // given
-    LogEventMapper<Map<String, String>> mapper =
+    LogEventMapper<Map<String, Object>> mapper =
         new LogEventMapper<>(
             ContextDataAccessorImpl.INSTANCE, false, false, true, false, singletonList("*"));
 
@@ -177,17 +177,17 @@ class LogEventMapperTest {
             attributeEntry("log4j.map_message.message", "value2"));
   }
 
-  private enum ContextDataAccessorImpl implements ContextDataAccessor<Map<String, String>> {
+  private enum ContextDataAccessorImpl implements ContextDataAccessor<Map<String, Object>, Object> {
     INSTANCE;
 
     @Override
     @Nullable
-    public String getValue(Map<String, String> contextData, String key) {
+    public Object getValue(Map<String, Object> contextData, String key) {
       return contextData.get(key);
     }
 
     @Override
-    public void forEach(Map<String, String> contextData, BiConsumer<String, String> action) {
+    public void forEach(Map<String, Object> contextData, BiConsumer<String, Object> action) {
       contextData.forEach(action);
     }
   }

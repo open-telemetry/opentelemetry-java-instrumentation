@@ -12,10 +12,18 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public interface ContextDataAccessor<T> {
+public interface ContextDataAccessor<T, V> {
 
   @Nullable
-  String getValue(T contextData, String key);
+  V getValue(T contextData, String key);
 
-  void forEach(T contextData, BiConsumer<String, String> action);
+  default String getStringValue(T contextData, String key) {
+    Object value = getValue(contextData, key);
+    if (value != null) {
+      return value.toString();
+    }
+    return null;
+  }
+
+  void forEach(T contextData, BiConsumer<String, V> action);
 }

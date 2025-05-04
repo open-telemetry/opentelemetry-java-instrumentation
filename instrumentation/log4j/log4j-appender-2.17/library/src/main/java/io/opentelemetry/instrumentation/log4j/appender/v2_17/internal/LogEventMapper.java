@@ -19,17 +19,19 @@ import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.semconv.ExceptionAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.core.LogEvent;
-import org.apache.logging.log4j.core.impl.MutableLogEvent;
 import org.apache.logging.log4j.message.MapMessage;
 import org.apache.logging.log4j.message.Message;
 
@@ -58,7 +60,7 @@ public final class LogEventMapper<T> {
 
   private static final AttributeKey<String> LOG_MARKER = AttributeKey.stringKey("log4j.marker");
 
-  private final ContextDataAccessor<T> contextDataAccessor;
+  private final ContextDataAccessor<T, Object> contextDataAccessor;
 
   private final boolean captureExperimentalAttributes;
   private final boolean captureCodeAttributes;
@@ -68,7 +70,7 @@ public final class LogEventMapper<T> {
   private final boolean captureAllContextDataAttributes;
 
   public LogEventMapper(
-      ContextDataAccessor<T> contextDataAccessor,
+      ContextDataAccessor<T, Object> contextDataAccessor,
       boolean captureExperimentalAttributes,
       boolean captureCodeAttributes,
       boolean captureMapMessageAttributes,
@@ -159,51 +161,36 @@ public final class LogEventMapper<T> {
   }
 
   // visible for testing
+  @SuppressWarnings("unchecked")
   void captureMessage(
       LogRecordBuilder builder, ExtendedAttributesBuilder attributes, Message message) {
     if (message == null) {
       return;
     }
-
-    if (message instanceof MutableLogEvent) {
-      captureLogEvent(attributes, (MutableLogEvent) message);
+    if (!(message instanceof MapMessage)) {
+      builder.setBody(message.getFormattedMessage());
       return;
     }
 
-    if (message instanceof MapMessage) {
-      captureMapMessage(builder, attributes, (MapMessage<?, ?>) message);
-      return;
-    }
+    MapMessage<?, ?> mapMessage = (MapMessage<?, ?>) message;
 
-    builder.setBody(message.getFormattedMessage());
-  }
-
-  @SuppressWarnings("unchecked")
-  private void captureMapMessage(
-      LogRecordBuilder builder, ExtendedAttributesBuilder attributes, MapMessage<?, ?> mapMessage) {
     String body = mapMessage.getFormat();
-    boolean checkSpecialMapMessageAttribute = false;
-    if (body == null || body.isEmpty()) {
-      checkSpecialMapMessageAttribute = true;
+    boolean checkSpecialMapMessageAttribute = (body == null || body.isEmpty());
+    if (checkSpecialMapMessageAttribute) {
       body = mapMessage.get(SPECIAL_MAP_MESSAGE_ATTRIBUTE);
     }
+
     if (body != null && !body.isEmpty()) {
       builder.setBody(body);
     }
 
     if (captureMapMessageAttributes) {
-      consumeAttributes(mapMessage.getData()::forEach, attributes, checkSpecialMapMessageAttribute);
-    }
-  }
-
-  @SuppressWarnings("unchecked")
-  private void captureLogEvent(ExtendedAttributesBuilder attributes, MutableLogEvent logEvent) {
-    if (captureMapMessageAttributes) {
+      // TODO (trask) this could be optimized in 2.9 and later by calling MapMessage.forEach()
       consumeAttributes(
-          biConsumer ->
-              logEvent.getContextData().forEach((s, object) -> biConsumer.accept(s, object)),
+          mapMessage.getData()::forEach,
           attributes,
-          false);
+          checkSpecialMapMessageAttribute,
+          LogEventMapper::getMapMessageAttributeKey);
     }
   }
 
@@ -211,27 +198,39 @@ public final class LogEventMapper<T> {
   private static void consumeAttributes(
       Consumer<BiConsumer> actionConsumer,
       ExtendedAttributesBuilder attributes,
-      boolean checkSpecialMapMessageAttribute) {
+      boolean checkSpecialMapMessageAttribute,
+      BiFunction<String, ExtendedAttributeType, ExtendedAttributeKey<?>> keyProvider) {
     actionConsumer.accept(
         (key, value) -> {
           if (value != null
               && (!checkSpecialMapMessageAttribute || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))) {
-            consumeEntry(key.toString(), value, attributes);
+            consumeEntry(key.toString(), value, attributes, keyProvider);
           }
         });
   }
 
   @SuppressWarnings({"unchecked"})
-  private static void consumeEntry(String key, Object value, ExtendedAttributesBuilder attributes) {
+  private static void consumeEntry(
+      String key,
+      Object value,
+      ExtendedAttributesBuilder attributes,
+      BiFunction<String, ExtendedAttributeType, ExtendedAttributeKey<?>> keyProvider) {
     if (value instanceof String) {
-      attributes.put(getMapMessageAttributeKey(key, ExtendedAttributeType.STRING), (String) value);
+      attributes.put(
+          (ExtendedAttributeKey<String>) keyProvider.apply(key, ExtendedAttributeType.STRING),
+          (String) value);
     } else if (value instanceof Boolean) {
       attributes.put(
-          getMapMessageAttributeKey(key, ExtendedAttributeType.BOOLEAN), (Boolean) value);
+          (ExtendedAttributeKey<Boolean>) keyProvider.apply(key, ExtendedAttributeType.BOOLEAN),
+          (Boolean) value);
     } else if ((value instanceof Long) || (value instanceof Integer)) {
-      attributes.put(getMapMessageAttributeKey(key, ExtendedAttributeType.LONG), (long) value);
+      attributes.put(
+          (ExtendedAttributeKey<Long>) keyProvider.apply(key, ExtendedAttributeType.LONG),
+          (long) value);
     } else if ((value instanceof Double) || (value instanceof Float)) {
-      attributes.put(getMapMessageAttributeKey(key, ExtendedAttributeType.DOUBLE), (double) value);
+      attributes.put(
+          (ExtendedAttributeKey<Double>) keyProvider.apply(key, ExtendedAttributeType.DOUBLE),
+          (double) value);
     } else if (value instanceof List) {
       List<?> list = (List<?>) value;
       if (list.isEmpty()) {
@@ -241,45 +240,72 @@ public final class LogEventMapper<T> {
       Object first = list.get(0);
       if (first instanceof String) {
         attributes.put(
-            getMapMessageAttributeKey(key, ExtendedAttributeType.STRING_ARRAY),
+            (ExtendedAttributeKey<List<String>>)
+                keyProvider.apply(key, ExtendedAttributeType.STRING_ARRAY),
             (List<String>) value);
       } else if (first instanceof Boolean) {
         attributes.put(
-            getMapMessageAttributeKey(key, ExtendedAttributeType.BOOLEAN_ARRAY),
+            (ExtendedAttributeKey<List<Boolean>>)
+                keyProvider.apply(key, ExtendedAttributeType.BOOLEAN_ARRAY),
             (List<Boolean>) value);
       } else if ((first instanceof Long) || (first instanceof Integer)) {
         attributes.put(
-            getMapMessageAttributeKey(key, ExtendedAttributeType.LONG_ARRAY), (List<Long>) value);
+            (ExtendedAttributeKey<List<Long>>)
+                keyProvider.apply(key, ExtendedAttributeType.LONG_ARRAY),
+            (List<Long>) value);
       } else if ((first instanceof Double) || (first instanceof Float)) {
         attributes.put(
-            getMapMessageAttributeKey(key, ExtendedAttributeType.DOUBLE_ARRAY),
+            (ExtendedAttributeKey<List<Double>>)
+                keyProvider.apply(key, ExtendedAttributeType.DOUBLE_ARRAY),
             (List<Double>) value);
       }
     } else if (value instanceof String[]) {
       attributes.put(
-          getMapMessageAttributeKey(key, ExtendedAttributeType.STRING_ARRAY), (String[]) value);
+          (ExtendedAttributeKey<List<String>>)
+              keyProvider.apply(key, ExtendedAttributeType.STRING_ARRAY),
+          Arrays.asList((String[]) value));
     } else if (value instanceof boolean[]) {
-      attributes.put(
-          getMapMessageAttributeKey(key, ExtendedAttributeType.BOOLEAN_ARRAY), (boolean[]) value);
-    } else if (value instanceof long[]) {
-      attributes.put(
-          getMapMessageAttributeKey(key, ExtendedAttributeType.LONG_ARRAY), (long[]) value);
-    } else if (value instanceof int[]) {
-      attributes.put(
-          getMapMessageAttributeKey(key, ExtendedAttributeType.LONG_ARRAY),
-          Arrays.stream((int[]) value).asLongStream().toArray());
-    } else if (value instanceof double[]) {
-      attributes.put(
-          getMapMessageAttributeKey(key, ExtendedAttributeType.DOUBLE_ARRAY), (double[]) value);
-    } else if (value instanceof float[]) {
-      double[] arr = new double[((float[]) value).length];
-      for (int i = 0; i < arr.length; ++i) {
-        arr[i] = ((float[]) value)[i];
+      boolean[] arr = (boolean[]) value;
+      List<Boolean> list = new ArrayList<>(arr.length);
+      for (boolean f : arr) {
+        list.add(f);
       }
-      attributes.put(getMapMessageAttributeKey(key, ExtendedAttributeType.DOUBLE_ARRAY), arr);
+      attributes.put(
+          (ExtendedAttributeKey<List<Boolean>>)
+              keyProvider.apply(key, ExtendedAttributeType.BOOLEAN_ARRAY),
+          list);
+    } else if (value instanceof long[]) {
+      List<Long> list = Arrays.stream((long[]) value).boxed().collect(Collectors.toList());
+      attributes.put(
+          (ExtendedAttributeKey<List<Long>>)
+              keyProvider.apply(key, ExtendedAttributeType.LONG_ARRAY),
+          list);
+    } else if (value instanceof int[]) {
+      List<Long> list =
+          Arrays.stream((int[]) value).mapToLong(i -> i).boxed().collect(Collectors.toList());
+      attributes.put(
+          (ExtendedAttributeKey<List<Long>>)
+              keyProvider.apply(key, ExtendedAttributeType.LONG_ARRAY),
+          list);
+    } else if (value instanceof double[]) {
+      List<Double> list = Arrays.stream((double[]) value).boxed().collect(Collectors.toList());
+      attributes.put(
+          (ExtendedAttributeKey<List<Double>>)
+              keyProvider.apply(key, ExtendedAttributeType.DOUBLE_ARRAY),
+          list);
+    } else if (value instanceof float[]) {
+      float[] arr = (float[]) value;
+      List<Double> list = new ArrayList<>(arr.length);
+      for (float f : arr) {
+        list.add((double) f);
+      }
+      attributes.put(
+          (ExtendedAttributeKey<List<Double>>)
+              keyProvider.apply(key, ExtendedAttributeType.DOUBLE_ARRAY),
+          list);
     } else if ((value instanceof Map)) {
       ExtendedAttributesBuilder nestedAttribute = ExtendedAttributes.builder();
-      consumeAttributes(((Map<?, ?>) value)::forEach, nestedAttribute, false);
+      consumeAttributes(((Map<?, ?>) value)::forEach, nestedAttribute, false, keyProvider);
       attributes.put(
           getMapMessageAttributeKey(key, ExtendedAttributeType.EXTENDED_ATTRIBUTES),
           nestedAttribute.build());
@@ -289,22 +315,21 @@ public final class LogEventMapper<T> {
   }
 
   // visible for testing
+  @SuppressWarnings("unchecked")
   void captureContextDataAttributes(ExtendedAttributesBuilder attributes, T contextData) {
     if (captureAllContextDataAttributes) {
-      contextDataAccessor.forEach(
-          contextData,
-          (key, value) -> {
-            if (value != null) {
-              attributes.put(getContextDataAttributeKey(key, ExtendedAttributeType.STRING), value);
-            }
-          });
+      consumeAttributes(
+          biConsumer -> contextDataAccessor.forEach(contextData, biConsumer),
+          attributes,
+          false,
+          LogEventMapper::getContextDataAttributeKey);
       return;
     }
 
     for (String key : captureContextDataAttributes) {
-      String value = contextDataAccessor.getValue(contextData, key);
+      Object value = contextDataAccessor.getValue(contextData, key);
       if (value != null) {
-        attributes.put(getContextDataAttributeKey(key, ExtendedAttributeType.STRING), value);
+        consumeEntry(key, value, attributes, LogEventMapper::getContextDataAttributeKey);
       }
     }
   }

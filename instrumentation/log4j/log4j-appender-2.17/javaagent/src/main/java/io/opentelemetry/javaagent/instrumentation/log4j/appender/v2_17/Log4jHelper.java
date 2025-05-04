@@ -30,7 +30,7 @@ import org.apache.logging.log4j.message.Message;
 
 public final class Log4jHelper {
 
-  private static final LogEventMapper<Map<String, String>> mapper;
+  private static final LogEventMapper<Map<String, Object>> mapper;
   private static final boolean captureExperimentalAttributes;
   private static final MethodHandle stackTraceMethodHandle = getStackTraceMethodHandle();
 
@@ -147,17 +147,17 @@ public final class Log4jHelper {
     }
   }
 
-  private enum ContextDataAccessorImpl implements ContextDataAccessor<Map<String, String>> {
+  private enum ContextDataAccessorImpl implements ContextDataAccessor<Map<String, Object>, Object> {
     INSTANCE;
 
     @Override
     @Nullable
-    public String getValue(Map<String, String> contextData, String key) {
+    public Object getValue(Map<String, Object> contextData, String key) {
       return contextData.get(key);
     }
 
     @Override
-    public void forEach(Map<String, String> contextData, BiConsumer<String, String> action) {
+    public void forEach(Map<String, Object> contextData, BiConsumer<String, Object> action) {
       contextData.forEach(action);
     }
   }
