@@ -6,8 +6,10 @@
 package io.opentelemetry.instrumentation.log4j.appender.v2_17.internal;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.incubator.common.ExtendedAttributeKey;
+import io.opentelemetry.api.incubator.common.ExtendedAttributes;
+import io.opentelemetry.api.incubator.common.ExtendedAttributesBuilder;
+import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
@@ -15,12 +17,17 @@ import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.semconv.ExceptionAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.Marker;
 import org.apache.logging.log4j.core.LogEvent;
+import org.apache.logging.log4j.core.impl.MutableLogEvent;
 import org.apache.logging.log4j.message.MapMessage;
 import org.apache.logging.log4j.message.Message;
 
@@ -98,7 +105,7 @@ public final class LogEventMapper<T> {
       Supplier<StackTraceElement> sourceSupplier,
       Context context) {
 
-    AttributesBuilder attributes = Attributes.builder();
+    ExtendedAttributesBuilder attributes = ExtendedAttributes.builder();
 
     captureMessage(builder, attributes, message);
 
@@ -134,57 +141,137 @@ public final class LogEventMapper<T> {
         }
         attributes.put(CODE_NAMESPACE, source.getClassName());
         attributes.put(CODE_FUNCTION, source.getMethodName());
-        int lineNumber = source.getLineNumber();
+        long lineNumber = source.getLineNumber();
         if (lineNumber > 0) {
           attributes.put(CODE_LINENO, lineNumber);
         }
       }
     }
 
-    builder.setAllAttributes(attributes.build());
+    if (builder instanceof ExtendedLogRecordBuilder) {
+      ((ExtendedLogRecordBuilder) builder).setAllAttributes(attributes.build());
+    } else {
+      builder.setAllAttributes(attributes.build().asAttributes());
+    }
     builder.setContext(context);
   }
 
   // visible for testing
-  void captureMessage(LogRecordBuilder builder, AttributesBuilder attributes, Message message) {
+  void captureMessage(
+      LogRecordBuilder builder, ExtendedAttributesBuilder attributes, Message message) {
     if (message == null) {
       return;
     }
-    if (!(message instanceof MapMessage)) {
-      builder.setBody(message.getFormattedMessage());
+
+    if (message instanceof MutableLogEvent) {
+      captureLogEvent(attributes, (MutableLogEvent) message);
       return;
     }
 
-    MapMessage<?, ?> mapMessage = (MapMessage<?, ?>) message;
-
-    String body = mapMessage.getFormat();
-    boolean checkSpecialMapMessageAttribute = (body == null || body.isEmpty());
-    if (checkSpecialMapMessageAttribute) {
-      body = mapMessage.get(SPECIAL_MAP_MESSAGE_ATTRIBUTE);
+    if (message instanceof MapMessage) {
+      captureMapMessage(builder, attributes, (MapMessage<?, ?>) message);
+      return;
     }
 
+    builder.setBody(message.getFormattedMessage());
+  }
+
+  @SuppressWarnings("unchecked")
+  private void captureMapMessage(
+      LogRecordBuilder builder, ExtendedAttributesBuilder attributes, MapMessage<?, ?> mapMessage) {
+    String body = mapMessage.getFormat();
+    boolean checkSpecialMapMessageAttribute = false;
+    if (body == null || body.isEmpty()) {
+      checkSpecialMapMessageAttribute = true;
+      body = mapMessage.get(SPECIAL_MAP_MESSAGE_ATTRIBUTE);
+    }
     if (body != null && !body.isEmpty()) {
       builder.setBody(body);
     }
 
     if (captureMapMessageAttributes) {
-      // TODO (trask) this could be optimized in 2.9 and later by calling MapMessage.forEach()
-      mapMessage
-          .getData()
-          .forEach(
-              (key, value) -> {
-                if (value != null
-                    && (!checkSpecialMapMessageAttribute
-                        || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))) {
-                  attributes.put(getMapMessageAttributeKey(key), value.toString());
-                }
-              });
+      consumeAttributes(mapMessage.getData()::forEach, attributes, checkSpecialMapMessageAttribute);
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  private void captureLogEvent(ExtendedAttributesBuilder attributes, MutableLogEvent logEvent) {
+    if (captureMapMessageAttributes) {
+      consumeAttributes(
+          biConsumer ->
+              logEvent.getContextData().forEach((s, object) -> biConsumer.accept(s, object)),
+          attributes,
+          false);
+    }
+  }
+
+  @SuppressWarnings("rawtypes")
+  private static void consumeAttributes(
+      Consumer<BiConsumer> actionConsumer,
+      ExtendedAttributesBuilder attributes,
+      boolean checkSpecialMapMessageAttribute) {
+    actionConsumer.accept(
+        (key, value) -> {
+          if (value != null
+              && (!checkSpecialMapMessageAttribute || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))) {
+            consumeEntry(key.toString(), value, attributes);
+          }
+        });
+  }
+
+  @SuppressWarnings({"unchecked"})
+  private static void consumeEntry(String key, Object value, ExtendedAttributesBuilder attributes) {
+    if (value instanceof String) {
+      attributes.put(key, (String) value);
+    } else if (value instanceof Boolean) {
+      attributes.put(key, (Boolean) value);
+    } else if ((value instanceof Long) || (value instanceof Integer)) {
+      attributes.put(key, (long) value);
+    } else if ((value instanceof Double) || (value instanceof Float)) {
+      attributes.put(key, (double) value);
+    } else if (value instanceof List) {
+      List<?> list = (List<?>) value;
+      if (list.isEmpty()) {
+        return;
+      }
+
+      Object first = list.get(0);
+      if (first instanceof String) {
+        attributes.put(ExtendedAttributeKey.stringArrayKey(key), (List<String>) value);
+      } else if (first instanceof Boolean) {
+        attributes.put(ExtendedAttributeKey.booleanArrayKey(key), (List<Boolean>) value);
+      } else if ((first instanceof Long) || (first instanceof Integer)) {
+        attributes.put(ExtendedAttributeKey.longArrayKey(key), (List<Long>) value);
+      } else if ((first instanceof Double) || (first instanceof Float)) {
+        attributes.put(ExtendedAttributeKey.doubleArrayKey(key), (List<Double>) value);
+      }
+    } else if (value instanceof String[]) {
+      attributes.put(key, (String[]) value);
+    } else if (value instanceof boolean[]) {
+      attributes.put(key, (boolean[]) value);
+    } else if (value instanceof long[]) {
+      attributes.put(key, (long[]) value);
+    } else if (value instanceof int[]) {
+      attributes.put(key, Arrays.stream((int[]) value).asLongStream().toArray());
+    } else if (value instanceof double[]) {
+      attributes.put(key, (double[]) value);
+    } else if (value instanceof float[]) {
+      double[] arr = new double[((float[]) value).length];
+      for (int i = 0; i < arr.length; ++i) {
+        arr[i] = ((float[]) value)[i];
+      }
+      attributes.put(key, arr);
+    } else if ((value instanceof Map)) {
+      ExtendedAttributesBuilder nestedAttribute = ExtendedAttributes.builder();
+      consumeAttributes(((Map<?, ?>) value)::forEach, nestedAttribute, false);
+      attributes.put(ExtendedAttributeKey.extendedAttributesKey(key), nestedAttribute.build());
+    } else {
+      throw new IllegalArgumentException("Unrecognized value type: " + value.getClass());
     }
   }
 
   // visible for testing
-  void captureContextDataAttributes(AttributesBuilder attributes, T contextData) {
-
+  void captureContextDataAttributes(ExtendedAttributesBuilder attributes, T contextData) {
     if (captureAllContextDataAttributes) {
       contextDataAccessor.forEach(
           contextData,
@@ -213,7 +300,7 @@ public final class LogEventMapper<T> {
         key, k -> AttributeKey.stringKey("log4j.map_message." + k));
   }
 
-  private static void setThrowable(AttributesBuilder attributes, Throwable throwable) {
+  private static void setThrowable(ExtendedAttributesBuilder attributes, Throwable throwable) {
     // TODO (trask) extract method for recording exception into
     // io.opentelemetry:opentelemetry-api
     attributes.put(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());

@@ -7,6 +7,8 @@ dependencies {
   annotationProcessor("org.apache.logging.log4j:log4j-core:2.17.0")
 
   implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.17:library-autoconfigure"))
+  implementation("io.opentelemetry:opentelemetry-api-incubator:1.50.0-SNAPSHOT")
+  implementation("io.opentelemetry:opentelemetry-sdk-logs:1.50.0-SNAPSHOT")
 
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testLibrary("com.lmax:disruptor:3.3.4")
@@ -14,6 +16,17 @@ dependencies {
   if (findProperty("testLatestDeps") as Boolean) {
     testCompileOnly("biz.aQute.bnd:biz.aQute.bnd.annotation:7.0.0")
     testCompileOnly("com.google.errorprone:error_prone_annotations")
+  }
+}
+
+repositories {
+  mavenLocal()
+  mavenCentral()
+}
+
+configurations.all {
+  resolutionStrategy {
+    force("io.opentelemetry:opentelemetry-sdk:1.50.0-SNAPSHOT", "io.opentelemetry:opentelemetry-sdk-logs:1.50.0-SNAPSHOT", "io.opentelemetry:opentelemetry-sdk-common:1.50.0-SNAPSHOT", "io.opentelemetry:opentelemetry-api:1.50.0-SNAPSHOT", "io.opentelemetry:opentelemetry-api-incubator:1.50.0-alpha-SNAPSHOT")
   }
 }
 
@@ -30,4 +43,8 @@ tasks {
   check {
     dependsOn(testAsyncLogger)
   }
+}
+
+tasks.test {
+  systemProperty("log4j2.threadContextMap", "org.apache.logging.log4j.spi.CopyOnWriteSortedArrayThreadContextMap")
 }

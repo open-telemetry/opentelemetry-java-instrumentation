@@ -14,8 +14,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.incubator.common.ExtendedAttributes;
+import io.opentelemetry.api.incubator.common.ExtendedAttributesBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,13 +36,13 @@ class LogEventMapperTest {
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
-    AttributesBuilder attributes = Attributes.builder();
+    ExtendedAttributesBuilder attributes = ExtendedAttributes.builder();
 
     // when
     mapper.captureContextDataAttributes(attributes, contextData);
 
     // then
-    assertThat(attributes.build()).isEmpty();
+    assertThat(attributes.build().asAttributes()).isEmpty();
   }
 
   @Test
@@ -54,13 +54,13 @@ class LogEventMapperTest {
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
-    AttributesBuilder attributes = Attributes.builder();
+    ExtendedAttributesBuilder attributes = ExtendedAttributes.builder();
 
     // when
     mapper.captureContextDataAttributes(attributes, contextData);
 
     // then
-    assertThat(attributes.build()).containsOnly(attributeEntry("key2", "value2"));
+    assertThat(attributes.build().asAttributes()).containsOnly(attributeEntry("key2", "value2"));
   }
 
   @Test
@@ -72,13 +72,13 @@ class LogEventMapperTest {
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
-    AttributesBuilder attributes = Attributes.builder();
+    ExtendedAttributesBuilder attributes = ExtendedAttributes.builder();
 
     // when
     mapper.captureContextDataAttributes(attributes, contextData);
 
     // then
-    assertThat(attributes.build())
+    assertThat(attributes.build().asAttributes())
         .containsOnly(attributeEntry("key1", "value1"), attributeEntry("key2", "value2"));
   }
 
@@ -94,14 +94,14 @@ class LogEventMapperTest {
     message.put("message", "value2");
 
     LogRecordBuilder logRecordBuilder = mock(LogRecordBuilder.class);
-    AttributesBuilder attributes = Attributes.builder();
+    ExtendedAttributesBuilder attributes = ExtendedAttributes.builder();
 
     // when
     mapper.captureMessage(logRecordBuilder, attributes, message);
 
     // then
     verify(logRecordBuilder).setBody("value2");
-    assertThat(attributes.build()).isEmpty();
+    assertThat(attributes.build().asAttributes()).isEmpty();
   }
 
   @Test
@@ -116,14 +116,15 @@ class LogEventMapperTest {
     message.put("message", "value2");
 
     LogRecordBuilder logRecordBuilder = mock(LogRecordBuilder.class);
-    AttributesBuilder attributes = Attributes.builder();
+    ExtendedAttributesBuilder attributes = ExtendedAttributes.builder();
 
     // when
     mapper.captureMessage(logRecordBuilder, attributes, message);
 
     // then
     verify(logRecordBuilder).setBody("value2");
-    assertThat(attributes.build()).containsOnly(attributeEntry("log4j.map_message.key1", "value1"));
+    assertThat(attributes.build().asAttributes())
+        .containsOnly(attributeEntry("log4j.map_message.key1", "value1"));
   }
 
   @Test
@@ -138,14 +139,14 @@ class LogEventMapperTest {
     message.put("key2", "value2");
 
     LogRecordBuilder logRecordBuilder = mock(LogRecordBuilder.class);
-    AttributesBuilder attributes = Attributes.builder();
+    ExtendedAttributesBuilder attributes = ExtendedAttributes.builder();
 
     // when
     mapper.captureMessage(logRecordBuilder, attributes, message);
 
     // then
     verify(logRecordBuilder, never()).setBody(anyString());
-    assertThat(attributes.build())
+    assertThat(attributes.build().asAttributes())
         .containsOnly(
             attributeEntry("log4j.map_message.key1", "value1"),
             attributeEntry("log4j.map_message.key2", "value2"));
@@ -163,14 +164,14 @@ class LogEventMapperTest {
     message.put("message", "value2");
 
     LogRecordBuilder logRecordBuilder = mock(LogRecordBuilder.class);
-    AttributesBuilder attributes = Attributes.builder();
+    ExtendedAttributesBuilder attributes = ExtendedAttributes.builder();
 
     // when
     mapper.captureMessage(logRecordBuilder, attributes, message);
 
     // then
     verify(logRecordBuilder).setBody("a message");
-    assertThat(attributes.build())
+    assertThat(attributes.build().asAttributes())
         .containsOnly(
             attributeEntry("log4j.map_message.key1", "value1"),
             attributeEntry("log4j.map_message.message", "value2"));
