@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
-enum MessageMessagingAttributesGetter implements MessagingAttributesGetter<NatsRequest, Void> {
+enum NatsRequestMessagingAttributesGetter implements MessagingAttributesGetter<NatsRequest, Void> {
   INSTANCE;
 
   @Nullable
@@ -69,7 +69,7 @@ enum MessageMessagingAttributesGetter implements MessagingAttributesGetter<NatsR
   @Nullable
   @Override
   public String getClientId(NatsRequest request) {
-    return String.valueOf(request.getConnection().getServerInfo().getClientId());
+    return String.valueOf(request.getClientId());
   }
 
   @Nullable

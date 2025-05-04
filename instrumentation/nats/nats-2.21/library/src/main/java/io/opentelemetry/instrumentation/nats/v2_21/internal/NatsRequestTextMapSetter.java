@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.nats.v2_21.internal;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import javax.annotation.Nullable;
 
-enum MessageTextMapSetter implements TextMapSetter<NatsRequest> {
+enum NatsRequestTextMapSetter implements TextMapSetter<NatsRequest> {
   INSTANCE;
 
   @Override

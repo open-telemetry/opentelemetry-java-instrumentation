@@ -63,7 +63,7 @@ class NatsInstrumentationPublishTest {
   @BeforeEach
   void beforeEach() throws IOException, InterruptedException {
     connection = Nats.connect(natsUrl);
-    subscription = connection.subscribe("*");
+    subscription = connection.subscribe("sub");
     clientId = connection.getServerInfo().getClientId();
   }
 

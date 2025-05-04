@@ -137,13 +137,13 @@ class NatsTelemetryPublishTest {
   }
 
   private static void assertNoHeaders(TestConnection connection) {
-    Message published = connection.publishedMessages.peekLast();
+    Message published = connection.publishedMessages.remove();
     assertNotNull(published);
     assertThat(published.getHeaders()).isNull();
   }
 
   private static void assertTraceparentHeader(TestConnection connection) {
-    Message published = connection.publishedMessages.peekLast();
+    Message published = connection.publishedMessages.remove();
     assertNotNull(published);
     assertThat(published.getHeaders().get("traceparent")).isNotEmpty();
   }
