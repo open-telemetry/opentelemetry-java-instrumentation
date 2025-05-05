@@ -10,7 +10,7 @@ package io.opentelemetry.instrumentation.nats.v2_21.internal;
  * any time.
  */
 @FunctionalInterface
-public interface ThrowingSupplier<T, E extends Throwable> {
+public interface ThrowingSupplier2<T, E extends Throwable, E2 extends Throwable> {
 
-  T call() throws E;
+  T call() throws E, E2;
 }

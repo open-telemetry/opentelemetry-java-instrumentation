@@ -28,10 +28,6 @@ public abstract class NatsRequest {
     return create(connection, subject, null, data);
   }
 
-  public static NatsRequest create(Message message) {
-    return create(message.getConnection(), message);
-  }
-
   public static NatsRequest create(Connection connection, Message message) {
     return create(
         message.getConnection() == null ? connection : message.getConnection(),

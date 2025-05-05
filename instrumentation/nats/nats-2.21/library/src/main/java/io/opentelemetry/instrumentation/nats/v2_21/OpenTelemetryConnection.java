@@ -33,26 +33,31 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.nats.v2_21.internal.NatsRequest;
+import io.opentelemetry.instrumentation.nats.v2_21.internal.ThrowingSupplier;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Supplier;
 
 public class OpenTelemetryConnection implements Connection {
 
   private final Connection delegate;
   private final Instrumenter<NatsRequest, Void> producerInstrumenter;
   private final Instrumenter<NatsRequest, Void> consumerInstrumenter;
+  private final Instrumenter<NatsRequest, NatsRequest> clientInstrumenter;
 
   public OpenTelemetryConnection(
       Connection connection,
       Instrumenter<NatsRequest, Void> producerInstrumenter,
-      Instrumenter<NatsRequest, Void> consumerInstrumenter) {
+      Instrumenter<NatsRequest, Void> consumerInstrumenter,
+      Instrumenter<NatsRequest, NatsRequest> clientInstrumenter) {
     this.delegate = connection;
     this.producerInstrumenter = producerInstrumenter;
     this.consumerInstrumenter = consumerInstrumenter;
+    this.clientInstrumenter = clientInstrumenter;
   }
 
   @Override
@@ -87,51 +92,62 @@ public class OpenTelemetryConnection implements Connection {
 
   @Override
   public CompletableFuture<Message> request(String subject, byte[] body) {
-    return delegate.request(subject, body);
+    return wrapRequest(
+        NatsRequest.create(this, subject, body), () -> delegate.request(subject, body));
   }
 
   @Override
   public Message request(String subject, byte[] body, Duration timeout)
       throws InterruptedException {
-    return delegate.request(subject, body, timeout);
+    return wrapRequest(
+        NatsRequest.create(this, subject, body), () -> delegate.request(subject, body, timeout));
   }
 
   @Override
   public CompletableFuture<Message> request(String subject, Headers headers, byte[] body) {
-    return delegate.request(subject, headers, body);
+    return wrapRequest(
+        NatsRequest.create(this, subject, headers, body),
+        () -> delegate.request(subject, headers, body));
   }
 
   @Override
   public Message request(String subject, Headers headers, byte[] body, Duration timeout)
       throws InterruptedException {
-    return delegate.request(subject, headers, body, timeout);
+    return wrapRequest(
+        NatsRequest.create(this, subject, headers, body),
+        () -> delegate.request(subject, headers, body, timeout));
   }
 
   @Override
   public CompletableFuture<Message> request(Message message) {
-    return delegate.request(message);
+    return wrapRequest(NatsRequest.create(this, message), () -> delegate.request(message));
   }
 
   @Override
   public Message request(Message message, Duration timeout) throws InterruptedException {
-    return delegate.request(message, timeout);
+    return wrapRequest(NatsRequest.create(this, message), () -> delegate.request(message, timeout));
   }
 
   @Override
   public CompletableFuture<Message> requestWithTimeout(
       String subject, byte[] body, Duration timeout) {
-    return delegate.requestWithTimeout(subject, body, timeout);
+    return wrapRequest(
+        NatsRequest.create(this, subject, body),
+        () -> delegate.requestWithTimeout(subject, body, timeout));
   }
 
   @Override
   public CompletableFuture<Message> requestWithTimeout(
       String subject, Headers headers, byte[] body, Duration timeout) {
-    return delegate.requestWithTimeout(subject, headers, body, timeout);
+    return wrapRequest(
+        NatsRequest.create(this, subject, headers, body),
+        () -> delegate.requestWithTimeout(subject, headers, body, timeout));
   }
 
   @Override
   public CompletableFuture<Message> requestWithTimeout(Message message, Duration timeout) {
-    return delegate.requestWithTimeout(message, timeout);
+    return wrapRequest(
+        NatsRequest.create(this, message), () -> delegate.requestWithTimeout(message, timeout));
   }
 
   @Override
@@ -365,6 +381,61 @@ public class OpenTelemetryConnection implements Connection {
       publish.run();
     } finally {
       producerInstrumenter.end(context, natsRequest, null, null);
+    }
+  }
+
+  private Message wrapRequest(
+      NatsRequest natsRequest, ThrowingSupplier<Message, InterruptedException> request)
+      throws InterruptedException {
+    Context parentContext = Context.current();
+
+    if (!Span.fromContext(parentContext).getSpanContext().isValid()
+        || !clientInstrumenter.shouldStart(parentContext, natsRequest)) {
+      return request.call();
+    }
+
+    Context context = clientInstrumenter.start(parentContext, natsRequest);
+    TimeoutException timeout = null;
+    NatsRequest response = null;
+
+    try (Scope ignored = context.makeCurrent()) {
+      Message message = request.call();
+
+      if (message == null) {
+        timeout = new TimeoutException("Timed out waiting for message");
+      } else {
+        response = NatsRequest.create(this, message);
+      }
+
+      return message;
+    } finally {
+      clientInstrumenter.end(context, natsRequest, response, timeout);
+    }
+  }
+
+  private CompletableFuture<Message> wrapRequest(
+      NatsRequest natsRequest, Supplier<CompletableFuture<Message>> request) {
+    Context parentContext = Context.current();
+
+    if (!Span.fromContext(parentContext).getSpanContext().isValid()
+        || !clientInstrumenter.shouldStart(parentContext, natsRequest)) {
+      return request.get();
+    }
+
+    Context context = clientInstrumenter.start(parentContext, natsRequest);
+
+    try (Scope ignored = context.makeCurrent()) {
+      return request
+          .get()
+          .whenComplete(
+              (message, exception) -> {
+                if (message != null) {
+                  NatsRequest response = NatsRequest.create(this, message);
+                  clientInstrumenter.end(context, natsRequest, response, exception);
+                } else {
+                  clientInstrumenter.end(context, natsRequest, null, exception);
+                }
+              });
     }
   }
 }
