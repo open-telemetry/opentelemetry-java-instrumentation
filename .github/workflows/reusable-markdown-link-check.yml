@@ -21,4 +21,5 @@ jobs:
             --exclude "^https://github.com/open-telemetry/opentelemetry-java-instrumentation/(issues|pull)/\\d+$"
             --exclude "^http://code.google.com/p/concurrentlinkedhashmap$"
             --max-retries 6
+            --max-concurrency 1
             .
