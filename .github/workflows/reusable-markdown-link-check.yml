@@ -23,5 +23,5 @@ jobs:
             --exclude "^http://code.google.com/p/concurrentlinkedhashmap$"
             --exclude "^https://softwareengineering.stackexchange.com/questions/29727"
             --max-retries 6
-            --max-concurrency 2
+            --max-concurrency 1
             .
