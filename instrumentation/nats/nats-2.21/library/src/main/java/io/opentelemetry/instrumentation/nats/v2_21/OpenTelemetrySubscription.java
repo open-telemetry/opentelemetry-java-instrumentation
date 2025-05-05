@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.nats.v2_21.internal.NatsRequest;
-import io.opentelemetry.instrumentation.nats.v2_21.internal.ThrowingSupplier;
+import io.opentelemetry.instrumentation.nats.v2_21.internal.ThrowingSupplier2;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
@@ -124,7 +124,7 @@ public class OpenTelemetrySubscription implements Subscription {
   }
 
   private Message wrapNextMessage(
-      ThrowingSupplier<Message, InterruptedException, IllegalStateException> nextMessage)
+      ThrowingSupplier2<Message, InterruptedException, IllegalStateException> nextMessage)
       throws InterruptedException {
     Timer timer = Timer.start();
     Message message = nextMessage.call();

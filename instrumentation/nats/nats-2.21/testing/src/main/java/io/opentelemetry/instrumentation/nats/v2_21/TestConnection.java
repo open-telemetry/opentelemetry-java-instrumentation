@@ -47,6 +47,8 @@ public class TestConnection implements Connection {
       Collections.synchronizedList(new LinkedList<>());
 
   public final Queue<Message> publishedMessages = new ConcurrentLinkedQueue<>();
+  public final Queue<Message> requestedMessages = new ConcurrentLinkedQueue<>();
+  public final Queue<Message> requestResponseMessages = new ConcurrentLinkedQueue<>();
 
   public void deliver(Message message) {
     subscriptions.stream()
@@ -88,52 +90,74 @@ public class TestConnection implements Connection {
   }
 
   @Override
-  public CompletableFuture<Message> request(String subject, byte[] body) {
-    return null;
-  }
-
-  @Override
   public Message request(String subject, byte[] body, Duration timeout)
       throws InterruptedException {
-    return null;
-  }
-
-  @Override
-  public CompletableFuture<Message> request(String subject, Headers headers, byte[] body) {
-    return null;
+    return this.request(NatsMessage.builder().subject(subject).data(body).build(), timeout);
   }
 
   @Override
   public Message request(String subject, Headers headers, byte[] body, Duration timeout)
       throws InterruptedException {
-    return null;
-  }
-
-  @Override
-  public CompletableFuture<Message> request(Message message) {
-    return null;
+    return this.request(
+        NatsMessage.builder().subject(subject).headers(headers).data(body).build(), timeout);
   }
 
   @Override
   public Message request(Message message, Duration timeout) throws InterruptedException {
-    return null;
+    this.requestedMessages.add(message);
+    return requestResponseMessages.peek();
+  }
+
+  @Override
+  public CompletableFuture<Message> request(String subject, byte[] body) {
+    return this.request(NatsMessage.builder().subject(subject).data(body).build());
+  }
+
+  @Override
+  public CompletableFuture<Message> request(String subject, Headers headers, byte[] body) {
+    return this.request(NatsMessage.builder().subject(subject).headers(headers).data(body).build());
+  }
+
+  @Override
+  public CompletableFuture<Message> request(Message message) {
+    this.requestedMessages.add(message);
+    Message response = requestResponseMessages.peek();
+
+    if (response != null) {
+      return CompletableFuture.completedFuture(message);
+    }
+
+    CompletableFuture<Message> future = new CompletableFuture<>();
+    future.completeExceptionally(new TimeoutException("Timed out waiting for message"));
+    return future;
   }
 
   @Override
   public CompletableFuture<Message> requestWithTimeout(
       String subject, byte[] body, Duration timeout) {
-    return null;
+    return this.requestWithTimeout(
+        NatsMessage.builder().subject(subject).data(body).build(), timeout);
   }
 
   @Override
   public CompletableFuture<Message> requestWithTimeout(
       String subject, Headers headers, byte[] body, Duration timeout) {
-    return null;
+    return this.requestWithTimeout(
+        NatsMessage.builder().subject(subject).headers(headers).data(body).build(), timeout);
   }
 
   @Override
   public CompletableFuture<Message> requestWithTimeout(Message message, Duration timeout) {
-    return null;
+    this.requestedMessages.add(message);
+    Message response = requestResponseMessages.peek();
+
+    if (response != null) {
+      return CompletableFuture.completedFuture(message);
+    }
+
+    CompletableFuture<Message> future = new CompletableFuture<>();
+    future.completeExceptionally(new TimeoutException("Timed out waiting for message"));
+    return future;
   }
 
   @Override

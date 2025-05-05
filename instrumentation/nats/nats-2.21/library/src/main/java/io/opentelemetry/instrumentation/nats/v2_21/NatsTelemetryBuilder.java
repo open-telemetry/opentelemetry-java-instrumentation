@@ -19,6 +19,7 @@ public final class NatsTelemetryBuilder {
   public NatsTelemetry build() {
     return new NatsTelemetry(
         NatsInstrumenterFactory.createProducerInstrumenter(openTelemetry),
-        NatsInstrumenterFactory.createConsumerInstrumenter(openTelemetry));
+        NatsInstrumenterFactory.createConsumerInstrumenter(openTelemetry),
+        NatsInstrumenterFactory.createClientInstrumenter(openTelemetry));
   }
 }
