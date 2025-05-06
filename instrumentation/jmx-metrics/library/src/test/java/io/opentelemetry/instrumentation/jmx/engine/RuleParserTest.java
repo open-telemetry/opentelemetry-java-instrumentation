@@ -9,6 +9,7 @@ package io.opentelemetry.instrumentation.jmx.engine;
 // because it needs to access package-private methods from a number of classes.
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -26,7 +27,6 @@ import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanInfo;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -73,7 +73,8 @@ class RuleParserTest {
           + "      - OBJECT:NAME3=*\n"
           + "    mapping:\n"
           + "      ATTRIBUTE3:\n"
-          + "        metric: METRIC_NAME3\n";
+          + "        metric: METRIC_NAME3\n"
+          + "        unit: ''\n";
 
   @Test
   void testConf2() {
@@ -129,6 +130,7 @@ class RuleParserTest {
   private static final String CONF3 =
       "rules:\n"
           + "  - bean: OBJECT:NAME3=*\n"
+          + "    unit: ''\n"
           + "    mapping:\n"
           + "      ATTRIBUTE31:\n"
           + "      ATTRIBUTE32:\n"
@@ -260,6 +262,7 @@ class RuleParserTest {
       "---                                   # keep stupid spotlessJava at bay\n"
           + "rules:\n"
           + "  - bean: my-test:type=5\n"
+          + "    unit: ''\n"
           + "    mapping:\n"
           + "      ATTRIBUTE:\n";
 
@@ -280,7 +283,9 @@ class RuleParserTest {
 
     MetricInfo mb1 = m1.getInfo();
     assertThat(mb1.getMetricName()).isEqualTo("ATTRIBUTE");
-    assertThat(mb1.getType()).isEqualTo(MetricInfo.Type.GAUGE);
+    assertThat(mb1.getType())
+        .describedAs("default metric type should be gauge")
+        .isEqualTo(MetricInfo.Type.GAUGE);
     assertThat(mb1.getUnit()).isEmpty();
   }
 
@@ -288,6 +293,7 @@ class RuleParserTest {
       "---                                   # keep stupid spotlessJava at bay\n"
           + "rules:\n"
           + "  - bean: my-test:type=6\n"
+          + "    unit: ''\n"
           + "    metricAttribute:\n"
           + "      key1: const(value1)\n"
           + "    mapping:\n"
@@ -299,10 +305,10 @@ class RuleParserTest {
   void testConf6() throws Exception {
     JmxConfig config = parseConf(CONF6);
 
-    List<JmxRule> defs = config.getRules();
-    assertThat(defs).hasSize(1);
+    List<JmxRule> rules = config.getRules();
+    assertThat(rules).hasSize(1);
 
-    MetricDef metricDef = defs.get(0).buildMetricDef();
+    MetricDef metricDef = rules.get(0).buildMetricDef();
     assertThat(metricDef).isNotNull();
     assertThat(metricDef.getMetricExtractors()).hasSize(1);
 
@@ -316,12 +322,14 @@ class RuleParserTest {
     assertThat(m1.getInfo().getMetricName())
         .describedAs("metric name should default to JMX attribute name")
         .isEqualTo("ATTRIBUTE");
+
   }
 
   private static final String CONF7 =
       "---                                   # keep stupid spotlessJava at bay\n"
           + "rules:\n"
           + "  - bean: my-test:type=7\n"
+          + "    unit: ''\n"
           + "    metricAttribute:\n"
           + "      key1: const(value1)\n"
           + "    mapping:\n"
@@ -356,6 +364,7 @@ class RuleParserTest {
       "---                                   # keep stupid spotlessJava at bay\n"
           + "rules:\n"
           + "  - bean: my-test:type=8\n"
+          + "    unit: UNIT8\n"
           + "    mapping:\n"
           + "      Attr.with\\.dot:\n";
 
@@ -378,7 +387,7 @@ class RuleParserTest {
     // Make sure the metric name has no backslash
     assertThat(mb1.getMetricName()).isEqualTo("Attr.with.dot");
     assertThat(mb1.getType()).isEqualTo(MetricInfo.Type.GAUGE);
-    assertThat(mb1.getUnit()).isEmpty();
+    assertThat(mb1.getUnit()).isEqualTo("UNIT8");
   }
 
   private static final String CONF9 =
@@ -444,6 +453,9 @@ class RuleParserTest {
             me -> {
               assertThat(me.getInfo().getMetricName()).isEqualTo("state_metric");
               assertThat(me.getInfo().getType()).isEqualTo(MetricInfo.Type.UPDOWNCOUNTER);
+              assertThat(me.getInfo().getUnit())
+                  .describedAs("state metric unit should be an empty string")
+                  .isEmpty();
 
               assertThat(me.getAttributes()).hasSize(1);
               MetricAttribute stateAttribute = me.getAttributes().get(0);
@@ -479,6 +491,7 @@ class RuleParserTest {
           + "    mapping:\n"
           + "      jmxAttribute:\n"
           + "        type: counter\n"
+          + "        unit: ''\n"
           + "        metric: my_metric\n"
           + "        metricAttribute:\n"
           + "          to_lower_const: lowercase(const(Hello))\n"
@@ -516,6 +529,7 @@ class RuleParserTest {
           + "rules:\n"
           + "  - bean: my-test:type=11_Hello\n"
           + "    type: counter\n"
+          + "    unit: '{item}'\n"
           + "    mapping:\n"
           + "      negativeDropped:\n"
           + "        dropNegativeValues: true\n"
@@ -591,6 +605,16 @@ class RuleParserTest {
     InputStream is = new ByteArrayInputStream(s.getBytes(StandardCharsets.UTF_8));
     JmxConfig jmxConfig = parser.loadConfig(is);
     assertThat(jmxConfig).isNotNull();
+
+    // building metric definitions allows triggering validation rules
+    for (JmxRule rule : jmxConfig.getRules()) {
+      try {
+        rule.buildMetricDef();
+      } catch (Exception e) {
+        throw new IllegalStateException(e.getMessage(), e);
+      }
+    }
+
     return jmxConfig;
   }
 
@@ -598,16 +622,14 @@ class RuleParserTest {
    *     Negative tests
    */
 
-  private static void runNegativeTest(String yaml) {
-    Assertions.assertThrows(
-        Exception.class,
-        () -> {
-          JmxConfig config = parseConf(yaml);
+  private static void runNegativeTest(String yaml, String message) {
+    assertThatThrownBy(() -> {
+      JmxConfig config = parseConf(yaml);
 
-          List<JmxRule> defs = config.getRules();
-          assertThat(defs).hasSize(1);
-          defs.get(0).buildMetricDef();
-        });
+      List<JmxRule> defs = config.getRules();
+      assertThat(defs).hasSize(1);
+      defs.get(0).buildMetricDef();
+    }).hasMessageContaining(message);
   }
 
   @Test
@@ -618,7 +640,7 @@ class RuleParserTest {
             + "  - mapping:           # still no beans\n"
             + "      A:\n"
             + "        metric: METRIC_NAME\n";
-    runNegativeTest(yaml);
+    runNegativeTest(yaml, "No ObjectName specified");
   }
 
   @Test
@@ -630,7 +652,7 @@ class RuleParserTest {
             + "    mapping:\n"
             + "      A:\n"
             + "        metric: METRIC_NAME\n";
-    runNegativeTest(yaml);
+    runNegativeTest(yaml, "not a valid JMX object name");
   }
 
   @Test
@@ -640,7 +662,7 @@ class RuleParserTest {
             + "rules:\n"
             + "  - bean: domain:type=6\n"
             + "    mapping:\n";
-    runNegativeTest(yaml);
+    runNegativeTest(yaml, "No MBean attributes specified");
   }
 
   @Test
@@ -652,7 +674,7 @@ class RuleParserTest {
             + "    mapping:\n"
             + "      .used:\n"
             + "        metric: METRIC_NAME\n";
-    runNegativeTest(yaml);
+    runNegativeTest(yaml, "Invalid attribute name");
   }
 
   @Test
@@ -666,7 +688,7 @@ class RuleParserTest {
             + "        metricAttribute:\n"
             + "          LABEL: something\n"
             + "        metric: METRIC_NAME\n";
-    runNegativeTest(yaml);
+    runNegativeTest(yaml, "Invalid metric attribute expression");
   }
 
   @Test
@@ -679,7 +701,7 @@ class RuleParserTest {
             + "      ATTRIB:\n"
             + "        type: gage\n"
             + "        metric: METRIC_NAME\n";
-    runNegativeTest(yaml);
+    runNegativeTest(yaml, "Invalid metric type");
   }
 
   @Test
@@ -693,7 +715,7 @@ class RuleParserTest {
             + "        metricAttribute:\n"
             + "          LABEL: beanattr(.used)\n"
             + "        metric: METRIC_NAME\n";
-    runNegativeTest(yaml);
+    runNegativeTest(yaml, "Invalid attribute name");
   }
 
   @Test
@@ -707,7 +729,7 @@ class RuleParserTest {
             + "        metricAttribute:\n"
             + "          LABEL: beanattr( )\n"
             + "        metric: METRIC_NAME\n";
-    runNegativeTest(yaml);
+    runNegativeTest(yaml, "Invalid metric attribute expression");
   }
 
   @Test
@@ -721,7 +743,7 @@ class RuleParserTest {
             + "        metricAttribute:\n"
             + "          LABEL: param( )\n"
             + "        metric: METRIC_NAME\n";
-    runNegativeTest(yaml);
+    runNegativeTest(yaml, "Invalid metric attribute");
   }
 
   @Test
@@ -733,7 +755,7 @@ class RuleParserTest {
             + "    mapping:\n"
             + "      A:\n"
             + "        metrics: METRIC_NAME\n";
-    runNegativeTest(yaml);
+    runNegativeTest(yaml, "Unrecognized key(s) found");
   }
 
   @Test
@@ -747,6 +769,19 @@ class RuleParserTest {
             + "        key: const(value)\n"
             + "      A:\n"
             + "        metric: METRIC_NAME\n";
-    runNegativeTest(yaml);
+    runNegativeTest(yaml, "Unrecognized key(s) found");
+  }
+
+  @Test
+  void testMissingMetricUnit() {
+    String yaml =
+        "---\n"
+            + "rules:\n"
+            + "  - bean: domain:name=you\n"
+            + "    mapping:\n"
+            + "      A:\n"
+            + "        type: gauge\n"
+            + "        metric: METRIC_NAME\n";
+    runNegativeTest(yaml, "Metric unit is required");
   }
 }

@@ -153,7 +153,7 @@ public class RuleParser {
 
   private static void failOnExtraKeys(Map<String, Object> yaml) {
     if (!yaml.isEmpty()) {
-      throw new IllegalArgumentException("Unrecognized keys found: " + yaml.keySet());
+      throw new IllegalArgumentException("Unrecognized key(s) found: " + yaml.keySet());
     }
   }
 

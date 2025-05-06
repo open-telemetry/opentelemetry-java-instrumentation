@@ -144,9 +144,7 @@ public class JmxRule extends MetricStructure {
                 getUnit(),
                 getMetricType());
       } else {
-        metricInfo =
-            m.buildMetricInfo(
-                prefix, niceAttributeName, getSourceUnit(), getUnit(), getMetricType());
+        metricInfo = m.buildMetricInfo(niceAttributeName, this);
       }
 
       List<MetricAttribute> ownAttributes = getAttributeList();
@@ -203,13 +201,13 @@ public class JmxRule extends MetricStructure {
       BeanAttributeExtractor extractor =
           BeanAttributeExtractor.forStateMetric(attrExtractor, key, stateMapping);
 
-      // state metric are always up/down counters
+      // state metric are always up/down counters, empty '' unit and no source unit
       MetricInfo stateMetricInfo =
           new MetricInfo(
               metricInfo.getMetricName(),
               metricInfo.getDescription(),
-              metricInfo.getSourceUnit(),
-              metricInfo.getUnit(),
+              null,
+              "",
               MetricInfo.Type.UPDOWNCOUNTER);
 
       extractors.add(new MetricExtractor(extractor, stateMetricInfo, stateMetricAttributes));
