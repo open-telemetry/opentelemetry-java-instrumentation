@@ -61,4 +61,11 @@ class OpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTest {
                         ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
                     equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId())));
   }
+
+  @Test
+  @Override
+  @SuppressWarnings("RedundantOverride)")
+  void withExtendedAttributes() {
+    super.withExtendedAttributes();
+  }
 }

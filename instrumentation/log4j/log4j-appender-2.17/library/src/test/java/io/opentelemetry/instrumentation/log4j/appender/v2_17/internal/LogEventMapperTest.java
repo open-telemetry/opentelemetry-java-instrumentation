@@ -14,9 +14,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
+import io.opentelemetry.api.incubator.common.ExtendedAttributeKey;
 import io.opentelemetry.api.incubator.common.ExtendedAttributes;
 import io.opentelemetry.api.incubator.common.ExtendedAttributesBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -175,6 +177,38 @@ class LogEventMapperTest {
         .containsOnly(
             attributeEntry("log4j.map_message.key1", "value1"),
             attributeEntry("log4j.map_message.message", "value2"));
+  }
+
+  @Test
+  void testObjects() {
+    // given
+    LogEventMapper<Map<String, Object>> mapper =
+        new LogEventMapper<>(
+            ContextDataAccessorImpl.INSTANCE, false, false, true, false, singletonList("*"));
+
+    Map<String, Object> map = new HashMap<>();
+    Map<String, Object> contextData = new HashMap<>();
+    contextData.put("key1", "value1");
+    contextData.put("key2", new String[] {"one", "two", "three"});
+    map.put("fn", "Joe");
+    map.put("ln", "Smitty");
+    contextData.put("key3", map);
+    ExtendedAttributesBuilder attributes = ExtendedAttributes.builder();
+
+    // when
+    mapper.captureContextDataAttributes(attributes, contextData);
+
+    // then
+    ExtendedAttributes result = attributes.build();
+    assertThat(result.get(ExtendedAttributeKey.stringKey("key1"))).isEqualTo("value1");
+    assertThat(result.get(ExtendedAttributeKey.stringArrayKey("key2")))
+        .isEqualTo(Arrays.asList("one", "two", "three"));
+
+    Map<ExtendedAttributeKey<?>, Object> expected = new HashMap<>();
+    expected.put(ExtendedAttributeKey.stringKey("fn"), "Joe");
+    expected.put(ExtendedAttributeKey.stringKey("ln"), "Smitty");
+    assertThat(result.get(ExtendedAttributeKey.extendedAttributesKey("key3")).asMap())
+        .isEqualTo(expected);
   }
 
   private enum ContextDataAccessorImpl implements ContextDataAccessor<Map<String, Object>, Object> {

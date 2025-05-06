@@ -223,14 +223,22 @@ public final class LogEventMapper<T> {
       attributes.put(
           (ExtendedAttributeKey<Boolean>) keyProvider.apply(key, ExtendedAttributeType.BOOLEAN),
           (Boolean) value);
-    } else if ((value instanceof Long) || (value instanceof Integer)) {
+    } else if ((value instanceof Long)) {
       attributes.put(
           (ExtendedAttributeKey<Long>) keyProvider.apply(key, ExtendedAttributeType.LONG),
-          (long) value);
-    } else if ((value instanceof Double) || (value instanceof Float)) {
+          (Long) value);
+    } else if ((value instanceof Integer)) {
+      attributes.put(
+          (ExtendedAttributeKey<Long>) keyProvider.apply(key, ExtendedAttributeType.LONG),
+          ((Integer) value).longValue());
+    } else if (value instanceof Double) {
       attributes.put(
           (ExtendedAttributeKey<Double>) keyProvider.apply(key, ExtendedAttributeType.DOUBLE),
-          (double) value);
+          (Double) value);
+    } else if (value instanceof Float) {
+      attributes.put(
+          (ExtendedAttributeKey<Double>) keyProvider.apply(key, ExtendedAttributeType.DOUBLE),
+          ((Float) value).doubleValue());
     } else if (value instanceof List) {
       List<?> list = (List<?>) value;
       if (list.isEmpty()) {
@@ -248,12 +256,22 @@ public final class LogEventMapper<T> {
             (ExtendedAttributeKey<List<Boolean>>)
                 keyProvider.apply(key, ExtendedAttributeType.BOOLEAN_ARRAY),
             (List<Boolean>) value);
-      } else if ((first instanceof Long) || (first instanceof Integer)) {
+      } else if (first instanceof Integer) {
+        attributes.put(
+            (ExtendedAttributeKey<List<Long>>)
+                keyProvider.apply(key, ExtendedAttributeType.LONG_ARRAY),
+            ((List<Integer>) value).stream().map(Integer::longValue).collect(Collectors.toList()));
+      } else if (first instanceof Long) {
         attributes.put(
             (ExtendedAttributeKey<List<Long>>)
                 keyProvider.apply(key, ExtendedAttributeType.LONG_ARRAY),
             (List<Long>) value);
-      } else if ((first instanceof Double) || (first instanceof Float)) {
+      } else if (first instanceof Float) {
+        attributes.put(
+            (ExtendedAttributeKey<List<Double>>)
+                keyProvider.apply(key, ExtendedAttributeType.DOUBLE_ARRAY),
+            ((List<Float>) value).stream().map(Float::doubleValue).collect(Collectors.toList()));
+      } else if (first instanceof Double) {
         attributes.put(
             (ExtendedAttributeKey<List<Double>>)
                 keyProvider.apply(key, ExtendedAttributeType.DOUBLE_ARRAY),
@@ -307,7 +325,8 @@ public final class LogEventMapper<T> {
       ExtendedAttributesBuilder nestedAttribute = ExtendedAttributes.builder();
       consumeAttributes(((Map<?, ?>) value)::forEach, nestedAttribute, false, keyProvider);
       attributes.put(
-          getMapMessageAttributeKey(key, ExtendedAttributeType.EXTENDED_ATTRIBUTES),
+          (ExtendedAttributeKey<ExtendedAttributes>)
+              keyProvider.apply(key, ExtendedAttributeType.EXTENDED_ATTRIBUTES),
           nestedAttribute.build());
     } else {
       throw new IllegalArgumentException("Unrecognized value type: " + value.getClass());
