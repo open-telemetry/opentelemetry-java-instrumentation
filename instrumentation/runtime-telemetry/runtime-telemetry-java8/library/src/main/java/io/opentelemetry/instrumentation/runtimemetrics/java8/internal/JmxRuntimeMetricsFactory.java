@@ -21,7 +21,7 @@ import java.util.List;
 public class JmxRuntimeMetricsFactory {
   @SuppressWarnings("CatchingUnchecked")
   public static List<AutoCloseable> buildObservables(
-      OpenTelemetry openTelemetry, boolean enableExperimentalJmxTelemetry, boolean captureGcCause) {
+      OpenTelemetry openTelemetry, boolean emitExperimentalTelemetry, boolean captureGcCause) {
     // Set up metrics gathered by JMX
     List<AutoCloseable> observables = new ArrayList<>();
     observables.addAll(Classes.registerObservers(openTelemetry));
@@ -29,7 +29,7 @@ public class JmxRuntimeMetricsFactory {
     observables.addAll(GarbageCollector.registerObservers(openTelemetry, captureGcCause));
     observables.addAll(MemoryPools.registerObservers(openTelemetry));
     observables.addAll(Threads.registerObservers(openTelemetry));
-    if (enableExperimentalJmxTelemetry) {
+    if (emitExperimentalTelemetry) {
       observables.addAll(ExperimentalBufferPools.registerObservers(openTelemetry));
       observables.addAll(ExperimentalCpu.registerObservers(openTelemetry));
       observables.addAll(ExperimentalMemoryPools.registerObservers(openTelemetry));

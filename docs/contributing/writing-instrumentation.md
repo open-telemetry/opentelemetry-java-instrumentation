@@ -64,9 +64,9 @@ instrumentation ->
 The top level `settings.gradle.kts` file would contain the following (please add in alphabetical order):
 
 ```kotlin
-include("instrumentation:yarpc-1.0:javaagent")
-include("instrumentation:yarpc-1.0:library")
-include("instrumentation:yarpc-1.0:testing")
+include(":instrumentation:yarpc-1.0:javaagent")
+include(":instrumentation:yarpc-1.0:library")
+include(":instrumentation:yarpc-1.0:testing")
 ```
 
 ### Instrumentation metadata.yaml (Experimental)
@@ -133,26 +133,26 @@ plugins {
 The `otel.library-instrumentation` gradle plugin will apply all the default settings and configure
 build tooling for the library instrumentation module.
 
-By convention, OpenTelemetry library instrumentations are centered around `*Tracing`
-and `*TracingBuilder` classes. These two are usually the only public classes in the whole module.
+By convention, OpenTelemetry library instrumentations are centered around `*Telemetry`
+and `*TelemetryBuilder` classes. These two are usually the only public classes in the whole module.
 Keep the amount of public classes and methods as small as possible.
 
-Start by creating a `YarpcTracing` class:
+Start by creating a `YarpcTelemetry` class:
 
 ```java
-public final class YarpcTracing {
+public final class YarpcTelemetry {
 
-  public static YarpcTracing create(OpenTelemetry openTelemetry) {
+  public static YarpcTelemetry create(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).build();
   }
 
-  public static YarpcTracingBuilder builder(OpenTelemetry openTelemetry) {
-    return new YarpcTracingBuilder(openTelemetry);
+  public static YarpcTelemetryBuilder builder(OpenTelemetry openTelemetry) {
+    return new YarpcTelemetryBuilder(openTelemetry);
   }
 
   // ...
 
-  YarpcTracing() {}
+  YarpcTelemetry() {}
 
   public Interceptor newTracingInterceptor() {
     // ...
@@ -160,7 +160,7 @@ public final class YarpcTracing {
 }
 ```
 
-By convention, the `YarpcTracing` class exposes the `create()` and `builder()` methods as the only
+By convention, the `YarpcTelemetry` class exposes the `create()` and `builder()` methods as the only
 way of constructing a new instance; the constructor must be kept package-private (at most). Most of
 the configuration/construction logic happens in the builder class. Don't expose any other way of
 creating a new instance other than using the builder.
@@ -174,21 +174,21 @@ emits telemetry when used.
 Consider the following builder class:
 
 ```java
-public final class YarpcTracingBuilder {
+public final class YarpcTelemetryBuilder {
 
-  YarpcTracingBuilder(OpenTelemetry openTelemetry) {}
+  YarpcTelemetryBuilder(OpenTelemetry openTelemetry) {}
 
   // ...
 
-  public YarpcTracing build() {
+  public YarpcTelemetry build() {
     // ...
   }
 }
 ```
 
 The builder must have a package-private constructor, so that the only way of creating a new one is
-calling the `YarpcTracing#builder()` method and a public `build()` method that will return a new,
-properly configured `YarpcTracing` instance.
+calling the `YarpcTelemetry#builder()` method and a public `build()` method that will return a new,
+properly configured `YarpcTelemetry` instance.
 
 The library instrumentation builders can contain configuration settings that let you customize the
 behavior of the instrumentation. Most of these options are used to configure the
@@ -198,7 +198,7 @@ process.
 The configuration and usage of the `Instrumenter` class is described in
 [a separate document](using-instrumenter-api.md). In most cases, the `build()`
 method is supposed to create a fully configured `Instrumenter` instance and pass it
-to `YarpcTracing`, which in turn can pass it to the interceptor returned
+to `YarpcTelemetry`, which in turn can pass it to the interceptor returned
 by `newTracingInterceptor()`. The actual process of configuring an `Instrumenter` and various
 interfaces involved are described in the [`Instrumenter` API doc](using-instrumenter-api.md).
 
