@@ -21,7 +21,7 @@ public final class RuntimeMetricsBuilder {
   final EnumMap<JfrFeature, Boolean> enabledFeatureMap;
 
   private boolean disableJmx = false;
-  private boolean enableExperimentalJmxTelemetry = false;
+  private boolean emitExperimentalTelemetry = false;
   private boolean captureGcCause = false;
 
   RuntimeMetricsBuilder(OpenTelemetry openTelemetry) {
@@ -77,8 +77,20 @@ public final class RuntimeMetricsBuilder {
 
   /** Enable experimental JMX telemetry collection. */
   @CanIgnoreReturnValue
+  public RuntimeMetricsBuilder emitExperimentalTelemetry() {
+    emitExperimentalTelemetry = true;
+    return this;
+  }
+
+  /**
+   * Enable experimental JMX telemetry collection.
+   *
+   * @deprecated Use {@link #emitExperimentalTelemetry()} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
   public RuntimeMetricsBuilder enableExperimentalJmxTelemetry() {
-    enableExperimentalJmxTelemetry = true;
+    emitExperimentalTelemetry = true;
     return this;
   }
 
@@ -95,7 +107,7 @@ public final class RuntimeMetricsBuilder {
         disableJmx
             ? List.of()
             : JmxRuntimeMetricsFactory.buildObservables(
-                openTelemetry, enableExperimentalJmxTelemetry, captureGcCause);
+                openTelemetry, emitExperimentalTelemetry, captureGcCause);
     RuntimeMetrics.JfrRuntimeMetrics jfrRuntimeMetrics = buildJfrMetrics();
     return new RuntimeMetrics(openTelemetry, observables, jfrRuntimeMetrics);
   }
