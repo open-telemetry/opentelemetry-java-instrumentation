@@ -180,19 +180,44 @@ class LogEventMapperTest {
   }
 
   @Test
-  void testObjects() {
+  void testObjectsInContextData() {
     // given
     LogEventMapper<Map<String, Object>> mapper =
         new LogEventMapper<>(
             ContextDataAccessorImpl.INSTANCE, false, false, true, false, singletonList("*"));
 
-    Map<String, Object> map = new HashMap<>();
     Map<String, Object> contextData = new HashMap<>();
-    contextData.put("key1", "value1");
-    contextData.put("key2", new String[] {"one", "two", "three"});
-    map.put("fn", "Joe");
-    map.put("ln", "Smitty");
-    contextData.put("key3", map);
+
+    // scalars
+    contextData.put("string", "value");
+    contextData.put("int", 10);
+    contextData.put("long", 11L);
+    contextData.put("float", 12f);
+    contextData.put("double", 13d);
+    contextData.put("boolean", false);
+
+    // arrays
+    contextData.put("stringArray", new String[] {"one", "two", "three"});
+    contextData.put("intArray", new int[] {1, 2, 3});
+    contextData.put("longArray", new long[] {4L, 5L, 6L});
+    contextData.put("floatArray", new float[] {7f, 8f, 9f});
+    contextData.put("doubleArray", new double[] {10d, 11d, 12d});
+    contextData.put("booleanArray", new boolean[] {true, false, false});
+
+    // lists
+    contextData.put("stringList", Arrays.asList("one", "two", "three"));
+    contextData.put("intList", Arrays.asList(1, 2, 3));
+    contextData.put("longList", Arrays.asList(4L, 5L, 6L));
+    contextData.put("floatList", Arrays.asList(7f, 8f, 9f));
+    contextData.put("doubleList", Arrays.asList(10d, 11d, 12d));
+    contextData.put("booleanList", Arrays.asList(true, false, false));
+
+    Map<String, Object> map = new HashMap<>();
+    map.put("entry1", "value1");
+    map.put("entry2", 28);
+    map.put("entry3", new int[] {1, 2, 3});
+    contextData.put("map", map);
+
     ExtendedAttributesBuilder attributes = ExtendedAttributes.builder();
 
     // when
@@ -200,15 +225,49 @@ class LogEventMapperTest {
 
     // then
     ExtendedAttributes result = attributes.build();
-    assertThat(result.get(ExtendedAttributeKey.stringKey("key1"))).isEqualTo("value1");
-    assertThat(result.get(ExtendedAttributeKey.stringArrayKey("key2")))
+
+    // scalars
+    assertThat(result.get(ExtendedAttributeKey.stringKey("string"))).isEqualTo("value");
+    assertThat(result.get(ExtendedAttributeKey.longKey("int"))).isEqualTo(10L);
+    assertThat(result.get(ExtendedAttributeKey.longKey("long"))).isEqualTo(11L);
+    assertThat(result.get(ExtendedAttributeKey.doubleKey("float"))).isEqualTo(12d);
+    assertThat(result.get(ExtendedAttributeKey.doubleKey("double"))).isEqualTo(13f);
+    assertThat(result.get(ExtendedAttributeKey.booleanKey("boolean"))).isEqualTo(false);
+
+    assertThat(result.get(ExtendedAttributeKey.stringArrayKey("stringArray")))
         .isEqualTo(Arrays.asList("one", "two", "three"));
+    assertThat(result.get(ExtendedAttributeKey.longArrayKey("intArray")))
+        .isEqualTo(Arrays.asList(1L, 2L, 3L));
+    assertThat(result.get(ExtendedAttributeKey.longArrayKey("longArray")))
+        .isEqualTo(Arrays.asList(4L, 5L, 6L));
+    assertThat(result.get(ExtendedAttributeKey.doubleArrayKey("floatArray")))
+        .isEqualTo(Arrays.asList(7d, 8d, 9d));
+    assertThat(result.get(ExtendedAttributeKey.doubleArrayKey("doubleArray")))
+        .isEqualTo(Arrays.asList(10d, 11d, 12d));
+    assertThat(result.get(ExtendedAttributeKey.booleanArrayKey("booleanArray")))
+        .isEqualTo(Arrays.asList(true, false, false));
+
+    assertThat(result.get(ExtendedAttributeKey.stringArrayKey("stringList")))
+        .isEqualTo(Arrays.asList("one", "two", "three"));
+    assertThat(result.get(ExtendedAttributeKey.longArrayKey("intList")))
+        .isEqualTo(Arrays.asList(1L, 2L, 3L));
+    assertThat(result.get(ExtendedAttributeKey.longArrayKey("longList")))
+        .isEqualTo(Arrays.asList(4L, 5L, 6L));
+    assertThat(result.get(ExtendedAttributeKey.doubleArrayKey("floatList")))
+        .isEqualTo(Arrays.asList(7d, 8d, 9d));
+    assertThat(result.get(ExtendedAttributeKey.doubleArrayKey("doubleList")))
+        .isEqualTo(Arrays.asList(10d, 11d, 12d));
+    assertThat(result.get(ExtendedAttributeKey.booleanArrayKey("booleanList")))
+        .isEqualTo(Arrays.asList(true, false, false));
 
     Map<ExtendedAttributeKey<?>, Object> expected = new HashMap<>();
-    expected.put(ExtendedAttributeKey.stringKey("fn"), "Joe");
-    expected.put(ExtendedAttributeKey.stringKey("ln"), "Smitty");
-    assertThat(result.get(ExtendedAttributeKey.extendedAttributesKey("key3")).asMap())
-        .isEqualTo(expected);
+    expected.put(ExtendedAttributeKey.stringKey("entry1"), "value1");
+    expected.put(ExtendedAttributeKey.longKey("entry2"), 28L);
+    expected.put(ExtendedAttributeKey.longArrayKey("entry3"), Arrays.asList(1L, 2L, 3L));
+
+    ExtendedAttributes actual = result.get(ExtendedAttributeKey.extendedAttributesKey("map"));
+    assertThat(actual).isNotNull();
+    assertThat(actual.asMap()).containsExactlyInAnyOrderEntriesOf(expected);
   }
 
   private enum ContextDataAccessorImpl implements ContextDataAccessor<Map<String, Object>, Object> {
