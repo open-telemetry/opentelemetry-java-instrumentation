@@ -322,7 +322,6 @@ class RuleParserTest {
     assertThat(m1.getInfo().getMetricName())
         .describedAs("metric name should default to JMX attribute name")
         .isEqualTo("ATTRIBUTE");
-
   }
 
   private static final String CONF7 =
@@ -623,13 +622,15 @@ class RuleParserTest {
    */
 
   private static void runNegativeTest(String yaml, String message) {
-    assertThatThrownBy(() -> {
-      JmxConfig config = parseConf(yaml);
+    assertThatThrownBy(
+            () -> {
+              JmxConfig config = parseConf(yaml);
 
-      List<JmxRule> defs = config.getRules();
-      assertThat(defs).hasSize(1);
-      defs.get(0).buildMetricDef();
-    }).hasMessageContaining(message);
+              List<JmxRule> defs = config.getRules();
+              assertThat(defs).hasSize(1);
+              defs.get(0).buildMetricDef();
+            })
+        .hasMessageContaining(message);
   }
 
   @Test

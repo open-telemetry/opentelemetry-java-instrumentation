@@ -21,8 +21,7 @@ public class Metric extends MetricStructure {
   @Nullable private String metric;
   @Nullable private String desc;
 
-  public Metric() {
-  }
+  public Metric() {}
 
   @Nullable
   public String getMetric() {
@@ -95,5 +94,4 @@ public class Metric extends MetricStructure {
 
     return new MetricInfo(metricName, desc, sourceUnit, unit, metricType);
   }
-
 }

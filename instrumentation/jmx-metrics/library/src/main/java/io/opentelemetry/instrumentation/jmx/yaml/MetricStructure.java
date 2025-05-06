@@ -190,7 +190,6 @@ public abstract class MetricStructure {
 
     MetricAttributeExtractor extractor = null;
 
-
     String paramName = tryParseFunction("param", targetExpr, errorMsg);
     if (paramName != null) {
       extractor = MetricAttributeExtractor.fromObjectNameParameter(paramName);
