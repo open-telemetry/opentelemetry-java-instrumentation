@@ -287,6 +287,8 @@ In the particular case where only two values are defined, we can simplify furthe
             off: '*'
 ```
 
+State metrics do not have a unit (nor source unit) and use an empty string `"""` as unit.
+
 ### Metric attributes modifiers
 
 JMX attributes values may require modification or normalization in order to fit semantic conventions.
