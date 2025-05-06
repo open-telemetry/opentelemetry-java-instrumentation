@@ -47,9 +47,7 @@ public final class JdbcSingletons {
             GlobalOpenTelemetry.get(),
             Collections.singletonList(peerServiceExtractor),
             AgentInstrumentationConfig.get()
-                .getBoolean(
-                    "otel.instrumentation.jdbc.experimental.transaction.enabled",
-                    AgentCommonConfig.get().isStatementSanitizationEnabled()));
+                .getBoolean("otel.instrumentation.jdbc.experimental.transaction.enabled", false));
   }
 
   public static Instrumenter<DbRequest, Void> transactionInstrumenter() {
