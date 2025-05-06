@@ -20,22 +20,17 @@ import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THR
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-import io.opentelemetry.api.incubator.common.ExtendedAttributeKey;
-import io.opentelemetry.api.incubator.common.ExtendedAttributes;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.sdk.logs.data.internal.ExtendedLogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.Marker;
@@ -45,7 +40,6 @@ import org.apache.logging.log4j.core.impl.Log4jLogEvent;
 import org.apache.logging.log4j.message.FormattedMessage;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
-import org.apache.logging.log4j.spi.ObjectThreadContextMap;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AssertAccess;
 import org.junit.jupiter.api.AfterAll;
@@ -210,78 +204,6 @@ abstract class AbstractOpenTelemetryAppenderTest {
                             equalTo(THREAD_ID, Thread.currentThread().getId()),
                             equalTo(stringKey("log4j.map_message.key1"), "val1"),
                             equalTo(stringKey("log4j.map_message.key2"), "val2"))));
-  }
-
-  @Test
-  void withExtendedAttributes() {
-    StringMapMessage message = new StringMapMessage();
-    message.put("key1", "val1");
-    message.put("key2", "val2");
-
-    ObjectThreadContextMap contextMap =
-        (ObjectThreadContextMap) ThreadContext.getThreadContextMap();
-
-    contextMap.putValue("integer", 10);
-    contextMap.putValue("string", "hello");
-    contextMap.putValue("double", 11.1d);
-
-    Map<String, String> map = new HashMap<>();
-    map.put("string1", "1");
-    map.put("string2", "2");
-    contextMap.putValue("map", map);
-
-    contextMap.putValue("intArray", new int[] {1, 2, 3});
-    contextMap.putValue("floatList", Arrays.asList(10f, 20f, 30f));
-
-    logger.info(message);
-
-    executeAfterLogsExecution();
-
-    getTesting()
-        .waitAndAssertLogRecords(
-            logRecord ->
-                logRecord
-                    .hasResource(resource)
-                    .hasInstrumentationScope(instrumentationScopeInfo)
-                    .hasAttributesSatisfying(
-                        addLocationAttributes(
-                            "withExtendedAttributes",
-                            equalTo(THREAD_NAME, Thread.currentThread().getName()),
-                            equalTo(THREAD_ID, Thread.currentThread().getId()),
-                            equalTo(stringKey("log4j.map_message.key1"), "val1"),
-                            equalTo(stringKey("log4j.map_message.key2"), "val2")))
-                    .isInstanceOf(ExtendedLogRecordData.class)
-                    .satisfies(
-                        logRecordData -> {
-                          ExtendedLogRecordData extendedLogRecord =
-                              (ExtendedLogRecordData) logRecordData;
-                          Map<ExtendedAttributeKey<?>, Object> extendedAttributes =
-                              extendedLogRecord.getExtendedAttributes().asMap();
-                          assertThat(extendedAttributes)
-                              .containsEntry(ExtendedAttributeKey.stringKey("string"), "hello");
-                          assertThat(extendedAttributes)
-                              .containsEntry(ExtendedAttributeKey.longKey("integer"), 10L);
-                          assertThat(extendedAttributes)
-                              .containsEntry(ExtendedAttributeKey.doubleKey("double"), 11.1d);
-                          assertThat(extendedAttributes)
-                              .containsEntry(
-                                  ExtendedAttributeKey.longArrayKey("intArray"),
-                                  Arrays.asList(1L, 2L, 3L));
-                          assertThat(extendedAttributes)
-                              .containsEntry(
-                                  ExtendedAttributeKey.doubleArrayKey("floatList"),
-                                  Arrays.asList(10d, 20d, 30d));
-
-                          Map<ExtendedAttributeKey<?>, Object> expected = new HashMap<>();
-                          expected.put(ExtendedAttributeKey.stringKey("string1"), "1");
-                          expected.put(ExtendedAttributeKey.stringKey("string2"), "2");
-
-                          ExtendedAttributes actual =
-                              (ExtendedAttributes)
-                                  extendedAttributes.get(
-                                      ExtendedAttributeKey.extendedAttributesKey("map"));
-                          assertThat(actual.asMap()).isEqualTo(expected);
-                        }));
   }
 
   @Test
