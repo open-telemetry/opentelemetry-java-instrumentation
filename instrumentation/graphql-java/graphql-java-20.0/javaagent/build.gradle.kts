@@ -25,6 +25,7 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.graphql.data-fetcher.enabled=true")
+  jvmArgs("-Dotel.instrumentation.graphql.add-operation-name-to-span-name.enabled=true")
 }
 
 if (findProperty("testLatestDeps") as Boolean) {

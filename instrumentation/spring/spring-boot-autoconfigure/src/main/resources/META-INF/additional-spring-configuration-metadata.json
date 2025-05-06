@@ -483,6 +483,12 @@
       "defaultValue": true
     },
     {
+      "name": "otel.instrumentation.runtime-telemetry.capture-gc-cause",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of the jvm.gc.cause attribute with the jvm.gc.duration metric.",
+      "defaultValue": false
+    },
+    {
       "name": "otel.instrumentation.runtime-telemetry.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable runtime telemetry metrics.",
