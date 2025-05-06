@@ -1683,6 +1683,7 @@ class JdbcInstrumentationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
                             equalTo(maybeStable(DB_NAME), dbNameLower),
+                            equalTo(maybeStable(DB_OPERATION), "COMMIT"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                             equalTo(
                                 DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url))));
@@ -1738,6 +1739,7 @@ class JdbcInstrumentationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
                             equalTo(maybeStable(DB_NAME), dbNameLower),
+                            equalTo(maybeStable(DB_OPERATION), "ROLLBACK"),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
                             equalTo(
                                 DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url))));

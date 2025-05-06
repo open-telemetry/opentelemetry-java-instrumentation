@@ -279,6 +279,7 @@ class OpenTelemetryConnectionTest {
                                 maybeStable(DB_SYSTEM),
                                 maybeStableDbSystemName(dbInfo.getSystem())),
                             equalTo(maybeStable(DB_NAME), dbInfo.getName()),
+                            equalTo(maybeStable(DB_OPERATION), operation),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : dbInfo.getUser()),
                             equalTo(
                                 DB_CONNECTION_STRING,

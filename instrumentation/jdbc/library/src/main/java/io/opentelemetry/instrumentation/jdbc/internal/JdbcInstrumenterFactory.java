@@ -98,6 +98,7 @@ public final class JdbcInstrumenterFactory {
     return Instrumenter.<DbRequest, Void>builder(
             openTelemetry, INSTRUMENTATION_NAME, DbRequest::getOperation)
         .addAttributesExtractor(SqlClientAttributesExtractor.builder(dbAttributesGetter).build())
+        .addAttributesExtractor(TransactionAttributeExtractor.INSTANCE)
         .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
         .addAttributesExtractors(extractors)
         .setEnabled(enabled)
