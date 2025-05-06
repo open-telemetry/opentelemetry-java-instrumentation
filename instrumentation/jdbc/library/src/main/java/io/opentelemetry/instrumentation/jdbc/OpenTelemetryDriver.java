@@ -24,13 +24,11 @@ import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFac
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory;
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
-import io.opentelemetry.instrumentation.jdbc.internal.TransactionRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.Connection;
 import java.sql.Driver;
@@ -246,11 +244,8 @@ public final class OpenTelemetryDriver implements Driver {
 
     Instrumenter<DbRequest, Void> statementInstrumenter =
         JdbcInstrumenterFactory.createStatementInstrumenter(openTelemetry);
-    Instrumenter<TransactionRequest, Void> transactionInstrumenter =
-        JdbcInstrumenterFactory.createTransactionInstrumenter(
-            openTelemetry,
-            ConfigPropertiesUtil.getBoolean(
-                "otel.instrumentation.jdbc.experimental.transaction.enabled", false));
+    Instrumenter<DbRequest, Void> transactionInstrumenter =
+        JdbcInstrumenterFactory.createTransactionInstrumenter(openTelemetry);
     return OpenTelemetryConnection.create(
         connection, dbInfo, statementInstrumenter, transactionInstrumenter);
   }

@@ -19,10 +19,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcData;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcUtils;
-import io.opentelemetry.instrumentation.jdbc.internal.TransactionRequest;
-import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.sql.Connection;
@@ -77,18 +75,10 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
-      DbInfo dbInfo = null;
-      Connection realConnection = JdbcUtils.unwrapConnection(connection);
-      if (realConnection != null) {
-        dbInfo = JdbcUtils.extractDbInfo(realConnection);
-      }
-      if (dbInfo == null) {
-        return;
-      }
-      TransactionRequest request =
-          TransactionRequest.create(dbInfo, methodName.toUpperCase(Locale.ROOT));
+      DbRequest request =
+          DbRequest.createTransaction(connection, methodName.toUpperCase(Locale.ROOT));
 
-      if (!transactionInstrumenter().shouldStart(parentContext, request)) {
+      if (request == null || !transactionInstrumenter().shouldStart(parentContext, request)) {
         return;
       }
 
@@ -99,7 +89,7 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelRequest") TransactionRequest request,
+        @Advice.Local("otelRequest") DbRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       if (scope == null) {

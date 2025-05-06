@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.jdbc.datasource;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
-import io.opentelemetry.instrumentation.jdbc.internal.TransactionRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import javax.sql.DataSource;
 
@@ -27,12 +26,12 @@ public final class JdbcTelemetry {
 
   private final Instrumenter<DataSource, DbInfo> dataSourceInstrumenter;
   private final Instrumenter<DbRequest, Void> statementInstrumenter;
-  private final Instrumenter<TransactionRequest, Void> transactionInstrumenter;
+  private final Instrumenter<DbRequest, Void> transactionInstrumenter;
 
   JdbcTelemetry(
       Instrumenter<DataSource, DbInfo> dataSourceInstrumenter,
       Instrumenter<DbRequest, Void> statementInstrumenter,
-      Instrumenter<TransactionRequest, Void> transactionInstrumenter) {
+      Instrumenter<DbRequest, Void> transactionInstrumenter) {
     this.dataSourceInstrumenter = dataSourceInstrumenter;
     this.statementInstrumenter = statementInstrumenter;
     this.transactionInstrumenter = transactionInstrumenter;

@@ -5,18 +5,21 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
+import java.util.List;
 import javax.sql.DataSource;
 
 /**
@@ -25,18 +28,9 @@ import javax.sql.DataSource;
  */
 public final class JdbcInstrumenterFactory {
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
-  private static final JdbcStatementAttributesGetter statementAttributesGetter =
-      new JdbcStatementAttributesGetter();
-  private static final JdbcTransactionAttributesGetter transactionAttributesGetter =
-      new JdbcTransactionAttributesGetter();
-  private static final StatementNetworkAttributesGetter statementNetAttributesGetter =
-      new StatementNetworkAttributesGetter();
-  private static final TransactionNetworkAttributesGetter transactionNetAttributesGetter =
-      new TransactionNetworkAttributesGetter();
-
-  public static Instrumenter<DbRequest, Void> createStatementInstrumenter() {
-    return createStatementInstrumenter(GlobalOpenTelemetry.get());
-  }
+  private static final JdbcAttributesGetter dbAttributesGetter = new JdbcAttributesGetter();
+  private static final JdbcNetworkAttributesGetter netAttributesGetter =
+      new JdbcNetworkAttributesGetter();
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
       OpenTelemetry openTelemetry) {
@@ -49,15 +43,25 @@ public final class JdbcInstrumenterFactory {
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
       OpenTelemetry openTelemetry, boolean enabled, boolean statementSanitizationEnabled) {
+    return createStatementInstrumenter(
+        openTelemetry, emptyList(), enabled, statementSanitizationEnabled);
+  }
+
+  public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
+      OpenTelemetry openTelemetry,
+      List<AttributesExtractor<DbRequest, Void>> extractors,
+      boolean enabled,
+      boolean statementSanitizationEnabled) {
     return Instrumenter.<DbRequest, Void>builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
-            DbClientSpanNameExtractor.create(statementAttributesGetter))
+            DbClientSpanNameExtractor.create(dbAttributesGetter))
         .addAttributesExtractor(
-            SqlClientAttributesExtractor.builder(statementAttributesGetter)
+            SqlClientAttributesExtractor.builder(dbAttributesGetter)
                 .setStatementSanitizationEnabled(statementSanitizationEnabled)
                 .build())
-        .addAttributesExtractor(ServerAttributesExtractor.create(statementNetAttributesGetter))
+        .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
+        .addAttributesExtractors(extractors)
         .addOperationMetrics(DbClientMetrics.get())
         .setEnabled(enabled)
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
@@ -74,13 +78,28 @@ public final class JdbcInstrumenterFactory {
         .buildInstrumenter();
   }
 
-  public static Instrumenter<TransactionRequest, Void> createTransactionInstrumenter(
+  public static Instrumenter<DbRequest, Void> createTransactionInstrumenter(
+      OpenTelemetry openTelemetry) {
+    return createTransactionInstrumenter(
+        openTelemetry,
+        ConfigPropertiesUtil.getBoolean(
+            "otel.instrumentation.jdbc.experimental.transaction.enabled", false));
+  }
+
+  public static Instrumenter<DbRequest, Void> createTransactionInstrumenter(
       OpenTelemetry openTelemetry, boolean enabled) {
-    return Instrumenter.<TransactionRequest, Void>builder(
-            openTelemetry, INSTRUMENTATION_NAME, TransactionRequest::spanName)
-        .addAttributesExtractor(
-            SqlClientAttributesExtractor.builder(transactionAttributesGetter).build())
-        .addAttributesExtractor(ServerAttributesExtractor.create(transactionNetAttributesGetter))
+    return createTransactionInstrumenter(openTelemetry, emptyList(), enabled);
+  }
+
+  public static Instrumenter<DbRequest, Void> createTransactionInstrumenter(
+      OpenTelemetry openTelemetry,
+      List<AttributesExtractor<DbRequest, Void>> extractors,
+      boolean enabled) {
+    return Instrumenter.<DbRequest, Void>builder(
+            openTelemetry, INSTRUMENTATION_NAME, DbRequest::getOperation)
+        .addAttributesExtractor(SqlClientAttributesExtractor.builder(dbAttributesGetter).build())
+        .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
+        .addAttributesExtractors(extractors)
         .setEnabled(enabled)
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }

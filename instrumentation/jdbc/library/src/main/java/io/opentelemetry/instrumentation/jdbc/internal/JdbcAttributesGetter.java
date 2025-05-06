@@ -5,37 +5,30 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import static java.util.Collections.emptySet;
-
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
-public class JdbcTransactionAttributesGetter
-    implements SqlClientAttributesGetter<TransactionRequest, Void> {
+final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest, Void> {
 
   @Nullable
   @Override
-  public String getDbSystem(TransactionRequest request) {
+  public String getDbSystem(DbRequest request) {
     return request.getDbInfo().getSystem();
   }
 
   @Deprecated
   @Nullable
   @Override
-  public String getUser(TransactionRequest request) {
+  public String getUser(DbRequest request) {
     return request.getDbInfo().getUser();
   }
 
   @Nullable
   @Override
-  public String getDbNamespace(TransactionRequest request) {
+  public String getDbNamespace(DbRequest request) {
     DbInfo dbInfo = request.getDbInfo();
     return dbInfo.getName() == null ? dbInfo.getDb() : dbInfo.getName();
   }
@@ -43,19 +36,18 @@ public class JdbcTransactionAttributesGetter
   @Deprecated
   @Nullable
   @Override
-  public String getConnectionString(TransactionRequest request) {
+  public String getConnectionString(DbRequest request) {
     return request.getDbInfo().getShortUrl();
   }
 
   @Override
-  public Collection<String> getRawQueryTexts(TransactionRequest request) {
-    return emptySet();
+  public Collection<String> getRawQueryTexts(DbRequest request) {
+    return request.getQueryTexts();
   }
 
-  @Nullable
   @Override
-  public Long getBatchSize(TransactionRequest request) {
-    return null;
+  public Long getBatchSize(DbRequest request) {
+    return request.getBatchSize();
   }
 
   @Nullable

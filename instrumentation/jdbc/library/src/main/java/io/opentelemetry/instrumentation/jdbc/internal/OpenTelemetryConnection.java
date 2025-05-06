@@ -54,13 +54,13 @@ public class OpenTelemetryConnection implements Connection {
   protected final Connection delegate;
   private final DbInfo dbInfo;
   protected final Instrumenter<DbRequest, Void> statementInstrumenter;
-  protected final Instrumenter<TransactionRequest, Void> transactionInstrumenter;
+  protected final Instrumenter<DbRequest, Void> transactionInstrumenter;
 
   protected OpenTelemetryConnection(
       Connection delegate,
       DbInfo dbInfo,
       Instrumenter<DbRequest, Void> statementInstrumenter,
-      Instrumenter<TransactionRequest, Void> transactionInstrumenter) {
+      Instrumenter<DbRequest, Void> transactionInstrumenter) {
     this.delegate = delegate;
     this.dbInfo = dbInfo;
     this.statementInstrumenter = statementInstrumenter;
@@ -81,7 +81,7 @@ public class OpenTelemetryConnection implements Connection {
       Connection delegate,
       DbInfo dbInfo,
       Instrumenter<DbRequest, Void> statementInstrumenter,
-      Instrumenter<TransactionRequest, Void> transactionInstrumenter) {
+      Instrumenter<DbRequest, Void> transactionInstrumenter) {
     if (hasJdbc43) {
       return new OpenTelemetryConnectionJdbc43(
           delegate, dbInfo, statementInstrumenter, transactionInstrumenter);
@@ -408,7 +408,7 @@ public class OpenTelemetryConnection implements Connection {
         Connection delegate,
         DbInfo dbInfo,
         Instrumenter<DbRequest, Void> statementInstrumenter,
-        Instrumenter<TransactionRequest, Void> transactionInstrumenter) {
+        Instrumenter<DbRequest, Void> transactionInstrumenter) {
       super(delegate, dbInfo, statementInstrumenter, transactionInstrumenter);
     }
 
@@ -454,7 +454,7 @@ public class OpenTelemetryConnection implements Connection {
   protected <E extends Exception> void wrapCall(ThrowingSupplier<E> callable, String operation)
       throws E {
     Context parentContext = Context.current();
-    TransactionRequest request = TransactionRequest.create(dbInfo, operation);
+    DbRequest request = DbRequest.createTransaction(dbInfo, operation);
     if (!this.transactionInstrumenter.shouldStart(parentContext, request)) {
       callable.call();
       return;
@@ -471,8 +471,6 @@ public class OpenTelemetryConnection implements Connection {
   }
 
   protected interface ThrowingSupplier<E extends Exception> {
-    String statement = null;
-
     void call() throws E;
   }
 }
