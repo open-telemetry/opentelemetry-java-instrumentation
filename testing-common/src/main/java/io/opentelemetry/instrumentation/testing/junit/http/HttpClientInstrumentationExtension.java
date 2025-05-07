@@ -38,6 +38,12 @@ public final class HttpClientInstrumentationExtension extends InstrumentationExt
   private HttpClientInstrumentationExtension(InstrumentationTestRunner runner) {
     super(runner);
 
+    // In netty-4.1.121.Final unsafe usage is disabled by default on jdk24. This triggers using
+    // a different pooled buffer usage which apparently has a bug that breaks when initializing ssl.
+    // Here we switch to unpooled buffers to avoid that bug.
+    if (Double.parseDouble(System.getProperty("java.specification.version")) >= 24) {
+      System.setProperty("io.opentelemetry.testing.internal.io.netty.allocator.type", "unpooled");
+    }
     server = new HttpClientTestServer(getOpenTelemetry());
   }
 
