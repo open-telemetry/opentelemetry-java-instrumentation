@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling.instrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.ForceDynamicallyTypedAssignReturnedFactory;
 import java.util.function.Function;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
@@ -22,7 +23,9 @@ final class TypeTransformerImpl implements TypeTransformer {
     this.agentBuilder = agentBuilder;
     adviceMapping =
         Advice.withCustomMapping()
-            .with(new Advice.AssignReturned.Factory().withSuppressed(Throwable.class));
+            .with(
+                new ForceDynamicallyTypedAssignReturnedFactory(
+                    new Advice.AssignReturned.Factory().withSuppressed(Throwable.class)));
   }
 
   @Override

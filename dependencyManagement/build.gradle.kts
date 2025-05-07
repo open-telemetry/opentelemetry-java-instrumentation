@@ -27,7 +27,7 @@ val DEPENDENCY_BOMS = listOf(
   // for some reason boms show up as runtime dependencies in license and vulnerability scans
   // even if they are only used by test dependencies, so not using junit bom since it is LGPL
 
-  "com.fasterxml.jackson:jackson-bom:2.18.3",
+  "com.fasterxml.jackson:jackson-bom:2.19.0",
   "com.squareup.okio:okio-bom:3.11.0", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
   "com.google.guava:guava-bom:33.4.8-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
@@ -90,7 +90,7 @@ val DEPENDENCIES = listOf(
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.12.6",
+  "com.uber.nullaway:nullaway:0.12.7",
   "commons-beanutils:commons-beanutils:1.10.1",
   "commons-cli:commons-cli:1.9.0",
   "commons-codec:commons-codec:1.18.0",
@@ -106,6 +106,7 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-aws-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-gcp-resources:${otelContribVersion}",
+  "io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-baggage-processor:${otelContribVersion}",
   "io.opentelemetry.proto:opentelemetry-proto:1.5.0-alpha",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom

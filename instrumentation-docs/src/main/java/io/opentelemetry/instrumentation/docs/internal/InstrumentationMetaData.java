@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.docs.internal;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -15,16 +18,26 @@ import javax.annotation.Nullable;
  */
 public class InstrumentationMetaData {
   @Nullable private String description;
-  @Nullable private Boolean disabledByDefault;
+
+  @JsonProperty("disabled_by_default")
+  @Nullable
+  private Boolean disabledByDefault;
+
   private String classification;
+
+  private List<ConfigurationOption> configurations = Collections.emptyList();
 
   public InstrumentationMetaData() {}
 
   public InstrumentationMetaData(
-      String description, String classification, Boolean disabledByDefault) {
+      String description,
+      String classification,
+      Boolean disabledByDefault,
+      List<ConfigurationOption> configurations) {
     this.classification = classification;
     this.disabledByDefault = disabledByDefault;
     this.description = description;
+    this.configurations = Objects.requireNonNullElse(configurations, Collections.emptyList());
   }
 
   @Nullable
@@ -53,5 +66,13 @@ public class InstrumentationMetaData {
 
   public void setDisabledByDefault(@Nullable Boolean disabledByDefault) {
     this.disabledByDefault = disabledByDefault;
+  }
+
+  public List<ConfigurationOption> getConfigurations() {
+    return configurations;
+  }
+
+  public void setConfigurations(@Nullable List<ConfigurationOption> configurations) {
+    this.configurations = Objects.requireNonNullElse(configurations, Collections.emptyList());
   }
 }

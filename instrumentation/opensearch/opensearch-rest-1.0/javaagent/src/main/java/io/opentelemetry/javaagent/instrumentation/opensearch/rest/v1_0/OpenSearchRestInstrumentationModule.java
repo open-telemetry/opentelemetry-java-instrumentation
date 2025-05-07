@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.rest.v1_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -23,7 +24,9 @@ public class OpenSearchRestInstrumentationModule extends InstrumentationModule {
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // class introduced in 1.0.0
-    return hasClassesNamed("org.opensearch.client.RestClient$InternalRequest");
+    return hasClassesNamed("org.opensearch.client.RestClient$InternalRequest")
+        // class introduced in 3.0.0
+        .and(not(hasClassesNamed("org.opensearch.client.http.HttpUriRequestProducer")));
   }
 
   @Override
