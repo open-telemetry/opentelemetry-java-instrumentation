@@ -13,6 +13,8 @@ dependencies {
 
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
+  // OtelInternalJavadocTest fails with 25-ea
+  maxJavaVersionForTests.set(JavaVersion.VERSION_24)
 }
 
 // We cannot use "--release" javac option here because that will forbid exporting com.sun.tools package.
