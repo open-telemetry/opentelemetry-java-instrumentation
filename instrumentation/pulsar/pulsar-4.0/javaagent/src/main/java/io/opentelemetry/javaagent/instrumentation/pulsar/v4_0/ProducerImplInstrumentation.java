@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
+package io.opentelemetry.javaagent.instrumentation.pulsar.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarSingletons.producerInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.pulsar.v4_0.telemetry.PulsarSingletons.producerInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -42,7 +42,6 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
             .and(
                 takesArgument(0, hasSuperType(named("org.apache.pulsar.client.api.PulsarClient")))),
         ProducerImplInstrumentation.class.getName() + "$ProducerImplConstructorAdvice");
-
     transformer.applyAdviceToMethod(
         isMethod()
             .and(named("sendAsync"))
@@ -52,7 +51,6 @@ public class ProducerImplInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ProducerImplConstructorAdvice {
-
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void intercept(
         @Advice.This ProducerImpl<?> producer, @Advice.Argument(value = 0) PulsarClient client) {
