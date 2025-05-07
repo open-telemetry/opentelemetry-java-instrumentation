@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opensearch.rest.v1_0;
+package io.opentelemetry.javaagent.instrumentation.opensearch.rest.v3_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.instrumentation.opensearch.rest.OpenSearchRestInstrumenterFactory;
@@ -15,7 +15,7 @@ import org.opensearch.client.Response;
 public final class OpenSearchRestSingletons {
 
   private static final Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> INSTRUMENTER =
-      OpenSearchRestInstrumenterFactory.create("io.opentelemetry.opensearch-rest-1.0");
+      OpenSearchRestInstrumenterFactory.create("io.opentelemetry.opensearch-rest-3.0");
 
   public static Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> instrumenter() {
     return INSTRUMENTER;

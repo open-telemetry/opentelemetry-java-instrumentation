@@ -726,6 +726,9 @@ targets:
       target: ':instrumentation:opensearch:opensearch-rest-1.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:opensearch:opensearch-rest-3.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:opensearch:opensearch-rest-common:javaagent'
     - type: gradle
       path: ./

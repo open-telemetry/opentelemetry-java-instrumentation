@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opensearch.rest.v1_0;
+package io.opentelemetry.javaagent.instrumentation.opensearch.rest.v3_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.opensearch.rest.v1_0.OpenSearchRestSingletons.convertResponse;
-import static io.opentelemetry.javaagent.instrumentation.opensearch.rest.v1_0.OpenSearchRestSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.opensearch.rest.v3_0.OpenSearchRestSingletons.convertResponse;
+import static io.opentelemetry.javaagent.instrumentation.opensearch.rest.v3_0.OpenSearchRestSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
