@@ -36,7 +36,7 @@ dependencies {
   testImplementation("commons-io:commons-io:2.11.0")
   testImplementation("org.opensearch:opensearch-testcontainers:2.0.0")
 
-  latestDepTestLibrary("org.opensearch.client:opensearch-rest-client:2.+")
+  latestDepTestLibrary("org.opensearch.client:opensearch-rest-client:2.+") // see opensearch-rest-3.0 module
 }
 
 tasks {
