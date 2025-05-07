@@ -26,7 +26,6 @@ public final class OpenSearchRestSingletons {
 
       @Override
       public int getStatusCode() {
-        new Exception().printStackTrace();
         return response.getStatusLine().getStatusCode();
       }
 

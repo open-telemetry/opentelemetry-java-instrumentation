@@ -29,14 +29,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:opensearch:opensearch-rest-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-5.0:javaagent"))
 
-  /*
-  testImplementation("org.apache.logging.log4j:log4j-core:2.18.0")
-  testImplementation("org.apache.logging.log4j:log4j-api:2.18.0")
-  testImplementation("org.apache.commons:commons-lang3:3.12.0")
-  testImplementation("commons-io:commons-io:2.11.0")
-
-   */
-  testImplementation("org.opensearch:opensearch-testcontainers:2.0.0")
+  testImplementation(project(":instrumentation:opensearch:opensearch-rest-common:testing"))
 }
 
 tasks {

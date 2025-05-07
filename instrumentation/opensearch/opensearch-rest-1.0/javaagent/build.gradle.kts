@@ -34,7 +34,7 @@ dependencies {
   testImplementation("org.apache.logging.log4j:log4j-api:2.18.0")
   testImplementation("org.apache.commons:commons-lang3:3.12.0")
   testImplementation("commons-io:commons-io:2.11.0")
-  testImplementation("org.opensearch:opensearch-testcontainers:2.0.0")
+  testImplementation(project(":instrumentation:opensearch:opensearch-rest-common:testing"))
 
   latestDepTestLibrary("org.opensearch.client:opensearch-rest-client:2.+") // see opensearch-rest-3.0 module
 }
