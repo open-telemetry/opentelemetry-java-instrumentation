@@ -5,6 +5,8 @@
 libraries:
   activej:
   - name: activej-http-6.0
+    description: This instrumentation provides SERVER spans and metrics for the ActiveJ
+      HttpServer.
     source_path: instrumentation/activej-http-6.0
     minimum_java_version: 17
     scope:
@@ -42,6 +44,8 @@ libraries:
       - com.typesafe.akka:akka-actor_2.13:[2.3,)
   alibaba:
   - name: alibaba-druid-1.0
+    description: |
+      The Druid instrumentation generates database connection pool metrics for druid data sources.
     source_path: instrumentation/alibaba-druid-1.0
     scope:
       name: io.opentelemetry.alibaba-druid-1.0
@@ -152,7 +156,7 @@ libraries:
   avaje:
   - name: avaje-jex-3.0
     description: |
-      This instrumentation does not emit telemetry on its own. Instead, it hooks into the Avaje Jex Context to extract the HTTP route and attach it to existing SERVER span and HTTP-server metrics.
+      This instrumentation does not emit telemetry on its own. Instead, it hooks into the Avaje Jex Context to extract the HTTP route and attach it to existing SERVER span and HTTP server metrics.
     source_path: instrumentation/avaje-jex-3.0
     minimum_java_version: 21
     scope:
@@ -261,7 +265,8 @@ libraries:
     configurations:
     - name: otel.instrumentation.common.db-statement-sanitizer.enabled
       description: Enables statement sanitization for database queries.
-      default: 'true'
+      type: boolean
+      default: true
   - name: cassandra-4.4
     description: |
       Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
@@ -276,7 +281,8 @@ libraries:
     configurations:
     - name: otel.instrumentation.common.db-statement-sanitizer.enabled
       description: Enables statement sanitization for database queries.
-      default: 'true'
+      type: boolean
+      default: true
   - name: cassandra-3.0
     description: |
       Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
@@ -289,7 +295,8 @@ libraries:
     configurations:
     - name: otel.instrumentation.common.db-statement-sanitizer.enabled
       description: Enables statement sanitization for database queries.
-      default: 'true'
+      type: boolean
+      default: true
   clickhouse:
   - name: clickhouse-client-0.5
     description: Instruments the V1 ClickHouseClient, providing database client spans
@@ -303,7 +310,8 @@ libraries:
     configurations:
     - name: otel.instrumentation.common.db-statement-sanitizer.enabled
       description: Enables statement sanitization for database queries.
-      default: 'true'
+      type: boolean
+      default: true
   couchbase:
   - name: couchbase-3.1.6
     source_path: instrumentation/couchbase/couchbase-3.1.6
@@ -426,10 +434,12 @@ libraries:
     configurations:
     - name: otel.instrumentation.executors.include
       description: List of Executor subclasses to be instrumented.
+      type: list
       default: ''
     - name: otel.instrumentation.executors.include-all
       description: Whether to instrument all classes that implement the Executor interface.
-      default: 'false'
+      type: boolean
+      default: false
   finagle:
   - name: finagle-http-23.11
     source_path: instrumentation/finagle-http-23.11
@@ -763,13 +773,16 @@ libraries:
     - name: otel.instrumentation.jdbc.statement-sanitizer.enabled
       description: Enables statement sanitization for database queries. Takes precedent
         to otel.instrumentation.common.db-statement-sanitizer.enabled.
-      default: 'true'
+      type: boolean
+      default: true
     - name: otel.instrumentation.common.db-statement-sanitizer.enabled
       description: Enables statement sanitization for database queries.
-      default: 'true'
+      type: boolean
+      default: true
     - name: otel.instrumentation.common.peer-service-mapping
       description: Used to specify a mapping from host names or IP addresses to peer
         services.
+      type: map
       default: ''
   jedis:
   - name: jedis-1.4
@@ -927,6 +940,15 @@ libraries:
     target_versions:
       javaagent:
       - org.apache.kafka:kafka-clients:[0.11.0.0,)
+    configurations:
+    - name: otel.instrumentation.kafka.producer-propagation.enabled
+      description: Enable context propagation for kafka message producers.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.kafka.experimental-span-attributes
+      description: Enables the capture of the experimental consumer attribute "kafka.record.queue_time_ms"
+      type: boolean
+      default: false
   kotlinx:
   - name: kotlinx-coroutines
     source_path: instrumentation/kotlinx-coroutines
@@ -1180,6 +1202,14 @@ libraries:
       javaagent:
       - com.squareup.okhttp:okhttp:[2.2,3)
   opensearch:
+  - name: opensearch-rest-3.0
+    source_path: instrumentation/opensearch/opensearch-rest-3.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.opensearch-rest-3.0
+    target_versions:
+      javaagent:
+      - org.opensearch.client:opensearch-rest-client:[3.0,)
   - name: opensearch-rest-1.0
     source_path: instrumentation/opensearch/opensearch-rest-1.0
     minimum_java_version: 11
@@ -1187,7 +1217,7 @@ libraries:
       name: io.opentelemetry.opensearch-rest-1.0
     target_versions:
       javaagent:
-      - org.opensearch.client:opensearch-rest-client:[1.0,)
+      - org.opensearch.client:opensearch-rest-client:[1.0,3.0)
   oracle:
   - name: oracle-ucp-11.2
     source_path: instrumentation/oracle-ucp-11.2

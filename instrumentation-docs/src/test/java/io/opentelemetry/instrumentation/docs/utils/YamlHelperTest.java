@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
+import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationClassification;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
@@ -112,7 +113,8 @@ class YamlHelperTest {
                 new ConfigurationOption(
                     "otel.instrumentation.spring-web-6.0.enabled",
                     "Enables or disables Spring Web 6.0 instrumentation.",
-                    "true")));
+                    "true",
+                    ConfigurationType.BOOLEAN)));
 
     modules.add(
         new InstrumentationModule.Builder()
@@ -180,7 +182,8 @@ class YamlHelperTest {
                 configurations:
                 - name: otel.instrumentation.spring-web-6.0.enabled
                   description: Enables or disables Spring Web 6.0 instrumentation.
-                  default: 'true'
+                  type: boolean
+                  default: true
             internal:
             - name: internal-application-logger
               source_path: instrumentation/internal/internal-application-logger
@@ -209,6 +212,7 @@ class YamlHelperTest {
             configurations:
               - name: otel.instrumentation.common.db-statement-sanitizer.enabled
                 description: Enables statement sanitization for database queries.
+                type: boolean
                 default: true
             """;
 
@@ -262,6 +266,7 @@ class YamlHelperTest {
             configurations:
               - name: otel.instrumentation.common.db-statement-sanitizer.enabled
                 description: Enables statement sanitization for database queries.
+                type: boolean
                 default: true
         """;
     InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
@@ -276,5 +281,6 @@ class YamlHelperTest {
     assertThat(config.description())
         .isEqualTo("Enables statement sanitization for database queries.");
     assertThat(config.defaultValue()).isEqualTo("true");
+    assertThat(config.type()).isEqualTo(ConfigurationType.BOOLEAN);
   }
 }

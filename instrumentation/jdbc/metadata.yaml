@@ -7,10 +7,13 @@ configurations:
   - name: otel.instrumentation.jdbc.statement-sanitizer.enabled
     description: Enables statement sanitization for database queries. Takes precedent to 
       otel.instrumentation.common.db-statement-sanitizer.enabled.
+    type: boolean
     default: true
   - name: otel.instrumentation.common.db-statement-sanitizer.enabled
     description: Enables statement sanitization for database queries.
+    type: boolean
     default: true
   - name: otel.instrumentation.common.peer-service-mapping
     description: Used to specify a mapping from host names or IP addresses to peer services.
+    type: map
     default: ""
