@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
+package io.opentelemetry.instrumentation.awssdk.v2_2.metrics;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -163,4 +163,4 @@ class OpenTelemetryMetricPublisherTest {
     // Create the MetricCollection using DefaultMetricCollection
     return new DefaultMetricCollection("ApiCall", metrics, Collections.emptyList());
   }
-}
+} 

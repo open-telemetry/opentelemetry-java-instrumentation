@@ -27,10 +27,6 @@ dependencies {
   testLibrary("software.amazon.awssdk:rds:2.2.0")
   testLibrary("software.amazon.awssdk:s3:2.2.0")
   testLibrary("software.amazon.awssdk:ses:2.2.0")
-
-  // Add missing AWS SDK metric dependencies for tests
-  testImplementation("software.amazon.awssdk:sdk-core:2.25.63")
-  testImplementation("software.amazon.awssdk:metrics-spi:2.25.63")
 }
 
 testing {
@@ -75,6 +71,18 @@ testing {
         } else {
           implementation("software.amazon.awssdk:bedrockruntime:2.25.63")
         }
+      }
+    }
+
+     val testMetricPublisher by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
+        // Add AWS SDK metric dependencies specifically for this test suite
+        implementation("software.amazon.awssdk:sdk-core:2.25.63")
+        implementation("software.amazon.awssdk:metrics-spi:2.25.63")
+        // Add main source set as a dependency
+        implementation(sourceSets["main"].output)
       }
     }
   }
