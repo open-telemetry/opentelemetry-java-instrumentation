@@ -189,7 +189,12 @@ public enum MetricSpec {
     return strategyFactory.apply(meter, metricPrefix);
   }
 
-  /** Denotes where in the AWS-SDK metric hierarchy the metric lives. */
+  /**
+   * Denotes where in the AWS-SDK metric hierarchy the metric lives.
+   *
+   * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+   * at any time.
+   */
   public enum Scope {
     REQUEST,
     ATTEMPT,
