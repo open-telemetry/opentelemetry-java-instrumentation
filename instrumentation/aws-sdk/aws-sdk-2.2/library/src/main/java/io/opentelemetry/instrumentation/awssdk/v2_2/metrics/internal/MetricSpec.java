@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awssdk.v2_2.metrics;
+package io.opentelemetry.instrumentation.awssdk.v2_2.metrics.internal;
 
 import io.opentelemetry.api.metrics.Meter;
 import java.util.function.BiFunction;
@@ -189,12 +189,7 @@ public enum MetricSpec {
     return strategyFactory.apply(meter, metricPrefix);
   }
 
-  /**
-   * Denotes where in the AWS-SDK metric hierarchy the metric lives.
-   *
-   * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
-   * at any time.
-   */
+  /** Denotes where in the AWS-SDK metric hierarchy the metric lives. */
   public enum Scope {
     REQUEST,
     ATTEMPT,
