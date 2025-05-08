@@ -8,9 +8,12 @@ import software.amazon.awssdk.http.HttpMetric;
 /**
  * Catalogue of AWS-SDK metric definitions that this instrumentation recognizes.
  * <p>
- * Each enum constant knows: (1) the SDK metric identifier, (2) the scope in the
- * request/attempt/http hierarchy, and (3) how to build the {@link MetricStrategy}
- * that records the metric.
+ * Each enum constant knows: 
+ * (1) the SDK metric identifier
+ * (2) the scope in the request/attempt/http hierarchy
+ * (3) how to build the {@link MetricStrategy} that records the metric.
+ * <p>
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at any time.
  */
 public enum MetricSpec {
   // per-request metrics
@@ -106,6 +109,7 @@ public enum MetricSpec {
 
   private final String sdkMetricName;
   private final Scope scope;
+  @SuppressWarnings("ImmutableEnumChecker")
   private final BiFunction<Meter, String, MetricStrategy> strategyFactory;
 
   MetricSpec(String sdkMetricName, Scope scope, BiFunction<Meter, String, MetricStrategy> strategyFactory) {
@@ -127,6 +131,10 @@ public enum MetricSpec {
     return strategyFactory.apply(meter, metricPrefix);
   }
 
-  /** Denotes where in the AWS-SDK metric hierarchy the metric lives. */
+  /**
+   * Denotes where in the AWS-SDK metric hierarchy the metric lives.
+   *
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at any time.
+   */
   public enum Scope { REQUEST, ATTEMPT, HTTP }
 }

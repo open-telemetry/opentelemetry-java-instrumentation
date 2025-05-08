@@ -23,10 +23,11 @@ import software.amazon.awssdk.metrics.MetricRecord;
 /**
  * A metrics reporter that reports AWS SDK metrics to OpenTelemetry.
  * The metric names, descriptions, and units are defined based on <a href="https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/metrics-list.html">AWS SDK Metrics List</a>.
+ * <p>
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at any time.
  */
 public class OpenTelemetryMetricPublisher implements MetricPublisher {
-  private static final Logger logger = Logger.getLogger(
-      OpenTelemetryMetricPublisher.class.getName());
+  private static final Logger logger = Logger.getLogger(OpenTelemetryMetricPublisher.class.getName());
   private static final String DEFAULT_METRIC_PREFIX = "aws.sdk";
   private final Attributes baseAttributes;
 
@@ -108,12 +109,12 @@ public class OpenTelemetryMetricPublisher implements MetricPublisher {
     try {
       // Start processing from the root per-request metrics
       processPerRequestMetrics(metricCollection);
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       logger.log(Level.SEVERE, "An error occurred while publishing metrics", e);
     }
   }
 
-  private void recordMetrics(Map<String, MetricRecord<?>> metricsMap,
+  private static void recordMetrics(Map<String, MetricRecord<?>> metricsMap,
       Attributes attributes,
       Map<String, MetricStrategy> metricStrategies) {
     for (Map.Entry<String, MetricStrategy> entry : metricStrategies.entrySet()) {
@@ -173,7 +174,7 @@ public class OpenTelemetryMetricPublisher implements MetricPublisher {
     recordMetrics(metricsMap, attributes, httpMetrics);
   }
 
-  private Map<String, MetricRecord<?>> extractMetrics(MetricCollection metricCollection) {
+  private static Map<String, MetricRecord<?>> extractMetrics(MetricCollection metricCollection) {
     Map<String, MetricRecord<?>> metricMap = new HashMap<>();
     for (MetricRecord<?> metricRecord : metricCollection) {
       metricMap.put(metricRecord.metric().name(), metricRecord);
@@ -181,7 +182,7 @@ public class OpenTelemetryMetricPublisher implements MetricPublisher {
     return metricMap;
   }
 
-  private String getStringMetricValue(Map<String, MetricRecord<?>> metricsMap, String metricName) {
+  private static String getStringMetricValue(Map<String, MetricRecord<?>> metricsMap, String metricName) {
     MetricRecord<?> metricRecord = metricsMap.get(metricName);
     if (metricRecord != null) {
       Object value = metricRecord.value();
@@ -193,7 +194,7 @@ public class OpenTelemetryMetricPublisher implements MetricPublisher {
   }
 
   @SuppressWarnings("SameParameterValue")
-  private boolean getBooleanMetricValue(Map<String, MetricRecord<?>> metricsMap,
+  private static boolean getBooleanMetricValue(Map<String, MetricRecord<?>> metricsMap,
       String metricName) {
     MetricRecord<?> metricRecord = metricsMap.get(metricName);
     if (metricRecord != null) {
@@ -205,7 +206,7 @@ public class OpenTelemetryMetricPublisher implements MetricPublisher {
     return false;
   }
 
-  private int getIntMetricValue(Map<String, MetricRecord<?>> metricsMap, String metricName) {
+  private static int getIntMetricValue(Map<String, MetricRecord<?>> metricsMap, String metricName) {
     MetricRecord<?> metricRecord = metricsMap.get(metricName);
     if (metricRecord != null) {
       Object value = metricRecord.value();

@@ -10,7 +10,6 @@ dependencies {
   library("software.amazon.awssdk:lambda:2.2.0")
   library("software.amazon.awssdk:sns:2.2.0")
   library("software.amazon.awssdk:aws-json-protocol:2.2.0")
-  library("software.amazon.awssdk:metrics-spi:2.2.0")
   // json-utils was added in 2.17.0
   compileOnly("software.amazon.awssdk:json-utils:2.17.0")
   compileOnly(project(":muzzle")) // For @NoMuzzle
@@ -28,6 +27,10 @@ dependencies {
   testLibrary("software.amazon.awssdk:rds:2.2.0")
   testLibrary("software.amazon.awssdk:s3:2.2.0")
   testLibrary("software.amazon.awssdk:ses:2.2.0")
+
+  // Add missing AWS SDK metric dependencies for tests
+  testImplementation("software.amazon.awssdk:sdk-core:2.25.63")
+  testImplementation("software.amazon.awssdk:metrics-spi:2.25.63")
 }
 
 testing {
