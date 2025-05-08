@@ -85,7 +85,7 @@ val DEPENDENCIES = listOf(
   "org.spockframework:spock-core:2.4-M6-groovy-4.0",
   "org.spockframework:spock-junit4:2.4-M6-groovy-4.0",
 
-  "io.r2dbc:r2dbc-proxy:1.1.5.RELEASE",
+  "io.r2dbc:r2dbc-proxy:1.1.6.RELEASE",
   "ch.qos.logback:logback-classic:1.3.15", // 1.4+ requires Java 11+
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
@@ -106,6 +106,7 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-aws-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-gcp-resources:${otelContribVersion}",
+  "io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-baggage-processor:${otelContribVersion}",
   "io.opentelemetry.proto:opentelemetry-proto:1.5.0-alpha",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
