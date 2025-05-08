@@ -9,10 +9,20 @@ To instrument all AWS SDK clients include the `opentelemetry-aws-sdk-2.2-autocon
 To register instrumentation only on a specific SDK client, register the interceptor when creating it.
 
 ```java
-AwsSdkTelemetry telemetry = AwsSdkTelemetry.create(openTelemetry).build();
+// For tracing
+AwsSdkTelemetry telemetry = AwsSdkTelemetry.create(openTelemetry);
 DynamoDbClient client = DynamoDbClient.builder()
   .overrideConfiguration(ClientOverrideConfiguration.builder()
-    .addExecutionInterceptor(telemetry.newExecutionInterceptor()))
+    .addExecutionInterceptor(telemetry.newExecutionInterceptor())
+    .build())
+  .build();
+
+// For metrics (can be used independently of tracing)
+MetricPublisher metricPublisher = new OpenTelemetryMetricPublisher(openTelemetry);
+
+DynamoDbClient client = DynamoDbClient.builder()
+  .overrideConfiguration(ClientOverrideConfiguration.builder()
+    .addMetricPublisher(metricPublisher)
     .build())
   .build();
 ```
@@ -28,6 +38,40 @@ SqsAsyncClientBuilder sqsAsyncClientBuilder = SqsAsyncClient.builder();
 ...
 SqsAsyncClient sqsAsyncClient = telemetry.wrap(sqsAsyncClientBuilder.build());
 ```
+
+## Metrics
+
+The AWS SDK instrumentation can publish AWS SDK metrics to OpenTelemetry. This includes metrics like:
+- API call latencies
+- Retry counts
+- Throttling events
+- And other AWS SDK metrics
+
+To enable metrics, instantiate `OpenTelemetryMetricPublisher` (or your own decorator around it)
+and register it with the client:
+
+```java
+// Minimal setup – uses the common ForkJoinPool and the default metric prefix "aws.sdk"
+MetricPublisher metricPublisher = new OpenTelemetryMetricPublisher(openTelemetry);
+
+// Optional customization
+Executor executor = Executors.newFixedThreadPool(4);
+String metricPrefix = "mycompany.aws.sdk"; // will be used as Meter instrumentation scope
+Attributes staticAttributes = Attributes.builder().put("env", "prod").build();
+MetricPublisher metricPublisher = new OpenTelemetryMetricPublisher(openTelemetry, metricPrefix, executor, staticAttributes);
+
+DynamoDbClient client = DynamoDbClient.builder()
+  .overrideConfiguration(ClientOverrideConfiguration.builder()
+    .addMetricPublisher(metricPublisher)
+    .build())
+  .build();
+```
+
+The publisher emits the full hierarchy of AWS-SDK metrics (per-request, per-attempt, and HTTP)
+to the OpenTelemetry SDK. Instrument names are prefixed with your `metricPrefix` (default
+`aws.sdk.`) and attributes include service, operation name, retry count, success flag,
+HTTP status code and error type when relevant. Attribute objects are cached internally
+to minimize GC overhead.
 
 ## Trace propagation
 

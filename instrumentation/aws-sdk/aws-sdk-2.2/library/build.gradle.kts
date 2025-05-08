@@ -10,6 +10,7 @@ dependencies {
   library("software.amazon.awssdk:lambda:2.2.0")
   library("software.amazon.awssdk:sns:2.2.0")
   library("software.amazon.awssdk:aws-json-protocol:2.2.0")
+  library("software.amazon.awssdk:metrics-spi:2.2.0")
   // json-utils was added in 2.17.0
   compileOnly("software.amazon.awssdk:json-utils:2.17.0")
   compileOnly(project(":muzzle")) // For @NoMuzzle
