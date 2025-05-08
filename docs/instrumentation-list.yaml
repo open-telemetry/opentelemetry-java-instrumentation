@@ -6,7 +6,7 @@ libraries:
   activej:
   - name: activej-http-6.0
     description: This instrumentation provides SERVER spans and metrics for the ActiveJ
-      HttpServer.
+      HTTP server.
     source_path: instrumentation/activej-http-6.0
     minimum_java_version: 17
     scope:
@@ -45,7 +45,7 @@ libraries:
   alibaba:
   - name: alibaba-druid-1.0
     description: |
-      The Druid instrumentation generates database connection pool metrics for druid data sources.
+      The Alibaba Druid instrumentation generates database connection pool metrics for druid data sources.
     source_path: instrumentation/alibaba-druid-1.0
     scope:
       name: io.opentelemetry.alibaba-druid-1.0
