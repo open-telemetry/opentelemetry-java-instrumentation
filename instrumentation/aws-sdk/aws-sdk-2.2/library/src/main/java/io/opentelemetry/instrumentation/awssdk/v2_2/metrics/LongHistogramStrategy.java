@@ -12,12 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import software.amazon.awssdk.metrics.MetricRecord;
 
-/**
- * Records long value metrics using a LongHistogram.
- *
- * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
- * at any time.
- */
+/** Strategy for recording long histogram metrics from AWS SDK. */
 public class LongHistogramStrategy implements MetricStrategy {
   private static final Logger logger = Logger.getLogger(LongHistogramStrategy.class.getName());
   private final LongHistogram histogram;

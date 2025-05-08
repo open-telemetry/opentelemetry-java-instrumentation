@@ -30,9 +30,6 @@ import software.amazon.awssdk.metrics.MetricRecord;
  * and units are defined based on <a
  * href="https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/metrics-list.html">AWS SDK
  * Metrics List</a>.
- *
- * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
- * at any time.
  */
 public class OpenTelemetryMetricPublisher implements MetricPublisher {
   private static final Logger logger =

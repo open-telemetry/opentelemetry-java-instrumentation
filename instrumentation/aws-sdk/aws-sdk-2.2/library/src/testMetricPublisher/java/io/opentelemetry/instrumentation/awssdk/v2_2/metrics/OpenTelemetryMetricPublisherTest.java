@@ -163,4 +163,4 @@ class OpenTelemetryMetricPublisherTest {
     // Create the MetricCollection using DefaultMetricCollection
     return new DefaultMetricCollection("ApiCall", metrics, Collections.emptyList());
   }
-} 
+}

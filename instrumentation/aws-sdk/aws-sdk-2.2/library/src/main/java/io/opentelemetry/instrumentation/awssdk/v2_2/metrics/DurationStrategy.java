@@ -13,12 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import software.amazon.awssdk.metrics.MetricRecord;
 
-/**
- * Records duration metrics using a LongHistogram.
- *
- * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
- * at any time.
- */
+/** Strategy for recording duration metrics from AWS SDK. */
 public class DurationStrategy implements MetricStrategy {
   private static final Logger logger = Logger.getLogger(DurationStrategy.class.getName());
   private final LongHistogram histogram;

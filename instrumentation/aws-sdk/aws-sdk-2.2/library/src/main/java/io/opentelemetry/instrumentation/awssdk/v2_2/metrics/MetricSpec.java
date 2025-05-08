@@ -11,7 +11,7 @@ import software.amazon.awssdk.core.metrics.CoreMetric;
 import software.amazon.awssdk.http.HttpMetric;
 
 /**
- * Catalogue of AWS-SDK metric definitions that this instrumentation recognizes.
+ * Specification for AWS SDK metrics that can be recorded by OpenTelemetry.
  *
  * <p>Each enum constant knows: (1) the SDK metric identifier (2) the scope in the
  * request/attempt/http hierarchy (3) how to build the {@link MetricStrategy} that records the

@@ -10,14 +10,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import software.amazon.awssdk.metrics.MetricRecord;
 
-/**
- * A {@link MetricStrategy} that delegates to another {@link MetricStrategy} and catches any
+/** A {@link MetricStrategy} that delegates to another {@link MetricStrategy} and catches any
  * exceptions that occur during the delegation. If an exception occurs, it logs a warning and
- * continues.
- *
- * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
- * at any time.
- */
+ * continues. */
 public class MetricStrategyWithoutErrors implements MetricStrategy {
   private static final Logger logger =
       Logger.getLogger(MetricStrategyWithoutErrors.class.getName());

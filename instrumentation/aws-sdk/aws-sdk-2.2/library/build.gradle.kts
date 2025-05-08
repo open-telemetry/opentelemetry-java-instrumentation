@@ -74,7 +74,7 @@ testing {
       }
     }
 
-     val testMetricPublisher by registering(JvmTestSuite::class) {
+    val testMetricPublisher by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))

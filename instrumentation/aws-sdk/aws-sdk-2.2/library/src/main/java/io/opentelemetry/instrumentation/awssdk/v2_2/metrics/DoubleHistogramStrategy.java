@@ -12,12 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import software.amazon.awssdk.metrics.MetricRecord;
 
-/**
- * Records double value metrics using a DoubleHistogram.
- *
- * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
- * at any time.
- */
+/** Strategy for recording double histogram metrics from AWS SDK. */
 public class DoubleHistogramStrategy implements MetricStrategy {
   private static final Logger logger = Logger.getLogger(DoubleHistogramStrategy.class.getName());
   private final DoubleHistogram histogram;
