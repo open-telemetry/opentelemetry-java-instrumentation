@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -21,19 +26,26 @@ import software.amazon.awssdk.metrics.MetricPublisher;
 import software.amazon.awssdk.metrics.MetricRecord;
 
 /**
- * A metrics reporter that reports AWS SDK metrics to OpenTelemetry.
- * The metric names, descriptions, and units are defined based on <a href="https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/metrics-list.html">AWS SDK Metrics List</a>.
- * <p>
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at any time.
+ * A metrics reporter that reports AWS SDK metrics to OpenTelemetry. The metric names, descriptions,
+ * and units are defined based on <a
+ * href="https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/metrics-list.html">AWS SDK
+ * Metrics List</a>.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public class OpenTelemetryMetricPublisher implements MetricPublisher {
-  private static final Logger logger = Logger.getLogger(OpenTelemetryMetricPublisher.class.getName());
+  private static final Logger logger =
+      Logger.getLogger(OpenTelemetryMetricPublisher.class.getName());
   private static final String DEFAULT_METRIC_PREFIX = "aws.sdk";
   private final Attributes baseAttributes;
 
-  private final Map<String, Map<Boolean, Map<Integer, Attributes>>> perRequestAttributesCache = new ConcurrentHashMap<>();
-  private final Map<Attributes, Map<String, Attributes>> perAttemptAttributesCache = new ConcurrentHashMap<>();
-  private final Map<Attributes, Map<Integer, Attributes>> perHttpAttributesCache = new ConcurrentHashMap<>();
+  private final Map<String, Map<Boolean, Map<Integer, Attributes>>> perRequestAttributesCache =
+      new ConcurrentHashMap<>();
+  private final Map<Attributes, Map<String, Attributes>> perAttemptAttributesCache =
+      new ConcurrentHashMap<>();
+  private final Map<Attributes, Map<Integer, Attributes>> perHttpAttributesCache =
+      new ConcurrentHashMap<>();
 
   private final Executor executor;
   private final String metricPrefix;
@@ -49,12 +61,13 @@ public class OpenTelemetryMetricPublisher implements MetricPublisher {
     this(openTelemetry, metricPrefix, ForkJoinPool.commonPool(), Attributes.empty());
   }
 
-  public OpenTelemetryMetricPublisher(OpenTelemetry openTelemetry, String metricPrefix,
-      Executor executor) {
+  public OpenTelemetryMetricPublisher(
+      OpenTelemetry openTelemetry, String metricPrefix, Executor executor) {
     this(openTelemetry, metricPrefix, executor, Attributes.empty());
   }
 
-  public OpenTelemetryMetricPublisher(OpenTelemetry openTelemetry,
+  public OpenTelemetryMetricPublisher(
+      OpenTelemetry openTelemetry,
       String metricPrefix,
       Executor executor,
       Attributes baseAttributes) {
@@ -63,7 +76,8 @@ public class OpenTelemetryMetricPublisher implements MetricPublisher {
     Objects.requireNonNull(baseAttributes, "baseAttributes must not be null");
 
     if (executor == null) {
-      logger.log(Level.WARNING,
+      logger.log(
+          Level.WARNING,
           "An executor is not provided. The metrics will be published synchronously on the calling thread.");
     }
     Meter meter = openTelemetry.getMeter(metricPrefix);
@@ -86,7 +100,8 @@ public class OpenTelemetryMetricPublisher implements MetricPublisher {
     try {
       executor.execute(() -> publishInternal(metricCollection));
     } catch (RejectedExecutionException ex) {
-      logger.log(Level.WARNING,
+      logger.log(
+          Level.WARNING,
           "Some AWS SDK client-side metrics have been dropped because an internal executor did not accept the task.",
           ex);
     }
@@ -100,9 +115,11 @@ public class OpenTelemetryMetricPublisher implements MetricPublisher {
   private Map<String, MetricStrategy> initStrategies(MetricSpec.Scope scope, Meter meter) {
     return Arrays.stream(MetricSpec.values())
         .filter(s -> s.getScope() == scope)
-        .collect(Collectors.toMap(
-            MetricSpec::getSdkMetricName,
-            metricSpec -> new MetricStrategyWithoutErrors(metricSpec.create(meter, metricPrefix))));
+        .collect(
+            Collectors.toMap(
+                MetricSpec::getSdkMetricName,
+                metricSpec ->
+                    new MetricStrategyWithoutErrors(metricSpec.create(meter, metricPrefix))));
   }
 
   private void publishInternal(MetricCollection metricCollection) {
@@ -114,7 +131,8 @@ public class OpenTelemetryMetricPublisher implements MetricPublisher {
     }
   }
 
-  private static void recordMetrics(Map<String, MetricRecord<?>> metricsMap,
+  private static void recordMetrics(
+      Map<String, MetricRecord<?>> metricsMap,
       Attributes attributes,
       Map<String, MetricStrategy> metricStrategies) {
     for (Map.Entry<String, MetricStrategy> entry : metricStrategies.entrySet()) {
@@ -143,8 +161,8 @@ public class OpenTelemetryMetricPublisher implements MetricPublisher {
     }
   }
 
-  private void processPerAttemptMetrics(MetricCollection attemptMetrics,
-      Attributes parentAttributes) {
+  private void processPerAttemptMetrics(
+      MetricCollection attemptMetrics, Attributes parentAttributes) {
     Map<String, MetricRecord<?>> metricsMap = extractMetrics(attemptMetrics);
 
     // Extract ErrorType if present
@@ -162,8 +180,8 @@ public class OpenTelemetryMetricPublisher implements MetricPublisher {
     }
   }
 
-  private void processHttpMetrics(MetricCollection httpMetricsCollection,
-      Attributes parentAttributes) {
+  private void processHttpMetrics(
+      MetricCollection httpMetricsCollection, Attributes parentAttributes) {
     Map<String, MetricRecord<?>> metricsMap = extractMetrics(httpMetricsCollection);
 
     // Extract HTTP status code
@@ -182,7 +200,8 @@ public class OpenTelemetryMetricPublisher implements MetricPublisher {
     return metricMap;
   }
 
-  private static String getStringMetricValue(Map<String, MetricRecord<?>> metricsMap, String metricName) {
+  private static String getStringMetricValue(
+      Map<String, MetricRecord<?>> metricsMap, String metricName) {
     MetricRecord<?> metricRecord = metricsMap.get(metricName);
     if (metricRecord != null) {
       Object value = metricRecord.value();
@@ -194,8 +213,8 @@ public class OpenTelemetryMetricPublisher implements MetricPublisher {
   }
 
   @SuppressWarnings("SameParameterValue")
-  private static boolean getBooleanMetricValue(Map<String, MetricRecord<?>> metricsMap,
-      String metricName) {
+  private static boolean getBooleanMetricValue(
+      Map<String, MetricRecord<?>> metricsMap, String metricName) {
     MetricRecord<?> metricRecord = metricsMap.get(metricName);
     if (metricRecord != null) {
       Object value = metricRecord.value();
@@ -217,38 +236,45 @@ public class OpenTelemetryMetricPublisher implements MetricPublisher {
     return 0;
   }
 
-  private Attributes toPerRequestAttributes(String operationName, boolean isSuccess,
-      int retryCount) {
+  private Attributes toPerRequestAttributes(
+      String operationName, boolean isSuccess, int retryCount) {
     String nullSafeOperationName = operationName == null ? "null" : operationName;
     return perRequestAttributesCache
         .computeIfAbsent(nullSafeOperationName, op -> new ConcurrentHashMap<>())
         .computeIfAbsent(isSuccess, success -> new ConcurrentHashMap<>())
-        .computeIfAbsent(retryCount, rc -> Attributes.builder()
-            .put("request_operation_name", nullSafeOperationName)
-            .put("request_is_success", isSuccess)
-            .put("request_retry_count", retryCount)
-            .putAll(this.baseAttributes)
-            .build());
+        .computeIfAbsent(
+            retryCount,
+            rc ->
+                Attributes.builder()
+                    .put("request_operation_name", nullSafeOperationName)
+                    .put("request_is_success", isSuccess)
+                    .put("request_retry_count", retryCount)
+                    .putAll(this.baseAttributes)
+                    .build());
   }
 
   private Attributes toAttemptAttributes(Attributes parentAttributes, String errorType) {
     String safeErrorType = errorType == null ? "no_error" : errorType;
     return perAttemptAttributesCache
         .computeIfAbsent(parentAttributes, attr -> new ConcurrentHashMap<>())
-        .computeIfAbsent(safeErrorType, type ->
-            Attributes.builder()
-                .putAll(parentAttributes)
-                .put("attempt_error_type", type)
-                .build());
+        .computeIfAbsent(
+            safeErrorType,
+            type ->
+                Attributes.builder()
+                    .putAll(parentAttributes)
+                    .put("attempt_error_type", type)
+                    .build());
   }
 
   private Attributes toHttpAttributes(Attributes parentAttributes, int httpStatusCode) {
     return perHttpAttributesCache
         .computeIfAbsent(parentAttributes, attr -> new ConcurrentHashMap<>())
-        .computeIfAbsent(httpStatusCode, code ->
-            Attributes.builder()
-                .putAll(parentAttributes)
-                .put("http_status_code", code)
-                .build());
+        .computeIfAbsent(
+            httpStatusCode,
+            code ->
+                Attributes.builder()
+                    .putAll(parentAttributes)
+                    .put("http_status_code", code)
+                    .build());
   }
 }

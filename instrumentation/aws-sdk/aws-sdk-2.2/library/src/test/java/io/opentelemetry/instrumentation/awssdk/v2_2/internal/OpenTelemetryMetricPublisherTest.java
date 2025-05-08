@@ -1,4 +1,11 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -9,17 +16,6 @@ import io.opentelemetry.sdk.metrics.data.HistogramData;
 import io.opentelemetry.sdk.metrics.data.HistogramPointData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import software.amazon.awssdk.core.metrics.CoreMetric;
-import software.amazon.awssdk.metrics.MetricCollection;
-import software.amazon.awssdk.metrics.MetricPublisher;
-import software.amazon.awssdk.metrics.MetricRecord;
-import software.amazon.awssdk.metrics.SdkMetric;
-import software.amazon.awssdk.metrics.internal.DefaultMetricCollection;
-import software.amazon.awssdk.metrics.internal.DefaultMetricRecord;
-
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,8 +26,16 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import software.amazon.awssdk.core.metrics.CoreMetric;
+import software.amazon.awssdk.metrics.MetricCollection;
+import software.amazon.awssdk.metrics.MetricPublisher;
+import software.amazon.awssdk.metrics.MetricRecord;
+import software.amazon.awssdk.metrics.SdkMetric;
+import software.amazon.awssdk.metrics.internal.DefaultMetricCollection;
+import software.amazon.awssdk.metrics.internal.DefaultMetricRecord;
 
 class OpenTelemetryMetricPublisherTest {
 
@@ -49,26 +53,28 @@ class OpenTelemetryMetricPublisherTest {
     metricReader = InMemoryMetricReader.create();
 
     // Setup some base attributes
-    Attributes baseAttributes = Attributes.of(AttributeKey.stringKey("custom.dimension.key.1"),
-        "CustomDimensionValue.1",
-        AttributeKey.stringKey("custom.dimension.key.2"), "CustomDimensionValue.2");
+    Attributes baseAttributes =
+        Attributes.of(
+            AttributeKey.stringKey("custom.dimension.key.1"),
+            "CustomDimensionValue.1",
+            AttributeKey.stringKey("custom.dimension.key.2"),
+            "CustomDimensionValue.2");
 
     // Set up the SdkMeterProvider with the metric reader
-    SdkMeterProvider sdkMeterProvider = SdkMeterProvider.builder()
-        .registerMetricReader(metricReader)
-        .build();
+    SdkMeterProvider sdkMeterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
 
     // Set up OpenTelemetry with the SdkMeterProvider
-    OpenTelemetrySdk openTelemetrySdk = OpenTelemetrySdk.builder()
-        .setMeterProvider(sdkMeterProvider)
-        .build();
+    OpenTelemetrySdk openTelemetrySdk =
+        OpenTelemetrySdk.builder().setMeterProvider(sdkMeterProvider).build();
 
     GlobalOpenTelemetry.resetForTest();
     GlobalOpenTelemetry.set(openTelemetrySdk);
 
     // Create an instance of OpenTelemetryMetricPublisher
-    metricPublisher = new OpenTelemetryMetricPublisher(GlobalOpenTelemetry.get(), basePrefix, executor,
-        baseAttributes);
+    metricPublisher =
+        new OpenTelemetryMetricPublisher(
+            GlobalOpenTelemetry.get(), basePrefix, executor, baseAttributes);
   }
 
   @AfterEach
@@ -106,7 +112,9 @@ class OpenTelemetryMetricPublisherTest {
 
     MetricData metricData = exportedMetrics.get(0);
     assertEquals(basePrefix + ".api_call_duration", metricData.getName());
-    assertEquals("The total time taken to finish a request (inclusive of all retries)", metricData.getDescription());
+    assertEquals(
+        "The total time taken to finish a request (inclusive of all retries)",
+        metricData.getDescription());
     assertEquals("ns", metricData.getUnit());
 
     // Verify the data points
@@ -117,13 +125,16 @@ class OpenTelemetryMetricPublisherTest {
     HistogramPointData point = points.iterator().next();
     assertEquals(100.0, point.getSum(), 0.001, "Expected sum to be 100.0");
     assertEquals(1, point.getCount(), "Expected count to be 1");
-    assertEquals("GetItem", point.getAttributes().get(AttributeKey.stringKey("request_operation_name")));
+    assertEquals(
+        "GetItem", point.getAttributes().get(AttributeKey.stringKey("request_operation_name")));
     assertEquals(true, point.getAttributes().get(AttributeKey.booleanKey("request_is_success")));
     assertEquals(0L, point.getAttributes().get(AttributeKey.longKey("request_retry_count")));
-    assertEquals("CustomDimensionValue.1", point.getAttributes()
-        .get(AttributeKey.stringKey("custom.dimension.key.1")));
-    assertEquals("CustomDimensionValue.2", point.getAttributes()
-        .get(AttributeKey.stringKey("custom.dimension.key.2")));
+    assertEquals(
+        "CustomDimensionValue.1",
+        point.getAttributes().get(AttributeKey.stringKey("custom.dimension.key.1")));
+    assertEquals(
+        "CustomDimensionValue.2",
+        point.getAttributes().get(AttributeKey.stringKey("custom.dimension.key.2")));
   }
 
   private static MetricCollection createMockMetricCollection() {
@@ -131,15 +142,18 @@ class OpenTelemetryMetricPublisherTest {
     Map<SdkMetric<?>, List<MetricRecord<?>>> metrics = new HashMap<>();
 
     // For API_CALL_DURATION
-    MetricRecord<Duration> apiCallDurationRecord = new DefaultMetricRecord<>(CoreMetric.API_CALL_DURATION, Duration.ofNanos(100));
+    MetricRecord<Duration> apiCallDurationRecord =
+        new DefaultMetricRecord<>(CoreMetric.API_CALL_DURATION, Duration.ofNanos(100));
     metrics.put(CoreMetric.API_CALL_DURATION, Collections.singletonList(apiCallDurationRecord));
 
     // For OPERATION_NAME
-    MetricRecord<String> operationNameRecord = new DefaultMetricRecord<>(CoreMetric.OPERATION_NAME, "GetItem");
+    MetricRecord<String> operationNameRecord =
+        new DefaultMetricRecord<>(CoreMetric.OPERATION_NAME, "GetItem");
     metrics.put(CoreMetric.OPERATION_NAME, Collections.singletonList(operationNameRecord));
 
     // For API_CALL_SUCCESSFUL
-    MetricRecord<Boolean> apiCallSuccessfulRecord = new DefaultMetricRecord<>(CoreMetric.API_CALL_SUCCESSFUL, true);
+    MetricRecord<Boolean> apiCallSuccessfulRecord =
+        new DefaultMetricRecord<>(CoreMetric.API_CALL_SUCCESSFUL, true);
     metrics.put(CoreMetric.API_CALL_SUCCESSFUL, Collections.singletonList(apiCallSuccessfulRecord));
 
     // For RETRY_COUNT
