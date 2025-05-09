@@ -156,7 +156,7 @@ libraries:
   avaje:
   - name: avaje-jex-3.0
     description: |
-      This instrumentation does not emit telemetry on its own. Instead, it hooks into the Avaje Jex Context to extract the HTTP route and attach it to existing SERVER span and HTTP server metrics.
+      This instrumentation does not emit telemetry on its own. Instead, it hooks into the Avaje Jex Context to extract the HTTP route and attach it to existing SERVER spans and HTTP server metrics.
     source_path: instrumentation/avaje-jex-3.0
     minimum_java_version: 21
     scope:
@@ -762,7 +762,7 @@ libraries:
   - name: jdbc
     description: |
       The JDBC instrumentation provides database client spans and metrics. Each call produces a span named after the SQL verb, enriched with standard DB client attributes (system, database, operation, sanitized statement, peer address) and error details if an exception occurs.
-    disabled_by_default: true
+      There is also a "jdbc-datasource" instrumentation that creates spans for datasource connections, but is disabled by default due to the volume of telemetry produced.
     source_path: instrumentation/jdbc
     scope:
       name: io.opentelemetry.jdbc
@@ -784,6 +784,10 @@ libraries:
         services.
       type: map
       default: ''
+    - name: otel.instrumentation.jdbc-datasource.enabled
+      description: Enables instrumentation of JDBC datasource connections.
+      type: boolean
+      default: false
   jedis:
   - name: jedis-1.4
     source_path: instrumentation/jedis/jedis-1.4
