@@ -63,19 +63,12 @@ class SqlClientAttributesExtractorTest {
       return read(map, "db.operation.batch.size", Long.class);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Map<String, String> getQueryParameters(Map<String, Object> map) {
-      String parameterString = read(map, "db.query.parameter");
-
-      if (parameterString == null) {
-        return Collections.emptyMap();
-      }
-
-      Map<String, String> parameters = new HashMap<>();
-      for (String s : parameterString.split(";")) {
-        parameters.put(Integer.toString(parameters.size()), s);
-      }
-      return parameters;
+      Map<String, String> parameters =
+          (Map<String, String>) read(map, "db.query.parameter", Map.class);
+      return parameters != null ? parameters : Collections.emptyMap();
     }
 
     protected String read(Map<String, Object> map, String key) {
@@ -414,7 +407,10 @@ class SqlClientAttributesExtractorTest {
         "db.statement",
         "SELECT col FROM table WHERE field1=? AND field2='A' AND field3=? AND field4=2");
     // a prepared parameters map
-    request.put("db.query.parameter", "'a';1");
+    Map<String, String> parameterMap = new HashMap<>();
+    parameterMap.put("0", "'a'");
+    parameterMap.put("1", "1");
+    request.put("db.query.parameter", parameterMap);
 
     Context context = Context.root();
 
@@ -449,13 +445,15 @@ class SqlClientAttributesExtractorTest {
     Map<String, Object> request = new HashMap<>();
     request.put("db.name", "potatoes");
     request.put("db.statements", singleton("INSERT INTO potato VALUES(?)"));
-    request.put("db.operation.batch.size", 1L);
-    request.put("db.query.parameter", "1");
+    request.put("db.operation.batch.size", 2L);
+    request.put("db.query.parameter", Collections.singletonMap("0", "1"));
 
     Context context = Context.root();
 
     AttributesExtractor<Map<String, Object>, Void> underTest =
-        SqlClientAttributesExtractor.create(new TestMultiAttributesGetter());
+        SqlClientAttributesExtractor.builder(new TestMultiAttributesGetter())
+            .setCaptureQueryParameters(true)
+            .build();
 
     // when
     AttributesBuilder startAttributes = Attributes.builder();
@@ -465,17 +463,7 @@ class SqlClientAttributesExtractorTest {
     underTest.onEnd(endAttributes, context, request, null, null);
 
     // then
-    if (SemconvStability.emitStableDatabaseSemconv() && SemconvStability.emitOldDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .doesNotContainKey(DB_QUERY_PARAMETER.getAttributeKey("0"));
-    } else if (SemconvStability.emitOldDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .doesNotContainKey(DB_QUERY_PARAMETER.getAttributeKey("0"));
-    } else if (SemconvStability.emitStableDatabaseSemconv()) {
-      assertThat(startAttributes.build())
-          .doesNotContainKey(DB_QUERY_PARAMETER.getAttributeKey("0"));
-    }
-
+    assertThat(startAttributes.build()).doesNotContainKey(DB_QUERY_PARAMETER.getAttributeKey("0"));
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
 }
