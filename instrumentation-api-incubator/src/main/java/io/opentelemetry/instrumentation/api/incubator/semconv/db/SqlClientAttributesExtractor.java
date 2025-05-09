@@ -71,18 +71,16 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       boolean captureQueryParameters) {
     super(getter);
     this.oldSemconvTableAttribute = oldSemconvTableAttribute;
-    // captureQueryParameters disables statementSanitizationEnabled
+    // capturing query parameters disables statement sanitization
     this.statementSanitizationEnabled = !captureQueryParameters && statementSanitizationEnabled;
     this.captureQueryParameters = captureQueryParameters;
   }
 
   @Override
-  @SuppressWarnings("AlreadyChecked")
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
     Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
-    Map<String, String> queryParameters = getter.getQueryParameters(request);
 
     if (rawQueryTexts.isEmpty()) {
       return;
@@ -104,7 +102,6 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         if (!SQL_CALL.equals(operation)) {
           internalSet(attributes, oldSemconvTableAttribute, sanitizedStatement.getMainIdentifier());
         }
-        setQueryParameters(attributes, isBatch, queryParameters);
       }
     }
 
@@ -124,7 +121,6 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         if (!SQL_CALL.equals(operation)) {
           internalSet(attributes, DB_COLLECTION_NAME, sanitizedStatement.getMainIdentifier());
         }
-        setQueryParameters(attributes, isBatch, queryParameters);
       } else {
         MultiQuery multiQuery =
             MultiQuery.analyze(getter.getRawQueryTexts(request), statementSanitizationEnabled);
@@ -140,6 +136,9 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         }
       }
     }
+
+    Map<String, String> queryParameters = getter.getQueryParameters(request);
+    setQueryParameters(attributes, isBatch, queryParameters);
   }
 
   private void setQueryParameters(
@@ -148,9 +147,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       for (Map.Entry<String, String> entry : queryParameters.entrySet()) {
         String key = entry.getKey();
         String value = entry.getValue();
-        if (value != null) {
-          internalSet(attributes, DB_QUERY_PARAMETER.getAttributeKey(key), value);
-        }
+        internalSet(attributes, DB_QUERY_PARAMETER.getAttributeKey(key), value);
       }
     }
   }

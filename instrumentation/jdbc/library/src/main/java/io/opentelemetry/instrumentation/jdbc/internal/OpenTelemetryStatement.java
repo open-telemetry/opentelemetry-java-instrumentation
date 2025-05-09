@@ -30,6 +30,7 @@ import java.sql.SQLException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 class OpenTelemetryStatement<S extends Statement> implements Statement {
@@ -385,7 +386,7 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
   }
 
   private <T, E extends Exception> T wrapBatchCall(ThrowingSupplier<T, E> callable) throws E {
-    DbRequest request = DbRequest.create(dbInfo, batchCommands, batchSize, null);
+    DbRequest request = DbRequest.create(dbInfo, batchCommands, batchSize, Collections.emptyMap());
     return wrapCall(request, callable);
   }
 }

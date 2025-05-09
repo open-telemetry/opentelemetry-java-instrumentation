@@ -98,6 +98,5 @@ public abstract class DbRequest {
   @Nullable
   public abstract Long getBatchSize();
 
-  @Nullable
   public abstract Map<String, String> getPreparedStatementParameters();
 }

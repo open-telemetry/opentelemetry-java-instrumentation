@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jdbc;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.JdbcPreparedStatementStringifier.stringifyParameter;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
@@ -90,6 +89,9 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
             .and(takesArguments(3))
             .and(isPublic()),
         PreparedStatementInstrumentation.class.getName() + "$SetTimeParameter3Advice");
+    transformer.applyAdviceToMethod(
+        named("clearParameters").and(takesNoArguments()).and(isPublic()),
+        PreparedStatementInstrumentation.class.getName() + "$ClearParametersAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -121,7 +123,7 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
       }
 
       Context parentContext = currentContext();
-      Map<String, String> parameters = JdbcData.parameters.get(statement);
+      Map<String, String> parameters = JdbcData.getParameters(statement);
       request = DbRequest.create(statement, parameters);
 
       if (request == null || !statementInstrumenter().shouldStart(parentContext, request)) {
@@ -172,23 +174,16 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
 
       String str = null;
 
-      if (value instanceof Boolean) {
-        str = stringifyParameter((Boolean) value);
-      } else if (value instanceof Number) {
-        // Short, Int, Long, Float, Double, BigDecimal
-        str = stringifyParameter((Number) value);
-      } else if (value instanceof String) {
-        str = stringifyParameter((String) value);
-      } else if (value instanceof Date) {
-        str = stringifyParameter((Date) value);
-      } else if (value instanceof Time) {
-        str = stringifyParameter((Time) value);
-      } else if (value instanceof Timestamp) {
-        str = stringifyParameter((Timestamp) value);
-      } else if (value instanceof URL) {
-        str = stringifyParameter((URL) value);
-      } else if (value instanceof RowId) {
-        str = stringifyParameter((RowId) value);
+      if (value instanceof Boolean
+          // Short, Int, Long, Float, Double, BigDecimal
+          || value instanceof Number
+          || value instanceof String
+          || value instanceof Date
+          || value instanceof Time
+          || value instanceof Timestamp
+          || value instanceof URL
+          || value instanceof RowId) {
+        str = value.toString();
       }
 
       if (str != null) {
@@ -211,17 +206,22 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
 
       String str = null;
 
-      if (value instanceof Date) {
-        str = stringifyParameter((Date) value);
-      } else if (value instanceof Time) {
-        str = stringifyParameter((Time) value);
-      } else if (value instanceof Timestamp) {
-        str = stringifyParameter((Timestamp) value);
+      if (value instanceof Date || value instanceof Time || value instanceof Timestamp) {
+        str = value.toString();
       }
 
       if (str != null) {
         JdbcData.addParameter(statement, Integer.toString(index - 1), str);
       }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ClearParametersAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void clearBatch(@Advice.This PreparedStatement statement) {
+      JdbcData.clearParameters(statement);
     }
   }
 }

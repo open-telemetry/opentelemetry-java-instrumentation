@@ -158,12 +158,12 @@ public class StatementInstrumentation implements TypeInstrumentation {
 
       Context parentContext = currentContext();
       if (statement instanceof PreparedStatement) {
-        Long batchSize = JdbcData.getPreparedStatementBatchSize((PreparedStatement) statement);
         String sql = JdbcData.preparedStatement.get((PreparedStatement) statement);
-        Map<String, String> parameters = JdbcData.parameters.get((PreparedStatement) statement);
         if (sql == null) {
           return;
         }
+        Long batchSize = JdbcData.getPreparedStatementBatchSize((PreparedStatement) statement);
+        Map<String, String> parameters = JdbcData.getParameters((PreparedStatement) statement);
         request = DbRequest.create(statement, sql, batchSize, parameters);
       } else {
         JdbcData.StatementBatchInfo batchInfo = JdbcData.getStatementBatchInfo(statement);

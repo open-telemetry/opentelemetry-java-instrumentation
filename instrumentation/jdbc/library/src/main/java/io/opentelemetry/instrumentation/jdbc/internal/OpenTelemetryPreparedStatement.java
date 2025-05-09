@@ -20,8 +20,6 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.JdbcPreparedStatementStringifier.stringifyParameter;
-
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.io.InputStream;
@@ -66,9 +64,9 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
     this.parameters = new HashMap<>();
   }
 
-  private void putParameter(int index, String value) {
-    if (this.captureQueryParameters) {
-      parameters.put(Integer.toString(index - 1), value);
+  private void putParameter(int index, Object value) {
+    if (this.captureQueryParameters && value != null) {
+      parameters.put(Integer.toString(index - 1), value.toString());
     }
   }
 
@@ -102,54 +100,55 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
   @Override
   public void setBoolean(int parameterIndex, boolean x) throws SQLException {
     delegate.setBoolean(parameterIndex, x);
-    putParameter(parameterIndex, stringifyParameter(x));
+    putParameter(parameterIndex, String.valueOf(x));
   }
 
   @Override
   public void setByte(int parameterIndex, byte x) throws SQLException {
     delegate.setByte(parameterIndex, x);
+    putParameter(parameterIndex, String.valueOf(x));
   }
 
   @Override
   public void setShort(int parameterIndex, short x) throws SQLException {
     delegate.setShort(parameterIndex, x);
-    putParameter(parameterIndex, stringifyParameter(x));
+    putParameter(parameterIndex, String.valueOf(x));
   }
 
   @Override
   public void setInt(int parameterIndex, int x) throws SQLException {
     delegate.setInt(parameterIndex, x);
-    putParameter(parameterIndex, stringifyParameter(x));
+    putParameter(parameterIndex, String.valueOf(x));
   }
 
   @Override
   public void setLong(int parameterIndex, long x) throws SQLException {
     delegate.setLong(parameterIndex, x);
-    putParameter(parameterIndex, stringifyParameter(x));
+    putParameter(parameterIndex, String.valueOf(x));
   }
 
   @Override
   public void setFloat(int parameterIndex, float x) throws SQLException {
     delegate.setFloat(parameterIndex, x);
-    putParameter(parameterIndex, stringifyParameter(x));
+    putParameter(parameterIndex, String.valueOf(x));
   }
 
   @Override
   public void setDouble(int parameterIndex, double x) throws SQLException {
     delegate.setDouble(parameterIndex, x);
-    putParameter(parameterIndex, stringifyParameter(x));
+    putParameter(parameterIndex, String.valueOf(x));
   }
 
   @Override
   public void setBigDecimal(int parameterIndex, BigDecimal x) throws SQLException {
     delegate.setBigDecimal(parameterIndex, x);
-    putParameter(parameterIndex, stringifyParameter(x));
+    putParameter(parameterIndex, x);
   }
 
   @Override
   public void setString(int parameterIndex, String x) throws SQLException {
     delegate.setString(parameterIndex, x);
-    putParameter(parameterIndex, stringifyParameter(x));
+    putParameter(parameterIndex, x);
   }
 
   @Override
@@ -161,41 +160,41 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
   @Override
   public void setDate(int parameterIndex, Date x) throws SQLException {
     delegate.setDate(parameterIndex, x);
-    putParameter(parameterIndex, stringifyParameter(x));
+    putParameter(parameterIndex, x);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setDate(int parameterIndex, Date x, Calendar cal) throws SQLException {
     delegate.setDate(parameterIndex, x, cal);
-    putParameter(parameterIndex, stringifyParameter(x));
+    putParameter(parameterIndex, x);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setTime(int parameterIndex, Time x) throws SQLException {
     delegate.setTime(parameterIndex, x);
-    putParameter(parameterIndex, stringifyParameter(x));
+    putParameter(parameterIndex, x);
   }
 
   @Override
   public void setTime(int parameterIndex, Time x, Calendar cal) throws SQLException {
     delegate.setTime(parameterIndex, x, cal);
-    putParameter(parameterIndex, stringifyParameter(x));
+    putParameter(parameterIndex, x);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
     delegate.setTimestamp(parameterIndex, x);
-    putParameter(parameterIndex, stringifyParameter(x));
+    putParameter(parameterIndex, x);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal) throws SQLException {
     delegate.setTimestamp(parameterIndex, x, cal);
-    putParameter(parameterIndex, stringifyParameter(x));
+    putParameter(parameterIndex, x);
   }
 
   @SuppressWarnings("UngroupedOverloads")
@@ -336,7 +335,7 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
   @Override
   public void setURL(int parameterIndex, URL x) throws SQLException {
     delegate.setURL(parameterIndex, x);
-    putParameter(parameterIndex, stringifyParameter(x));
+    putParameter(parameterIndex, x);
   }
 
   @Override
@@ -347,13 +346,13 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
   @Override
   public void setRowId(int parameterIndex, RowId x) throws SQLException {
     delegate.setRowId(parameterIndex, x);
-    putParameter(parameterIndex, stringifyParameter(x));
+    putParameter(parameterIndex, x);
   }
 
   @Override
   public void setNString(int parameterIndex, String value) throws SQLException {
     delegate.setNString(parameterIndex, value);
-    putParameter(parameterIndex, stringifyParameter(value));
+    putParameter(parameterIndex, value);
   }
 
   @SuppressWarnings("UngroupedOverloads")

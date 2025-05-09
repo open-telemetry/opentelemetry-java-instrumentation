@@ -50,9 +50,14 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Sets whether the {@code db.query.parameter.<key>} attributes extracted by the constructed
-   * {@link SqlClientAttributesExtractor} should be opted-in. If set to {@code true}, all parameters
-   * from {@code PreparedStatement} will be exposed as attributes. Disabled by default.
+   * Sets whether the query parameters should be captured as span attributes named {@code
+   * db.query.parameter.<key>}. Enabling this option disables the statement sanitization. Disabled
+   * by default.
+   *
+   * <p>WARNING: captured query parameters may contain sensitive information such as passwords,
+   * personally identifiable information or protected health info. Exposing such info may result in
+   * substantial fines and penalties or criminal liability. Consult your peers, superiors and a
+   * legal counsel before enabling this option.
    */
   @CanIgnoreReturnValue
   public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCaptureQueryParameters(

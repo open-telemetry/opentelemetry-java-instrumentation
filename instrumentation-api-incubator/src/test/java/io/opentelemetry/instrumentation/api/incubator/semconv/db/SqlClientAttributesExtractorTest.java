@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
-import org.spockframework.util.Nullable;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class SqlClientAttributesExtractorTest {
@@ -64,7 +63,6 @@ class SqlClientAttributesExtractorTest {
       return read(map, "db.operation.batch.size", Long.class);
     }
 
-    @Nullable
     @Override
     public Map<String, String> getQueryParameters(Map<String, Object> map) {
       String parameterString = read(map, "db.query.parameter");
