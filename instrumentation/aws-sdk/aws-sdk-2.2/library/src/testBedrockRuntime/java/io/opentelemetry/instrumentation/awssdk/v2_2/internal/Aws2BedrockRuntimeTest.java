@@ -944,9 +944,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             .build();
 
     SdkJsonGenerator generator0 = new SdkJsonGenerator(new JsonFactory(), "application/json");
-    software.amazon.awssdk.protocols.json.internal.marshall.DocumentTypeJsonMarshaller marshaller0 =
-        new software.amazon.awssdk.protocols.json.internal.marshall.DocumentTypeJsonMarshaller(
-            generator0);
+    DocumentTypeJsonMarshaller marshaller0 = new DocumentTypeJsonMarshaller(generator0);
     requestPayload0.accept(marshaller0);
 
     InvokeModelRequest request0 =
@@ -1144,9 +1142,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             .build();
 
     SdkJsonGenerator generator1 = new SdkJsonGenerator(new JsonFactory(), "application/json");
-    software.amazon.awssdk.protocols.json.internal.marshall.DocumentTypeJsonMarshaller marshaller1 =
-        new software.amazon.awssdk.protocols.json.internal.marshall.DocumentTypeJsonMarshaller(
-            generator1);
+    DocumentTypeJsonMarshaller marshaller1 = new DocumentTypeJsonMarshaller(generator1);
     requestPayload1.accept(marshaller1);
 
     InvokeModelRequest request1 =
@@ -1371,9 +1367,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             .build();
 
     SdkJsonGenerator generator0 = new SdkJsonGenerator(new JsonFactory(), "application/json");
-    software.amazon.awssdk.protocols.json.internal.marshall.DocumentTypeJsonMarshaller marshaller0 =
-        new software.amazon.awssdk.protocols.json.internal.marshall.DocumentTypeJsonMarshaller(
-            generator0);
+    DocumentTypeJsonMarshaller marshaller0 = new DocumentTypeJsonMarshaller(generator0);
     requestPayload0.accept(marshaller0);
 
     InvokeModelWithResponseStreamRequest request0 =
@@ -1649,9 +1643,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             .build();
 
     SdkJsonGenerator generator1 = new SdkJsonGenerator(new JsonFactory(), "application/json");
-    software.amazon.awssdk.protocols.json.internal.marshall.DocumentTypeJsonMarshaller marshaller1 =
-        new software.amazon.awssdk.protocols.json.internal.marshall.DocumentTypeJsonMarshaller(
-            generator1);
+    DocumentTypeJsonMarshaller marshaller1 = new DocumentTypeJsonMarshaller(generator1);
     requestPayload1.accept(marshaller1);
 
     InvokeModelWithResponseStreamRequest request1 =
@@ -1880,9 +1872,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             .build();
 
     SdkJsonGenerator generator0 = new SdkJsonGenerator(new JsonFactory(), "application/json");
-    software.amazon.awssdk.protocols.json.internal.marshall.DocumentTypeJsonMarshaller marshaller0 =
-        new software.amazon.awssdk.protocols.json.internal.marshall.DocumentTypeJsonMarshaller(
-            generator0);
+    DocumentTypeJsonMarshaller marshaller0 = new DocumentTypeJsonMarshaller(generator0);
     requestPayload0.accept(marshaller0);
 
     InvokeModelRequest request0 =
@@ -2060,9 +2050,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             .build();
 
     SdkJsonGenerator generator1 = new SdkJsonGenerator(new JsonFactory(), "application/json");
-    software.amazon.awssdk.protocols.json.internal.marshall.DocumentTypeJsonMarshaller marshaller1 =
-        new software.amazon.awssdk.protocols.json.internal.marshall.DocumentTypeJsonMarshaller(
-            generator1);
+    DocumentTypeJsonMarshaller marshaller1 = new DocumentTypeJsonMarshaller(generator1);
     requestPayload1.accept(marshaller1);
 
     InvokeModelRequest request1 =
@@ -2271,9 +2259,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             .build();
 
     SdkJsonGenerator generator0 = new SdkJsonGenerator(new JsonFactory(), "application/json");
-    software.amazon.awssdk.protocols.json.internal.marshall.DocumentTypeJsonMarshaller marshaller0 =
-        new software.amazon.awssdk.protocols.json.internal.marshall.DocumentTypeJsonMarshaller(
-            generator0);
+    DocumentTypeJsonMarshaller marshaller0 = new DocumentTypeJsonMarshaller(generator0);
     requestPayload0.accept(marshaller0);
 
     InvokeModelWithResponseStreamRequest request0 =
@@ -2539,8 +2525,7 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
             .build();
 
     SdkJsonGenerator generator1 = new SdkJsonGenerator(new JsonFactory(), "application/json");
-    software.amazon.awssdk.protocols.json.internal.marshall.DocumentTypeJsonMarshaller marshaller1 =
-        new DocumentTypeJsonMarshaller(generator1);
+    DocumentTypeJsonMarshaller marshaller1 = new DocumentTypeJsonMarshaller(generator1);
     requestPayload1.accept(marshaller1);
 
     InvokeModelWithResponseStreamRequest request1 =
