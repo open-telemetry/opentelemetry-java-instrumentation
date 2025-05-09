@@ -15,7 +15,7 @@ public final class RuntimeMetricsBuilder {
 
   private final OpenTelemetry openTelemetry;
 
-  private boolean enableExperimentalJmxTelemetry = false;
+  private boolean emitExperimentalTelemetry = false;
   private boolean captureGcCause = false;
 
   RuntimeMetricsBuilder(OpenTelemetry openTelemetry) {
@@ -24,8 +24,20 @@ public final class RuntimeMetricsBuilder {
 
   /** Enable all JMX telemetry collection. */
   @CanIgnoreReturnValue
+  public RuntimeMetricsBuilder emitExperimentalTelemetry() {
+    emitExperimentalTelemetry = true;
+    return this;
+  }
+
+  /**
+   * Enable experimental JMX telemetry collection.
+   *
+   * @deprecated Use {@link #emitExperimentalTelemetry()} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
   public RuntimeMetricsBuilder enableExperimentalJmxTelemetry() {
-    enableExperimentalJmxTelemetry = true;
+    emitExperimentalTelemetry = true;
     return this;
   }
 
@@ -40,7 +52,7 @@ public final class RuntimeMetricsBuilder {
   public RuntimeMetrics build() {
     List<AutoCloseable> observables =
         JmxRuntimeMetricsFactory.buildObservables(
-            openTelemetry, enableExperimentalJmxTelemetry, captureGcCause);
+            openTelemetry, emitExperimentalTelemetry, captureGcCause);
     return new RuntimeMetrics(observables);
   }
 }
