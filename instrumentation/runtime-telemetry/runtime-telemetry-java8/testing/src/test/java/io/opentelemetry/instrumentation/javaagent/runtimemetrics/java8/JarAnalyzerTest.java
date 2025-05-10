@@ -42,7 +42,7 @@ class JarAnalyzerTest {
   void processUrl_EmitsEvents(URL archiveUrl, Consumer<AttributesAssert> attributesConsumer) {
     ExtendedLogRecordBuilder builder = mock(ExtendedLogRecordBuilder.class);
     when(builder.setEventName(eq("package.info"))).thenReturn(builder);
-    when(builder.setAllAttributes(any())).thenReturn(builder);
+    when(builder.setAllAttributes(any(Attributes.class))).thenReturn(builder);
 
     JarAnalyzer.processUrl(builder, archiveUrl);
 
