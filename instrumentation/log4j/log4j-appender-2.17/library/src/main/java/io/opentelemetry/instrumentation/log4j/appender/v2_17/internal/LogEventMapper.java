@@ -161,7 +161,6 @@ public final class LogEventMapper<T> {
   }
 
   // visible for testing
-  @SuppressWarnings("unchecked")
   void captureMessage(
       LogRecordBuilder builder, ExtendedAttributesBuilder attributes, Message message) {
     if (message == null) {
@@ -194,17 +193,17 @@ public final class LogEventMapper<T> {
     }
   }
 
-  @SuppressWarnings("rawtypes")
   private static void consumeAttributes(
-      Consumer<BiConsumer> actionConsumer,
+      // Consumes an action on an entry, like map::forEach
+      Consumer<BiConsumer<String, Object>> entryActionConsumer,
       ExtendedAttributesBuilder attributes,
       boolean checkSpecialMapMessageAttribute,
       BiFunction<String, ExtendedAttributeType, ExtendedAttributeKey<?>> keyProvider) {
-    actionConsumer.accept(
+    entryActionConsumer.accept(
         (key, value) -> {
           if (value != null
               && (!checkSpecialMapMessageAttribute || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))) {
-            consumeEntry(key.toString(), value, attributes, keyProvider);
+            consumeEntry(key, value, attributes, keyProvider);
           }
         });
   }
@@ -323,7 +322,12 @@ public final class LogEventMapper<T> {
           list);
     } else if ((value instanceof Map)) {
       ExtendedAttributesBuilder nestedAttribute = ExtendedAttributes.builder();
-      consumeAttributes(((Map<?, ?>) value)::forEach, nestedAttribute, false, keyProvider);
+      Map<?, ?> nestedMap = (Map<?, ?>) value;
+      consumeAttributes(
+          consumer -> nestedMap.forEach((k, v) -> consumer.accept(k.toString(), v)),
+          nestedAttribute,
+          false,
+          keyProvider);
       attributes.put(
           (ExtendedAttributeKey<ExtendedAttributes>)
               keyProvider.apply(key, ExtendedAttributeType.EXTENDED_ATTRIBUTES),
@@ -334,11 +338,10 @@ public final class LogEventMapper<T> {
   }
 
   // visible for testing
-  @SuppressWarnings("unchecked")
   void captureContextDataAttributes(ExtendedAttributesBuilder attributes, T contextData) {
     if (captureAllContextDataAttributes) {
       consumeAttributes(
-          biConsumer -> contextDataAccessor.forEach(contextData, biConsumer),
+          entryConsumer -> contextDataAccessor.forEach(contextData, entryConsumer),
           attributes,
           false,
           LogEventMapper::getContextDataAttributeKey);
