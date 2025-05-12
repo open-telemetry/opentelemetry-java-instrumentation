@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_47.incubator;
+package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_50.incubator;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Collections.singletonList;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -20,18 +19,12 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class OpenTelemetryApiIncubatorInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public OpenTelemetryApiIncubatorInstrumentationModule() {
-    super("opentelemetry-api", "opentelemetry-api-1.47", "opentelemetry-api-incubator-1.47");
+    super("opentelemetry-api", "opentelemetry-api-1.50", "opentelemetry-api-incubator-1.50");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed(
-            "application.io.opentelemetry.api.common.Value",
-            "application.io.opentelemetry.api.incubator.logs.ExtendedLogger")
-        .and(
-            not(
-                hasClassesNamed(
-                    "application.io.opentelemetry.api.incubator.common.ExtendedAttributes")));
+    return hasClassesNamed("application.io.opentelemetry.api.incubator.common.ExtendedAttributes");
   }
 
   @Override

@@ -31,7 +31,7 @@ public class ApplicationLogRecordBuilder142 extends ApplicationLogRecordBuilder
   }
 
   @SuppressWarnings("unchecked")
-  private static io.opentelemetry.api.common.Value<?> convertValue(Value<?> value) {
+  protected static io.opentelemetry.api.common.Value<?> convertValue(Value<?> value) {
     if (value == null) {
       return null;
     }
