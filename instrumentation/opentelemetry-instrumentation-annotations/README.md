@@ -1,7 +1,6 @@
 # Settings for the OpenTelemetry Instrumentation Annotations integration
 
-Instruments methods annotated with OpenTelemetry instrumentation annotations, such as @WithSpan and
-@SpanAttribute.
+Instruments methods annotated with OpenTelemetry instrumentation annotations, such as @WithSpan, @SpanAttribute, @Counted and @Timed.
 
 | Environment variable                                                             | Type   | Default | Description                                                                       |
 | -------------------------------------------------------------------------------- | ------ | ------- | --------------------------------------------------------------------------------- |
