@@ -95,6 +95,13 @@ public abstract class AbstractRedissonClientTest {
       newAddress = "redis://" + address;
     }
     Config config = new Config();
+    try {
+      // script cache is enabled by default in 3.46.0 and that causes hashCommand and lockCommand
+      // tests to fail
+      Config.class.getMethod("setUseScriptCache", boolean.class).invoke(config, false);
+    } catch (NoSuchMethodException ignored) {
+      // ignored
+    }
     SingleServerConfig singleServerConfig = config.useSingleServer();
     singleServerConfig.setAddress(newAddress);
     singleServerConfig.setTimeout(30_000);
