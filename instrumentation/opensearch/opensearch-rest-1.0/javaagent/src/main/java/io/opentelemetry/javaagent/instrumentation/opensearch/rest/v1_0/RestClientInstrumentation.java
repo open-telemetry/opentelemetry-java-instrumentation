@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.v1_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.opensearch.rest.v1_0.OpenSearchRestSingletons.convertResponse;
+import static io.opentelemetry.javaagent.instrumentation.opensearch.rest.v1_0.OpenSearchRestSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -59,11 +61,11 @@ public class RestClientInstrumentation implements TypeInstrumentation {
 
       Context parentContext = currentContext();
       otelRequest = OpenSearchRestRequest.create(request.getMethod(), request.getEndpoint());
-      if (!OpenSearchRestSingletons.instrumenter().shouldStart(parentContext, otelRequest)) {
+      if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
       }
 
-      context = OpenSearchRestSingletons.instrumenter().start(parentContext, otelRequest);
+      context = instrumenter().start(parentContext, otelRequest);
       scope = context.makeCurrent();
     }
 
@@ -80,7 +82,7 @@ public class RestClientInstrumentation implements TypeInstrumentation {
       }
       scope.close();
 
-      OpenSearchRestSingletons.instrumenter().end(context, otelRequest, response, throwable);
+      instrumenter().end(context, otelRequest, convertResponse(response), throwable);
     }
   }
 
@@ -97,20 +99,21 @@ public class RestClientInstrumentation implements TypeInstrumentation {
 
       Context parentContext = currentContext();
       otelRequest = OpenSearchRestRequest.create(request.getMethod(), request.getEndpoint());
-      if (!OpenSearchRestSingletons.instrumenter().shouldStart(parentContext, otelRequest)) {
+      if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
       }
 
-      context = OpenSearchRestSingletons.instrumenter().start(parentContext, otelRequest);
+      context = instrumenter().start(parentContext, otelRequest);
       scope = context.makeCurrent();
 
       responseListener =
           new RestResponseListener(
               responseListener,
               parentContext,
-              OpenSearchRestSingletons.instrumenter(),
+              instrumenter(),
               context,
-              otelRequest);
+              otelRequest,
+              OpenSearchRestSingletons::convertResponse);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -126,7 +129,7 @@ public class RestClientInstrumentation implements TypeInstrumentation {
       scope.close();
 
       if (throwable != null) {
-        OpenSearchRestSingletons.instrumenter().end(context, otelRequest, null, throwable);
+        instrumenter().end(context, otelRequest, null, throwable);
       }
       // span ended in RestResponseListener
     }

@@ -134,6 +134,7 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
 
   @Override
   public void close() throws SQLException {
+    JdbcData.close(this);
     delegate.close();
   }
 

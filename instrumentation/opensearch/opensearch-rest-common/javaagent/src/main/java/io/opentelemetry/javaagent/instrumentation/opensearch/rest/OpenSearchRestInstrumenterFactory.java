@@ -12,16 +12,16 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNam
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
-import org.opensearch.client.Response;
 
 public final class OpenSearchRestInstrumenterFactory {
 
-  public static Instrumenter<OpenSearchRestRequest, Response> create(String instrumentationName) {
+  public static Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> create(
+      String instrumentationName) {
     OpenSearchRestAttributesGetter dbClientAttributesGetter = new OpenSearchRestAttributesGetter();
     OpenSearchRestNetResponseAttributesGetter netAttributesGetter =
         new OpenSearchRestNetResponseAttributesGetter();
 
-    return Instrumenter.<OpenSearchRestRequest, Response>builder(
+    return Instrumenter.<OpenSearchRestRequest, OpenSearchRestResponse>builder(
             GlobalOpenTelemetry.get(),
             instrumentationName,
             DbClientSpanNameExtractor.create(dbClientAttributesGetter))

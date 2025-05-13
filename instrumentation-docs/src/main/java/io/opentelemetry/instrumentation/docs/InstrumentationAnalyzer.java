@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.docs;
 
 import static io.opentelemetry.instrumentation.docs.parsers.GradleParser.parseGradleFile;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.opentelemetry.instrumentation.docs.internal.DependencyInfo;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
@@ -62,7 +63,7 @@ class InstrumentationAnalyzer {
    *
    * @return a list of {@link InstrumentationModule}
    */
-  List<InstrumentationModule> analyze() {
+  List<InstrumentationModule> analyze() throws JsonProcessingException {
     List<InstrumentationPath> paths = fileManager.getInstrumentationPaths();
     List<InstrumentationModule> modules = convertToInstrumentationModules(paths);
 

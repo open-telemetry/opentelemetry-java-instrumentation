@@ -55,6 +55,9 @@ public class StatementInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         namedOneOf("executeBatch", "executeLargeBatch").and(takesNoArguments()).and(isPublic()),
         StatementInstrumentation.class.getName() + "$ExecuteBatchAdvice");
+    transformer.applyAdviceToMethod(
+        named("close").and(isPublic()).and(takesNoArguments()),
+        StatementInstrumentation.class.getName() + "$CloseAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -198,6 +201,15 @@ public class StatementInstrumentation implements TypeInstrumentation {
         scope.close();
         statementInstrumenter().end(context, request, null, throwable);
       }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class CloseAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void closeStatement(@Advice.This Statement statement) {
+      JdbcData.close(statement);
     }
   }
 }

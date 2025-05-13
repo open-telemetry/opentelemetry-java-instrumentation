@@ -4,7 +4,7 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.4.5"
     id("com.gradle.plugin-publish") version "1.3.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.1.20"
+    id("org.jetbrains.kotlin.jvm") version "2.1.21"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("org.unbroken-dome.xjc") version "2.0.0"
     id("org.graalvm.buildtools.native") version "0.10.6"
@@ -20,7 +20,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "9.4.0" apply false
-  id("com.gradle.develocity") version "4.0"
+  id("com.gradle.develocity") version "4.0.1"
 }
 
 dependencyResolutionManagement {
@@ -156,6 +156,7 @@ include(":instrumentation:armeria:armeria-1.3:testing")
 include(":instrumentation:armeria:armeria-grpc-1.14:javaagent")
 include(":instrumentation:async-http-client:async-http-client-1.9:javaagent")
 include(":instrumentation:async-http-client:async-http-client-2.0:javaagent")
+include(":instrumentation:avaje-jex-3.0:javaagent")
 include(":instrumentation:aws-lambda:aws-lambda-core-1.0:javaagent")
 include(":instrumentation:aws-lambda:aws-lambda-core-1.0:library")
 include(":instrumentation:aws-lambda:aws-lambda-core-1.0:testing")
@@ -420,7 +421,9 @@ include(":instrumentation:okhttp:okhttp-3.0:library")
 include(":instrumentation:okhttp:okhttp-3.0:testing")
 include(":instrumentation:opencensus-shim:testing")
 include(":instrumentation:opensearch:opensearch-rest-1.0:javaagent")
+include(":instrumentation:opensearch:opensearch-rest-3.0:javaagent")
 include(":instrumentation:opensearch:opensearch-rest-common:javaagent")
+include(":instrumentation:opensearch:opensearch-rest-common:testing")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.10:javaagent")

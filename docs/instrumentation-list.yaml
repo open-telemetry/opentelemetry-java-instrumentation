@@ -5,6 +5,8 @@
 libraries:
   activej:
   - name: activej-http-6.0
+    description: This instrumentation provides SERVER spans and metrics for the ActiveJ
+      HTTP server.
     source_path: instrumentation/activej-http-6.0
     minimum_java_version: 17
     scope:
@@ -42,6 +44,8 @@ libraries:
       - com.typesafe.akka:akka-actor_2.13:[2.3,)
   alibaba:
   - name: alibaba-druid-1.0
+    description: |
+      The Alibaba Druid instrumentation generates database connection pool metrics for druid data sources.
     source_path: instrumentation/alibaba-druid-1.0
     scope:
       name: io.opentelemetry.alibaba-druid-1.0
@@ -149,6 +153,17 @@ libraries:
     target_versions:
       javaagent:
       - org.asynchttpclient:async-http-client:[2.0.0,)
+  avaje:
+  - name: avaje-jex-3.0
+    description: |
+      This instrumentation does not emit telemetry on its own. Instead, it hooks into the Avaje Jex Context to extract the HTTP route and attach it to existing SERVER spans and HTTP server metrics.
+    source_path: instrumentation/avaje-jex-3.0
+    minimum_java_version: 21
+    scope:
+      name: io.opentelemetry.avaje-jex-3.0
+    target_versions:
+      javaagent:
+      - io.avaje:avaje-jex:[3.0,)
   aws:
   - name: aws-lambda-events-2.2
     source_path: instrumentation/aws-lambda/aws-lambda-events-2.2
@@ -239,13 +254,22 @@ libraries:
       - org.apache.camel:camel-core:[2.19,3)
   cassandra:
   - name: cassandra-4.0
+    description: |
+      Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
     source_path: instrumentation/cassandra/cassandra-4.0
     scope:
       name: io.opentelemetry.cassandra-4.0
     target_versions:
       javaagent:
       - com.datastax.oss:java-driver-core:[4.0,4.4)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
   - name: cassandra-4.4
+    description: |
+      Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
     source_path: instrumentation/cassandra/cassandra-4.4
     scope:
       name: io.opentelemetry.cassandra-4.4
@@ -254,13 +278,25 @@ libraries:
       - com.datastax.oss:java-driver-core:[4.4,]
       library:
       - com.datastax.oss:java-driver-core:4.4.0
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
   - name: cassandra-3.0
+    description: |
+      Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
     source_path: instrumentation/cassandra/cassandra-3.0
     scope:
       name: io.opentelemetry.cassandra-3.0
     target_versions:
       javaagent:
       - com.datastax.cassandra:cassandra-driver-core:[3.0,4.0)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
   clickhouse:
   - name: clickhouse-client-0.5
     description: Instruments the V1 ClickHouseClient, providing database client spans
@@ -271,6 +307,11 @@ libraries:
     target_versions:
       javaagent:
       - com.clickhouse.client:clickhouse-client:[0.5.0,)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
   couchbase:
   - name: couchbase-3.1.6
     source_path: instrumentation/couchbase/couchbase-3.1.6
@@ -382,12 +423,23 @@ libraries:
       - org.elasticsearch:elasticsearch:[5.3.0,6.0.0)
   executors:
   - name: executors
+    description: |
+      The executor instrumentation ensures that context is automatically propagated when using common Java executors (e.g., ThreadPoolExecutor, ScheduledThreadPoolExecutor, ForkJoinPool). When a task is submitted, the current context is captured and bound to the task. Then, when the task eventually runs, even if it’s on a different thread, the instrumentation reactivates that context, enabling consistent correlation across concurrent and asynchronous workflows.
     source_path: instrumentation/executors
     scope:
       name: io.opentelemetry.executors
     target_versions:
       javaagent:
       - Java 8+
+    configurations:
+    - name: otel.instrumentation.executors.include
+      description: List of Executor subclasses to be instrumented.
+      type: list
+      default: ''
+    - name: otel.instrumentation.executors.include-all
+      description: Whether to instrument all classes that implement the Executor interface.
+      type: boolean
+      default: false
   finagle:
   - name: finagle-http-23.11
     source_path: instrumentation/finagle-http-23.11
@@ -708,13 +760,34 @@ libraries:
       - org.jboss.logmanager:jboss-logmanager:[1.1.0.GA,)
   jdbc:
   - name: jdbc
-    disabled_by_default: true
+    description: |
+      The JDBC instrumentation provides database client spans and metrics. Each call produces a span named after the SQL verb, enriched with standard DB client attributes (system, database, operation, sanitized statement, peer address) and error details if an exception occurs.
+      There is also a "jdbc-datasource" instrumentation that creates spans for datasource connections, but is disabled by default due to the volume of telemetry produced.
     source_path: instrumentation/jdbc
     scope:
       name: io.opentelemetry.jdbc
     target_versions:
       javaagent:
       - Java 8+
+    configurations:
+    - name: otel.instrumentation.jdbc.statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries. Takes precedent
+        to otel.instrumentation.common.db-statement-sanitizer.enabled.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.jdbc-datasource.enabled
+      description: Enables instrumentation of JDBC datasource connections.
+      type: boolean
+      default: false
   jedis:
   - name: jedis-1.4
     source_path: instrumentation/jedis/jedis-1.4
@@ -871,6 +944,15 @@ libraries:
     target_versions:
       javaagent:
       - org.apache.kafka:kafka-clients:[0.11.0.0,)
+    configurations:
+    - name: otel.instrumentation.kafka.producer-propagation.enabled
+      description: Enable context propagation for kafka message producers.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.kafka.experimental-span-attributes
+      description: Enables the capture of the experimental consumer attribute "kafka.record.queue_time_ms"
+      type: boolean
+      default: false
   kotlinx:
   - name: kotlinx-coroutines
     source_path: instrumentation/kotlinx-coroutines
@@ -1124,6 +1206,14 @@ libraries:
       javaagent:
       - com.squareup.okhttp:okhttp:[2.2,3)
   opensearch:
+  - name: opensearch-rest-3.0
+    source_path: instrumentation/opensearch/opensearch-rest-3.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.opensearch-rest-3.0
+    target_versions:
+      javaagent:
+      - org.opensearch.client:opensearch-rest-client:[3.0,)
   - name: opensearch-rest-1.0
     source_path: instrumentation/opensearch/opensearch-rest-1.0
     minimum_java_version: 11
@@ -1131,7 +1221,7 @@ libraries:
       name: io.opentelemetry.opensearch-rest-1.0
     target_versions:
       javaagent:
-      - org.opensearch.client:opensearch-rest-client:[1.0,)
+      - org.opensearch.client:opensearch-rest-client:[1.0,3.0)
   oracle:
   - name: oracle-ucp-11.2
     source_path: instrumentation/oracle-ucp-11.2
