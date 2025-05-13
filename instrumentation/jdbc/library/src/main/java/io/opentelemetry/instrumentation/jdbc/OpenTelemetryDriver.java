@@ -24,6 +24,7 @@ import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFac
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
@@ -53,7 +54,6 @@ public final class OpenTelemetryDriver implements Driver {
   static final OpenTelemetryDriver INSTANCE = new OpenTelemetryDriver();
 
   private volatile OpenTelemetry openTelemetry = OpenTelemetry.noop();
-  private volatile boolean sqlCommenterEnabled;
 
   private static final int MAJOR_VERSION;
   private static final int MINOR_VERSION;
@@ -61,6 +61,9 @@ public final class OpenTelemetryDriver implements Driver {
   private static final String URL_PREFIX = "jdbc:otel:";
   private static final AtomicBoolean REGISTERED = new AtomicBoolean();
   private static final List<Driver> DRIVER_CANDIDATES = new CopyOnWriteArrayList<>();
+
+  private static final boolean sqlCommenterEnabled =
+      ConfigPropertiesUtil.getBoolean("otel.instrumentation.common.db-sqlcommenter.enabled", false);
 
   static {
     try {
@@ -221,14 +224,6 @@ public final class OpenTelemetryDriver implements Driver {
    */
   public void setOpenTelemetry(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
-  }
-
-  /**
-   * Sets whether to augment sql query with comment containing the tracing information. See <a
-   * href="https://google.github.io/sqlcommenter/">sqlcommenter</a> for more info.
-   */
-  public void sqlCommenterEnabled(boolean sqlCommenterEnabled) {
-    this.sqlCommenterEnabled = sqlCommenterEnabled;
   }
 
   @Nullable
