@@ -315,7 +315,6 @@ class OpenTelemetryConnectionTest {
           .contains("traceparent")
           .contains(spanContext.getTraceId())
           .contains(spanContext.getSpanId());
-      ;
     } else {
       assertThat(executedSql.get(0)).isEqualTo(query);
     }
