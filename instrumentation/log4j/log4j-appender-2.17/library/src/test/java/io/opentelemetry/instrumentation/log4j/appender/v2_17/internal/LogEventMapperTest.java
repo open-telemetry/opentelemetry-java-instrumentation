@@ -25,6 +25,7 @@ import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 class LogEventMapperTest {
@@ -268,6 +269,28 @@ class LogEventMapperTest {
     ExtendedAttributes actual = result.get(ExtendedAttributeKey.extendedAttributesKey("map"));
     assertThat(actual).isNotNull();
     assertThat(actual.asMap()).containsExactlyInAnyOrderEntriesOf(expected);
+  }
+
+  @Test
+  void testMixedTypeListAttribute() {
+    // given
+    LogEventMapper<Map<String, Object>> mapper =
+        new LogEventMapper<>(
+            ContextDataAccessorImpl.INSTANCE, false, false, true, false, singletonList("*"));
+
+    Map<String, Object> contextData = new HashMap<>();
+    contextData.put("stringList", Arrays.asList("one", 2, "three"));
+
+    ExtendedAttributesBuilder attributes = ExtendedAttributes.builder();
+
+    // when
+    mapper.captureContextDataAttributes(attributes, contextData);
+
+    // then
+    ExtendedAttributes result = attributes.build();
+
+    Assertions.assertThat(result.get(ExtendedAttributeKey.stringArrayKey("stringList")))
+        .isEqualTo(Arrays.asList("one", "2", "three"));
   }
 
   private enum ContextDataAccessorImpl implements ContextDataAccessor<Map<String, Object>, Object> {

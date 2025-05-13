@@ -208,7 +208,7 @@ public final class LogEventMapper<T> {
         });
   }
 
-  @SuppressWarnings({"unchecked"})
+  @SuppressWarnings({"unchecked", "ReturnValueIgnored"})
   private static void consumeEntry(
       String key,
       Object value,
@@ -240,36 +240,47 @@ public final class LogEventMapper<T> {
       }
 
       Object first = list.get(0);
+      for (int idx = 1; idx < list.size(); ++idx) {
+        try {
+          first.getClass().cast(list.get(idx));
+        } catch (ClassCastException exception) {
+          // fallback to a list of strings
+          list = list.stream().map(Object::toString).collect(Collectors.toList());
+          first = list.get(0);
+          break;
+        }
+      }
+
       if (first instanceof String) {
         attributes.put(
             (ExtendedAttributeKey<List<String>>)
                 keyProvider.apply(key, ExtendedAttributeType.STRING_ARRAY),
-            (List<String>) value);
+            (List<String>) list);
       } else if (first instanceof Boolean) {
         attributes.put(
             (ExtendedAttributeKey<List<Boolean>>)
                 keyProvider.apply(key, ExtendedAttributeType.BOOLEAN_ARRAY),
-            (List<Boolean>) value);
+            (List<Boolean>) list);
       } else if (first instanceof Integer) {
         attributes.put(
             (ExtendedAttributeKey<List<Long>>)
                 keyProvider.apply(key, ExtendedAttributeType.LONG_ARRAY),
-            ((List<Integer>) value).stream().map(Integer::longValue).collect(Collectors.toList()));
+            ((List<Integer>) list).stream().map(Integer::longValue).collect(Collectors.toList()));
       } else if (first instanceof Long) {
         attributes.put(
             (ExtendedAttributeKey<List<Long>>)
                 keyProvider.apply(key, ExtendedAttributeType.LONG_ARRAY),
-            (List<Long>) value);
+            (List<Long>) list);
       } else if (first instanceof Float) {
         attributes.put(
             (ExtendedAttributeKey<List<Double>>)
                 keyProvider.apply(key, ExtendedAttributeType.DOUBLE_ARRAY),
-            ((List<Float>) value).stream().map(Float::doubleValue).collect(Collectors.toList()));
+            ((List<Float>) list).stream().map(Float::doubleValue).collect(Collectors.toList()));
       } else if (first instanceof Double) {
         attributes.put(
             (ExtendedAttributeKey<List<Double>>)
                 keyProvider.apply(key, ExtendedAttributeType.DOUBLE_ARRAY),
-            (List<Double>) value);
+            (List<Double>) list);
       }
     } else if (value instanceof String[]) {
       attributes.put(
