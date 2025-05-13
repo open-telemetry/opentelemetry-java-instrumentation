@@ -222,22 +222,17 @@ public final class LogEventMapper<T> {
       attributes.put(
           (ExtendedAttributeKey<Boolean>) keyProvider.apply(key, ExtendedAttributeType.BOOLEAN),
           (Boolean) value);
-    } else if ((value instanceof Long)) {
+    } else if (value instanceof Byte
+        || value instanceof Short
+        || value instanceof Integer
+        || value instanceof Long) {
       attributes.put(
           (ExtendedAttributeKey<Long>) keyProvider.apply(key, ExtendedAttributeType.LONG),
-          (Long) value);
-    } else if ((value instanceof Integer)) {
-      attributes.put(
-          (ExtendedAttributeKey<Long>) keyProvider.apply(key, ExtendedAttributeType.LONG),
-          ((Integer) value).longValue());
-    } else if (value instanceof Double) {
+          ((Number) value).longValue());
+    } else if (value instanceof Float || value instanceof Double) {
       attributes.put(
           (ExtendedAttributeKey<Double>) keyProvider.apply(key, ExtendedAttributeType.DOUBLE),
-          (Double) value);
-    } else if (value instanceof Float) {
-      attributes.put(
-          (ExtendedAttributeKey<Double>) keyProvider.apply(key, ExtendedAttributeType.DOUBLE),
-          ((Float) value).doubleValue());
+          ((Number) value).doubleValue());
     } else if (value instanceof List) {
       List<?> list = (List<?>) value;
       if (list.isEmpty()) {
