@@ -17,21 +17,23 @@ import java.nio.charset.StandardCharsets;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.assertj.core.api.InstanceOfAssertFactories;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-@Disabled // does not work after declarative config changes
 class DeclarativeConfigTest {
 
   @Test
   void endToEnd() {
     String yaml =
-        "file_format: 0.3\n"
+        "file_format: \"0.4\"\n"
+            + "tracer_provider:\n"
             + "resource:\n"
             + "  attributes:\n"
             + "    - name: service.name\n"
             + "      value: my-service\n"
-            + "tracer_provider:\n";
+            + "  detection/development:\n"
+            + "    detectors:\n"
+            + "      - host:\n"
+            + "      - process:\n";
 
     boolean java8 = "1.8".equals(System.getProperty("java.specification.version"));
     OpenTelemetrySdk openTelemetrySdk =
