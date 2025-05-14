@@ -55,7 +55,7 @@ rules:
       tomcat.context: param(context)
     mapping:
       activeSessions:
-        metric: active_session.count
+        metric: session.active.count
         type: updowncounter
         unit: "{session}"
         desc: The number of active sessions.
