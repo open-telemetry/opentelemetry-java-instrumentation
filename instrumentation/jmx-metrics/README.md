@@ -287,7 +287,7 @@ In the particular case where only two values are defined, we can simplify furthe
             off: '*'
 ```
 
-State metrics do not have a unit (nor source unit) and use an empty string `"""` as unit.
+State metrics do not have a unit (nor source unit) and use an empty string `""` as unit.
 
 ### Metric attributes modifiers
 
@@ -384,7 +384,7 @@ rules:                                # start of list of configuration rules
       <ATTRIBUTE2>: beanattr(<ATTR>)  # <ATTR> is used as the MBean attribute name to extract the value
       <ATTRIBUTE3>: const(<CONST>)    # <CONST> is used as a constant
     prefix: <METRIC_NAME_PREFIX>      # optional, useful for avoiding specifying metric names below
-    unit: <UNIT>                      # optional, redefines the default unit for the whole rule, defaults to '' if not set
+    unit: <UNIT>                      # optional, defines the default unit for the whole rule. must be defined at metric level if not set here
     type: <TYPE>                      # optional, redefines the default type for the whole rule
     dropNegativeValues: <BOOL>        # optional, redefines if negative values are dropped for the whole rule
     mapping:
@@ -392,13 +392,13 @@ rules:                                # start of list of configuration rules
         metric: <METRIC_NAME1>        # metric name will be <METRIC_NAME_PREFIX><METRIC_NAME1>
         type: <TYPE>                  # optional, the default type is gauge
         desc: <DESCRIPTION1>          # optional
-        unit: <UNIT1>                 # optional, defaults to '' if not set at metric or rule level
+        unit: <UNIT1>                 # optional if unit is already defined on rule level (redefines it in such a case), required otherwise
         dropNegativeValues: <BOOL>    # optional, defines if negative values are dropped for the metric
         metricAttribute:              # optional, will be used in addition to the shared metric attributes above
           <ATTRIBUTE3>: const(<STR>)  # direct value for the metric attribute
       <BEANATTR2>:                    # use a.b to get access into CompositeData
         metric: <METRIC_NAME2>        # optional, the default is the MBean attribute name
-        unit: <UNIT2>                 # optional, defaults to '' if not set at metric or rule level
+        unit: <UNIT2>                 # optional if unit is already defined on rule level (redefines it in such a case), required otherwise
       <BEANATTR3>:                    # metric name will be <METRIC_NAME_PREFIX><BEANATTR3>
       <BEANATTR4>:                    # metric name will be <METRIC_NAME_PREFIX><BEANATTR4>
   - beans:                            # alternatively, if multiple object names are needed

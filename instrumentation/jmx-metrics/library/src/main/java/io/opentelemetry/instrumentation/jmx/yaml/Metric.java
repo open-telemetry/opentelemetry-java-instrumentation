@@ -50,14 +50,14 @@ public class Metric extends MetricStructure {
 
   /**
    * @param attributeName attribute name
-   * @param jmxRule parent JMX rule where metric is defined
+   * @param parentJmxRule parent JMX rule where metric is defined
    * @return metric info
    * @throws IllegalStateException when effective metric definition is invalid
    */
-  MetricInfo buildMetricInfo(String attributeName, JmxRule jmxRule) {
+  MetricInfo buildMetricInfo(String attributeName, JmxRule parentJmxRule) {
     String metricName;
 
-    String prefix = jmxRule.getPrefix();
+    String prefix = parentJmxRule.getPrefix();
     if (metric == null) {
       metricName = prefix == null ? attributeName : (prefix + attributeName);
     } else {
@@ -66,7 +66,7 @@ public class Metric extends MetricStructure {
 
     MetricInfo.Type metricType = getMetricType();
     if (metricType == null) {
-      metricType = jmxRule.getMetricType();
+      metricType = parentJmxRule.getMetricType();
     }
     if (metricType == null) {
       metricType = MetricInfo.Type.GAUGE;
@@ -74,7 +74,7 @@ public class Metric extends MetricStructure {
 
     String sourceUnit = getSourceUnit();
     if (sourceUnit == null) {
-      sourceUnit = jmxRule.getSourceUnit();
+      sourceUnit = parentJmxRule.getSourceUnit();
     }
 
     String unit;
@@ -84,7 +84,7 @@ public class Metric extends MetricStructure {
     } else {
       unit = getUnit();
       if (unit == null) {
-        unit = jmxRule.getUnit();
+        unit = parentJmxRule.getUnit();
       }
       if (unit == null) {
         throw new IllegalStateException(
