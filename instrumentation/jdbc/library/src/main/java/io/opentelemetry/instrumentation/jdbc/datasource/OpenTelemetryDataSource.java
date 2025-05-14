@@ -22,6 +22,7 @@ package io.opentelemetry.instrumentation.jdbc.datasource;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createDataSourceInstrumenter;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createStatementInstrumenter;
+import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createTransactionInstrumenter;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcUtils.computeDbInfo;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -47,6 +48,7 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
   private final DataSource delegate;
   private final Instrumenter<DataSource, DbInfo> dataSourceInstrumenter;
   private final Instrumenter<DbRequest, Void> statementInstrumenter;
+  private final Instrumenter<DbRequest, Void> transactionInstrumenter;
   private volatile DbInfo cachedDbInfo;
 
   /**
@@ -71,6 +73,7 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
     this.delegate = delegate;
     this.dataSourceInstrumenter = createDataSourceInstrumenter(openTelemetry, true);
     this.statementInstrumenter = createStatementInstrumenter(openTelemetry);
+    this.transactionInstrumenter = createTransactionInstrumenter(openTelemetry, false);
   }
 
   /**
@@ -83,24 +86,28 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
   OpenTelemetryDataSource(
       DataSource delegate,
       Instrumenter<DataSource, DbInfo> dataSourceInstrumenter,
-      Instrumenter<DbRequest, Void> statementInstrumenter) {
+      Instrumenter<DbRequest, Void> statementInstrumenter,
+      Instrumenter<DbRequest, Void> transactionInstrumenter) {
     this.delegate = delegate;
     this.dataSourceInstrumenter = dataSourceInstrumenter;
     this.statementInstrumenter = statementInstrumenter;
+    this.transactionInstrumenter = transactionInstrumenter;
   }
 
   @Override
   public Connection getConnection() throws SQLException {
     Connection connection = wrapCall(delegate::getConnection);
     DbInfo dbInfo = getDbInfo(connection);
-    return OpenTelemetryConnection.create(connection, dbInfo, statementInstrumenter);
+    return OpenTelemetryConnection.create(
+        connection, dbInfo, statementInstrumenter, transactionInstrumenter);
   }
 
   @Override
   public Connection getConnection(String username, String password) throws SQLException {
     Connection connection = wrapCall(() -> delegate.getConnection(username, password));
     DbInfo dbInfo = getDbInfo(connection);
-    return OpenTelemetryConnection.create(connection, dbInfo, statementInstrumenter);
+    return OpenTelemetryConnection.create(
+        connection, dbInfo, statementInstrumenter, transactionInstrumenter);
   }
 
   @Override

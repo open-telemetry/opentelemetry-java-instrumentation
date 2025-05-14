@@ -1,9 +1,8 @@
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
-    'config:recommended',
-    'docker:pinDigests',
-    'helpers:pinGitHubActionDigests',
+    'config:best-practices',
+    'helpers:pinGitHubActionDigestsToSemver',
   ],
   ignorePaths: [
     'instrumentation/**',
@@ -32,6 +31,7 @@
         'io.opentelemetry.contrib:opentelemetry-aws-resources',
         'io.opentelemetry.contrib:opentelemetry-aws-xray-propagator',
         'io.opentelemetry.contrib:opentelemetry-gcp-resources',
+        'io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources',
         'io.opentelemetry.contrib:opentelemetry-baggage-processor',
         'io.opentelemetry.proto:opentelemetry-proto',
         'io.opentelemetry.semconv:opentelemetry-semconv',
@@ -329,8 +329,8 @@
     {
       customType: 'regex',
       datasourceTemplate: 'pypi',
-      fileMatch: [
-        '^.github/workflows/',
+      managerFilePatterns: [
+        '/^.github/workflows//',
       ],
       matchStrings: [
         'pip install (?<depName>[^=]+)==(?<currentValue>[^\\s]+)',
@@ -339,8 +339,8 @@
     {
       customType: 'regex',
       datasourceTemplate: 'npm',
-      fileMatch: [
-        '^.github/workflows/',
+      managerFilePatterns: [
+        '/^.github/workflows//',
       ],
       matchStrings: [
         'npx (?<depName>[^@]+)@(?<currentValue>[^\\s]+)',

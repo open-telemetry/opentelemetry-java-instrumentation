@@ -130,6 +130,7 @@ class JdbcTelemetryTest {
         JdbcTelemetry.builder(testing.getOpenTelemetry())
             .setDataSourceInstrumenterEnabled(false)
             .setStatementInstrumenterEnabled(false)
+            .setTransactionInstrumenterEnabled(false)
             .build();
 
     DataSource dataSource = telemetry.wrap(new TestDataSource());
@@ -170,6 +171,30 @@ class JdbcTelemetryTest {
 
     testing.runWithSpan(
         "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;"));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent"),
+                span -> span.hasName("TestDataSource.getConnection")));
+  }
+
+  @Test
+  void buildWithTransactionInstrumenterDisabled() throws SQLException {
+    JdbcTelemetry telemetry =
+        JdbcTelemetry.builder(testing.getOpenTelemetry())
+            .setTransactionInstrumenterEnabled(false)
+            .build();
+
+    DataSource dataSource = telemetry.wrap(new TestDataSource());
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          Connection connection = dataSource.getConnection();
+          connection.commit();
+          connection.rollback();
+        });
 
     testing.waitAndAssertTraces(
         trace ->

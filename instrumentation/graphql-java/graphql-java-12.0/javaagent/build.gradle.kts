@@ -24,3 +24,7 @@ dependencies {
 
   latestDepTestLibrary("com.graphql-java:graphql-java:19.+") // see graphql-java-20.0 module
 }
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.graphql.add-operation-name-to-span-name.enabled=true")
+}
