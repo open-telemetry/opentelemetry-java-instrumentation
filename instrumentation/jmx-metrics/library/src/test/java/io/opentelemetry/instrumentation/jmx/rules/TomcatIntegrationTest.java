@@ -48,7 +48,7 @@ public class TomcatIntegrationTest extends TargetSystemTest {
 
     startTarget(target);
 
-    // Deploy example web application to the tomcat to enable reporting tomcat.active_session.count
+    // Deploy example web application to the tomcat to enable reporting tomcat.session.active.count
     // metric
     target.execInContainer("rm", "-fr", "/usr/local/tomcat/webapps/ROOT");
     target.execInContainer(
@@ -61,7 +61,7 @@ public class TomcatIntegrationTest extends TargetSystemTest {
     AttributeMatcher requestProcessorNameAttribute =
         attribute("tomcat.request_processor.name", "\"http-nio-8080\"");
     AttributeMatcher threadPoolNameAttribute =
-        attribute("tomcat.thread_pool.name", "\"http-nio-8080\"");
+        attribute("tomcat.thread.pool.name", "\"http-nio-8080\"");
 
     return MetricsVerifier.create()
         .add(
@@ -111,10 +111,18 @@ public class TomcatIntegrationTest extends TargetSystemTest {
                             attribute("network.io.direction", "transmit"),
                             requestProcessorNameAttribute)))
         .add(
-            "tomcat.active_session.count",
+            "tomcat.session.active.count",
             metric ->
                 metric
-                    .hasDescription("The number of active sessions.")
+                    .hasDescription("The number of currently active sessions.")
+                    .hasUnit("{session}")
+                    .isUpDownCounter()
+                    .hasDataPointsWithOneAttribute(attributeWithAnyValue("tomcat.context")))
+        .add(
+            "tomcat.session.active.limit",
+            metric ->
+                metric
+                    .hasDescription("Maximum number of active sessions.")
                     .hasUnit("{session}")
                     .isUpDownCounter()
                     .hasDataPointsWithOneAttribute(attributeWithAnyValue("tomcat.context")))
@@ -123,6 +131,14 @@ public class TomcatIntegrationTest extends TargetSystemTest {
             metric ->
                 metric
                     .hasDescription("Total thread count of the thread pool.")
+                    .hasUnit("{thread}")
+                    .isUpDownCounter()
+                    .hasDataPointsWithOneAttribute(threadPoolNameAttribute))
+        .add(
+            "tomcat.thread.limit",
+            metric ->
+                metric
+                    .hasDescription("Maximum thread count of the thread pool.")
                     .hasUnit("{thread}")
                     .isUpDownCounter()
                     .hasDataPointsWithOneAttribute(threadPoolNameAttribute))
