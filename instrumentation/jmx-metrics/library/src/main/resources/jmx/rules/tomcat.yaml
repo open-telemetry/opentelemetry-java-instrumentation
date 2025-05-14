@@ -67,7 +67,7 @@ rules:
     prefix: tomcat.thread.
     type: updowncounter
     metricAttribute:
-      tomcat.thread_pool.name: param(name)
+      tomcat.thread.pool.name: param(name)
     mapping:
       currentThreadCount:
         metric: count
