@@ -24,9 +24,10 @@ configurations:
     default: ""
   - name: otel.instrumentation.jdbc.capture-query-parameters
     description: >
-      Enables the attribute db.query.parameter.<key>. Enabling this option disables the statement sanitization.
-      WARNING: captured query parameters may contain sensitive information such as passwords, personally
-      identifiable information or protected health info.
+      Sets whether the query parameters should be captured as span attributes named
+      <code>db.query.parameter.&lt;key&gt;</code>. Enabling this option disables the statement
+      sanitization.<p>WARNING: captured query parameters may contain sensitive information such as
+      passwords, personally identifiable information or protected health info.
     type: boolean
     default: false
   - name: otel.instrumentation.jdbc-datasource.enabled
