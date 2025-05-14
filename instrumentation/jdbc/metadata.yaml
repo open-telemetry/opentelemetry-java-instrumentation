@@ -22,7 +22,7 @@ configurations:
     description: Used to specify a mapping from host names or IP addresses to peer services.
     type: map
     default: ""
-  - name: otel.instrumentation.jdbc.capture-query-parameters
+  - name: otel.instrumentation.jdbc.experimental.capture-query-parameters
     description: >
       Sets whether the query parameters should be captured as span attributes named
       <code>db.query.parameter.&lt;key&gt;</code>. Enabling this option disables the statement

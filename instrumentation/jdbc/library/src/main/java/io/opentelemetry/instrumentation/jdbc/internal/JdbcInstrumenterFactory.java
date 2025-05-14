@@ -34,7 +34,7 @@ public final class JdbcInstrumenterFactory {
 
   public static boolean captureQueryParameters() {
     return ConfigPropertiesUtil.getBoolean(
-        "otel.instrumentation.jdbc.capture-query-parameters", false);
+        "otel.instrumentation.jdbc.experimental.capture-query-parameters", false);
   }
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter(

@@ -58,7 +58,7 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
           .setCaptureQueryParameters(
               configPropertiesProvider
                   .getObject()
-                  .getBoolean("otel.instrumentation.jdbc.capture-query-parameters", false))
+                  .getBoolean("otel.instrumentation.jdbc.experimental.capture-query-parameters", false))
           .setTransactionInstrumenterEnabled(
               configPropertiesProvider
                   .getObject()
