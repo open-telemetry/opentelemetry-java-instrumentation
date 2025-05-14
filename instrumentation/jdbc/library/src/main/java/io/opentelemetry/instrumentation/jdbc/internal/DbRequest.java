@@ -63,7 +63,26 @@ public abstract class DbRequest {
   }
 
   public static DbRequest create(DbInfo dbInfo, Collection<String> queryTexts, Long batchSize) {
-    return new AutoValue_DbRequest(dbInfo, queryTexts, batchSize);
+    return new AutoValue_DbRequest(dbInfo, queryTexts, batchSize, null);
+  }
+
+  public static DbRequest create(
+      DbInfo dbInfo, Collection<String> queryTexts, Long batchSize, String operation) {
+    return new AutoValue_DbRequest(dbInfo, queryTexts, batchSize, operation);
+  }
+
+  @Nullable
+  public static DbRequest createTransaction(Connection connection, String operation) {
+    Connection realConnection = JdbcUtils.unwrapConnection(connection);
+    if (realConnection == null) {
+      return null;
+    }
+
+    return createTransaction(JdbcUtils.extractDbInfo(realConnection), operation);
+  }
+
+  public static DbRequest createTransaction(DbInfo dbInfo, String operation) {
+    return create(dbInfo, Collections.emptyList(), null, operation);
   }
 
   public abstract DbInfo getDbInfo();
@@ -72,4 +91,8 @@ public abstract class DbRequest {
 
   @Nullable
   public abstract Long getBatchSize();
+
+  // used for transaction instrumentation
+  @Nullable
+  public abstract String getOperation();
 }

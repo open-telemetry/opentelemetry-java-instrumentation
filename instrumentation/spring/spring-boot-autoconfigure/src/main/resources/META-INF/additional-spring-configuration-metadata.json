@@ -352,6 +352,12 @@
       "defaultValue": true
     },
     {
+      "name": "otel.instrumentation.jdbc.experimental.transaction.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables experimental instrumentation to create spans for COMMIT and ROLLBACK operations.",
+      "defaultValue": false
+    },
+    {
       "name": "otel.instrumentation.kafka.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable the Kafka instrumentation.",

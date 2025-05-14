@@ -91,3 +91,9 @@ tasks {
     dependsOn(testSlickStableSemconv)
   }
 }
+
+tasks {
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.jdbc.experimental.transaction.enabled=true")
+  }
+}
