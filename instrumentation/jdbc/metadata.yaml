@@ -17,6 +17,7 @@ configurations:
     default: true
   - name: otel.instrumentation.jdbc.experimental.transaction.enabled
     description: Enables experimental instrumentation to create spans for COMMIT and ROLLBACK operations.
+    type: boolean
     default: false
   - name: otel.instrumentation.common.peer-service-mapping
     description: Used to specify a mapping from host names or IP addresses to peer services.

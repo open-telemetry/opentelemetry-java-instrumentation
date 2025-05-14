@@ -18,7 +18,7 @@ dependencies {
 }
 
 tasks {
-  val generateDocs by registering(JavaExec::class) {
+  val runAnalysis by registering(JavaExec::class) {
     dependsOn(classes)
 
     mainClass.set("io.opentelemetry.instrumentation.docs.DocGeneratorApplication")
