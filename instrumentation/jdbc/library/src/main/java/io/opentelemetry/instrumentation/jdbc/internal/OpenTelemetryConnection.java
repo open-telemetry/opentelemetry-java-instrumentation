@@ -20,6 +20,8 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.Array;
@@ -52,16 +54,19 @@ public class OpenTelemetryConnection implements Connection {
   protected final Connection delegate;
   private final DbInfo dbInfo;
   protected final Instrumenter<DbRequest, Void> statementInstrumenter;
+  protected final Instrumenter<DbRequest, Void> transactionInstrumenter;
   private final boolean captureQueryParameters;
 
   protected OpenTelemetryConnection(
       Connection delegate,
       DbInfo dbInfo,
       Instrumenter<DbRequest, Void> statementInstrumenter,
+      Instrumenter<DbRequest, Void> transactionInstrumenter,
       boolean captureQueryParameters) {
     this.delegate = delegate;
     this.dbInfo = dbInfo;
     this.statementInstrumenter = statementInstrumenter;
+    this.transactionInstrumenter = transactionInstrumenter;
     this.captureQueryParameters = captureQueryParameters;
   }
 
@@ -79,13 +84,14 @@ public class OpenTelemetryConnection implements Connection {
       Connection delegate,
       DbInfo dbInfo,
       Instrumenter<DbRequest, Void> statementInstrumenter,
+      Instrumenter<DbRequest, Void> transactionInstrumenter,
       boolean captureQueryParameters) {
     if (hasJdbc43) {
       return new OpenTelemetryConnectionJdbc43(
-          delegate, dbInfo, statementInstrumenter, captureQueryParameters);
+          delegate, dbInfo, statementInstrumenter, transactionInstrumenter, captureQueryParameters);
     }
     return new OpenTelemetryConnection(
-        delegate, dbInfo, statementInstrumenter, captureQueryParameters);
+        delegate, dbInfo, statementInstrumenter, transactionInstrumenter, captureQueryParameters);
   }
 
   @Override
@@ -183,7 +189,7 @@ public class OpenTelemetryConnection implements Connection {
 
   @Override
   public void commit() throws SQLException {
-    delegate.commit();
+    wrapCall(delegate::commit, "COMMIT");
   }
 
   @Override
@@ -289,13 +295,13 @@ public class OpenTelemetryConnection implements Connection {
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void rollback() throws SQLException {
-    delegate.rollback();
+    wrapCall(delegate::rollback, "ROLLBACK");
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void rollback(Savepoint savepoint) throws SQLException {
-    delegate.rollback(savepoint);
+    wrapCall(() -> delegate.rollback(savepoint), "ROLLBACK");
   }
 
   @Override
@@ -406,8 +412,10 @@ public class OpenTelemetryConnection implements Connection {
         Connection delegate,
         DbInfo dbInfo,
         Instrumenter<DbRequest, Void> statementInstrumenter,
+        Instrumenter<DbRequest, Void> transactionInstrumenter,
         boolean captureQueryParameters) {
-      super(delegate, dbInfo, statementInstrumenter, captureQueryParameters);
+      super(
+          delegate, dbInfo, statementInstrumenter, transactionInstrumenter, captureQueryParameters);
     }
 
     @SuppressWarnings("Since15")
@@ -447,5 +455,28 @@ public class OpenTelemetryConnection implements Connection {
     public void setShardingKey(ShardingKey shardingKey) throws SQLException {
       delegate.setShardingKey(shardingKey);
     }
+  }
+
+  protected <E extends Exception> void wrapCall(ThrowingSupplier<E> callable, String operation)
+      throws E {
+    Context parentContext = Context.current();
+    DbRequest request = DbRequest.createTransaction(dbInfo, operation);
+    if (!this.transactionInstrumenter.shouldStart(parentContext, request)) {
+      callable.call();
+      return;
+    }
+
+    Context context = this.transactionInstrumenter.start(parentContext, request);
+    try (Scope ignored = context.makeCurrent()) {
+      callable.call();
+    } catch (Throwable t) {
+      this.transactionInstrumenter.end(context, request, null, t);
+      throw t;
+    }
+    this.transactionInstrumenter.end(context, request, null, null);
+  }
+
+  protected interface ThrowingSupplier<E extends Exception> {
+    void call() throws E;
   }
 }

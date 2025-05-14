@@ -12,11 +12,7 @@ import java.util.Collection;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
-public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest, Void> {
+final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest, Void> {
 
   @Nullable
   @Override

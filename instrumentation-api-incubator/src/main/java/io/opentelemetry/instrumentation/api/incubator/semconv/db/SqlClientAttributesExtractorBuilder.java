@@ -55,9 +55,7 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * by default.
    *
    * <p>WARNING: captured query parameters may contain sensitive information such as passwords,
-   * personally identifiable information or protected health info. Exposing such info may result in
-   * substantial fines and penalties or criminal liability. Consult your peers, superiors and a
-   * legal counsel before enabling this option.
+   * personally identifiable information or protected health info.
    */
   @CanIgnoreReturnValue
   public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> setCaptureQueryParameters(

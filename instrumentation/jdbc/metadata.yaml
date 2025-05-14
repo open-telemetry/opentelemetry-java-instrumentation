@@ -1,25 +1,35 @@
-disabled_by_default: true
 description: >
   The JDBC instrumentation provides database client spans and metrics. Each call produces a span
   named after the SQL verb, enriched with standard DB client attributes (system, database,
   operation, sanitized statement, peer address) and error details if an exception occurs.
+  
+  There is also a "jdbc-datasource" instrumentation that creates spans for datasource connections,
+  but is disabled by default due to the volume of telemetry produced.
 configurations:
   - name: otel.instrumentation.jdbc.statement-sanitizer.enabled
     description: Enables statement sanitization for database queries. Takes precedent to 
       otel.instrumentation.common.db-statement-sanitizer.enabled.
+    type: boolean
     default: true
   - name: otel.instrumentation.common.db-statement-sanitizer.enabled
     description: Enables statement sanitization for database queries.
+    type: boolean
     default: true
+  - name: otel.instrumentation.jdbc.experimental.transaction.enabled
+    description: Enables experimental instrumentation to create spans for COMMIT and ROLLBACK operations.
+    default: false
   - name: otel.instrumentation.common.peer-service-mapping
     description: Used to specify a mapping from host names or IP addresses to peer services.
+    type: map
     default: ""
   - name: otel.instrumentation.jdbc.capture-query-parameters
     description: >
-      Enables the attribute db.query.parameter.<key>.
-      WARNING: captured query parameters may contain sensitive information such as passwords, 
-      personally identifiable information or protected health info. 
-      Exposing such info may result in substantial fines and penalties or criminal liability. 
-      Consult your peers, superiors and a legal counsel before enabling this option.
-      This option will disable otel.instrumentation.jdbc.statement-sanitizer
+      Enables the attribute db.query.parameter.<key>. Enabling this option disables the statement sanitization.
+      WARNING: captured query parameters may contain sensitive information such as passwords, personally
+      identifiable information or protected health info.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.jdbc-datasource.enabled
+    description: Enables instrumentation of JDBC datasource connections.
+    type: boolean
     default: false

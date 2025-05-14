@@ -101,3 +101,9 @@ tasks {
     dependsOn(testCaptureParameters)
   }
 }
+
+tasks {
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.jdbc.experimental.transaction.enabled=true")
+  }
+}

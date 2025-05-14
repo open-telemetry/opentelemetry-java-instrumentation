@@ -42,6 +42,16 @@ import org.awaitility.core.ConditionTimeoutException;
  */
 public abstract class InstrumentationTestRunner {
 
+  static {
+    // In netty-4.1.121.Final unsafe usage is disabled by default on jdk24. This triggers using
+    // a different pooled buffer implementation which apparently breaks when initializing ssl. Here
+    // we switch to unpooled buffers to avoid that bug. We do this here because this code is
+    // executed early for both agent and library tests.
+    if (Double.parseDouble(System.getProperty("java.specification.version")) >= 24) {
+      System.setProperty("io.opentelemetry.testing.internal.io.netty.allocator.type", "unpooled");
+    }
+  }
+
   private final TestInstrumenters testInstrumenters;
 
   protected InstrumentationTestRunner(OpenTelemetry openTelemetry) {

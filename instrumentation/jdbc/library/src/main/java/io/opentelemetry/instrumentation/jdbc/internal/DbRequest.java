@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcUtils.connectionFromStatement;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcUtils.extractDbInfo;
+import static java.util.Collections.emptyMap;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
@@ -34,11 +35,11 @@ public abstract class DbRequest {
 
   @Nullable
   public static DbRequest create(Statement statement, String dbStatementString) {
-    return create(statement, dbStatementString, null, Collections.emptyMap());
+    return create(statement, dbStatementString, null, emptyMap());
   }
 
   @Nullable
-  public static DbRequest create(
+  private static DbRequest create(
       Statement statement,
       String dbStatementString,
       Map<String, String> preparedStatementParameters) {
@@ -67,11 +68,11 @@ public abstract class DbRequest {
       return null;
     }
 
-    return create(extractDbInfo(connection), queryTexts, batchSize, Collections.emptyMap());
+    return create(extractDbInfo(connection), queryTexts, batchSize, emptyMap());
   }
 
   public static DbRequest create(DbInfo dbInfo, String queryText) {
-    return create(dbInfo, queryText, null, Collections.emptyMap());
+    return create(dbInfo, queryText, null, emptyMap());
   }
 
   public static DbRequest create(
@@ -88,7 +89,31 @@ public abstract class DbRequest {
       Collection<String> queryTexts,
       Long batchSize,
       Map<String, String> preparedStatementParameters) {
-    return new AutoValue_DbRequest(dbInfo, queryTexts, batchSize, preparedStatementParameters);
+    return create(dbInfo, queryTexts, batchSize, null, preparedStatementParameters);
+  }
+
+  private static DbRequest create(
+      DbInfo dbInfo,
+      Collection<String> queryTexts,
+      Long batchSize,
+      String operation,
+      Map<String, String> preparedStatementParameters) {
+    return new AutoValue_DbRequest(
+        dbInfo, queryTexts, batchSize, operation, preparedStatementParameters);
+  }
+
+  @Nullable
+  public static DbRequest createTransaction(Connection connection, String operation) {
+    Connection realConnection = JdbcUtils.unwrapConnection(connection);
+    if (realConnection == null) {
+      return null;
+    }
+
+    return createTransaction(JdbcUtils.extractDbInfo(realConnection), operation);
+  }
+
+  public static DbRequest createTransaction(DbInfo dbInfo, String operation) {
+    return create(dbInfo, Collections.emptyList(), null, operation, emptyMap());
   }
 
   public abstract DbInfo getDbInfo();
@@ -97,6 +122,10 @@ public abstract class DbRequest {
 
   @Nullable
   public abstract Long getBatchSize();
+
+  // used for transaction instrumentation
+  @Nullable
+  public abstract String getOperation();
 
   public abstract Map<String, String> getPreparedStatementParameters();
 }
