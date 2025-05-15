@@ -16,8 +16,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION_NAME;
 
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -111,7 +110,6 @@ class JettyServlet2Test extends AbstractHttpServerTest<Server> {
     }
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
@@ -119,7 +117,6 @@ class JettyServlet2Test extends AbstractHttpServerTest<Server> {
     return span.hasName("Response." + responseMethod)
         .hasKind(INTERNAL)
         .hasAttributesSatisfyingExactly(
-            equalTo(CODE_NAMESPACE, Response.class.getName()),
-            equalTo(CODE_FUNCTION, responseMethod));
+            equalTo(CODE_FUNCTION_NAME, Response.class.getName() + "." + responseMethod));
   }
 }
