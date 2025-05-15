@@ -120,4 +120,8 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
   public Throwable getAsyncException(Context context) {
     return ServletAsyncContext.getAsyncException(context);
   }
+
+  public Context getAsyncListenerContext(Context context) {
+    return ServletAsyncContext.getAsyncListenerContext(context);
+  }
 }

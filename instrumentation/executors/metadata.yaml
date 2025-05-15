@@ -8,7 +8,9 @@ description: >
 configurations:
   - name: otel.instrumentation.executors.include
     description: List of Executor subclasses to be instrumented.
+    type: list
     default: ""
   - name: otel.instrumentation.executors.include-all
     description: Whether to instrument all classes that implement the Executor interface.
+    type: boolean
     default: false
