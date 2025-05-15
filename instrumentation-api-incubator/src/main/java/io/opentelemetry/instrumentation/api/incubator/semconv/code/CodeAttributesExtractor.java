@@ -22,9 +22,8 @@ public final class CodeAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   // copied from CodeIncubatingAttributes
-  private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function");
-  private static final AttributeKey<String> CODE_NAMESPACE =
-      AttributeKey.stringKey("code.namespace");
+  private static final AttributeKey<String> CODE_FUNCTION_NAME =
+      AttributeKey.stringKey("code.function.name");
 
   /** Creates the code attributes extractor. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
@@ -40,11 +39,13 @@ public final class CodeAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
+    StringBuilder sb = new StringBuilder();
     Class<?> cls = getter.getCodeClass(request);
     if (cls != null) {
-      internalSet(attributes, CODE_NAMESPACE, cls.getName());
+      sb.append(cls.getName()).append(".");
     }
-    internalSet(attributes, CODE_FUNCTION, getter.getMethodName(request));
+    sb.append(getter.getMethodName(request));
+    internalSet(attributes, CODE_FUNCTION_NAME, sb.toString());
   }
 
   @Override
