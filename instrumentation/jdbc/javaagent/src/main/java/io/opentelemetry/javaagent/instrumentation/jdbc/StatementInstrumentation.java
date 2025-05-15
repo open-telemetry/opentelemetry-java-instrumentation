@@ -25,6 +25,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -162,12 +163,13 @@ public class StatementInstrumentation implements TypeInstrumentation {
 
       Context parentContext = currentContext();
       if (statement instanceof PreparedStatement) {
-        Long batchSize = JdbcData.getPreparedStatementBatchSize((PreparedStatement) statement);
         String sql = JdbcData.preparedStatement.get((PreparedStatement) statement);
         if (sql == null) {
           return;
         }
-        request = DbRequest.create(statement, sql, batchSize);
+        Long batchSize = JdbcData.getPreparedStatementBatchSize((PreparedStatement) statement);
+        Map<String, String> parameters = JdbcData.getParameters((PreparedStatement) statement);
+        request = DbRequest.create(statement, sql, batchSize, parameters);
       } else {
         JdbcData.StatementBatchInfo batchInfo = JdbcData.getStatementBatchInfo(statement);
         if (batchInfo == null) {

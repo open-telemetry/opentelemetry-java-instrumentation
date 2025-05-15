@@ -248,8 +248,18 @@ public final class OpenTelemetryDriver implements Driver {
 
     Instrumenter<DbRequest, Void> statementInstrumenter =
         JdbcInstrumenterFactory.createStatementInstrumenter(openTelemetry);
+
+    boolean captureQueryParameters = JdbcInstrumenterFactory.captureQueryParameters();
+    Instrumenter<DbRequest, Void> transactionInstrumenter =
+        JdbcInstrumenterFactory.createTransactionInstrumenter(openTelemetry);
+
     return OpenTelemetryConnection.create(
-        connection, dbInfo, statementInstrumenter, sqlCommenterEnabled);
+        connection,
+        dbInfo,
+        statementInstrumenter,
+        transactionInstrumenter,
+        captureQueryParameters,
+        sqlCommenterEnabled);
   }
 
   @Override

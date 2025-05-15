@@ -52,8 +52,16 @@ class OpenTelemetryCallableStatement<S extends CallableStatement>
       DbInfo dbInfo,
       String query,
       Instrumenter<DbRequest, Void> instrumenter,
+      boolean captureQueryParameters,
       boolean sqlCommenterEnabled) {
-    super(delegate, connection, dbInfo, query, instrumenter, sqlCommenterEnabled);
+    super(
+        delegate,
+        connection,
+        dbInfo,
+        query,
+        instrumenter,
+        captureQueryParameters,
+        sqlCommenterEnabled);
   }
 
   @Override

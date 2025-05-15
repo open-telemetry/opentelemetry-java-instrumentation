@@ -26,14 +26,20 @@ public final class JdbcTelemetry {
 
   private final Instrumenter<DataSource, DbInfo> dataSourceInstrumenter;
   private final Instrumenter<DbRequest, Void> statementInstrumenter;
+  private final Instrumenter<DbRequest, Void> transactionInstrumenter;
+  private final boolean captureQueryParameters;
   private final boolean sqlCommenterEnabled;
 
   JdbcTelemetry(
       Instrumenter<DataSource, DbInfo> dataSourceInstrumenter,
       Instrumenter<DbRequest, Void> statementInstrumenter,
+      Instrumenter<DbRequest, Void> transactionInstrumenter,
+      boolean captureQueryParameters,
       boolean sqlCommenterEnabled) {
     this.dataSourceInstrumenter = dataSourceInstrumenter;
     this.statementInstrumenter = statementInstrumenter;
+    this.transactionInstrumenter = transactionInstrumenter;
+    this.captureQueryParameters = captureQueryParameters;
     this.sqlCommenterEnabled = sqlCommenterEnabled;
   }
 
@@ -42,6 +48,8 @@ public final class JdbcTelemetry {
         dataSource,
         this.dataSourceInstrumenter,
         this.statementInstrumenter,
+        this.transactionInstrumenter,
+        this.captureQueryParameters,
         this.sqlCommenterEnabled);
   }
 }

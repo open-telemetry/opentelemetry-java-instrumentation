@@ -352,6 +352,18 @@
       "defaultValue": true
     },
     {
+      "name": "otel.instrumentation.jdbc.capture-query-parameters",
+      "type": "java.lang.Boolean",
+      "description": "Sets whether the query parameters should be captured as span attributes named <code>db.query.parameter.&lt;key&gt;</code>. Enabling this option disables the statement sanitization.<p>WARNING: captured query parameters may contain sensitive information such as passwords, personally identifiable information or protected health info.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.jdbc.experimental.transaction.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables experimental instrumentation to create spans for COMMIT and ROLLBACK operations.",
+      "defaultValue": false
+    },
+    {
       "name": "otel.instrumentation.jdbc.sqlcommenter.enabled",
       "type": "java.lang.Boolean",
       "description": "Enables augmenting queries with a comment containing the tracing information. See [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting queries with tracing context will make query texts unique, which may have adverse impact on database performance. Consult with database experts before enabling.",

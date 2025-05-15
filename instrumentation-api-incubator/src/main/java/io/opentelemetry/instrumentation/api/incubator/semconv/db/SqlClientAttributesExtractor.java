@@ -12,7 +12,9 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.semconv.AttributeKeyTemplate;
 import java.util.Collection;
+import java.util.Map;
 
 /**
  * Extractor of <a
@@ -38,6 +40,8 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       AttributeKey.stringKey("db.collection.name");
   private static final AttributeKey<Long> DB_OPERATION_BATCH_SIZE =
       AttributeKey.longKey("db.operation.batch.size");
+  private static final AttributeKeyTemplate<String> DB_QUERY_PARAMETER =
+      AttributeKeyTemplate.stringKeyTemplate("db.query.parameter");
 
   /** Creates the SQL client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
@@ -58,14 +62,18 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
 
   private final AttributeKey<String> oldSemconvTableAttribute;
   private final boolean statementSanitizationEnabled;
+  private final boolean captureQueryParameters;
 
   SqlClientAttributesExtractor(
       SqlClientAttributesGetter<REQUEST, RESPONSE> getter,
       AttributeKey<String> oldSemconvTableAttribute,
-      boolean statementSanitizationEnabled) {
+      boolean statementSanitizationEnabled,
+      boolean captureQueryParameters) {
     super(getter);
     this.oldSemconvTableAttribute = oldSemconvTableAttribute;
-    this.statementSanitizationEnabled = statementSanitizationEnabled;
+    // capturing query parameters disables statement sanitization
+    this.statementSanitizationEnabled = !captureQueryParameters && statementSanitizationEnabled;
+    this.captureQueryParameters = captureQueryParameters;
   }
 
   @Override
@@ -77,6 +85,9 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     if (rawQueryTexts.isEmpty()) {
       return;
     }
+
+    Long batchSize = getter.getBatchSize(request);
+    boolean isBatch = batchSize != null && batchSize > 1;
 
     if (SemconvStability.emitOldDatabaseSemconv()) {
       if (rawQueryTexts.size() == 1) { // for backcompat(?)
@@ -95,8 +106,6 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     }
 
     if (SemconvStability.emitStableDatabaseSemconv()) {
-      Long batchSize = getter.getBatchSize(request);
-      boolean isBatch = batchSize != null && batchSize > 1;
       if (isBatch) {
         internalSet(attributes, DB_OPERATION_BATCH_SIZE, batchSize);
       }
@@ -125,6 +134,20 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
             && (multiQuery.getOperation() == null || !SQL_CALL.equals(multiQuery.getOperation()))) {
           internalSet(attributes, DB_COLLECTION_NAME, multiQuery.getMainIdentifier());
         }
+      }
+    }
+
+    Map<String, String> queryParameters = getter.getQueryParameters(request);
+    setQueryParameters(attributes, isBatch, queryParameters);
+  }
+
+  private void setQueryParameters(
+      AttributesBuilder attributes, boolean isBatch, Map<String, String> queryParameters) {
+    if (captureQueryParameters && !isBatch && queryParameters != null) {
+      for (Map.Entry<String, String> entry : queryParameters.entrySet()) {
+        String key = entry.getKey();
+        String value = entry.getValue();
+        internalSet(attributes, DB_QUERY_PARAMETER.getAttributeKey(key), value);
       }
     }
   }

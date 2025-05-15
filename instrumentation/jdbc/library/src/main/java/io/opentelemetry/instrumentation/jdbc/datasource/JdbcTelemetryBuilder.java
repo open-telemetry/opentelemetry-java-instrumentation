@@ -7,7 +7,11 @@ package io.opentelemetry.instrumentation.jdbc.datasource;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory;
+import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
+import javax.sql.DataSource;
 
 /** A builder of {@link JdbcTelemetry}. */
 public final class JdbcTelemetryBuilder {
@@ -16,6 +20,8 @@ public final class JdbcTelemetryBuilder {
   private boolean dataSourceInstrumenterEnabled = true;
   private boolean statementInstrumenterEnabled = true;
   private boolean statementSanitizationEnabled = true;
+  private boolean transactionInstrumenterEnabled = false;
+  private boolean captureQueryParameters = false;
   private boolean sqlCommenterEnabled = false;
 
   JdbcTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -43,6 +49,26 @@ public final class JdbcTelemetryBuilder {
     return this;
   }
 
+  /** Configures whether spans are created for JDBC Transactions. Disabled by default. */
+  @CanIgnoreReturnValue
+  public JdbcTelemetryBuilder setTransactionInstrumenterEnabled(boolean enabled) {
+    this.transactionInstrumenterEnabled = enabled;
+    return this;
+  }
+
+  /**
+   * Configures whether parameters are captured for JDBC Statements. Enabling this option disables
+   * the statement sanitization. Disabled by default.
+   *
+   * <p>WARNING: captured query parameters may contain sensitive information such as passwords,
+   * personally identifiable information or protected health info.
+   */
+  @CanIgnoreReturnValue
+  public JdbcTelemetryBuilder setCaptureQueryParameters(boolean enabled) {
+    this.captureQueryParameters = enabled;
+    return this;
+  }
+
   /**
    * Sets whether to augment sql query with comment containing the tracing information. See <a
    * href="https://google.github.io/sqlcommenter/">sqlcommenter</a> for more info.
@@ -58,11 +84,24 @@ public final class JdbcTelemetryBuilder {
 
   /** Returns a new {@link JdbcTelemetry} with the settings of this {@link JdbcTelemetryBuilder}. */
   public JdbcTelemetry build() {
-    return new JdbcTelemetry(
+    Instrumenter<DataSource, DbInfo> dataSourceInstrumenter =
         JdbcInstrumenterFactory.createDataSourceInstrumenter(
-            openTelemetry, dataSourceInstrumenterEnabled),
+            openTelemetry, dataSourceInstrumenterEnabled);
+    Instrumenter<DbRequest, Void> statementInstrumenter =
         JdbcInstrumenterFactory.createStatementInstrumenter(
-            openTelemetry, statementInstrumenterEnabled, statementSanitizationEnabled),
+            openTelemetry,
+            statementInstrumenterEnabled,
+            statementSanitizationEnabled,
+            captureQueryParameters);
+    Instrumenter<DbRequest, Void> transactionInstrumenter =
+        JdbcInstrumenterFactory.createTransactionInstrumenter(
+            openTelemetry, transactionInstrumenterEnabled);
+
+    return new JdbcTelemetry(
+        dataSourceInstrumenter,
+        statementInstrumenter,
+        transactionInstrumenter,
+        captureQueryParameters,
         sqlCommenterEnabled);
   }
 }

@@ -22,6 +22,7 @@ package io.opentelemetry.instrumentation.jdbc.datasource;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createDataSourceInstrumenter;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createStatementInstrumenter;
+import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createTransactionInstrumenter;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcUtils.computeDbInfo;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -47,6 +48,8 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
   private final DataSource delegate;
   private final Instrumenter<DataSource, DbInfo> dataSourceInstrumenter;
   private final Instrumenter<DbRequest, Void> statementInstrumenter;
+  private final Instrumenter<DbRequest, Void> transactionInstrumenter;
+  private final boolean captureQueryParameters;
   private final boolean sqlCommenterEnabled;
   private volatile DbInfo cachedDbInfo;
 
@@ -72,6 +75,8 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
     this.delegate = delegate;
     this.dataSourceInstrumenter = createDataSourceInstrumenter(openTelemetry, true);
     this.statementInstrumenter = createStatementInstrumenter(openTelemetry);
+    this.transactionInstrumenter = createTransactionInstrumenter(openTelemetry, false);
+    this.captureQueryParameters = false;
     this.sqlCommenterEnabled = false;
   }
 
@@ -88,10 +93,14 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
       DataSource delegate,
       Instrumenter<DataSource, DbInfo> dataSourceInstrumenter,
       Instrumenter<DbRequest, Void> statementInstrumenter,
+      Instrumenter<DbRequest, Void> transactionInstrumenter,
+      boolean captureQueryParameters,
       boolean sqlCommenterEnabled) {
     this.delegate = delegate;
     this.dataSourceInstrumenter = dataSourceInstrumenter;
     this.statementInstrumenter = statementInstrumenter;
+    this.transactionInstrumenter = transactionInstrumenter;
+    this.captureQueryParameters = captureQueryParameters;
     this.sqlCommenterEnabled = sqlCommenterEnabled;
   }
 
@@ -100,7 +109,12 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
     Connection connection = wrapCall(delegate::getConnection);
     DbInfo dbInfo = getDbInfo(connection);
     return OpenTelemetryConnection.create(
-        connection, dbInfo, statementInstrumenter, sqlCommenterEnabled);
+        connection,
+        dbInfo,
+        statementInstrumenter,
+        transactionInstrumenter,
+        captureQueryParameters,
+        sqlCommenterEnabled);
   }
 
   @Override
@@ -108,7 +122,12 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
     Connection connection = wrapCall(() -> delegate.getConnection(username, password));
     DbInfo dbInfo = getDbInfo(connection);
     return OpenTelemetryConnection.create(
-        connection, dbInfo, statementInstrumenter, sqlCommenterEnabled);
+        connection,
+        dbInfo,
+        statementInstrumenter,
+        transactionInstrumenter,
+        captureQueryParameters,
+        sqlCommenterEnabled);
   }
 
   @Override

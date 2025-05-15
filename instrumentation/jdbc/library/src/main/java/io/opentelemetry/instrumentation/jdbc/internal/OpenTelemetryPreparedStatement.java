@@ -43,10 +43,14 @@ import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 @SuppressWarnings("OverloadMethodsDeclarationOrder")
 class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTelemetryStatement<S>
     implements PreparedStatement {
+  private final boolean captureQueryParameters;
+  private final Map<String, String> parameters;
 
   public OpenTelemetryPreparedStatement(
       S delegate,
@@ -54,8 +58,17 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
       DbInfo dbInfo,
       String query,
       Instrumenter<DbRequest, Void> instrumenter,
+      boolean captureQueryParameters,
       boolean sqlCommenterEnabled) {
     super(delegate, connection, dbInfo, query, instrumenter, sqlCommenterEnabled);
+    this.captureQueryParameters = captureQueryParameters;
+    this.parameters = new HashMap<>();
+  }
+
+  private void putParameter(int index, Object value) {
+    if (this.captureQueryParameters && value != null) {
+      parameters.put(Integer.toString(index - 1), value.toString());
+    }
   }
 
   @Override
@@ -88,46 +101,55 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
   @Override
   public void setBoolean(int parameterIndex, boolean x) throws SQLException {
     delegate.setBoolean(parameterIndex, x);
+    putParameter(parameterIndex, String.valueOf(x));
   }
 
   @Override
   public void setByte(int parameterIndex, byte x) throws SQLException {
     delegate.setByte(parameterIndex, x);
+    putParameter(parameterIndex, String.valueOf(x));
   }
 
   @Override
   public void setShort(int parameterIndex, short x) throws SQLException {
     delegate.setShort(parameterIndex, x);
+    putParameter(parameterIndex, String.valueOf(x));
   }
 
   @Override
   public void setInt(int parameterIndex, int x) throws SQLException {
     delegate.setInt(parameterIndex, x);
+    putParameter(parameterIndex, String.valueOf(x));
   }
 
   @Override
   public void setLong(int parameterIndex, long x) throws SQLException {
     delegate.setLong(parameterIndex, x);
+    putParameter(parameterIndex, String.valueOf(x));
   }
 
   @Override
   public void setFloat(int parameterIndex, float x) throws SQLException {
     delegate.setFloat(parameterIndex, x);
+    putParameter(parameterIndex, String.valueOf(x));
   }
 
   @Override
   public void setDouble(int parameterIndex, double x) throws SQLException {
     delegate.setDouble(parameterIndex, x);
+    putParameter(parameterIndex, String.valueOf(x));
   }
 
   @Override
   public void setBigDecimal(int parameterIndex, BigDecimal x) throws SQLException {
     delegate.setBigDecimal(parameterIndex, x);
+    putParameter(parameterIndex, x);
   }
 
   @Override
   public void setString(int parameterIndex, String x) throws SQLException {
     delegate.setString(parameterIndex, x);
+    putParameter(parameterIndex, x);
   }
 
   @Override
@@ -139,35 +161,41 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
   @Override
   public void setDate(int parameterIndex, Date x) throws SQLException {
     delegate.setDate(parameterIndex, x);
+    putParameter(parameterIndex, x);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setDate(int parameterIndex, Date x, Calendar cal) throws SQLException {
     delegate.setDate(parameterIndex, x, cal);
+    putParameter(parameterIndex, x);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setTime(int parameterIndex, Time x) throws SQLException {
     delegate.setTime(parameterIndex, x);
+    putParameter(parameterIndex, x);
   }
 
   @Override
   public void setTime(int parameterIndex, Time x, Calendar cal) throws SQLException {
     delegate.setTime(parameterIndex, x, cal);
+    putParameter(parameterIndex, x);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setTimestamp(int parameterIndex, Timestamp x) throws SQLException {
     delegate.setTimestamp(parameterIndex, x);
+    putParameter(parameterIndex, x);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setTimestamp(int parameterIndex, Timestamp x, Calendar cal) throws SQLException {
     delegate.setTimestamp(parameterIndex, x, cal);
+    putParameter(parameterIndex, x);
   }
 
   @SuppressWarnings("UngroupedOverloads")
@@ -308,6 +336,7 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
   @Override
   public void setURL(int parameterIndex, URL x) throws SQLException {
     delegate.setURL(parameterIndex, x);
+    putParameter(parameterIndex, x);
   }
 
   @Override
@@ -318,11 +347,13 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
   @Override
   public void setRowId(int parameterIndex, RowId x) throws SQLException {
     delegate.setRowId(parameterIndex, x);
+    putParameter(parameterIndex, x);
   }
 
   @Override
   public void setNString(int parameterIndex, String value) throws SQLException {
     delegate.setNString(parameterIndex, value);
+    putParameter(parameterIndex, value);
   }
 
   @SuppressWarnings("UngroupedOverloads")
@@ -362,6 +393,7 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
   @Override
   public void clearParameters() throws SQLException {
     delegate.clearParameters();
+    parameters.clear();
   }
 
   @Override
@@ -369,8 +401,15 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
     return wrapBatchCall(delegate::executeBatch);
   }
 
+  @Override
+  protected <T, E extends Exception> T wrapCall(String sql, ThrowingSupplier<T, E> callable)
+      throws E {
+    DbRequest request = DbRequest.create(dbInfo, sql, null, parameters);
+    return wrapCall(request, callable);
+  }
+
   private <T, E extends Exception> T wrapBatchCall(ThrowingSupplier<T, E> callable) throws E {
-    DbRequest request = DbRequest.create(dbInfo, query, batchSize);
+    DbRequest request = DbRequest.create(dbInfo, query, batchSize, parameters);
     return wrapCall(request, callable);
   }
 
