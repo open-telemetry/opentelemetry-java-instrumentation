@@ -9,7 +9,6 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.resources.HostIdResource;
 import io.opentelemetry.instrumentation.resources.HostResource;
 import io.opentelemetry.instrumentation.resources.OsResource;
-import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 
 /**
@@ -20,14 +19,8 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
  */
 @SuppressWarnings("rawtypes")
 @AutoService(ComponentProvider.class)
-public class HostResourceComponentProvider extends ResourceComponentProvider implements Ordered {
+public class HostResourceComponentProvider extends ResourceComponentProvider {
   public HostResourceComponentProvider() {
     super("host", () -> HostResource.get().merge(HostIdResource.get()).merge(OsResource.get()));
-  }
-
-  @Override
-  public int order() {
-    // Run after cloud provider resource providers
-    return Integer.MAX_VALUE - 1;
   }
 }
