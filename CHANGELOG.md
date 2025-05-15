@@ -39,6 +39,8 @@
   ([#13709](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13709))
 - Added experimental opt-in JDBC `db.query.parameter.<key>` span attributes
   ([#13719](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13719))
+- Add tools support to bedrock InvokeModel instrumentation
+  ([#13832](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13832))
 
 ### 🛠️ Bug fixes
 
