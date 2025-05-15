@@ -21,6 +21,6 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
-  latestDepTestLibrary("io.vertx:vertx-core:4.+") // 5.x not supported yet
-  latestDepTestLibrary("io.vertx:vertx-codegen:4.+") // 5.x not supported yet
+  latestDepTestLibrary("io.vertx:vertx-core:4.+") // documented limitation, 5.x not supported yet
+  latestDepTestLibrary("io.vertx:vertx-codegen:4.+") // documented limitation, 5.x not supported yet
 }

@@ -21,9 +21,9 @@ dependencies {
   testLibrary("io.vertx:vertx-pg-client:$version")
   testLibrary("io.vertx:vertx-codegen:$version")
 
-  latestDepTestLibrary("io.vertx:vertx-sql-client:4.+") // 5.x not supported yet
-  latestDepTestLibrary("io.vertx:vertx-pg-client:4.+") // 5.x not supported yet
-  latestDepTestLibrary("io.vertx:vertx-codegen:4.+") // 5.x not supported yet
+  latestDepTestLibrary("io.vertx:vertx-sql-client:4.+") // documented limitation, 5.x not supported yet
+  latestDepTestLibrary("io.vertx:vertx-pg-client:4.+") // documented limitation, 5.x not supported yet
+  latestDepTestLibrary("io.vertx:vertx-codegen:4.+") // documented limitation, 5.x not supported yet
 }
 
 tasks {
@@ -37,5 +37,13 @@ tasks {
 
   check {
     dependsOn(testStableSemconv)
+  }
+}
+
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+if (!latestDepTest) {
+  // https://bugs.openjdk.org/browse/JDK-8320431
+  otelJava {
+    maxJavaVersionForTests.set(JavaVersion.VERSION_21)
   }
 }
