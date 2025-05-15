@@ -37,9 +37,9 @@ testing {
       dependencies {
         implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
 
-        implementation("io.vertx:vertx-web:latest.release")
-        implementation("io.vertx:vertx-jdbc-client:latest.release")
-        implementation("io.vertx:vertx-codegen:latest.release")
+        implementation("io.vertx:vertx-web:4.+")
+        implementation("io.vertx:vertx-jdbc-client:4.+")
+        implementation("io.vertx:vertx-codegen:4.+")
       }
     }
   }
