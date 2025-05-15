@@ -7,8 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.methods;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION_NAME;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.trace.Span;
@@ -43,8 +42,9 @@ class MethodTest {
                     span.hasName("ConfigTracedCallable.call")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, ConfigTracedCallable.class.getName()),
-                            equalTo(CODE_FUNCTION, "call"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                ConfigTracedCallable.class.getName() + ".call"))));
   }
 
   @Test
