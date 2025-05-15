@@ -11,8 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -78,8 +77,9 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
           .hasKind(SpanKind.INTERNAL)
           .hasStatus(StatusData.error())
           .hasAttributesSatisfyingExactly(
-              equalTo(CODE_NAMESPACE, ResourceHttpRequestHandler.class.getName()),
-              equalTo(CODE_FUNCTION, "handleRequest"))
+              equalTo(
+                  CODE_FUNCTION_NAME,
+                  ResourceHttpRequestHandler.class.getName() + ".handleRequest"))
           .hasEventsSatisfyingExactly(
               event ->
                   event
