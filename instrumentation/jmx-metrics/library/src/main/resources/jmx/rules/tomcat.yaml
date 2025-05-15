@@ -27,11 +27,11 @@ rules:
         unit: s
         desc: The longest request processing time.
       processingTime:
-        metric: request.processing_time
+        metric: request.duration.total
         type: counter
         sourceUnit: ms
         unit: s
-        desc: Total time for processing all requests.
+        desc: Total time of processing all requests.
       bytesReceived:
         metric: &metric network.io
         type: &type counter
