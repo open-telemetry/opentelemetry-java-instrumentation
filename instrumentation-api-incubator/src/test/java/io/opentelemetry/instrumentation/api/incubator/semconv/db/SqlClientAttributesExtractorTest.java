@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_PARAMETER;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.entry;
@@ -60,6 +61,14 @@ class SqlClientAttributesExtractorTest {
     @Override
     public Long getBatchSize(Map<String, Object> map) {
       return read(map, "db.operation.batch.size", Long.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Map<String, String> getQueryParameters(Map<String, Object> map) {
+      Map<String, String> parameters =
+          (Map<String, String>) read(map, "db.query.parameter", Map.class);
+      return parameters != null ? parameters : Collections.emptyMap();
     }
 
     protected String read(Map<String, Object> map, String key) {
@@ -385,6 +394,76 @@ class SqlClientAttributesExtractorTest {
               entry(DbIncubatingAttributes.DB_COLLECTION_NAME, "potato"));
     }
 
+    assertThat(endAttributes.build().isEmpty()).isTrue();
+  }
+
+  @Test
+  void shouldExtractQueryParameters() {
+    // given
+    Map<String, Object> request = new HashMap<>();
+    request.put("db.name", "potatoes");
+    // a query with prepared parameters and parameters to sanitize
+    request.put(
+        "db.statement",
+        "SELECT col FROM table WHERE field1=? AND field2='A' AND field3=? AND field4=2");
+    // a prepared parameters map
+    Map<String, String> parameterMap = new HashMap<>();
+    parameterMap.put("0", "'a'");
+    parameterMap.put("1", "1");
+    request.put("db.query.parameter", parameterMap);
+
+    Context context = Context.root();
+
+    AttributesExtractor<Map<String, Object>, Void> underTest =
+        SqlClientAttributesExtractor.builder(new TestAttributesGetter())
+            .setCaptureQueryParameters(true)
+            .build();
+
+    // when
+    AttributesBuilder startAttributes = Attributes.builder();
+    underTest.onStart(startAttributes, context, request);
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    underTest.onEnd(endAttributes, context, request, null, null);
+
+    String prefix = DB_QUERY_PARAMETER.getAttributeKey("").getKey();
+    Attributes queryParameterAttributes =
+        startAttributes.removeIf(attribute -> !attribute.getKey().startsWith(prefix)).build();
+
+    // then
+    assertThat(queryParameterAttributes)
+        .containsOnly(
+            entry(DB_QUERY_PARAMETER.getAttributeKey("0"), "'a'"),
+            entry(DB_QUERY_PARAMETER.getAttributeKey("1"), "1"));
+
+    assertThat(endAttributes.build().isEmpty()).isTrue();
+  }
+
+  @Test
+  void shouldNotExtractQueryParametersForBatch() {
+    // given
+    Map<String, Object> request = new HashMap<>();
+    request.put("db.name", "potatoes");
+    request.put("db.statements", singleton("INSERT INTO potato VALUES(?)"));
+    request.put("db.operation.batch.size", 2L);
+    request.put("db.query.parameter", Collections.singletonMap("0", "1"));
+
+    Context context = Context.root();
+
+    AttributesExtractor<Map<String, Object>, Void> underTest =
+        SqlClientAttributesExtractor.builder(new TestMultiAttributesGetter())
+            .setCaptureQueryParameters(true)
+            .build();
+
+    // when
+    AttributesBuilder startAttributes = Attributes.builder();
+    underTest.onStart(startAttributes, context, request);
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    underTest.onEnd(endAttributes, context, request, null, null);
+
+    // then
+    assertThat(startAttributes.build()).doesNotContainKey(DB_QUERY_PARAMETER.getAttributeKey("0"));
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
 }

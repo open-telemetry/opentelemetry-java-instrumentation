@@ -60,7 +60,8 @@ class DeclarativeConfigPropertiesBridgeTest {
             Objects.requireNonNull(configProvider.getInstrumentationConfig()));
 
     OpenTelemetryConfigurationModel emptyModel =
-        new OpenTelemetryConfigurationModel().withInstrumentation(new InstrumentationModel());
+        new OpenTelemetryConfigurationModel()
+            .withAdditionalProperty("instrumentation", new InstrumentationModel());
     SdkConfigProvider emptyConfigProvider = SdkConfigProvider.create(emptyModel);
     emptyBridge =
         new DeclarativeConfigPropertiesBridge(
