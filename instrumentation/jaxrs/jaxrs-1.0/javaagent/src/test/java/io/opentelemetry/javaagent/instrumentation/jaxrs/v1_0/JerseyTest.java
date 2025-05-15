@@ -8,8 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v1_0;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.sun.jersey.spi.container.servlet.ServletContainer;
@@ -122,7 +121,8 @@ class JerseyTest extends AbstractHttpServerUsingTest<Server> {
                     span.hasName(controllerName)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, Resource.class.getName() + "$" + className),
-                            equalTo(CODE_FUNCTION, methodName))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                Resource.class.getName() + "$" + className + "." + methodName))));
   }
 }
