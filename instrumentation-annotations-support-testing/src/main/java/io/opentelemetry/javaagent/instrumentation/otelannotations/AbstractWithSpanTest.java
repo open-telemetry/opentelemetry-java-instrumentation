@@ -81,7 +81,9 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
                         .hasStatus(StatusData.error())
                         .hasException(AbstractTraced.FAILURE)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION_NAME, traced.getClass().getName()+".completable"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                traced.getClass().getName() + ".completable"))));
   }
 
   @Test
@@ -98,7 +100,8 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION_NAME, traced.getClass().getName()+".completable"),
+                            equalTo(
+                                CODE_FUNCTION_NAME, traced.getClass().getName() + ".completable"),
                             equalTo(booleanKey(canceledKey()), true))));
   }
 
@@ -115,7 +118,9 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION_NAME, traced.getClass().getName()+".alreadySucceeded"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                traced.getClass().getName() + ".alreadySucceeded"))));
   }
 
   @Test
@@ -134,6 +139,8 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
                         .hasStatus(StatusData.error())
                         .hasException(AbstractTraced.FAILURE)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION_NAME, traced.getClass().getName()+".alreadyFailed"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                traced.getClass().getName() + ".alreadyFailed"))));
   }
 }
