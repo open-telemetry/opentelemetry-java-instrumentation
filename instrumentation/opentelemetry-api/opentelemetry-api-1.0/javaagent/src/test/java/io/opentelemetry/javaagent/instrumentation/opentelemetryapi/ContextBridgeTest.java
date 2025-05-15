@@ -27,7 +27,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class ContextBridgeTest {
 
   @RegisterExtension
@@ -84,9 +83,8 @@ class ContextBridgeTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                runnable.getClass().getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "run"),
+                                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                runnable.getClass().getName() + ".run"),
                             equalTo(stringKey("cat"), "yes"))));
   }
 
@@ -149,9 +147,8 @@ class ContextBridgeTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                runnable.getClass().getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "run"),
+                                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                runnable.getClass().getName() + ".run"),
                             equalTo(stringKey("cat"), "yes"))));
   }
 
