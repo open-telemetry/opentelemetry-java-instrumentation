@@ -828,17 +828,7 @@ public final class BedrockRuntimeImpl {
         }
         List<ContentBlock> parsedContentBlocks = new ArrayList<>();
         for (Document contentBlock : content.asList()) {
-          ContentBlock parsed;
-          switch (modelFamily) {
-            case AMAZON_NOVA:
-              parsed = parseAmazonNovaContentBlock(contentBlock);
-              break;
-            case ANTHROPIC_CLAUDE:
-              parsed = parseAnthropicClaudeContentBlock(contentBlock);
-              break;
-            default:
-              parsed = null;
-          }
+          ContentBlock parsed = parseModelContentBlock(modelFamily, contentBlock);
           if (parsed != null) {
             parsedContentBlocks.add(parsed);
           }
@@ -988,17 +978,7 @@ public final class BedrockRuntimeImpl {
     }
     List<ContentBlock> parsedContentBlocks = new ArrayList<>();
     for (Document contentBlock : content.asList()) {
-      ContentBlock parsed;
-      switch (modelFamily) {
-        case AMAZON_NOVA:
-          parsed = parseAmazonNovaContentBlock(contentBlock);
-          break;
-        case ANTHROPIC_CLAUDE:
-          parsed = parseAnthropicClaudeContentBlock(contentBlock);
-          break;
-        default:
-          parsed = null;
-      }
+      ContentBlock parsed = parseModelContentBlock(modelFamily, contentBlock);
       if (parsed != null) {
         parsedContentBlocks.add(parsed);
       }
@@ -1009,6 +989,18 @@ public final class BedrockRuntimeImpl {
         .setAttribute(EVENT_NAME, "gen_ai.choice")
         .setBody(convertMessage(parsedMessage, 0, stopReasonString, captureMessageContent))
         .emit();
+  }
+
+  @Nullable
+  private static ContentBlock parseModelContentBlock(
+      ModelFamily modelFamily, Document contentBlock) {
+    switch (modelFamily) {
+      case AMAZON_NOVA:
+        return parseAmazonNovaContentBlock(contentBlock);
+      case ANTHROPIC_CLAUDE:
+        return parseAnthropicClaudeContentBlock(contentBlock);
+    }
+    return null;
   }
 
   @Nullable
@@ -1553,11 +1545,11 @@ public final class BedrockRuntimeImpl {
                 }
               case "input_json_delta":
                 {
-                  if (currentInputJson == null) {
-                    currentInputJson = new StringBuilder();
-                  }
                   Document json = delta.asMap().get("partial_json");
                   if (json != null && json.isString()) {
+                    if (currentInputJson == null) {
+                      currentInputJson = new StringBuilder();
+                    }
                     currentInputJson.append(json.asString());
                   }
                   return;
