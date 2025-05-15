@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 2.16.0 (2025-05-15)
+
 ### ⚠️⚠️ Breaking changes ⚠️⚠️
 
 - Remove operation name from graphql span name
