@@ -62,6 +62,11 @@ libraries:
     target_versions:
       javaagent:
       - org.apache.shenyu:shenyu-web:[2.4.0,)
+    configurations:
+    - name: otel.instrumentation.apache-shenyu.experimental-span-attributes
+      description: Enables experimental span attributes for Apache Shenyu instrumentation.
+      type: boolean
+      default: false
   - name: apache-httpclient-2.0
     source_path: instrumentation/apache-httpclient/apache-httpclient-2.0
     scope:
@@ -92,12 +97,22 @@ libraries:
       - io.dropwizard:dropwizard-client:(,3.0.0)
       - org.apache.httpcomponents:httpclient:[4.0,)
   - name: apache-dubbo-2.7
+    description: The Apache Dubbo instrumentation provides client and server spans
+      for Apache Dubbo RPC calls. Each call produces a span named after the Dubbo
+      method, enriched with standard RPC attributes (system, service, method), network
+      attributes, and error details if an exception occurs.
     source_path: instrumentation/apache-dubbo-2.7
     scope:
       name: io.opentelemetry.apache-dubbo-2.7
     target_versions:
       javaagent:
       - org.apache.dubbo:dubbo:[2.7,)
+    configurations:
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
   - name: apache-httpclient-5.2
     source_path: instrumentation/apache-httpclient/apache-httpclient-5.2
     scope:
@@ -166,6 +181,8 @@ libraries:
       - io.avaje:avaje-jex:[3.0,)
   aws:
   - name: aws-lambda-events-2.2
+    description: |
+      Provides full instrumentation of the Lambda library, including standard and custom event types, from `aws-lambda-java-events` 2.2+.
     source_path: instrumentation/aws-lambda/aws-lambda-events-2.2
     scope:
       name: io.opentelemetry.aws-lambda-events-2.2
@@ -175,7 +192,14 @@ libraries:
       library:
       - com.amazonaws:aws-lambda-java-events:2.2.1
       - com.amazonaws:aws-lambda-java-core:1.0.0
+    configurations:
+    - name: otel.instrumentation.aws-lambda.flush-timeout
+      description: Flush timeout in milliseconds.
+      type: int
+      default: 10000
   - name: aws-lambda-core-1.0
+    description: |
+      Provides lightweight instrumentation of the Lambda core library, supporting all versions. Use this package if you only use `RequestStreamHandler` or know you don't use any event classes from `aws-lambda-java-events`. This also includes when you are using `aws-serverless-java-container` to run e.g., a Spring Boot application on Lambda.
     source_path: instrumentation/aws-lambda/aws-lambda-core-1.0
     scope:
       name: io.opentelemetry.aws-lambda-core-1.0
@@ -184,6 +208,11 @@ libraries:
       - com.amazonaws:aws-lambda-java-core:[1.0.0,)
       library:
       - com.amazonaws:aws-lambda-java-core:1.0.0
+    configurations:
+    - name: otel.instrumentation.aws-lambda.flush-timeout
+      description: Flush timeout in milliseconds.
+      type: int
+      default: 10000
   - name: aws-sdk-1.11
     source_path: instrumentation/aws-sdk/aws-sdk-1.11
     scope:
@@ -195,6 +224,19 @@ libraries:
       library:
       - com.amazonaws:aws-java-sdk-sqs:[1.11.106,1.12.583)
       - com.amazonaws:aws-java-sdk-core:1.11.0
+    configurations:
+    - name: otel.instrumentation.aws-sdk.experimental-span-attributes
+      description: Enables experimental span attributes for AWS SDK instrumentation.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+      description: Enables experimental receive telemetry for AWS SDK instrumentation.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: Allows configuring headers to capture as span attributes.
+      type: list
+      default: ''
   - name: aws-sdk-2.2
     source_path: instrumentation/aws-sdk/aws-sdk-2.2
     scope:
@@ -779,11 +821,21 @@ libraries:
       description: Enables statement sanitization for database queries.
       type: boolean
       default: true
+    - name: otel.instrumentation.jdbc.experimental.transaction.enabled
+      description: Enables experimental instrumentation to create spans for COMMIT
+        and ROLLBACK operations.
+      type: boolean
+      default: false
     - name: otel.instrumentation.common.peer-service-mapping
       description: Used to specify a mapping from host names or IP addresses to peer
         services.
       type: map
       default: ''
+    - name: otel.instrumentation.jdbc.capture-query-parameters
+      description: |
+        Sets whether the query parameters should be captured as span attributes named <code>db.query.parameter.&lt;key&gt;</code>. Enabling this option disables the statement sanitization.<p>WARNING: captured query parameters may contain sensitive information such as passwords, personally identifiable information or protected health info.
+      type: boolean
+      default: false
     - name: otel.instrumentation.jdbc-datasource.enabled
       description: Enables instrumentation of JDBC datasource connections.
       type: boolean

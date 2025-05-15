@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.docs;
 import static io.opentelemetry.instrumentation.docs.parsers.GradleParser.parseGradleFile;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 import io.opentelemetry.instrumentation.docs.internal.DependencyInfo;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
@@ -20,8 +21,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 
 class InstrumentationAnalyzer {
+
+  private static final Logger logger = Logger.getLogger(InstrumentationAnalyzer.class.getName());
 
   private final FileManager fileManager;
 
@@ -73,7 +77,12 @@ class InstrumentationAnalyzer {
 
       String metadataFile = fileManager.getMetaDataFile(module.getSrcPath());
       if (metadataFile != null) {
-        module.setMetadata(YamlHelper.metaDataParser(metadataFile));
+        try {
+          module.setMetadata(YamlHelper.metaDataParser(metadataFile));
+        } catch (ValueInstantiationException e) {
+          logger.severe("Error parsing metadata file for " + module.getInstrumentationName());
+          throw e;
+        }
       }
     }
     return modules;

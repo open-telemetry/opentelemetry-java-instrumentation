@@ -1,0 +1,9 @@
+description: The Apache Dubbo instrumentation provides client and server spans for Apache Dubbo
+  RPC calls. Each call produces a span named after the Dubbo method, enriched with standard RPC
+  attributes (system, service, method), network attributes, and error details if an exception
+  occurs.
+configurations:
+  - name: otel.instrumentation.common.peer-service-mapping
+    description: Used to specify a mapping from host names or IP addresses to peer services.
+    type: map
+    default: ''
