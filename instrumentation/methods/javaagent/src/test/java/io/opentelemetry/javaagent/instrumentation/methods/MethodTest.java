@@ -25,13 +25,11 @@ import javax.naming.ldap.InitialLdapContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class MethodTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void methodTraced() {
     assertThat(new ConfigTracedCallable().call()).isEqualTo("Hello!");
@@ -70,8 +68,9 @@ class MethodTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasException(throwableReference.get())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, InitialDirContext.class.getName()),
-                            equalTo(CODE_FUNCTION, "search"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                InitialDirContext.class.getName() + ".search"))));
   }
 
   static class ConfigTracedCallable implements Callable<String> {
@@ -101,8 +100,9 @@ class MethodTest {
                     span.hasName("ConfigTracedCompletableFuture.getResult")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, ConfigTracedCompletableFuture.class.getName()),
-                            equalTo(CODE_FUNCTION, "getResult"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                ConfigTracedCompletableFuture.class.getName() + ".getResult"))));
   }
 
   static class ConfigTracedCompletableFuture {
