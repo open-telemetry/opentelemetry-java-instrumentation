@@ -47,7 +47,7 @@ testing {
         implementation("org.testcontainers:testcontainers")
         if (latestDepTest) {
           implementation("org.hibernate.reactive:hibernate-reactive-core:latest.release")
-          implementation("io.vertx:vertx-pg-client:latest.release")
+          implementation("io.vertx:vertx-pg-client:4.+")
         } else {
           implementation("org.hibernate.reactive:hibernate-reactive-core:2.0.0.Final")
           implementation("io.vertx:vertx-pg-client:4.4.2")
