@@ -21,9 +21,9 @@ dependencies {
   testLibrary("io.vertx:vertx-pg-client:$version")
   testLibrary("io.vertx:vertx-codegen:$version")
 
-  latestDepTestLibrary("io.vertx:vertx-sql-client:4.+")
-  latestDepTestLibrary("io.vertx:vertx-pg-client:4.+")
-  latestDepTestLibrary("io.vertx:vertx-codegen:4.+")
+  latestDepTestLibrary("io.vertx:vertx-sql-client:4.+") // 5.x not supported yet
+  latestDepTestLibrary("io.vertx:vertx-pg-client:4.+") // 5.x not supported yet
+  latestDepTestLibrary("io.vertx:vertx-codegen:4.+") // 5.x not supported yet
 }
 
 tasks {
