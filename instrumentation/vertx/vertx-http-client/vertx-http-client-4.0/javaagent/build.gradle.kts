@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("io.vertx")
     module.set("vertx-core")
-    versions.set("[4.0.0,)")
+    versions.set("[4.0.0,5)")
     assertInverse.set(true)
   }
 }
@@ -20,4 +20,7 @@ dependencies {
   implementation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-common:javaagent"))
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
+
+  latestDepTestLibrary("io.vertx:vertx-core:4.+")
+  latestDepTestLibrary("io.vertx:vertx-codegen:4.+")
 }
