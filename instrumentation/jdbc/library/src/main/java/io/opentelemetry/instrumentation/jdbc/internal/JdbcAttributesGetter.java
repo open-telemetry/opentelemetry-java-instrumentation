@@ -9,13 +9,10 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttrib
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Map;
 import javax.annotation.Nullable;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
-public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest, Void> {
+final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest, Void> {
 
   @Nullable
   @Override
@@ -61,5 +58,10 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
       return Integer.toString(((SQLException) error).getErrorCode());
     }
     return null;
+  }
+
+  @Override
+  public Map<String, String> getQueryParameters(DbRequest request) {
+    return request.getPreparedStatementParameters();
   }
 }

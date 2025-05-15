@@ -17,6 +17,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.AbstractServlet3Test.HTML_PRINT_WRITER;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.AbstractServlet3Test.HTML_SERVLET_OUTPUT_STREAM;
 
+import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -100,7 +101,12 @@ public class TestServlet3 {
     protected void service(HttpServletRequest req, HttpServletResponse resp) {
       ServerEndpoint endpoint = ServerEndpoint.forPath(req.getServletPath());
       CountDownLatch latch = new CountDownLatch(1);
-      AsyncContext context = req.startAsync();
+      boolean startAsyncInSpan =
+          SUCCESS.equals(endpoint) && "true".equals(req.getParameter("startAsyncInSpan"));
+      AsyncContext context =
+          startAsyncInSpan
+              ? GlobalTraceUtil.runWithSpan("startAsync", () -> req.startAsync())
+              : req.startAsync();
       if (endpoint.equals(EXCEPTION)) {
         context.setTimeout(5000);
       }

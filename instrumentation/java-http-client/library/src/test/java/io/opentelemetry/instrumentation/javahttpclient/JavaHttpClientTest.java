@@ -12,6 +12,8 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import java.net.http.HttpClient;
 import java.util.Collections;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.condition.DisabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class JavaHttpClientTest extends AbstractJavaHttpClientTest {
@@ -39,6 +41,7 @@ public abstract class JavaHttpClientTest extends AbstractJavaHttpClientTest {
     }
   }
 
+  @DisabledForJreRange(min = JRE.JAVA_25) // flaky on jdk25-ea
   @Nested
   static class Http2ClientTest extends JavaHttpClientTest {
 

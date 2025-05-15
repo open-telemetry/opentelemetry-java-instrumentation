@@ -1,0 +1,351 @@
+---
+id: f3198ef2-111f-48cc-b293-79a02e8dc9b8
+name: model_amazonnova-micro-v10_invoke
+request:
+  url: /model/amazon.nova-micro-v1%3A0/invoke
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "messages" : [ {
+          "role" : "user",
+          "content" : [ {
+            "text" : "What is the weather in Seattle and San Francisco today?"
+          } ]
+        } ],
+        "toolConfig" : {
+          "tools" : [ {
+            "toolSpec" : {
+              "name" : "get_current_weather",
+              "description" : "Get the current weather in a given location.",
+              "inputSchema" : {
+                "json" : {
+                  "type" : "object",
+                  "properties" : {
+                    "location" : {
+                      "type" : "string",
+                      "description" : "The name of the city"
+                    }
+                  },
+                  "required" : [ "location" ]
+                }
+              }
+            }
+          } ]
+        }
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  body: "{\"output\":{\"message\":{\"content\":[{\"text\":\"<thinking> The User has\
+    \ asked for the current weather in two locations: Seattle and San Francisco. To\
+    \ provide this information, I will use the \\\"get_current_weather\\\" tool for\
+    \ each location separately. </thinking>\\n\"},{\"toolUse\":{\"name\":\"get_current_weather\"\
+    ,\"toolUseId\":\"d01caf28-63e1-4d23-9b03-41cb967810d3\",\"input\":{\"location\"\
+    :\"Seattle\"}}},{\"toolUse\":{\"name\":\"get_current_weather\",\"toolUseId\":\"\
+    ee0169e4-80b3-4691-83c9-fc1e17971570\",\"input\":{\"location\":\"San Francisco\"\
+    }}}],\"role\":\"assistant\"}},\"stopReason\":\"tool_use\",\"usage\":{\"inputTokens\"\
+    :416,\"outputTokens\":161,\"totalTokens\":577,\"cacheReadInputTokenCount\":0,\"\
+    cacheWriteInputTokenCount\":0}}"
+  headers:
+    Date: "Thu, 08 May 2025 05:42:11 GMT"
+    Content-Type: application/json
+    x-amzn-RequestId: e1440bcd-57f7-4e62-aead-a897468ccc73
+    X-Amzn-Bedrock-Invocation-Latency: "439"
+    X-Amzn-Bedrock-Cache-Write-Input-Token-Count: "0"
+    X-Amzn-Bedrock-Cache-Read-Input-Token-Count: "0"
+    X-Amzn-Bedrock-Output-Token-Count: "161"
+    X-Amzn-Bedrock-Input-Token-Count: "416"
+uuid: f3198ef2-111f-48cc-b293-79a02e8dc9b8
+persistent: true
+insertionIndex: 60
+---
+id: d4e9bbcc-8fbb-4095-81b7-04c247fe8b83
+name: model_amazonnova-micro-v10_invoke
+request:
+  url: /model/amazon.nova-micro-v1%3A0/invoke
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "messages" : [ {
+          "role" : "user",
+          "content" : [ {
+            "text" : "What is the weather in Seattle and San Francisco today?"
+          } ]
+        } ],
+        "toolConfig" : {
+          "tools" : [ {
+            "toolSpec" : {
+              "name" : "get_current_weather",
+              "description" : "Get the current weather in a given location.",
+              "inputSchema" : {
+                "json" : {
+                  "type" : "object",
+                  "properties" : {
+                    "location" : {
+                      "type" : "string",
+                      "description" : "The name of the city"
+                    }
+                  },
+                  "required" : [ "location" ]
+                }
+              }
+            }
+          } ]
+        }
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  body: "{\"output\":{\"message\":{\"content\":[{\"text\":\"<thinking> The User has\
+    \ asked for the current weather in two locations: Seattle and San Francisco. To\
+    \ provide this information, I will need to use the \\\"get_current_weather\\\"\
+    \ tool twice, once for each location. I will call the tool with the appropriate\
+    \ location for each request. </thinking>\\n\"},{\"toolUse\":{\"name\":\"get_current_weather\"\
+    ,\"toolUseId\":\"2e6fe685-46eb-4699-9254-c0cf071e7f9b\",\"input\":{\"location\"\
+    :\"Seattle\"}}},{\"toolUse\":{\"name\":\"get_current_weather\",\"toolUseId\":\"\
+    a148657b-d07f-4b95-a422-0548617ee183\",\"input\":{\"location\":\"San Francisco\"\
+    }}}],\"role\":\"assistant\"}},\"stopReason\":\"tool_use\",\"usage\":{\"inputTokens\"\
+    :416,\"outputTokens\":178,\"totalTokens\":594,\"cacheReadInputTokenCount\":0,\"\
+    cacheWriteInputTokenCount\":0}}"
+  headers:
+    Date: "Thu, 08 May 2025 05:43:12 GMT"
+    Content-Type: application/json
+    x-amzn-RequestId: 115d83f7-3464-497c-9bbc-1ab4e3edf8d0
+    X-Amzn-Bedrock-Invocation-Latency: "461"
+    X-Amzn-Bedrock-Cache-Write-Input-Token-Count: "0"
+    X-Amzn-Bedrock-Cache-Read-Input-Token-Count: "0"
+    X-Amzn-Bedrock-Output-Token-Count: "178"
+    X-Amzn-Bedrock-Input-Token-Count: "416"
+uuid: d4e9bbcc-8fbb-4095-81b7-04c247fe8b83
+persistent: true
+insertionIndex: 62
+---
+id: 9f342370-bd08-4513-b85d-bd560a831c28
+name: model_amazonnova-micro-v10_invoke
+request:
+  url: /model/amazon.nova-micro-v1%3A0/invoke
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "messages" : [ {
+          "role" : "user",
+          "content" : [ {
+            "text" : "What is the weather in Seattle and San Francisco today?"
+          } ]
+        } ],
+        "toolConfig" : {
+          "tools" : [ {
+            "toolSpec" : {
+              "name" : "get_current_weather",
+              "description" : "Get the current weather in a given location.",
+              "inputSchema" : {
+                "json" : {
+                  "type" : "object",
+                  "properties" : {
+                    "location" : {
+                      "type" : "string",
+                      "description" : "The name of the city"
+                    }
+                  },
+                  "required" : [ "location" ]
+                }
+              }
+            }
+          } ]
+        }
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  body: "{\"output\":{\"message\":{\"content\":[{\"text\":\"<thinking> The user has\
+    \ asked for the current weather in two different locations: Seattle and San Francisco.\
+    \ I can use the \\\"get_current_weather\\\" tool to retrieve the weather information\
+    \ for each location separately. I will first get the weather for Seattle and then\
+    \ for San Francisco.</thinking>\\n\"},{\"toolUse\":{\"name\":\"get_current_weather\"\
+    ,\"toolUseId\":\"3c137f91-51da-489c-89b0-718203f5e058\",\"input\":{\"location\"\
+    :\"Seattle\"}}},{\"toolUse\":{\"name\":\"get_current_weather\",\"toolUseId\":\"\
+    10e209e4-7b83-4baa-8ae6-e7ec855635ad\",\"input\":{\"location\":\"San Francisco\"\
+    }}}],\"role\":\"assistant\"}},\"stopReason\":\"tool_use\",\"usage\":{\"inputTokens\"\
+    :416,\"outputTokens\":175,\"totalTokens\":591,\"cacheReadInputTokenCount\":0,\"\
+    cacheWriteInputTokenCount\":0}}"
+  headers:
+    Date: "Thu, 08 May 2025 05:48:01 GMT"
+    Content-Type: application/json
+    x-amzn-RequestId: 9d0aaea1-405f-455e-8992-7ce2750f4fca
+    X-Amzn-Bedrock-Invocation-Latency: "431"
+    X-Amzn-Bedrock-Cache-Write-Input-Token-Count: "0"
+    X-Amzn-Bedrock-Cache-Read-Input-Token-Count: "0"
+    X-Amzn-Bedrock-Output-Token-Count: "175"
+    X-Amzn-Bedrock-Input-Token-Count: "416"
+uuid: 9f342370-bd08-4513-b85d-bd560a831c28
+persistent: true
+insertionIndex: 64
+---
+id: 43495582-00d0-4144-9c24-a6bed69e1337
+name: model_amazonnova-micro-v10_invoke
+request:
+  url: /model/amazon.nova-micro-v1%3A0/invoke
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "messages" : [ {
+          "role" : "user",
+          "content" : [ {
+            "text" : "What is the weather in Seattle and San Francisco today?"
+          } ]
+        } ],
+        "toolConfig" : {
+          "tools" : [ {
+            "toolSpec" : {
+              "name" : "get_current_weather",
+              "description" : "Get the current weather in a given location.",
+              "inputSchema" : {
+                "json" : {
+                  "type" : "object",
+                  "properties" : {
+                    "location" : {
+                      "type" : "string",
+                      "description" : "The name of the city"
+                    }
+                  },
+                  "required" : [ "location" ]
+                }
+              }
+            }
+          } ]
+        }
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  body: "{\"output\":{\"message\":{\"content\":[{\"text\":\"<thinking> To provide\
+    \ the current weather in both Seattle and San Francisco, I will use the \\\"get_current_weather\\\
+    \" tool twice, once for each city. I will need to specify the \\\"location\\\"\
+    \ argument for each call.</thinking>\\n\"},{\"toolUse\":{\"name\":\"get_current_weather\"\
+    ,\"toolUseId\":\"f572ba9c-daa7-43bb-bd14-ff074a68acc2\",\"input\":{\"location\"\
+    :\"Seattle\"}}},{\"toolUse\":{\"name\":\"get_current_weather\",\"toolUseId\":\"\
+    ad567d78-10fe-4309-9caf-0d69ce625242\",\"input\":{\"location\":\"San Francisco\"\
+    }}}],\"role\":\"assistant\"}},\"stopReason\":\"tool_use\",\"usage\":{\"inputTokens\"\
+    :416,\"outputTokens\":166,\"totalTokens\":582,\"cacheReadInputTokenCount\":0,\"\
+    cacheWriteInputTokenCount\":0}}"
+  headers:
+    Date: "Thu, 08 May 2025 06:01:02 GMT"
+    Content-Type: application/json
+    x-amzn-RequestId: 8e2c5693-9533-4205-8878-83b5ea6ada99
+    X-Amzn-Bedrock-Invocation-Latency: "434"
+    X-Amzn-Bedrock-Cache-Write-Input-Token-Count: "0"
+    X-Amzn-Bedrock-Cache-Read-Input-Token-Count: "0"
+    X-Amzn-Bedrock-Output-Token-Count: "166"
+    X-Amzn-Bedrock-Input-Token-Count: "416"
+uuid: 43495582-00d0-4144-9c24-a6bed69e1337
+persistent: true
+insertionIndex: 66
+---
+id: c4ecd091-7a8e-4d6c-adf6-392ee39b6fbc
+name: model_amazonnova-micro-v10_invoke
+request:
+  url: /model/amazon.nova-micro-v1%3A0/invoke
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "messages" : [ {
+          "role" : "user",
+          "content" : [ {
+            "text" : "What is the weather in Seattle and San Francisco today?"
+          } ]
+        }, {
+          "content" : [ {
+            "text" : "<thinking> To provide the current weather in both Seattle and San Francisco, I will use the \"get_current_weather\" tool twice, once for each city. I will need to specify the \"location\" argument for each call.</thinking>\n"
+          }, {
+            "toolUse" : {
+              "name" : "get_current_weather",
+              "toolUseId" : "f572ba9c-daa7-43bb-bd14-ff074a68acc2",
+              "input" : {
+                "location" : "Seattle"
+              }
+            }
+          }, {
+            "toolUse" : {
+              "name" : "get_current_weather",
+              "toolUseId" : "ad567d78-10fe-4309-9caf-0d69ce625242",
+              "input" : {
+                "location" : "San Francisco"
+              }
+            }
+          } ],
+          "role" : "assistant"
+        }, {
+          "role" : "user",
+          "content" : [ {
+            "toolResult" : {
+              "toolUseId" : "f572ba9c-daa7-43bb-bd14-ff074a68acc2",
+              "content" : [ {
+                "json" : {
+                  "weather" : "50 degrees and raining"
+                }
+              } ]
+            }
+          }, {
+            "toolResult" : {
+              "toolUseId" : "ad567d78-10fe-4309-9caf-0d69ce625242",
+              "content" : [ {
+                "json" : {
+                  "weather" : "70 degrees and sunny"
+                }
+              } ]
+            }
+          } ]
+        } ],
+        "toolConfig" : {
+          "tools" : [ {
+            "toolSpec" : {
+              "name" : "get_current_weather",
+              "description" : "Get the current weather in a given location.",
+              "inputSchema" : {
+                "json" : {
+                  "type" : "object",
+                  "properties" : {
+                    "location" : {
+                      "type" : "string",
+                      "description" : "The name of the city"
+                    }
+                  },
+                  "required" : [ "location" ]
+                }
+              }
+            }
+          } ]
+        }
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  body: "{\"output\":{\"message\":{\"content\":[{\"text\":\"<thinking> I have received\
+    \ the weather information for both cities. Now I will compile this information\
+    \ and present it to the user.</thinking>\\n\\nThe current weather in Seattle is\
+    \ 50 degrees and it is raining. The current weather in San Francisco is 70 degrees\
+    \ and it is sunny.\"}],\"role\":\"assistant\"}},\"stopReason\":\"end_turn\",\"\
+    usage\":{\"inputTokens\":559,\"outputTokens\":59,\"totalTokens\":618,\"cacheReadInputTokenCount\"\
+    :0,\"cacheWriteInputTokenCount\":0}}"
+  headers:
+    Date: "Thu, 08 May 2025 06:01:04 GMT"
+    Content-Type: application/json
+    x-amzn-RequestId: f3054387-5cec-4a48-b065-4dce8cd1a991
+    X-Amzn-Bedrock-Invocation-Latency: "412"
+    X-Amzn-Bedrock-Cache-Write-Input-Token-Count: "0"
+    X-Amzn-Bedrock-Cache-Read-Input-Token-Count: "0"
+    X-Amzn-Bedrock-Output-Token-Count: "59"
+    X-Amzn-Bedrock-Input-Token-Count: "559"
+uuid: c4ecd091-7a8e-4d6c-adf6-392ee39b6fbc
+persistent: true
+insertionIndex: 67

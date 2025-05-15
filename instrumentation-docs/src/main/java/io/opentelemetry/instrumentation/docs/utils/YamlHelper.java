@@ -9,6 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
+import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationClassification;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
@@ -144,12 +145,20 @@ public class YamlHelper {
     }
 
     if (module.getMetadata() != null && !module.getMetadata().getConfigurations().isEmpty()) {
-      List<Map<String, String>> configurations = new ArrayList<>();
+      List<Map<String, Object>> configurations = new ArrayList<>();
       for (ConfigurationOption configuration : module.getMetadata().getConfigurations()) {
-        Map<String, String> conf = new LinkedHashMap<>();
+        Map<String, Object> conf = new LinkedHashMap<>();
         conf.put("name", configuration.name());
         conf.put("description", configuration.description());
-        conf.put("default", configuration.defaultValue());
+        conf.put("type", configuration.type().toString());
+        if (configuration.type().equals(ConfigurationType.BOOLEAN)) {
+          conf.put("default", Boolean.parseBoolean(configuration.defaultValue()));
+        } else if (configuration.type().equals(ConfigurationType.INT)) {
+          conf.put("default", Integer.parseInt(configuration.defaultValue()));
+        } else {
+          conf.put("default", configuration.defaultValue());
+        }
+
         configurations.add(conf);
       }
       moduleMap.put("configurations", configurations);
