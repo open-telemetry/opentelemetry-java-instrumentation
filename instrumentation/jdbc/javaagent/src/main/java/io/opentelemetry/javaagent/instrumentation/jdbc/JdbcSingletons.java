@@ -41,7 +41,7 @@ public final class JdbcSingletons {
 
     CAPTURE_QUERY_PARAMETERS =
         AgentInstrumentationConfig.get()
-            .getBoolean("otel.instrumentation.jdbc.capture-query-parameters", false);
+            .getBoolean("otel.instrumentation.jdbc.experimental.capture-query-parameters", false);
 
     STATEMENT_INSTRUMENTER =
         JdbcInstrumenterFactory.createStatementInstrumenter(

@@ -101,7 +101,7 @@ tasks {
     filter {
       includeTestsMatching("PreparedStatementParametersTest")
     }
-    jvmArgs("-Dotel.instrumentation.jdbc.capture-query-parameters=true")
+    jvmArgs("-Dotel.instrumentation.jdbc.experimental.capture-query-parameters=true")
   }
 
   check {
