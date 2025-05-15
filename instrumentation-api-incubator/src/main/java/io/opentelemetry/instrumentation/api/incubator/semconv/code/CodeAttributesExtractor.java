@@ -42,10 +42,18 @@ public final class CodeAttributesExtractor<REQUEST, RESPONSE>
     StringBuilder sb = new StringBuilder();
     Class<?> cls = getter.getCodeClass(request);
     if (cls != null) {
-      sb.append(cls.getName()).append(".");
+      sb.append(cls.getName());
     }
-    sb.append(getter.getMethodName(request));
-    internalSet(attributes, CODE_FUNCTION_NAME, sb.toString());
+    String methodName = getter.getMethodName(request);
+    if(methodName != null){
+      if(sb.length() > 0){
+        sb.append(".");
+      }
+      sb.append(methodName);
+    }
+    if (sb.length() > 0) {
+      internalSet(attributes, CODE_FUNCTION_NAME, sb.toString());
+    }
   }
 
   @Override

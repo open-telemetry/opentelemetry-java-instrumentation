@@ -60,8 +60,7 @@ class CodeAttributesExtractorTest {
     // then
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(CodeIncubatingAttributes.CODE_NAMESPACE, TestClass.class.getName()),
-            entry(CodeIncubatingAttributes.CODE_FUNCTION, "doSomething"));
+            entry(CodeIncubatingAttributes.CODE_FUNCTION_NAME, TestClass.class.getName() + ".doSomething"));
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
