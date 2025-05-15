@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### ⚠️⚠️ Breaking changes ⚠️⚠️
+
+- Remove operation name from graphql span name
+  ([#13794](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13794))
+- Remove deprecated property for disabling kafka metrics
+  ([#13803](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13803))
+
+
 ### 🌟 New javaagent instrumentation
 
 - Add Avaje Jex Instrumentation
@@ -19,14 +27,10 @@
   ([#13736](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13736))
 - Re-enable Agent Detection on z/OS
   ([#13730](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13730))
-- Add GC cause to jvm GC related metric
+- Add GC cause as an opt-in attribute on jvm GC related metric
   ([#13750](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13750))
 - Implement stable semconv for db connection pool metrics
   ([#13785](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13785))
-- Remove operation name from graphql span name
-  ([#13794](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13794))
-- Remove deprecated property for disabling kafka metrics
-  ([#13803](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13803))
 - Add Cloud foundry resource provider
   ([#13782](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13782))
 - Add instrumentation for opensearch-rest-3.0
