@@ -50,11 +50,11 @@ testing {
         compileOnly(project.dependencies.project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
 
         implementation("org.hsqldb:hsqldb:2.3.4")
-        implementation("io.vertx:vertx-web:latest.release")
-        implementation("io.vertx:vertx-rx-java2:latest.release")
-        implementation("io.vertx:vertx-web-client:latest.release")
-        implementation("io.vertx:vertx-jdbc-client:latest.release")
-        implementation("io.vertx:vertx-circuit-breaker:latest.release")
+        implementation("io.vertx:vertx-web:4.+")
+        implementation("io.vertx:vertx-rx-java2:4.+")
+        implementation("io.vertx:vertx-web-client:4.+")
+        implementation("io.vertx:vertx-jdbc-client:4.+")
+        implementation("io.vertx:vertx-circuit-breaker:4.+")
       }
     }
   }

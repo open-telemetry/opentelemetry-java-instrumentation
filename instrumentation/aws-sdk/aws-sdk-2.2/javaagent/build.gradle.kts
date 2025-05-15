@@ -141,6 +141,20 @@ testing {
       }
     }
 
+    val s3CrtTest by registering(JvmTestSuite::class) {
+      dependencies {
+        if (latestDepTest) {
+          implementation("software.amazon.awssdk:s3:latest.release")
+          implementation("software.amazon.awssdk.crt:aws-crt:latest.release")
+        } else {
+          implementation("software.amazon.awssdk:s3:2.27.21")
+          implementation("software.amazon.awssdk.crt:aws-crt:0.30.11")
+        }
+        implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
+        implementation("org.testcontainers:localstack")
+      }
+    }
+
     val testBedrockRuntime by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))

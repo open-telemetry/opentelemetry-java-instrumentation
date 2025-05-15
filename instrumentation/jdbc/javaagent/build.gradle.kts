@@ -65,6 +65,7 @@ tasks {
   test {
     filter {
       excludeTestsMatching("SlickTest")
+      excludeTestsMatching("PreparedStatementParametersTest")
     }
     jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
   }
@@ -72,6 +73,7 @@ tasks {
   val testStableSemconv by registering(Test::class) {
     filter {
       excludeTestsMatching("SlickTest")
+      excludeTestsMatching("PreparedStatementParametersTest")
     }
     jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
@@ -85,9 +87,23 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 
+  val testCaptureParameters by registering(Test::class) {
+    filter {
+      includeTestsMatching("PreparedStatementParametersTest")
+    }
+    jvmArgs("-Dotel.instrumentation.jdbc.experimental.capture-query-parameters=true")
+  }
+
   check {
     dependsOn(testSlick)
     dependsOn(testStableSemconv)
     dependsOn(testSlickStableSemconv)
+    dependsOn(testCaptureParameters)
+  }
+}
+
+tasks {
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.jdbc.experimental.transaction.enabled=true")
   }
 }
