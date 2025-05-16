@@ -202,8 +202,8 @@ abstract class AbstractOpenTelemetryAppenderTest {
                             "logStringMapMessage",
                             equalTo(THREAD_NAME, Thread.currentThread().getName()),
                             equalTo(THREAD_ID, Thread.currentThread().getId()),
-                            equalTo(stringKey("log4j.map_message.key1"), "val1"),
-                            equalTo(stringKey("log4j.map_message.key2"), "val2"))));
+                            equalTo(stringKey("key1"), "val1"),
+                            equalTo(stringKey("key2"), "val2"))));
   }
 
   @Test
@@ -227,7 +227,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
                             "logStringMapMessageWithSpecialAttribute",
                             equalTo(THREAD_NAME, Thread.currentThread().getName()),
                             equalTo(THREAD_ID, Thread.currentThread().getId()),
-                            equalTo(stringKey("log4j.map_message.key1"), "val1"))));
+                            equalTo(stringKey("key1"), "val1"))));
   }
 
   @Test
@@ -266,8 +266,8 @@ abstract class AbstractOpenTelemetryAppenderTest {
                             "logStructuredDataMessage",
                             equalTo(THREAD_NAME, Thread.currentThread().getName()),
                             equalTo(THREAD_ID, Thread.currentThread().getId()),
-                            equalTo(stringKey("log4j.map_message.key1"), "val1"),
-                            equalTo(stringKey("log4j.map_message.key2"), "val2"))));
+                            equalTo(stringKey("key1"), "val1"),
+                            equalTo(stringKey("key2"), "val2"))));
   }
 
   private static List<AttributeAssertion> addLocationAttributes(
