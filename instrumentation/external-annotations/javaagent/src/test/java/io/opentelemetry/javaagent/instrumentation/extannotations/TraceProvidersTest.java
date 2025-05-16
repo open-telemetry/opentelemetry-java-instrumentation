@@ -35,10 +35,8 @@ class TraceProvidersTest {
                     span.hasName("SayTracedHello." + provider.testMethodName())
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                SayTracedHello.class.getName()),
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_FUNCTION, provider.testMethodName()),
+                                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                SayTracedHello.class.getName() + "." + provider.testMethodName()),
                             equalTo(stringKey("providerAttr"), provider.name()))));
   }
 
