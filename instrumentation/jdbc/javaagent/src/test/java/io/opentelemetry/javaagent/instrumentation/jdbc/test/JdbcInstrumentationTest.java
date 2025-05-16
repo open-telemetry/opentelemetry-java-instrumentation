@@ -1063,7 +1063,9 @@ class JdbcInstrumentationTest {
                               .hasKind(SpanKind.INTERNAL)
                               .hasParent(trace.getSpan(0))
                               .hasAttributesSatisfyingExactly(
-                                  equalTo(CodeIncubatingAttributes.CODE_FUNCTION_NAME, datasource.getClass().getName() + ".getConnection"),
+                                  equalTo(
+                                      CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                      datasource.getClass().getName() + ".getConnection"),
                                   equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
                                   equalTo(DB_USER, emitStableDatabaseSemconv() ? null : user),
                                   equalTo(maybeStable(DB_NAME), "jdbcunittest"),
@@ -1077,7 +1079,9 @@ class JdbcInstrumentationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION_NAME, datasource.getClass().getName() + ".getConnection"),
+                            equalTo(
+                                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                datasource.getClass().getName() + ".getConnection"),
                             equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : user),
                             equalTo(maybeStable(DB_NAME), "jdbcunittest"),

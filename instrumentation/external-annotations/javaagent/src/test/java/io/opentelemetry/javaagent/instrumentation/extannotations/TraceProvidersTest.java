@@ -22,7 +22,6 @@ class TraceProvidersTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
   @EnumSource(TraceProvider.class)
   void testShouldSupportProvider(TraceProvider provider) {
