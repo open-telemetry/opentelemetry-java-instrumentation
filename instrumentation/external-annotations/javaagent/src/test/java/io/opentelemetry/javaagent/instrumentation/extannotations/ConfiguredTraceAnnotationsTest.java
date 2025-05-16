@@ -37,9 +37,8 @@ class ConfiguredTraceAnnotationsTest {
                     span.hasName("AnnotationTracedCallable.call")
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                AnnotationTracedCallable.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "call"))));
+                                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                AnnotationTracedCallable.class.getName() + ".call"))));
   }
 
   static class AnnotationTracedCallable implements Callable<String> {
