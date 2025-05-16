@@ -128,6 +128,6 @@ class TraceAnnotationsTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 CodeIncubatingAttributes.CODE_FUNCTION_NAME,
-                                SayTracedHello.class.getName() + "$1.call"))));
+                                TraceAnnotationsTest.class.getName() + "$1.call"))));
   }
 }
