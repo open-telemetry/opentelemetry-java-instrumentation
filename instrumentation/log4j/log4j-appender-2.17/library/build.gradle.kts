@@ -7,6 +7,7 @@ dependencies {
   annotationProcessor("org.apache.logging.log4j:log4j-core:2.17.0")
 
   implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.17:library-autoconfigure"))
+  implementation("io.opentelemetry:opentelemetry-api-incubator")
 
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testLibrary("com.lmax:disruptor:3.3.4")
