@@ -225,7 +225,7 @@ public class TargetSystemTest {
         try {
           rule.buildMetricDef();
         } catch (Exception e) {
-          fail("Failed to build metric definition " + rule.getBean(), e);
+          fail("Failed to build metric definition " + rule.getBeans(), e);
         }
       }
     } catch (IOException e) {

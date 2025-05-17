@@ -41,22 +41,20 @@ public class JmxRule extends MetricStructure {
   //     ATTRIBUTE3:
   //       METRIC_FIELDS3
   // The parser never calls setters for these fields with null arguments
-  @Nullable private String bean;
+
   private List<String> beans;
   @Nullable private String prefix;
   private Map<String, Metric> mapping;
 
-  @Nullable
-  public String getBean() {
-    return bean;
-  }
-
-  public void setBean(String bean) {
-    this.bean = validateBean(bean);
-  }
-
   public List<String> getBeans() {
     return beans;
+  }
+
+  public void addBean(String bean) {
+    if (beans == null) {
+      beans = new ArrayList<>();
+    }
+    beans.add(validateBean(bean));
   }
 
   private static String validateBean(String name) {
@@ -68,14 +66,6 @@ public class JmxRule extends MetricStructure {
     } catch (MalformedObjectNameException e) {
       throw new IllegalArgumentException("'" + name + "' is not a valid JMX object name", e);
     }
-  }
-
-  public void setBeans(List<String> beans) {
-    List<String> list = new ArrayList<>();
-    for (String name : beans) {
-      list.add(validateBean(name));
-    }
-    this.beans = list;
   }
 
   public void setPrefix(String prefix) {
@@ -128,13 +118,10 @@ public class JmxRule extends MetricStructure {
    */
   public MetricDef buildMetricDef() throws Exception {
     BeanGroup group;
-    if (bean != null) {
-      group = BeanGroup.forSingleBean(bean);
-    } else if (beans != null && !beans.isEmpty()) {
-      group = BeanGroup.forBeans(beans);
-    } else {
+    if (beans == null || beans.isEmpty()) {
       throw new IllegalStateException("No ObjectName specified");
     }
+    group = BeanGroup.forBeans(beans);
 
     if (mapping == null || mapping.isEmpty()) {
       throw new IllegalStateException("No MBean attributes specified");
@@ -157,9 +144,7 @@ public class JmxRule extends MetricStructure {
                 getUnit(),
                 getMetricType());
       } else {
-        metricInfo =
-            m.buildMetricInfo(
-                prefix, niceAttributeName, getSourceUnit(), getUnit(), getMetricType());
+        metricInfo = m.buildMetricInfo(niceAttributeName, this);
       }
 
       List<MetricAttribute> ownAttributes = getAttributeList();
@@ -216,13 +201,13 @@ public class JmxRule extends MetricStructure {
       BeanAttributeExtractor extractor =
           BeanAttributeExtractor.forStateMetric(attrExtractor, key, stateMapping);
 
-      // state metric are always up/down counters
+      // state metric are always up/down counters, empty '' unit and no source unit
       MetricInfo stateMetricInfo =
           new MetricInfo(
               metricInfo.getMetricName(),
               metricInfo.getDescription(),
-              metricInfo.getSourceUnit(),
-              metricInfo.getUnit(),
+              null,
+              "",
               MetricInfo.Type.UPDOWNCOUNTER);
 
       extractors.add(new MetricExtractor(extractor, stateMetricInfo, stateMetricAttributes));
