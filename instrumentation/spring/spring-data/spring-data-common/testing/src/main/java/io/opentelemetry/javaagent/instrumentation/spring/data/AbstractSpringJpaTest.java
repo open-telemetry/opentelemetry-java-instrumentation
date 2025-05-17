@@ -26,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
@@ -82,9 +83,7 @@ public abstract class AbstractSpringJpaTest<
         span ->
             span.hasName("JpaCustomerRepository.save")
                 .hasKind(SpanKind.INTERNAL)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, repoClassName),
-                    equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "save")),
+                .hasAttributesSatisfyingExactly(assertCodeAttributes("save", repoClassName)),
         span ->
             span.hasName("INSERT test.JpaCustomer")
                 .hasKind(SpanKind.CLIENT)
@@ -100,15 +99,17 @@ public abstract class AbstractSpringJpaTest<
                     equalTo(maybeStable(DB_SQL_TABLE), "JpaCustomer")));
   }
 
+  private static AttributeAssertion assertCodeAttributes(String methodName, String repoClassName) {
+    return equalTo(CodeIncubatingAttributes.CODE_FUNCTION_NAME, repoClassName + "." + methodName);
+  }
+
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   static void assertHibernateTrace(TraceAssert trace, String repoClassName) {
     trace.hasSpansSatisfyingExactly(
         span ->
             span.hasName("JpaCustomerRepository.save")
                 .hasKind(SpanKind.INTERNAL)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, repoClassName),
-                    equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "save")),
+                .hasAttributesSatisfyingExactly(assertCodeAttributes("save", repoClassName)),
         span ->
             span.hasName("CALL test")
                 .hasKind(SpanKind.CLIENT)
@@ -155,8 +156,7 @@ public abstract class AbstractSpringJpaTest<
                     span.hasName("JpaCustomerRepository.findAll")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, repoClassName),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "findAll")),
+                            assertCodeAttributes("findAll", repoClassName)),
                 span ->
                     span.hasName("SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
@@ -193,8 +193,7 @@ public abstract class AbstractSpringJpaTest<
                     span.hasName("JpaCustomerRepository.save")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, repoClassName),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "save")),
+                            assertCodeAttributes("save", repoClassName)),
                 span ->
                     span.hasName("SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
@@ -233,8 +232,7 @@ public abstract class AbstractSpringJpaTest<
                     span.hasName("JpaCustomerRepository.findByLastName")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, repoClassName),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "findByLastName")),
+                            assertCodeAttributes("findByLastName", repoClassName)),
                 span ->
                     span.hasName("SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
@@ -259,8 +257,7 @@ public abstract class AbstractSpringJpaTest<
                     span.hasName("JpaCustomerRepository.delete")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, repoClassName),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "delete")),
+                            assertCodeAttributes("delete", repoClassName)),
                 span ->
                     span.hasName("SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
@@ -307,9 +304,7 @@ public abstract class AbstractSpringJpaTest<
                     span.hasName("JpaCustomerRepository.findSpecialCustomers")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, repoClassName),
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_FUNCTION, "findSpecialCustomers")),
+                            assertCodeAttributes("findSpecialCustomers", repoClassName)),
                 span ->
                     span.hasName("SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
@@ -355,8 +350,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasStatus(StatusData.error())
                         .hasException(expectedException)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, repoClassName),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "findOneByLastName")),
+                            assertCodeAttributes("findOneByLastName", repoClassName)),
                 span ->
                     span.hasName("SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.quartz.v2_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION_NAME;
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
 
@@ -14,7 +15,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -72,9 +72,8 @@ public abstract class AbstractQuartzTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(AttributeKey.stringKey("job.system"), "quartz"),
                                 equalTo(
-                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                    SuccessfulJob.class.getName()),
-                                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "execute")),
+                                    CODE_FUNCTION_NAME,
+                                    SuccessfulJob.class.getName() + ".execute")),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -103,9 +102,8 @@ public abstract class AbstractQuartzTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(AttributeKey.stringKey("job.system"), "quartz"),
                                 equalTo(
-                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                    FailingJob.class.getName()),
-                                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "execute"))));
+                                    CODE_FUNCTION_NAME,
+                                    SuccessfulJob.class.getName() + ".execute"))));
   }
 
   private static Scheduler createScheduler(String name) throws Exception {

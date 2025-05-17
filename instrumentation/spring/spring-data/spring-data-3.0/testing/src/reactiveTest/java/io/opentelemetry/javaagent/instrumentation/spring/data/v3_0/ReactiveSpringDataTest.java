@@ -71,9 +71,8 @@ class ReactiveSpringDataTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                CustomerRepository.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "findAll")),
+                                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                CustomerRepository.class.getName() + ".findAll")),
                 span ->
                     span.hasName("SELECT db.CUSTOMER")
                         .hasKind(SpanKind.CLIENT)
