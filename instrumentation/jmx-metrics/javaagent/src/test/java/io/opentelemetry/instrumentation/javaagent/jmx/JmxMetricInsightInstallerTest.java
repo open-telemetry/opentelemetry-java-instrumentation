@@ -22,6 +22,12 @@ import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
+/**
+ * TODO: This test will eventually go away when all yaml files are moved from javaagent to library
+ * directory. When yaml file is moved from javaagent to library then appropriate item must be
+ * removed from JmxMetricInsightInstallerTest#FILES_TO_BE_TESTED and corresponding test must be
+ * added in the library.
+ */
 class JmxMetricInsightInstallerTest {
   private static final String PATH_TO_ALL_EXISTING_RULES = "src/main/resources/jmx/rules";
   private static final Set<String> FILES_TO_BE_TESTED =
@@ -32,7 +38,6 @@ class JmxMetricInsightInstallerTest {
               "hadoop.yaml",
               "jetty.yaml",
               "kafka-broker.yaml",
-              "tomcat.yaml",
               "wildfly.yaml"));
 
   @Test
