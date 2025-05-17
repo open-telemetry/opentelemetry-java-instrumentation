@@ -9,8 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION_NAME;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanId;
@@ -31,7 +30,6 @@ import net.bytebuddy.matcher.ElementMatchers;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class WithSpanInstrumentationTest {
 
   @RegisterExtension
@@ -50,8 +48,8 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, TracedWithSpan.class.getName()),
-                            equalTo(CODE_FUNCTION, "otel"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME, TracedWithSpan.class.getName() + ".otel"))));
   }
 
   @Test
@@ -66,8 +64,9 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, TracedWithSpan.class.getName()),
-                            equalTo(CODE_FUNCTION, "namedOtel"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                TracedWithSpan.class.getName() + ".namedOtel"))));
   }
 
   @Test
@@ -82,8 +81,9 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.PRODUCER)
                         .hasParentSpanId(SpanId.getInvalid())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, TracedWithSpan.class.getName()),
-                            equalTo(CODE_FUNCTION, "someKind"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                TracedWithSpan.class.getName() + ".someKind"))));
   }
 
   @Test
@@ -98,15 +98,15 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, TracedWithSpan.class.getName()),
-                            equalTo(CODE_FUNCTION, "server")),
+                            equalTo(
+                                CODE_FUNCTION_NAME, TracedWithSpan.class.getName() + ".server")),
                 span ->
                     span.hasName("TracedWithSpan.otel")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParentSpanId(trace.getSpan(0).getSpanId())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, TracedWithSpan.class.getName()),
-                            equalTo(CODE_FUNCTION, "otel"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME, TracedWithSpan.class.getName() + ".otel"))));
   }
 
   @Test
@@ -122,8 +122,8 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, TracedWithSpan.class.getName()),
-                            equalTo(CODE_FUNCTION, "consumer"))),
+                            equalTo(
+                                CODE_FUNCTION_NAME, TracedWithSpan.class.getName() + ".consumer"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -131,8 +131,9 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, TracedWithSpan.class.getName()),
-                            equalTo(CODE_FUNCTION, "withoutParent"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                TracedWithSpan.class.getName() + ".withoutParent"))));
   }
 
   @Test
@@ -156,8 +157,9 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, TracedWithSpan.class.getName()),
-                            equalTo(CODE_FUNCTION, "completionStage"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                TracedWithSpan.class.getName() + ".completionStage"))));
   }
 
   @Test
@@ -175,8 +177,9 @@ class WithSpanInstrumentationTest {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, TracedWithSpan.class.getName()),
-                            equalTo(CODE_FUNCTION, "completionStage"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                TracedWithSpan.class.getName() + ".completionStage"))));
   }
 
   @Test
@@ -191,8 +194,9 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, TracedWithSpan.class.getName()),
-                            equalTo(CODE_FUNCTION, "completionStage"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                TracedWithSpan.class.getName() + ".completionStage"))));
   }
 
   @Test
@@ -213,8 +217,9 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, TracedWithSpan.class.getName()),
-                            equalTo(CODE_FUNCTION, "completionStage"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                TracedWithSpan.class.getName() + ".completionStage"))));
   }
 
   @Test
@@ -236,8 +241,9 @@ class WithSpanInstrumentationTest {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, TracedWithSpan.class.getName()),
-                            equalTo(CODE_FUNCTION, "completionStage"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                TracedWithSpan.class.getName() + ".completionStage"))));
   }
 
   @Test
@@ -253,8 +259,9 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, TracedWithSpan.class.getName()),
-                            equalTo(CODE_FUNCTION, "completableFuture"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                TracedWithSpan.class.getName() + ".completableFuture"))));
   }
 
   @Test
@@ -272,8 +279,9 @@ class WithSpanInstrumentationTest {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, TracedWithSpan.class.getName()),
-                            equalTo(CODE_FUNCTION, "completableFuture"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                TracedWithSpan.class.getName() + ".completableFuture"))));
   }
 
   @Test
@@ -288,8 +296,9 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, TracedWithSpan.class.getName()),
-                            equalTo(CODE_FUNCTION, "completableFuture"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                TracedWithSpan.class.getName() + ".completableFuture"))));
   }
 
   @Test
@@ -310,8 +319,9 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, TracedWithSpan.class.getName()),
-                            equalTo(CODE_FUNCTION, "completableFuture"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                TracedWithSpan.class.getName() + ".completableFuture"))));
   }
 
   @Test
@@ -333,8 +343,9 @@ class WithSpanInstrumentationTest {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfying(
-                            equalTo(CODE_NAMESPACE, TracedWithSpan.class.getName()),
-                            equalTo(CODE_FUNCTION, "completableFuture"))));
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                TracedWithSpan.class.getName() + ".completableFuture"))));
   }
 
   @Test
@@ -349,8 +360,9 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, TracedWithSpan.class.getName()),
-                            equalTo(CODE_FUNCTION, "withSpanAttributes"),
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                TracedWithSpan.class.getName() + ".withSpanAttributes"),
                             equalTo(stringKey("implicitName"), "foo"),
                             equalTo(stringKey("explicitName"), "bar"))));
   }
@@ -399,8 +411,7 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_NAMESPACE, "GeneratedJava6TestClass"),
-                            equalTo(CODE_FUNCTION, "run")),
+                            equalTo(CODE_FUNCTION_NAME, TracedWithSpan.class.getName() + ".run")),
                 span ->
                     span.hasName("intercept")
                         .hasKind(SpanKind.INTERNAL)

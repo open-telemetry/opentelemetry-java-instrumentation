@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.io.IOException;
@@ -80,29 +81,22 @@ class HttpServletResponseTest {
                     span.hasName("TestResponse.sendError")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                TestResponse.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "sendError")),
+                        .hasAttributesSatisfyingExactly(assertCodeAttributes("sendError")),
                 span ->
                     span.hasName("TestResponse.sendError")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                TestResponse.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "sendError")),
+                        .hasAttributesSatisfyingExactly(assertCodeAttributes("sendError")),
                 span ->
                     span.hasName("TestResponse.sendRedirect")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                TestResponse.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "sendRedirect"))));
+                        .hasAttributesSatisfyingExactly(assertCodeAttributes("sendRedirect"))));
+  }
+
+  private static AttributeAssertion assertCodeAttributes(String method) {
+    return equalTo(
+        CodeIncubatingAttributes.CODE_FUNCTION_NAME, TestResponse.class.getName() + "." + method);
   }
 
   @Test
