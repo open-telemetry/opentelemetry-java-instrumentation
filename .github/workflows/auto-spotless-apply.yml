@@ -63,8 +63,17 @@ jobs:
         working-directory: ${{ runner.temp }}/artifacts
         run: unzip patch.zip
 
+      - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+        if: steps.download-patch.outputs.exists == 'true'
+        id: otelbot-token
+        with:
+          app-id: 1295839
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         if: steps.download-patch.outputs.exists == 'true'
+        with:
+          token: ${{ steps.otelbot-token.outputs.token }}
 
       - name: Check out PR branch
         if: steps.download-patch.outputs.exists == 'true'
@@ -80,17 +89,8 @@ jobs:
           git config user.name otelbot
           git config user.email 197425009+otelbot@users.noreply.github.com
 
-      - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
-        if: steps.download-patch.outputs.exists == 'true'
-        id: otelbot-token
-        with:
-          app-id: ${{ vars.OTELBOT_APP_ID }}
-          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
-
       - name: Apply patch and push
         if: steps.download-patch.outputs.exists == 'true'
-        env:
-          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           git apply "${{ runner.temp }}/artifacts/patch"
           git commit -a -m "./gradlew spotlessApply"
