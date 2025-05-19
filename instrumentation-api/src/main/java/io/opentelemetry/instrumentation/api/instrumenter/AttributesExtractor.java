@@ -27,7 +27,8 @@ public interface AttributesExtractor<REQUEST, RESPONSE> {
    * Extracts attributes from the {@link Context} and the {@link REQUEST} into the {@link
    * AttributesBuilder} at the beginning of a request.
    */
-  void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request);
+  void onStart(AttributesBuilder attributes,
+               Context parentContext, REQUEST request);
 
   /**
    * Extracts attributes from the {@link Context}, the {@link REQUEST} and either {@link RESPONSE}
