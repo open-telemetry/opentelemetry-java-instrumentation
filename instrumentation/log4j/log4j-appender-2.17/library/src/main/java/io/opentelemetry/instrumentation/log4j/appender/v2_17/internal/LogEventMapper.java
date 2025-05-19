@@ -168,14 +168,17 @@ public final class LogEventMapper<T> {
     }
 
     if (captureMapMessageAttributes) {
-      mapMessage.forEach(
-          (key, value) -> {
-            if (value != null
-                && (!checkSpecialMapMessageAttribute
-                    || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))) {
-              attributes.put(getMapMessageAttributeKey(key), value.toString());
-            }
-          });
+      // TODO (trask) this could be optimized in 2.9 and later by calling MapMessage.forEach()
+      mapMessage
+          .getData()
+          .forEach(
+              (key, value) -> {
+                if (value != null
+                    && (!checkSpecialMapMessageAttribute
+                        || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))) {
+                  attributes.put(getMapMessageAttributeKey(key), value.toString());
+                }
+              });
     }
   }
 
