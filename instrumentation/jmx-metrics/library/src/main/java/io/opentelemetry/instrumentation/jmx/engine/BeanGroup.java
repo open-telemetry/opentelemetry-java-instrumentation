@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.jmx.engine;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import javax.management.MalformedObjectNameException;
@@ -32,10 +31,6 @@ public class BeanGroup {
   private BeanGroup(@Nullable QueryExp queryExp, List<ObjectName> namePatterns) {
     this.queryExp = queryExp;
     this.namePatterns = namePatterns;
-  }
-
-  public static BeanGroup forSingleBean(String bean) throws MalformedObjectNameException {
-    return new BeanGroup(null, Collections.singletonList(new ObjectName(bean)));
   }
 
   public static BeanGroup forBeans(List<String> beans) throws MalformedObjectNameException {
