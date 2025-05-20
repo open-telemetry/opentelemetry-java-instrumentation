@@ -1,4 +1,4 @@
-name: Auto spotless check
+name: Auto spotless
 on:
   pull_request:
     types:
