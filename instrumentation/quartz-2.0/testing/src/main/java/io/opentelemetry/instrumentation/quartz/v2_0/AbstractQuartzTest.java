@@ -103,7 +103,7 @@ public abstract class AbstractQuartzTest {
                                 equalTo(AttributeKey.stringKey("job.system"), "quartz"),
                                 equalTo(
                                     CODE_FUNCTION_NAME,
-                                    SuccessfulJob.class.getName() + ".execute"))));
+                                    FailingJob.class.getName() + ".execute"))));
   }
 
   private static Scheduler createScheduler(String name) throws Exception {
