@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("org.hibernate")
     module.set("hibernate-core")
-    versions.set("[6.0.0.Final,)")
+    versions.set("[6.0.0.Final,7)")
     assertInverse.set(true)
   }
 }
@@ -29,6 +29,8 @@ dependencies {
   testImplementation("javax.activation:activation:1.1.1")
   testImplementation("org.hsqldb:hsqldb:2.0.0")
   testImplementation("org.springframework.data:spring-data-jpa:3.0.0")
+
+  latestDepTestLibrary("org.hibernate:hibernate-core:6.+") // documented limitation
 }
 
 otelJava {
