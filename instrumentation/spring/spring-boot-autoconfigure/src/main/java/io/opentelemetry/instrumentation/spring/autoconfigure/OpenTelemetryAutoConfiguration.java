@@ -28,6 +28,8 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -54,6 +56,8 @@ import org.springframework.core.env.Environment;
   OtelSpringProperties.class
 })
 public class OpenTelemetryAutoConfiguration {
+  private static final Logger logger =
+      LoggerFactory.getLogger(OpenTelemetryAutoConfiguration.class);
 
   public OpenTelemetryAutoConfiguration() {}
 
@@ -110,6 +114,8 @@ public class OpenTelemetryAutoConfiguration {
     @Bean
     public OpenTelemetry openTelemetry(
         AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
+      logger.info("Starting OpenTelemetry Spring Boot starter");
+
       return autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk();
     }
 
