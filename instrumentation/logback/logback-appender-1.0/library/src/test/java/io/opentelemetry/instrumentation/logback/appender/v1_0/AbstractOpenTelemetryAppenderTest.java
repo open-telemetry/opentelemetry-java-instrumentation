@@ -92,7 +92,6 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasTotalAttributeCount(4));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void logWithExtras() {
     Instant start = Instant.now();
@@ -118,13 +117,14 @@ abstract class AbstractOpenTelemetryAppenderTest {
                       satisfies(
                           EXCEPTION_STACKTRACE, stackTrace -> stackTrace.contains("logWithExtras")),
                       equalTo(
-                          CodeIncubatingAttributes.CODE_FILEPATH,
+                          CodeIncubatingAttributes.CODE_FILE_PATH,
                           AbstractOpenTelemetryAppenderTest.class.getSimpleName() + ".java"),
                       equalTo(
                           CodeIncubatingAttributes.CODE_FUNCTION_NAME,
                           AbstractOpenTelemetryAppenderTest.class.getName() + ".logWithExtras"),
                       satisfies(
-                          CodeIncubatingAttributes.CODE_LINENO, lineNo -> lineNo.isGreaterThan(1)),
+                          CodeIncubatingAttributes.CODE_LINE_NUMBER,
+                          lineNo -> lineNo.isGreaterThan(1)),
                       equalTo(
                           AttributeKey.stringArrayKey("logback.marker"),
                           Collections.singletonList(markerName)));
