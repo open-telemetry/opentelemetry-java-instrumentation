@@ -206,6 +206,35 @@ class JdbcConnectionUrlParserTest {
               .build());
     }
   }
+  @ParameterizedTest(name = "{index}: {0}")
+  @ArgumentsSource(ClickHouseProvider.class)
+  void testClickHouseParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  static final class ClickHouseProvider implements ArgumentsProvider {
+    @Override
+    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
+      return args(
+          // https://clickhouse.com/docs/integrations/language-clients/java/jdbc#configuration
+          arg("jdbc:clickhouse:http://localhost:8123/mydb")
+              .setShortUrl("clickhouse:http://localhost:8123")
+              .setSystem("clickhouse")
+              .setSubtype("http")
+              .setHost("localhost")
+              .setPort(8123)
+              .setDb("mydb")
+              .build(),
+          arg("jdbc:clickhouse:https://localhost:8443?ssl=true")
+              .setShortUrl("clickhouse:https://localhost:8443")
+              .setSystem("clickhouse")
+              .setSubtype("https")
+              .setHost("localhost")
+              .setPort(8443)
+              .build()
+      );
+    }
+  }
 
   @ParameterizedTest(name = "{index}: {0}")
   @ArgumentsSource(PostgresProvider.class)

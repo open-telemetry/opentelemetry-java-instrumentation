@@ -892,6 +892,17 @@ public enum JdbcConnectionUrlParser {
 
       return builder;
     }
+  },
+  CLICKHOUSE("clickhouse") {
+    @Override
+    DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
+      String clickhouseUrl = jdbcUrl.substring("clickhouse:".length());
+      int typeEndIndex = clickhouseUrl.indexOf("://");
+      if (typeEndIndex > 0) {
+        builder.subtype(clickhouseUrl.substring(0, typeEndIndex));
+      }
+      return GENERIC_URL_LIKE.doParse(clickhouseUrl, builder);
+    }
   };
 
   private static final Logger logger = Logger.getLogger(JdbcConnectionUrlParser.class.getName());
@@ -1079,6 +1090,8 @@ public enum JdbcConnectionUrlParser {
         return DbSystemValues.MSSQL;
       case "sap": // SAP Hana
         return DbSystemValues.HANADB;
+      case "clickhouse": // ClickHouse
+        return DbSystemValues.CLICKHOUSE;
       default:
         return DbSystemValues.OTHER_SQL; // Unknown DBMS
     }
@@ -1098,6 +1111,7 @@ public enum JdbcConnectionUrlParser {
     static final String DERBY = "derby";
     static final String MARIADB = "mariadb";
     static final String H2 = "h2";
+    static final String CLICKHOUSE = "clickhouse";
 
     private DbSystemValues() {}
   }
