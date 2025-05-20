@@ -163,8 +163,6 @@ class LogbackTest {
                         equalTo(
                             ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
                         equalTo(
-                            CodeIncubatingAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
-                        equalTo(
                             CodeIncubatingAttributes.CODE_FUNCTION_NAME,
                             LogbackTest.class.getName() + ".performLogging"),
                         satisfies(
