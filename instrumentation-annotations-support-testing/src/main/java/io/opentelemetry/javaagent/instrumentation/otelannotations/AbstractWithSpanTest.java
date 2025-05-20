@@ -59,7 +59,7 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 CODE_FUNCTION_NAME,
-                                traced.getClass().getCanonicalName() + ".completable"))));
+                                traced.getClass().getName() + ".completable"))));
   }
 
   @Test
