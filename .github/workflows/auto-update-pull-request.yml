@@ -1,8 +1,8 @@
-name: Auto spotless apply
+name: Auto update pull request
 on:
   workflow_run:
     workflows:
-      - "Auto spotless check"
+      - "Auto spotless"
     types:
       - completed
 
