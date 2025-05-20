@@ -47,9 +47,12 @@ import org.slf4j.event.KeyValuePair;
  */
 public final class LoggingEventMapper {
   // copied from CodeIncubatingAttributes
-  private static final AttributeKey<String> CODE_FILE_PATH = AttributeKey.stringKey("code.file.path");
-  private static final AttributeKey<String> CODE_FUNCTION_NAME = AttributeKey.stringKey("code.function.name");
-  private static final AttributeKey<Long> CODE_LINE_NUMBER = AttributeKey.longKey("code.line.number");
+  private static final AttributeKey<String> CODE_FILE_PATH =
+      AttributeKey.stringKey("code.file.path");
+  private static final AttributeKey<String> CODE_FUNCTION_NAME =
+      AttributeKey.stringKey("code.function.name");
+  private static final AttributeKey<Long> CODE_LINE_NUMBER =
+      AttributeKey.longKey("code.line.number");
   // copied from
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
   private static final AttributeKey<String> THREAD_NAME = AttributeKey.stringKey("thread.name");
@@ -161,7 +164,9 @@ public final class LoggingEventMapper {
         if (fileName != null) {
           attributes.put(CODE_FILE_PATH, fileName);
         }
-        attributes.put(CODE_FUNCTION_NAME, firstStackElement.getClassName()+"."+firstStackElement.getMethodName());
+        attributes.put(
+            CODE_FUNCTION_NAME,
+            firstStackElement.getClassName() + "." + firstStackElement.getMethodName());
         int lineNumber = firstStackElement.getLineNumber();
         if (lineNumber > 0) {
           attributes.put(CODE_LINE_NUMBER, lineNumber);

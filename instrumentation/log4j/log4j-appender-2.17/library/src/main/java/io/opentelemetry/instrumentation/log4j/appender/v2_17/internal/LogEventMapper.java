@@ -31,8 +31,10 @@ import org.apache.logging.log4j.message.Message;
 public final class LogEventMapper<T> {
 
   // copied from CodeIncubatingAttributes
-  private static final AttributeKey<String> CODE_FILEPATH = AttributeKey.stringKey("code.file.path");
-  private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function.name");
+  private static final AttributeKey<String> CODE_FILEPATH =
+      AttributeKey.stringKey("code.file.path");
+  private static final AttributeKey<String> CODE_FUNCTION =
+      AttributeKey.stringKey("code.function.name");
   private static final AttributeKey<Long> CODE_LINENO = AttributeKey.longKey("code.line.number");
   // copied from ThreadIncubatingAttributes
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
@@ -130,7 +132,7 @@ public final class LogEventMapper<T> {
         if (fileName != null) {
           attributes.put(CODE_FILEPATH, fileName);
         }
-        attributes.put(CODE_FUNCTION, source.getClassName()+ "."+ source.getMethodName());
+        attributes.put(CODE_FUNCTION, source.getClassName() + "." + source.getMethodName());
         int lineNumber = source.getLineNumber();
         if (lineNumber > 0) {
           attributes.put(CODE_LINENO, lineNumber);
