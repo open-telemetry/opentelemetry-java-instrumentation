@@ -411,7 +411,7 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION_NAME, TracedWithSpan.class.getName() + ".run")),
+                            equalTo(CODE_FUNCTION_NAME, "GeneratedJava6TestClass.run")),
                 span ->
                     span.hasName("intercept")
                         .hasKind(SpanKind.INTERNAL)
