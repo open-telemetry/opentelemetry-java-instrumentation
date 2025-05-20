@@ -60,7 +60,6 @@ class Jetty12HandlerTest extends AbstractHttpServerTest<Server> {
     options.setHasResponseCustomizer(endpoint -> endpoint != EXCEPTION);
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
@@ -75,8 +74,9 @@ class Jetty12HandlerTest extends AbstractHttpServerTest<Server> {
     span.hasKind(SpanKind.INTERNAL)
         .satisfies(spanData -> assertThat(spanData.getName()).endsWith("." + methodName))
         .hasAttributesSatisfyingExactly(
-            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, methodName),
-            equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, "org.eclipse.jetty.server.Response"));
+            equalTo(
+                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                "org.eclipse.jetty.server.Response." + methodName));
     return span;
   }
 

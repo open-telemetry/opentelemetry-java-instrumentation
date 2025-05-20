@@ -12,10 +12,9 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FILEPATH;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_LINENO;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FILE_PATH;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_LINE_NUMBER;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -275,7 +274,6 @@ abstract class AbstractOpenTelemetryAppenderTest {
     return addLocationAttributes(AbstractOpenTelemetryAppenderTest.class, methodName, assertions);
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> addLocationAttributes(
       Class<?> testClass, String methodName, AttributeAssertion... assertions) {
     String selector = System.getProperty("Log4j2.contextSelector");
@@ -288,10 +286,9 @@ abstract class AbstractOpenTelemetryAppenderTest {
     List<AttributeAssertion> result = new ArrayList<>(Arrays.asList(assertions));
     result.addAll(
         Arrays.asList(
-            equalTo(CODE_NAMESPACE, testClass.getName()),
-            equalTo(CODE_FUNCTION, methodName),
-            satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
-            equalTo(CODE_FILEPATH, testClass.getSimpleName() + ".java")));
+            equalTo(CODE_FUNCTION_NAME, testClass.getName() + "." + methodName),
+            satisfies(CODE_LINE_NUMBER, AbstractLongAssert::isPositive),
+            equalTo(CODE_FILE_PATH, testClass.getSimpleName() + ".java")));
     return result;
   }
 }

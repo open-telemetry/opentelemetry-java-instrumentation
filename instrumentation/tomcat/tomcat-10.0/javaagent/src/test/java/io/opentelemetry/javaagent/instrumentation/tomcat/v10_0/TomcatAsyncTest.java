@@ -14,7 +14,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,7 +33,6 @@ import java.util.UUID;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.startup.Tomcat;
-import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class TomcatAsyncTest extends AbstractHttpServerTest<Tomcat> {
@@ -115,7 +113,6 @@ class TomcatAsyncTest extends AbstractHttpServerTest<Tomcat> {
     options.setHasResponseSpan(endpoint -> endpoint == NOT_FOUND || endpoint == REDIRECT);
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
@@ -130,8 +127,8 @@ class TomcatAsyncTest extends AbstractHttpServerTest<Tomcat> {
     span.hasKind(SpanKind.INTERNAL)
         .satisfies(spanData -> assertThat(spanData.getName()).endsWith("." + methodName))
         .hasAttributesSatisfyingExactly(
-            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, methodName),
-            satisfies(CodeIncubatingAttributes.CODE_NAMESPACE, AbstractStringAssert::isNotEmpty));
+            satisfies(
+                CodeIncubatingAttributes.CODE_FUNCTION_NAME, v -> v.endsWith("." + methodName)));
     return span;
   }
 }

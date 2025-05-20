@@ -11,10 +11,9 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FILEPATH;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_LINENO;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FILE_PATH;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_LINE_NUMBER;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -48,7 +47,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class Log4j2Test {
 
   @RegisterExtension
@@ -121,10 +119,9 @@ class Log4j2Test {
                     Arrays.asList(
                         equalTo(THREAD_NAME, Thread.currentThread().getName()),
                         equalTo(THREAD_ID, Thread.currentThread().getId()),
-                        equalTo(CODE_NAMESPACE, Log4j2Test.class.getName()),
-                        equalTo(CODE_FUNCTION, "performLogging"),
-                        satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
-                        equalTo(CODE_FILEPATH, "Log4j2Test.java")));
+                        equalTo(CODE_FUNCTION_NAME, Log4j2Test.class.getName() + ".performLogging"),
+                        satisfies(CODE_LINE_NUMBER, AbstractLongAssert::isPositive),
+                        equalTo(CODE_FILE_PATH, "Log4j2Test.java")));
             if (logException) {
               attributeAsserts.addAll(
                   Arrays.asList(
@@ -168,10 +165,9 @@ class Log4j2Test {
                     equalTo(AttributeKey.stringKey("key2"), "val2"),
                     equalTo(THREAD_NAME, Thread.currentThread().getName()),
                     equalTo(THREAD_ID, Thread.currentThread().getId()),
-                    equalTo(CODE_NAMESPACE, Log4j2Test.class.getName()),
-                    equalTo(CODE_FUNCTION, "testContextData"),
-                    satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
-                    equalTo(CODE_FILEPATH, "Log4j2Test.java")));
+                    equalTo(CODE_FUNCTION_NAME, Log4j2Test.class.getName() + ".testContextData"),
+                    satisfies(CODE_LINE_NUMBER, AbstractLongAssert::isPositive),
+                    equalTo(CODE_FILE_PATH, "Log4j2Test.java")));
   }
 
   @Test
@@ -193,10 +189,10 @@ class Log4j2Test {
                     equalTo(AttributeKey.stringKey("log4j.map_message.key2"), "val2"),
                     equalTo(THREAD_NAME, Thread.currentThread().getName()),
                     equalTo(THREAD_ID, Thread.currentThread().getId()),
-                    equalTo(CODE_NAMESPACE, Log4j2Test.class.getName()),
-                    equalTo(CODE_FUNCTION, "testStringMapMessage"),
-                    satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
-                    equalTo(CODE_FILEPATH, "Log4j2Test.java")));
+                    equalTo(
+                        CODE_FUNCTION_NAME, Log4j2Test.class.getName() + ".testStringMapMessage"),
+                    satisfies(CODE_LINE_NUMBER, AbstractLongAssert::isPositive),
+                    equalTo(CODE_FILE_PATH, "Log4j2Test.java")));
   }
 
   @Test
@@ -217,10 +213,11 @@ class Log4j2Test {
                     equalTo(AttributeKey.stringKey("log4j.map_message.key1"), "val1"),
                     equalTo(THREAD_NAME, Thread.currentThread().getName()),
                     equalTo(THREAD_ID, Thread.currentThread().getId()),
-                    equalTo(CODE_NAMESPACE, Log4j2Test.class.getName()),
-                    equalTo(CODE_FUNCTION, "testStringMapMessageWithSpecialAttribute"),
-                    satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
-                    equalTo(CODE_FILEPATH, "Log4j2Test.java")));
+                    equalTo(
+                        CODE_FUNCTION_NAME,
+                        Log4j2Test.class.getName() + ".testStringMapMessageWithSpecialAttribute"),
+                    satisfies(CODE_LINE_NUMBER, AbstractLongAssert::isPositive),
+                    equalTo(CODE_FILE_PATH, "Log4j2Test.java")));
   }
 
   @Test
@@ -242,10 +239,11 @@ class Log4j2Test {
                     equalTo(AttributeKey.stringKey("log4j.map_message.key2"), "val2"),
                     equalTo(THREAD_NAME, Thread.currentThread().getName()),
                     equalTo(THREAD_ID, Thread.currentThread().getId()),
-                    equalTo(CODE_NAMESPACE, Log4j2Test.class.getName()),
-                    equalTo(CODE_FUNCTION, "testStructuredDataMapMessage"),
-                    satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
-                    equalTo(CODE_FILEPATH, "Log4j2Test.java")));
+                    equalTo(
+                        CODE_FUNCTION_NAME,
+                        Log4j2Test.class.getName() + ".testStructuredDataMapMessage"),
+                    satisfies(CODE_LINE_NUMBER, AbstractLongAssert::isPositive),
+                    equalTo(CODE_FILE_PATH, "Log4j2Test.java")));
   }
 
   @Test
@@ -260,10 +258,9 @@ class Log4j2Test {
             logRecord.hasAttributesSatisfyingExactly(
                 equalTo(THREAD_NAME, Thread.currentThread().getName()),
                 equalTo(THREAD_ID, Thread.currentThread().getId()),
-                equalTo(CODE_NAMESPACE, Log4j2Test.class.getName()),
-                equalTo(CODE_FUNCTION, "testMarker"),
-                satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
-                equalTo(CODE_FILEPATH, "Log4j2Test.java"),
+                equalTo(CODE_FUNCTION_NAME, Log4j2Test.class.getName() + ".testMarker"),
+                satisfies(CODE_LINE_NUMBER, AbstractLongAssert::isPositive),
+                equalTo(CODE_FILE_PATH, "Log4j2Test.java"),
                 equalTo(AttributeKey.stringKey("log4j.marker"), markerName)));
   }
 

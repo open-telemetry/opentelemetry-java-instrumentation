@@ -118,13 +118,13 @@ public abstract class AbstractArquillianJaxWsTest {
     return span.hasName(service + "/" + methodName).hasKind(SpanKind.INTERNAL);
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   private static SpanDataAssert assertAnnotationHandlerSpan(
       SpanDataAssert span, String service, String methodName) {
     return span.hasName(service + "Impl." + methodName)
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
-            equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, "test." + service + "Impl"),
-            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, methodName));
+            equalTo(
+                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                "test." + service + "Impl." + methodName));
   }
 }

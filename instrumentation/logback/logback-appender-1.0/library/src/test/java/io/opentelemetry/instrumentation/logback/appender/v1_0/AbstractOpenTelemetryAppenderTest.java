@@ -121,9 +121,8 @@ abstract class AbstractOpenTelemetryAppenderTest {
                           CodeIncubatingAttributes.CODE_FILEPATH,
                           AbstractOpenTelemetryAppenderTest.class.getSimpleName() + ".java"),
                       equalTo(
-                          CodeIncubatingAttributes.CODE_NAMESPACE,
-                          AbstractOpenTelemetryAppenderTest.class.getName()),
-                      equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "logWithExtras"),
+                          CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                          AbstractOpenTelemetryAppenderTest.class.getName() + ".logWithExtras"),
                       satisfies(
                           CodeIncubatingAttributes.CODE_LINENO, lineNo -> lineNo.isGreaterThan(1)),
                       equalTo(

@@ -18,7 +18,6 @@ class JaxWsAnnotationsTest {
   @RegisterExtension
   static InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void webServiceProviderSpan() {
     new SoapProvider().invoke(null);
@@ -32,8 +31,7 @@ class JaxWsAnnotationsTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                SoapProvider.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "invoke"))));
+                                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                SoapProvider.class.getName() + ".invoke"))));
   }
 }

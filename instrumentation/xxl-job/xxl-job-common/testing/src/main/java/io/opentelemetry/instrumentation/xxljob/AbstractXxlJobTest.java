@@ -48,8 +48,7 @@ public abstract class AbstractXxlJobTest {
         "CustomizedGroovyHandler.execute",
         StatusData.unset(),
         GlueTypeEnum.GLUE_GROOVY,
-        "CustomizedGroovyHandler",
-        "execute");
+        "CustomizedGroovyHandler.execute");
     jobThread.toStop("Test finish");
   }
 
@@ -76,8 +75,7 @@ public abstract class AbstractXxlJobTest {
         "SimpleCustomizedHandler.execute",
         StatusData.unset(),
         GlueTypeEnum.BEAN,
-        getPackageName() + ".SimpleCustomizedHandler",
-        "execute");
+        getPackageName() + ".SimpleCustomizedHandler.execute");
     jobThread.toStop("Test finish");
   }
 
@@ -95,8 +93,7 @@ public abstract class AbstractXxlJobTest {
         "ReflectObject.echo",
         StatusData.unset(),
         GlueTypeEnum.BEAN,
-        "io.opentelemetry.instrumentation.xxljob.ReflectiveMethodsFactory$ReflectObject",
-        "echo");
+        "io.opentelemetry.instrumentation.xxljob.ReflectiveMethodsFactory$ReflectObject.echo");
     jobThread.toStop("Test finish");
   }
 
@@ -111,8 +108,7 @@ public abstract class AbstractXxlJobTest {
         "CustomizedFailedHandler.execute",
         StatusData.error(),
         GlueTypeEnum.BEAN,
-        getPackageName() + ".CustomizedFailedHandler",
-        "execute");
+        getPackageName() + ".CustomizedFailedHandler.execute");
     jobThread.toStop("Test finish");
   }
 
@@ -140,17 +136,11 @@ public abstract class AbstractXxlJobTest {
                         .hasAttributesSatisfyingExactly(assertions)));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   private static void checkXxlJob(
-      String spanName,
-      StatusData statusData,
-      GlueTypeEnum glueType,
-      String codeNamespace,
-      String codeFunction) {
+      String spanName, StatusData statusData, GlueTypeEnum glueType, String codeFunction) {
     List<AttributeAssertion> attributeAssertions = new ArrayList<>();
     attributeAssertions.addAll(attributeAssertions(glueType));
-    attributeAssertions.add(equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, codeNamespace));
-    attributeAssertions.add(equalTo(CodeIncubatingAttributes.CODE_FUNCTION, codeFunction));
+    attributeAssertions.add(equalTo(CodeIncubatingAttributes.CODE_FUNCTION_NAME, codeFunction));
 
     checkXxlJob(spanName, statusData, attributeAssertions);
   }

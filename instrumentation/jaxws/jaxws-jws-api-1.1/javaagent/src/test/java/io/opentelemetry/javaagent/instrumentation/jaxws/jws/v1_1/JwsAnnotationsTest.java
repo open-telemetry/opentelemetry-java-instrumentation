@@ -16,7 +16,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class JwsAnnotationsTest {
   @RegisterExtension
   static InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -37,9 +36,8 @@ class JwsAnnotationsTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                WebServiceClass.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "doSomethingPublic"))));
+                                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                WebServiceClass.class.getName() + ".doSomethingPublic"))));
   }
 
   @Test
@@ -58,10 +56,9 @@ class JwsAnnotationsTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                WebServiceFromInterface.class.getName()),
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_FUNCTION, "partOfPublicInterface"))));
+                                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                WebServiceFromInterface.class.getName()
+                                    + ".partOfPublicInterface"))));
   }
 
   @Test
@@ -84,9 +81,8 @@ class JwsAnnotationsTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                WebServiceFromInterface.class.getName()),
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_FUNCTION, "partOfPublicInterface"))));
+                                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                WebServiceFromInterface.class.getName()
+                                    + ".partOfPublicInterface"))));
   }
 }

@@ -11,10 +11,9 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FILEPATH;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_LINENO;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FILE_PATH;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_LINE_NUMBER;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 
@@ -41,7 +40,6 @@ import org.slf4j.MDC;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class Slf4jToLog4jTest {
 
   @RegisterExtension
@@ -112,10 +110,11 @@ class Slf4jToLog4jTest {
                     Arrays.asList(
                         equalTo(THREAD_NAME, Thread.currentThread().getName()),
                         equalTo(THREAD_ID, Thread.currentThread().getId()),
-                        equalTo(CODE_NAMESPACE, Slf4jToLog4jTest.class.getName()),
-                        equalTo(CODE_FUNCTION, "performLogging"),
-                        satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
-                        equalTo(CODE_FILEPATH, "Slf4jToLog4jTest.java")));
+                        equalTo(
+                            CODE_FUNCTION_NAME,
+                            Slf4jToLog4jTest.class.getName() + ".performLogging"),
+                        satisfies(CODE_LINE_NUMBER, AbstractLongAssert::isPositive),
+                        equalTo(CODE_FILE_PATH, "Slf4jToLog4jTest.java")));
             if (logException) {
               attributeAsserts.addAll(
                   Arrays.asList(
@@ -155,10 +154,9 @@ class Slf4jToLog4jTest {
                     equalTo(AttributeKey.stringKey("key2"), "val2"),
                     equalTo(THREAD_NAME, Thread.currentThread().getName()),
                     equalTo(THREAD_ID, Thread.currentThread().getId()),
-                    equalTo(CODE_NAMESPACE, Slf4jToLog4jTest.class.getName()),
-                    equalTo(CODE_FUNCTION, "testMdc"),
-                    satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
-                    equalTo(CODE_FILEPATH, "Slf4jToLog4jTest.java")));
+                    equalTo(CODE_FUNCTION_NAME, Slf4jToLog4jTest.class.getName() + ".testMdc"),
+                    satisfies(CODE_LINE_NUMBER, AbstractLongAssert::isPositive),
+                    equalTo(CODE_FILE_PATH, "Slf4jToLog4jTest.java")));
   }
 
   @Test
@@ -173,10 +171,9 @@ class Slf4jToLog4jTest {
             logRecord.hasAttributesSatisfyingExactly(
                 equalTo(THREAD_NAME, Thread.currentThread().getName()),
                 equalTo(THREAD_ID, Thread.currentThread().getId()),
-                equalTo(CODE_NAMESPACE, Slf4jToLog4jTest.class.getName()),
-                equalTo(CODE_FUNCTION, "testMarker"),
-                satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
-                equalTo(CODE_FILEPATH, "Slf4jToLog4jTest.java"),
+                equalTo(CODE_FUNCTION_NAME, Slf4jToLog4jTest.class.getName() + ".testMarker"),
+                satisfies(CODE_LINE_NUMBER, AbstractLongAssert::isPositive),
+                equalTo(CODE_FILE_PATH, "Slf4jToLog4jTest.java"),
                 equalTo(AttributeKey.stringKey("log4j.marker"), markerName)));
   }
 

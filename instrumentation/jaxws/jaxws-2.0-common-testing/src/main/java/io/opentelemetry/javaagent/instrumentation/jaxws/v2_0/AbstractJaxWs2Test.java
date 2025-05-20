@@ -40,7 +40,6 @@ import org.springframework.util.ClassUtils;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.soap.client.SoapFaultClientException;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 public class AbstractJaxWs2Test extends AbstractHttpServerUsingTest<Server> {
   @RegisterExtension
   public static final InstrumentationExtension testing =
@@ -132,11 +131,10 @@ public class AbstractJaxWs2Test extends AbstractHttpServerUsingTest<Server> {
                             .hasKind(SpanKind.INTERNAL)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(
-                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                    HelloServiceImpl.class.getName()),
-                                equalTo(
-                                    CodeIncubatingAttributes.CODE_FUNCTION,
-                                    testMethod.methodName())));
+                                    CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                    HelloServiceImpl.class.getName()
+                                        + "."
+                                        + testMethod.methodName())));
               }
 
               trace.hasSpansSatisfyingExactly(assertions);
@@ -178,11 +176,10 @@ public class AbstractJaxWs2Test extends AbstractHttpServerUsingTest<Server> {
                             .hasException(expectedException)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(
-                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                    HelloServiceImpl.class.getName()),
-                                equalTo(
-                                    CodeIncubatingAttributes.CODE_FUNCTION,
-                                    testMethod.methodName())));
+                                    CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                    HelloServiceImpl.class.getName()
+                                        + "."
+                                        + testMethod.methodName())));
               }
 
               trace.hasSpansSatisfyingExactly(assertions);
