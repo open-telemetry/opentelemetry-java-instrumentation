@@ -89,7 +89,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasResource(resource)
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("log message 1")
-                    .hasTotalAttributeCount(4));
+                    .hasTotalAttributeCount(3));
   }
 
   @Test
@@ -156,7 +156,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasResource(resource)
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("log message 1")
-                    .hasTotalAttributeCount(2 + 4) // 4 code attributes
+                    .hasTotalAttributeCount(2 + 3) // 3 code attributes
                     .hasAttributesSatisfying(
                         equalTo(AttributeKey.stringKey("key1"), "val1"),
                         equalTo(AttributeKey.stringKey("key2"), "val2")));
@@ -180,7 +180,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasResource(resource)
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("log message 1")
-                    .hasTotalAttributeCount(1 + 4) // 4 code attributes
+                    .hasTotalAttributeCount(1 + 3) // 3 code attributes
                     .hasAttributesSatisfying(
                         equalTo(AttributeKey.stringKey("test-property"), "test-value")));
   }
