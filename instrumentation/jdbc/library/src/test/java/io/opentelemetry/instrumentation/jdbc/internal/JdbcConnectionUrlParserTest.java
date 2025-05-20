@@ -206,6 +206,7 @@ class JdbcConnectionUrlParserTest {
               .build());
     }
   }
+
   @ParameterizedTest(name = "{index}: {0}")
   @ArgumentsSource(ClickHouseProvider.class)
   void testClickHouseParsing(ParseTestArgument argument) {
@@ -231,8 +232,7 @@ class JdbcConnectionUrlParserTest {
               .setSubtype("https")
               .setHost("localhost")
               .setPort(8443)
-              .build()
-      );
+              .build());
     }
   }
 
