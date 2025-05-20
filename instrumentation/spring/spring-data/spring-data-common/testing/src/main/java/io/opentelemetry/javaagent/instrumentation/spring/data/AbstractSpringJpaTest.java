@@ -83,7 +83,7 @@ public abstract class AbstractSpringJpaTest<
         span ->
             span.hasName("JpaCustomerRepository.save")
                 .hasKind(SpanKind.INTERNAL)
-                .hasAttributesSatisfyingExactly(assertCodeAttributes("save", repoClassName)),
+                .hasAttributesSatisfyingExactly(assertCodeFunction(repoClassName, "save")),
         span ->
             span.hasName("INSERT test.JpaCustomer")
                 .hasKind(SpanKind.CLIENT)
@@ -99,7 +99,7 @@ public abstract class AbstractSpringJpaTest<
                     equalTo(maybeStable(DB_SQL_TABLE), "JpaCustomer")));
   }
 
-  private static AttributeAssertion assertCodeAttributes(String methodName, String repoClassName) {
+  private static AttributeAssertion assertCodeFunction(String repoClassName, String methodName) {
     return equalTo(CodeIncubatingAttributes.CODE_FUNCTION_NAME, repoClassName + "." + methodName);
   }
 
@@ -109,7 +109,7 @@ public abstract class AbstractSpringJpaTest<
         span ->
             span.hasName("JpaCustomerRepository.save")
                 .hasKind(SpanKind.INTERNAL)
-                .hasAttributesSatisfyingExactly(assertCodeAttributes("save", repoClassName)),
+                .hasAttributesSatisfyingExactly(assertCodeFunction(repoClassName, "save")),
         span ->
             span.hasName("CALL test")
                 .hasKind(SpanKind.CLIENT)
@@ -156,7 +156,7 @@ public abstract class AbstractSpringJpaTest<
                     span.hasName("JpaCustomerRepository.findAll")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            assertCodeAttributes("findAll", repoClassName)),
+                            assertCodeFunction(repoClassName, "findAll")),
                 span ->
                     span.hasName("SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
@@ -192,8 +192,7 @@ public abstract class AbstractSpringJpaTest<
                 span ->
                     span.hasName("JpaCustomerRepository.save")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasAttributesSatisfyingExactly(
-                            assertCodeAttributes("save", repoClassName)),
+                        .hasAttributesSatisfyingExactly(assertCodeFunction(repoClassName, "save")),
                 span ->
                     span.hasName("SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
@@ -232,7 +231,7 @@ public abstract class AbstractSpringJpaTest<
                     span.hasName("JpaCustomerRepository.findByLastName")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            assertCodeAttributes("findByLastName", repoClassName)),
+                            assertCodeFunction(repoClassName, "findByLastName")),
                 span ->
                     span.hasName("SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
@@ -257,7 +256,7 @@ public abstract class AbstractSpringJpaTest<
                     span.hasName("JpaCustomerRepository.delete")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            assertCodeAttributes("delete", repoClassName)),
+                            assertCodeFunction(repoClassName, "delete")),
                 span ->
                     span.hasName("SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
@@ -304,7 +303,7 @@ public abstract class AbstractSpringJpaTest<
                     span.hasName("JpaCustomerRepository.findSpecialCustomers")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            assertCodeAttributes("findSpecialCustomers", repoClassName)),
+                            assertCodeFunction(repoClassName, "findSpecialCustomers")),
                 span ->
                     span.hasName("SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
@@ -350,7 +349,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasStatus(StatusData.error())
                         .hasException(expectedException)
                         .hasAttributesSatisfyingExactly(
-                            assertCodeAttributes("findOneByLastName", repoClassName)),
+                            assertCodeFunction(repoClassName, "findOneByLastName")),
                 span ->
                     span.hasName("SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)

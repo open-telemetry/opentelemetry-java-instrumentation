@@ -81,20 +81,20 @@ class HttpServletResponseTest {
                     span.hasName("TestResponse.sendError")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("sendError")),
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("sendError")),
                 span ->
                     span.hasName("TestResponse.sendError")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("sendError")),
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("sendError")),
                 span ->
                     span.hasName("TestResponse.sendRedirect")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("sendRedirect"))));
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("sendRedirect"))));
   }
 
-  private static AttributeAssertion assertCodeAttributes(String method) {
+  private static AttributeAssertion assertCodeFunction(String method) {
     return equalTo(
         CodeIncubatingAttributes.CODE_FUNCTION_NAME, TestResponse.class.getName() + "." + method);
   }

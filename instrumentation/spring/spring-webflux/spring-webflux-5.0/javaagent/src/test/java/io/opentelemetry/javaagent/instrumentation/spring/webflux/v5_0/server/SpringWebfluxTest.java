@@ -140,11 +140,11 @@ public class SpringWebfluxTest {
                   }
                   span.hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(assertCodeAttributes(parameter));
+                      .hasAttributesSatisfyingExactly(assertCodeFunction(parameter));
                 }));
   }
 
-  private static @NotNull AttributeAssertion assertCodeAttributes(Parameter parameter) {
+  private static @NotNull AttributeAssertion assertCodeFunction(Parameter parameter) {
     String expectedFunctionName =
         parameter.annotatedMethod == null ? "handle" : parameter.annotatedMethod;
     String expectedPrefix =
@@ -266,7 +266,7 @@ public class SpringWebfluxTest {
                   }
                   span.hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(assertCodeAttributes(parameter));
+                      .hasAttributesSatisfyingExactly(assertCodeFunction(parameter));
                 },
                 span ->
                     span.hasName("tracedMethod")
@@ -367,7 +367,7 @@ public class SpringWebfluxTest {
                   }
                   span.hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(assertCodeAttributes(parameter));
+                      .hasAttributesSatisfyingExactly(assertCodeFunction(parameter));
                 },
                 span ->
                     span.hasName("tracedMethod")
@@ -543,7 +543,7 @@ public class SpringWebfluxTest {
                                       satisfies(
                                           EXCEPTION_STACKTRACE,
                                           val -> val.isInstanceOf(String.class))))
-                      .hasAttributesSatisfyingExactly(assertCodeAttributes(parameter));
+                      .hasAttributesSatisfyingExactly(assertCodeFunction(parameter));
                 }));
   }
 
@@ -686,7 +686,7 @@ public class SpringWebfluxTest {
                   }
                   span.hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(assertCodeAttributes(parameter));
+                      .hasAttributesSatisfyingExactly(assertCodeFunction(parameter));
                 });
 
     testing.waitAndAssertTraces(Collections.nCopies(requestsCount, traceAssertion));

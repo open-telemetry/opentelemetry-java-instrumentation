@@ -36,7 +36,7 @@ class WithSpanInstrumentationTest {
   public static final AgentInstrumentationExtension testing =
       AgentInstrumentationExtension.create();
 
-  private static AttributeAssertion assertCodeAttributes(String methodName) {
+  private static AttributeAssertion assertCodeFunction(String methodName) {
     return equalTo(
         CodeIncubatingAttributes.CODE_FUNCTION_NAME,
         TracedWithSpan.class.getName() + "." + methodName);
@@ -53,7 +53,7 @@ class WithSpanInstrumentationTest {
                     span.hasName("TracedWithSpan.otel")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("otel"))));
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("otel"))));
   }
 
   @Test
@@ -67,7 +67,7 @@ class WithSpanInstrumentationTest {
                     span.hasName("manualName")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("namedOtel"))));
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("namedOtel"))));
   }
 
   @Test
@@ -81,7 +81,7 @@ class WithSpanInstrumentationTest {
                     span.hasName("TracedWithSpan.someKind")
                         .hasKind(SpanKind.PRODUCER)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("someKind"))));
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("someKind"))));
   }
 
   @Test
@@ -95,12 +95,12 @@ class WithSpanInstrumentationTest {
                     span.hasName("TracedWithSpan.server")
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("server")),
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("server")),
                 span ->
                     span.hasName("TracedWithSpan.otel")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("otel"))));
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("otel"))));
   }
 
   @Test
@@ -123,7 +123,7 @@ class WithSpanInstrumentationTest {
                     span.hasName("TracedWithSpan.completionStage")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("completionStage"))));
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("completionStage"))));
   }
 
   @Test
@@ -142,7 +142,7 @@ class WithSpanInstrumentationTest {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasException(exception)
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("completionStage"))));
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("completionStage"))));
   }
 
   @Test
@@ -156,7 +156,7 @@ class WithSpanInstrumentationTest {
                     span.hasName("TracedWithSpan.completionStage")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("completionStage"))));
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("completionStage"))));
   }
 
   @Test
@@ -176,7 +176,7 @@ class WithSpanInstrumentationTest {
                     span.hasName("TracedWithSpan.completionStage")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("completionStage"))));
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("completionStage"))));
   }
 
   @Test
@@ -199,7 +199,7 @@ class WithSpanInstrumentationTest {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasException(exception)
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("completionStage"))));
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("completionStage"))));
   }
 
   @Test
@@ -214,8 +214,7 @@ class WithSpanInstrumentationTest {
                     span.hasName("TracedWithSpan.completableFuture")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            assertCodeAttributes("completableFuture"))));
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("completableFuture"))));
   }
 
   @Test
@@ -234,8 +233,7 @@ class WithSpanInstrumentationTest {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasException(exception)
-                        .hasAttributesSatisfyingExactly(
-                            assertCodeAttributes("completableFuture"))));
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("completableFuture"))));
   }
 
   @Test
@@ -249,8 +247,7 @@ class WithSpanInstrumentationTest {
                     span.hasName("TracedWithSpan.completableFuture")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            assertCodeAttributes("completableFuture"))));
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("completableFuture"))));
   }
 
   @Test
@@ -270,8 +267,7 @@ class WithSpanInstrumentationTest {
                     span.hasName("TracedWithSpan.completableFuture")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            assertCodeAttributes("completableFuture"))));
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("completableFuture"))));
   }
 
   @Test
@@ -294,8 +290,7 @@ class WithSpanInstrumentationTest {
                         .hasNoParent()
                         .hasStatus(StatusData.error())
                         .hasException(exception)
-                        .hasAttributesSatisfyingExactly(
-                            assertCodeAttributes("completableFuture"))));
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("completableFuture"))));
   }
 
   @Test
@@ -310,7 +305,7 @@ class WithSpanInstrumentationTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            assertCodeAttributes("withSpanAttributes"),
+                            assertCodeFunction("withSpanAttributes"),
                             equalTo(stringKey("implicitName"), "foo"),
                             equalTo(stringKey("explicitName"), "bar"))));
   }

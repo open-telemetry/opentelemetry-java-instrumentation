@@ -80,7 +80,7 @@ class Elasticsearch53SpringRepositoryTest {
                     span.hasName("DocRepository.findAll")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("findAll")),
+                        .hasAttributesSatisfyingExactly(assertFunctionName("findAll")),
                 span ->
                     span.hasName("SearchAction")
                         .hasKind(SpanKind.CLIENT)
@@ -110,7 +110,7 @@ class Elasticsearch53SpringRepositoryTest {
                     span.hasName("DocRepository.index")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("index")),
+                        .hasAttributesSatisfyingExactly(assertFunctionName("index")),
                 span ->
                     span.hasName("IndexAction")
                         .hasKind(SpanKind.CLIENT)
@@ -155,7 +155,7 @@ class Elasticsearch53SpringRepositoryTest {
                     span.hasName("DocRepository.findById")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("findById")),
+                        .hasAttributesSatisfyingExactly(assertFunctionName("findById")),
                 span ->
                     span.hasName("GetAction")
                         .hasKind(SpanKind.CLIENT)
@@ -185,7 +185,7 @@ class Elasticsearch53SpringRepositoryTest {
                     span.hasName("DocRepository.index")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("index")),
+                        .hasAttributesSatisfyingExactly(assertFunctionName("index")),
                 span ->
                     span.hasName("IndexAction")
                         .hasKind(SpanKind.CLIENT)
@@ -225,7 +225,7 @@ class Elasticsearch53SpringRepositoryTest {
                     span.hasName("DocRepository.findById")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("findById")),
+                        .hasAttributesSatisfyingExactly(assertFunctionName("findById")),
                 span ->
                     span.hasName("GetAction")
                         .hasKind(SpanKind.CLIENT)
@@ -253,7 +253,7 @@ class Elasticsearch53SpringRepositoryTest {
                     span.hasName("DocRepository.deleteById")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("deleteById")),
+                        .hasAttributesSatisfyingExactly(assertFunctionName("deleteById")),
                 span ->
                     span.hasName("DeleteAction")
                         .hasKind(SpanKind.CLIENT)
@@ -292,7 +292,7 @@ class Elasticsearch53SpringRepositoryTest {
                     span.hasName("DocRepository.findAll")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("findAll")),
+                        .hasAttributesSatisfyingExactly(assertFunctionName("findAll")),
                 span ->
                     span.hasName("SearchAction")
                         .hasKind(SpanKind.CLIENT)
@@ -308,7 +308,7 @@ class Elasticsearch53SpringRepositoryTest {
                             equalTo(stringKey("elasticsearch.request.search.types"), "doc"))));
   }
 
-  private AttributeAssertion assertCodeAttributes(String methodName) {
+  private static AttributeAssertion assertFunctionName(String methodName) {
     return equalTo(
         CodeIncubatingAttributes.CODE_FUNCTION_NAME,
         DocRepository.class.getName() + "." + methodName);

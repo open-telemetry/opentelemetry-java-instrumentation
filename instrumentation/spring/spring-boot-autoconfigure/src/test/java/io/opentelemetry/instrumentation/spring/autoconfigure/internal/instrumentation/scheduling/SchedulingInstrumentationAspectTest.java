@@ -62,7 +62,7 @@ class SchedulingInstrumentationAspectTest {
     schedulingTester = factory.getProxy();
   }
 
-  protected AttributeAssertion assertCodeAttributes(String method) {
+  protected AttributeAssertion assertCodeFunction(String method) {
     return satisfies(
         CODE_FUNCTION_NAME, val -> val.isEqualTo(unproxiedTesterClassName + "." + method));
   }
@@ -80,7 +80,7 @@ class SchedulingInstrumentationAspectTest {
                 span ->
                     span.hasName(unproxiedTesterSimpleClassName + ".testScheduled")
                         .hasKind(INTERNAL)
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("testScheduled"))));
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("testScheduled"))));
   }
 
   @Test
@@ -96,8 +96,7 @@ class SchedulingInstrumentationAspectTest {
                 span ->
                     span.hasName(unproxiedTesterSimpleClassName + ".testMultiScheduled")
                         .hasKind(INTERNAL)
-                        .hasAttributesSatisfyingExactly(
-                            assertCodeAttributes("testMultiScheduled"))));
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("testMultiScheduled"))));
   }
 
   @Test
@@ -113,7 +112,7 @@ class SchedulingInstrumentationAspectTest {
                 span ->
                     span.hasName(unproxiedTesterSimpleClassName + ".testSchedules")
                         .hasKind(INTERNAL)
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("testSchedules"))));
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("testSchedules"))));
   }
 
   @Test
@@ -130,7 +129,7 @@ class SchedulingInstrumentationAspectTest {
                 span ->
                     span.hasName(unproxiedTesterSimpleClassName + ".testNestedSpan")
                         .hasKind(INTERNAL)
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("testNestedSpan")),
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("testNestedSpan")),
                 nestedSpan ->
                     nestedSpan.hasParent(trace.getSpan(0)).hasKind(INTERNAL).hasName("test")));
   }
@@ -150,7 +149,7 @@ class SchedulingInstrumentationAspectTest {
                         .hasKind(INTERNAL)
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
-                            assertCodeAttributes("testScheduledWithException"))));
+                            assertCodeFunction("testScheduledWithException"))));
   }
 
   static class InstrumentationSchedulingTester {

@@ -16,7 +16,6 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentracing.contrib.dropwizard.Trace;
 import java.util.concurrent.Callable;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -37,11 +36,10 @@ class TraceAnnotationsTest {
                     span.hasName("SayTracedHello.sayHello")
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            assertCodeAttributes("sayHello"),
-                            equalTo(stringKey("myattr"), "test"))));
+                            assertCodeFunction("sayHello"), equalTo(stringKey("myattr"), "test"))));
   }
 
-  private static @NotNull AttributeAssertion assertCodeAttributes(String methodName) {
+  private static AttributeAssertion assertCodeFunction(String methodName) {
     return equalTo(
         CodeIncubatingAttributes.CODE_FUNCTION_NAME,
         SayTracedHello.class.getName() + "." + methodName);
@@ -59,19 +57,18 @@ class TraceAnnotationsTest {
                     span.hasName("SayTracedHello.sayHelloSayHa")
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            assertCodeAttributes("sayHelloSayHa"),
+                            assertCodeFunction("sayHelloSayHa"),
                             equalTo(stringKey("myattr"), "test2")),
                 span ->
                     span.hasName("SayTracedHello.sayHello")
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            assertCodeAttributes("sayHello"), equalTo(stringKey("myattr"), "test")),
+                            assertCodeFunction("sayHello"), equalTo(stringKey("myattr"), "test")),
                 span ->
                     span.hasName("SayTracedHello.sayHello")
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            assertCodeAttributes("sayHello"),
-                            equalTo(stringKey("myattr"), "test"))));
+                            assertCodeFunction("sayHello"), equalTo(stringKey("myattr"), "test"))));
   }
 
   @Test
@@ -85,7 +82,7 @@ class TraceAnnotationsTest {
                     span.hasName("SayTracedHello.sayError")
                         .hasStatus(StatusData.error())
                         .hasException(thrown)
-                        .hasAttributesSatisfyingExactly(assertCodeAttributes("sayError"))));
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("sayError"))));
   }
 
   @Test
