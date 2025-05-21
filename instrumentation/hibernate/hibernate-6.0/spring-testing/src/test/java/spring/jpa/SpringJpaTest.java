@@ -344,7 +344,7 @@ class SpringJpaTest {
                                 stringKey("hibernate.session_id"),
                                 val -> val.isInstanceOf(String.class))),
                 span ->
-                    span.hasName("Session.delete spring.jpa.Customer")
+                    span.hasName("Session.remove spring.jpa.Customer")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(

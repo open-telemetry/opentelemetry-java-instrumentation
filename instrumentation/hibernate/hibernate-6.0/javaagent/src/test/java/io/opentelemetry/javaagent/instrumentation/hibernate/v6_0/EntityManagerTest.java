@@ -258,7 +258,7 @@ public class EntityManagerTest extends AbstractHibernateTest {
             named(
                 "remove",
                 new Parameter(
-                    "delete",
+                    "remove",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
                     true,
                     true,
