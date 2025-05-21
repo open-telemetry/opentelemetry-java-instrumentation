@@ -69,7 +69,6 @@ dependencies {
   implementation("org.slf4j:jul-to-slf4j")
   implementation("io.opentelemetry:opentelemetry-exporter-logging")
   implementation("io.opentelemetry.contrib:opentelemetry-baggage-processor")
-  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.19.0")
   api(project(":instrumentation-api-incubator"))
 
   annotationProcessor("com.google.auto.service:auto-service")

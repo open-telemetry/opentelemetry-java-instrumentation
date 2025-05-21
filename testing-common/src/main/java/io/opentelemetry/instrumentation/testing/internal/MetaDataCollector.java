@@ -7,8 +7,6 @@ package io.opentelemetry.instrumentation.testing.internal;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -16,9 +14,6 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -37,9 +32,6 @@ public final class MetaDataCollector {
   private static final String TMP_DIR = ".telemetry";
   private static final Pattern MODULE_PATTERN =
       Pattern.compile("(.*?/instrumentation/.*?)(/javaagent/|/library/)");
-
-  // thread-safe after initialization
-  private static final ObjectMapper YAML_MAPPER = new ObjectMapper(new YAMLFactory());
 
   public static void writeTelemetryToFiles(String path, Map<String, MetricData> metrics)
       throws IOException {
@@ -68,46 +60,40 @@ public final class MetaDataCollector {
     return instrumentationPath;
   }
 
-  private static void writeMetricData(String moduleRoot, Map<String, MetricData> metrics)
+  private static void writeMetricData(String instrumentationPath, Map<String, MetricData> metrics)
       throws IOException {
+
     if (metrics.isEmpty()) {
       return;
     }
 
-    Path output = Paths.get(moduleRoot, TMP_DIR, "metrics-" + UUID.randomUUID() + ".yaml");
+    Path metricsPath =
+        Paths.get(instrumentationPath, TMP_DIR, "metrics-" + UUID.randomUUID() + ".yaml");
+    try (BufferedWriter writer = Files.newBufferedWriter(metricsPath.toFile().toPath(), UTF_8)) {
 
-    Map<String, Object> root = new LinkedHashMap<>();
-    List<Map<String, Object>> metricList = new ArrayList<>();
-
-    for (MetricData metric : metrics.values()) {
-      Map<String, Object> metricNode = new LinkedHashMap<>();
-      metricNode.put("name", metric.getName());
-      metricNode.put("description", metric.getDescription());
-      metricNode.put("type", metric.getType().toString());
-      metricNode.put("unit", sanitizeUnit(metric.getUnit()));
-
-      List<Map<String, String>> attributes = new ArrayList<>();
-      metric.getData().getPoints().stream()
-          .findFirst()
-          .ifPresent(
-              p ->
-                  p.getAttributes()
-                      .forEach(
-                          (key, value) -> {
-                            Map<String, String> attr = new LinkedHashMap<>();
-                            attr.put("name", key.getKey());
-                            attr.put("type", key.getType().toString());
-                            attributes.add(attr);
-                          }));
-
-      metricNode.put("attributes", attributes);
-      metricList.add(metricNode);
-    }
-
-    root.put("metrics", metricList);
-
-    try (BufferedWriter writer = Files.newBufferedWriter(output, UTF_8)) {
-      YAML_MAPPER.writeValue(writer, root);
+      if (!metrics.isEmpty()) {
+        writer.write("metrics:\n");
+        for (MetricData metric : metrics.values()) {
+          writer.write("  - name: " + metric.getName() + "\n");
+          writer.write("    description: " + metric.getDescription() + "\n");
+          writer.write("    type: " + metric.getType().toString() + "\n");
+          writer.write("    unit: " + sanitizeUnit(metric.getUnit()) + "\n");
+          writer.write("    attributes: \n");
+          metric.getData().getPoints().stream()
+              .findFirst()
+              .get()
+              .getAttributes()
+              .forEach(
+                  (key, value) -> {
+                    try {
+                      writer.write("      - name: " + key.getKey() + "\n");
+                      writer.write("        type: " + key.getType().toString() + "\n");
+                    } catch (IOException e) {
+                      throw new IllegalStateException(e);
+                    }
+                  });
+        }
+      }
     }
   }
 
