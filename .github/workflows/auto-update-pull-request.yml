@@ -3,6 +3,7 @@ on:
   workflow_run:
     workflows:
       - "Auto spotless"
+      - "Auto license report"
     types:
       - completed
 
