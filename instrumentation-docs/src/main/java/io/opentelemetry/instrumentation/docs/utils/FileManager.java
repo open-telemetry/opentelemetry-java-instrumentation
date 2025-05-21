@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
 public class FileManager {
   private static final Logger logger = Logger.getLogger(FileManager.class.getName());
@@ -38,6 +39,7 @@ public class FileManager {
     }
   }
 
+  @Nullable
   private static InstrumentationPath parseInstrumentationPath(String filePath) {
     if (filePath == null || filePath.isEmpty()) {
       return null;
@@ -98,6 +100,7 @@ public class FileManager {
     }
   }
 
+  @Nullable
   public String getMetaDataFile(String instrumentationDirectory) {
     String metadataFile = instrumentationDirectory + "/metadata.yaml";
     if (Files.exists(Paths.get(metadataFile))) {
@@ -106,6 +109,7 @@ public class FileManager {
     return null;
   }
 
+  @Nullable
   public String readFileToString(String filePath) {
     try {
       return Files.readString(Paths.get(filePath));
@@ -113,5 +117,34 @@ public class FileManager {
       logger.severe("Error reading file: " + e.getMessage());
       return null;
     }
+  }
+
+  /**
+   * Looks for metric files in the .telemetry directory
+   *
+   * @param instrumentationDirectory the directory to traverse
+   * @return contents of file
+   */
+  public String getMetrics(String instrumentationDirectory) {
+    StringBuilder metricsContent = new StringBuilder();
+    Path telemetryDir = Paths.get(instrumentationDirectory, ".telemetry");
+
+    if (Files.exists(telemetryDir) && Files.isDirectory(telemetryDir)) {
+      try (Stream<Path> files = Files.list(telemetryDir)) {
+        files
+            .filter(path -> path.getFileName().toString().startsWith("metrics-"))
+            .forEach(
+                path -> {
+                  String content = readFileToString(path.toString());
+                  if (content != null) {
+                    metricsContent.append(content).append("\n");
+                  }
+                });
+      } catch (IOException e) {
+        logger.severe("Error reading metrics files: " + e.getMessage());
+      }
+    }
+
+    return metricsContent.toString();
   }
 }
