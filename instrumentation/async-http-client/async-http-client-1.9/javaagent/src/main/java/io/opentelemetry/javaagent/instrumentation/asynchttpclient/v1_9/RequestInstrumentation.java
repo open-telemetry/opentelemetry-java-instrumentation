@@ -21,6 +21,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import javax.annotation.Nullable;
 
 public class RequestInstrumentation implements TypeInstrumentation {
 
@@ -42,24 +43,22 @@ public class RequestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) Request request,
-        @Advice.Argument(1) AsyncHandler<?> handler,
-        @Advice.Local("otelScope") Scope scope) {
+    public static Scope onEnter(@Advice.Argument(0) Request request, @Advice.Argument(1) AsyncHandler<?> handler) {
       Context parentContext = currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
+        return null;
       }
 
       Context context = instrumenter().start(parentContext, request);
       VirtualField.find(AsyncHandler.class, AsyncHandlerData.class)
           .set(handler, AsyncHandlerData.create(parentContext, context, request));
-      scope = context.makeCurrent();
+      return context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Local("otelScope") Scope scope) {
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

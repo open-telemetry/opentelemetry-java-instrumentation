@@ -22,6 +22,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.asynchttpclient.AsyncHandler;
 import org.asynchttpclient.Request;
+import javax.annotation.Nullable;
 
 public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
 
@@ -43,15 +44,14 @@ public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExecuteRequestAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) Request request,
-        @Advice.Argument(1) AsyncHandler<?> handler,
-        @Advice.Local("otelScope") Scope scope) {
+    public static Scope onEnter(@Advice.Argument(0) Request request, @Advice.Argument(1) AsyncHandler<?> handler) {
+
       Context parentContext = currentContext();
       RequestContext requestContext = new RequestContext(parentContext, request);
       if (!instrumenter().shouldStart(parentContext, requestContext)) {
-        return;
+        return null;
       }
 
       Context context = instrumenter().start(parentContext, requestContext);
@@ -71,11 +71,11 @@ public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
       // module introduced)
 
       VirtualField.find(AsyncHandler.class, RequestContext.class).set(handler, requestContext);
-      scope = context.makeCurrent();
+      return context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Local("otelScope") Scope scope) {
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }
