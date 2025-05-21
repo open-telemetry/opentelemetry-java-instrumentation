@@ -14,8 +14,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class GoogleHttpClientInstrumentationModule extends InstrumentationModule implements
-    ExperimentalInstrumentationModule {
+public class GoogleHttpClientInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public GoogleHttpClientInstrumentationModule() {
     super("google-http-client", "google-http-client-1.19");
   }
