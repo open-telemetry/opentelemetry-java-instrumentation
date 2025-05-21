@@ -76,7 +76,7 @@ public final class PulsarSingletons {
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, MessageOperation.RECEIVE))
             .addAttributesExtractor(
-                createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
+                createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE, "receive"))
             .addOperationMetrics(MessagingConsumerMetrics.get())
             .addAttributesExtractor(
                 ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()));
@@ -99,7 +99,7 @@ public final class PulsarSingletons {
             INSTRUMENTATION_NAME,
             MessagingSpanNameExtractor.create(getter, MessageOperation.RECEIVE))
         .addAttributesExtractor(
-            createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
+            createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE, "receive"))
         .addAttributesExtractor(
             ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
         .addSpanLinksExtractor(new PulsarBatchRequestSpanLinksExtractor(PROPAGATOR))
@@ -117,7 +117,7 @@ public final class PulsarSingletons {
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, MessageOperation.PROCESS))
             .addAttributesExtractor(
-                createMessagingAttributesExtractor(getter, MessageOperation.PROCESS));
+                createMessagingAttributesExtractor(getter, MessageOperation.PROCESS, "process"));
 
     if (receiveInstrumentationEnabled) {
       SpanLinksExtractor<PulsarRequest> spanLinksExtractor =
@@ -136,9 +136,9 @@ public final class PulsarSingletons {
         Instrumenter.<PulsarRequest, Void>builder(
                 TELEMETRY,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, MessageOperation.PUBLISH))
+                MessagingSpanNameExtractor.create(getter, MessageOperation.SEND))
             .addAttributesExtractor(
-                createMessagingAttributesExtractor(getter, MessageOperation.PUBLISH))
+                createMessagingAttributesExtractor(getter, MessageOperation.SEND, "send"))
             .addAttributesExtractor(
                 ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
             .addOperationMetrics(MessagingProducerMetrics.get());
@@ -152,8 +152,8 @@ public final class PulsarSingletons {
   }
 
   private static <T> AttributesExtractor<T, Void> createMessagingAttributesExtractor(
-      MessagingAttributesGetter<T, Void> getter, MessageOperation operation) {
-    return MessagingAttributesExtractor.builder(getter, operation)
+      MessagingAttributesGetter<T, Void> getter, MessageOperation operation, String operationName) {
+    return MessagingAttributesExtractor.builder(getter, operation, operationName)
         .setCapturedHeaders(capturedHeaders)
         .build();
   }
