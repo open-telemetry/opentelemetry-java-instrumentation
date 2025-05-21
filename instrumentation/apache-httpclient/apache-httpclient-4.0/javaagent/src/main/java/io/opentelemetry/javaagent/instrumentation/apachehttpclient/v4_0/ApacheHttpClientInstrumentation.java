@@ -20,7 +20,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.http.HttpHost;
@@ -123,87 +126,88 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$RequestWithHandlerAdvice");
   }
 
-  @SuppressWarnings("unused")
-  public static class UriRequestAdvice {
+  public static class AdviceScope {
+    private final ApacheHttpClientRequest otelRequest;
+    private final Context parentContext;
+    private final Context context;
+    private final Scope scope;
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
-        @Advice.Argument(0) HttpUriRequest request,
-        @Advice.Local("otelRequest") ApacheHttpClientRequest otelRequest,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = currentContext();
-
-      otelRequest = new ApacheHttpClientRequest(request);
-
-      if (!instrumenter().shouldStart(parentContext, otelRequest)) {
-        return;
-      }
-
-      context = instrumenter().start(parentContext, otelRequest);
-      scope = context.makeCurrent();
+    private AdviceScope(
+        ApacheHttpClientRequest otelRequest, Context parentContext, Context context, Scope scope) {
+      this.otelRequest = otelRequest;
+      this.parentContext = parentContext;
+      this.context = context;
+      this.scope = scope;
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(
-        @Advice.Argument(0) HttpUriRequest request,
-        @Advice.Return Object result,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelRequest") ApacheHttpClientRequest otelRequest,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
+    @Nullable
+    public static AdviceScope start(ApacheHttpClientRequest otelRequest) {
+      Context parentContext = currentContext();
+      if (!instrumenter().shouldStart(parentContext, otelRequest)) {
+        return null;
       }
+      Context context = instrumenter().start(parentContext, otelRequest);
+      return new AdviceScope(otelRequest, parentContext, context, context.makeCurrent());
+    }
 
+    public <T> ResponseHandler<T> wrapHandler(ResponseHandler<T> handler) {
+      return new WrappingStatusSettingResponseHandler<>(
+          context, parentContext, otelRequest, handler);
+    }
+
+    public void end(@Nullable Object result, @Nullable Throwable throwable) {
       scope.close();
       ApacheHttpClientHelper.doMethodExit(context, otelRequest, result, throwable);
     }
   }
 
   @SuppressWarnings("unused")
-  public static class UriRequestWithHandlerAdvice {
+  public static class UriRequestAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
-        @Advice.Argument(0) HttpUriRequest request,
-        @Advice.Argument(value = 1, readOnly = false) ResponseHandler<?> handler,
-        @Advice.Local("otelRequest") ApacheHttpClientRequest otelRequest,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = currentContext();
-
-      otelRequest = new ApacheHttpClientRequest(request);
-
-      if (!instrumenter().shouldStart(parentContext, otelRequest)) {
-        return;
-      }
-
-      context = instrumenter().start(parentContext, otelRequest);
-      scope = context.makeCurrent();
-
-      // Wrap the handler so we capture the status code
-      if (handler != null) {
-        handler =
-            new WrappingStatusSettingResponseHandler<>(
-                context, parentContext, otelRequest, handler);
-      }
+    public static AdviceScope methodEnter(@Advice.Argument(0) HttpUriRequest request) {
+      return AdviceScope.start(new ApacheHttpClientRequest(request));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Argument(0) HttpUriRequest request,
+        @Advice.Return @Nullable Object result,
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+
+      if (adviceScope != null) {
+        adviceScope.end(result, throwable);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class UriRequestWithHandlerAdvice {
+
+    @AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static Object[] methodEnter(
+        @Advice.Argument(0) HttpUriRequest request,
+        @Advice.Argument(1) ResponseHandler<?> handler) {
+
+      AdviceScope adviceScope = AdviceScope.start(new ApacheHttpClientRequest(request));
+      // Wrap the handler so we capture the status code
+      return new Object[] {
+        adviceScope, adviceScope == null ? handler : adviceScope.wrapHandler(handler)
+      };
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void methodExit(
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelRequest") ApacheHttpClientRequest otelRequest,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
+        @Advice.Enter Object[] enterResult) {
 
-      scope.close();
-      ApacheHttpClientHelper.doMethodExit(context, otelRequest, result, throwable);
+      AdviceScope adviceScope = (AdviceScope) enterResult[0];
+      if (adviceScope != null) {
+        adviceScope.end(result, throwable);
+      }
     }
   }
 
@@ -211,83 +215,51 @@ public class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   public static class RequestAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
-        @Advice.Argument(0) HttpHost host,
-        @Advice.Argument(1) HttpRequest request,
-        @Advice.Local("otelRequest") ApacheHttpClientRequest otelRequest,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = currentContext();
-
-      otelRequest = new ApacheHttpClientRequest(host, request);
-
-      if (!instrumenter().shouldStart(parentContext, otelRequest)) {
-        return;
-      }
-
-      context = instrumenter().start(parentContext, otelRequest);
-      scope = context.makeCurrent();
+    public static AdviceScope methodEnter(
+        @Advice.Argument(0) HttpHost host, @Advice.Argument(1) HttpRequest request) {
+      return AdviceScope.start(new ApacheHttpClientRequest(host, request));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelRequest") ApacheHttpClientRequest otelRequest,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
+        @Advice.Enter AdviceScope adviceScope) {
 
-      scope.close();
-      ApacheHttpClientHelper.doMethodExit(context, otelRequest, result, throwable);
+      if (adviceScope != null) {
+        adviceScope.end(result, throwable);
+      }
     }
   }
 
   @SuppressWarnings("unused")
   public static class RequestWithHandlerAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
+    public static Object[] methodEnter(
         @Advice.Argument(0) HttpHost host,
         @Advice.Argument(1) HttpRequest request,
-        @Advice.Argument(value = 2, readOnly = false) ResponseHandler<?> handler,
-        @Advice.Local("otelRequest") ApacheHttpClientRequest otelRequest,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = currentContext();
+        @Advice.Argument(2) ResponseHandler<?> handler) {
 
-      otelRequest = new ApacheHttpClientRequest(host, request);
-
-      if (!instrumenter().shouldStart(parentContext, otelRequest)) {
-        return;
-      }
-
-      context = instrumenter().start(parentContext, otelRequest);
-      scope = context.makeCurrent();
-
-      // Wrap the handler so we capture the status code
-      if (handler != null) {
-        handler =
-            new WrappingStatusSettingResponseHandler<>(
-                context, parentContext, otelRequest, handler);
-      }
+      AdviceScope adviceScope = AdviceScope.start(new ApacheHttpClientRequest(host, request));
+      return new Object[] {
+        adviceScope,
+        // Wrap the handler so we capture the status code
+        adviceScope == null ? handler : adviceScope.wrapHandler(handler)
+      };
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelRequest") ApacheHttpClientRequest otelRequest,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
+        @Advice.Enter Object[] enterResult) {
 
-      scope.close();
-      ApacheHttpClientHelper.doMethodExit(context, otelRequest, result, throwable);
+      AdviceScope adviceScope = (AdviceScope) enterResult[0];
+      if (adviceScope != null) {
+        adviceScope.end(result, throwable);
+      }
     }
   }
 }
