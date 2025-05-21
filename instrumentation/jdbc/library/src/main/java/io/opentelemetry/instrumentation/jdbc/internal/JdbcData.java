@@ -13,6 +13,8 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -35,6 +37,8 @@ public final class JdbcData {
   private static final VirtualField<PreparedStatement, PreparedStatementBatchInfo>
       preparedStatementBatch =
           VirtualField.find(PreparedStatement.class, PreparedStatementBatchInfo.class);
+  private static final VirtualField<PreparedStatement, Map<String, String>> parameters =
+      VirtualField.find(PreparedStatement.class, Map.class);
 
   private JdbcData() {}
 
@@ -103,7 +107,30 @@ public final class JdbcData {
       PreparedStatement prepared = (PreparedStatement) statement;
       preparedStatement.set(prepared, null);
       preparedStatementBatch.set(prepared, null);
+      parameters.set(prepared, null);
     }
+  }
+
+  public static Map<String, String> getParameters(PreparedStatement statement) {
+    Map<String, String> parametersMap = parameters.get(statement);
+    return parametersMap != null ? parametersMap : Collections.emptyMap();
+  }
+
+  public static void addParameter(PreparedStatement statement, String key, String value) {
+    if (value == null) {
+      return;
+    }
+
+    Map<String, String> parametersMap = parameters.get(statement);
+    if (parametersMap == null) {
+      parametersMap = new HashMap<>();
+      parameters.set(statement, parametersMap);
+    }
+    parametersMap.put(key, value);
+  }
+
+  public static void clearParameters(PreparedStatement statement) {
+    parameters.set(statement, null);
   }
 
   /**

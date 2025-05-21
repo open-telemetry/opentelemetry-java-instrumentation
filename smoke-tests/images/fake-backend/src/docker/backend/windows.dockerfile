@@ -1,3 +1,3 @@
-FROM eclipse-temurin:11.0.27_6-jdk-windowsservercore-ltsc2022@sha256:dce5dfb7884802f4c29368860d1b7b4ca291f6525be2d4df80cbd2cd5cb1f9d9
+FROM eclipse-temurin:11.0.27_6-jdk-windowsservercore-ltsc2022@sha256:48e3b80f8ff69d03f5c9eef0769eaf01f7874fe799cb48a4780e014843b3e484
 COPY fake-backend.jar /fake-backend.jar
 CMD ["java", "-jar", "/fake-backend.jar"]
