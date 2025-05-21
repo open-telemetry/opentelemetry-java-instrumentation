@@ -16,7 +16,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public abstract class AbstractHibernateTest {
+abstract class AbstractHibernateTest {
   protected static SessionFactory sessionFactory;
   protected static List<Value> prepopulated;
 

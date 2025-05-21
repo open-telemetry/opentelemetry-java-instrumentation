@@ -38,7 +38,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class ProcedureCallTest {
+class ProcedureCallTest {
   protected static SessionFactory sessionFactory;
   protected static List<Value> prepopulated;
 

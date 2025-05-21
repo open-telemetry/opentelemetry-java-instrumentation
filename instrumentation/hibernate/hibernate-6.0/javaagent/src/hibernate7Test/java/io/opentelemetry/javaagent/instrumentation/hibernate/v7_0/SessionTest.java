@@ -47,7 +47,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 @SuppressWarnings("deprecation") // testing instrumentation of deprecated class
-public class SessionTest extends AbstractHibernateTest {
+class SessionTest extends AbstractHibernateTest {
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideHibernateActionParameters")
   void testHibernateAction(Parameter parameter) {
