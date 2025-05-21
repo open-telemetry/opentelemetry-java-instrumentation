@@ -1632,4 +1632,128 @@ class JdbcInstrumentationTest {
                                 DB_OPERATION_BATCH_SIZE,
                                 emitStableDatabaseSemconv() ? 2L : null))));
   }
+
+  @ParameterizedTest
+  @MethodSource("transactionOperationsStream")
+  void testCommitTransaction(String system, Connection connection, String username, String url)
+      throws SQLException {
+
+    String tableName = "TXN_COMMIT_TEST_" + system.toUpperCase(Locale.ROOT);
+    Statement createTable = connection.createStatement();
+    createTable.execute("CREATE TABLE " + tableName + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
+    cleanup.deferCleanup(createTable);
+
+    connection.setAutoCommit(false);
+
+    testing.waitForTraces(1);
+    testing.clearData();
+
+    Statement insertStatement = connection.createStatement();
+    cleanup.deferCleanup(insertStatement);
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          insertStatement.executeUpdate("INSERT INTO " + tableName + " VALUES(1)");
+          connection.commit();
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("INSERT jdbcunittest." + tableName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
+                            equalTo(maybeStable(DB_NAME), dbNameLower),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
+                            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                "INSERT INTO " + tableName + " VALUES(?)"),
+                            equalTo(maybeStable(DB_OPERATION), "INSERT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), tableName)),
+                span ->
+                    span.hasName("COMMIT")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
+                            equalTo(maybeStable(DB_NAME), dbNameLower),
+                            equalTo(maybeStable(DB_OPERATION), "COMMIT"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
+                            equalTo(
+                                DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url))));
+  }
+
+  @ParameterizedTest
+  @MethodSource("transactionOperationsStream")
+  void testRollbackTransaction(String system, Connection connection, String username, String url)
+      throws SQLException {
+
+    String tableName = "TXN_ROLLBACK_TEST_" + system.toUpperCase(Locale.ROOT);
+    Statement createTable = connection.createStatement();
+    createTable.execute("CREATE TABLE " + tableName + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
+    cleanup.deferCleanup(createTable);
+
+    connection.setAutoCommit(false);
+
+    testing.waitForTraces(1);
+    testing.clearData();
+
+    Statement insertStatement = connection.createStatement();
+    cleanup.deferCleanup(insertStatement);
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          insertStatement.executeUpdate("INSERT INTO " + tableName + " VALUES(1)");
+          connection.rollback();
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("INSERT jdbcunittest." + tableName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
+                            equalTo(maybeStable(DB_NAME), dbNameLower),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
+                            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
+                            equalTo(
+                                maybeStable(DB_STATEMENT),
+                                "INSERT INTO " + tableName + " VALUES(?)"),
+                            equalTo(maybeStable(DB_OPERATION), "INSERT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), tableName)),
+                span ->
+                    span.hasName("ROLLBACK")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
+                            equalTo(maybeStable(DB_NAME), dbNameLower),
+                            equalTo(maybeStable(DB_OPERATION), "ROLLBACK"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
+                            equalTo(
+                                DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url))));
+  }
+
+  static Stream<Arguments> transactionOperationsStream() throws SQLException {
+    return Stream.of(
+        Arguments.of("h2", new org.h2.Driver().connect(jdbcUrls.get("h2"), null), null, "h2:mem:"),
+        Arguments.of(
+            "derby",
+            new EmbeddedDriver().connect(jdbcUrls.get("derby"), null),
+            "APP",
+            "derby:memory:"),
+        Arguments.of(
+            "hsqldb", new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null), "SA", "hsqldb:mem:"));
+  }
 }

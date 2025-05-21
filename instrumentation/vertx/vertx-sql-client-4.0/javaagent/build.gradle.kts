@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("io.vertx")
     module.set("vertx-sql-client")
-    versions.set("[4.0.0,)")
+    versions.set("[4.0.0,5)")
     assertInverse.set(true)
   }
 }
@@ -20,6 +20,10 @@ dependencies {
 
   testLibrary("io.vertx:vertx-pg-client:$version")
   testLibrary("io.vertx:vertx-codegen:$version")
+
+  latestDepTestLibrary("io.vertx:vertx-sql-client:4.+") // documented limitation, 5.x not supported yet
+  latestDepTestLibrary("io.vertx:vertx-pg-client:4.+") // documented limitation, 5.x not supported yet
+  latestDepTestLibrary("io.vertx:vertx-codegen:4.+") // documented limitation, 5.x not supported yet
 }
 
 tasks {
