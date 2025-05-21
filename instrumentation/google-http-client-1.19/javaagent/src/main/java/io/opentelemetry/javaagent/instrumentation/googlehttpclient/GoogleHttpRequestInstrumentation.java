@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.Executor;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -49,29 +50,55 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$ExecuteAsyncAdvice");
   }
 
+  public static class AdviceLocals {
+    public final Context context;
+    public final Scope scope;
+
+    public AdviceLocals(Context context, Scope scope) {
+      this.context = context;
+      this.scope = scope;
+    }
+
+    public static AdviceLocals start(HttpRequest request) {
+
+      Context parentContext = currentContext();
+      if (!instrumenter().shouldStart(parentContext, request)) {
+        return null;
+      }
+
+      Context context = instrumenter().start(parentContext, request);
+      return new AdviceLocals(context, context.makeCurrent());
+    }
+
+    public void end(HttpRequest request, HttpResponse response, Throwable throwable) {
+      scope.close();
+      instrumenter().end(context, request, response, throwable);
+    }
+
+    public void endWhenThrown(HttpRequest request, Throwable throwable) {
+      scope.close();
+      if (throwable != null) {
+        instrumenter().end(context, request, null, throwable);
+      }
+    }
+  }
+
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
-        @Advice.This HttpRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-
-      context = VirtualField.find(HttpRequest.class, Context.class).get(request);
-      if (context != null) {
+    public static AdviceLocals methodEnter(@Advice.This HttpRequest request) {
+      Context virtualFieldContext =
+          VirtualField.find(HttpRequest.class, Context.class).get(request);
+      if (virtualFieldContext != null) {
         // span was created by GoogleHttpClientAsyncAdvice instrumentation below
         // (executeAsync ends up calling execute from a separate thread)
         // so make it current and end it in method exit
-        scope = context.makeCurrent();
-        return;
+        return new AdviceLocals(virtualFieldContext, virtualFieldContext.makeCurrent());
       }
-      Context parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
-      }
-      context = instrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+
+      return AdviceLocals.start(request);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -79,48 +106,37 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
         @Advice.This HttpRequest request,
         @Advice.Return HttpResponse response,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
+        @Advice.Enter @Nullable AdviceLocals locals) {
 
-      scope.close();
-      instrumenter().end(context, request, response, throwable);
+      if (locals != null) {
+        locals.end(request, response, throwable);
+      }
     }
   }
 
   @SuppressWarnings("unused")
   public static class ExecuteAsyncAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
-        @Advice.This HttpRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
-      }
-      context = instrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+    public static AdviceLocals methodEnter(@Advice.This HttpRequest request) {
 
-      VirtualField.find(HttpRequest.class, Context.class).set(request, context);
+      AdviceLocals locals = AdviceLocals.start(request);
+      if (locals != null) {
+        VirtualField.find(HttpRequest.class, Context.class).set(request, locals.context);
+      }
+
+      return locals;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.This HttpRequest request,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
+        @Advice.Enter @Nullable AdviceLocals locals) {
 
-      scope.close();
-      if (throwable != null) {
-        instrumenter().end(context, request, null, throwable);
+      if (locals != null) {
+        locals.endWhenThrown(request, throwable);
       }
     }
   }

@@ -14,8 +14,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.Experimenta
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class AsyncHttpClientInstrumentationModule extends InstrumentationModule implements
-    ExperimentalInstrumentationModule {
+public class AsyncHttpClientInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public AsyncHttpClientInstrumentationModule() {
     super("async-http-client", "async-http-client-1.9");
   }

@@ -18,10 +18,10 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import javax.annotation.Nullable;
 
 public class RequestInstrumentation implements TypeInstrumentation {
 
@@ -45,7 +45,8 @@ public class RequestInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope onEnter(@Advice.Argument(0) Request request, @Advice.Argument(1) AsyncHandler<?> handler) {
+    public static Scope onEnter(
+        @Advice.Argument(0) Request request, @Advice.Argument(1) AsyncHandler<?> handler) {
       Context parentContext = currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
