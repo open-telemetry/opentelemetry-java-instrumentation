@@ -71,6 +71,18 @@ tasks {
     jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
   }
 
+  named("compileHibernate7TestJava", JavaCompile::class).configure {
+    options.release.set(17)
+  }
+  val testJavaVersion =
+    gradle.startParameter.projectProperties.get("testJavaVersion")?.let(JavaVersion::toVersion)
+      ?: JavaVersion.current()
+  if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
+    named("hibernate7Test", Test::class).configure {
+      enabled = false
+    }
+  }
+
   val testStableSemconv by registering(Test::class) {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
