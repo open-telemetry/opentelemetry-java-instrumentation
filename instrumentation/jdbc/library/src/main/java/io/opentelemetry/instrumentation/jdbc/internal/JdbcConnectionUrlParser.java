@@ -893,6 +893,11 @@ public enum JdbcConnectionUrlParser {
       return builder;
     }
   },
+  /**
+   * <a href="https://clickhouse.com/docs/integrations/language-clients/java/jdbc#configuration">Driver configuration doc</a>
+   * mentions that besides <code>clickhouse</code> <code>ch</code> could also be used but ClickHouse Connection implementation
+   * always returns full prefix <code>jdbc:clickhouse:</code>
+   */
   CLICKHOUSE("clickhouse") {
     @Override
     DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
