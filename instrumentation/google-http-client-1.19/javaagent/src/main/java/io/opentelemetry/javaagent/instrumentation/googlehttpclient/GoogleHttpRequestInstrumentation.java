@@ -50,20 +50,20 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$ExecuteAsyncAdvice");
   }
 
-  public static class AdviceLocals {
+  public static class AdviceScope {
 
     private static final VirtualField<HttpRequest, Context> virtualField =
         VirtualField.find(HttpRequest.class, Context.class);
     private final Context context;
     private final Scope scope;
 
-    public AdviceLocals(Context context, Scope scope) {
+    public AdviceScope(Context context, Scope scope) {
       this.context = context;
       this.scope = scope;
     }
 
     @Nullable
-    public static AdviceLocals start(HttpRequest request) {
+    public static AdviceScope start(HttpRequest request) {
 
       Context parentContext = currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
@@ -71,7 +71,7 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
       }
 
       Context context = instrumenter().start(parentContext, request);
-      return new AdviceLocals(context, context.makeCurrent());
+      return new AdviceScope(context, context.makeCurrent());
     }
 
     public void end(HttpRequest request, HttpResponse response, Throwable throwable) {
@@ -86,12 +86,12 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
       }
     }
 
-    public static AdviceLocals fromVirtualFieldContext(HttpRequest request) {
+    public static AdviceScope fromVirtualFieldContext(HttpRequest request) {
       Context context = virtualField.get(request);
       if (context == null) {
         return null;
       }
-      return new AdviceLocals(context, context.makeCurrent());
+      return new AdviceScope(context, context.makeCurrent());
     }
 
     public void storeContextToVirtualField(HttpRequest request) {
@@ -104,17 +104,17 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AdviceLocals methodEnter(@Advice.This HttpRequest request) {
+    public static AdviceScope methodEnter(@Advice.This HttpRequest request) {
 
-      AdviceLocals locals = AdviceLocals.fromVirtualFieldContext(request);
-      if (locals != null) {
+      AdviceScope scope = AdviceScope.fromVirtualFieldContext(request);
+      if (scope != null) {
         // span was created by GoogleHttpClientAsyncAdvice instrumentation below
         // (executeAsync ends up calling execute from a separate thread)
         // so make it current and end it in method exit
-        return locals;
+        return scope;
       }
 
-      return AdviceLocals.start(request);
+      return AdviceScope.start(request);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -122,10 +122,10 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
         @Advice.This HttpRequest request,
         @Advice.Return HttpResponse response,
         @Advice.Thrown Throwable throwable,
-        @Advice.Enter @Nullable AdviceLocals locals) {
+        @Advice.Enter @Nullable AdviceScope scope) {
 
-      if (locals != null) {
-        locals.end(request, response, throwable);
+      if (scope != null) {
+        scope.end(request, response, throwable);
       }
     }
   }
@@ -135,9 +135,9 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AdviceLocals methodEnter(@Advice.This HttpRequest request) {
+    public static AdviceScope methodEnter(@Advice.This HttpRequest request) {
 
-      AdviceLocals locals = AdviceLocals.start(request);
+      AdviceScope locals = AdviceScope.start(request);
       if (locals != null) {
         locals.storeContextToVirtualField(request);
       }
@@ -148,10 +148,10 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
     public static void methodExit(
         @Advice.This HttpRequest request,
         @Advice.Thrown Throwable throwable,
-        @Advice.Enter @Nullable AdviceLocals locals) {
+        @Advice.Enter @Nullable AdviceScope scope) {
 
-      if (locals != null) {
-        locals.endWhenThrown(request, throwable);
+      if (scope != null) {
+        scope.endWhenThrown(request, throwable);
       }
     }
   }

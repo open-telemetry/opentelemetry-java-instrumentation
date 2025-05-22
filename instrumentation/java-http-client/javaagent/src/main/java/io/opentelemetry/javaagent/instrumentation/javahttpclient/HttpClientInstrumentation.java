@@ -67,13 +67,13 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         HttpClientInstrumentation.class.getName() + "$SendAsyncAdvice");
   }
 
-  public static class AdviceLocals {
+  public static class AdviceScope {
     private final Context context;
     private final Context parentContext;
     private final Scope scope;
     private final CallDepth callDepth;
 
-    private AdviceLocals(Context parentContext, Context context, Scope scope, CallDepth callDepth) {
+    private AdviceScope(Context parentContext, Context context, Scope scope, CallDepth callDepth) {
       this.parentContext = parentContext;
       this.context = context;
       this.scope = scope;
@@ -81,18 +81,18 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    public static AdviceLocals start(HttpRequest request) {
+    public static AdviceScope start(HttpRequest request) {
       return start(request, null);
     }
 
-    private static AdviceLocals start(HttpRequest request, CallDepth callDepth) {
+    private static AdviceScope start(HttpRequest request, CallDepth callDepth) {
       Context parentContext = currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
       }
 
       Context context = instrumenter().start(parentContext, request);
-      return new AdviceLocals(parentContext, context, context.makeCurrent(), callDepth);
+      return new AdviceScope(parentContext, context, context.makeCurrent(), callDepth);
     }
 
     public void end(HttpRequest request, HttpResponse<?> response, Throwable throwable) {
@@ -100,10 +100,10 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
       instrumenter().end(context, request, response, throwable);
     }
 
-    public static AdviceLocals startWithCallDepth(HttpRequest httpRequest) {
+    public static AdviceScope startWithCallDepth(HttpRequest httpRequest) {
       CallDepth callDepth = CallDepth.forClass(HttpClient.class);
       if (callDepth.getAndIncrement() > 0) {
-        return new AdviceLocals(null, null, null, callDepth);
+        return new AdviceScope(null, null, null, callDepth);
       }
       return start(httpRequest, callDepth);
     }
@@ -134,8 +134,8 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AdviceLocals methodEnter(@Advice.Argument(value = 0) HttpRequest httpRequest) {
-      return AdviceLocals.start(httpRequest);
+    public static AdviceScope methodEnter(@Advice.Argument(value = 0) HttpRequest httpRequest) {
+      return AdviceScope.start(httpRequest);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -143,10 +143,10 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) HttpRequest httpRequest,
         @Advice.Return HttpResponse<?> httpResponse,
         @Advice.Thrown Throwable throwable,
-        @Advice.Enter @Nullable AdviceLocals locals) {
+        @Advice.Enter @Nullable AdviceScope scope) {
 
-      if (locals != null) {
-        locals.end(httpRequest, httpResponse, throwable);
+      if (scope != null) {
+        scope.end(httpRequest, httpResponse, throwable);
       }
     }
   }
@@ -155,8 +155,8 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   public static class SendAsyncAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AdviceLocals methodEnter(@Advice.Argument(value = 0) HttpRequest httpRequest) {
-      return AdviceLocals.startWithCallDepth(httpRequest);
+    public static AdviceScope methodEnter(@Advice.Argument(value = 0) HttpRequest httpRequest) {
+      return AdviceScope.startWithCallDepth(httpRequest);
     }
 
     @AssignReturned.ToReturned
@@ -165,16 +165,16 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Return CompletableFuture<HttpResponse<?>> originalFuture,
         @Advice.Thrown Throwable throwable,
-        @Advice.Enter AdviceLocals locals) {
+        @Advice.Enter AdviceScope scope) {
 
       @SuppressWarnings("UnnecessaryLocalVariable")
       CompletableFuture<HttpResponse<?>> future = originalFuture;
 
-      if (!locals.endWithCallDepth(httpRequest, throwable)) {
+      if (!scope.endWithCallDepth(httpRequest, throwable)) {
         return future;
       }
 
-      return locals.wrapFuture(future, httpRequest);
+      return scope.wrapFuture(future, httpRequest);
     }
   }
 }
