@@ -34,7 +34,8 @@ class ExperimentalFileDescriptorTest {
   void setUp() {
     // Skip tests on non-Unix systems since UnixOperatingSystemMXBean is only available on Unix
     OperatingSystemMXBean realOsBean = ManagementFactory.getOperatingSystemMXBean();
-    assumeTrue(realOsBean instanceof UnixOperatingSystemMXBean, 
+    assumeTrue(
+        realOsBean instanceof UnixOperatingSystemMXBean,
         "Skipping test: UnixOperatingSystemMXBean is only available on Unix systems");
   }
 
@@ -55,9 +56,7 @@ class ExperimentalFileDescriptorTest {
                         .hasDescription("Number of open file descriptors as reported by the JVM.")
                         .hasUnit("{file_descriptor}")
                         .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point -> point.hasValue(42)))));
+                            sum -> sum.hasPointsSatisfying(point -> point.hasValue(42)))));
   }
 
   @Test
@@ -77,8 +76,6 @@ class ExperimentalFileDescriptorTest {
                         .hasDescription("Number of open file descriptors as reported by the JVM.")
                         .hasUnit("{file_descriptor}")
                         .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point -> point.hasValue(0)))));
+                            sum -> sum.hasPointsSatisfying(point -> point.hasValue(0)))));
   }
 }
