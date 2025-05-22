@@ -2,7 +2,7 @@
 
 ## Java versions
 
-Open Telemetry Auto Instrumentation's minimal supported version is java 8.
+OpenTelemetry Auto Instrumentation's minimal supported version is java 8.
 All jar files that we produce, unless noted otherwise, have bytecode
 compatibility with the java 8 runtime. Our test suite is executed against
 java 8, all LTS versions and the latest non-LTS version.
