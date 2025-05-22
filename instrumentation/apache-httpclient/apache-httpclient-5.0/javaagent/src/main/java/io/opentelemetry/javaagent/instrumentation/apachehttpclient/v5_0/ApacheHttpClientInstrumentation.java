@@ -124,13 +124,13 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$RequestWithHostAndContextAndHandlerAdvice");
   }
 
-  public static class AdviceLocals {
+  public static class AdviceScope {
     public final ClassicHttpRequest request;
     public final Context parentContext;
     public final Context context;
     public final Scope scope;
 
-    private AdviceLocals(
+    private AdviceScope(
         ClassicHttpRequest request, Context parentContext, Context context, Scope scope) {
       this.request = request;
       this.context = context;
@@ -139,19 +139,24 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    public static AdviceLocals start(ClassicHttpRequest request) {
+    public static AdviceScope start(ClassicHttpRequest request) {
       Context parentContext = currentContext();
 
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
       }
       Context context = instrumenter().start(parentContext, request);
-      return new AdviceLocals(request, parentContext, context, context.makeCurrent());
+      return new AdviceScope(request, parentContext, context, context.makeCurrent());
     }
 
     public void end(Object result, Throwable throwable) {
       scope.close();
       ApacheHttpClientHelper.doMethodExit(context, request, result, throwable);
+    }
+
+    public WrappingStatusSettingResponseHandler<?> wrapResponseHandler(
+        HttpClientResponseHandler<?> handler) {
+      return new WrappingStatusSettingResponseHandler<>(context, parentContext, request, handler);
     }
   }
 
@@ -160,18 +165,18 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AdviceLocals methodEnter(@Advice.Argument(0) ClassicHttpRequest request) {
-      return AdviceLocals.start(request);
+    public static AdviceScope methodEnter(@Advice.Argument(0) ClassicHttpRequest request) {
+      return AdviceScope.start(request);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
-        @Advice.Enter @Nullable AdviceLocals locals) {
+        @Advice.Enter @Nullable AdviceScope scope) {
 
-      if (locals != null) {
-        locals.end(result, throwable);
+      if (scope != null) {
+        scope.end(result, throwable);
       }
     }
   }
@@ -186,18 +191,16 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) HttpClientResponseHandler<?> originalHandler) {
 
       HttpClientResponseHandler<?> handler = originalHandler;
-      AdviceLocals locals = AdviceLocals.start(request);
-      if (locals == null) {
+      AdviceScope scope = AdviceScope.start(request);
+      if (scope == null) {
         return new Object[] {null, handler};
       }
 
       // Wrap the handler so we capture the status code
       if (handler != null) {
-        handler =
-            new WrappingStatusSettingResponseHandler<>(
-                locals.context, locals.parentContext, request, handler);
+        handler = scope.wrapResponseHandler(handler);
       }
-      return new Object[] {locals, handler};
+      return new Object[] {scope, handler};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -207,9 +210,9 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable,
         @Advice.Enter Object[] enterResult) {
 
-      AdviceLocals locals = (AdviceLocals) enterResult[0];
-      if (locals != null) {
-        locals.end(result, throwable);
+      AdviceScope scope = (AdviceScope) enterResult[0];
+      if (scope != null) {
+        scope.end(result, throwable);
       }
     }
   }
@@ -224,18 +227,16 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(2) HttpClientResponseHandler<?> originalHandler) {
 
       HttpClientResponseHandler<?> handler = originalHandler;
-      AdviceLocals locals = AdviceLocals.start(request);
-      if (locals == null) {
+      AdviceScope scope = AdviceScope.start(request);
+      if (scope == null) {
         return new Object[] {null, handler};
       }
 
       // Wrap the handler so we capture the status code
       if (handler != null) {
-        handler =
-            new WrappingStatusSettingResponseHandler<>(
-                locals.context, locals.parentContext, request, handler);
+        handler = scope.wrapResponseHandler(handler);
       }
-      return new Object[] {locals, handler};
+      return new Object[] {scope, handler};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -245,9 +246,9 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable,
         @Advice.Enter Object[] enterResult) {
 
-      AdviceLocals locals = (AdviceLocals) enterResult[0];
-      if (locals != null) {
-        locals.end(result, throwable);
+      AdviceScope scope = (AdviceScope) enterResult[0];
+      if (scope != null) {
+        scope.end(result, throwable);
       }
     }
   }
@@ -257,20 +258,20 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AdviceLocals methodEnter(
+    public static AdviceScope methodEnter(
         @Advice.Argument(0) HttpHost host, @Advice.Argument(1) ClassicHttpRequest request) {
 
-      return AdviceLocals.start(new RequestWithHost(host, request));
+      return AdviceScope.start(new RequestWithHost(host, request));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return Object result,
         @Advice.Thrown Throwable throwable,
-        @Advice.Enter @Nullable AdviceLocals locals) {
+        @Advice.Enter @Nullable AdviceScope scope) {
 
-      if (locals != null) {
-        locals.end(result, throwable);
+      if (scope != null) {
+        scope.end(result, throwable);
       }
     }
   }
@@ -286,19 +287,17 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(2) HttpClientResponseHandler<?> originalHandler) {
 
       HttpClientResponseHandler<?> handler = originalHandler;
-      AdviceLocals locals = AdviceLocals.start(new RequestWithHost(host, request));
+      AdviceScope scope = AdviceScope.start(new RequestWithHost(host, request));
 
-      if (locals == null) {
+      if (scope == null) {
         return new Object[] {null, handler};
       }
 
       // Wrap the handler so we capture the status code
       if (handler != null) {
-        handler =
-            new WrappingStatusSettingResponseHandler<>(
-                locals.context, locals.parentContext, locals.request, handler);
+        scope.wrapResponseHandler(handler);
       }
-      return new Object[] {locals, handler};
+      return new Object[] {scope, handler};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -307,9 +306,9 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable,
         @Advice.Enter Object[] enterResult) {
 
-      AdviceLocals locals = (AdviceLocals) enterResult[0];
-      if (locals != null) {
-        locals.end(result, throwable);
+      AdviceScope scope = (AdviceScope) enterResult[0];
+      if (scope != null) {
+        scope.end(result, throwable);
       }
     }
   }
@@ -325,19 +324,17 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(3) HttpClientResponseHandler<?> originalHandler) {
 
       HttpClientResponseHandler<?> handler = originalHandler;
-      AdviceLocals locals = AdviceLocals.start(new RequestWithHost(host, request));
+      AdviceScope scope = AdviceScope.start(new RequestWithHost(host, request));
 
-      if (locals == null) {
+      if (scope == null) {
         return new Object[] {null, handler};
       }
 
       // Wrap the handler so we capture the status code
       if (handler != null) {
-        handler =
-            new WrappingStatusSettingResponseHandler<>(
-                locals.context, locals.parentContext, locals.request, handler);
+        handler = scope.wrapResponseHandler(handler);
       }
-      return new Object[] {locals, handler};
+      return new Object[] {scope, handler};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -346,9 +343,9 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable,
         @Advice.Enter Object[] enterResult) {
 
-      AdviceLocals locals = (AdviceLocals) enterResult[0];
-      if (locals != null) {
-        locals.end(result, throwable);
+      AdviceScope scope = (AdviceScope) enterResult[0];
+      if (scope != null) {
+        scope.end(result, throwable);
       }
     }
   }
