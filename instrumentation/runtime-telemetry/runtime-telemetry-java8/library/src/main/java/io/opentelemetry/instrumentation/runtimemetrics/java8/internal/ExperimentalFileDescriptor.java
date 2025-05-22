@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.runtimemetrics.java8.internal;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
 import java.lang.management.ManagementFactory;
 import java.lang.management.OperatingSystemMXBean;
 import java.util.ArrayList;
@@ -51,4 +50,4 @@ public final class ExperimentalFileDescriptor {
   }
 
   private ExperimentalFileDescriptor() {}
-} 
+}
