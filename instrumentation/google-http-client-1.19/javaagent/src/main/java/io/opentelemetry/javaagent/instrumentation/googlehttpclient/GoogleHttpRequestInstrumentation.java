@@ -51,14 +51,18 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
   }
 
   public static class AdviceLocals {
-    public final Context context;
-    public final Scope scope;
+
+    private static final VirtualField<HttpRequest, Context> virtualField =
+        VirtualField.find(HttpRequest.class, Context.class);
+    private final Context context;
+    private final Scope scope;
 
     public AdviceLocals(Context context, Scope scope) {
       this.context = context;
       this.scope = scope;
     }
 
+    @Nullable
     public static AdviceLocals start(HttpRequest request) {
 
       Context parentContext = currentContext();
@@ -81,6 +85,18 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
         instrumenter().end(context, request, null, throwable);
       }
     }
+
+    public static AdviceLocals fromVirtualFieldContext(HttpRequest request) {
+      Context context = virtualField.get(request);
+      if (context == null) {
+        return null;
+      }
+      return new AdviceLocals(context, context.makeCurrent());
+    }
+
+    public void storeContextToVirtualField(HttpRequest request) {
+      virtualField.set(request, context);
+    }
   }
 
   @SuppressWarnings("unused")
@@ -89,13 +105,13 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceLocals methodEnter(@Advice.This HttpRequest request) {
-      Context virtualFieldContext =
-          VirtualField.find(HttpRequest.class, Context.class).get(request);
-      if (virtualFieldContext != null) {
+
+      AdviceLocals locals = AdviceLocals.fromVirtualFieldContext(request);
+      if (locals != null) {
         // span was created by GoogleHttpClientAsyncAdvice instrumentation below
         // (executeAsync ends up calling execute from a separate thread)
         // so make it current and end it in method exit
-        return new AdviceLocals(virtualFieldContext, virtualFieldContext.makeCurrent());
+        return locals;
       }
 
       return AdviceLocals.start(request);
@@ -123,9 +139,8 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
 
       AdviceLocals locals = AdviceLocals.start(request);
       if (locals != null) {
-        VirtualField.find(HttpRequest.class, Context.class).set(request, locals.context);
+        locals.storeContextToVirtualField(request);
       }
-
       return locals;
     }
 
