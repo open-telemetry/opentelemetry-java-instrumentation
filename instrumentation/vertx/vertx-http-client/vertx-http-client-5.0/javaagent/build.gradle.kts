@@ -6,21 +6,23 @@ muzzle {
   pass {
     group.set("io.vertx")
     module.set("vertx-core")
-    versions.set("[4.0.0,5)")
+    versions.set("[5.0.0,)")
     assertInverse.set(true)
   }
 }
 
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_11)
+}
+
 dependencies {
-  library("io.vertx:vertx-core:4.0.0")
+  library("io.vertx:vertx-core:5.0.0")
 
   // vertx-codegen dependency is needed for Xlint's annotation checking
-  library("io.vertx:vertx-codegen:4.0.0")
+  library("io.vertx:vertx-codegen:5.0.0")
 
   implementation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-common:javaagent"))
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
-
-  latestDepTestLibrary("io.vertx:vertx-core:4.+") // see vertx-http-client-5.0 module
-  latestDepTestLibrary("io.vertx:vertx-codegen:4.+") // see vertx-http-client-5.0 module
+  testInstrumentation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-4.0:javaagent"))
 }
