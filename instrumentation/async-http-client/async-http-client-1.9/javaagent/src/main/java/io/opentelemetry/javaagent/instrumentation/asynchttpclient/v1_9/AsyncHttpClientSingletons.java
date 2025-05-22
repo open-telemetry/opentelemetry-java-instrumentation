@@ -33,7 +33,7 @@ public final class AsyncHttpClientSingletons {
     return INSTRUMENTER;
   }
 
-  public static VirtualField<AsyncHandler<?>, AsyncHandlerData> getVirtualField() {
+  public static VirtualField<AsyncHandler<?>, AsyncHandlerData> virtualField() {
     return VIRTUAL_FIELD;
   }
 
