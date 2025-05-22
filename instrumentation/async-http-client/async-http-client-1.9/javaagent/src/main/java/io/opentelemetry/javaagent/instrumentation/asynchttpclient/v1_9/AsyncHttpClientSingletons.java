@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
 
+import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
 
 public final class AsyncHttpClientSingletons {
@@ -15,16 +17,24 @@ public final class AsyncHttpClientSingletons {
 
   private static final Instrumenter<Request, Response> INSTRUMENTER;
 
+  private static final VirtualField<AsyncHandler<?>, AsyncHandlerData> VIRTUAL_FIELD;
+
   static {
     INSTRUMENTER =
         JavaagentHttpClientInstrumenters.create(
             INSTRUMENTATION_NAME,
             new AsyncHttpClientHttpAttributesGetter(),
             HttpHeaderSetter.INSTANCE);
+
+    VIRTUAL_FIELD = VirtualField.find(AsyncHandler.class, AsyncHandlerData.class);
   }
 
   public static Instrumenter<Request, Response> instrumenter() {
     return INSTRUMENTER;
+  }
+
+  public static VirtualField<AsyncHandler<?>, AsyncHandlerData> getVirtualField() {
+    return VIRTUAL_FIELD;
   }
 
   private AsyncHttpClientSingletons() {}

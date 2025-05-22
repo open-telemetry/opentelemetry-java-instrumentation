@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9.AsyncHttpClientSingletons.getVirtualField;
 import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9.AsyncHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -15,7 +16,6 @@ import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.Request;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -53,8 +53,7 @@ public class RequestInstrumentation implements TypeInstrumentation {
       }
 
       Context context = instrumenter().start(parentContext, request);
-      VirtualField.find(AsyncHandler.class, AsyncHandlerData.class)
-          .set(handler, AsyncHandlerData.create(parentContext, context, request));
+      getVirtualField().set(handler, AsyncHandlerData.create(parentContext, context, request));
       return context.makeCurrent();
     }
 
