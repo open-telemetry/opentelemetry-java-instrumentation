@@ -11,6 +11,10 @@ muzzle {
   }
 }
 
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_11)
+}
+
 dependencies {
   val version = "5.0.0"
   library("io.vertx:vertx-sql-client:$version")
