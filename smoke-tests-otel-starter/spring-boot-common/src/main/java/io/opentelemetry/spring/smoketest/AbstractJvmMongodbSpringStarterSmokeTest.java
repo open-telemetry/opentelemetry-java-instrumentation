@@ -29,7 +29,7 @@ public class AbstractJvmMongodbSpringStarterSmokeTest
 
   @BeforeAll
   static void setUpContainer() {
-    container = new MongoDBContainer("mongo:4.0");
+    container = new MongoDBContainer("mongo:4.2");
     container.start();
   }
 
