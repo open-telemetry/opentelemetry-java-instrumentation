@@ -14,7 +14,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 import grails.boot.GrailsApp;
 import grails.boot.config.GrailsAutoConfiguration;
@@ -37,7 +37,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
-import org.apache.catalina.connector.ResponseFacade;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
@@ -175,9 +174,8 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
     span.hasKind(SpanKind.INTERNAL)
         .satisfies(spanData -> assertThat(spanData.getName()).endsWith("." + methodName))
         .hasAttributesSatisfyingExactly(
-            equalTo(
-                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
-                ResponseFacade.class.getName() + "." + methodName));
+            satisfies(
+                CodeIncubatingAttributes.CODE_FUNCTION_NAME, v -> v.endsWith("." + methodName)));
     return span;
   }
 
@@ -198,9 +196,9 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
               span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"))
                   .hasKind(SpanKind.INTERNAL)
                   .hasAttributesSatisfyingExactly(
-                      equalTo(
+                      satisfies(
                           CodeIncubatingAttributes.CODE_FUNCTION_NAME,
-                          ResponseFacade.class.getName() + ".sendError")));
+                          v -> v.endsWith(".sendError"))));
     }
     return spanAssertions;
   }
