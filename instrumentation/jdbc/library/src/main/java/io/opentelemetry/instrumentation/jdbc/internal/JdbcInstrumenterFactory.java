@@ -32,26 +32,42 @@ public final class JdbcInstrumenterFactory {
   private static final JdbcNetworkAttributesGetter netAttributesGetter =
       new JdbcNetworkAttributesGetter();
 
-  public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
-      OpenTelemetry openTelemetry) {
-    return createStatementInstrumenter(
-        openTelemetry,
-        true,
-        ConfigPropertiesUtil.getBoolean(
-            "otel.instrumentation.common.db-statement-sanitizer.enabled", true));
+  public static boolean captureQueryParameters() {
+    return ConfigPropertiesUtil.getBoolean(
+        "otel.instrumentation.jdbc.experimental.capture-query-parameters", false);
   }
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
-      OpenTelemetry openTelemetry, boolean enabled, boolean statementSanitizationEnabled) {
+      OpenTelemetry openTelemetry) {
+    return createStatementInstrumenter(openTelemetry, captureQueryParameters());
+  }
+
+  static Instrumenter<DbRequest, Void> createStatementInstrumenter(
+      OpenTelemetry openTelemetry, boolean captureQueryParameters) {
     return createStatementInstrumenter(
-        openTelemetry, emptyList(), enabled, statementSanitizationEnabled);
+        openTelemetry,
+        emptyList(),
+        true,
+        ConfigPropertiesUtil.getBoolean(
+            "otel.instrumentation.common.db-statement-sanitizer.enabled", true),
+        captureQueryParameters);
+  }
+
+  public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
+      OpenTelemetry openTelemetry,
+      boolean enabled,
+      boolean statementSanitizationEnabled,
+      boolean captureQueryParameters) {
+    return createStatementInstrumenter(
+        openTelemetry, emptyList(), enabled, statementSanitizationEnabled, captureQueryParameters);
   }
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
       OpenTelemetry openTelemetry,
       List<AttributesExtractor<DbRequest, Void>> extractors,
       boolean enabled,
-      boolean statementSanitizationEnabled) {
+      boolean statementSanitizationEnabled,
+      boolean captureQueryParameters) {
     return Instrumenter.<DbRequest, Void>builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
@@ -59,6 +75,7 @@ public final class JdbcInstrumenterFactory {
         .addAttributesExtractor(
             SqlClientAttributesExtractor.builder(dbAttributesGetter)
                 .setStatementSanitizationEnabled(statementSanitizationEnabled)
+                .setCaptureQueryParameters(captureQueryParameters)
                 .build())
         .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
         .addAttributesExtractors(extractors)

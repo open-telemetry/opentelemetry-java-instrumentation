@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_PARAMETER;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -30,10 +31,22 @@ import io.opentelemetry.instrumentation.jdbc.TestConnection;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import java.math.BigDecimal;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -221,6 +234,73 @@ class OpenTelemetryConnectionTest {
     connection.close();
   }
 
+  // https://github.com/open-telemetry/semantic-conventions/pull/2093
+  @SuppressWarnings("deprecation")
+  @Test
+  void testVerifyPrepareStatementParameters() throws SQLException, MalformedURLException {
+    OpenTelemetry openTelemetry = testing.getOpenTelemetry();
+    Instrumenter<DbRequest, Void> instrumenter =
+        createStatementInstrumenter(testing.getOpenTelemetry(), true);
+    Instrumenter<DbRequest, Void> transactionInstrumenter =
+        createTransactionInstrumenter(openTelemetry, false);
+    DbInfo dbInfo = getDbInfo();
+    OpenTelemetryConnection connection =
+        new OpenTelemetryConnection(
+            new TestConnection(), dbInfo, instrumenter, transactionInstrumenter, true);
+    String query = "SELECT * FROM users WHERE id=? AND age=3";
+    String sanitized = "SELECT * FROM users WHERE id=? AND age=3";
+    PreparedStatement statement = connection.prepareStatement(query);
+    // doesn't need to match the number of placeholders in this context
+    statement.setBoolean(1, true);
+    statement.setShort(2, (short) 1);
+    statement.setInt(3, 2);
+    statement.setLong(4, 3);
+    statement.setFloat(5, 4);
+    statement.setDouble(6, 5.5);
+    statement.setBigDecimal(7, BigDecimal.valueOf(6));
+    statement.setString(8, "S");
+    statement.setDate(9, Date.valueOf("2000-01-01"));
+    statement.setDate(10, Date.valueOf("2000-01-02"), Calendar.getInstance());
+    statement.setTime(11, Time.valueOf("00:00:00"));
+    statement.setTime(12, Time.valueOf("00:00:01"), Calendar.getInstance());
+    statement.setTimestamp(13, Timestamp.valueOf("2000-01-01 00:00:00"));
+    statement.setTimestamp(14, Timestamp.valueOf("2000-01-01 00:00:01"), Calendar.getInstance());
+    statement.setURL(15, URI.create("http://localhost:8080").toURL());
+    statement.setNString(16, "S");
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          ResultSet resultSet = statement.executeQuery();
+          assertThat(resultSet).isInstanceOf(OpenTelemetryResultSet.class);
+          assertThat(resultSet.getStatement()).isEqualTo(statement);
+        });
+
+    jdbcTraceAssertion(
+        dbInfo,
+        sanitized,
+        "SELECT",
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("0"), "true"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("1"), "1"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("2"), "2"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("3"), "3"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("4"), "4.0"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("5"), "5.5"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("6"), "6"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("7"), "S"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("8"), "2000-01-01"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("9"), "2000-01-02"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("10"), "00:00:00"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("11"), "00:00:01"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("12"), "2000-01-01 00:00:00.0"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("13"), "2000-01-01 00:00:01.0"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("14"), "http://localhost:8080"),
+        equalTo(DB_QUERY_PARAMETER.getAttributeKey("15"), "S"));
+
+    statement.close();
+    connection.close();
+  }
+
   private static DbInfo getDbInfo() {
     return DbInfo.builder()
         .system("my_system")
@@ -239,7 +319,22 @@ class OpenTelemetryConnectionTest {
   }
 
   @SuppressWarnings("deprecation") // old semconv
-  private static void jdbcTraceAssertion(DbInfo dbInfo, String query, String operation) {
+  private static void jdbcTraceAssertion(
+      DbInfo dbInfo, String query, String operation, AttributeAssertion... assertions) {
+    List<AttributeAssertion> baseAttributeAssertions =
+        Arrays.asList(
+            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(dbInfo.getSystem())),
+            equalTo(maybeStable(DB_NAME), dbInfo.getName()),
+            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : dbInfo.getUser()),
+            equalTo(
+                DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : dbInfo.getShortUrl()),
+            equalTo(maybeStable(DB_STATEMENT), query),
+            equalTo(maybeStable(DB_OPERATION), operation),
+            equalTo(maybeStable(DB_SQL_TABLE), "users"),
+            equalTo(SERVER_ADDRESS, dbInfo.getHost()),
+            equalTo(SERVER_PORT, dbInfo.getPort()));
+
+    List<AttributeAssertion> additionAttributeAssertions = Arrays.asList(assertions);
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -249,19 +344,10 @@ class OpenTelemetryConnectionTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                maybeStableDbSystemName(dbInfo.getSystem())),
-                            equalTo(maybeStable(DB_NAME), dbInfo.getName()),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : dbInfo.getUser()),
-                            equalTo(
-                                DB_CONNECTION_STRING,
-                                emitStableDatabaseSemconv() ? null : dbInfo.getShortUrl()),
-                            equalTo(maybeStable(DB_STATEMENT), query),
-                            equalTo(maybeStable(DB_OPERATION), operation),
-                            equalTo(maybeStable(DB_SQL_TABLE), "users"),
-                            equalTo(SERVER_ADDRESS, dbInfo.getHost()),
-                            equalTo(SERVER_PORT, dbInfo.getPort()))));
+                            Stream.concat(
+                                    baseAttributeAssertions.stream(),
+                                    additionAttributeAssertions.stream())
+                                .collect(Collectors.toList()))));
   }
 
   @SuppressWarnings("deprecation") // old semconv
@@ -299,6 +385,6 @@ class OpenTelemetryConnectionTest {
         createTransactionInstrumenter(openTelemetry, true);
     DbInfo dbInfo = getDbInfo();
     return new OpenTelemetryConnection(
-        new TestConnection(), dbInfo, statementInstrumenter, transactionInstrumenter);
+        new TestConnection(), dbInfo, statementInstrumenter, transactionInstrumenter, false);
   }
 }

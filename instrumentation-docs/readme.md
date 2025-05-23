@@ -4,9 +4,9 @@ Runs analysis on instrumentation modules in order to generate documentation.
 
 ## How to use
 
-Run the doc generator:
+Run the analysis to update the instrumentation-list.yaml:
 
-`./gradlew :instrumentation-docs:generateDocs`
+`./gradlew :instrumentation-docs:runAnalysis`
 
 ## Instrumentation Hierarchy
 

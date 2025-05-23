@@ -50,6 +50,7 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
   private final Instrumenter<DbRequest, Void> statementInstrumenter;
   private final Instrumenter<DbRequest, Void> transactionInstrumenter;
   private volatile DbInfo cachedDbInfo;
+  private final boolean captureQueryParameters;
 
   /**
    * Create a OpenTelemetry DataSource wrapping another DataSource.
@@ -74,6 +75,7 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
     this.dataSourceInstrumenter = createDataSourceInstrumenter(openTelemetry, true);
     this.statementInstrumenter = createStatementInstrumenter(openTelemetry);
     this.transactionInstrumenter = createTransactionInstrumenter(openTelemetry, false);
+    this.captureQueryParameters = false;
   }
 
   /**
@@ -87,11 +89,13 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
       DataSource delegate,
       Instrumenter<DataSource, DbInfo> dataSourceInstrumenter,
       Instrumenter<DbRequest, Void> statementInstrumenter,
-      Instrumenter<DbRequest, Void> transactionInstrumenter) {
+      Instrumenter<DbRequest, Void> transactionInstrumenter,
+      boolean captureQueryParameters) {
     this.delegate = delegate;
     this.dataSourceInstrumenter = dataSourceInstrumenter;
     this.statementInstrumenter = statementInstrumenter;
     this.transactionInstrumenter = transactionInstrumenter;
+    this.captureQueryParameters = captureQueryParameters;
   }
 
   @Override
@@ -99,7 +103,7 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
     Connection connection = wrapCall(delegate::getConnection);
     DbInfo dbInfo = getDbInfo(connection);
     return OpenTelemetryConnection.create(
-        connection, dbInfo, statementInstrumenter, transactionInstrumenter);
+        connection, dbInfo, statementInstrumenter, transactionInstrumenter, captureQueryParameters);
   }
 
   @Override
@@ -107,7 +111,7 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
     Connection connection = wrapCall(() -> delegate.getConnection(username, password));
     DbInfo dbInfo = getDbInfo(connection);
     return OpenTelemetryConnection.create(
-        connection, dbInfo, statementInstrumenter, transactionInstrumenter);
+        connection, dbInfo, statementInstrumenter, transactionInstrumenter, captureQueryParameters);
   }
 
   @Override

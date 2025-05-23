@@ -25,12 +25,17 @@ public final class JdbcSingletons {
   private static final Instrumenter<DbRequest, Void> TRANSACTION_INSTRUMENTER;
   public static final Instrumenter<DataSource, DbInfo> DATASOURCE_INSTRUMENTER =
       createDataSourceInstrumenter(GlobalOpenTelemetry.get(), true);
+  public static final boolean CAPTURE_QUERY_PARAMETERS;
 
   static {
     JdbcNetworkAttributesGetter netAttributesGetter = new JdbcNetworkAttributesGetter();
     AttributesExtractor<DbRequest, Void> peerServiceExtractor =
         PeerServiceAttributesExtractor.create(
             netAttributesGetter, AgentCommonConfig.get().getPeerServiceResolver());
+
+    CAPTURE_QUERY_PARAMETERS =
+        AgentInstrumentationConfig.get()
+            .getBoolean("otel.instrumentation.jdbc.experimental.capture-query-parameters", false);
 
     STATEMENT_INSTRUMENTER =
         JdbcInstrumenterFactory.createStatementInstrumenter(
@@ -40,7 +45,8 @@ public final class JdbcSingletons {
             AgentInstrumentationConfig.get()
                 .getBoolean(
                     "otel.instrumentation.jdbc.statement-sanitizer.enabled",
-                    AgentCommonConfig.get().isStatementSanitizationEnabled()));
+                    AgentCommonConfig.get().isStatementSanitizationEnabled()),
+            CAPTURE_QUERY_PARAMETERS);
 
     TRANSACTION_INSTRUMENTER =
         JdbcInstrumenterFactory.createTransactionInstrumenter(

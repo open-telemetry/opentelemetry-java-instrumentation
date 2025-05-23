@@ -16,6 +16,7 @@ import java.util.Locale;
 public enum ConfigurationType {
   BOOLEAN("boolean"),
   STRING("string"),
+  INT("int"),
   MAP("map"),
   LIST("list");
 
