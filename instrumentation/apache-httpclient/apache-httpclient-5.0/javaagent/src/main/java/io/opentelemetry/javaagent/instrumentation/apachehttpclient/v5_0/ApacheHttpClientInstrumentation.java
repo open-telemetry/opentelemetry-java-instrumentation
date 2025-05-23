@@ -149,7 +149,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
       return new AdviceScope(request, parentContext, context, context.makeCurrent());
     }
 
-    public void end(Object result, Throwable throwable) {
+    public void end(@Nullable Object result, @Nullable Throwable throwable) {
       scope.close();
       ApacheHttpClientHelper.doMethodExit(context, request, result, throwable);
     }
@@ -172,7 +172,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return Object result,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope scope) {
 
       if (scope != null) {
@@ -206,8 +206,8 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Argument(0) ClassicHttpRequest request,
-        @Advice.Return Object result,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Return @Nullable Object result,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter Object[] enterResult) {
 
       AdviceScope scope = (AdviceScope) enterResult[0];
@@ -242,8 +242,8 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Argument(0) ClassicHttpRequest request,
-        @Advice.Return Object result,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Return @Nullable Object result,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter Object[] enterResult) {
 
       AdviceScope scope = (AdviceScope) enterResult[0];
@@ -267,7 +267,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Return Object result,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope scope) {
 
       if (scope != null) {
@@ -302,8 +302,8 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Return Object result,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Return @Nullable Object result,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter Object[] enterResult) {
 
       AdviceScope scope = (AdviceScope) enterResult[0];
