@@ -14,10 +14,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.ning.http.client.AsyncCompletionHandler;
-import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.Response;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -55,7 +53,6 @@ public class ResponseInstrumentation implements TypeInstrumentation {
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Response response) {
 
-      VirtualField<AsyncHandler<?>, AsyncHandlerData> virtualField = virtualField();
       AsyncHandlerData data = virtualField().get(handler);
       if (data == null) {
         return null;

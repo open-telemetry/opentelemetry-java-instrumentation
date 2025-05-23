@@ -5,17 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
 import org.asynchttpclient.AsyncHandler;
+import org.asynchttpclient.Request;
 import org.asynchttpclient.Response;
 
 public final class AsyncHttpClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.async-http-client-2.0";
 
   private static final Instrumenter<RequestContext, Response> INSTRUMENTER;
-  private static final VirtualField<AsyncHandler<?>, RequestContext> VIRTUAL_FIELD;
+  private static final VirtualField<AsyncHandler<?>, RequestContext> ASYNC_HANDLER_VIRTUAL_FIELD;
+  private static final VirtualField<Request, Context> REQUEST_VIRTUAL_FIELD;
 
   static {
     INSTRUMENTER =
@@ -24,15 +27,20 @@ public final class AsyncHttpClientSingletons {
             new AsyncHttpClientHttpAttributesGetter(),
             HttpHeaderSetter.INSTANCE);
 
-    VIRTUAL_FIELD = VirtualField.find(AsyncHandler.class, RequestContext.class);
+    ASYNC_HANDLER_VIRTUAL_FIELD = VirtualField.find(AsyncHandler.class, RequestContext.class);
+    REQUEST_VIRTUAL_FIELD = VirtualField.find(Request.class, Context.class);
   }
 
   public static Instrumenter<RequestContext, Response> instrumenter() {
     return INSTRUMENTER;
   }
 
-  public static VirtualField<AsyncHandler<?>, RequestContext> virtualField() {
-    return VIRTUAL_FIELD;
+  public static VirtualField<AsyncHandler<?>, RequestContext> asyncHandlerVirtualField() {
+    return ASYNC_HANDLER_VIRTUAL_FIELD;
+  }
+
+  public static VirtualField<Request, Context> requestVirtualField() {
+    return REQUEST_VIRTUAL_FIELD;
   }
 
   private AsyncHttpClientSingletons() {}
