@@ -295,7 +295,7 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
 
       // Wrap the handler so we capture the status code
       if (handler != null) {
-        scope.wrapResponseHandler(handler);
+        handler = scope.wrapResponseHandler(handler);
       }
       return new Object[] {scope, handler};
     }
