@@ -125,10 +125,10 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
   }
 
   public static class AdviceScope {
-    public final ClassicHttpRequest request;
-    public final Context parentContext;
-    public final Context context;
-    public final Scope scope;
+    private final ClassicHttpRequest request;
+    private final Context parentContext;
+    private final Context context;
+    private final Scope scope;
 
     private AdviceScope(
         ClassicHttpRequest request, Context parentContext, Context context, Scope scope) {
