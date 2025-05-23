@@ -1,0 +1,24 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!DOCTYPE hibernate-configuration PUBLIC
+  "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+  "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+
+  <session-factory>
+
+    <property name="hibernate.archive.autodetection">class,hbm</property>
+    <property name="hibernate.dialect">org.hibernate.dialect.HSQLDialect</property>
+    <property name="hibernate.show_sql">true</property>
+    <property name="hibernate.connection.driver_class">org.hsqldb.jdbcDriver</property>
+    <property name="hibernate.connection.username">sa</property>
+    <property name="hibernate.connection.password">1</property>
+    <property name="hibernate.connection.url">jdbc:hsqldb:mem:test</property>
+    <property name="hibernate.hbm2ddl.auto">create</property>
+
+    <!-- Objects -->
+    <mapping class="io.opentelemetry.javaagent.instrumentation.hibernate.v7_0.Value"/>
+
+  </session-factory>
+
+</hibernate-configuration>

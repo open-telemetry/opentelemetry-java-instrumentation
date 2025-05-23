@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.hibernate.v6_0;
+package io.opentelemetry.javaagent.instrumentation.hibernate.v7_0;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
@@ -32,13 +32,13 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.procedure.ProcedureCall;
-import org.hibernate.query.procedure.ProcedureParameter;
+import org.hibernate.procedure.ProcedureParameter;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class ProcedureCallTest {
+class ProcedureCallTest {
   protected static SessionFactory sessionFactory;
   protected static List<Value> prepopulated;
 
@@ -167,7 +167,7 @@ public class ProcedureCallTest {
                                     .hasAttributesSatisfyingExactly(
                                         equalTo(
                                             AttributeKey.stringKey("exception.type"),
-                                            "org.hibernate.exception.SQLGrammarException"),
+                                            "org.hibernate.exception.AuthException"),
                                         satisfies(
                                             AttributeKey.stringKey("exception.message"),
                                             val -> val.startsWith("could not prepare statement")),

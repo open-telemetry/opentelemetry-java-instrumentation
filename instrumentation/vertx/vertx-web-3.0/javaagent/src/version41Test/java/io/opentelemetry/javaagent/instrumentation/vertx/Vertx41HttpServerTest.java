@@ -8,11 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.vertx;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Vertx;
 
-class VertxLatestHttpServerTest extends AbstractVertxHttpServerTest {
+class Vertx41HttpServerTest extends AbstractVertxHttpServerTest {
 
   @Override
   protected Class<? extends AbstractVerticle> verticle() {
-    return VertxLatestWebServer.class;
+    return Vertx41WebServer.class;
   }
 
   @Override

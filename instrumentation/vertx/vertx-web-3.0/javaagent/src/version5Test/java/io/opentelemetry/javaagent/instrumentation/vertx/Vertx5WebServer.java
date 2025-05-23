@@ -9,7 +9,7 @@ import io.vertx.core.Promise;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.ext.web.Router;
 
-public class VertxLatestWebServer extends AbstractVertxWebServer {
+public class Vertx5WebServer extends AbstractVertxWebServer {
 
   @Override
   public void end(HttpServerResponse response) {
@@ -28,6 +28,10 @@ public class VertxLatestWebServer extends AbstractVertxWebServer {
     Router mainRouter = Router.router(vertx);
     mainRouter.route("/vertx-app/*").subRouter(router);
 
-    vertx.createHttpServer().requestHandler(mainRouter).listen(port, it -> startPromise.complete());
+    vertx
+        .createHttpServer()
+        .requestHandler(mainRouter)
+        .listen(port)
+        .onComplete(it -> startPromise.complete());
   }
 }
