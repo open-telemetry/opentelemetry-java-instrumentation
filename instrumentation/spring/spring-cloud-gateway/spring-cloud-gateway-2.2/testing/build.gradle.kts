@@ -12,7 +12,9 @@ dependencies {
   testImplementation(project(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-common:testing"))
 
   testLibrary("org.springframework.cloud:spring-cloud-starter-gateway:2.2.0.RELEASE")
-  testLibrary("org.springframework.boot:spring-boot-starter-test:2.2.0.RELEASE")
+  // latest version of spring-cloud-starter-gateway is not compatible with spring boot 3.5 yet
+  testImplementation("org.springframework.boot:spring-boot-starter-test:2.2.0.RELEASE")
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.4.+") // documented limitation
 }
 
 tasks.withType<Test>().configureEach {
