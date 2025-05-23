@@ -11,13 +11,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.vertx.client.VertxClientInstrumenterFactory;
 import io.vertx.core.Future;
-import io.vertx.core.Promise;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
-import io.vertx.core.internal.ContextInternal;
-import io.vertx.core.internal.VertxInternal;
-import io.vertx.core.internal.resource.ResourceManager;
 import io.vertx.core.net.HostAndPort;
+import java.util.concurrent.CompletableFuture;
 
 public final class VertxClientSingletons {
 
@@ -40,31 +37,22 @@ public final class VertxClientSingletons {
     return authorityField.get(request);
   }
 
-  private static final VirtualField<ResourceManager<?, ?>, VertxInternal> vertxField =
-      VirtualField.find(ResourceManager.class, VertxInternal.class);
-
-  public static void setVertx(ResourceManager<?, ?> resourceManager, VertxInternal vertx) {
-    vertxField.set(resourceManager, vertx);
-  }
-
-  public static VertxInternal getVertx(ResourceManager<?, ?> resourceManager) {
-    return vertxField.get(resourceManager);
-  }
-
-  public static <T> Future<T> wrapFuture(ContextInternal vertxContext, Future<T> future) {
+  public static <T> Future<T> wrapFuture(Future<T> future) {
     Context context = Context.current();
-    Promise<T> promise = vertxContext.promise();
-    future.onComplete(
-        result -> {
-          try (Scope ignore = context.makeCurrent()) {
-            if (result.failed()) {
-              promise.fail(result.cause());
-            } else {
-              promise.complete(result.result());
-            }
-          }
-        });
-    return promise.future();
+    CompletableFuture<T> result = new CompletableFuture<>();
+    future
+        .toCompletionStage()
+        .whenComplete(
+            (value, throwable) -> {
+              try (Scope ignore = context.makeCurrent()) {
+                if (throwable != null) {
+                  result.completeExceptionally(throwable);
+                } else {
+                  result.complete(value);
+                }
+              }
+            });
+    return Future.fromCompletionStage(result);
   }
 
   private VertxClientSingletons() {}

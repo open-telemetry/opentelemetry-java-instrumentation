@@ -11,8 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.core.Future;
-import io.vertx.core.internal.VertxInternal;
-import io.vertx.core.internal.resource.ResourceManager;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -35,13 +33,8 @@ public class ResourceManagerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class WithResourceAsyncAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void wrapFuture(
-        @Advice.This ResourceManager<?, ?> resourceManager,
-        @Advice.Return(readOnly = false) Future<?> future) {
-      VertxInternal vertx = VertxClientSingletons.getVertx(resourceManager);
-      if (vertx != null) {
-        future = VertxClientSingletons.wrapFuture(vertx.getOrCreateContext(), future);
-      }
+    public static void wrapFuture(@Advice.Return(readOnly = false) Future<?> future) {
+      future = VertxClientSingletons.wrapFuture(future);
     }
   }
 }
