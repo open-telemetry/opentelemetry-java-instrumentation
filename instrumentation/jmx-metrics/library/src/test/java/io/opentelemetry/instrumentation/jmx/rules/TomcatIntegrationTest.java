@@ -89,7 +89,7 @@ public class TomcatIntegrationTest extends TargetSystemTest {
                     .isGauge()
                     .hasDataPointsWithOneAttribute(requestProcessorNameAttribute))
         .add(
-            "tomcat.request.duration.total",
+            "tomcat.request.duration.sum",
             metric ->
                 metric
                     .hasDescription("Total time of processing all requests.")

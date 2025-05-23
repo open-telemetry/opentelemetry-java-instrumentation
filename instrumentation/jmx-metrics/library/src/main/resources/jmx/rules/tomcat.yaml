@@ -27,7 +27,7 @@ rules:
         unit: s
         desc: The longest request processing time.
       processingTime:
-        metric: request.duration.total
+        metric: request.duration.sum
         type: counter
         sourceUnit: ms
         unit: s
