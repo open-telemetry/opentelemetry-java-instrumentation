@@ -8,7 +8,8 @@ dependencies {
   testLibrary("org.glassfish.jersey.core:jersey-client:2.0")
   testLibrary("org.jboss.resteasy:resteasy-client:3.0.5.Final")
   // ^ This version has timeouts https://issues.redhat.com/browse/RESTEASY-975
-  testLibrary("org.apache.cxf:cxf-rt-rs-client:3.1.0")
+  // testLibrary("org.apache.cxf:cxf-rt-rs-client:3.1.0")
+  testImplementation("org.apache.cxf:cxf-rt-rs-client:3.1.0")
   // Doesn't work with CXF 3.0.x because their context is wrong:
   // https://github.com/apache/cxf/commit/335c7bad2436f08d6d54180212df5a52157c9f21
 
@@ -24,7 +25,8 @@ dependencies {
   latestDepTestLibrary("org.glassfish.jersey.inject:jersey-hk2:2.+")
   latestDepTestLibrary("org.glassfish.jersey.core:jersey-client:2.+")
   latestDepTestLibrary("org.jboss.resteasy:resteasy-client:3.0.26.Final")
-  latestDepTestLibrary("org.apache.cxf:cxf-rt-rs-client:3.+")
+  // latestDepTestLibrary("org.apache.cxf:cxf-rt-rs-client:3.+")
+  latestDepTestLibrary("org.apache.cxf:cxf-rt-rs-client:3.6.6")
 }
 
 // Requires old Guava. Can't use enforcedPlatform since predates BOM
