@@ -27,7 +27,10 @@ import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -69,6 +72,41 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   boolean propagateOperationListenersToOnEnd = false;
   boolean enabled = true;
 
+  private static final Map<String, List<ConditionalContextCustomizerProvider>>
+      CONTEXT_CUSTOMIZER_MAP = new HashMap<>();
+  private static final Map<String, List<ConditionalAttributesExtractorProvider>>
+      ATTRIBUTES_EXTRACTOR_MAP = new HashMap<>();
+  private static final Map<String, List<ConditionalOperationMetricsProvider>>
+      OPERATION_METRICS_MAP = new HashMap<>();
+
+  static {
+    ServiceLoader.load(ConditionalContextCustomizerProvider.class)
+        .forEach(
+            provider -> {
+              for (String name : provider.supportedNames()) {
+                CONTEXT_CUSTOMIZER_MAP.computeIfAbsent(name, k -> new ArrayList<>()).add(provider);
+              }
+            });
+
+    ServiceLoader.load(ConditionalAttributesExtractorProvider.class)
+        .forEach(
+            provider -> {
+              for (String name : provider.supportedNames()) {
+                ATTRIBUTES_EXTRACTOR_MAP
+                    .computeIfAbsent(name, k -> new ArrayList<>())
+                    .add(provider);
+              }
+            });
+
+    ServiceLoader.load(ConditionalOperationMetricsProvider.class)
+        .forEach(
+            provider -> {
+              for (String name : provider.supportedNames()) {
+                OPERATION_METRICS_MAP.computeIfAbsent(name, k -> new ArrayList<>()).add(provider);
+              }
+            });
+  }
+
   InstrumenterBuilder(
       OpenTelemetry openTelemetry,
       String instrumentationName,
@@ -78,6 +116,30 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     this.spanNameExtractor = spanNameExtractor;
     this.instrumentationVersion =
         EmbeddedInstrumentationProperties.findVersion(instrumentationName);
+
+    List<ConditionalContextCustomizerProvider> contextProviders =
+        CONTEXT_CUSTOMIZER_MAP.get(instrumentationName);
+    if (contextProviders != null) {
+      for (ConditionalContextCustomizerProvider provider : contextProviders) {
+        addContextCustomizer(provider.get());
+      }
+    }
+
+    List<ConditionalAttributesExtractorProvider> attributeProviders =
+        ATTRIBUTES_EXTRACTOR_MAP.get(instrumentationName);
+    if (attributeProviders != null) {
+      for (ConditionalAttributesExtractorProvider provider : attributeProviders) {
+        addAttributesExtractor(provider.get());
+      }
+    }
+
+    List<ConditionalOperationMetricsProvider> metricsProviders =
+        OPERATION_METRICS_MAP.get(instrumentationName);
+    if (metricsProviders != null) {
+      for (ConditionalOperationMetricsProvider provider : metricsProviders) {
+        addOperationMetrics(provider.get());
+      }
+    }
   }
 
   /**
