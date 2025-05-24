@@ -65,6 +65,7 @@ final class Vertx5HttpAttributesGetter extends AbstractVertxHttpAttributesGetter
     return authority != null ? authority.host() : null;
   }
 
+  @Nullable
   @Override
   public Integer getServerPort(HttpClientRequest request) {
     HostAndPort authority = VertxClientSingletons.getAuthority(request);
