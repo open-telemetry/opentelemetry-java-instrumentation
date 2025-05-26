@@ -62,12 +62,14 @@ public class JettyHttpClient9Instrumentation implements TypeInstrumentation {
         @Advice.Argument(1) List<Response.ResponseListener> listeners) {
 
       Context parentContext = currentContext();
-      Context context = JettyClientTracingListener.handleRequest(parentContext, httpRequest, instrumenter());
+      Context context =
+          JettyClientTracingListener.handleRequest(parentContext, httpRequest, instrumenter());
       if (context == null) {
         return new Object[] {null, listeners};
       }
 
-      List<Response.ResponseListener> wrappedListeners = wrapResponseListeners(parentContext, listeners);
+      List<Response.ResponseListener> wrappedListeners =
+          wrapResponseListeners(parentContext, listeners);
       return new Object[] {new AdviceLocals(context, context.makeCurrent()), wrappedListeners};
     }
 
