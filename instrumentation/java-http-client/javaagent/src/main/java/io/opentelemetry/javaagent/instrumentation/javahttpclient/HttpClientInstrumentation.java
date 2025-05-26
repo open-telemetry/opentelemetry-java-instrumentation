@@ -78,7 +78,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         Context parentContext,
         Context context,
         Scope scope,
-        CallDepth callDepth,
+        @Nullable CallDepth callDepth,
         HttpRequest request) {
       this.parentContext = parentContext;
       this.context = context;
@@ -92,7 +92,8 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
       return start(request, null);
     }
 
-    private static AdviceScope start(HttpRequest request, CallDepth callDepth) {
+    @Nullable
+    private static AdviceScope start(HttpRequest request, @Nullable CallDepth callDepth) {
       Context parentContext = currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
@@ -102,31 +103,37 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
       return new AdviceScope(parentContext, context, context.makeCurrent(), callDepth, request);
     }
 
-    public void end(HttpRequest request, HttpResponse<?> response, Throwable throwable) {
-      scope.close();
-      instrumenter().end(context, request, response, throwable);
-    }
-
-    public static AdviceScope startWithCallDepth(HttpRequest httpRequest) {
+    public static AdviceScope startAsync(HttpRequest httpRequest) {
       CallDepth callDepth = CallDepth.forClass(HttpClient.class);
       if (callDepth.getAndIncrement() > 0) {
-        return new AdviceScope(null, null, null, callDepth, null);
+        return new AdviceScope(null, null, null, callDepth, httpRequest);
       }
       return start(httpRequest, callDepth);
     }
 
-    public boolean endWithCallDepth(HttpRequest httpRequest, Throwable throwable) {
+    public boolean end(@Nullable HttpResponse<?> response, @Nullable Throwable throwable) {
+      // non-null call depth only used for async to prevent recursion
+      if (callDepth != null) {
+        if (callDepth.decrementAndGet() > 0) {
+          // async end nested call
+          return false;
+        }
 
-      if (callDepth.decrementAndGet() > 0) {
-        return false;
+        scope.close();
+        if (throwable != null) {
+          // async end with exception: ending span and no wrapping needed
+          instrumenter().end(context, request, response, throwable);
+          return false;
+        }
+
+        // async end without exception:
+        return true;
       }
 
+      // synchronous end
       scope.close();
-      if (throwable != null) {
-        instrumenter().end(context, httpRequest, null, throwable);
-        return false;
-      }
-      return true;
+      instrumenter().end(context, request, response, throwable);
+      return false;
     }
 
     public CompletableFuture<HttpResponse<?>> wrapFuture(
@@ -148,12 +155,12 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Argument(0) HttpRequest httpRequest,
-        @Advice.Return HttpResponse<?> httpResponse,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Return @Nullable HttpResponse<?> httpResponse,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope scope) {
 
       if (scope != null) {
-        scope.end(httpRequest, httpResponse, throwable);
+        scope.end(httpResponse, throwable);
       }
     }
   }
@@ -163,7 +170,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope methodEnter(@Advice.Argument(value = 0) HttpRequest httpRequest) {
-      return AdviceScope.startWithCallDepth(httpRequest);
+      return AdviceScope.startAsync(httpRequest);
     }
 
     @AssignReturned.ToReturned
@@ -171,14 +178,17 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     public static CompletableFuture<HttpResponse<?>> methodExit(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Return CompletableFuture<HttpResponse<?>> future,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Enter AdviceScope scope) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope scope) {
 
-      if (!scope.endWithCallDepth(httpRequest, throwable)) {
+      if (scope == null) {
         return future;
       }
 
-      return scope.wrapFuture(future);
+      if (scope.end(null, throwable)) {
+        return scope.wrapFuture(future);
+      }
+      return future;
     }
   }
 }
