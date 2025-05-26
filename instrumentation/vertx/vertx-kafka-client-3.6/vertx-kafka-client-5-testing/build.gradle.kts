@@ -2,6 +2,10 @@ plugins {
   id("otel.javaagent-testing")
 }
 
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_11)
+}
+
 dependencies {
   library("io.vertx:vertx-kafka-client:5.0.0")
   // vertx-codegen is needed for Xlint's annotation checking
