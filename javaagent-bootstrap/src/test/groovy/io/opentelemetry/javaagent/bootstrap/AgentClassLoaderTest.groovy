@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.bootstrap
 
-import io.opentelemetry.sdk.internal.JavaVersionSpecific
+import io.opentelemetry.sdk.OpenTelemetrySdk
 import spock.lang.Specification
 
-import java.lang.reflect.Field
+import java.lang.reflect.Method
 import java.util.concurrent.Phaser
 
 class AgentClassLoaderTest extends Specification {
@@ -18,7 +18,7 @@ class AgentClassLoaderTest extends Specification {
     def className1 = 'some/class/Name1'
     def className2 = 'some/class/Name2'
     // any jar would do, use opentelemety sdk
-    URL testJarLocation = JavaVersionSpecific.getProtectionDomain().getCodeSource().getLocation()
+    URL testJarLocation = OpenTelemetrySdk.getProtectionDomain().getCodeSource().getLocation()
     AgentClassLoader loader = new AgentClassLoader(new File(testJarLocation.toURI()))
     Phaser threadHoldLockPhase = new Phaser(2)
     Phaser acquireLockFromMainThreadPhase = new Phaser(2)
@@ -56,8 +56,9 @@ class AgentClassLoaderTest extends Specification {
   def "multi release jar"() {
     setup:
     boolean jdk8 = "1.8" == System.getProperty("java.specification.version")
+    def mrJarClass = Class.forName("io.opentelemetry.instrumentation.resources.ProcessArguments")
     // sdk is a multi release jar
-    URL multiReleaseJar = JavaVersionSpecific.getProtectionDomain().getCodeSource().getLocation()
+    URL multiReleaseJar = mrJarClass.getProtectionDomain().getCodeSource().getLocation()
     AgentClassLoader loader = new AgentClassLoader(new File(multiReleaseJar.toURI())) {
       @Override
       protected String getClassSuffix() {
@@ -66,7 +67,7 @@ class AgentClassLoaderTest extends Specification {
     }
 
     when:
-    URL url = loader.findResource("io/opentelemetry/sdk/internal/CurrentJavaVersionSpecific.class")
+    URL url = loader.findResource("io/opentelemetry/instrumentation/resources/ProcessArguments.class")
 
     then:
     url != null
@@ -74,14 +75,13 @@ class AgentClassLoaderTest extends Specification {
     jdk8 != url.toString().contains("META-INF/versions/9/")
 
     and:
-    Class<?> clazz = loader.loadClass(JavaVersionSpecific.getName())
+    Class<?> clazz = loader.loadClass("io.opentelemetry.instrumentation.resources.ProcessArguments")
     // class was loaded by agent loader used in this test
     clazz.getClassLoader() == loader
-    // extract value of private static field that gets a different class depending on java version
-    Field field = clazz.getDeclaredField("CURRENT")
-    field.setAccessible(true)
-    Object javaVersionSpecific = field.get(null)
-    // expect a versioned class on java 9+
-    jdk8 != javaVersionSpecific.getClass().getName().endsWith("Java9VersionSpecific")
+    Method method = clazz.getDeclaredMethod("getProcessArguments")
+    method.setAccessible(true)
+    String[] result = method.invoke(null)
+    // jdk8 versions returns empty array, jdk9 version does not
+    jdk8 != result.length > 0
   }
 }

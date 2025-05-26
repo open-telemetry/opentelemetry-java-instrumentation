@@ -28,11 +28,41 @@ dependencies {
   testImplementation("com.sun.xml.bind:jaxb-impl:2.2.11")
   testImplementation("javax.activation:activation:1.1.1")
   testImplementation("org.hsqldb:hsqldb:2.0.0")
-  testImplementation("org.springframework.data:spring-data-jpa:3.0.0")
+  testLibrary("org.springframework.data:spring-data-jpa:3.0.0")
 }
 
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
+}
+
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
+testing {
+  suites {
+    val hibernate6Test by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation("com.h2database:h2:1.4.197")
+        implementation("org.hsqldb:hsqldb:2.0.0")
+        if (latestDepTest) {
+          implementation("org.hibernate:hibernate-core:6.+")
+        } else {
+          implementation("org.hibernate:hibernate-core:6.0.0.Final")
+        }
+      }
+    }
+
+    val hibernate7Test by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation("com.h2database:h2:1.4.197")
+        implementation("org.hsqldb:hsqldb:2.0.0")
+        if (latestDepTest) {
+          implementation("org.hibernate:hibernate-core:7.+")
+        } else {
+          implementation("org.hibernate:hibernate-core:7.0.0.Final")
+        }
+      }
+    }
+  }
 }
 
 tasks {
@@ -41,11 +71,24 @@ tasks {
     jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
   }
 
+  named("compileHibernate7TestJava", JavaCompile::class).configure {
+    options.release.set(17)
+  }
+  val testJavaVersion =
+    gradle.startParameter.projectProperties.get("testJavaVersion")?.let(JavaVersion::toVersion)
+      ?: JavaVersion.current()
+  if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
+    named("hibernate7Test", Test::class).configure {
+      enabled = false
+    }
+  }
+
   val testStableSemconv by registering(Test::class) {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 
   check {
     dependsOn(testStableSemconv)
+    dependsOn(testing.suites)
   }
 }

@@ -768,6 +768,9 @@ targets:
       target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.47:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.50:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:pekko:pekko-actor-1.0:javaagent'
     - type: gradle
       path: ./
@@ -1111,6 +1114,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:vertx:vertx-http-client:vertx-http-client-4.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:vertx:vertx-http-client:vertx-http-client-5.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:vertx:vertx-http-client:vertx-http-client-common:javaagent'

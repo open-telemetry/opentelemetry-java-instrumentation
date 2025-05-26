@@ -22,6 +22,9 @@ dependencies {
   testImplementation(project(":instrumentation:vertx:vertx-kafka-client-3.6:testing"))
 
   testInstrumentation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
+
+  latestDepTestLibrary("io.vertx:vertx-kafka-client:4.+") // documented limitation, 5.x not supported yet
+  latestDepTestLibrary("io.vertx:vertx-codegen:4.+") // documented limitation, 5.x not supported yet
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
@@ -34,8 +37,8 @@ testing {
 
         // the "library" configuration is not recognized by the test suite plugin
         if (latestDepTest) {
-          implementation("io.vertx:vertx-kafka-client:latest.release")
-          implementation("io.vertx:vertx-codegen:latest.release")
+          implementation("io.vertx:vertx-kafka-client:4.+")
+          implementation("io.vertx:vertx-codegen:4.+")
         } else {
           implementation("io.vertx:vertx-kafka-client:3.6.0")
           implementation("io.vertx:vertx-codegen:3.6.0")

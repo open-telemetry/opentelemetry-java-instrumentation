@@ -9,6 +9,8 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
@@ -65,5 +67,10 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
   // TODO: make this required to implement
   default Long getBatchSize(REQUEST request) {
     return null;
+  }
+
+  // TODO: make this required to implement
+  default Map<String, String> getQueryParameters(REQUEST request) {
+    return Collections.emptyMap();
   }
 }
