@@ -1,0 +1,25 @@
+configurations:
+  - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+    description: Enables experimental receive telemetry for AWS SDK instrumentation.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.messaging.experimental.capture-headers
+    description: Allows configuring headers to capture as span attributes.
+    type: list
+    default: ''
+  - name: otel.instrumentation.aws-sdk.experimental-span-attributes
+    description: Enables experimental span attributes for AWS SDK instrumentation.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging
+    description: Determines whether the configured TextMapPropagator should be used to inject into supported messaging attributes (for SQS).
+    type: boolean
+    default: false
+  - name: otel.instrumentation.genai.capture-message-content
+    description: Determines whether Generative AI events include full content of user and assistant messages. Note that full content can have data privacy and size concerns and care should be taken when enabling this
+    type: boolean
+    default: false
+  - name: otel.instrumentation.aws-sdk.experimental-record-individual-http-error
+    description: Determines whether errors returned by each individual HTTP request should be recorded as events for the SDK span.
+    type: boolean
+    default: false
