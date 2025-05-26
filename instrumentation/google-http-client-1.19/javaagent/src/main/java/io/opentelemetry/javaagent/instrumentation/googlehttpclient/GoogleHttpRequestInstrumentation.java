@@ -52,14 +52,16 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
 
   public static class AdviceScope {
 
-    private static final VirtualField<HttpRequest, Context> virtualField =
+    private static final VirtualField<HttpRequest, Context> HTTP_REQUEST_CONTEXT =
         VirtualField.find(HttpRequest.class, Context.class);
     private final Context context;
     private final Scope scope;
+    private final HttpRequest request;
 
-    public AdviceScope(Context context, Scope scope) {
+    public AdviceScope(Context context, Scope scope, HttpRequest request) {
       this.context = context;
       this.scope = scope;
+      this.request = request;
     }
 
     @Nullable
@@ -71,10 +73,10 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
       }
 
       Context context = instrumenter().start(parentContext, request);
-      return new AdviceScope(context, context.makeCurrent());
+      return new AdviceScope(context, context.makeCurrent(), request);
     }
 
-    public void end(HttpRequest request, HttpResponse response, Throwable throwable) {
+    public void end(HttpResponse response, Throwable throwable) {
       scope.close();
       instrumenter().end(context, request, response, throwable);
     }
@@ -87,15 +89,15 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
     }
 
     public static AdviceScope fromVirtualFieldContext(HttpRequest request) {
-      Context context = virtualField.get(request);
+      Context context = HTTP_REQUEST_CONTEXT.get(request);
       if (context == null) {
         return null;
       }
-      return new AdviceScope(context, context.makeCurrent());
+      return new AdviceScope(context, context.makeCurrent(), request);
     }
 
     public void storeContextToVirtualField(HttpRequest request) {
-      virtualField.set(request, context);
+      HTTP_REQUEST_CONTEXT.set(request, context);
     }
   }
 
@@ -119,13 +121,12 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.This HttpRequest request,
         @Advice.Return HttpResponse response,
         @Advice.Thrown Throwable throwable,
         @Advice.Enter @Nullable AdviceScope scope) {
 
       if (scope != null) {
-        scope.end(request, response, throwable);
+        scope.end(response, throwable);
       }
     }
   }
@@ -137,11 +138,11 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope methodEnter(@Advice.This HttpRequest request) {
 
-      AdviceScope locals = AdviceScope.start(request);
-      if (locals != null) {
-        locals.storeContextToVirtualField(request);
+      AdviceScope scope = AdviceScope.start(request);
+      if (scope != null) {
+        scope.storeContextToVirtualField(request);
       }
-      return locals;
+      return scope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

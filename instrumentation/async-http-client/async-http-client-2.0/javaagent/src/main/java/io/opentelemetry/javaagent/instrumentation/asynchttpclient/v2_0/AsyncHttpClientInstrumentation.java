@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0.AsyncHttpClientSingletons.asyncHandlerVirtualField;
+import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0.AsyncHttpClientSingletons.ASYNC_HANDLER_REQUEST_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0.AsyncHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -71,7 +71,7 @@ public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
       // 2.1, so the instrumentation module will need to be essentially duplicated (or a common
       // module introduced)
 
-      asyncHandlerVirtualField().set(handler, requestContext);
+      ASYNC_HANDLER_REQUEST_CONTEXT.set(handler, requestContext);
       return context.makeCurrent();
     }
 

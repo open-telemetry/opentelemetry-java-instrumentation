@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9.AsyncHttpClientSingletons.ASYNC_HANDLER_DATA;
 import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9.AsyncHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -52,8 +53,7 @@ public class RequestInstrumentation implements TypeInstrumentation {
       }
 
       Context context = instrumenter().start(parentContext, request);
-      AsyncHttpClientSingletons.ASYNC_HANDLER_DATA.set(
-          handler, AsyncHandlerData.create(parentContext, context, request));
+      ASYNC_HANDLER_DATA.set(handler, AsyncHandlerData.create(parentContext, context, request));
       return context.makeCurrent();
     }
 

@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0.AsyncHttpClientSingletons.asyncHandlerVirtualField;
+import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0.AsyncHttpClientSingletons.ASYNC_HANDLER_REQUEST_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0.AsyncHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperClass;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -53,11 +53,11 @@ public class AsyncCompletionHandlerInstrumentation implements TypeInstrumentatio
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Response response) {
 
-      RequestContext requestContext = asyncHandlerVirtualField().get(handler);
+      RequestContext requestContext = ASYNC_HANDLER_REQUEST_CONTEXT.get(handler);
       if (requestContext == null) {
         return null;
       }
-      asyncHandlerVirtualField().set(handler, null);
+      ASYNC_HANDLER_REQUEST_CONTEXT.set(handler, null);
       instrumenter().end(requestContext.getContext(), requestContext, response, null);
       return requestContext.getParentContext().makeCurrent();
     }
@@ -77,11 +77,11 @@ public class AsyncCompletionHandlerInstrumentation implements TypeInstrumentatio
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Throwable throwable) {
 
-      RequestContext requestContext = asyncHandlerVirtualField().get(handler);
+      RequestContext requestContext = ASYNC_HANDLER_REQUEST_CONTEXT.get(handler);
       if (requestContext == null) {
         return null;
       }
-      asyncHandlerVirtualField().set(handler, null);
+      ASYNC_HANDLER_REQUEST_CONTEXT.set(handler, null);
       instrumenter().end(requestContext.getContext(), requestContext, null, throwable);
       return requestContext.getParentContext().makeCurrent();
     }

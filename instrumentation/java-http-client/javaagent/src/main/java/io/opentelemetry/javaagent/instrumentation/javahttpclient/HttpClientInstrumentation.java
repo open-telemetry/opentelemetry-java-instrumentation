@@ -72,12 +72,19 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     private final Context parentContext;
     private final Scope scope;
     private final CallDepth callDepth;
+    private final HttpRequest request;
 
-    private AdviceScope(Context parentContext, Context context, Scope scope, CallDepth callDepth) {
+    private AdviceScope(
+        Context parentContext,
+        Context context,
+        Scope scope,
+        CallDepth callDepth,
+        HttpRequest request) {
       this.parentContext = parentContext;
       this.context = context;
       this.scope = scope;
       this.callDepth = callDepth;
+      this.request = request;
     }
 
     @Nullable
@@ -92,7 +99,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
       }
 
       Context context = instrumenter().start(parentContext, request);
-      return new AdviceScope(parentContext, context, context.makeCurrent(), callDepth);
+      return new AdviceScope(parentContext, context, context.makeCurrent(), callDepth, request);
     }
 
     public void end(HttpRequest request, HttpResponse<?> response, Throwable throwable) {
@@ -103,7 +110,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     public static AdviceScope startWithCallDepth(HttpRequest httpRequest) {
       CallDepth callDepth = CallDepth.forClass(HttpClient.class);
       if (callDepth.getAndIncrement() > 0) {
-        return new AdviceScope(null, null, null, callDepth);
+        return new AdviceScope(null, null, null, callDepth, null);
       }
       return start(httpRequest, callDepth);
     }
@@ -123,8 +130,8 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     }
 
     public CompletableFuture<HttpResponse<?>> wrapFuture(
-        CompletableFuture<HttpResponse<?>> future, HttpRequest httpRequest) {
-      future = future.whenComplete(new ResponseConsumer(instrumenter(), context, httpRequest));
+        CompletableFuture<HttpResponse<?>> future) {
+      future = future.whenComplete(new ResponseConsumer(instrumenter(), context, request));
       return CompletableFutureWrapper.wrap(future, parentContext);
     }
   }
@@ -163,18 +170,15 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static CompletableFuture<HttpResponse<?>> methodExit(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
-        @Advice.Return CompletableFuture<HttpResponse<?>> originalFuture,
+        @Advice.Return CompletableFuture<HttpResponse<?>> future,
         @Advice.Thrown Throwable throwable,
         @Advice.Enter AdviceScope scope) {
-
-      @SuppressWarnings("UnnecessaryLocalVariable")
-      CompletableFuture<HttpResponse<?>> future = originalFuture;
 
       if (!scope.endWithCallDepth(httpRequest, throwable)) {
         return future;
       }
 
-      return scope.wrapFuture(future, httpRequest);
+      return scope.wrapFuture(future);
     }
   }
 }
