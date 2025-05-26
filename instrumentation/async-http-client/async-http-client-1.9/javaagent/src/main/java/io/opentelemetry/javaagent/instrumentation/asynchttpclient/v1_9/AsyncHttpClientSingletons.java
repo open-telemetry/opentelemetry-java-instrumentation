@@ -17,7 +17,7 @@ public final class AsyncHttpClientSingletons {
 
   private static final Instrumenter<Request, Response> INSTRUMENTER;
 
-  private static final VirtualField<AsyncHandler<?>, AsyncHandlerData> VIRTUAL_FIELD;
+  public static final VirtualField<AsyncHandler<?>, AsyncHandlerData> ASYNC_HANDLER_DATA;
 
   static {
     INSTRUMENTER =
@@ -26,15 +26,11 @@ public final class AsyncHttpClientSingletons {
             new AsyncHttpClientHttpAttributesGetter(),
             HttpHeaderSetter.INSTANCE);
 
-    VIRTUAL_FIELD = VirtualField.find(AsyncHandler.class, AsyncHandlerData.class);
+    ASYNC_HANDLER_DATA = VirtualField.find(AsyncHandler.class, AsyncHandlerData.class);
   }
 
   public static Instrumenter<Request, Response> instrumenter() {
     return INSTRUMENTER;
-  }
-
-  public static VirtualField<AsyncHandler<?>, AsyncHandlerData> virtualField() {
-    return VIRTUAL_FIELD;
   }
 
   private AsyncHttpClientSingletons() {}
