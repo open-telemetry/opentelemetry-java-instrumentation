@@ -31,6 +31,7 @@ import org.apache.logging.log4j.message.Message;
 public final class LogEventMapper<T> {
 
   // copied from CodeIncubatingAttributes
+  // TODO: remove duplication when updating to semconv 1.33.0 or later
   private static final AttributeKey<String> CODE_FILEPATH =
       AttributeKey.stringKey("code.file.path");
   private static final AttributeKey<String> CODE_FUNCTION =
