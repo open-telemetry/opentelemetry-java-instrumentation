@@ -1116,6 +1116,9 @@ targets:
       target: ':instrumentation:vertx:vertx-http-client:vertx-http-client-4.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:vertx:vertx-http-client:vertx-http-client-5.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:vertx:vertx-http-client:vertx-http-client-common:javaagent'
 
 experimental:
