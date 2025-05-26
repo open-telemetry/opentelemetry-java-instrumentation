@@ -59,18 +59,16 @@ public class JettyHttpClient9Instrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Object[] addTracingEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
-        @Advice.Argument(1) List<Response.ResponseListener> originalListeners) {
+        @Advice.Argument(1) List<Response.ResponseListener> listeners) {
 
-      List<Response.ResponseListener> listeners = originalListeners;
       Context parentContext = currentContext();
-      Context context =
-          JettyClientTracingListener.handleRequest(parentContext, httpRequest, instrumenter());
+      Context context = JettyClientTracingListener.handleRequest(parentContext, httpRequest, instrumenter());
       if (context == null) {
         return new Object[] {null, listeners};
       }
 
-      listeners = wrapResponseListeners(parentContext, listeners);
-      return new Object[] {new AdviceLocals(context, context.makeCurrent()), listeners};
+      List<Response.ResponseListener> wrappedListeners = wrapResponseListeners(parentContext, listeners);
+      return new Object[] {new AdviceLocals(context, context.makeCurrent()), wrappedListeners};
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
