@@ -59,7 +59,6 @@ public class JettyHttpClient12Instrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceLocals onEnterSend(@Advice.This HttpRequest request) {
-
       // start span
       Context parentContext = Context.current();
       Context context =
