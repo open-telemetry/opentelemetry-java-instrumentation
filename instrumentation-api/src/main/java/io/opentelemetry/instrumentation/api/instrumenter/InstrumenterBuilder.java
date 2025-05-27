@@ -72,37 +72,41 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   boolean propagateOperationListenersToOnEnd = false;
   boolean enabled = true;
 
-  private static final Map<String, List<ConditionalContextCustomizerProvider>>
-      CONTEXT_CUSTOMIZER_MAP = new HashMap<>();
-  private static final Map<String, List<ConditionalAttributesExtractorProvider>>
-      ATTRIBUTES_EXTRACTOR_MAP = new HashMap<>();
-  private static final Map<String, List<ConditionalOperationMetricsProvider>>
-      OPERATION_METRICS_MAP = new HashMap<>();
+  private static final Map<String, List<ContextCustomizerCustomizer>> CONTEXT_CUSTOMIZER_MAP =
+      new HashMap<>();
+  private static final Map<String, List<AttributesExtractorCustomizer>> ATTRIBUTES_EXTRACTOR_MAP =
+      new HashMap<>();
+  private static final Map<String, List<OperationMetricsCustomizer>> OPERATION_METRICS_MAP =
+      new HashMap<>();
 
   static {
-    ServiceLoader.load(ConditionalContextCustomizerProvider.class)
+    ServiceLoader.load(ContextCustomizerCustomizer.class)
         .forEach(
-            provider -> {
-              for (String name : provider.supportedNames()) {
-                CONTEXT_CUSTOMIZER_MAP.computeIfAbsent(name, k -> new ArrayList<>()).add(provider);
+            customizers -> {
+              for (String name : customizers.instrumentationNames()) {
+                CONTEXT_CUSTOMIZER_MAP
+                    .computeIfAbsent(name, k -> new ArrayList<>())
+                    .add(customizers);
               }
             });
 
-    ServiceLoader.load(ConditionalAttributesExtractorProvider.class)
+    ServiceLoader.load(AttributesExtractorCustomizer.class)
         .forEach(
-            provider -> {
-              for (String name : provider.supportedNames()) {
+            customizers -> {
+              for (String name : customizers.instrumentationNames()) {
                 ATTRIBUTES_EXTRACTOR_MAP
                     .computeIfAbsent(name, k -> new ArrayList<>())
-                    .add(provider);
+                    .add(customizers);
               }
             });
 
-    ServiceLoader.load(ConditionalOperationMetricsProvider.class)
+    ServiceLoader.load(OperationMetricsCustomizer.class)
         .forEach(
-            provider -> {
-              for (String name : provider.supportedNames()) {
-                OPERATION_METRICS_MAP.computeIfAbsent(name, k -> new ArrayList<>()).add(provider);
+            customizers -> {
+              for (String name : customizers.instrumentationNames()) {
+                OPERATION_METRICS_MAP
+                    .computeIfAbsent(name, k -> new ArrayList<>())
+                    .add(customizers);
               }
             });
   }
@@ -117,26 +121,26 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     this.instrumentationVersion =
         EmbeddedInstrumentationProperties.findVersion(instrumentationName);
 
-    List<ConditionalContextCustomizerProvider> contextProviders =
+    List<ContextCustomizerCustomizer> contextProviders =
         CONTEXT_CUSTOMIZER_MAP.get(instrumentationName);
     if (contextProviders != null) {
-      for (ConditionalContextCustomizerProvider provider : contextProviders) {
+      for (ContextCustomizerCustomizer provider : contextProviders) {
         addContextCustomizer(provider.get());
       }
     }
 
-    List<ConditionalAttributesExtractorProvider> attributeProviders =
+    List<AttributesExtractorCustomizer> attributeProviders =
         ATTRIBUTES_EXTRACTOR_MAP.get(instrumentationName);
     if (attributeProviders != null) {
-      for (ConditionalAttributesExtractorProvider provider : attributeProviders) {
+      for (AttributesExtractorCustomizer provider : attributeProviders) {
         addAttributesExtractor(provider.get());
       }
     }
 
-    List<ConditionalOperationMetricsProvider> metricsProviders =
+    List<OperationMetricsCustomizer> metricsProviders =
         OPERATION_METRICS_MAP.get(instrumentationName);
     if (metricsProviders != null) {
-      for (ConditionalOperationMetricsProvider provider : metricsProviders) {
+      for (OperationMetricsCustomizer provider : metricsProviders) {
         addOperationMetrics(provider.get());
       }
     }

@@ -1,18 +1,18 @@
 Comparing source compatibility of opentelemetry-instrumentation-api-2.17.0-SNAPSHOT.jar against opentelemetry-instrumentation-api-2.16.0.jar
-+++  NEW INTERFACE: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.instrumenter.ConditionalAttributesExtractorProvider  (not serializable)
++++  NEW INTERFACE: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractorCustomizer  (not serializable)
 	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
 	+++  NEW SUPERCLASS: java.lang.Object
 	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor<REQUEST,RESPONSE> get()
 		GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
-	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.util.List<java.lang.String> supportedNames()
-+++  NEW INTERFACE: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.instrumenter.ConditionalContextCustomizerProvider  (not serializable)
+	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.util.List<java.lang.String> instrumentationNames()
++++  NEW INTERFACE: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizerCustomizer  (not serializable)
 	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
 	+++  NEW SUPERCLASS: java.lang.Object
 	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer<REQUEST> get()
 		GENERIC TEMPLATES: +++ REQUEST:java.lang.Object
-	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.util.List<java.lang.String> supportedNames()
-+++  NEW INTERFACE: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.instrumenter.ConditionalOperationMetricsProvider  (not serializable)
+	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.util.List<java.lang.String> instrumentationNames()
++++  NEW INTERFACE: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.instrumenter.OperationMetricsCustomizer  (not serializable)
 	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
 	+++  NEW SUPERCLASS: java.lang.Object
 	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics get()
-	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.util.List<java.lang.String> supportedNames()
+	+++  NEW METHOD: PUBLIC(+) ABSTRACT(+) java.util.List<java.lang.String> instrumentationNames()
