@@ -60,7 +60,6 @@ public class JettyHttpClient9Instrumentation implements TypeInstrumentation {
     public static Object[] addTracingEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Argument(1) List<Response.ResponseListener> listeners) {
-
       Context parentContext = currentContext();
       Context context =
           JettyClientTracingListener.handleRequest(parentContext, httpRequest, instrumenter());
@@ -78,7 +77,6 @@ public class JettyHttpClient9Instrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Thrown Throwable throwable,
         @Advice.Enter Object[] enterResult) {
-
       AdviceLocals locals = (AdviceLocals) enterResult[0];
 
       if (locals == null) {
