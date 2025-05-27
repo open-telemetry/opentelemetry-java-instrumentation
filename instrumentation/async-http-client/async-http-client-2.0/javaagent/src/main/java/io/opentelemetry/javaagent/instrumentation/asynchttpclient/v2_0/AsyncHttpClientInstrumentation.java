@@ -48,7 +48,6 @@ public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope onEnter(
         @Advice.Argument(0) Request request, @Advice.Argument(1) AsyncHandler<?> handler) {
-
       Context parentContext = currentContext();
       RequestContext requestContext = new RequestContext(parentContext, request);
       if (!instrumenter().shouldStart(parentContext, requestContext)) {

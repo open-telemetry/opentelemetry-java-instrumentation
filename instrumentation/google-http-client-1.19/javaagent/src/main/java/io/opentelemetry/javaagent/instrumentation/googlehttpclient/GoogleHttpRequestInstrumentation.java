@@ -66,7 +66,6 @@ public class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
 
     @Nullable
     public static AdviceScope start(HttpRequest request) {
-
       Context parentContext = currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
