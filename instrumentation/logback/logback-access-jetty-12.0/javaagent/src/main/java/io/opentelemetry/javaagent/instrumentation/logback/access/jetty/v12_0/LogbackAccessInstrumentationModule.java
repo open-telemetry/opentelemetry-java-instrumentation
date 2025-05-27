@@ -16,7 +16,7 @@ import java.util.List;
 @AutoService(InstrumentationModule.class)
 public class LogbackAccessInstrumentationModule extends InstrumentationModule {
   public LogbackAccessInstrumentationModule() {
-    super("logback-access", "logback-access-1.0");
+    super("logback-access-jetty-12", "logback-access-jetty-12-1.0");
   }
 
   @Override
