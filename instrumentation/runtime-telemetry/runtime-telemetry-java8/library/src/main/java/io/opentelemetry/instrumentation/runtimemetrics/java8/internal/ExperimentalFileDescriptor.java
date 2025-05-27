@@ -17,6 +17,16 @@ import java.util.List;
  * any time.
  */
 public final class ExperimentalFileDescriptor {
+  private static final Class<?> unixOperatingSystemMxBeanClass =
+      loadClass("com.sun.management.UnixOperatingSystemMXBean");
+
+  private static Class<?> loadClass(String className) {
+    try {
+      return Class.forName(className, false, ExperimentalFileDescriptor.class.getClassLoader());
+    } catch (ClassNotFoundException | LinkageError e) {
+      return null;
+    }
+  }
 
   /** Register observers for java runtime file descriptor metrics. */
   public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
@@ -29,7 +39,8 @@ public final class ExperimentalFileDescriptor {
     Meter meter = JmxRuntimeMetricsUtil.getMeter(openTelemetry);
     List<AutoCloseable> observables = new ArrayList<>();
 
-    if (osBean instanceof com.sun.management.UnixOperatingSystemMXBean) {
+    if (unixOperatingSystemMxBeanClass != null
+        && unixOperatingSystemMxBeanClass.isInstance(osBean)) {
       observables.add(
           meter
               .upDownCounterBuilder("jvm.file_descriptor.count")
