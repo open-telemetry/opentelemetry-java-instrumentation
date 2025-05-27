@@ -22,7 +22,8 @@ public class AccessEventMapper {
   public static final String ACCESS_EVENT_NAME = "access-event";
 
   @SuppressWarnings({"MethodCanBeStatic", "EmptyCatch"})
-  // MethodCanBeStatic: This method should eventually refer to configs in this class. So it should not
+  // MethodCanBeStatic: This method should eventually refer to configs in this class. So it should
+  // not
   // be static.
   // EmptyCatch: for parsing URI, the input itself is actually one URI, so there is low chance the
   // exception would be thrown. Even when it actually happened, there is not much we can do here.
