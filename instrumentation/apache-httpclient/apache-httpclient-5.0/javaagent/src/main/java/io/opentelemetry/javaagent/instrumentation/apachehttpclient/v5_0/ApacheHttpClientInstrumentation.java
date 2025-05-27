@@ -28,6 +28,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 
 class ApacheHttpClientInstrumentation implements TypeInstrumentation {
@@ -151,7 +152,13 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
 
     public void end(@Nullable Object result, @Nullable Throwable throwable) {
       scope.close();
-      ApacheHttpClientHelper.doMethodExit(context, request, result, throwable);
+      if (throwable != null) {
+        instrumenter().end(context, request, null, throwable);
+      } else if (result instanceof HttpResponse) {
+        instrumenter().end(context, request, (HttpResponse) result, null);
+      } else {
+        // ended in WrappingStatusSettingResponseHandler
+      }
     }
 
     public WrappingStatusSettingResponseHandler<?> wrapResponseHandler(
