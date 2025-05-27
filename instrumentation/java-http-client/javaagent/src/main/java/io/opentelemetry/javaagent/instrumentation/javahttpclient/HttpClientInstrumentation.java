@@ -67,84 +67,36 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         HttpClientInstrumentation.class.getName() + "$SendAsyncAdvice");
   }
 
-  public static class AdviceScope {
-    private final Context context;
-    private final Context parentContext;
-    private final Scope scope;
-    private final CallDepth callDepth;
-    private final HttpRequest request;
-
-    private AdviceScope(
-        Context parentContext,
-        Context context,
-        Scope scope,
-        @Nullable CallDepth callDepth,
-        HttpRequest request) {
-      this.parentContext = parentContext;
-      this.context = context;
-      this.scope = scope;
-      this.callDepth = callDepth;
-      this.request = request;
-    }
-
-    @Nullable
-    public static AdviceScope start(HttpRequest request) {
-      return start(request, null);
-    }
-
-    @Nullable
-    private static AdviceScope start(HttpRequest request, @Nullable CallDepth callDepth) {
-      Context parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return null;
-      }
-
-      Context context = instrumenter().start(parentContext, request);
-      return new AdviceScope(parentContext, context, context.makeCurrent(), callDepth, request);
-    }
-
-    public static AdviceScope startAsync(HttpRequest httpRequest) {
-      CallDepth callDepth = CallDepth.forClass(HttpClient.class);
-      if (callDepth.getAndIncrement() > 0) {
-        return new AdviceScope(null, null, null, callDepth, httpRequest);
-      }
-      return start(httpRequest, callDepth);
-    }
-
-    public boolean end(@Nullable HttpResponse<?> response, @Nullable Throwable throwable) {
-      // non-null call depth only used for async to prevent recursion
-      if (callDepth != null) {
-        if (callDepth.decrementAndGet() > 0) {
-          // async end nested call
-          return false;
-        }
-
-        scope.close();
-        if (throwable != null) {
-          // async end with exception: ending span and no wrapping needed
-          instrumenter().end(context, request, response, throwable);
-          return false;
-        }
-
-        // async end without exception:
-        return true;
-      }
-
-      // synchronous end
-      scope.close();
-      instrumenter().end(context, request, response, throwable);
-      return false;
-    }
-
-    public CompletableFuture<HttpResponse<?>> wrapFuture(
-        CompletableFuture<HttpResponse<?>> future) {
-      future = future.whenComplete(new ResponseConsumer(instrumenter(), context, request));
-      return CompletableFutureWrapper.wrap(future, parentContext);
-    }
-  }
-
   @SuppressWarnings("unused")
   public static class SendAdvice {
+
+    public static class AdviceScope {
+      private final Context context;
+      private final Scope scope;
+      private final HttpRequest request;
+
+      private AdviceScope(Context context, Scope scope, HttpRequest request) {
+        this.context = context;
+        this.scope = scope;
+        this.request = request;
+      }
+
+      @Nullable
+      public static AdviceScope start(HttpRequest request) {
+        Context parentContext = currentContext();
+        if (!instrumenter().shouldStart(parentContext, request)) {
+          return null;
+        }
+
+        Context context = instrumenter().start(parentContext, request);
+        return new AdviceScope(context, context.makeCurrent(), request);
+      }
+
+      public void end(@Nullable HttpResponse<?> response, @Nullable Throwable throwable) {
+        scope.close();
+        instrumenter().end(context, request, response, throwable);
+      }
+    }
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
@@ -168,24 +120,78 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SendAsyncAdvice {
 
+    public static class AsyncAdviceScope {
+      private final Context context;
+      private final Context parentContext;
+      private final Scope scope;
+      private final HttpRequest request;
+      private final CallDepth callDepth;
+
+      public AsyncAdviceScope(
+          Context context,
+          Context parentContext,
+          Scope scope,
+          HttpRequest request,
+          CallDepth callDepth) {
+        this.context = context;
+        this.parentContext = parentContext;
+        this.scope = scope;
+        this.request = request;
+        this.callDepth = callDepth;
+      }
+
+      @Nullable
+      public static AsyncAdviceScope start(HttpRequest request) {
+        CallDepth callDepth = CallDepth.forClass(HttpClient.class);
+        if (callDepth.getAndIncrement() > 0) {
+          return new AsyncAdviceScope(null, null, null, null, callDepth);
+        }
+        Context parentContext = currentContext();
+        if (!instrumenter().shouldStart(parentContext, request)) {
+          return null;
+        }
+        Context context = instrumenter().start(parentContext, request);
+        return new AsyncAdviceScope(
+            parentContext, context, context.makeCurrent(), request, callDepth);
+      }
+
+      public boolean end(@Nullable Throwable throwable) {
+        if (callDepth.decrementAndGet() > 0) {
+          // async end nested call
+          return false;
+        }
+        scope.close();
+        if (throwable != null) {
+          // async end with exception: ending span and no wrapping needed
+          instrumenter().end(context, request, null, throwable);
+          return false;
+        }
+        return true;
+      }
+
+      public CompletableFuture<HttpResponse<?>> wrapFuture(
+          CompletableFuture<HttpResponse<?>> future) {
+        future = future.whenComplete(new ResponseConsumer(instrumenter(), context, request));
+        return CompletableFutureWrapper.wrap(future, parentContext);
+      }
+    }
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AdviceScope methodEnter(@Advice.Argument(value = 0) HttpRequest httpRequest) {
-      return AdviceScope.startAsync(httpRequest);
+    public static AsyncAdviceScope methodEnter(
+        @Advice.Argument(value = 0) HttpRequest httpRequest) {
+      return AsyncAdviceScope.start(httpRequest);
     }
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static CompletableFuture<HttpResponse<?>> methodExit(
-        @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Return CompletableFuture<HttpResponse<?>> future,
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable AdviceScope scope) {
-
+        @Advice.Enter @Nullable AsyncAdviceScope scope) {
       if (scope == null) {
         return future;
       }
-
-      if (scope.end(null, throwable)) {
+      if (scope.end(throwable)) {
         return scope.wrapFuture(future);
       }
       return future;
