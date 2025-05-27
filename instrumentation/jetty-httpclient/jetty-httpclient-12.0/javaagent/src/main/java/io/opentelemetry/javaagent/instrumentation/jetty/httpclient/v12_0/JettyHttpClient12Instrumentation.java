@@ -96,7 +96,6 @@ public class JettyHttpClient12Instrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope onEnterNotify(@Advice.This HttpRequest request) {
-
       Context context = (Context) request.getAttributes().get(JETTY_CLIENT_CONTEXT_KEY);
       if (context == null) {
         return null;
