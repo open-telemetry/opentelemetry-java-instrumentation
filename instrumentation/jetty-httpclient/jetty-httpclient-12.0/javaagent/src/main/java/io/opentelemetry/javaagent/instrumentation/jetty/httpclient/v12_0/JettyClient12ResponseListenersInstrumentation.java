@@ -92,7 +92,6 @@ public class JettyClient12ResponseListenersInstrumentation implements TypeInstru
         @Advice.Argument(0) Result result,
         @Advice.Thrown Throwable throwable,
         @Advice.Enter @Nullable Scope scope) {
-
       if (scope != null) {
         scope.close();
       }
