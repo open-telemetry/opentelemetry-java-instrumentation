@@ -11,16 +11,13 @@ muzzle {
     versions.set("[3.0.0,)")
     extraDependency("javax.servlet:javax.servlet-api:3.0.1")
     extraDependency("jakarta.servlet:jakarta.servlet-api:5.0.0")
-    skip("3.6.7") // version is present in maven metadata, but pom and jar are missing
   }
 }
 
 dependencies {
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
-  // library("org.apache.cxf:cxf-rt-frontend-jaxws:3.0.0")
-  compileOnly("org.apache.cxf:cxf-rt-frontend-jaxws:3.0.0")
-  testImplementation("org.apache.cxf:cxf-rt-frontend-jaxws:3.0.0")
+  library("org.apache.cxf:cxf-rt-frontend-jaxws:3.0.0")
 
   compileOnly("javax.servlet:javax.servlet-api:3.0.1")
   compileOnly("jakarta.servlet:jakarta.servlet-api:5.0.0")
@@ -44,8 +41,7 @@ dependencies {
   testImplementation("javax.annotation:javax.annotation-api:1.2")
   testImplementation("com.sun.xml.messaging.saaj:saaj-impl:1.5.2")
 
-  latestDepTestLibrary("org.apache.cxf:cxf-rt-frontend-jaxws:3.6.6") // documented limitation
-  // latestDepTestLibrary("org.apache.cxf:cxf-rt-frontend-jaxws:3.+") // documented limitation
+  latestDepTestLibrary("org.apache.cxf:cxf-rt-frontend-jaxws:3.+") // documented limitation
   latestDepTestLibrary("org.apache.cxf:cxf-rt-transports-http:3.+") // documented limitation
 }
 
