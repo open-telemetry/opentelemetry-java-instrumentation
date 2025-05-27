@@ -10,7 +10,6 @@ muzzle {
     module.set("cxf-rt-frontend-jaxrs")
     versions.set("[3.2,4)")
     extraDependency("javax.servlet:javax.servlet-api:3.1.0")
-    skip("3.6.7") // version is present in maven metadata, but pom and jar are missing
   }
   pass {
     group.set("org.apache.tomee")
@@ -27,9 +26,7 @@ dependencies {
 
   compileOnly("javax.ws.rs:javax.ws.rs-api:2.0")
   compileOnly("javax.servlet:javax.servlet-api:3.1.0")
-  // library("org.apache.cxf:cxf-rt-frontend-jaxrs:3.2.0")
-  compileOnly("org.apache.cxf:cxf-rt-frontend-jaxrs:3.2.0")
-  testImplementation("org.apache.cxf:cxf-rt-frontend-jaxrs:3.2.0")
+  library("org.apache.cxf:cxf-rt-frontend-jaxrs:3.2.0")
 
   implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent"))
 
@@ -50,8 +47,7 @@ dependencies {
   testLibrary("org.apache.cxf:cxf-rt-ws-policy:3.2.0")
 
   latestDepTestLibrary("org.eclipse.jetty:jetty-webapp:10.+") // documented limitation
-  latestDepTestLibrary("org.apache.cxf:cxf-rt-frontend-jaxrs:3.6.6") // documented limitation
-  // latestDepTestLibrary("org.apache.cxf:cxf-rt-frontend-jaxrs:3.+") // documented limitation
+  latestDepTestLibrary("org.apache.cxf:cxf-rt-frontend-jaxrs:3.+") // documented limitation
   latestDepTestLibrary("org.apache.cxf:cxf-rt-transports-http-jetty:3.+") // documented limitation
   latestDepTestLibrary("org.apache.cxf:cxf-rt-ws-policy:3.+") // documented limitation
 }
