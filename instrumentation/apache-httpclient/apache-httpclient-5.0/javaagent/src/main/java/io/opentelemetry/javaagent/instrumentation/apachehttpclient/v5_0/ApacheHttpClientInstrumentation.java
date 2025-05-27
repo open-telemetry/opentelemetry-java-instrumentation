@@ -156,9 +156,8 @@ class ApacheHttpClientInstrumentation implements TypeInstrumentation {
         instrumenter().end(context, request, null, throwable);
       } else if (result instanceof HttpResponse) {
         instrumenter().end(context, request, (HttpResponse) result, null);
-      } else {
-        // ended in WrappingStatusSettingResponseHandler
       }
+      // ended in WrappingStatusSettingResponseHandler
     }
 
     public WrappingStatusSettingResponseHandler<?> wrapResponseHandler(
