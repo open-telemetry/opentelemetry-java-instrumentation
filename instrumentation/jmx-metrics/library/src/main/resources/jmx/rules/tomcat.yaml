@@ -8,7 +8,7 @@ rules:
     - Tomcat:type=GlobalRequestProcessor,name=*
     prefix: tomcat.
     metricAttribute:
-      tomcat.request_processor.name: param(name)
+      tomcat.request.processor.name: param(name)
     mapping:
       errorCount:
         metric: error.count

@@ -59,7 +59,7 @@ public class TomcatIntegrationTest extends TargetSystemTest {
 
   private static MetricsVerifier createMetricsVerifier() {
     AttributeMatcher requestProcessorNameAttribute =
-        attribute("tomcat.request_processor.name", "\"http-nio-8080\"");
+        attribute("tomcat.request.processor.name", "\"http-nio-8080\"");
     AttributeMatcher threadPoolNameAttribute =
         attribute("tomcat.thread.pool.name", "\"http-nio-8080\"");
 
