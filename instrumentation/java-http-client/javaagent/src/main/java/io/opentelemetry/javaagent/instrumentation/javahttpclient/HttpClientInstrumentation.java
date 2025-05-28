@@ -121,30 +121,30 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   public static class SendAsyncAdvice {
 
     public static class AsyncAdviceScope {
-      private final Context context;
       private final Context parentContext;
+      private final Context context;
       private final Scope scope;
-      private final HttpRequest request;
       private final CallDepth callDepth;
+      private final HttpRequest request;
 
       public AsyncAdviceScope(
-          Context context,
           Context parentContext,
+          Context context,
           Scope scope,
-          HttpRequest request,
-          CallDepth callDepth) {
-        this.context = context;
+          CallDepth callDepth,
+          HttpRequest request) {
         this.parentContext = parentContext;
+        this.context = context;
         this.scope = scope;
-        this.request = request;
         this.callDepth = callDepth;
+        this.request = request;
       }
 
       @Nullable
       public static AsyncAdviceScope start(HttpRequest request) {
         CallDepth callDepth = CallDepth.forClass(HttpClient.class);
         if (callDepth.getAndIncrement() > 0) {
-          return new AsyncAdviceScope(null, null, null, request, callDepth);
+          return new AsyncAdviceScope(null, null, null, callDepth, request);
         }
         Context parentContext = currentContext();
         if (!instrumenter().shouldStart(parentContext, request)) {
@@ -152,7 +152,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         }
         Context context = instrumenter().start(parentContext, request);
         return new AsyncAdviceScope(
-            parentContext, context, context.makeCurrent(), request, callDepth);
+            parentContext, context, context.makeCurrent(), callDepth, request);
       }
 
       public CompletableFuture<HttpResponse<?>> end(@Nullable Throwable throwable,
@@ -186,7 +186,6 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         @Advice.Return @Nullable CompletableFuture<HttpResponse<?>> future,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AsyncAdviceScope scope) {
-
       return scope == null ? future : scope.end(throwable, future);
     }
   }
