@@ -156,6 +156,8 @@ public class OpenTelemetryAutoConfiguration {
 
     @Bean
     public OpenTelemetry openTelemetry() {
+      logger.info("OpenTelemetry Spring Boot starter has been disabled");
+
       return OpenTelemetry.noop();
     }
 
