@@ -8,8 +8,17 @@ package io.opentelemetry.javaagent.instrumentation.finatra
 import com.twitter.finatra.http.HttpServer
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
-import io.opentelemetry.instrumentation.testing.junit.http.{AbstractHttpServerTest, HttpServerInstrumentationExtension, HttpServerTestOptions, ServerEndpoint}
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.{StringAssertConsumer, equalTo, satisfies}
+import io.opentelemetry.instrumentation.testing.junit.http.{
+  AbstractHttpServerTest,
+  HttpServerInstrumentationExtension,
+  HttpServerTestOptions,
+  ServerEndpoint
+}
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.{
+  StringAssertConsumer,
+  equalTo,
+  satisfies
+}
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert
 import io.opentelemetry.sdk.trace.data.StatusData
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
