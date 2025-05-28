@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.TracerProvider;
+import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelMapConverter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
@@ -114,7 +115,10 @@ public class OpenTelemetryAutoConfiguration {
     @Bean
     public OpenTelemetry openTelemetry(
         AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
-      logger.info("Starting OpenTelemetry Spring Boot starter");
+      logger.info(
+          "OpenTelemetry Spring Boot starter has been started: {}",
+          EmbeddedInstrumentationProperties.findVersion(
+              "io.opentelemetry.spring-boot-autoconfigure"));
 
       return autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk();
     }
