@@ -144,7 +144,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
       public static AsyncAdviceScope start(HttpRequest request) {
         CallDepth callDepth = CallDepth.forClass(HttpClient.class);
         if (callDepth.getAndIncrement() > 0) {
-          return new AsyncAdviceScope(null, null, null, null, callDepth);
+          return new AsyncAdviceScope(null, null, null, request, callDepth);
         }
         Context parentContext = currentContext();
         if (!instrumenter().shouldStart(parentContext, request)) {
@@ -155,27 +155,25 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
             parentContext, context, context.makeCurrent(), request, callDepth);
       }
 
-      public boolean end(@Nullable Throwable throwable) {
-        if (callDepth.decrementAndGet() > 0) {
+      public CompletableFuture<HttpResponse<?>> end(@Nullable Throwable throwable,
+          @Nullable CompletableFuture<HttpResponse<?>> future) {
+        if (callDepth.decrementAndGet() > 0 || scope == null) {
           // async end nested call
-          return false;
+          return future;
         }
         scope.close();
         if (throwable != null) {
           // async end with exception: ending span and no wrapping needed
           instrumenter().end(context, request, null, throwable);
-          return false;
+          return future;
         }
-        return true;
-      }
-
-      public CompletableFuture<HttpResponse<?>> wrapFuture(
-          CompletableFuture<HttpResponse<?>> future) {
         future = future.whenComplete(new ResponseConsumer(instrumenter(), context, request));
         return CompletableFutureWrapper.wrap(future, parentContext);
       }
+
     }
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AsyncAdviceScope methodEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest) {
@@ -185,16 +183,11 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static CompletableFuture<HttpResponse<?>> methodExit(
-        @Advice.Return CompletableFuture<HttpResponse<?>> future,
+        @Advice.Return @Nullable CompletableFuture<HttpResponse<?>> future,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AsyncAdviceScope scope) {
-      if (scope == null) {
-        return future;
-      }
-      if (scope.end(throwable)) {
-        return scope.wrapFuture(future);
-      }
-      return future;
+
+      return scope == null ? future : scope.end(throwable, future);
     }
   }
 }
