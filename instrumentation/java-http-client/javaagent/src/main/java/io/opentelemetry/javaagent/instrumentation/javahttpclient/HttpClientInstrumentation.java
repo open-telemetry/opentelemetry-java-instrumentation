@@ -155,8 +155,8 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
             parentContext, context, context.makeCurrent(), callDepth, request);
       }
 
-      public CompletableFuture<HttpResponse<?>> end(@Nullable Throwable throwable,
-          @Nullable CompletableFuture<HttpResponse<?>> future) {
+      public CompletableFuture<HttpResponse<?>> end(
+          @Nullable Throwable throwable, @Nullable CompletableFuture<HttpResponse<?>> future) {
         if (callDepth.decrementAndGet() > 0 || scope == null) {
           // async end nested call
           return future;
@@ -170,7 +170,6 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
         future = future.whenComplete(new ResponseConsumer(instrumenter(), context, request));
         return CompletableFutureWrapper.wrap(future, parentContext);
       }
-
     }
 
     @Nullable
