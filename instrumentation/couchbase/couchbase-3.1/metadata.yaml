@@ -1,0 +1,5 @@
+description: >
+  Couchbase instrumentation is owned upstream. This instrumentation hooks into the
+  CoreEnvironment.Builder constructor and automatically sets the Couchbase requestTracer to use an
+  OpenTelemetry tracer from the agent. This enables distributed tracing for Couchbase operations
+  using OpenTelemetry, without requiring manual configuration by the user.
