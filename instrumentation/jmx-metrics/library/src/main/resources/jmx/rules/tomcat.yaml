@@ -63,7 +63,7 @@ rules:
         metric: session.active.limit
         type: updowncounter
         unit: "{session}"
-        desc: Maximum number of active sessions.
+        desc: Maximum possible number of active sessions.
 
   - beans:
     - Catalina:type=ThreadPool,name=*
@@ -79,7 +79,7 @@ rules:
         desc: Total thread count of the thread pool.
       maxThreads:
         metric: limit
-        desc: Maximum thread count of the thread pool.
+        desc: Maximum possible number of threads in the thread pool.
       currentThreadsBusy:
         metric: busy.count
         desc: Number of busy threads in the thread pool.

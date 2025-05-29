@@ -122,7 +122,7 @@ public class TomcatIntegrationTest extends TargetSystemTest {
             "tomcat.session.active.limit",
             metric ->
                 metric
-                    .hasDescription("Maximum number of active sessions.")
+                    .hasDescription("Maximum possible number of active sessions.")
                     .hasUnit("{session}")
                     .isUpDownCounter()
                     .hasDataPointsWithOneAttribute(attributeWithAnyValue("tomcat.context")))
@@ -138,7 +138,7 @@ public class TomcatIntegrationTest extends TargetSystemTest {
             "tomcat.thread.limit",
             metric ->
                 metric
-                    .hasDescription("Maximum thread count of the thread pool.")
+                    .hasDescription("Maximum possible number of threads in the thread pool.")
                     .hasUnit("{thread}")
                     .isUpDownCounter()
                     .hasDataPointsWithOneAttribute(threadPoolNameAttribute))
