@@ -91,23 +91,10 @@ public class OpenTelemetryConnection implements Connection {
   }
 
   @Override
-  public CompletableFuture<Message> request(String subject, byte[] body) {
-    return wrapRequest(
-        NatsRequest.create(this, subject, body), () -> delegate.request(subject, body));
-  }
-
-  @Override
   public Message request(String subject, byte[] body, Duration timeout)
       throws InterruptedException {
     return wrapRequest(
         NatsRequest.create(this, subject, body), () -> delegate.request(subject, body, timeout));
-  }
-
-  @Override
-  public CompletableFuture<Message> request(String subject, Headers headers, byte[] body) {
-    return wrapRequest(
-        NatsRequest.create(this, subject, headers, body),
-        () -> delegate.request(subject, headers, body));
   }
 
   @Override
@@ -119,13 +106,26 @@ public class OpenTelemetryConnection implements Connection {
   }
 
   @Override
-  public CompletableFuture<Message> request(Message message) {
-    return wrapRequest(NatsRequest.create(this, message), () -> delegate.request(message));
+  public Message request(Message message, Duration timeout) throws InterruptedException {
+    return wrapRequest(NatsRequest.create(this, message), () -> delegate.request(message, timeout));
   }
 
   @Override
-  public Message request(Message message, Duration timeout) throws InterruptedException {
-    return wrapRequest(NatsRequest.create(this, message), () -> delegate.request(message, timeout));
+  public CompletableFuture<Message> request(String subject, byte[] body) {
+    return wrapRequest(
+        NatsRequest.create(this, subject, body), () -> delegate.request(subject, body));
+  }
+
+  @Override
+  public CompletableFuture<Message> request(String subject, Headers headers, byte[] body) {
+    return wrapRequest(
+        NatsRequest.create(this, subject, headers, body),
+        () -> delegate.request(subject, headers, body));
+  }
+
+  @Override
+  public CompletableFuture<Message> request(Message message) {
+    return wrapRequest(NatsRequest.create(this, message), () -> delegate.request(message));
   }
 
   @Override
