@@ -8,6 +8,8 @@ muzzle {
     module.set("camel-core")
     versions.set("[2.19,3)")
     assertInverse.set(true)
+    // https://repo.maven.apache.org/maven2/org/apache/camel/core/4.12.0/core-4.12.0.pom is missing
+    skip("4.12.0")
   }
 }
 
