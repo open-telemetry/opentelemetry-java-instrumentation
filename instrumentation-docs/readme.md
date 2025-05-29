@@ -24,7 +24,7 @@ tasks {
 
 Then, prior to running the analyzer, run the following command to generate `.telemetry` files:
 
-`./gradlew test -collectMetadata=true`
+`./gradlew test -PcollectMetadata=true`
 
 Then run the doc generator
 

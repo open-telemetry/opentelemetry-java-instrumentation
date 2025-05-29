@@ -1950,6 +1950,22 @@ libraries:
     target_versions:
       javaagent:
       - io.vertx:vertx-redis-client:[4.0.0,)
+  - name: vertx-sql-client-5.0
+    source_path: instrumentation/vertx/vertx-sql-client/vertx-sql-client-5.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.vertx-sql-client-5.0
+    target_versions:
+      javaagent:
+      - io.vertx:vertx-sql-client:[5.0.0,)
+  - name: vertx-http-client-5.0
+    source_path: instrumentation/vertx/vertx-http-client/vertx-http-client-5.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.vertx-http-client-5.0
+    target_versions:
+      javaagent:
+      - io.vertx:vertx-core:[5.0.0,)
   - name: vertx-web-3.0
     source_path: instrumentation/vertx/vertx-web-3.0
     scope:
@@ -1958,7 +1974,7 @@ libraries:
       javaagent:
       - io.vertx:vertx-web:[3.0.0,)
   - name: vertx-sql-client-4.0
-    source_path: instrumentation/vertx/vertx-sql-client-4.0
+    source_path: instrumentation/vertx/vertx-sql-client/vertx-sql-client-4.0
     scope:
       name: io.opentelemetry.vertx-sql-client-4.0
     target_versions:
