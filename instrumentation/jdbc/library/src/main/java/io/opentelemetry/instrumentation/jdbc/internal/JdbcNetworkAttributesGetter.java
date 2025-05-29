@@ -5,14 +5,14 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class JdbcNetworkAttributesGetter implements ServerAttributesGetter<DbRequest, Void> {
+public final class JdbcNetworkAttributesGetter implements ServerAttributesGetter<DbRequest> {
 
   @Nullable
   @Override

@@ -10,6 +10,12 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.netty.handler.codec.http.HttpMethod;
@@ -26,7 +32,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.time.Duration;
@@ -105,8 +110,8 @@ abstract class AbstractReactorNettyHttpClientTest
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.markAsLowLevelInstrumentation();
     optionsBuilder.setMaxRedirects(52);
+    optionsBuilder.spanEndsAfterBody();
 
-    optionsBuilder.setUserAgent(USER_AGENT);
     // TODO: remove this test altogether? this scenario is (was) only implemented in reactor-netty,
     // all other HTTP clients worked in a different way
     //    optionsBuilder.enableTestCallbackWithImplicitParent();
@@ -126,22 +131,19 @@ abstract class AbstractReactorNettyHttpClientTest
     optionsBuilder.setHttpAttributes(this::getHttpAttributes);
   }
 
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected Set<AttributeKey<?>> getHttpAttributes(URI uri) {
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
 
     // unopened port or non routable address
     if ("http://localhost:61/".equals(uri.toString())
         || "https://192.0.2.1/".equals(uri.toString())) {
-      attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-      attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
+      attributes.remove(NETWORK_PROTOCOL_VERSION);
     }
 
     if (uri.toString().contains("/read-timeout")) {
-      attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-      attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
-      attributes.remove(SemanticAttributes.NET_PEER_NAME);
-      attributes.remove(SemanticAttributes.NET_PEER_PORT);
+      attributes.remove(NETWORK_PROTOCOL_VERSION);
+      attributes.remove(SERVER_ADDRESS);
+      attributes.remove(SERVER_PORT);
     }
     return attributes;
   }
@@ -272,7 +274,6 @@ abstract class AbstractReactorNettyHttpClientTest
   }
 
   @Test
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void shouldEndSpanOnMonoTimeout() {
     HttpClient httpClient = createHttpClient();
 
@@ -310,12 +311,11 @@ abstract class AbstractReactorNettyHttpClientTest
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_URL, uri.toString()),
-                            equalTo(SemanticAttributes.USER_AGENT_ORIGINAL, USER_AGENT),
-                            equalTo(SemanticAttributes.HTTP_REQUEST_CONTENT_LENGTH, 0),
-                            equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                            equalTo(SemanticAttributes.NET_PEER_PORT, uri.getPort())),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(URL_FULL, uri.toString()),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, uri.getPort()),
+                            equalTo(ERROR_TYPE, "cancelled")),
                 span ->
                     span.hasName("test-http-server")
                         .hasKind(SpanKind.SERVER)

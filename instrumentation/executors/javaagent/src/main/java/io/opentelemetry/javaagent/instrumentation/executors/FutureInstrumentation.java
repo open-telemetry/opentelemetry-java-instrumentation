@@ -61,6 +61,8 @@ public class FutureInstrumentation implements TypeInstrumentation {
       "java.util.concurrent.FutureTask",
       "java.util.concurrent.RecursiveAction",
       "java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask",
+      "org.apache.pekko.dispatch.ForkJoinExecutorConfigurator$PekkoForkJoinTask",
+      "org.apache.pekko.dispatch.Mailbox",
       "scala.collection.parallel.AdaptiveWorkStealingForkJoinTasks$WrappedTask",
       "scala.concurrent.forkjoin.ForkJoinTask",
       "scala.concurrent.forkjoin.ForkJoinTask$AdaptedCallable",

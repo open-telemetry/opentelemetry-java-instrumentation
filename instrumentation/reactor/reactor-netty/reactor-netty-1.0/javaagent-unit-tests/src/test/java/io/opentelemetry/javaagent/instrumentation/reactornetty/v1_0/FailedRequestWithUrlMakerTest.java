@@ -53,6 +53,7 @@ class FailedRequestWithUrlMakerTest {
   }
 
   @Test
+  @SuppressWarnings("MockitoDoSetup")
   void shouldPrependRemoteAddress() {
     when(config.baseUrl()).thenReturn("/");
     when(config.uri()).thenReturn("/docs");
@@ -68,6 +69,7 @@ class FailedRequestWithUrlMakerTest {
 
   @ParameterizedTest
   @ArgumentsSource(DefaultPortsArguments.class)
+  @SuppressWarnings("MockitoDoSetup")
   void shouldSkipDefaultPorts(int port, boolean isSecure) {
     when(config.baseUrl()).thenReturn("/");
     when(config.uri()).thenReturn("/docs");

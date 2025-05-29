@@ -59,14 +59,16 @@ testing {
     val vaadin14LatestTest by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project(":instrumentation:vaadin-14.2:testing"))
-        implementation("com.vaadin:vaadin-spring-boot-starter:14.+")
+        // 14.12 requires license
+        implementation("com.vaadin:vaadin-spring-boot-starter:14.11.+")
       }
     }
 
     val vaadinLatestTest by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project(":instrumentation:vaadin-14.2:testing"))
-        implementation("com.vaadin:vaadin-spring-boot-starter:+")
+        // tests fail with 24.4.1
+        implementation("com.vaadin:vaadin-spring-boot-starter:24.3.13")
       }
     }
   }
@@ -94,4 +96,7 @@ configurations.configureEach {
       force("org.slf4j:slf4j-api:1.7.36")
     }
   }
+}
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

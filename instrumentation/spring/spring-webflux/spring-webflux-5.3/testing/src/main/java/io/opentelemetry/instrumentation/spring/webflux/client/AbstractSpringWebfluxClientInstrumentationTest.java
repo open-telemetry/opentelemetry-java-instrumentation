@@ -5,21 +5,33 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.client;
 
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static java.util.Collections.emptyMap;
 import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.net.URI;
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -65,23 +77,22 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
   }
 
   @Override
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestRedirects();
+
+    // no enum value for non standard method
+    optionsBuilder.disableTestNonStandardHttpMethod();
 
     // timeouts leak the scope
     optionsBuilder.disableTestReadTimeout();
 
-    if (SemconvStability.emitOldHttpSemconv()) {
-      optionsBuilder.setHttpAttributes(
-          uri -> {
-            Set<AttributeKey<?>> attributes =
-                new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-            attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-            attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
-            return attributes;
-          });
-    }
+    optionsBuilder.setHttpAttributes(
+        uri -> {
+          Set<AttributeKey<?>> attributes =
+              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+          attributes.remove(NETWORK_PROTOCOL_VERSION);
+          return attributes;
+        });
 
     optionsBuilder.setClientSpanErrorMapper(
         (uri, throwable) -> {
@@ -143,5 +154,45 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
     } catch (Throwable e) {
       throw new AssertionError(e);
     }
+  }
+
+  @Test
+  void shouldEndSpanOnMonoTimeout() {
+    URI uri = resolveAddress("/read-timeout");
+    Throwable thrown =
+        catchThrowable(
+            () ->
+                testing.runWithSpan(
+                    "parent",
+                    () ->
+                        buildRequest("GET", uri, emptyMap())
+                            .exchange()
+                            // apply Mono timeout that is way shorter than HTTP request timeout
+                            .timeout(Duration.ofSeconds(1))
+                            .block()));
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("parent")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasException(thrown),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(URL_FULL, uri.toString()),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, uri.getPort()),
+                            equalTo(ERROR_TYPE, "cancelled")),
+                span ->
+                    span.hasName("test-http-server")
+                        .hasKind(SpanKind.SERVER)
+                        .hasParent(trace.getSpan(1))));
   }
 }

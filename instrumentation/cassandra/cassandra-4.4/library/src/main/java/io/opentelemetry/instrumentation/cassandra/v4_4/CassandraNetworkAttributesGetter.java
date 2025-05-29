@@ -6,18 +6,19 @@
 package io.opentelemetry.instrumentation.cassandra.v4_4;
 
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
+import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
-import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
+import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 final class CassandraNetworkAttributesGetter
-    implements ServerAttributesGetter<CassandraRequest, ExecutionInfo> {
+    implements NetworkAttributesGetter<CassandraRequest, ExecutionInfo> {
 
   @Override
   @Nullable
-  public InetSocketAddress getServerInetSocketAddress(
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
       CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
     if (executionInfo == null) {
       return null;
@@ -26,9 +27,11 @@ final class CassandraNetworkAttributesGetter
     if (coordinator == null) {
       return null;
     }
-    // resolve() returns an existing InetSocketAddress, it does not do a dns resolve,
-    // at least in the only current EndPoint implementation (DefaultEndPoint)
-    SocketAddress address = coordinator.getEndPoint().resolve();
-    return address instanceof InetSocketAddress ? (InetSocketAddress) address : null;
+    EndPoint endPoint = coordinator.getEndPoint();
+    if (endPoint instanceof DefaultEndPoint) {
+      // resolve() returns an existing InetSocketAddress, it does not do a dns resolve,
+      return (InetSocketAddress) endPoint.resolve();
+    }
+    return null;
   }
 }

@@ -32,22 +32,27 @@ dependencies {
   testInstrumentation(project(":instrumentation:spring:spring-web:spring-web-3.1:javaagent"))
 
   testImplementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-common:testing"))
+  testImplementation("com.google.guava:guava")
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:1.5.17.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-web:1.5.17.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-security:1.5.17.RELEASE")
 
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.+")
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-web:2.+")
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-security:2.+")
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.+") // see spring-webmvc-6.0 module
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-web:2.+") // see spring-webmvc-6.0 module
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-security:2.+") // see spring-webmvc-6.0 module
 }
 
 tasks.withType<Test>().configureEach {
+  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.spring-webmvc.experimental-span-attributes=true")
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
 }
 
 configurations.testRuntimeClasspath {

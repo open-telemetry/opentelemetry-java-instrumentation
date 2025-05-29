@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.kubernetesclient;
 import static java.util.Collections.emptyList;
 
 import io.kubernetes.client.openapi.ApiResponse;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
 import okhttp3.Request;

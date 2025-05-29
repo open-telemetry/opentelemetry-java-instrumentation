@@ -7,7 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.common;
 
 import static io.opentelemetry.javaagent.instrumentation.tomcat.common.TomcatHelper.messageBytesToString;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -15,6 +16,7 @@ import org.apache.coyote.ActionCode;
 import org.apache.coyote.Request;
 import org.apache.coyote.Response;
 import org.apache.tomcat.util.buf.MessageBytes;
+import org.apache.tomcat.util.http.MimeHeaders;
 
 public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
 
@@ -44,7 +46,17 @@ public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Re
 
   @Override
   public List<String> getHttpRequestHeader(Request request, String name) {
-    return Collections.list(request.getMimeHeaders().values(name));
+    List<String> result = null;
+    MimeHeaders headers = request.getMimeHeaders();
+    int i = headers.findHeader(name, 0);
+    while (i != -1) {
+      if (result == null) {
+        result = new ArrayList<>();
+      }
+      result.add(messageBytesToString(headers.getValue(i)));
+      i = headers.findHeader(name, i + 1);
+    }
+    return result != null ? result : Collections.emptyList();
   }
 
   @Override
@@ -79,41 +91,30 @@ public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Re
     return null;
   }
 
-  @Nullable
-  @Override
-  public String getServerAddress(Request request) {
-    return messageBytesToString(request.serverName());
-  }
-
-  @Override
-  public Integer getServerPort(Request request) {
-    return request.getServerPort();
-  }
-
   @Override
   @Nullable
-  public String getClientSocketAddress(Request request, @Nullable Response response) {
+  public String getNetworkPeerAddress(Request request, @Nullable Response response) {
     request.action(ActionCode.REQ_HOST_ADDR_ATTRIBUTE, request);
     return messageBytesToString(request.remoteAddr());
   }
 
   @Override
   @Nullable
-  public Integer getClientSocketPort(Request request, @Nullable Response response) {
+  public Integer getNetworkPeerPort(Request request, @Nullable Response response) {
     request.action(ActionCode.REQ_REMOTEPORT_ATTRIBUTE, request);
     return request.getRemotePort();
   }
 
   @Nullable
   @Override
-  public String getServerSocketAddress(Request request, @Nullable Response response) {
+  public String getNetworkLocalAddress(Request request, @Nullable Response response) {
     request.action(ActionCode.REQ_LOCAL_ADDR_ATTRIBUTE, request);
     return messageBytesToString(request.localAddr());
   }
 
   @Nullable
   @Override
-  public Integer getServerSocketPort(Request request, @Nullable Response response) {
+  public Integer getNetworkLocalPort(Request request, @Nullable Response response) {
     request.action(ActionCode.REQ_LOCALPORT_ATTRIBUTE, request);
     return request.getLocalPort();
   }

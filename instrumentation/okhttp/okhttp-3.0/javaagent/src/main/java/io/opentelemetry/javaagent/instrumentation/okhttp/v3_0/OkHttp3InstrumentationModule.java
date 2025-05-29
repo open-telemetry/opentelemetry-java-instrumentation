@@ -20,13 +20,6 @@ public class OkHttp3InstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isIndyModule() {
-    // java.lang.LinkageError: bad method type alias: (Builder,Map)void not visible from class
-    // io.opentelemetry.javaagent.instrumentation.okhttp.v3_0.OkHttp3Instrumentation$ConstructorAdvice
-    return false;
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(new OkHttp3Instrumentation(), new OkHttp3DispatcherInstrumentation());
   }

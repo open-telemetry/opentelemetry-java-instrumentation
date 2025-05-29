@@ -7,10 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0.AwsLambdaInstrumentationHelper.flushTimeout;
 import static io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0.AwsLambdaInstrumentationHelper.functionInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -35,7 +38,13 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named("com.amazonaws.services.lambda.runtime.RequestHandler"));
+    return implementsInterface(named("com.amazonaws.services.lambda.runtime.RequestHandler"))
+        .and(not(nameStartsWith("com.amazonaws.services.lambda.runtime.api.client")))
+        // In Java 8 and Java 11 runtimes,
+        // AWS Lambda runtime is packaged under `lambdainternal` package.
+        // But it is `com.amazonaws.services.lambda.runtime.api.client`
+        // for new runtime likes Java 17 and Java 21.
+        .and(not(nameStartsWith("lambdainternal")));
   }
 
   @Override
@@ -82,7 +91,7 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
         functionInstrumenter().end(functionContext, input, null, throwable);
       }
 
-      OpenTelemetrySdkAccess.forceFlush(1, TimeUnit.SECONDS);
+      OpenTelemetrySdkAccess.forceFlush(flushTimeout().toNanos(), TimeUnit.NANOSECONDS);
     }
   }
 }

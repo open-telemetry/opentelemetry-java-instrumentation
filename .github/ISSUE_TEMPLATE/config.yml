@@ -1,5 +1,5 @@
 contact_links:
-  - name: GitHib Discussions
+  - name: GitHub Discussions
     url: https://github.com/open-telemetry/opentelemetry-java-instrumentation/discussions/new/choose
     about: Please ask questions here.
   - name: StackOverflow

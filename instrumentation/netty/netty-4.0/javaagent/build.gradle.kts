@@ -25,8 +25,8 @@ muzzle {
 
 dependencies {
   library("io.netty:netty-codec-http:4.0.0.Final")
-  implementation(project(":instrumentation:netty:netty-4-common:javaagent"))
-  implementation(project(":instrumentation:netty:netty-4-common:library"))
+  implementation(project(":instrumentation:netty:netty-common-4.0:javaagent"))
+  implementation(project(":instrumentation:netty:netty-common-4.0:library"))
   implementation(project(":instrumentation:netty:netty-common:library"))
 
   testInstrumentation(project(":instrumentation:netty:netty-3.8:javaagent"))
@@ -47,27 +47,6 @@ tasks {
     jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
   }
 
-  val testStableSemconv by registering(Test::class) {
-    filter {
-      excludeTestsMatching("Netty40ConnectionSpanTest")
-      excludeTestsMatching("Netty40ClientSslTest")
-    }
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
-  val testStableSemconvConnectionSpan by registering(Test::class) {
-    filter {
-      includeTestsMatching("Netty40ConnectionSpanTest")
-      includeTestsMatching("Netty40ClientSslTest")
-    }
-    include("**/Netty40ConnectionSpanTest.*", "**/Netty40ClientSslTest.*")
-
-    jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
   test {
     filter {
       excludeTestsMatching("Netty40ConnectionSpanTest")
@@ -77,8 +56,6 @@ tasks {
 
   check {
     dependsOn(testConnectionSpan)
-    dependsOn(testStableSemconv)
-    dependsOn(testStableSemconvConnectionSpan)
   }
 }
 

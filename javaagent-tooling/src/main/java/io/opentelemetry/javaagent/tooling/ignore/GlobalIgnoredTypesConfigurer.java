@@ -40,7 +40,8 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         .ignoreClass("com.nr.agent.")
         .ignoreClass("com.singularity.")
         .ignoreClass("com.jinspired.")
-        .ignoreClass("org.jinspired.");
+        .ignoreClass("org.jinspired.")
+        .ignoreClass("org.jboss.byteman.");
 
     // allow JDK HttpClient
     builder.allowClass("jdk.internal.net.http.");
@@ -76,6 +77,7 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         // java.lang.ClassCircularityError: java/lang/ClassLoader$1
         // when SecurityManager is enabled. ClassLoader$1 is used in ClassLoader.checkPackageAccess
         .ignoreClass("java.lang.ClassLoader$")
+        .allowClass("java.lang.VirtualThread")
         .allowClass("java.lang.invoke.InnerClassLambdaMetafactory")
         // Concurrent instrumentation modifies the structure of
         // Cleaner class incompatibly with java9+ modules.
@@ -97,7 +99,8 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         .allowClass("sun.net.www.protocol.")
         .allowClass("sun.rmi.server")
         .allowClass("sun.rmi.transport")
-        .allowClass("sun.net.www.http.HttpClient");
+        .allowClass("sun.net.www.http.HttpClient")
+        .allowClass("sun.net.httpserver.");
 
     builder.ignoreClass("org.slf4j.");
 
@@ -124,6 +127,7 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         .ignoreClassLoader("org.openjdk.nashorn.internal.runtime.ScriptLoader")
         .ignoreClassLoader("org.codehaus.janino.ByteArrayClassLoader")
         .ignoreClassLoader("org.eclipse.persistence.internal.jaxb.JaxbClassLoader")
+        .ignoreClassLoader("com.alibaba.fastjson.util.ASMClassLoader")
         .ignoreClassLoader(AgentClassLoader.class.getName())
         .ignoreClassLoader(ExtensionClassLoader.class.getName())
         .ignoreClassLoader(InstrumentationModuleClassLoader.class.getName());

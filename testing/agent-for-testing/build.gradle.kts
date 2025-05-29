@@ -44,7 +44,6 @@ tasks {
   afterEvaluate {
     withType<Test>().configureEach {
       jvmArgs("-Dotel.javaagent.debug=true")
-      jvmArgs("-Dotel.metrics.exporter=otlp")
 
       jvmArgumentProviders.add(JavaagentProvider(jar.flatMap { it.archiveFile }))
     }

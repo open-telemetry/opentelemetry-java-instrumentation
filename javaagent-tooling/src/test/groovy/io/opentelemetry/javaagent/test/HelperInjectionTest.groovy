@@ -17,6 +17,7 @@ import net.bytebuddy.dynamic.loading.ClassInjector
 import spock.lang.Specification
 
 import java.lang.ref.WeakReference
+import java.time.Duration
 import java.util.concurrent.atomic.AtomicReference
 
 import static io.opentelemetry.instrumentation.test.utils.ClasspathUtils.isClassLoaded
@@ -53,7 +54,7 @@ class HelperInjectionTest extends Specification {
     def ref = new WeakReference(emptyLoader.get())
     emptyLoader.set(null)
 
-    awaitGc(ref)
+    awaitGc(ref, Duration.ofSeconds(10))
 
     then: "HelperInjector doesn't prevent it from being collected"
     null == ref.get()
@@ -100,7 +101,7 @@ class HelperInjectionTest extends Specification {
     def injectorRef = new WeakReference(injector.get())
     injector.set(null)
 
-    awaitGc(injectorRef)
+    awaitGc(injectorRef, Duration.ofSeconds(10))
 
     then:
     null == injectorRef.get()
@@ -109,7 +110,7 @@ class HelperInjectionTest extends Specification {
     def loaderRef = new WeakReference(emptyLoader.get())
     emptyLoader.set(null)
 
-    awaitGc(loaderRef)
+    awaitGc(loaderRef, Duration.ofSeconds(10))
 
     then:
     null == loaderRef.get()

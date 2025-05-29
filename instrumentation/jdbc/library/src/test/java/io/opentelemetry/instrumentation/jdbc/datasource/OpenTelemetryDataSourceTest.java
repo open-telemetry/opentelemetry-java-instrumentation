@@ -5,7 +5,12 @@
 
 package io.opentelemetry.instrumentation.jdbc.datasource;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
@@ -15,7 +20,7 @@ import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.stream.Stream;
@@ -32,11 +37,12 @@ class OpenTelemetryDataSourceTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
   @ArgumentsSource(GetConnectionMethods.class)
   void shouldEmitGetConnectionSpans(GetConnectionFunction getConnection) throws SQLException {
-    OpenTelemetryDataSource dataSource =
-        new OpenTelemetryDataSource(new TestDataSource(), testing.getOpenTelemetry());
+    JdbcTelemetry telemetry = JdbcTelemetry.create(testing.getOpenTelemetry());
+    DataSource dataSource = telemetry.wrap(new TestDataSource());
 
     Connection connection = testing.runWithSpan("parent", () -> getConnection.call(dataSource));
 
@@ -50,15 +56,18 @@ class OpenTelemetryDataSourceTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                SemanticAttributes.CODE_NAMESPACE, TestDataSource.class.getName()),
-                            equalTo(SemanticAttributes.CODE_FUNCTION, "getConnection"),
-                            equalTo(SemanticAttributes.DB_SYSTEM, "postgresql"),
-                            equalTo(SemanticAttributes.DB_NAME, "dbname"),
+                                CodeIncubatingAttributes.CODE_NAMESPACE,
+                                TestDataSource.class.getName()),
+                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "getConnection"),
+                            equalTo(maybeStable(DB_SYSTEM), "postgresql"),
+                            equalTo(maybeStable(DB_NAME), "dbname"),
                             equalTo(
-                                SemanticAttributes.DB_CONNECTION_STRING,
-                                "postgresql://127.0.0.1:5432"))));
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv()
+                                    ? null
+                                    : "postgresql://127.0.0.1:5432"))));
 
-    assertThat(connection).isExactlyInstanceOf(OpenTelemetryConnection.class);
+    assertThat(connection).isInstanceOf(OpenTelemetryConnection.class);
     DbInfo dbInfo = ((OpenTelemetryConnection) connection).getDbInfo();
     assertDbInfo(dbInfo);
   }
@@ -67,14 +76,14 @@ class OpenTelemetryDataSourceTest {
   @ArgumentsSource(GetConnectionMethods.class)
   void shouldNotEmitGetConnectionSpansWithoutParentSpan(GetConnectionFunction getConnection)
       throws SQLException {
-    OpenTelemetryDataSource dataSource =
-        new OpenTelemetryDataSource(new TestDataSource(), testing.getOpenTelemetry());
+    JdbcTelemetry telemetry = JdbcTelemetry.create(testing.getOpenTelemetry());
+    DataSource dataSource = telemetry.wrap(new TestDataSource());
 
     Connection connection = getConnection.call(dataSource);
 
     assertThat(testing.waitForTraces(0)).isEmpty();
 
-    assertThat(connection).isExactlyInstanceOf(OpenTelemetryConnection.class);
+    assertThat(connection).isInstanceOf(OpenTelemetryConnection.class);
     DbInfo dbInfo = ((OpenTelemetryConnection) connection).getDbInfo();
     assertDbInfo(dbInfo);
   }

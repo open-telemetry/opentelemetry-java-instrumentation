@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v4_0;
 
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
 import java.util.Map;
 import org.apache.http.HttpHost;
@@ -19,17 +18,10 @@ import org.apache.http.protocol.HttpContext;
 abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
     extends AbstractHttpClientTest<T> {
 
-  private static final String USER_AGENT = "apachehttpclient";
-
-  @Override
-  protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-    optionsBuilder.setUserAgent(USER_AGENT);
-  }
-
   @Override
   public T buildRequest(String method, URI uri, Map<String, String> headers) {
     T request = createRequest(method, uri);
-    request.addHeader("user-agent", USER_AGENT);
+    request.addHeader("user-agent", "apachehttpclient");
     headers.forEach(request::setHeader);
     return request;
   }

@@ -20,20 +20,10 @@ dependencies {
 }
 
 tasks {
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
   withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.grizzly.enabled=true")
-
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
   }
 }
 

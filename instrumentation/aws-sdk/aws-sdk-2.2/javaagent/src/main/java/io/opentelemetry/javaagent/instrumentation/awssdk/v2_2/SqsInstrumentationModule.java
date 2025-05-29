@@ -9,9 +9,12 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.awssdk.v2_2.SqsAdviceBridge;
+import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsAdviceBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.ArrayList;
+import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -25,6 +28,14 @@ public class SqsInstrumentationModule extends AbstractAwsSdkInstrumentationModul
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed("software.amazon.awssdk.services.sqs.SqsClient");
+  }
+
+  @Override
+  public List<TypeInstrumentation> typeInstrumentations() {
+    List<TypeInstrumentation> instrumentations = new ArrayList<>(super.typeInstrumentations());
+    instrumentations.add(new DefaultSqsClientBuilderInstrumentation());
+    instrumentations.add(new DefaultSqsAsyncClientBuilderInstrumentation());
+    return instrumentations;
   }
 
   @Override

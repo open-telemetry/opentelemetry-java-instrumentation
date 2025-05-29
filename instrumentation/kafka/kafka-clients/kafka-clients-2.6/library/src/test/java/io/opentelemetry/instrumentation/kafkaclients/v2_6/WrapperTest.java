@@ -7,121 +7,92 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static java.util.Collections.singletonList;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaClientBaseTest;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.sdk.trace.data.LinkData;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.clients.producer.ProducerRecord;
+import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.AbstractLongAssert;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.assertj.core.api.AbstractStringAssert;
 
-class WrapperTest extends KafkaClientBaseTest {
+class WrapperTest extends AbstractWrapperTest {
 
-  @RegisterExtension
-  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  @Override
+  void configure(KafkaTelemetryBuilder builder) {
+    builder.setMessagingReceiveInstrumentationEnabled(true);
+  }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {true, false})
-  void testWrappers(boolean testHeaders) throws InterruptedException {
-    KafkaTelemetry telemetry =
-        KafkaTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedHeaders(singletonList("test-message-header"))
-            // TODO run tests both with and without experimental span attributes
-            .setCaptureExperimentalSpanAttributes(true)
-            .build();
-
-    String greeting = "Hello Kafka!";
-    Producer<Integer, String> wrappedProducer = telemetry.wrap(producer);
-
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          ProducerRecord<Integer, String> producerRecord =
-              new ProducerRecord<>(SHARED_TOPIC, greeting);
-          if (testHeaders) {
-            producerRecord
-                .headers()
-                .add("test-message-header", "test".getBytes(StandardCharsets.UTF_8));
-          }
-          wrappedProducer.send(
-              producerRecord,
-              (meta, ex) -> {
-                if (ex == null) {
-                  testing.runWithSpan("producer callback", () -> {});
-                } else {
-                  testing.runWithSpan("producer exception: " + ex, () -> {});
-                }
-              });
-        });
-
-    awaitUntilConsumerIsReady();
-    Consumer<Integer, String> wrappedConsumer = telemetry.wrap(consumer);
-    ConsumerRecords<?, ?> records = wrappedConsumer.poll(Duration.ofSeconds(10));
-    assertThat(records.count()).isEqualTo(1);
-    for (ConsumerRecord<?, ?> record : records) {
-      assertThat(record.value()).isEqualTo(greeting);
-      assertThat(record.key()).isNull();
-    }
-
+  @Override
+  void assertTraces(boolean testHeaders) {
+    AtomicReference<SpanContext> producerSpanContext = new AtomicReference<>();
     testing.waitAndAssertTraces(
         trace -> {
           trace.hasSpansSatisfyingExactly(
-              span -> {
-                span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent();
-              },
-              span -> {
-                span.hasName(SHARED_TOPIC + " publish")
-                    .hasKind(SpanKind.PRODUCER)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(sendAttributes(testHeaders));
-              },
-              span -> {
-                span.hasName(SHARED_TOPIC + " receive")
-                    .hasKind(SpanKind.CONSUMER)
-                    .hasParent(trace.getSpan(1))
-                    .hasAttributesSatisfyingExactly(receiveAttributes(greeting, testHeaders));
-              },
-              span -> {
-                span.hasName("producer callback")
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasParent(trace.getSpan(0));
-              });
-        });
+              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+              span ->
+                  span.hasName(SHARED_TOPIC + " publish")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(sendAttributes(testHeaders)),
+              span ->
+                  span.hasName("producer callback")
+                      .hasKind(SpanKind.INTERNAL)
+                      .hasParent(trace.getSpan(0)));
+          SpanContext spanContext = trace.getSpan(1).getSpanContext();
+          producerSpanContext.set(
+              SpanContext.createFromRemoteParent(
+                  spanContext.getTraceId(),
+                  spanContext.getSpanId(),
+                  spanContext.getTraceFlags(),
+                  spanContext.getTraceState()));
+        },
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(SHARED_TOPIC + " receive")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasNoParent()
+                        .hasLinksSatisfying(links -> assertThat(links).isEmpty())
+                        .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders)),
+                span ->
+                    span.hasName(SHARED_TOPIC + " process")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(0))
+                        .hasLinks(LinkData.create(producerSpanContext.get()))
+                        .hasAttributesSatisfyingExactly(processAttributes(greeting, testHeaders)),
+                span ->
+                    span.hasName("process child")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(1))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> sendAttributes(boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                satisfies(
-                    SemanticAttributes.MESSAGING_CLIENT_ID,
-                    stringAssert -> stringAssert.startsWith("producer")),
-                satisfies(
-                    SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
-                    AbstractLongAssert::isNotNegative),
-                satisfies(
-                    SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
-                    AbstractLongAssert::isNotNegative)));
+                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                equalTo(MESSAGING_OPERATION, "publish"),
+                satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("producer")),
+                satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
+                satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
       assertions.add(
           equalTo(
@@ -131,29 +102,44 @@ class WrapperTest extends KafkaClientBaseTest {
     return assertions;
   }
 
-  private static List<AttributeAssertion> receiveAttributes(String greeting, boolean testHeaders) {
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  private static List<AttributeAssertion> processAttributes(String greeting, boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
+                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                equalTo(MESSAGING_OPERATION, "process"),
                 equalTo(
-                    SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
-                    greeting.getBytes(StandardCharsets.UTF_8).length),
-                satisfies(
-                    SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
-                    AbstractLongAssert::isNotNegative),
-                satisfies(
-                    SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
-                    AbstractLongAssert::isNotNegative),
+                    MESSAGING_MESSAGE_BODY_SIZE, greeting.getBytes(StandardCharsets.UTF_8).length),
+                satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
+                satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
                 satisfies(
                     AttributeKey.longKey("kafka.record.queue_time_ms"),
                     AbstractLongAssert::isNotNegative),
-                equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
+                equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
                 satisfies(
-                    SemanticAttributes.MESSAGING_CLIENT_ID,
-                    stringAssert -> stringAssert.startsWith("consumer"))));
+                    MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer"))));
+    if (testHeaders) {
+      assertions.add(
+          equalTo(
+              AttributeKey.stringArrayKey("messaging.header.test_message_header"),
+              Collections.singletonList("test")));
+    }
+    return assertions;
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  protected static List<AttributeAssertion> receiveAttributes(boolean testHeaders) {
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            Arrays.asList(
+                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                equalTo(MESSAGING_OPERATION, "receive"),
+                equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
+                satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")),
+                equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
     if (testHeaders) {
       assertions.add(
           equalTo(

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -24,8 +24,19 @@ enum RabbitChannelAttributesGetter implements MessagingAttributesGetter<ChannelA
     return null;
   }
 
+  @Nullable
+  @Override
+  public String getDestinationTemplate(ChannelAndMethod channelAndMethod) {
+    return null;
+  }
+
   @Override
   public boolean isTemporaryDestination(ChannelAndMethod channelAndMethod) {
+    return false;
+  }
+
+  @Override
+  public boolean isAnonymousDestination(ChannelAndMethod channelAndMethod) {
     return false;
   }
 
@@ -37,19 +48,31 @@ enum RabbitChannelAttributesGetter implements MessagingAttributesGetter<ChannelA
 
   @Nullable
   @Override
-  public Long getMessagePayloadSize(ChannelAndMethod channelAndMethod) {
+  public Long getMessageBodySize(ChannelAndMethod channelAndMethod) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long getMessagePayloadCompressedSize(ChannelAndMethod channelAndMethod) {
+  public Long getMessageEnvelopeSize(ChannelAndMethod channelAndMethod) {
     return null;
   }
 
   @Nullable
   @Override
   public String getMessageId(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getClientId(ChannelAndMethod channelAndMethod) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Long getBatchMessageCount(ChannelAndMethod channelAndMethod, @Nullable Void unused) {
     return null;
   }
 

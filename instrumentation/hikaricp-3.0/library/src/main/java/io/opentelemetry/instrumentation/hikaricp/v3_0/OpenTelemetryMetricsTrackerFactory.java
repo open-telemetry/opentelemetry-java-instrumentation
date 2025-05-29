@@ -12,7 +12,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
-import io.opentelemetry.instrumentation.api.metrics.db.DbConnectionPoolMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbConnectionPoolMetrics;
 import javax.annotation.Nullable;
 
 final class OpenTelemetryMetricsTrackerFactory implements MetricsTrackerFactory {

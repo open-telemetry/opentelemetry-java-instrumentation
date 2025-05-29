@@ -12,7 +12,7 @@ import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -78,26 +78,35 @@ final class ExecutorMatchers {
                 "java.util.concurrent.ForkJoinPool",
                 "java.util.concurrent.ScheduledThreadPoolExecutor",
                 "java.util.concurrent.ThreadPoolExecutor",
+                "java.util.concurrent.ThreadPerTaskExecutor",
                 "org.apache.tomcat.util.threads.ThreadPoolExecutor",
                 "org.eclipse.jetty.util.thread.QueuedThreadPool", // dispatch() covered in the jetty
                 // module
                 "org.eclipse.jetty.util.thread.ReservedThreadExecutor",
                 "org.glassfish.grizzly.threadpool.GrizzlyExecutorService",
                 "org.jboss.threads.EnhancedQueueExecutor",
+                "org.apache.pekko.dispatch.BalancingDispatcher",
+                "org.apache.pekko.dispatch.Dispatcher",
+                "org.apache.pekko.dispatch.Dispatcher$LazyExecutorServiceDelegate",
+                "org.apache.pekko.dispatch.ExecutionContexts$sameThreadExecutionContext$",
+                "org.apache.pekko.dispatch.ForkJoinExecutorConfigurator$PekkoForkJoinPool",
+                "org.apache.pekko.dispatch.MessageDispatcher",
+                "org.apache.pekko.dispatch.PinnedDispatcher",
                 "play.api.libs.streams.Execution$trampoline$",
                 "play.shaded.ahc.io.netty.util.concurrent.ThreadPerTaskExecutor",
                 "scala.concurrent.forkjoin.ForkJoinPool",
                 "scala.concurrent.Future$InternalCallbackExecutor$",
                 "scala.concurrent.impl.ExecutionContextImpl"));
     combined.addAll(
-        InstrumentationConfig.get().getList("otel.instrumentation.executors.include", emptyList()));
+        AgentInstrumentationConfig.get()
+            .getList("otel.instrumentation.executors.include", emptyList()));
     INSTRUMENTED_EXECUTOR_NAMES = Collections.unmodifiableSet(combined);
 
     INSTRUMENTED_EXECUTOR_PREFIXES = Collections.singletonList("slick.util.AsyncExecutor$");
   }
 
   static ElementMatcher.Junction<TypeDescription> executorNameMatcher() {
-    if (InstrumentationConfig.get()
+    if (AgentInstrumentationConfig.get()
         .getBoolean("otel.instrumentation.executors.include-all", false)) {
       return any();
     }

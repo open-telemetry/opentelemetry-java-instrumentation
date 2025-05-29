@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.internal.HttpProtocolUtil;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HeaderValues;
 import java.net.InetSocketAddress;
@@ -65,46 +66,26 @@ public class UndertowHttpAttributesGetter
   @Override
   public String getNetworkProtocolName(
       HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
-    String protocol = exchange.getProtocol().toString();
-    if (protocol.startsWith("HTTP/")) {
-      return "http";
-    }
-    return null;
+    return HttpProtocolUtil.getProtocol(exchange.getProtocol().toString());
   }
 
   @Nullable
   @Override
   public String getNetworkProtocolVersion(
       HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
-    String protocol = exchange.getProtocol().toString();
-    if (protocol.startsWith("HTTP/")) {
-      return protocol.substring("HTTP/".length());
-    }
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getServerAddress(HttpServerExchange exchange) {
-    return exchange.getHostName();
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerPort(HttpServerExchange exchange) {
-    return exchange.getHostPort();
+    return HttpProtocolUtil.getVersion(exchange.getProtocol().toString());
   }
 
   @Override
   @Nullable
-  public InetSocketAddress getClientInetSocketAddress(
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
       HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
     return exchange.getConnection().getPeerAddress(InetSocketAddress.class);
   }
 
   @Nullable
   @Override
-  public InetSocketAddress getServerInetSocketAddress(
+  public InetSocketAddress getNetworkLocalInetSocketAddress(
       HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
     return exchange.getConnection().getLocalAddress(InetSocketAddress.class);
   }

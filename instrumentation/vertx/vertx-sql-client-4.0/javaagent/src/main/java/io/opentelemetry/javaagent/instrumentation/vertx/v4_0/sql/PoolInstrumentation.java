@@ -97,6 +97,7 @@ public class PoolInstrumentation implements TypeInstrumentation {
       SqlConnectOptions sqlConnectOptions = virtualField.get(pool);
 
       future = VertxSqlClientSingletons.attachConnectOptions(future, sqlConnectOptions);
+      future = VertxSqlClientSingletons.wrapContext(future);
     }
   }
 }

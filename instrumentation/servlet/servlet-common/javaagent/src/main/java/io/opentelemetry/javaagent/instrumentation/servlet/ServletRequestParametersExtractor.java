@@ -11,7 +11,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,7 +23,7 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<
         ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> {
   private static final List<String> CAPTURE_REQUEST_PARAMETERS =
-      InstrumentationConfig.get()
+      AgentInstrumentationConfig.get()
           .getList(
               "otel.instrumentation.servlet.experimental.capture-request-parameters", emptyList());
 
@@ -70,14 +70,15 @@ public class ServletRequestParametersExtractor<REQUEST, RESPONSE>
   }
 
   private static AttributeKey<List<String>> parameterAttributeKey(String headerName) {
-    return parameterKeysCache.computeIfAbsent(headerName, n -> createKey(n));
+    return parameterKeysCache.computeIfAbsent(
+        headerName, ServletRequestParametersExtractor::createKey);
   }
 
   private static AttributeKey<List<String>> createKey(String parameterName) {
     // normalize parameter name similarly as is done with header names when header values are
     // captured as span attributes
     parameterName = parameterName.toLowerCase(Locale.ROOT);
-    String key = "servlet.request.parameter." + parameterName.replace('-', '_');
+    String key = "servlet.request.parameter." + parameterName;
     return AttributeKey.stringArrayKey(key);
   }
 }

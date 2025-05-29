@@ -45,7 +45,7 @@ dependencies {
 
   latestDepTestLibrary("com.typesafe.play:play-java_2.11:2.5.+") // see play-2.6 module
   latestDepTestLibrary("com.typesafe.play:play-java-ws_2.11:2.5.+") // see play-2.6 module
-  latestDepTestLibrary("com.typesafe.play:play-test_2.11:2.5.+")
+  latestDepTestLibrary("com.typesafe.play:play-test_2.11:2.5.+") // see play-2.6 module
 }
 
 testing {
@@ -63,14 +63,6 @@ testing {
 tasks {
   check {
     dependsOn(testing.suites)
-  }
-
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
   }
 }
 
@@ -92,4 +84,7 @@ if (!(findProperty("testLatestDeps") as Boolean)) {
       }
     }
   }
+}
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -15,10 +15,10 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -30,6 +30,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.assertj.core.api.ListAssert;
+import org.awaitility.core.ConditionFactory;
 import org.awaitility.core.ConditionTimeoutException;
 
 /**
@@ -40,6 +41,16 @@ import org.awaitility.core.ConditionTimeoutException;
  * @see AgentTestRunner
  */
 public abstract class InstrumentationTestRunner {
+
+  static {
+    // In netty-4.1.121.Final unsafe usage is disabled by default on jdk24. This triggers using
+    // a different pooled buffer implementation which apparently breaks when initializing ssl. Here
+    // we switch to unpooled buffers to avoid that bug. We do this here because this code is
+    // executed early for both agent and library tests.
+    if (Double.parseDouble(System.getProperty("java.specification.version")) >= 24) {
+      System.setProperty("io.opentelemetry.testing.internal.io.netty.allocator.type", "unpooled");
+    }
+  }
 
   private final TestInstrumenters testInstrumenters;
 
@@ -119,16 +130,7 @@ public abstract class InstrumentationTestRunner {
     List<T> assertionsList = new ArrayList<>();
     assertions.forEach(assertionsList::add);
 
-    try {
-      await()
-          .untilAsserted(() -> doAssertTraces(traceComparator, assertionsList, verifyScopeVersion));
-    } catch (ConditionTimeoutException e) {
-      // Don't throw this failure since the stack is the awaitility thread, causing confusion.
-      // Instead, just assert one more time on the test thread, which will fail with a better stack
-      // trace.
-      // TODO(anuraaga): There is probably a better way to do this.
-      doAssertTraces(traceComparator, assertionsList, verifyScopeVersion);
-    }
+    awaitUntilAsserted(() -> doAssertTraces(traceComparator, assertionsList, verifyScopeVersion));
   }
 
   private <T extends Consumer<TraceAssert>> void doAssertTraces(
@@ -151,33 +153,42 @@ public abstract class InstrumentationTestRunner {
    */
   public final void waitAndAssertMetrics(
       String instrumentationName, String metricName, Consumer<ListAssert<MetricData>> assertion) {
-    await()
-        .untilAsserted(
-            () ->
-                assertion.accept(
-                    assertThat(getExportedMetrics())
-                        .filteredOn(
-                            data ->
-                                data.getInstrumentationScopeInfo()
-                                        .getName()
-                                        .equals(instrumentationName)
-                                    && data.getName().equals(metricName))));
+
+    awaitUntilAsserted(
+        () ->
+            assertion.accept(
+                assertThat(getExportedMetrics())
+                    .describedAs(
+                        "Metrics for instrumentation %s and metric name %s",
+                        instrumentationName, metricName)
+                    .filteredOn(
+                        data ->
+                            data.getInstrumentationScopeInfo().getName().equals(instrumentationName)
+                                && data.getName().equals(metricName))));
   }
 
   @SafeVarargs
   public final void waitAndAssertMetrics(
       String instrumentationName, Consumer<MetricAssert>... assertions) {
-    await()
-        .untilAsserted(
-            () -> {
-              Collection<MetricData> metrics = instrumentationMetrics(instrumentationName);
-              assertThat(metrics).isNotEmpty();
-              for (Consumer<MetricAssert> assertion : assertions) {
-                assertThat(metrics)
-                    .anySatisfy(
-                        metric -> assertion.accept(OpenTelemetryAssertions.assertThat(metric)));
-              }
-            });
+    awaitUntilAsserted(
+        () -> {
+          Collection<MetricData> metrics = instrumentationMetrics(instrumentationName);
+          assertThat(metrics).isNotEmpty();
+          for (int i = 0; i < assertions.length; i++) {
+            int index = i;
+            assertThat(metrics)
+                .describedAs(
+                    "Metrics for instrumentation %s and assertion %d", instrumentationName, index)
+                .anySatisfy(metric -> assertions[index].accept(assertThat(metric)));
+          }
+        });
+  }
+
+  public final List<LogRecordData> waitForLogRecords(int numberOfLogRecords) {
+    awaitUntilAsserted(
+        () -> assertThat(getExportedLogRecords().size()).isEqualTo(numberOfLogRecords),
+        await().timeout(Duration.ofSeconds(20)));
+    return getExportedLogRecords();
   }
 
   private List<MetricData> instrumentationMetrics(String instrumentationName) {
@@ -258,5 +269,30 @@ public abstract class InstrumentationTestRunner {
   public final <T, E extends Throwable> T runWithNonRecordingSpan(ThrowingSupplier<T, E> callback)
       throws E {
     return testInstrumenters.runWithNonRecordingSpan(callback);
+  }
+
+  private static void awaitUntilAsserted(Runnable runnable) {
+    awaitUntilAsserted(runnable, await());
+  }
+
+  private static void awaitUntilAsserted(Runnable runnable, ConditionFactory conditionFactory) {
+    try {
+      conditionFactory.untilAsserted(runnable::run);
+    } catch (Throwable t) {
+      // awaitility is doing a jmx call that is not implemented in GraalVM:
+      // call:
+      // https://github.com/awaitility/awaitility/blob/fbe16add874b4260dd240108304d5c0be84eabc8/awaitility/src/main/java/org/awaitility/core/ConditionAwaiter.java#L157
+      // see https://github.com/oracle/graal/issues/6101 (spring boot graal native image)
+      if (t.getClass().getName().equals("com.oracle.svm.core.jdk.UnsupportedFeatureError")
+          || t instanceof ConditionTimeoutException) {
+        // Don't throw this failure since the stack is the awaitility thread, causing confusion.
+        // Instead, just assert one more time on the test thread, which will fail with a better
+        // stack trace - that is on the same thread as the test.
+        // TODO: There is probably a better way to do this.
+        runnable.run();
+      } else {
+        throw t;
+      }
+    }
   }
 }

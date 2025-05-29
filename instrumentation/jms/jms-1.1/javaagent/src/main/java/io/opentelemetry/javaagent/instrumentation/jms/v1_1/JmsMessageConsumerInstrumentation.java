@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jms.v1_1;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.jms.JmsReceiveSpanUtil.createReceiveSpan;
 import static io.opentelemetry.javaagent.instrumentation.jms.v1_1.JmsSingletons.consumerReceiveInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -14,7 +15,6 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -75,16 +75,7 @@ public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
       MessageWithDestination request =
           MessageWithDestination.create(JavaxMessageAdapter.create(message), null);
 
-      if (consumerReceiveInstrumenter().shouldStart(parentContext, request)) {
-        InstrumenterUtil.startAndEnd(
-            consumerReceiveInstrumenter(),
-            parentContext,
-            request,
-            null,
-            throwable,
-            timer.startTime(),
-            timer.now());
-      }
+      createReceiveSpan(consumerReceiveInstrumenter(), request, timer, throwable);
     }
   }
 }

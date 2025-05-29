@@ -12,6 +12,7 @@ import static io.opentelemetry.javaagent.tooling.field.GeneratedVirtualFieldName
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings;
 import java.util.HashMap;
@@ -109,7 +110,7 @@ final class VirtualFieldImplementationsGenerator {
           MethodList<?> methods,
           int writerFlags,
           int readerFlags) {
-        return new ClassVisitor(Opcodes.ASM7, classVisitor) {
+        return new ClassVisitor(AsmApi.VERSION, classVisitor) {
 
           private final TypeDescription accessorInterface =
               fieldAccessorInterfaces.find(typeName, fieldTypeName);

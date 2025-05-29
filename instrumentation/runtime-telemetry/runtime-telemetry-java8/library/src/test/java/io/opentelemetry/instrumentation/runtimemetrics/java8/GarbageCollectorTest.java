@@ -5,8 +5,13 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java8;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.runtimemetrics.java8.ScopeUtil.EXPECTED_SCOPE;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_ACTION;
+import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_NAME;
+import static java.util.Collections.singletonList;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -14,18 +19,17 @@ import static org.mockito.Mockito.when;
 
 import com.sun.management.GarbageCollectionNotificationInfo;
 import com.sun.management.GcInfo;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.lang.management.GarbageCollectorMXBean;
-import java.util.Collections;
 import java.util.concurrent.atomic.AtomicLong;
 import javax.management.Notification;
 import javax.management.NotificationEmitter;
 import javax.management.NotificationListener;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -37,6 +41,9 @@ import org.mockito.quality.Strictness;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class GarbageCollectorTest {
 
+  static final double[] GC_DURATION_BUCKETS =
+      GarbageCollector.GC_DURATION_BUCKETS.stream().mapToDouble(d -> d).toArray();
+
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
@@ -45,33 +52,37 @@ class GarbageCollectorTest {
 
   @Captor private ArgumentCaptor<NotificationListener> listenerCaptor;
 
-  @Test
-  void registerObservers() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void registerObservers(boolean captureGcCause) {
     GarbageCollector.registerObservers(
         testing.getOpenTelemetry(),
-        Collections.singletonList(gcBean),
-        GarbageCollectorTest::getGcNotificationInfo);
+        singletonList(gcBean),
+        GarbageCollectorTest::getGcNotificationInfo,
+        captureGcCause);
 
     NotificationEmitter notificationEmitter = (NotificationEmitter) gcBean;
     verify(notificationEmitter).addNotificationListener(listenerCaptor.capture(), any(), any());
     NotificationListener listener = listenerCaptor.getValue();
 
     listener.handleNotification(
-        createTestNotification("G1 Young Generation", "end of minor GC", 10), null);
+        createTestNotification("G1 Young Generation", "end of minor GC", "Allocation Failure", 10),
+        null);
     listener.handleNotification(
-        createTestNotification("G1 Young Generation", "end of minor GC", 12), null);
+        createTestNotification("G1 Young Generation", "end of minor GC", "Allocation Failure", 12),
+        null);
     listener.handleNotification(
-        createTestNotification("G1 Old Generation", "end of major GC", 11), null);
+        createTestNotification("G1 Old Generation", "end of major GC", "System.gc()", 11), null);
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
-        "process.runtime.jvm.gc.duration",
+        "jvm.gc.duration",
         metrics ->
             metrics.anySatisfy(
                 metricData ->
                     assertThat(metricData)
                         .hasInstrumentationScope(EXPECTED_SCOPE)
-                        .hasDescription("Duration of JVM garbage collection actions")
+                        .hasDescription("Duration of JVM garbage collection actions.")
                         .hasUnit("s")
                         .hasHistogramSatisfying(
                             histogram ->
@@ -80,30 +91,33 @@ class GarbageCollectorTest {
                                         point
                                             .hasCount(2)
                                             .hasSum(0.022)
-                                            .hasAttributes(
-                                                Attributes.builder()
-                                                    .put("gc", "G1 Young Generation")
-                                                    .put("action", "end of minor GC")
-                                                    .build())
-                                            .hasBucketBoundaries(),
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(JVM_GC_NAME, "G1 Young Generation"),
+                                                equalTo(JVM_GC_ACTION, "end of minor GC"),
+                                                equalTo(
+                                                    stringKey("jvm.gc.cause"),
+                                                    captureGcCause ? "Allocation Failure" : null))
+                                            .hasBucketBoundaries(GC_DURATION_BUCKETS),
                                     point ->
                                         point
                                             .hasCount(1)
                                             .hasSum(0.011)
-                                            .hasAttributes(
-                                                Attributes.builder()
-                                                    .put("gc", "G1 Old Generation")
-                                                    .put("action", "end of major GC")
-                                                    .build())
-                                            .hasBucketBoundaries()))));
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(JVM_GC_NAME, "G1 Old Generation"),
+                                                equalTo(JVM_GC_ACTION, "end of major GC"),
+                                                equalTo(
+                                                    stringKey("jvm.gc.cause"),
+                                                    captureGcCause ? "System.gc()" : null))
+                                            .hasBucketBoundaries(GC_DURATION_BUCKETS)))));
   }
 
   private static Notification createTestNotification(
-      String gcName, String gcAction, long duration) {
+      String gcName, String gcAction, String gcCause, long duration) {
     GarbageCollectionNotificationInfo gcNotificationInfo =
         mock(GarbageCollectionNotificationInfo.class);
     when(gcNotificationInfo.getGcName()).thenReturn(gcName);
     when(gcNotificationInfo.getGcAction()).thenReturn(gcAction);
+    when(gcNotificationInfo.getGcCause()).thenReturn(gcCause);
     GcInfo gcInfo = mock(GcInfo.class);
     when(gcInfo.getDuration()).thenReturn(duration);
     when(gcNotificationInfo.getGcInfo()).thenReturn(gcInfo);

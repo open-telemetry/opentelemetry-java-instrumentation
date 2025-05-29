@@ -5,22 +5,25 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource.SERVER;
-import static io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource.SERVER_FILTER;
+import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER;
+import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER_FILTER;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
+import io.opentelemetry.javaagent.bootstrap.servlet.ServletAsyncContext;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import java.security.Principal;
 import java.util.function.Function;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   protected final Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
       instrumenter;
@@ -59,6 +62,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     accessor.setRequestAttribute(request, "span_id", spanContext.getSpanId());
 
     context = addServletContextPath(context, request);
+    context = addAsyncContext(context);
 
     attachServerContext(context, request);
 
@@ -67,6 +71,10 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
 
   protected Context addServletContextPath(Context context, REQUEST request) {
     return ServletContextPath.init(context, contextPathExtractor, request);
+  }
+
+  protected Context addAsyncContext(Context context) {
+    return ServletAsyncContext.init(context);
   }
 
   public Context getServerContext(REQUEST request) {
@@ -85,6 +93,8 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   public Context updateContext(
       Context context, REQUEST request, MappingResolver mappingResolver, boolean servlet) {
     Context result = addServletContextPath(context, request);
+    result = addAsyncContext(result);
+
     if (mappingResolver != null) {
       HttpServerRoute.update(
           result, servlet ? SERVER : SERVER_FILTER, spanNameProvider, mappingResolver, request);
@@ -123,23 +133,27 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
       return;
     }
 
-    parameterExtractor.setAttributes(request, (key, value) -> serverSpan.setAttribute(key, value));
+    parameterExtractor.setAttributes(request, serverSpan::setAttribute);
   }
 
   /**
-   * Capture {@link SemanticAttributes#ENDUSER_ID} as span attributes when SERVER span is not create
-   * by servlet instrumentation.
+   * Capture {@link EnduserIncubatingAttributes#ENDUSER_ID} as span attributes when SERVER span is
+   * not create by servlet instrumentation.
    *
    * <p>When SERVER span is created by servlet instrumentation we register {@link
    * ServletAdditionalAttributesExtractor} as an attribute extractor. When SERVER span is not
    * created by servlet instrumentation we call this method on exit from the last servlet or filter.
    */
   private void captureEnduserId(Span serverSpan, REQUEST request) {
+    if (!AgentCommonConfig.get().getEnduserConfig().isIdEnabled()) {
+      return;
+    }
+
     Principal principal = accessor.getRequestUserPrincipal(request);
     if (principal != null) {
       String name = principal.getName();
       if (name != null) {
-        serverSpan.setAttribute(SemanticAttributes.ENDUSER_ID, name);
+        serverSpan.setAttribute(EnduserIncubatingAttributes.ENDUSER_ID, name);
       }
     }
   }

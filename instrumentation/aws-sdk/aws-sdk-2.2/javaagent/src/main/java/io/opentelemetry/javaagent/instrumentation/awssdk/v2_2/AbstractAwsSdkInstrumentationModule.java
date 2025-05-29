@@ -12,24 +12,26 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-abstract class AbstractAwsSdkInstrumentationModule extends InstrumentationModule {
+abstract class AbstractAwsSdkInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   protected AbstractAwsSdkInstrumentationModule(String additionalInstrumentationName) {
     super("aws-sdk", "aws-sdk-2.2", additionalInstrumentationName);
   }
 
   @Override
-  public boolean isHelperClass(String className) {
-    return className.startsWith("io.opentelemetry.contrib.awsxray.");
+  public String getModuleGroup() {
+    return "aws-sdk-v2";
   }
 
   @Override
-  public boolean isIndyModule() {
-    return false;
+  public boolean isHelperClass(String className) {
+    return className.startsWith("io.opentelemetry.contrib.awsxray.");
   }
 
   @Override

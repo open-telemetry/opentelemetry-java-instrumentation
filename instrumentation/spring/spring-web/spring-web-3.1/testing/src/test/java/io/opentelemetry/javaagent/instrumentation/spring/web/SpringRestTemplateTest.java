@@ -96,5 +96,8 @@ public class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<St
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.setMaxRedirects(20);
+
+    // no enum value for TEST
+    optionsBuilder.disableTestNonStandardHttpMethod();
   }
 }

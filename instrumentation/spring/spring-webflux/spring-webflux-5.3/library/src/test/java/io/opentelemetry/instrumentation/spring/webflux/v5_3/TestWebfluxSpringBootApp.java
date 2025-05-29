@@ -52,12 +52,11 @@ class TestWebfluxSpringBootApp {
 
   @Bean
   WebFilter telemetryFilter() {
-    return SpringWebfluxTelemetry.builder(GlobalOpenTelemetry.get())
-        .setCapturedServerRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-        .setCapturedServerResponseHeaders(
-            singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
+    return SpringWebfluxServerTelemetry.builder(GlobalOpenTelemetry.get())
+        .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
+        .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
         .build()
-        .createWebFilter();
+        .createWebFilterAndRegisterReactorHook();
   }
 
   @Controller
@@ -69,10 +68,16 @@ class TestWebfluxSpringBootApp {
       return Flux.defer(() -> Flux.just(controller(SUCCESS, SUCCESS::getBody)));
     }
 
+    @RequestMapping("/no-mono")
+    @ResponseBody
+    String noMono() {
+      return controller(SUCCESS, SUCCESS::getBody);
+    }
+
     @RequestMapping("/query")
     @ResponseBody
-    String query_param(@RequestParam("some") String param) {
-      return controller(QUERY_PARAM, () -> "some=" + param);
+    Mono<String> query_param(@RequestParam("some") String param) {
+      return Mono.just(controller(QUERY_PARAM, () -> "some=" + param));
     }
 
     @RequestMapping("/redirect")
@@ -92,30 +97,31 @@ class TestWebfluxSpringBootApp {
     }
 
     @RequestMapping("/exception")
-    Flux<ResponseEntity<String>> exception() throws Exception {
+    Flux<ResponseEntity<String>> exception() {
       return Flux.just(
           controller(
               EXCEPTION,
               () -> {
-                throw new RuntimeException(EXCEPTION.getBody());
+                throw new IllegalStateException(EXCEPTION.getBody());
               }));
     }
 
     @RequestMapping("/captureHeaders")
-    ResponseEntity<String> capture_headers(
+    Mono<ResponseEntity<String>> capture_headers(
         @RequestHeader("X-Test-Request") String testRequestHeader) {
-      return controller(
-          CAPTURE_HEADERS,
-          () ->
-              ResponseEntity.ok()
-                  .header("X-Test-Response", testRequestHeader)
-                  .body(CAPTURE_HEADERS.getBody()));
+      return Mono.just(
+          controller(
+              CAPTURE_HEADERS,
+              () ->
+                  ResponseEntity.ok()
+                      .header("X-Test-Response", testRequestHeader)
+                      .body(CAPTURE_HEADERS.getBody())));
     }
 
     @RequestMapping("/path/{id}/param")
     @ResponseBody
-    String path_param(@PathVariable("id") int id) {
-      return controller(PATH_PARAM, () -> String.valueOf(id));
+    Mono<String> path_param(@PathVariable("id") int id) {
+      return Mono.just(controller(PATH_PARAM, () -> String.valueOf(id)));
     }
 
     @RequestMapping("/child")

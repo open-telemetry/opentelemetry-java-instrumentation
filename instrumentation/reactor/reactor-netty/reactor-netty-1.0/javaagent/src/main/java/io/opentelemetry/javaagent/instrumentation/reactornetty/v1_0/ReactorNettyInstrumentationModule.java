@@ -7,10 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -24,16 +26,11 @@ import reactor.netty.http.client.HttpClient;
  * HttpClient#doOnRequest(BiConsumer)} to pass context from the caller to Reactor to Netty.
  */
 @AutoService(InstrumentationModule.class)
-public class ReactorNettyInstrumentationModule extends InstrumentationModule {
+public class ReactorNettyInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public ReactorNettyInstrumentationModule() {
     super("reactor-netty", "reactor-netty-1.0");
-  }
-
-  @Override
-  public boolean isIndyModule() {
-    // ResponseMonoAdvice uses both @Advice.Local and return value from an @OnMethodEnter advice
-    return false;
   }
 
   @Override
@@ -45,6 +42,11 @@ public class ReactorNettyInstrumentationModule extends InstrumentationModule {
   @Override
   public boolean isHelperClass(String className) {
     return className.startsWith("reactor.netty.http.client.HttpClientConfigBuddy");
+  }
+
+  @Override
+  public List<String> injectedClassNames() {
+    return singletonList("reactor.netty.http.client.HttpClientConfigBuddy");
   }
 
   @Override

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.okhttp.v2_2;
 
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
@@ -13,13 +15,11 @@ import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 import com.squareup.okhttp.internal.http.HttpMethod;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashSet;
@@ -38,7 +38,7 @@ public class OkHttp2Test extends AbstractHttpClientTest<Request> {
   private static final OkHttpClient clientWithReadTimeout = new OkHttpClient();
 
   @BeforeAll
-  void setupSpec() {
+  void setup() {
     client.setConnectTimeout(CONNECTION_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
     clientWithReadTimeout.setConnectTimeout(CONNECTION_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
     clientWithReadTimeout.setReadTimeout(READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
@@ -93,7 +93,6 @@ public class OkHttp2Test extends AbstractHttpClientTest<Request> {
   }
 
   @Override
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestCircularRedirects();
 
@@ -101,18 +100,13 @@ public class OkHttp2Test extends AbstractHttpClientTest<Request> {
         uri -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-
-          if (SemconvStability.emitOldHttpSemconv()) {
-            // protocol is extracted from the response, and those URLs cause exceptions (= null
-            // response)
-            if ("http://localhost:61/".equals(uri.toString())
-                || "https://192.0.2.1/".equals(uri.toString())
-                || resolveAddress("/read-timeout").toString().equals(uri.toString())) {
-              attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-              attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
-            }
+          // protocol is extracted from the response, and those URLs cause exceptions (= null
+          // response)
+          if ("http://localhost:61/".equals(uri.toString())
+              || "https://192.0.2.1/".equals(uri.toString())
+              || resolveAddress("/read-timeout").toString().equals(uri.toString())) {
+            attributes.remove(NETWORK_PROTOCOL_VERSION);
           }
-
           return attributes;
         });
   }

@@ -5,10 +5,16 @@ on:
     paths:
       - "smoke-tests/images/spring-boot/**"
       - ".github/workflows/pr-smoke-test-spring-boot-images.yml"
+      - ".github/workflows/reusable-pr-smoke-test-images.yml"
+    branches:
+      - main
+
+permissions:
+  contents: read
 
 jobs:
   build:
-    uses: ./.github/workflows/reusable-smoke-test-images.yml
+    uses: ./.github/workflows/reusable-pr-smoke-test-images.yml
     with:
       project: ":smoke-tests:images:spring-boot"
       cache-read-only: true

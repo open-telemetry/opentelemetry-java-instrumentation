@@ -75,11 +75,11 @@ public class RuleParser {
 
     String bean = (String) ruleYaml.remove("bean");
     if (bean != null) {
-      jmxRule.setBean(bean);
+      jmxRule.addBean(bean);
     }
     List<String> beans = (List<String>) ruleYaml.remove("beans");
     if (beans != null) {
-      jmxRule.setBeans(beans);
+      beans.forEach(jmxRule::addBean);
     }
     String prefix = (String) ruleYaml.remove("prefix");
     if (prefix != null) {
@@ -97,9 +97,13 @@ public class RuleParser {
     Map<String, Metric> mappings = new LinkedHashMap<>();
     if (mappingYaml != null) {
       mappingYaml.forEach(
-          (name, metricYaml) ->
-              mappings.put(
-                  name, metricYaml == null ? null : parseMetric((Map<String, Object>) metricYaml)));
+          (name, metricYaml) -> {
+            Metric m = null;
+            if (metricYaml != null) {
+              m = parseMetric((Map<String, Object>) metricYaml);
+            }
+            mappings.put(name, m);
+          });
     }
     return mappings;
   }
@@ -124,12 +128,13 @@ public class RuleParser {
   @SuppressWarnings("unchecked")
   private static void parseMetricStructure(
       Map<String, Object> metricStructureYaml, MetricStructure out) {
+
     String type = (String) metricStructureYaml.remove("type");
     if (type != null) {
       out.setType(type);
     }
-    Map<String, String> metricAttribute =
-        (Map<String, String>) metricStructureYaml.remove("metricAttribute");
+    Map<String, Object> metricAttribute =
+        (Map<String, Object>) metricStructureYaml.remove("metricAttribute");
     if (metricAttribute != null) {
       out.setMetricAttribute(metricAttribute);
     }
@@ -137,11 +142,18 @@ public class RuleParser {
     if (unit != null) {
       out.setUnit(unit);
     }
+    String sourceUnit = (String) metricStructureYaml.remove("sourceUnit");
+    if (sourceUnit != null) {
+      out.setSourceUnit(sourceUnit);
+    }
+
+    Boolean dropNegativeValues = (Boolean) metricStructureYaml.remove("dropNegativeValues");
+    out.setDropNegativeValues(dropNegativeValues);
   }
 
   private static void failOnExtraKeys(Map<String, Object> yaml) {
     if (!yaml.isEmpty()) {
-      throw new IllegalArgumentException("Unrecognized keys found: " + yaml.keySet());
+      throw new IllegalArgumentException("Unrecognized key(s) found: " + yaml.keySet());
     }
   }
 

@@ -9,18 +9,33 @@ import com.lambdaworks.redis.RedisURI;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class LettuceConnectAttributesExtractor implements AttributesExtractor<RedisURI, Void> {
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, RedisURI redisUri) {
-    attributes.put(SemanticAttributes.DB_SYSTEM, SemanticAttributes.DbSystemValues.REDIS);
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      attributes.put(
+          DbIncubatingAttributes.DB_SYSTEM_NAME,
+          DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS);
+    }
+    if (SemconvStability.emitOldDatabaseSemconv()) {
+      attributes.put(
+          DbIncubatingAttributes.DB_SYSTEM, DbIncubatingAttributes.DbSystemIncubatingValues.REDIS);
+    }
 
     int database = redisUri.getDatabase();
     if (database != 0) {
-      attributes.put(SemanticAttributes.DB_REDIS_DATABASE_INDEX, (long) database);
+      if (SemconvStability.emitStableDatabaseSemconv()) {
+        attributes.put(DbIncubatingAttributes.DB_NAMESPACE, String.valueOf(database));
+      }
+      if (SemconvStability.emitOldDatabaseSemconv()) {
+        attributes.put(DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX, (long) database);
+      }
     }
   }
 

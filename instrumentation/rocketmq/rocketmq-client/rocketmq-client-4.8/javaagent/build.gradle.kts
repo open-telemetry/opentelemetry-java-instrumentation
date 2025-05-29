@@ -29,4 +29,9 @@ tasks.withType<Test>().configureEach {
   // required on jdk17
   jvmArgs("--add-opens=java.base/sun.nio.ch=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+
+  // with default settings tests will fail when disk is 90% full
+  jvmArgs("-Drocketmq.broker.diskSpaceWarningLevelRatio=1.0")
 }

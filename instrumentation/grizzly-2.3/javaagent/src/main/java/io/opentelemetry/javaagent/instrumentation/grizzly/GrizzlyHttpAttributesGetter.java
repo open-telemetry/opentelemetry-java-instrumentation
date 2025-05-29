@@ -5,11 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.grizzly;
 
-import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_TCP;
-import static io.opentelemetry.semconv.SemanticAttributes.NetTransportValues.IP_UDP;
 import static java.util.Collections.emptyList;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -70,18 +68,6 @@ final class GrizzlyHttpAttributesGetter
     return request.getQueryString();
   }
 
-  @Override
-  public String getTransport(HttpRequestPacket request) {
-    Transport transport = request.getConnection().getTransport();
-    if (transport instanceof TCPNIOTransport) {
-      return IP_TCP;
-    }
-    if (transport instanceof UDPNIOTransport) {
-      return IP_UDP;
-    }
-    return null;
-  }
-
   @Nullable
   @Override
   public String getNetworkTransport(
@@ -119,39 +105,26 @@ final class GrizzlyHttpAttributesGetter
 
   @Nullable
   @Override
-  public String getServerAddress(HttpRequestPacket request) {
-    // rely on the 'host' header parsing
-    return null;
-  }
-
-  @Override
-  public Integer getServerPort(HttpRequestPacket request) {
-    // rely on the 'host' header parsing
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public String getClientSocketAddress(
+  public String getNetworkPeerAddress(
       HttpRequestPacket request, @Nullable HttpResponsePacket response) {
     return request.getRemoteAddress();
   }
 
   @Override
-  public Integer getClientSocketPort(
+  public Integer getNetworkPeerPort(
       HttpRequestPacket request, @Nullable HttpResponsePacket response) {
     return request.getRemotePort();
   }
 
   @Nullable
   @Override
-  public String getServerSocketAddress(
+  public String getNetworkLocalAddress(
       HttpRequestPacket request, @Nullable HttpResponsePacket response) {
     return request.getLocalAddress();
   }
 
   @Override
-  public Integer getServerSocketPort(
+  public Integer getNetworkLocalPort(
       HttpRequestPacket request, @Nullable HttpResponsePacket response) {
     return request.getLocalPort();
   }

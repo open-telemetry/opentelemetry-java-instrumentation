@@ -8,6 +8,15 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_GRPC_STATUS_CODE;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
@@ -46,9 +55,8 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -72,8 +80,8 @@ import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
 public abstract class AbstractGrpcTest {
   protected static final String CLIENT_REQUEST_METADATA_KEY = "some-client-key";
 
@@ -134,58 +142,58 @@ public abstract class AbstractGrpcTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraClientAttributes(
-                                    equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                    equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                    equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                    equalTo(
-                                        SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                        (long) Status.Code.OK.value()),
-                                    equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                    equalTo(
-                                        SemanticAttributes.NET_PEER_PORT, (long) server.getPort())))
+                                    equalTo(RPC_SYSTEM, "grpc"),
+                                    equalTo(RPC_SERVICE, "example.Greeter"),
+                                    equalTo(RPC_METHOD, "SayHello"),
+                                    equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L))),
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                "RECEIVED"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.OK.value()),
-                                equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                satisfies(
-                                    SemanticAttributes.NET_SOCK_PEER_PORT,
-                                    val -> assertThat(val).isNotNull()))
+                                equalTo(RPC_SYSTEM, "grpc"),
+                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                equalTo(RPC_METHOD, "SayHello"),
+                                equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(NETWORK_TYPE, "ipv4"),
+                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                "RECEIVED"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L)))));
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",
@@ -200,15 +208,12 @@ public abstract class AbstractGrpcTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
+                                                equalTo(SERVER_ADDRESS, "localhost"),
+                                                equalTo(RPC_METHOD, "SayHello"),
+                                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                                equalTo(RPC_SYSTEM, "grpc"),
                                                 equalTo(
-                                                    SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                                equalTo(
-                                                    SemanticAttributes.RPC_SERVICE,
-                                                    "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    RPC_GRPC_STATUS_CODE,
                                                     (long) Status.Code.OK.value()))))));
     testing()
         .waitAndAssertMetrics(
@@ -224,18 +229,13 @@ public abstract class AbstractGrpcTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
+                                                equalTo(SERVER_ADDRESS, "localhost"),
+                                                equalTo(SERVER_PORT, server.getPort()),
+                                                equalTo(RPC_METHOD, "SayHello"),
+                                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                                equalTo(RPC_SYSTEM, "grpc"),
                                                 equalTo(
-                                                    SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                                equalTo(
-                                                    SemanticAttributes.NET_PEER_PORT,
-                                                    server.getPort()),
-                                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                                equalTo(
-                                                    SemanticAttributes.RPC_SERVICE,
-                                                    "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    RPC_GRPC_STATUS_CODE,
                                                     (long) Status.Code.OK.value()))))));
   }
 
@@ -295,58 +295,58 @@ public abstract class AbstractGrpcTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraClientAttributes(
-                                    equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                    equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                    equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                    equalTo(
-                                        SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                        (long) Status.Code.OK.value()),
-                                    equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                    equalTo(
-                                        SemanticAttributes.NET_PEER_PORT, (long) server.getPort())))
+                                    equalTo(RPC_SYSTEM, "grpc"),
+                                    equalTo(RPC_SERVICE, "example.Greeter"),
+                                    equalTo(RPC_METHOD, "SayHello"),
+                                    equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L))),
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                "RECEIVED"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.OK.value()),
-                                equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                satisfies(
-                                    SemanticAttributes.NET_SOCK_PEER_PORT,
-                                    val -> assertThat(val).isNotNull()))
+                                equalTo(RPC_SYSTEM, "grpc"),
+                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                equalTo(RPC_METHOD, "SayHello"),
+                                equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(NETWORK_TYPE, "ipv4"),
+                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                "RECEIVED"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L))),
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -365,15 +365,12 @@ public abstract class AbstractGrpcTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
+                                                equalTo(SERVER_ADDRESS, "localhost"),
+                                                equalTo(RPC_METHOD, "SayHello"),
+                                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                                equalTo(RPC_SYSTEM, "grpc"),
                                                 equalTo(
-                                                    SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                                equalTo(
-                                                    SemanticAttributes.RPC_SERVICE,
-                                                    "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    RPC_GRPC_STATUS_CODE,
                                                     (long) Status.Code.OK.value()))))));
     testing()
         .waitAndAssertMetrics(
@@ -389,18 +386,13 @@ public abstract class AbstractGrpcTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
+                                                equalTo(SERVER_ADDRESS, "localhost"),
+                                                equalTo(SERVER_PORT, server.getPort()),
+                                                equalTo(RPC_METHOD, "SayHello"),
+                                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                                equalTo(RPC_SYSTEM, "grpc"),
                                                 equalTo(
-                                                    SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                                equalTo(
-                                                    SemanticAttributes.NET_PEER_PORT,
-                                                    server.getPort()),
-                                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                                equalTo(
-                                                    SemanticAttributes.RPC_SERVICE,
-                                                    "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    RPC_GRPC_STATUS_CODE,
                                                     (long) Status.Code.OK.value()))))));
   }
 
@@ -468,58 +460,58 @@ public abstract class AbstractGrpcTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraClientAttributes(
-                                    equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                    equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                    equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                    equalTo(
-                                        SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                        (long) Status.Code.OK.value()),
-                                    equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                    equalTo(
-                                        SemanticAttributes.NET_PEER_PORT, (long) server.getPort())))
+                                    equalTo(RPC_SYSTEM, "grpc"),
+                                    equalTo(RPC_SERVICE, "example.Greeter"),
+                                    equalTo(RPC_METHOD, "SayHello"),
+                                    equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L))),
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                "RECEIVED"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.OK.value()),
-                                equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                satisfies(
-                                    SemanticAttributes.NET_SOCK_PEER_PORT,
-                                    val -> assertThat(val).isNotNull()))
+                                equalTo(RPC_SYSTEM, "grpc"),
+                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                equalTo(RPC_METHOD, "SayHello"),
+                                equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(NETWORK_TYPE, "ipv4"),
+                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                "RECEIVED"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L))),
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -538,15 +530,12 @@ public abstract class AbstractGrpcTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
+                                                equalTo(SERVER_ADDRESS, "localhost"),
+                                                equalTo(RPC_METHOD, "SayHello"),
+                                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                                equalTo(RPC_SYSTEM, "grpc"),
                                                 equalTo(
-                                                    SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                                equalTo(
-                                                    SemanticAttributes.RPC_SERVICE,
-                                                    "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    RPC_GRPC_STATUS_CODE,
                                                     (long) Status.Code.OK.value()))))));
     testing()
         .waitAndAssertMetrics(
@@ -562,18 +551,13 @@ public abstract class AbstractGrpcTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
+                                                equalTo(SERVER_ADDRESS, "localhost"),
+                                                equalTo(SERVER_PORT, server.getPort()),
+                                                equalTo(RPC_METHOD, "SayHello"),
+                                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                                equalTo(RPC_SYSTEM, "grpc"),
                                                 equalTo(
-                                                    SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                                equalTo(
-                                                    SemanticAttributes.NET_PEER_PORT,
-                                                    server.getPort()),
-                                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                                equalTo(
-                                                    SemanticAttributes.RPC_SERVICE,
-                                                    "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    RPC_GRPC_STATUS_CODE,
                                                     (long) Status.Code.OK.value()))))));
   }
 
@@ -604,6 +588,7 @@ public abstract class AbstractGrpcTest {
               assertThat(t.getStatus().getDescription()).isEqualTo(status.getDescription());
             });
 
+    boolean isServerError = status.getCode() != Status.Code.NOT_FOUND;
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -615,48 +600,44 @@ public abstract class AbstractGrpcTest {
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
                                 addExtraClientAttributes(
-                                    equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                    equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                    equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                    equalTo(
-                                        SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                        (long) status.getCode().value()),
-                                    equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                    equalTo(
-                                        SemanticAttributes.NET_PEER_PORT, (long) server.getPort())))
+                                    equalTo(RPC_SYSTEM, "grpc"),
+                                    equalTo(RPC_SERVICE, "example.Greeter"),
+                                    equalTo(RPC_METHOD, "SayHello"),
+                                    equalTo(RPC_GRPC_STATUS_CODE, (long) status.getCode().value()),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L))),
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(0))
-                            .hasStatus(StatusData.error())
+                            .hasStatus(isServerError ? StatusData.error() : StatusData.unset())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) status.getCode().value()),
-                                equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                satisfies(
-                                    SemanticAttributes.NET_SOCK_PEER_PORT,
-                                    val -> assertThat(val).isNotNull()))
+                                equalTo(RPC_SYSTEM, "grpc"),
+                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                equalTo(RPC_METHOD, "SayHello"),
+                                equalTo(RPC_GRPC_STATUS_CODE, (long) status.getCode().value()),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(NETWORK_TYPE, "ipv4"),
+                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfying(
                                 events -> {
                                   assertThat(events).isNotEmpty();
                                   assertThat(events.get(0))
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
-                                          equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                          equalTo(SemanticAttributes.MESSAGE_ID, 1L));
+                                          equalTo(
+                                              MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
                                   if (status.getCause() == null) {
                                     assertThat(events).hasSize(1);
                                   } else {
@@ -678,15 +659,12 @@ public abstract class AbstractGrpcTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
+                                                equalTo(SERVER_ADDRESS, "localhost"),
+                                                equalTo(RPC_METHOD, "SayHello"),
+                                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                                equalTo(RPC_SYSTEM, "grpc"),
                                                 equalTo(
-                                                    SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                                equalTo(
-                                                    SemanticAttributes.RPC_SERVICE,
-                                                    "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    RPC_GRPC_STATUS_CODE,
                                                     (long) status.getCode().value()))))));
     testing()
         .waitAndAssertMetrics(
@@ -702,18 +680,13 @@ public abstract class AbstractGrpcTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
+                                                equalTo(SERVER_ADDRESS, "localhost"),
+                                                equalTo(SERVER_PORT, server.getPort()),
+                                                equalTo(RPC_METHOD, "SayHello"),
+                                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                                equalTo(RPC_SYSTEM, "grpc"),
                                                 equalTo(
-                                                    SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                                equalTo(
-                                                    SemanticAttributes.NET_PEER_PORT,
-                                                    server.getPort()),
-                                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                                equalTo(
-                                                    SemanticAttributes.RPC_SERVICE,
-                                                    "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    RPC_GRPC_STATUS_CODE,
                                                     (long) status.getCode().value()))))));
   }
 
@@ -742,7 +715,10 @@ public abstract class AbstractGrpcTest {
             t -> {
               // gRPC doesn't appear to propagate server exceptions that are thrown, not onError.
               assertThat(t.getStatus().getCode()).isEqualTo(Status.UNKNOWN.getCode());
-              assertThat(t.getStatus().getDescription()).isNull();
+              assertThat(t.getStatus().getDescription())
+                  .satisfiesAnyOf(
+                      a -> assertThat(a).isNull(),
+                      a -> assertThat(a).isEqualTo("Application error processing RPC"));
             });
 
     testing()
@@ -761,48 +737,46 @@ public abstract class AbstractGrpcTest {
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
                                 addExtraClientAttributes(
-                                    equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                    equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                    equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
+                                    equalTo(RPC_SYSTEM, "grpc"),
+                                    equalTo(RPC_SERVICE, "example.Greeter"),
+                                    equalTo(RPC_METHOD, "SayHello"),
                                     equalTo(
-                                        SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                        RPC_GRPC_STATUS_CODE,
                                         (long) Status.UNKNOWN.getCode().value()),
-                                    equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                    equalTo(
-                                        SemanticAttributes.NET_PEER_PORT, (long) server.getPort())))
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L))),
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(0))
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.UNKNOWN.value()),
-                                equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                satisfies(
-                                    SemanticAttributes.NET_SOCK_PEER_PORT,
-                                    val -> assertThat(val).isNotNull()))
+                                equalTo(RPC_SYSTEM, "grpc"),
+                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                equalTo(RPC_METHOD, "SayHello"),
+                                equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.UNKNOWN.value()),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(NETWORK_TYPE, "ipv4"),
+                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfying(
                                 events -> {
                                   assertThat(events).hasSize(2);
                                   assertThat(events.get(0))
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
-                                          equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                          equalTo(SemanticAttributes.MESSAGE_ID, 1L));
+                                          equalTo(
+                                              MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
                                   span.hasException(status.asRuntimeException());
                                 })));
     testing()
@@ -819,15 +793,12 @@ public abstract class AbstractGrpcTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
+                                                equalTo(SERVER_ADDRESS, "localhost"),
+                                                equalTo(RPC_METHOD, "SayHello"),
+                                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                                equalTo(RPC_SYSTEM, "grpc"),
                                                 equalTo(
-                                                    SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                                equalTo(
-                                                    SemanticAttributes.RPC_SERVICE,
-                                                    "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    RPC_GRPC_STATUS_CODE,
                                                     (long) Status.Code.UNKNOWN.value()))))));
     testing()
         .waitAndAssertMetrics(
@@ -843,18 +814,13 @@ public abstract class AbstractGrpcTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
+                                                equalTo(SERVER_ADDRESS, "localhost"),
+                                                equalTo(SERVER_PORT, server.getPort()),
+                                                equalTo(RPC_METHOD, "SayHello"),
+                                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                                equalTo(RPC_SYSTEM, "grpc"),
                                                 equalTo(
-                                                    SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                                equalTo(
-                                                    SemanticAttributes.NET_PEER_PORT,
-                                                    server.getPort()),
-                                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                                equalTo(
-                                                    SemanticAttributes.RPC_SERVICE,
-                                                    "example.Greeter"),
-                                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
+                                                    RPC_GRPC_STATUS_CODE,
                                                     (long) Status.Code.UNKNOWN.value()))))));
   }
 
@@ -863,11 +829,19 @@ public abstract class AbstractGrpcTest {
     public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
       return Stream.of(
           arguments(Status.UNKNOWN.withCause(new RuntimeException("some error"))),
-          arguments(Status.PERMISSION_DENIED.withCause(new RuntimeException("some error"))),
+          arguments(Status.DEADLINE_EXCEEDED.withCause(new RuntimeException("some error"))),
           arguments(Status.UNIMPLEMENTED.withCause(new RuntimeException("some error"))),
+          arguments(Status.INTERNAL.withCause(new RuntimeException("some error"))),
+          arguments(Status.UNAVAILABLE.withCause(new RuntimeException("some error"))),
+          arguments(Status.DATA_LOSS.withCause(new RuntimeException("some error"))),
+          arguments(Status.NOT_FOUND.withCause(new RuntimeException("some error"))),
           arguments(Status.UNKNOWN.withDescription("some description")),
-          arguments(Status.PERMISSION_DENIED.withDescription("some description")),
-          arguments(Status.UNIMPLEMENTED.withDescription("some description")));
+          arguments(Status.DEADLINE_EXCEEDED.withDescription("some description")),
+          arguments(Status.UNIMPLEMENTED.withDescription("some description")),
+          arguments(Status.INTERNAL.withDescription("some description")),
+          arguments(Status.UNAVAILABLE.withDescription("some description")),
+          arguments(Status.DATA_LOSS.withDescription("some description")),
+          arguments(Status.NOT_FOUND.withDescription("some description")));
     }
   }
 
@@ -998,58 +972,58 @@ public abstract class AbstractGrpcTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraClientAttributes(
-                                    equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                    equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                    equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                    equalTo(
-                                        SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                        (long) Status.Code.OK.value()),
-                                    equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                    equalTo(
-                                        SemanticAttributes.NET_PEER_PORT, (long) server.getPort())))
+                                    equalTo(RPC_SYSTEM, "grpc"),
+                                    equalTo(RPC_SERVICE, "example.Greeter"),
+                                    equalTo(RPC_METHOD, "SayHello"),
+                                    equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L))),
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                "RECEIVED"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.OK.value()),
-                                equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                satisfies(
-                                    SemanticAttributes.NET_SOCK_PEER_PORT,
-                                    val -> assertThat(val).isNotNull()))
+                                equalTo(RPC_SYSTEM, "grpc"),
+                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                equalTo(RPC_METHOD, "SayHello"),
+                                equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(NETWORK_TYPE, "ipv4"),
+                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                "RECEIVED"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L)))));
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
   }
 
   @Test
@@ -1115,28 +1089,27 @@ public abstract class AbstractGrpcTest {
                             .hasStatus(StatusData.error())
                             .hasAttributesSatisfyingExactly(
                                 addExtraClientAttributes(
-                                    equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                    equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                    equalTo(SemanticAttributes.RPC_METHOD, "SayMultipleHello"),
+                                    equalTo(RPC_SYSTEM, "grpc"),
+                                    equalTo(RPC_SERVICE, "example.Greeter"),
+                                    equalTo(RPC_METHOD, "SayMultipleHello"),
                                     equalTo(
-                                        SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                        (long) Status.Code.CANCELLED.value()),
-                                    equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                    equalTo(
-                                        SemanticAttributes.NET_PEER_PORT, (long) server.getPort())))
+                                        RPC_GRPC_STATUS_CODE, (long) Status.Code.CANCELLED.value()),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfying(
                                 events -> {
                                   assertThat(events).hasSize(3);
                                   assertThat(events.get(0))
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
-                                          equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
-                                          equalTo(SemanticAttributes.MESSAGE_ID, 1L));
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
                                   assertThat(events.get(1))
                                       .hasName("message")
                                       .hasAttributesSatisfyingExactly(
-                                          equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                          equalTo(SemanticAttributes.MESSAGE_ID, 2L));
+                                          equalTo(
+                                              MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
+                                          equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
                                   span.hasException(thrown);
                                 }),
                     span ->
@@ -1144,31 +1117,31 @@ public abstract class AbstractGrpcTest {
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "SayMultipleHello"),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.CANCELLED.value()),
-                                equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                satisfies(
-                                    SemanticAttributes.NET_SOCK_PEER_PORT,
-                                    val -> assertThat(val).isNotNull()))
+                                equalTo(RPC_SYSTEM, "grpc"),
+                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                equalTo(RPC_METHOD, "SayMultipleHello"),
+                                equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.CANCELLED.value()),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(NETWORK_TYPE, "ipv4"),
+                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                "RECEIVED"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L)))));
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
   }
 
   @Test
@@ -1230,63 +1203,60 @@ public abstract class AbstractGrpcTest {
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
                                 addExtraClientAttributes(
-                                    equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
+                                    equalTo(RPC_SYSTEM, "grpc"),
                                     equalTo(
-                                        SemanticAttributes.RPC_SERVICE,
-                                        "grpc.reflection.v1alpha.ServerReflection"),
-                                    equalTo(SemanticAttributes.RPC_METHOD, "ServerReflectionInfo"),
-                                    equalTo(
-                                        SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                        (long) Status.Code.OK.value()),
-                                    equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                    equalTo(
-                                        SemanticAttributes.NET_PEER_PORT, (long) server.getPort())))
+                                        RPC_SERVICE, "grpc.reflection.v1alpha.ServerReflection"),
+                                    equalTo(RPC_METHOD, "ServerReflectionInfo"),
+                                    equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L))),
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                "RECEIVED"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
                     span ->
                         span.hasName(
                                 "grpc.reflection.v1alpha.ServerReflection/ServerReflectionInfo")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                equalTo(
-                                    SemanticAttributes.RPC_SERVICE,
-                                    "grpc.reflection.v1alpha.ServerReflection"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "ServerReflectionInfo"),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.OK.value()),
-                                equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                satisfies(
-                                    SemanticAttributes.NET_SOCK_PEER_PORT,
-                                    val -> assertThat(val).isNotNull()))
+                                equalTo(RPC_SYSTEM, "grpc"),
+                                equalTo(RPC_SERVICE, "grpc.reflection.v1alpha.ServerReflection"),
+                                equalTo(RPC_METHOD, "ServerReflectionInfo"),
+                                equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(NETWORK_TYPE, "ipv4"),
+                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                "RECEIVED"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L)))));
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
   }
 
   @Test
@@ -1336,58 +1306,58 @@ public abstract class AbstractGrpcTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraClientAttributes(
-                                    equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                    equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                    equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                    equalTo(
-                                        SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                        (long) Status.Code.OK.value()),
-                                    equalTo(SemanticAttributes.NET_PEER_NAME, "localhost"),
-                                    equalTo(
-                                        SemanticAttributes.NET_PEER_PORT, (long) server.getPort())))
+                                    equalTo(RPC_SYSTEM, "grpc"),
+                                    equalTo(RPC_SERVICE, "example.Greeter"),
+                                    equalTo(RPC_METHOD, "SayHello"),
+                                    equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L))),
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                "RECEIVED"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
                     span ->
                         span.hasName("example.Greeter/SayHello")
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "grpc"),
-                                equalTo(SemanticAttributes.RPC_SERVICE, "example.Greeter"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "SayHello"),
-                                equalTo(
-                                    SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                                    (long) Status.Code.OK.value()),
-                                equalTo(SemanticAttributes.NET_HOST_NAME, "localhost"),
-                                equalTo(SemanticAttributes.NET_HOST_PORT, server.getPort()),
-                                equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"),
-                                satisfies(
-                                    SemanticAttributes.NET_SOCK_PEER_PORT,
-                                    val -> assertThat(val).isNotNull()))
+                                equalTo(RPC_SYSTEM, "grpc"),
+                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                equalTo(RPC_METHOD, "SayHello"),
+                                equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(NETWORK_TYPE, "ipv4"),
+                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 1L)),
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE,
+                                                "RECEIVED"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)),
                                 event ->
                                     event
                                         .hasName("message")
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(SemanticAttributes.MESSAGE_TYPE, "SENT"),
-                                            equalTo(SemanticAttributes.MESSAGE_ID, 2L)))));
+                                            equalTo(
+                                                MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
+                                            equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
   }
 
   // Regression test for
@@ -1579,7 +1549,7 @@ public abstract class AbstractGrpcTest {
                 "parent",
                 () -> client.sayHello(Helloworld.Request.newBuilder().setName("test").build()));
 
-    OpenTelemetryAssertions.assertThat(response.getMessage()).isEqualTo("Hello test");
+    assertThat(response.getMessage()).isEqualTo("Hello test");
 
     testing()
         .waitAndAssertTraces(
@@ -1628,7 +1598,9 @@ public abstract class AbstractGrpcTest {
     List<AttributeAssertion> result = new ArrayList<>();
     result.addAll(Arrays.asList(assertions));
     if (Boolean.getBoolean("testLatestDeps")) {
-      result.add(equalTo(SemanticAttributes.NET_SOCK_PEER_ADDR, "127.0.0.1"));
+      result.add(equalTo(NETWORK_TYPE, "ipv4"));
+      result.add(equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
+      result.add(satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()));
     }
     return result;
   }

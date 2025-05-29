@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jms;
 
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
@@ -29,9 +29,20 @@ enum JmsMessageAttributesGetter implements MessagingAttributesGetter<MessageWith
     return messageWithDestination.destinationName();
   }
 
+  @Nullable
+  @Override
+  public String getDestinationTemplate(MessageWithDestination messageWithDestination) {
+    return null;
+  }
+
   @Override
   public boolean isTemporaryDestination(MessageWithDestination messageWithDestination) {
     return messageWithDestination.isTemporaryDestination();
+  }
+
+  @Override
+  public boolean isAnonymousDestination(MessageWithDestination messageWithDestination) {
+    return false;
   }
 
   @Nullable
@@ -47,13 +58,13 @@ enum JmsMessageAttributesGetter implements MessagingAttributesGetter<MessageWith
 
   @Nullable
   @Override
-  public Long getMessagePayloadSize(MessageWithDestination messageWithDestination) {
+  public Long getMessageBodySize(MessageWithDestination messageWithDestination) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long getMessagePayloadCompressedSize(MessageWithDestination messageWithDestination) {
+  public Long getMessageEnvelopeSize(MessageWithDestination messageWithDestination) {
     return null;
   }
 
@@ -66,6 +77,19 @@ enum JmsMessageAttributesGetter implements MessagingAttributesGetter<MessageWith
       logger.log(FINE, "Failure getting JMS message id", exception);
       return null;
     }
+  }
+
+  @Nullable
+  @Override
+  public String getClientId(MessageWithDestination messageWithDestination) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Long getBatchMessageCount(
+      MessageWithDestination messageWithDestination, @Nullable Void unused) {
+    return null;
   }
 
   @Override

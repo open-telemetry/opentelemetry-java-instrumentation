@@ -31,7 +31,8 @@ class LogEventMapperTest {
   void testDefault() {
     // given
     LogEventMapper<Map<String, String>> mapper =
-        new LogEventMapper<>(ContextDataAccessorImpl.INSTANCE, false, false, false, emptyList());
+        new LogEventMapper<>(
+            ContextDataAccessorImpl.INSTANCE, false, false, false, false, emptyList());
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
@@ -49,7 +50,7 @@ class LogEventMapperTest {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE, false, false, false, singletonList("key2"));
+            ContextDataAccessorImpl.INSTANCE, false, false, false, false, singletonList("key2"));
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
@@ -59,8 +60,7 @@ class LogEventMapperTest {
     mapper.captureContextDataAttributes(attributes, contextData);
 
     // then
-    assertThat(attributes.build())
-        .containsOnly(attributeEntry("log4j.context_data.key2", "value2"));
+    assertThat(attributes.build()).containsOnly(attributeEntry("key2", "value2"));
   }
 
   @Test
@@ -68,7 +68,7 @@ class LogEventMapperTest {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE, false, false, false, singletonList("*"));
+            ContextDataAccessorImpl.INSTANCE, false, false, false, false, singletonList("*"));
     Map<String, String> contextData = new HashMap<>();
     contextData.put("key1", "value1");
     contextData.put("key2", "value2");
@@ -79,9 +79,7 @@ class LogEventMapperTest {
 
     // then
     assertThat(attributes.build())
-        .containsOnly(
-            attributeEntry("log4j.context_data.key1", "value1"),
-            attributeEntry("log4j.context_data.key2", "value2"));
+        .containsOnly(attributeEntry("key1", "value1"), attributeEntry("key2", "value2"));
   }
 
   @Test
@@ -89,7 +87,7 @@ class LogEventMapperTest {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE, false, false, false, singletonList("*"));
+            ContextDataAccessorImpl.INSTANCE, false, false, false, false, singletonList("*"));
 
     StringMapMessage message = new StringMapMessage();
     message.put("key1", "value1");
@@ -111,7 +109,7 @@ class LogEventMapperTest {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE, false, true, false, singletonList("*"));
+            ContextDataAccessorImpl.INSTANCE, false, false, true, false, singletonList("*"));
 
     StringMapMessage message = new StringMapMessage();
     message.put("key1", "value1");
@@ -133,7 +131,7 @@ class LogEventMapperTest {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE, false, true, false, singletonList("*"));
+            ContextDataAccessorImpl.INSTANCE, false, false, true, false, singletonList("*"));
 
     StringMapMessage message = new StringMapMessage();
     message.put("key1", "value1");
@@ -158,7 +156,7 @@ class LogEventMapperTest {
     // given
     LogEventMapper<Map<String, String>> mapper =
         new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE, false, true, false, singletonList("*"));
+            ContextDataAccessorImpl.INSTANCE, false, false, true, false, singletonList("*"));
 
     StructuredDataMessage message = new StructuredDataMessage("an id", "a message", "a type");
     message.put("key1", "value1");
@@ -183,12 +181,12 @@ class LogEventMapperTest {
 
     @Override
     @Nullable
-    public Object getValue(Map<String, String> contextData, String key) {
+    public String getValue(Map<String, String> contextData, String key) {
       return contextData.get(key);
     }
 
     @Override
-    public void forEach(Map<String, String> contextData, BiConsumer<String, Object> action) {
+    public void forEach(Map<String, String> contextData, BiConsumer<String, String> action) {
       contextData.forEach(action);
     }
   }

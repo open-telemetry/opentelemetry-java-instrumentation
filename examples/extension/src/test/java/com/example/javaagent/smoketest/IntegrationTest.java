@@ -31,6 +31,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.utility.MountableFile;
 
 abstract class IntegrationTest {
@@ -51,6 +52,8 @@ abstract class IntegrationTest {
 
   protected abstract String getTargetImage(int jdk);
 
+  protected abstract WaitStrategy getTargetWaitStrategy();
+
   /** Subclasses can override this method to customise target application's environment */
   protected Map<String, String> getExtraEnv() {
     return Collections.emptyMap();
@@ -59,7 +62,7 @@ abstract class IntegrationTest {
   private static GenericContainer backend;
 
   @BeforeAll
-  static void setupSpec() {
+  static void setup() {
     backend =
         new GenericContainer<>(
                 "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend:20221127.3559314891")
@@ -98,7 +101,11 @@ abstract class IntegrationTest {
             .withEnv("OTEL_BSP_MAX_EXPORT_BATCH", "1")
             .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10")
             .withEnv("OTEL_PROPAGATORS", "tracecontext,baggage,demo")
-            .withEnv(getExtraEnv());
+            // TODO (heya) update smoke tests to run using http/protobuf
+            // in the meantime, force smoke tests to use grpc protocol for all exporters
+            .withEnv("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc")
+            .withEnv(getExtraEnv())
+            .waitingFor(getTargetWaitStrategy());
     // If external extensions are requested
     if (extensionLocation != null) {
       // Asks instrumentation agent to include extensions from given location into its runtime
@@ -112,11 +119,13 @@ abstract class IntegrationTest {
   }
 
   @AfterEach
-  void cleanup() throws IOException {
+  void reset() throws IOException {
     client
         .newCall(
             new Request.Builder()
-                .url(String.format("http://localhost:%d/clear", backend.getMappedPort(8080)))
+                .url(
+                    String.format(
+                        "http://%s:%d/clear", backend.getHost(), backend.getMappedPort(8080)))
                 .build())
         .execute()
         .close();
@@ -127,7 +136,7 @@ abstract class IntegrationTest {
   }
 
   @AfterAll
-  static void cleanupSpec() {
+  static void cleanup() {
     backend.stop();
   }
 
@@ -194,7 +203,9 @@ abstract class IntegrationTest {
 
       Request request =
           new Request.Builder()
-              .url(String.format("http://localhost:%d/get-traces", backend.getMappedPort(8080)))
+              .url(
+                  String.format(
+                      "http://%s:%d/get-traces", backend.getHost(), backend.getMappedPort(8080)))
               .build();
 
       try (ResponseBody body = client.newCall(request).execute().body()) {

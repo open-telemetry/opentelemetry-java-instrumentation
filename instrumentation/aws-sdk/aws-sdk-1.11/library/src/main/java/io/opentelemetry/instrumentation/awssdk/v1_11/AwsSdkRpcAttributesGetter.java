@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import com.amazonaws.Request;
-import io.opentelemetry.instrumentation.api.instrumenter.rpc.RpcAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
 
 enum AwsSdkRpcAttributesGetter implements RpcAttributesGetter<Request<?>> {
   INSTANCE;

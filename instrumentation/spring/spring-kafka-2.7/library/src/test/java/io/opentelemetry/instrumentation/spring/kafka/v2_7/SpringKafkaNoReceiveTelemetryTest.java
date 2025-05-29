@@ -34,6 +34,11 @@ class SpringKafkaNoReceiveTelemetryTest extends AbstractSpringKafkaNoReceiveTele
     return singletonList(KafkaInstrumentationConfig.class);
   }
 
+  @Override
+  protected boolean isLibraryInstrumentationTest() {
+    return true;
+  }
+
   @Configuration
   public static class KafkaInstrumentationConfig {
 

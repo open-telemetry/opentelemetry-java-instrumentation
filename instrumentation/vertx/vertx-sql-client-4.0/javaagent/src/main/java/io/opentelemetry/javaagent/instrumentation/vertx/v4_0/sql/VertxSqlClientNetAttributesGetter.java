@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql;
 
-import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import javax.annotation.Nullable;
 
 public enum VertxSqlClientNetAttributesGetter
-    implements ServerAttributesGetter<VertxSqlClientRequest, Void> {
+    implements ServerAttributesGetter<VertxSqlClientRequest> {
   INSTANCE;
 
   @Nullable

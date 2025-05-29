@@ -13,16 +13,25 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaHeadersSetter;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaProcessRequest;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaProducerRequest;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaUtil;
-import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetryMetricsReporter;
-import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetrySupplier;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.instrumentation.api.internal.Timer;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaHeadersSetter;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProducerRequest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaUtil;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.MetricsReporterList;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetryMetricsReporter;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetrySupplier;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.TracingList;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Future;
 import java.util.function.BiFunction;
@@ -37,6 +46,7 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.common.metrics.MetricsReporter;
 
@@ -47,16 +57,19 @@ public final class KafkaTelemetry {
 
   private final OpenTelemetry openTelemetry;
   private final Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter;
+  private final Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter;
   private final Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter;
   private final boolean producerPropagationEnabled;
 
   KafkaTelemetry(
       OpenTelemetry openTelemetry,
       Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter,
+      Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter,
       Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter,
       boolean producerPropagationEnabled) {
     this.openTelemetry = openTelemetry;
     this.producerInstrumenter = producerInstrumenter;
+    this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
     this.producerPropagationEnabled = producerPropagationEnabled;
   }
@@ -115,6 +128,7 @@ public final class KafkaTelemetry {
             new Class<?>[] {Consumer.class},
             (proxy, method, args) -> {
               Object result;
+              Timer timer = "poll".equals(method.getName()) ? Timer.start() : null;
               try {
                 result = method.invoke(consumer, args);
               } catch (InvocationTargetException exception) {
@@ -123,10 +137,34 @@ public final class KafkaTelemetry {
               // ConsumerRecords<K, V> poll(long timeout)
               // ConsumerRecords<K, V> poll(Duration duration)
               if ("poll".equals(method.getName()) && result instanceof ConsumerRecords) {
-                buildAndFinishSpan((ConsumerRecords) result, consumer);
+                ConsumerRecords<K, V> consumerRecords = (ConsumerRecords<K, V>) result;
+                Context receiveContext = buildAndFinishSpan(consumerRecords, consumer, timer);
+                if (receiveContext == null) {
+                  receiveContext = Context.current();
+                }
+                KafkaConsumerContext consumerContext =
+                    KafkaConsumerContextUtil.create(receiveContext, consumer);
+                result = addTracing(consumerRecords, consumerContext);
               }
               return result;
             });
+  }
+
+  <K, V> ConsumerRecords<K, V> addTracing(
+      ConsumerRecords<K, V> consumerRecords, KafkaConsumerContext consumerContext) {
+    if (consumerRecords.isEmpty()) {
+      return consumerRecords;
+    }
+
+    Map<TopicPartition, List<ConsumerRecord<K, V>>> records = new LinkedHashMap<>();
+    for (TopicPartition partition : consumerRecords.partitions()) {
+      List<ConsumerRecord<K, V>> list = consumerRecords.records(partition);
+      if (list != null && !list.isEmpty()) {
+        list = TracingList.wrap(list, consumerProcessInstrumenter, () -> true, consumerContext);
+      }
+      records.put(partition, list);
+    }
+    return new ConsumerRecords<>(records);
   }
 
   /**
@@ -159,7 +197,7 @@ public final class KafkaTelemetry {
     Map<String, Object> config = new HashMap<>();
     config.put(
         CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
-        OpenTelemetryMetricsReporter.class.getName());
+        MetricsReporterList.singletonList(OpenTelemetryMetricsReporter.class));
     config.put(
         OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_SUPPLIER,
         new OpenTelemetrySupplier(openTelemetry));
@@ -214,30 +252,44 @@ public final class KafkaTelemetry {
     }
 
     Context context = producerInstrumenter.start(parentContext, request);
+    propagator().inject(context, record.headers(), SETTER);
+
     try (Scope ignored = context.makeCurrent()) {
-      propagator().inject(context, record.headers(), SETTER);
-      callback = new ProducerCallback(callback, parentContext, context, request);
-      return sendFn.apply(record, callback);
+      return sendFn.apply(record, new ProducerCallback(callback, parentContext, context, request));
     }
   }
 
-  private <K, V> void buildAndFinishSpan(ConsumerRecords<K, V> records, Consumer<K, V> consumer) {
-    buildAndFinishSpan(
-        records, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer));
+  private <K, V> Context buildAndFinishSpan(
+      ConsumerRecords<K, V> records, Consumer<K, V> consumer, Timer timer) {
+    return buildAndFinishSpan(
+        records, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer), timer);
   }
 
-  <K, V> void buildAndFinishSpan(
-      ConsumerRecords<K, V> records, String consumerGroup, String clientId) {
+  <K, V> Context buildAndFinishSpan(
+      ConsumerRecords<K, V> records, String consumerGroup, String clientId, Timer timer) {
+    if (records.isEmpty()) {
+      return null;
+    }
     Context parentContext = Context.current();
-    for (ConsumerRecord<K, V> record : records) {
-      KafkaProcessRequest request = KafkaProcessRequest.create(record, consumerGroup, clientId);
-      if (!consumerProcessInstrumenter.shouldStart(parentContext, request)) {
-        continue;
-      }
-
-      Context context = consumerProcessInstrumenter.start(parentContext, request);
-      consumerProcessInstrumenter.end(context, request, null, null);
+    KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumerGroup, clientId);
+    Context context = null;
+    if (consumerReceiveInstrumenter.shouldStart(parentContext, request)) {
+      context =
+          InstrumenterUtil.startAndEnd(
+              consumerReceiveInstrumenter,
+              parentContext,
+              request,
+              null,
+              null,
+              timer.startTime(),
+              timer.now());
     }
+
+    // we're returning the context of the receive span so that process spans can use it as
+    // parent context even though the span has ended
+    // this is the suggested behavior according to the spec batch receive scenario:
+    // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md#batch-receiving
+    return context;
   }
 
   private class ProducerCallback implements Callback {

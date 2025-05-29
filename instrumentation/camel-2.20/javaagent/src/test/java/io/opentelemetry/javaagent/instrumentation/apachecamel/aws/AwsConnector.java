@@ -18,10 +18,13 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.SetBucketNotificationConfigurationRequest;
 import com.amazonaws.services.sns.AmazonSNSAsyncClient;
 import com.amazonaws.services.sns.model.CreateTopicResult;
+import com.amazonaws.services.sns.model.PublishRequest;
 import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
 import com.amazonaws.services.sqs.model.GetQueueAttributesRequest;
+import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.PurgeQueueRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
+import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import java.util.Collections;
@@ -146,7 +149,9 @@ class AwsConnector {
 
   void receiveMessage(String queueUrl) {
     logger.info("Receive message from queue {}", queueUrl);
-    sqsClient.receiveMessage(new ReceiveMessageRequest(queueUrl).withWaitTimeSeconds(20));
+    ReceiveMessageResult receiveMessageResult =
+        sqsClient.receiveMessage(new ReceiveMessageRequest(queueUrl).withWaitTimeSeconds(20));
+    for (Message ignored : receiveMessageResult.getMessages()) {}
   }
 
   void disconnect() {
@@ -156,7 +161,7 @@ class AwsConnector {
   }
 
   void publishSampleNotification(String topicArn) {
-    snsClient.publish(topicArn, "Hello There");
+    snsClient.publish(new PublishRequest().withMessage("Hello There").withTopicArn(topicArn));
   }
 
   String createTopicAndSubscribeQueue(String topicName, String queueArn) {

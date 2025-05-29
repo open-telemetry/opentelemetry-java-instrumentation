@@ -53,21 +53,27 @@ public class ReflectionInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class FilterFieldsAdvice {
+
+    // using AsScalar is needed to return the array itself instead of "advice Object[] return"
+    @Advice.AssignReturned.ToReturned
+    @Advice.AssignReturned.AsScalar
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void filter(
-        @Advice.Argument(0) Class<?> containingClass,
-        @Advice.Return(readOnly = false) Field[] fields) {
-      fields = ReflectionHelper.filterFields(containingClass, fields);
+    public static Field[] filter(
+        @Advice.Argument(0) Class<?> containingClass, @Advice.Return Field[] fields) {
+      return ReflectionHelper.filterFields(containingClass, fields);
     }
   }
 
   @SuppressWarnings("unused")
   public static class FilterMethodsAdvice {
+
+    // using AsScalar is needed to return the array itself instead of "advice Object[] return"
+    @Advice.AssignReturned.ToReturned
+    @Advice.AssignReturned.AsScalar
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void filter(
-        @Advice.Argument(0) Class<?> containingClass,
-        @Advice.Return(readOnly = false) Method[] methods) {
-      methods = ReflectionHelper.filterMethods(containingClass, methods);
+    public static Method[] filter(
+        @Advice.Argument(0) Class<?> containingClass, @Advice.Return Method[] methods) {
+      return ReflectionHelper.filterMethods(containingClass, methods);
     }
   }
 }

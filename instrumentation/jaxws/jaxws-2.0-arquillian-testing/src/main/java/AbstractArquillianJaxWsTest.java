@@ -10,7 +10,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import java.net.URI;
@@ -118,12 +118,13 @@ public abstract class AbstractArquillianJaxWsTest {
     return span.hasName(service + "/" + methodName).hasKind(SpanKind.INTERNAL);
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static SpanDataAssert assertAnnotationHandlerSpan(
       SpanDataAssert span, String service, String methodName) {
     return span.hasName(service + "Impl." + methodName)
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
-            equalTo(SemanticAttributes.CODE_NAMESPACE, "test." + service + "Impl"),
-            equalTo(SemanticAttributes.CODE_FUNCTION, methodName));
+            equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, "test." + service + "Impl"),
+            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, methodName));
   }
 }

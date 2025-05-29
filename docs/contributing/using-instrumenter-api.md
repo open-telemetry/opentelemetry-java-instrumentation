@@ -84,14 +84,16 @@ Response decoratedMethod(Request request) {
   }
 
   Context context = instrumenter.start(parentContext, request);
+  Response response;
   try (Scope scope = context.makeCurrent()) {
-    Response response = actualMethod(request);
-    instrumenter.end(context, request, response, null);
-    return response;
-  } catch (Throwable error) {
-    instrumenter.end(context, request, null, error);
-    throw error;
+    response = actualMethod(request);
+  } catch (Throwable t) {
+    instrumenter.end(context, request, null, t);
+    throw t;
   }
+  // calling end after the scope is closed is a best practice
+  instrumenter.end(context, request, response, null);
+  return response;
 }
 ```
 
@@ -147,7 +149,7 @@ A `SpanNameExtractor` is a simple functional interface that accepts the `REQUEST
 the span name. For more detailed guidelines on span naming please take a look at
 the [`Span` specification](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/api.md#span)
 and the
-tracing [semantic conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/README.md).
+tracing [semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/trace.md).
 
 Consider the following example:
 
@@ -418,16 +420,16 @@ method for that: passing `false` will turn the newly created `Instrumenter` into
 The `Instrumenter` creation process ends with calling one of the following `InstrumenterBuilder`
 methods:
 
-- `newInstrumenter()`: the returned `Instrumenter` will always start spans with kind `INTERNAL`.
-- `newInstrumenter(SpanKindExtractor)`: the returned `Instrumenter` will always start spans with
+- `buildInstrumenter()`: the returned `Instrumenter` will always start spans with kind `INTERNAL`.
+- `buildInstrumenter(SpanKindExtractor)`: the returned `Instrumenter` will always start spans with
   kind determined by the passed `SpanKindExtractor`.
-- `newClientInstrumenter(TextMapSetter)`: the returned `Instrumenter` will always start `CLIENT`
+- `buildClientInstrumenter(TextMapSetter)`: the returned `Instrumenter` will always start `CLIENT`
   spans and will propagate operation context into the outgoing request.
-- `newServerInstrumenter(TextMapGetter)`: the returned `Instrumenter` will always start `SERVER`
+- `buildServerInstrumenter(TextMapGetter)`: the returned `Instrumenter` will always start `SERVER`
   spans and will extract the parent span context from the incoming request.
-- `newProducerInstrumenter(TextMapSetter)`: the returned `Instrumenter` will always start `PRODUCER`
+- `buildProducerInstrumenter(TextMapSetter)`: the returned `Instrumenter` will always start `PRODUCER`
   spans and will propagate operation context into the outgoing request.
-- `newConsumerInstrumenter(TextMapGetter)`: the returned `Instrumenter` will always start `SERVER`
+- `buildConsumerInstrumenter(TextMapGetter)`: the returned `Instrumenter` will always start `CONSUMER`
   spans and will extract the parent span context from the incoming request.
 
 The last four variants that create non-`INTERNAL` spans accept either `TextMapSetter`
@@ -453,6 +455,6 @@ class MySpanKindExtractor implements SpanKindExtractor<Request> {
 The example `SpanKindExtractor` above decides whether to use `PRODUCER` or `CLIENT` based on how the
 request is going to be processed. This example reflects a real-life scenario: you might find
 similar code in a messaging library instrumentation, since according to
-the [OpenTelemetry messaging semantic conventions](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md#span-kind)
+the [OpenTelemetry messaging semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md#span-kind)
 the span kind should be set to `CLIENT` if sending the message is completely synchronous and waits
 for the response.

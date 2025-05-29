@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.semconv.SemanticAttributes.HTTP_URL;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -55,7 +55,6 @@ public abstract class AbstractQueryProtocolModelTest {
   protected abstract InstrumentationExtension getTesting();
 
   @Test
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void testClientWithQueryProtocolModel() {
     server.enqueue(
         HttpResponse.of(
@@ -95,7 +94,7 @@ public abstract class AbstractQueryProtocolModelTest {
                         attributes -> {
                           assertThat(attributes)
                               .hasEntrySatisfying(
-                                  HTTP_URL,
+                                  URL_FULL,
                                   entry -> {
                                     assertThat(entry)
                                         .satisfies(

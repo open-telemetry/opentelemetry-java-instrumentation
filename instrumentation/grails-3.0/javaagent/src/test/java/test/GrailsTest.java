@@ -14,6 +14,8 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 import grails.boot.GrailsApp;
 import grails.boot.config.GrailsAutoConfiguration;
@@ -27,6 +29,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -35,7 +38,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
-import org.assertj.core.api.Assertions;
+import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
@@ -153,23 +156,32 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
     span.hasName(getHandlerSpanName(endpoint)).hasKind(SpanKind.INTERNAL);
     if (endpoint == EXCEPTION) {
       span.hasStatus(StatusData.error());
-      span.hasException(new Exception(EXCEPTION.getBody()));
+      span.hasException(new IllegalStateException(EXCEPTION.getBody()));
     }
     return span;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   public SpanDataAssert assertResponseSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
+    String methodName;
     if (endpoint == REDIRECT) {
-      span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendRedirect"));
+      methodName = "sendRedirect";
+    } else if (endpoint == ERROR || endpoint == NOT_FOUND) {
+      methodName = "sendError";
     } else {
-      span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"));
+      throw new AssertionError("Unexpected endpoint: " + endpoint.name());
     }
-    span.hasKind(SpanKind.INTERNAL).hasAttributesSatisfying(Attributes::isEmpty);
+    span.hasKind(SpanKind.INTERNAL)
+        .satisfies(spanData -> assertThat(spanData.getName()).endsWith("." + methodName))
+        .hasAttributesSatisfyingExactly(
+            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, methodName),
+            satisfies(CodeIncubatingAttributes.CODE_NAMESPACE, AbstractStringAssert::isNotEmpty));
     return span;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   public List<Consumer<SpanDataAssert>> errorPageSpanAssertions(
       String method, ServerEndpoint endpoint) {
@@ -179,14 +191,17 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
             span.hasName(
                     endpoint == NOT_FOUND ? "ErrorController.notFound" : "ErrorController.index")
                 .hasKind(SpanKind.INTERNAL)
-                .hasAttributesSatisfying(Attributes::isEmpty));
+                .hasAttributes(Attributes.empty()));
     if (endpoint == NOT_FOUND) {
       spanAssertions.add(
           span ->
-              span.satisfies(
-                      spanData -> Assertions.assertThat(spanData.getName()).endsWith(".sendError"))
+              span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"))
                   .hasKind(SpanKind.INTERNAL)
-                  .hasAttributesSatisfying(Attributes::isEmpty));
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "sendError"),
+                      satisfies(
+                          CodeIncubatingAttributes.CODE_NAMESPACE,
+                          AbstractStringAssert::isNotEmpty)));
     }
     return spanAssertions;
   }

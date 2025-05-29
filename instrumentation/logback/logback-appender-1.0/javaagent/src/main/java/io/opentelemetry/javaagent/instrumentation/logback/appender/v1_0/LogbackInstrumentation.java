@@ -51,7 +51,8 @@ class LogbackInstrumentation implements TypeInstrumentation {
       // logging framework delegates to another
       callDepth = CallDepth.forClass(LoggerProvider.class);
       if (callDepth.getAndIncrement() == 0) {
-        mapper().emit(GlobalOpenTelemetry.get().getLogsBridge(), event);
+        mapper()
+            .emit(GlobalOpenTelemetry.get().getLogsBridge(), event, Thread.currentThread().getId());
       }
     }
 

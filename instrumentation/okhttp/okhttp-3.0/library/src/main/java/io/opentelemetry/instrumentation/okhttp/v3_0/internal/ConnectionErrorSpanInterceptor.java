@@ -7,8 +7,8 @@ package io.opentelemetry.instrumentation.okhttp.v3_0.internal;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientResendCount;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientRequestResendCount;
 import java.io.IOException;
 import java.time.Instant;
 import okhttp3.Interceptor;
@@ -21,9 +21,9 @@ import okhttp3.Response;
  */
 public final class ConnectionErrorSpanInterceptor implements Interceptor {
 
-  private final Instrumenter<Request, Response> instrumenter;
+  private final Instrumenter<Chain, Response> instrumenter;
 
-  public ConnectionErrorSpanInterceptor(Instrumenter<Request, Response> instrumenter) {
+  public ConnectionErrorSpanInterceptor(Instrumenter<Chain, Response> instrumenter) {
     this.instrumenter = instrumenter;
   }
 
@@ -42,10 +42,10 @@ public final class ConnectionErrorSpanInterceptor implements Interceptor {
       throw t;
     } finally {
       // only create a span when there wasn't any HTTP request
-      if (HttpClientResendCount.get(parentContext) == 0) {
-        if (instrumenter.shouldStart(parentContext, request)) {
+      if (HttpClientRequestResendCount.get(parentContext) == 0) {
+        if (instrumenter.shouldStart(parentContext, chain)) {
           InstrumenterUtil.startAndEnd(
-              instrumenter, parentContext, request, response, error, startTime, Instant.now());
+              instrumenter, parentContext, chain, response, error, startTime, Instant.now());
         }
       }
     }

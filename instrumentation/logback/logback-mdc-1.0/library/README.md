@@ -65,3 +65,18 @@ following attributes are available for use:
 - `trace_id`
 - `span_id`
 - `trace_flags`
+
+These keys can be customized in your `logback.xml` configuration, for example:
+
+```xml
+<appender name="OTEL" class="io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender">
+  <traceIdKey>example_trace_id</traceIdKey>
+  <spanIdKey>example_span_id</spanIdKey>
+  <traceFlagsKey>example_trace_flags</traceFlagsKey>
+</appender>
+```
+
+If you set `<addBaggage>true</addBaggage>` in your `logback.xml` configuration,
+key/value pairs in [baggage](https://opentelemetry.io/docs/concepts/signals/baggage/) will also be added to the MDC.
+
+- `baggage.<entry_name>`

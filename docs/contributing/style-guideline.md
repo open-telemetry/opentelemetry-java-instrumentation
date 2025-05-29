@@ -64,8 +64,14 @@ rough guideline of what are commonly accepted static imports:
 - Collections helpers (such as `singletonList()` and `Collectors.toList()`)
 - ByteBuddy `ElementMatchers` (for building instrumentation modules)
 - Immutable constants (where clearly named)
-- Singleton instances (especially where clearly named an hopefully immutable)
+- Singleton instances (especially where clearly named and hopefully immutable)
 - `tracer()` methods that expose tracer singleton instances
+- Semantic convention attribute keys used in tests
+
+Some of these are enforced by checkstyle rules:
+
+- look for `RegexpSinglelineJava` in `checkstyle.xml`
+- use `@SuppressWarnings("checkstyle:RegexpSinglelineJava")` to suppress the checkstyle warning
 
 ## Ordering of class contents
 
@@ -102,18 +108,7 @@ All parameters and fields which can be `null` should be annotated with `@Nullabl
 (specifically `javax.annotation.Nullable`, which is included by the
 `otel.java-conventions` gradle plugin as a `compileOnly` dependency).
 
-There is no need to use `@NonNull`, as this is the default, which should be declared in a
-`package-info.java` file on the root package of each module, e.g.
-
-```java
-@DefaultQualifier(
-    value = NonNull.class,
-    locations = {TypeUseLocation.FIELD, TypeUseLocation.PARAMETER, TypeUseLocation.RETURN})
-package io.opentelemetry.instrumentation.api;
-
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.framework.qual.DefaultQualifier;
-```
+There is no need to use `@NonNull`, as this is the default.
 
 Public APIs should still defensively check for `null` parameters, even if the parameter is not
 annotated with `@Nullable`. Internal APIs do not need to defensively check for `null` parameters.
@@ -137,7 +132,14 @@ It is ok to use `Optional` in places where it does not leak into public API sign
 Also, avoid `Optional` usage on the hot path (instrumentation code), unless the instrumented library
 itself uses it.
 
-## `java.util.stream.Stream` usage
+## Hot path constraints
 
-Avoid streams on the hot path (instrumentation code), unless the instrumented library itself uses
-them.
+Avoid allocations whenever possible on the hot path (instrumentation code).
+This includes `Iterator` allocations from collections; note that
+`for(SomeType t : plainJavaArray)` does not allocate an iterator object.
+Non-allocating stream api usage on the hot path is acceptable but may not
+fit the surrounding code style; this is a judgement call.  Note that
+some stream apis make it much more difficult to allocate efficiently
+(e.g., `collect` with presized sink data structures involves
+convoluted `Supplier` code, or lambdas passed to `forEach` might be
+capturing/allocating lambdas).

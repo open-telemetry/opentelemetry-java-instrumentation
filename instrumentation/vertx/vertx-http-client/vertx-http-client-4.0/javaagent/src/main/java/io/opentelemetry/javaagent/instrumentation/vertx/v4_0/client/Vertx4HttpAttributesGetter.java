@@ -70,7 +70,7 @@ final class Vertx4HttpAttributesGetter extends AbstractVertxHttpAttributesGetter
 
   @Nullable
   @Override
-  public String getServerSocketAddress(
+  public String getNetworkPeerAddress(
       HttpClientRequest request, @Nullable HttpClientResponse response) {
     if (response == null) {
       return null;
@@ -81,18 +81,7 @@ final class Vertx4HttpAttributesGetter extends AbstractVertxHttpAttributesGetter
 
   @Nullable
   @Override
-  public String getServerSocketDomain(
-      HttpClientRequest request, @Nullable HttpClientResponse response) {
-    if (response == null) {
-      return null;
-    }
-    SocketAddress socketAddress = response.netSocket().remoteAddress();
-    return socketAddress == null ? null : socketAddress.host();
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerSocketPort(
+  public Integer getNetworkPeerPort(
       HttpClientRequest request, @Nullable HttpClientResponse response) {
     if (response == null) {
       return null;

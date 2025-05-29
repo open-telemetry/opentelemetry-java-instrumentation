@@ -8,15 +8,23 @@ package io.opentelemetry.instrumentation.logback.appender.v1_0;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
-import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Stream;
 import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.Test;
@@ -107,6 +115,7 @@ class LogbackTest {
     testing.clearData();
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static void test(
       Logger logger,
       OneArgLoggerMethod oneArgLoggerMethod,
@@ -133,49 +142,50 @@ class LogbackTest {
     }
 
     if (expectedSeverity != null) {
-      LogRecordData log = testing.waitForLogRecords(1).get(0);
-      assertThat(log)
-          .hasBody("xyz: 123")
-          .hasInstrumentationScope(InstrumentationScopeInfo.builder(expectedLoggerName).build())
-          .hasSeverity(expectedSeverity)
-          .hasSeverityText(expectedSeverityText);
-      if (logException) {
-        assertThat(log)
-            .hasAttributesSatisfyingExactly(
-                equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()),
-                equalTo(SemanticAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
-                equalTo(SemanticAttributes.CODE_FUNCTION, "performLogging"),
-                satisfies(SemanticAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
-                equalTo(SemanticAttributes.CODE_FILEPATH, "LogbackTest.java"),
-                equalTo(SemanticAttributes.EXCEPTION_TYPE, IllegalStateException.class.getName()),
-                equalTo(SemanticAttributes.EXCEPTION_MESSAGE, "hello"),
-                satisfies(
-                    SemanticAttributes.EXCEPTION_STACKTRACE,
-                    v -> v.contains(LogbackTest.class.getName())));
-      } else {
-        assertThat(log)
-            .hasAttributesSatisfyingExactly(
-                equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()),
-                equalTo(SemanticAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
-                equalTo(SemanticAttributes.CODE_FUNCTION, "performLogging"),
-                satisfies(SemanticAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
-                equalTo(SemanticAttributes.CODE_FILEPATH, "LogbackTest.java"));
-      }
+      testing.waitAndAssertLogRecords(
+          logRecord -> {
+            logRecord
+                .hasBody("xyz: 123")
+                .hasInstrumentationScope(
+                    InstrumentationScopeInfo.builder(expectedLoggerName).build())
+                .hasSeverity(expectedSeverity)
+                .hasSeverityText(expectedSeverityText)
+                .hasSpanContext(
+                    withParent
+                        ? testing.spans().get(0).getSpanContext()
+                        : SpanContext.getInvalid());
 
-      if (withParent) {
-        assertThat(log).hasSpanContext(testing.spans().get(0).getSpanContext());
-      } else {
-        assertThat(log.getSpanContext().isValid()).isFalse();
-      }
-
+            List<AttributeAssertion> attributeAsserts =
+                new ArrayList<>(
+                    Arrays.asList(
+                        equalTo(
+                            ThreadIncubatingAttributes.THREAD_NAME,
+                            Thread.currentThread().getName()),
+                        equalTo(
+                            ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
+                        equalTo(
+                            CodeIncubatingAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
+                        equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "performLogging"),
+                        satisfies(
+                            CodeIncubatingAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
+                        equalTo(CodeIncubatingAttributes.CODE_FILEPATH, "LogbackTest.java")));
+            if (logException) {
+              attributeAsserts.addAll(
+                  Arrays.asList(
+                      equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
+                      equalTo(EXCEPTION_MESSAGE, "hello"),
+                      satisfies(
+                          EXCEPTION_STACKTRACE, v -> v.contains(LogbackTest.class.getName()))));
+            }
+            logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
+          });
     } else {
       Thread.sleep(500); // sleep a bit just to make sure no log is captured
       assertThat(testing.logRecords()).isEmpty();
     }
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testMdc() {
     MDC.put("key1", "val1");
@@ -186,23 +196,26 @@ class LogbackTest {
       MDC.clear();
     }
 
-    LogRecordData log = testing.waitForLogRecords(1).get(0);
-    assertThat(log)
-        .hasBody("xyz: 123")
-        .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
-        .hasSeverity(Severity.INFO)
-        .hasSeverityText("INFO")
-        .hasAttributesSatisfyingExactly(
-            equalTo(AttributeKey.stringKey("logback.mdc.key1"), "val1"),
-            equalTo(AttributeKey.stringKey("logback.mdc.key2"), "val2"),
-            equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
-            equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()),
-            equalTo(SemanticAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
-            equalTo(SemanticAttributes.CODE_FUNCTION, "testMdc"),
-            satisfies(SemanticAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
-            equalTo(SemanticAttributes.CODE_FILEPATH, "LogbackTest.java"));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasBody("xyz: 123")
+                .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                .hasSeverity(Severity.INFO)
+                .hasSeverityText("INFO")
+                .hasAttributesSatisfyingExactly(
+                    equalTo(AttributeKey.stringKey("key1"), "val1"),
+                    equalTo(AttributeKey.stringKey("key2"), "val2"),
+                    equalTo(
+                        ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
+                    equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
+                    equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
+                    equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "testMdc"),
+                    satisfies(CodeIncubatingAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
+                    equalTo(CodeIncubatingAttributes.CODE_FILEPATH, "LogbackTest.java")));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   public void testMarker() {
 
@@ -211,16 +224,18 @@ class LogbackTest {
 
     abcLogger.info(marker, "Message");
 
-    LogRecordData log = testing.waitForLogRecords(1).get(0);
-    assertThat(log)
-        .hasAttributesSatisfyingExactly(
-            equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
-            equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()),
-            equalTo(AttributeKey.stringArrayKey("logback.marker"), Arrays.asList(markerName)),
-            equalTo(SemanticAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
-            equalTo(SemanticAttributes.CODE_FUNCTION, "testMarker"),
-            satisfies(SemanticAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
-            equalTo(SemanticAttributes.CODE_FILEPATH, "LogbackTest.java"));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
+                equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
+                equalTo(
+                    AttributeKey.stringArrayKey("logback.marker"),
+                    Collections.singletonList(markerName)),
+                equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
+                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "testMarker"),
+                satisfies(CodeIncubatingAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
+                equalTo(CodeIncubatingAttributes.CODE_FILEPATH, "LogbackTest.java")));
   }
 
   private static void performLogging(

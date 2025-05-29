@@ -69,16 +69,6 @@ public class Servlet5Accessor
   }
 
   @Override
-  public String getRequestServerName(HttpServletRequest request) {
-    return request.getServerName();
-  }
-
-  @Override
-  public Integer getRequestServerPort(HttpServletRequest request) {
-    return request.getServerPort();
-  }
-
-  @Override
   public String getRequestRemoteAddr(HttpServletRequest request) {
     return request.getRemoteAddr();
   }
@@ -204,7 +194,9 @@ public class Servlet5Accessor
 
     @Override
     public void onStartAsync(AsyncEvent event) {
-      event.getAsyncContext().addListener(this);
+      event
+          .getAsyncContext()
+          .addListener(this, event.getSuppliedRequest(), event.getSuppliedResponse());
     }
   }
 }

@@ -8,6 +8,7 @@ muzzle {
     module.set("kafka-clients")
     versions.set("[0.11.0.0,)")
     assertInverse.set(true)
+    excludeInstrumentationName("kafka-clients-metrics")
   }
 }
 
@@ -16,7 +17,7 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 
   bootstrap(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
-  implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common:library"))
+  implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
 
   library("org.apache.kafka:kafka-clients:0.11.0.0")
 

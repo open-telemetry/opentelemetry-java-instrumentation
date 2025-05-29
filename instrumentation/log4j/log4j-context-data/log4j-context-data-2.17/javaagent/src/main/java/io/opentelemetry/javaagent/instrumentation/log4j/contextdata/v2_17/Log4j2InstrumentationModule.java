@@ -14,12 +14,16 @@ import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilde
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import java.util.List;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class Log4j2InstrumentationModule extends InstrumentationModule {
+public class Log4j2InstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public Log4j2InstrumentationModule() {
     super("log4j-context-data", "log4j-context-data-2.17");
   }
@@ -31,8 +35,11 @@ public class Log4j2InstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isIndyModule() {
-    return false;
+  public void injectClasses(ClassInjector injector) {
+    injector
+        .proxyBuilder(
+            "io.opentelemetry.instrumentation.log4j.contextdata.v2_17.OpenTelemetryContextDataProvider")
+        .inject(InjectionMode.CLASS_ONLY);
   }
 
   @Override

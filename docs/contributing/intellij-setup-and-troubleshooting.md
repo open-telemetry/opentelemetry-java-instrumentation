@@ -19,6 +19,28 @@ Configuration:
 Note: If google-java-format generates errors in Intellij,
 see <https://github.com/google/google-java-format/issues/787#issuecomment-1200762464>.
 
+## Load/Unload Modules
+
+This project has many modules, which have many dependencies.
+Therefore, IntelliJ indexes a lot and consumes a lot of CPU/memory resources.
+
+To minimize IntelliJ's indexing and resource utilization,
+[unload any modules](https://www.jetbrains.com/help/idea/unloading-modules.html)
+on which you are not actively working.
+
+Specifically, unload all modules, and then selectively load the modules on which you need to work.
+IntelliJ will prompt you to load additional modules on which the selected modules depend.
+
+If you are working on a specific instrumentation, you can load only the modules for that instrumentation.
+For example, to load the modules for the Spring Boot autoconfigure instrumentation, run:
+
+```shell
+./docs/contributing/selectModules.kts instrumentation/spring/spring-boot-autoconfigure/
+```
+
+Install the [Kotlin executable](https://kotlinlang.org/docs/tutorials/command-line.html)
+if you don't have it already.
+
 ## Troubleshooting
 
 Occasionally, Intellij gets confused, maybe due to the number of modules in this project,

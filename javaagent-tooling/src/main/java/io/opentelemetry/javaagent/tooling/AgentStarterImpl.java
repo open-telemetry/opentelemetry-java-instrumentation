@@ -9,6 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.weaklockfree.WeakConcurrentMapCleaner;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.AgentStarter;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import java.io.File;
 import java.lang.instrument.ClassFileTransformer;
@@ -67,6 +68,8 @@ public class AgentStarterImpl implements AgentStarter {
 
   @Override
   public void start() {
+    installTransformers();
+
     EarlyInitAgentConfig earlyConfig = EarlyInitAgentConfig.create();
     extensionClassLoader = createExtensionClassLoader(getClass().getClassLoader(), earlyConfig);
 
@@ -114,6 +117,14 @@ public class AgentStarterImpl implements AgentStarter {
     }
   }
 
+  private void installTransformers() {
+    // prevents loading InetAddressResolverProvider SPI before agent has started
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/7130
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/10921
+    InetAddressClassFileTransformer transformer = new InetAddressClassFileTransformer();
+    instrumentation.addTransformer(transformer, true);
+  }
+
   @SuppressWarnings("SystemOut")
   private static void logUnrecognizedLoggerImplWarning(String loggerImplementationName) {
     System.err.println(
@@ -151,7 +162,7 @@ public class AgentStarterImpl implements AgentStarter {
       ClassReader cr = new ClassReader(classfileBuffer);
       ClassWriter cw = new ClassWriter(cr, 0);
       ClassVisitor cv =
-          new ClassVisitor(Opcodes.ASM7, cw) {
+          new ClassVisitor(AsmApi.VERSION, cw) {
             @Override
             public MethodVisitor visitMethod(
                 int access, String name, String descriptor, String signature, String[] exceptions) {
@@ -174,6 +185,62 @@ public class AgentStarterImpl implements AgentStarter {
               return mv;
             }
           };
+      cr.accept(cv, 0);
+
+      return hookInserted ? cw.toByteArray() : null;
+    }
+  }
+
+  private static class InetAddressClassFileTransformer implements ClassFileTransformer {
+    boolean hookInserted = false;
+
+    @Override
+    public byte[] transform(
+        ClassLoader loader,
+        String className,
+        Class<?> classBeingRedefined,
+        ProtectionDomain protectionDomain,
+        byte[] classfileBuffer) {
+      if (!"java/net/InetAddress".equals(className)) {
+        return null;
+      }
+      ClassReader cr = new ClassReader(classfileBuffer);
+      ClassWriter cw = new ClassWriter(cr, 0);
+      ClassVisitor cv =
+          new ClassVisitor(AsmApi.VERSION, cw) {
+            @Override
+            public MethodVisitor visitMethod(
+                int access, String name, String descriptor, String signature, String[] exceptions) {
+              MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
+              if (!"resolver".equals(name)) {
+                return mv;
+              }
+              return new MethodVisitor(api, mv) {
+                @Override
+                public void visitMethodInsn(
+                    int opcode,
+                    String ownerClassName,
+                    String methodName,
+                    String descriptor,
+                    boolean isInterface) {
+                  super.visitMethodInsn(
+                      opcode, ownerClassName, methodName, descriptor, isInterface);
+                  // rewrite Vm.isBooted() to AgentInitializer.isAgentStarted(Vm.isBooted())
+                  if ("jdk/internal/misc/VM".equals(ownerClassName)
+                      && "isBooted".equals(methodName)) {
+                    super.visitMethodInsn(
+                        Opcodes.INVOKESTATIC,
+                        Type.getInternalName(AgentInitializer.class),
+                        "isAgentStarted",
+                        "(Z)Z",
+                        false);
+                    hookInserted = true;
+                  }
+                }
+              };
+            }
+          };
+
       cr.accept(cv, 0);
 
       return hookInserted ? cw.toByteArray() : null;

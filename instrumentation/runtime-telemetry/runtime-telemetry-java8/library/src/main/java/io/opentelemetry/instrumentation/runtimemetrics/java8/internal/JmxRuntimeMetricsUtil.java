@@ -32,6 +32,15 @@ public class JmxRuntimeMetricsUtil {
     return meterBuilder.build();
   }
 
+  public static String getInstrumentationName() {
+    return INSTRUMENTATION_NAME;
+  }
+
+  @Nullable
+  public static String getInstrumentationVersion() {
+    return INSTRUMENTATION_VERSION;
+  }
+
   public static void closeObservers(List<AutoCloseable> observables) {
     observables.forEach(
         observable -> {

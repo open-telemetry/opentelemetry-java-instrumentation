@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
 import com.rabbitmq.client.GetResponse;
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -30,12 +30,23 @@ enum RabbitReceiveAttributesGetter
     }
   }
 
+  @Nullable
+  @Override
+  public String getDestinationTemplate(ReceiveRequest request) {
+    return null;
+  }
+
   private static String normalizeExchangeName(String exchange) {
     return exchange == null || exchange.isEmpty() ? "<default>" : exchange;
   }
 
   @Override
   public boolean isTemporaryDestination(ReceiveRequest request) {
+    return false;
+  }
+
+  @Override
+  public boolean isAnonymousDestination(ReceiveRequest request) {
     return false;
   }
 
@@ -47,19 +58,31 @@ enum RabbitReceiveAttributesGetter
 
   @Nullable
   @Override
-  public Long getMessagePayloadSize(ReceiveRequest request) {
+  public Long getMessageBodySize(ReceiveRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long getMessagePayloadCompressedSize(ReceiveRequest request) {
+  public Long getMessageEnvelopeSize(ReceiveRequest request) {
     return null;
   }
 
   @Nullable
   @Override
   public String getMessageId(ReceiveRequest request, @Nullable GetResponse response) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getClientId(ReceiveRequest request) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Long getBatchMessageCount(ReceiveRequest request, @Nullable GetResponse response) {
     return null;
   }
 

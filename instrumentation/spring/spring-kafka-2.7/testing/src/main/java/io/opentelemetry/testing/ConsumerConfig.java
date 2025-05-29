@@ -49,8 +49,6 @@ public class ConsumerConfig {
           customizerProvider) {
     ConcurrentKafkaListenerContainerFactory<String, String> factory =
         new ConcurrentKafkaListenerContainerFactory<>();
-    // do not retry failed records
-    factory.setBatchErrorHandler(new DoNothingBatchErrorHandler());
     factory.setConsumerFactory(consumerFactory);
     factory.setBatchListener(true);
     factory.setAutoStartup(true);
@@ -67,8 +65,6 @@ public class ConsumerConfig {
           customizerProvider) {
     ConcurrentKafkaListenerContainerFactory<String, String> factory =
         new ConcurrentKafkaListenerContainerFactory<>();
-    // do not retry failed records
-    factory.setErrorHandler(new DoNothingErrorHandler());
     factory.setConsumerFactory(consumerFactory);
     factory.setBatchListener(false);
     factory.setAutoStartup(true);

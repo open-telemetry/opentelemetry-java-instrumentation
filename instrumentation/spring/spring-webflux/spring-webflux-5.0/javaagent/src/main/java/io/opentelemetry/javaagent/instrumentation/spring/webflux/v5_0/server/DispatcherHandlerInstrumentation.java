@@ -35,6 +35,11 @@ public class DispatcherHandlerInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("org.springframework.web.server.ServerWebExchange")))
             .and(takesArguments(1)),
         this.getClass().getName() + "$HandleAdvice");
+    transformer.applyAdviceToMethod(
+        isMethod()
+            .and(named("handleResult"))
+            .and(takesArgument(0, named("org.springframework.web.server.ServerWebExchange"))),
+        this.getClass().getName() + "$HandleResultAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -51,6 +56,17 @@ public class DispatcherHandlerInstrumentation implements TypeInstrumentation {
         // endpoint annotation API fail Mono" test fails with that placement
         mono = AdviceUtils.end(mono, exchange);
       }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class HandleResultAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void methodExit(
+        @Advice.Argument(0) ServerWebExchange exchange,
+        @Advice.Return(readOnly = false) Mono<Void> mono) {
+      mono = AdviceUtils.wrapMono(mono, exchange.getAttribute(AdviceUtils.CONTEXT));
     }
   }
 }

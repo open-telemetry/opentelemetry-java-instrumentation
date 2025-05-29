@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.akkahttp.client;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
@@ -25,8 +26,9 @@ public class PoolMasterActorInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     // scala compiler mangles method names
     transformer.applyAdviceToMethod(
-        named("akka$http$impl$engine$client$PoolMasterActor$$startPoolInterface")
-            .or(named("akka$http$impl$engine$client$PoolMasterActor$$startPoolInterfaceActor")),
+        namedOneOf(
+            "akka$http$impl$engine$client$PoolMasterActor$$startPoolInterface",
+            "akka$http$impl$engine$client$PoolMasterActor$$startPoolInterfaceActor"),
         ClearContextAdvice.class.getName());
   }
 

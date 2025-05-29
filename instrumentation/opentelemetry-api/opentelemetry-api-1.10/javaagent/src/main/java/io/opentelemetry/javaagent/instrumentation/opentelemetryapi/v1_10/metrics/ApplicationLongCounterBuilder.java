@@ -13,11 +13,12 @@ import application.io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.function.Consumer;
 
-final class ApplicationLongCounterBuilder implements LongCounterBuilder {
+public class ApplicationLongCounterBuilder implements LongCounterBuilder {
 
   private final io.opentelemetry.api.metrics.LongCounterBuilder agentBuilder;
 
-  ApplicationLongCounterBuilder(io.opentelemetry.api.metrics.LongCounterBuilder agentBuilder) {
+  protected ApplicationLongCounterBuilder(
+      io.opentelemetry.api.metrics.LongCounterBuilder agentBuilder) {
     this.agentBuilder = agentBuilder;
   }
 

@@ -42,12 +42,12 @@ abstract class PayaraSmokeTest extends AppServerTest {
 class Payara52020Jdk8 extends PayaraSmokeTest {
 }
 
-@AppServer(version = "5.2020.6", jdk = "11")
-class Payara52020Jdk11 extends PayaraSmokeTest {
-}
-
 @AppServer(version = "5.2020.6", jdk = "8-openj9")
 class Payara52020Jdk8Openj9 extends PayaraSmokeTest {
+}
+
+@AppServer(version = "5.2020.6", jdk = "11")
+class Payara52020Jdk11 extends PayaraSmokeTest {
 }
 
 @AppServer(version = "5.2020.6", jdk = "11-openj9")
@@ -58,30 +58,34 @@ class Payara52020Jdk11Openj9 extends PayaraSmokeTest {
 class Payara52021Jdk8 extends PayaraSmokeTest {
 }
 
-@AppServer(version = "5.2021.8", jdk = "11")
-class Payara52021Jdk11 extends PayaraSmokeTest {
-}
-
 @AppServer(version = "5.2021.8", jdk = "8-openj9")
 class Payara52021Jdk8Openj9 extends PayaraSmokeTest {
+}
+
+@AppServer(version = "5.2021.8", jdk = "11")
+class Payara52021Jdk11 extends PayaraSmokeTest {
 }
 
 @AppServer(version = "5.2021.8", jdk = "11-openj9")
 class Payara52021Jdk11Openj9 extends PayaraSmokeTest {
 }
 
-@AppServer(version = "6.2023.4", jdk = "11")
+@AppServer(version = "6.2023.12", jdk = "11")
 class Payara6Jdk11 extends PayaraSmokeTest {
 }
 
-@AppServer(version = "6.2023.4", jdk = "11-openj9")
+@AppServer(version = "6.2023.12", jdk = "11-openj9")
 class Payara6Jdk11Openj9 extends PayaraSmokeTest {
 }
 
-@AppServer(version = "6.2023.4", jdk = "17")
+@AppServer(version = "6.2023.12", jdk = "17")
 class Payara6Jdk17 extends PayaraSmokeTest {
 }
 
-@AppServer(version = "6.2023.4", jdk = "17-openj9")
+@AppServer(version = "6.2023.12", jdk = "17-openj9")
 class Payara6Jdk17Openj9 extends PayaraSmokeTest {
+}
+
+@AppServer(version = "6.2023.12", jdk = "21-openj9")
+class Payara6Jdk21Openj9 extends PayaraSmokeTest {
 }

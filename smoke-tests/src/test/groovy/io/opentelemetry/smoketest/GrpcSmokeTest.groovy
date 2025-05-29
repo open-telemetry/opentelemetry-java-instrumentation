@@ -23,7 +23,7 @@ import static java.util.stream.Collectors.toSet
 class GrpcSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-grpc:jdk$jdk-20230228.4289437270"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-grpc:jdk$jdk-20241021.11448062549"
   }
 
   @Override
@@ -51,7 +51,7 @@ class GrpcSmokeTest extends SmokeTest {
     countSpansByName(traces, 'opentelemetry.proto.collector.trace.v1.TraceService/Export') == 1
     countSpansByName(traces, 'TestService.withSpan') == 1
 
-    [currentAgentVersion] as Set == findResourceAttribute(traces, "telemetry.auto.version")
+    [currentAgentVersion] as Set == findResourceAttribute(traces, "telemetry.distro.version")
       .map { it.stringValue }
       .collect(toSet())
 
@@ -67,6 +67,6 @@ class GrpcSmokeTest extends SmokeTest {
     channel.shutdown()
 
     where:
-    jdk << [8, 11, 17, 19]
+    jdk << [8, 11, 17, 21, 23]
   }
 }

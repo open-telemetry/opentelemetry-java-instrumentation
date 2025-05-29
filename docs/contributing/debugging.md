@@ -3,6 +3,17 @@
 Debugging javaagent instrumentation can be a challenging task since instrumentation
 code is directly inlined into target classes.
 
+## Indy compatible instrumentation
+
+For instrumentation that has been migrated to use the
+[invokedynamic based instrumentation mechanism](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8999),
+you can leverage breakpoints and standard debugging strategies by adding `-PtestIndy=true` to the
+gradle command when running tests:
+
+```
+./gradlew -PtestIndy=true :instrumentation:<INSTRUMENTATION_NAME>:test
+```
+
 ## Advice methods
 
 Breakpoints do not work in advice methods, because their code is directly inlined
@@ -63,6 +74,10 @@ builds by adding the following to `~/.gradle/gradle.properties` before building.
 ```properties
 disableShadowRelocate=true
 ```
+
+WARNING: disabling shadow renaming will make some of the tests fail. In some cases it can also make
+tests pass when they really should be failing. Use with caution and be prepared for unexpected
+behavior.
 
 ## Missing GraalVM hints
 

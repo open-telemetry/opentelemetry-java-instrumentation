@@ -7,8 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.logback.appender.v1_0;
 
 import static java.util.Collections.emptyList;
 
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.util.List;
 
 public final class LogbackSingletons {
@@ -16,7 +17,7 @@ public final class LogbackSingletons {
   private static final LoggingEventMapper mapper;
 
   static {
-    InstrumentationConfig config = InstrumentationConfig.get();
+    InstrumentationConfig config = AgentInstrumentationConfig.get();
 
     boolean captureExperimentalAttributes =
         config.getBoolean(
@@ -31,18 +32,33 @@ public final class LogbackSingletons {
         config.getBoolean(
             "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes",
             false);
+    boolean captureLoggerContext =
+        config.getBoolean(
+            "otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes",
+            false);
+    boolean captureArguments =
+        config.getBoolean(
+            "otel.instrumentation.logback-appender.experimental.capture-arguments", false);
+    boolean captureLogstashAttributes =
+        config.getBoolean(
+            "otel.instrumentation.logback-appender.experimental.capture-logstash-attributes",
+            false);
     List<String> captureMdcAttributes =
         config.getList(
             "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
             emptyList());
 
     mapper =
-        new LoggingEventMapper(
-            captureExperimentalAttributes,
-            captureMdcAttributes,
-            captureCodeAttributes,
-            captureMarkerAttribute,
-            captureKeyValuePairAttributes);
+        LoggingEventMapper.builder()
+            .setCaptureExperimentalAttributes(captureExperimentalAttributes)
+            .setCaptureMdcAttributes(captureMdcAttributes)
+            .setCaptureCodeAttributes(captureCodeAttributes)
+            .setCaptureMarkerAttribute(captureMarkerAttribute)
+            .setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes)
+            .setCaptureLoggerContext(captureLoggerContext)
+            .setCaptureArguments(captureArguments)
+            .setCaptureLogstashAttributes(captureLogstashAttributes)
+            .build();
   }
 
   public static LoggingEventMapper mapper() {

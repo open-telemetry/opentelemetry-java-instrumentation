@@ -9,7 +9,7 @@ import com.rabbitmq.client.Envelope;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import javax.annotation.Nullable;
 
 class RabbitDeliveryExtraAttributesExtractor implements AttributesExtractor<DeliveryRequest, Void> {
@@ -20,7 +20,8 @@ class RabbitDeliveryExtraAttributesExtractor implements AttributesExtractor<Deli
     Envelope envelope = request.getEnvelope();
     String routingKey = envelope.getRoutingKey();
     if (routingKey != null && !routingKey.isEmpty()) {
-      attributes.put(SemanticAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
+      attributes.put(
+          MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
     }
   }
 

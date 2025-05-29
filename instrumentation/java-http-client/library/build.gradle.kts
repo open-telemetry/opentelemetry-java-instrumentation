@@ -10,13 +10,3 @@ otelJava {
 dependencies {
   testImplementation(project(":instrumentation:java-http-client:testing"))
 }
-
-tasks {
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
-  }
-}

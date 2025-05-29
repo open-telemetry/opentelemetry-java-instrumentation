@@ -8,9 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorNettySingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientResendCount;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientRequestResendCount;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -36,7 +36,7 @@ final class InstrumentationContexts {
   private final Queue<RequestAndContext> clientContexts = new LinkedBlockingQueue<>();
 
   void initialize(Context parentContext) {
-    Context parentContextWithResends = HttpClientResendCount.initialize(parentContext);
+    Context parentContextWithResends = HttpClientRequestResendCount.initialize(parentContext);
     // make sure initialization happens only once
     if (parentContextUpdater.compareAndSet(this, null, parentContextWithResends)) {
       timer = Timer.start();

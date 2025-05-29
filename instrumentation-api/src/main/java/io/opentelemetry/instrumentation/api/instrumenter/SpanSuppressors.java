@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.api.internal.InstrumentationUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
@@ -61,10 +62,10 @@ final class SpanSuppressors {
 
   static final class BySpanKey implements SpanSuppressor {
 
-    private final Set<SpanKey> spanKeys;
+    private final SpanKey[] spanKeys;
 
     BySpanKey(Set<SpanKey> spanKeys) {
-      this.spanKeys = spanKeys;
+      this.spanKeys = spanKeys.toArray(new SpanKey[0]);
     }
 
     @Override
@@ -83,6 +84,27 @@ final class SpanSuppressors {
         }
       }
       return true;
+    }
+  }
+
+  static class ByContextKey implements SpanSuppressor {
+    private final SpanSuppressor delegate;
+
+    ByContextKey(SpanSuppressor delegate) {
+      this.delegate = delegate;
+    }
+
+    @Override
+    public Context storeInContext(Context context, SpanKind spanKind, Span span) {
+      return delegate.storeInContext(context, spanKind, span);
+    }
+
+    @Override
+    public boolean shouldSuppress(Context parentContext, SpanKind spanKind) {
+      if (InstrumentationUtil.shouldSuppressInstrumentation(parentContext)) {
+        return true;
+      }
+      return delegate.shouldSuppress(parentContext, spanKind);
     }
   }
 }

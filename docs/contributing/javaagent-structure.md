@@ -29,7 +29,7 @@ The bootstrap class loader contains several modules:
   it contains classes that continue the initialization work started by `OpenTelemetryAgent`, as well
   as some internal javaagent classes and interfaces that must be globally available to the whole
   application. This module is internal and its APIs are considered unstable.
-- **The `instrumentation-api` and `instrumentation-api-semconv` modules**:
+- **The `instrumentation-api` and `instrumentation-api-incubator` modules**:
   these modules contain the [Instrumenter API](using-instrumenter-api.md) and other related
   utilities. Because they are used by almost all instrumentations, they must be globally available
   to all classloaders running within the instrumented application. The classes located in these

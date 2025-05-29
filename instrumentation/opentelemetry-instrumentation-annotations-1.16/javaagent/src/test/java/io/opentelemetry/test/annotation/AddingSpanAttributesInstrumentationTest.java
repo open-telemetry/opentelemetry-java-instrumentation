@@ -5,15 +5,15 @@
 
 package io.opentelemetry.test.annotation;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -23,90 +23,62 @@ class AddingSpanAttributesInstrumentationTest {
   public static final AgentInstrumentationExtension testing =
       AgentInstrumentationExtension.create();
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
-  void captureAttributesInNewSpan() throws Exception {
-
+  void captureAttributesInNewSpan() {
     testing.runWithSpan(
         "root",
         () ->
             new ExtractAttributesUsingAddingSpanAttributes()
                 .withSpanTakesPrecedence("foo", "bar", null, "baz"));
 
-    assertThat(testing.waitForTraces(1))
-        .satisfiesExactly(
-            trace ->
-                assertThat(trace)
-                    .satisfiesExactly(
-                        span ->
-                            assertThat(span)
-                                .hasName("root")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(SpanId.getInvalid()),
-                        span ->
-                            assertThat(span)
-                                .hasName(
-                                    "ExtractAttributesUsingAddingSpanAttributes.withSpanTakesPrecedence")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(trace.get(0).getSpanId())
-                                .hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes)
-                                            .containsOnly(
-                                                entry(
-                                                    SemanticAttributes.CODE_NAMESPACE,
-                                                    ExtractAttributesUsingAddingSpanAttributes.class
-                                                        .getName()),
-                                                entry(
-                                                    SemanticAttributes.CODE_FUNCTION,
-                                                    "withSpanTakesPrecedence"),
-                                                entry(
-                                                    AttributeKey.stringKey("implicitName"), "foo"),
-                                                entry(
-                                                    AttributeKey.stringKey("explicitName"),
-                                                    "bar")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("root").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(
+                            "ExtractAttributesUsingAddingSpanAttributes.withSpanTakesPrecedence")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParentSpanId(trace.getSpan(0).getSpanId())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_NAMESPACE,
+                                ExtractAttributesUsingAddingSpanAttributes.class.getName()),
+                            equalTo(CODE_FUNCTION, "withSpanTakesPrecedence"),
+                            equalTo(stringKey("implicitName"), "foo"),
+                            equalTo(stringKey("explicitName"), "bar"))));
   }
 
   @Test
-  void captureAttributesInCurrentSpan() throws Exception {
-
+  void captureAttributesInCurrentSpan() {
     testing.runWithSpan(
         "root",
         () ->
             new ExtractAttributesUsingAddingSpanAttributes()
                 .withSpanAttributes("foo", "bar", null, "baz"));
 
-    assertThat(testing.waitForTraces(1))
-        .satisfiesExactly(
-            trace ->
-                assertThat(trace)
-                    .satisfiesExactly(
-                        span ->
-                            assertThat(span)
-                                .hasName("root")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(SpanId.getInvalid())
-                                .hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes)
-                                            .containsOnly(
-                                                entry(
-                                                    AttributeKey.stringKey("implicitName"), "foo"),
-                                                entry(
-                                                    AttributeKey.stringKey("explicitName"),
-                                                    "bar")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("root")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("implicitName"), "foo"),
+                            equalTo(stringKey("explicitName"), "bar"))));
   }
 
   @Test
-  void noExistingSpan() throws Exception {
-
+  void noExistingSpan() {
     new ExtractAttributesUsingAddingSpanAttributes().withSpanAttributes("foo", "bar", null, "baz");
 
-    assertThat(testing.waitForTraces(0));
+    assertThat(testing.waitForTraces(0)).isEmpty();
   }
 
   @Test
-  void overwriteAttributes() throws Exception {
-
+  void overwriteAttributes() {
     testing.runWithSpan(
         "root",
         () -> {
@@ -116,31 +88,21 @@ class AddingSpanAttributesInstrumentationTest {
               .withSpanAttributes("foo", "bar", null, "baz");
         });
 
-    assertThat(testing.waitForTraces(1))
-        .satisfiesExactly(
-            trace ->
-                assertThat(trace)
-                    .satisfiesExactly(
-                        span ->
-                            assertThat(span)
-                                .hasName("root")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(SpanId.getInvalid())
-                                .hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes)
-                                            .containsOnly(
-                                                entry(AttributeKey.stringKey("keep"), "willbekept"),
-                                                entry(
-                                                    AttributeKey.stringKey("implicitName"), "foo"),
-                                                entry(
-                                                    AttributeKey.stringKey("explicitName"),
-                                                    "bar")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("root")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("keep"), "willbekept"),
+                            equalTo(stringKey("implicitName"), "foo"),
+                            equalTo(stringKey("explicitName"), "bar"))));
   }
 
   @Test
-  void multiMethodOverwriteAttributes() throws Exception {
-
+  void multiMethodOverwriteAttributes() {
     testing.runWithSpan(
         "root",
         () -> {
@@ -150,25 +112,16 @@ class AddingSpanAttributesInstrumentationTest {
               .withSpanAttributesParent("parentbegone", "parentbegone", null, "parentbegone");
         });
 
-    assertThat(testing.waitForTraces(1))
-        .satisfiesExactly(
-            trace ->
-                assertThat(trace)
-                    .satisfiesExactly(
-                        span ->
-                            assertThat(span)
-                                .hasName("root")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(SpanId.getInvalid())
-                                .hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes)
-                                            .containsOnly(
-                                                entry(AttributeKey.stringKey("keep"), "willbekept"),
-                                                entry(
-                                                    AttributeKey.stringKey("implicitName"), "foo"),
-                                                entry(
-                                                    AttributeKey.stringKey("explicitName"),
-                                                    "bar")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("root")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("keep"), "willbekept"),
+                            equalTo(stringKey("implicitName"), "foo"),
+                            equalTo(stringKey("explicitName"), "bar"))));
   }
 }

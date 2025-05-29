@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.bootstrap.internal;
 import static java.util.Collections.emptyList;
 import static java.util.logging.Level.WARNING;
 
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -15,6 +16,7 @@ import java.util.logging.Logger;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
+@SuppressWarnings("unused")
 public final class DeprecatedConfigProperties {
 
   private static final Logger logger = Logger.getLogger(DeprecatedConfigProperties.class.getName());

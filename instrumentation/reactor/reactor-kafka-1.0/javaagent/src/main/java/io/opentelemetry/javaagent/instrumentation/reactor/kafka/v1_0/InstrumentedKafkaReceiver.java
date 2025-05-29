@@ -59,7 +59,7 @@ public final class InstrumentedKafkaReceiver<K, V> implements KafkaReceiver<K, V
   @Override
   public Flux<Flux<ConsumerRecord<K, V>>> receiveExactlyOnce(
       TransactionManager transactionManager) {
-    return actual.receiveAutoAck().map(InstrumentedKafkaReceiver::wrap);
+    return actual.receiveExactlyOnce(transactionManager).map(InstrumentedKafkaReceiver::wrap);
   }
 
   // added in 1.3.3

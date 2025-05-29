@@ -70,7 +70,7 @@ class ApacheHttpAsyncClientTest {
   }
 
   @Nested
-  class ApacheClientUriRequestTest extends AbstractHttpClientTest<HttpUriRequest> {
+  class ApacheClientUriRequestTest extends AbstractTest {
 
     @Override
     public HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -93,15 +93,10 @@ class ApacheHttpAsyncClientTest {
         HttpClientResult httpClientResult) {
       getClient(uri).execute(request, responseCallback(httpClientResult));
     }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
-    }
   }
 
   @Nested
-  class ApacheClientHostRequestTest extends AbstractHttpClientTest<HttpUriRequest> {
+  class ApacheClientHostRequestTest extends AbstractTest {
 
     @Override
     public HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -132,15 +127,10 @@ class ApacheHttpAsyncClientTest {
               request,
               responseCallback(httpClientResult));
     }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
-    }
   }
 
   @Nested
-  class ApacheClientHostAbsoluteUriRequestTest extends AbstractHttpClientTest<HttpUriRequest> {
+  class ApacheClientHostAbsoluteUriRequestTest extends AbstractTest {
 
     @Override
     public HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -170,10 +160,14 @@ class ApacheHttpAsyncClientTest {
               request,
               responseCallback(httpClientResult));
     }
+  }
+
+  abstract static class AbstractTest extends AbstractHttpClientTest<HttpUriRequest> {
 
     @Override
     protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
+      super.configure(optionsBuilder);
+      optionsBuilder.spanEndsAfterBody();
     }
   }
 
@@ -218,10 +212,6 @@ class ApacheHttpAsyncClientTest {
         httpClientResult.complete(new CancellationException());
       }
     };
-  }
-
-  void configureTest(HttpClientTestOptions.Builder optionsBuilder) {
-    optionsBuilder.setUserAgent("httpasyncclient");
   }
 
   static String fullPathFromUri(URI uri) {

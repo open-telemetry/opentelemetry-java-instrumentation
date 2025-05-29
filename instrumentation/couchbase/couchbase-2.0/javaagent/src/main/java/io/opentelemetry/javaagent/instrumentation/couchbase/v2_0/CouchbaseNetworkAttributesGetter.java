@@ -5,17 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 public class CouchbaseNetworkAttributesGetter
-    implements ServerAttributesGetter<CouchbaseRequestInfo, Void> {
+    implements NetworkAttributesGetter<CouchbaseRequestInfo, Void> {
 
   @Nullable
   @Override
-  public InetSocketAddress getServerInetSocketAddress(
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
       CouchbaseRequestInfo couchbaseRequest, @Nullable Void unused) {
     SocketAddress peerAddress = couchbaseRequest.getPeerAddress();
     if (peerAddress instanceof InetSocketAddress) {

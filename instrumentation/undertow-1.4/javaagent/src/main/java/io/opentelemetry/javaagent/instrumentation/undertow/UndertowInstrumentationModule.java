@@ -32,6 +32,6 @@ public class UndertowInstrumentationModule extends InstrumentationModule {
     return asList(
         new HandlerInstrumentation(),
         new HttpServerExchangeInstrumentation(),
-        new HttpTransferEncodingInstrumentation());
+        new HttpServerConnectionInstrumentation());
   }
 }

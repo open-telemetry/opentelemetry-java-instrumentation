@@ -8,6 +8,13 @@ package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
@@ -17,19 +24,22 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.util.ClassInfo;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -75,14 +85,16 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
       throws Exception {
     HttpResponse response = sendRequest(request);
     // read request body to avoid broken pipe errors on the server side
-    response.parseAsString();
+    // skip reading body of long-request to make the test a bit faster
+    if (!uri.toString().contains("/long-request")) {
+      response.parseAsString();
+    }
     return response.getStatusCode();
   }
 
   protected abstract HttpResponse sendRequest(HttpRequest request) throws Exception;
 
   @Test
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void errorTracesWhenExceptionIsNotThrown() throws Exception {
     URI uri = resolveAddress("/error");
 
@@ -90,28 +102,28 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
     int responseCode = sendRequest(request, "GET", uri, Collections.emptyMap());
 
     assertThat(responseCode).isEqualTo(500);
+
+    List<AttributeAssertion> attributes =
+        new ArrayList<>(
+            Arrays.asList(
+                equalTo(SERVER_ADDRESS, "localhost"),
+                satisfies(SERVER_PORT, AbstractLongAssert::isPositive),
+                equalTo(URL_FULL, uri.toString()),
+                equalTo(HTTP_REQUEST_METHOD, "GET"),
+                equalTo(HTTP_RESPONSE_STATUS_CODE, 500),
+                equalTo(ERROR_TYPE, "500")));
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .hasStatus(StatusData.error())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(getAttributeKey(SemanticAttributes.NET_PEER_NAME), "localhost"),
-                            satisfies(
-                                getAttributeKey(SemanticAttributes.NET_PEER_PORT),
-                                port -> port.isPositive()),
-                            equalTo(getAttributeKey(SemanticAttributes.HTTP_URL), uri.toString()),
-                            equalTo(getAttributeKey(SemanticAttributes.HTTP_METHOD), "GET"),
-                            equalTo(getAttributeKey(SemanticAttributes.HTTP_STATUS_CODE), 500),
-                            satisfies(
-                                getAttributeKey(SemanticAttributes.HTTP_RESPONSE_CONTENT_LENGTH),
-                                length -> length.isPositive())),
+                        .hasAttributesSatisfyingExactly(attributes),
                 span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(0))));
   }
 
   @Override
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     // executeAsync does not actually allow asynchronous execution since it returns a standard
     // Future which cannot have callbacks attached. We instrument execute and executeAsync
@@ -125,15 +137,12 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
     // can only use supported method
     optionsBuilder.disableTestNonStandardHttpMethod();
 
-    if (SemconvStability.emitOldHttpSemconv()) {
-      optionsBuilder.setHttpAttributes(
-          uri -> {
-            Set<AttributeKey<?>> attributes =
-                new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-            attributes.remove(SemanticAttributes.NET_PROTOCOL_NAME);
-            attributes.remove(SemanticAttributes.NET_PROTOCOL_VERSION);
-            return attributes;
-          });
-    }
+    optionsBuilder.setHttpAttributes(
+        uri -> {
+          Set<AttributeKey<?>> attributes =
+              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+          attributes.remove(NETWORK_PROTOCOL_VERSION);
+          return attributes;
+        });
   }
 }

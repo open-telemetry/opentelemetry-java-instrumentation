@@ -5,11 +5,8 @@
 
 package io.opentelemetry.instrumentation.awslambdacore.v1_0.internal;
 
-import static io.opentelemetry.semconv.ResourceAttributes.CLOUD_ACCOUNT_ID;
-import static io.opentelemetry.semconv.ResourceAttributes.CLOUD_RESOURCE_ID;
-import static io.opentelemetry.semconv.SemanticAttributes.FAAS_INVOCATION_ID;
-
 import com.amazonaws.services.lambda.runtime.Context;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
@@ -24,6 +21,15 @@ import javax.annotation.Nullable;
  */
 public final class AwsLambdaFunctionAttributesExtractor
     implements AttributesExtractor<AwsLambdaRequest, Object> {
+
+  // copied from FaasIncubatingAttributes
+  private static final AttributeKey<String> FAAS_INVOCATION_ID =
+      AttributeKey.stringKey("faas.invocation_id");
+  // copied from CloudIncubatingAttributes
+  private static final AttributeKey<String> CLOUD_ACCOUNT_ID =
+      AttributeKey.stringKey("cloud.account.id");
+  private static final AttributeKey<String> CLOUD_RESOURCE_ID =
+      AttributeKey.stringKey("cloud.resource_id");
 
   @Nullable private static final MethodHandle GET_FUNCTION_ARN;
 

@@ -8,13 +8,16 @@ package io.opentelemetry.javaagent.instrumentation.jul;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -114,18 +117,17 @@ class JavaUtilLoggingTest {
       if (logException) {
         assertThat(log)
             .hasAttributesSatisfyingExactly(
-                equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()),
-                equalTo(SemanticAttributes.EXCEPTION_TYPE, IllegalStateException.class.getName()),
-                equalTo(SemanticAttributes.EXCEPTION_MESSAGE, "hello"),
+                equalTo(ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
+                equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
+                equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
+                equalTo(EXCEPTION_MESSAGE, "hello"),
                 satisfies(
-                    SemanticAttributes.EXCEPTION_STACKTRACE,
-                    v -> v.contains(JavaUtilLoggingTest.class.getName())));
+                    EXCEPTION_STACKTRACE, v -> v.contains(JavaUtilLoggingTest.class.getName())));
       } else {
         assertThat(log)
             .hasAttributesSatisfyingExactly(
-                equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()));
+                equalTo(ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
+                equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()));
       }
 
       if (withParent) {

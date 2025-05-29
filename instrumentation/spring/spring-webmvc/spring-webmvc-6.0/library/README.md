@@ -25,7 +25,7 @@ For Maven add the following to your `pom.xml`:
   </dependency>
 
    <!-- OpenTelemetry exporter -->
-   <!-- replace this default exporter with your OpenTelemetry exporter (ex. otlp/zipkin/jaeger/..) -->
+   <!-- replace this default exporter with your OpenTelemetry exporter (ex. otlp/zipkin/..) -->
    <dependency>
     <groupId>io.opentelemetry</groupId>
     <artifactId>opentelemetry-exporter-logging</artifactId>
@@ -51,7 +51,7 @@ For Gradle add the following to your dependencies:
 implementation("io.opentelemetry.instrumentation:opentelemetry-spring-webmvc-6.0:OPENTELEMETRY_VERSION")
 
 // OpenTelemetry exporter
-// replace this default exporter with your OpenTelemetry exporter (ex. otlp/zipkin/jaeger/..)
+// replace this default exporter with your OpenTelemetry exporter (ex. otlp/zipkin/..)
 implementation("io.opentelemetry:opentelemetry-exporter-logging:OPENTELEMETRY_VERSION")
 
 // required to instrument Spring WebMVC

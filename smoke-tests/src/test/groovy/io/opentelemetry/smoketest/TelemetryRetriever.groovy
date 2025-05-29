@@ -6,7 +6,7 @@
 package io.opentelemetry.smoketest
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.google.protobuf.GeneratedMessageV3
+import com.google.protobuf.GeneratedMessage
 import com.google.protobuf.util.JsonFormat
 import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceRequest
 import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest
@@ -42,12 +42,12 @@ class TelemetryRetriever {
     return waitForTelemetry("get-logs", { ExportLogsServiceRequest.newBuilder() })
   }
 
-  private <T extends GeneratedMessageV3, B extends GeneratedMessageV3.Builder> Collection<T> waitForTelemetry(String path, Supplier<B> builderConstructor) {
+  private <T extends GeneratedMessage, B extends GeneratedMessage.Builder> Collection<T> waitForTelemetry(String path, Supplier<B> builderConstructor) {
     def content = waitForContent(path)
 
     return OBJECT_MAPPER.readTree(content).collect {
       def builder = builderConstructor.get()
-      // TODO(anuraaga): Register parser into object mapper to avoid de -> re -> deserialize.
+      // TODO: Register parser into object mapper to avoid de -> re -> deserialize.
       JsonFormat.parser().merge(OBJECT_MAPPER.writeValueAsString(it), builder)
       return (T) builder.build()
     }

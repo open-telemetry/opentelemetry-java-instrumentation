@@ -47,15 +47,11 @@ if (!(findProperty("testLatestDeps") as Boolean)) {
 }
 
 tasks {
-  val testStableSemconv by registering(Test::class) {
-    filter {
-      excludeTestsMatching("RatpackRoutesTest")
-    }
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   }
+}
 
-  check {
-    dependsOn(testStableSemconv)
-  }
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

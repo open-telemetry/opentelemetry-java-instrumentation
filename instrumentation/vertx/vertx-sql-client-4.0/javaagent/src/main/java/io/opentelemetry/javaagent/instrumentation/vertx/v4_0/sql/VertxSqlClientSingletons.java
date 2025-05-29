@@ -8,26 +8,25 @@ package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.SqlClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
 import io.vertx.sqlclient.impl.SqlClientBase;
-import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public final class VertxSqlClientSingletons {
-  public static final String OTEL_REQUEST_KEY = "otel.request";
-  public static final String OTEL_CONTEXT_KEY = "otel.context";
-  public static final String OTEL_PARENT_CONTEXT_KEY = "otel.parent-context";
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-sql-client-4.0";
   private static final Instrumenter<VertxSqlClientRequest, Void> INSTRUMENTER;
   private static final ThreadLocal<SqlConnectOptions> connectOptions = new ThreadLocal<>();
@@ -42,14 +41,15 @@ public final class VertxSqlClientSingletons {
             .addAttributesExtractor(
                 SqlClientAttributesExtractor.builder(VertxSqlClientAttributesGetter.INSTANCE)
                     .setStatementSanitizationEnabled(
-                        CommonConfig.get().isStatementSanitizationEnabled())
+                        AgentCommonConfig.get().isStatementSanitizationEnabled())
                     .build())
             .addAttributesExtractor(
                 ServerAttributesExtractor.create(VertxSqlClientNetAttributesGetter.INSTANCE))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     VertxSqlClientNetAttributesGetter.INSTANCE,
-                    CommonConfig.get().getPeerServiceMapping()));
+                    AgentCommonConfig.get().getPeerServiceResolver()))
+            .addOperationMetrics(DbClientMetrics.get());
 
     INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
@@ -66,16 +66,33 @@ public final class VertxSqlClientSingletons {
     return connectOptions.get();
   }
 
-  public static Scope endQuerySpan(Map<Object, Object> contextData, Throwable throwable) {
-    VertxSqlClientRequest otelRequest =
-        (VertxSqlClientRequest) contextData.remove(OTEL_REQUEST_KEY);
-    Context otelContext = (Context) contextData.remove(OTEL_CONTEXT_KEY);
-    Context otelParentContext = (Context) contextData.remove(OTEL_PARENT_CONTEXT_KEY);
-    if (otelRequest == null || otelContext == null || otelParentContext == null) {
+  private static final VirtualField<Promise<?>, RequestData> requestDataField =
+      VirtualField.find(Promise.class, RequestData.class);
+
+  public static void attachRequest(
+      Promise<?> promise, VertxSqlClientRequest request, Context context, Context parentContext) {
+    requestDataField.set(promise, new RequestData(request, context, parentContext));
+  }
+
+  public static Scope endQuerySpan(Promise<?> promise, Throwable throwable) {
+    RequestData requestData = requestDataField.get(promise);
+    if (requestData == null) {
       return null;
     }
-    instrumenter().end(otelContext, otelRequest, null, throwable);
-    return otelParentContext.makeCurrent();
+    instrumenter().end(requestData.context, requestData.request, null, throwable);
+    return requestData.parentContext.makeCurrent();
+  }
+
+  static class RequestData {
+    final VertxSqlClientRequest request;
+    final Context context;
+    final Context parentContext;
+
+    RequestData(VertxSqlClientRequest request, Context context, Context parentContext) {
+      this.request = request;
+      this.context = context;
+      this.parentContext = parentContext;
+    }
   }
 
   // this virtual field is also used in SqlClientBase instrumentation
@@ -91,6 +108,24 @@ public final class VertxSqlClientSingletons {
           }
           return sqlConnection;
         });
+  }
+
+  public static <T> Future<T> wrapContext(Future<T> future) {
+    Context context = Context.current();
+    CompletableFuture<T> result = new CompletableFuture<>();
+    future
+        .toCompletionStage()
+        .whenComplete(
+            (value, throwable) -> {
+              try (Scope ignore = context.makeCurrent()) {
+                if (throwable != null) {
+                  result.completeExceptionally(throwable);
+                } else {
+                  result.complete(value);
+                }
+              }
+            });
+    return Future.fromCompletionStage(result);
   }
 
   private VertxSqlClientSingletons() {}

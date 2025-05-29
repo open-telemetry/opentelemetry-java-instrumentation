@@ -5,16 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.client;
 
-import static java.util.Collections.singletonList;
-
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
-import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.ClientInstrumenterFactory;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientHttpAttributesGetter;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientTracingFilter;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
 import java.util.List;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -23,22 +18,8 @@ import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 public final class WebClientHelper {
 
   private static final Instrumenter<ClientRequest, ClientResponse> instrumenter =
-      ClientInstrumenterFactory.create(
-          GlobalOpenTelemetry.get(),
-          builder ->
-              builder
-                  .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
-                  .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
-                  .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
-          builder -> builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
-          singletonList(
-              PeerServiceAttributesExtractor.create(
-                  WebClientHttpAttributesGetter.INSTANCE,
-                  CommonConfig.get().getPeerServiceMapping())),
-          InstrumentationConfig.get()
-              .getBoolean(
-                  "otel.instrumentation.spring-webflux.experimental-span-attributes", false),
-          CommonConfig.get().shouldEmitExperimentalHttpClientMetrics());
+      JavaagentHttpClientInstrumenters.create(
+          "io.opentelemetry.spring-webflux-5.0", WebClientHttpAttributesGetter.INSTANCE);
 
   public static void addFilter(List<ExchangeFilterFunction> exchangeFilterFunctions) {
     for (ExchangeFilterFunction filterFunction : exchangeFilterFunctions) {

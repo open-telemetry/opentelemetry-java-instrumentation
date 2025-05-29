@@ -18,12 +18,12 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -98,15 +98,16 @@ final class TestInstrumenters {
       String spanName, Instrumenter<String, Void> instrumenter, ThrowingSupplier<T, E> callback)
       throws E {
     Context context = instrumenter.start(Context.current(), spanName);
-    Throwable err = null;
+
+    T result;
     try (Scope ignored = context.makeCurrent()) {
-      return callback.get();
+      result = callback.get();
     } catch (Throwable t) {
-      err = t;
+      instrumenter.end(context, spanName, null, t);
       throw t;
-    } finally {
-      instrumenter.end(context, spanName, null, err);
     }
+    instrumenter.end(context, spanName, null, null);
+    return result;
   }
 
   private static final class SpanKeyAttributesExtractor
@@ -175,18 +176,6 @@ final class TestInstrumenters {
     @Nullable
     @Override
     public String getUrlQuery(String s) {
-      return null;
-    }
-
-    @Nullable
-    @Override
-    public String getServerAddress(String unused) {
-      return null;
-    }
-
-    @Nullable
-    @Override
-    public Integer getServerPort(String unused) {
       return null;
     }
   }

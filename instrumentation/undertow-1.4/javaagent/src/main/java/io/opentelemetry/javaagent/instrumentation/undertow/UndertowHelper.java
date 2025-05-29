@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
@@ -84,5 +85,13 @@ public class UndertowHelper {
             KeyHolder.contextKeys.computeIfAbsent(
                 AttachmentKey.class, key -> AttachmentKey.create(Context.class));
     exchange.putAttachment(contextKey, context);
+  }
+
+  public boolean sameTrace(Context currentContext, Context attachedContext) {
+    return sameTrace(Span.fromContext(currentContext), Span.fromContext(attachedContext));
+  }
+
+  private static boolean sameTrace(Span oneSpan, Span otherSpan) {
+    return oneSpan.getSpanContext().getTraceId().equals(otherSpan.getSpanContext().getTraceId());
   }
 }

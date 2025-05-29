@@ -6,33 +6,28 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.db.DbClientSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import org.opensearch.client.Response;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 
 public final class OpenSearchRestInstrumenterFactory {
 
-  @SuppressWarnings("deprecation") // have to use the deprecated Net*AttributesExtractor for now
-  public static Instrumenter<OpenSearchRestRequest, Response> create(String instrumentationName) {
+  public static Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> create(
+      String instrumentationName) {
     OpenSearchRestAttributesGetter dbClientAttributesGetter = new OpenSearchRestAttributesGetter();
     OpenSearchRestNetResponseAttributesGetter netAttributesGetter =
         new OpenSearchRestNetResponseAttributesGetter();
 
-    return Instrumenter.<OpenSearchRestRequest, Response>builder(
+    return Instrumenter.<OpenSearchRestRequest, OpenSearchRestResponse>builder(
             GlobalOpenTelemetry.get(),
             instrumentationName,
             DbClientSpanNameExtractor.create(dbClientAttributesGetter))
         .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
-        .addAttributesExtractor(
-            io.opentelemetry.instrumentation.api.instrumenter.net.NetClientAttributesExtractor
-                .create(netAttributesGetter))
-        .addAttributesExtractor(
-            PeerServiceAttributesExtractor.create(
-                netAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
+        .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributesGetter))
+        .addOperationMetrics(DbClientMetrics.get())
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

@@ -19,10 +19,10 @@ import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.TestInstance;
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Request> {
-
-  private static final String USER_AGENT = "Jetty";
 
   private HttpClient client;
   private HttpClient httpsClient;
@@ -31,7 +31,7 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
   public void before() throws Exception {
     // Start the main Jetty HttpClient and a https client
     client = createStandardClient();
-    client.setConnectTimeout(5000L);
+    client.setConnectTimeout(CONNECTION_TIMEOUT.toMillis());
     client.start();
 
     SslContextFactory tlsCtx = new SslContextFactory();
@@ -48,20 +48,22 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
 
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-    optionsBuilder.disableTestRedirects().setUserAgent(USER_AGENT);
+    optionsBuilder.disableTestRedirects();
+    optionsBuilder.spanEndsAfterBody();
   }
 
   @Override
-  public Request buildRequest(String method, URI uri, Map<String, String> headers)
-      throws Exception {
+  public Request buildRequest(String method, URI uri, Map<String, String> headers) {
     HttpClient theClient = uri.getScheme().equalsIgnoreCase("https") ? httpsClient : client;
-    Request request =
-        theClient
-            .newRequest(uri)
-            .method(method)
-            .agent(USER_AGENT)
-            .timeout(5000L, TimeUnit.MILLISECONDS);
+    Request request = theClient.newRequest(uri).method(method).agent("Jetty");
     headers.forEach(request::header);
+
+    if (uri.toString().contains("/read-timeout")) {
+      request.timeout(READ_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+    } else if (uri.toString().contains("192.0.2.1")) {
+      request.timeout(CONNECTION_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
+    }
+
     return request;
   }
 
@@ -77,8 +79,7 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
       String method,
       URI uri,
       Map<String, String> headers,
-      HttpClientResult httpClientResult)
-      throws Exception {
+      HttpClientResult httpClientResult) {
     JettyClientListener jcl = new JettyClientListener();
     request.onRequestFailure(jcl);
     request.onResponseFailure(jcl);

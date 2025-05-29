@@ -12,15 +12,17 @@ dependencies {
 }
 
 otelJava {
-  minJavaVersionSupported.set(JavaVersion.VERSION_11)
+  minJavaVersionSupported.set(JavaVersion.VERSION_17)
+  // OtelInternalJavadocTest fails with 25-ea
+  maxJavaVersionForTests.set(JavaVersion.VERSION_24)
 }
 
 // We cannot use "--release" javac option here because that will forbid exporting com.sun.tools package.
 // We also can't seem to use the toolchain without the "--release" option. So disable everything.
 
 java {
-  sourceCompatibility = JavaVersion.VERSION_11
-  targetCompatibility = JavaVersion.VERSION_11
+  sourceCompatibility = JavaVersion.VERSION_17
+  targetCompatibility = JavaVersion.VERSION_17
   toolchain {
     languageVersion.set(null as JavaLanguageVersion?)
   }
@@ -35,6 +37,8 @@ tasks {
         listOf(
           "--add-exports",
           "jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
+          "--add-exports",
+          "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
           "--add-exports",
           "jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED",
           "--add-exports",
@@ -60,13 +64,18 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 }
 
+tasks.withType<Javadoc>().configureEach {
+  // using com.sun.tools.javac.api.JavacTrees breaks javadoc generation
+  enabled = false
+}
+
 // Our conventions apply this project as a dependency in the errorprone configuration, which would cause
 // a circular dependency if trying to compile this project with that still there. So we filter this
 // project out.
 configurations {
   named("errorprone") {
     dependencies.removeIf {
-      it is ProjectDependency && it.dependencyProject == project
+      it is ProjectDependency && it.group == project.group && it.name == project.name
     }
   }
 }

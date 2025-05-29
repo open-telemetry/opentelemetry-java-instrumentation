@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -76,8 +77,7 @@ public class ExtensionClassLoader extends URLClassLoader {
   }
 
   private static void includeEmbeddedExtensionsIfFound(List<URL> extensions, File javaagentFile) {
-    try {
-      JarFile jarFile = new JarFile(javaagentFile, false);
+    try (JarFile jarFile = new JarFile(javaagentFile, false)) {
       Enumeration<JarEntry> entryEnumeration = jarFile.entries();
       String prefix = "extensions/";
       File tempDirectory = null;
@@ -164,8 +164,14 @@ public class ExtensionClassLoader extends URLClassLoader {
 
   private static void addFileUrl(List<URL> result, File file) {
     try {
-      URL wrappedUrl = new URL("otel", null, -1, "/", new RemappingUrlStreamHandler(file));
-      result.add(wrappedUrl);
+      // skip shading extension classes if opentelemetry-api is not shaded (happens when using
+      // disableShadowRelocate=true)
+      if (Context.class.getName().contains(".shaded.")) {
+        URL wrappedUrl = new URL("otel", null, -1, "/", new RemappingUrlStreamHandler(file));
+        result.add(wrappedUrl);
+      } else {
+        result.add(file.toURI().toURL());
+      }
     } catch (MalformedURLException ignored) {
       System.err.println("Ignoring " + file);
     }

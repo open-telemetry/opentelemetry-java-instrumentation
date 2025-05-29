@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import akka.dispatch.sysmsg.SystemMessage;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
@@ -49,17 +48,22 @@ public class AkkaDefaultSystemMessageQueueInstrumentation implements TypeInstrum
     public static PropagatedContext enter(@Advice.Argument(1) SystemMessage systemMessage) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, systemMessage)) {
-        VirtualField<SystemMessage, PropagatedContext> virtualField =
-            VirtualField.find(SystemMessage.class, PropagatedContext.class);
-        return ExecutorAdviceHelper.attachContextToTask(context, virtualField, systemMessage);
+        return ExecutorAdviceHelper.attachContextToTask(
+            context, VirtualFields.SYSTEM_MESSAGE_PROPAGATED_CONTEXT, systemMessage);
       }
       return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exit(
-        @Advice.Enter PropagatedContext propagatedContext, @Advice.Thrown Throwable throwable) {
-      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
+        @Advice.Argument(1) SystemMessage systemMessage,
+        @Advice.Enter PropagatedContext propagatedContext,
+        @Advice.Thrown Throwable throwable) {
+      ExecutorAdviceHelper.cleanUpAfterSubmit(
+          propagatedContext,
+          throwable,
+          VirtualFields.SYSTEM_MESSAGE_PROPAGATED_CONTEXT,
+          systemMessage);
     }
   }
 }

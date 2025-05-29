@@ -6,19 +6,23 @@
 package io.opentelemetry.javaagent.instrumentation.instrumentationapi;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRoute;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerRouteSource;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.testing.AgentSpanTesting;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -76,7 +80,18 @@ class ContextBridgeTest {
   }
 
   @Test
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
+  void testSpanKeyBridge_UnbridgedSpan() {
+    OpenTelemetrySdk openTelemetry = OpenTelemetrySdk.builder().build();
+    // span is bridged only when it is created though a bridged OpenTelemetry instance obtained
+    // from GlobalOpenTelemetry
+    Span span = openTelemetry.getTracer("test").spanBuilder("test").startSpan();
+
+    Context context = SpanKey.HTTP_CLIENT.storeInContext(Context.current(), span);
+    assertThat(context).isNotNull();
+    assertThat(SpanKey.HTTP_CLIENT.fromContextOrNull(context)).isEqualTo(span);
+  }
+
+  @Test
   void testHttpRouteHolder_SameSourceAsServerInstrumentationDoesNotOverrideRoute() {
     AgentSpanTesting.runWithHttpServerSpan(
         "server",
@@ -92,12 +107,12 @@ class ContextBridgeTest {
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_ROUTE, "/test/server/*"))));
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_ROUTE, "/test/server/*"),
+                            equalTo(ERROR_TYPE, "_OTHER"))));
   }
 
   @Test
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   void testHttpRouteHolder_SourceWithHigherOrderValueOverridesRoute() {
     AgentSpanTesting.runWithHttpServerSpan(
         "server",
@@ -113,7 +128,8 @@ class ContextBridgeTest {
                         .hasKind(SpanKind.SERVER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_METHOD, "GET"),
-                            equalTo(SemanticAttributes.HTTP_ROUTE, "/test/controller/:id"))));
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_ROUTE, "/test/controller/:id"),
+                            equalTo(ERROR_TYPE, "_OTHER"))));
   }
 }

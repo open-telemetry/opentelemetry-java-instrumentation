@@ -35,8 +35,7 @@ otelJava {
 }
 
 dependencies {
-  // TODO(anuraaga): Something about library configuration doesn't work well with scala compilation
-  // here.
+  // TODO: Something about library configuration doesn't work well with scala compilation here.
   compileOnly("com.typesafe.play:play_$scalaVersion:$playVersion")
 
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
@@ -60,27 +59,20 @@ testing {
   }
 }
 
+val testLatestDeps = findProperty("testLatestDeps") as Boolean
 tasks {
-  if (findProperty("testLatestDeps") as Boolean) {
+  if (testLatestDeps) {
     // disable regular test running and compiling tasks when latest dep test task is run
     named("test") {
       enabled = false
     }
-    named("compileTestGroovy") {
+    named("compileTestJava") {
       enabled = false
     }
-
-    check {
-      dependsOn(testing.suites)
-    }
-  }
-
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites)
   }
 }
 
@@ -88,15 +80,6 @@ tasks {
 configurations.configureEach {
   exclude("org.eclipse.jetty.websocket", "websocket-client")
 }
-
-// com.fasterxml.jackson.module:jackson-module-scala_2.13:2.15.2 is missing force using jackson 2.15.1
-// remove this when a new version of jackson is released
-configurations.configureEach {
-  resolutionStrategy {
-    eachDependency {
-      if (requested.group == "com.fasterxml.jackson" && requested.name == "jackson-bom" && requested.version == "2.15.2") {
-        useVersion("2.15.1")
-      }
-    }
-  }
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

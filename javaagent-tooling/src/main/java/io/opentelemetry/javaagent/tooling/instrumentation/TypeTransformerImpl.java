@@ -8,23 +8,34 @@ package io.opentelemetry.javaagent.tooling.instrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.ForceDynamicallyTypedAssignReturnedFactory;
+import java.util.function.Function;
 import net.bytebuddy.agent.builder.AgentBuilder;
+import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 final class TypeTransformerImpl implements TypeTransformer {
   private AgentBuilder.Identified.Extendable agentBuilder;
+  private final Advice.WithCustomMapping adviceMapping;
 
   TypeTransformerImpl(AgentBuilder.Identified.Extendable agentBuilder) {
     this.agentBuilder = agentBuilder;
+    adviceMapping =
+        Advice.withCustomMapping()
+            .with(
+                new ForceDynamicallyTypedAssignReturnedFactory(
+                    new Advice.AssignReturned.Factory().withSuppressed(Throwable.class)));
   }
 
   @Override
   public void applyAdviceToMethod(
-      ElementMatcher<? super MethodDescription> methodMatcher, String adviceClassName) {
+      ElementMatcher<? super MethodDescription> methodMatcher,
+      Function<Advice.WithCustomMapping, Advice.WithCustomMapping> mappingCustomizer,
+      String adviceClassName) {
     agentBuilder =
         agentBuilder.transform(
-            new AgentBuilder.Transformer.ForAdvice()
+            new AgentBuilder.Transformer.ForAdvice(mappingCustomizer.apply(adviceMapping))
                 .include(
                     Utils.getBootstrapProxy(),
                     Utils.getAgentClassLoader(),

@@ -13,20 +13,23 @@ dependencies {
   implementation(project(":javaagent-extension-api"))
   implementation(project(":javaagent-tooling:javaagent-tooling-java9"))
   implementation(project(":instrumentation-api"))
+  implementation(project(":instrumentation-api-incubator"))
   implementation(project(":instrumentation-annotations-support"))
   implementation(project(":muzzle"))
+  implementation(project(":sdk-autoconfigure-support"))
 
   implementation("io.opentelemetry:opentelemetry-api")
-  testImplementation("io.opentelemetry:opentelemetry-api-events")
+  testImplementation("io.opentelemetry:opentelemetry-api-incubator")
   implementation("io.opentelemetry:opentelemetry-sdk")
-  implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   implementation("io.opentelemetry:opentelemetry-extension-kotlin")
   implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   // the incubator's ViewConfigCustomizer is used to support loading yaml-based metric views
-  implementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-incubator") {
+    // we use byte-buddy-dep
+    exclude("net.bytebuddy", "byte-buddy")
+  }
 
   // Exporters with dependencies
-  implementation("io.opentelemetry:opentelemetry-exporter-jaeger")
   implementation("io.opentelemetry:opentelemetry-exporter-logging")
   implementation("io.opentelemetry:opentelemetry-exporter-otlp")
   implementation("io.opentelemetry:opentelemetry-exporter-logging-otlp")
@@ -37,6 +40,12 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-sdk-extension-jaeger-remote-sampler")
 
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
+
+  implementation("io.opentelemetry.contrib:opentelemetry-azure-resources")
+  implementation("io.opentelemetry.contrib:opentelemetry-aws-resources")
+  implementation("io.opentelemetry.contrib:opentelemetry-gcp-resources")
+  implementation("io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources")
+  implementation("io.opentelemetry.contrib:opentelemetry-baggage-processor")
 
   api("net.bytebuddy:byte-buddy-dep")
   implementation("org.ow2.asm:asm-tree")
@@ -120,7 +129,7 @@ tasks {
 
 // Mockito inline mocking uses byte-buddy but agent tooling currently uses byte-buddy-dep, which cannot be on the same
 // classpath. Disable inline mocking to prevent conflicts.
-// TODO(anuraaga): Find a better solution
+// TODO: Find a better solution
 configurations {
   testRuntimeClasspath {
     dependencies {

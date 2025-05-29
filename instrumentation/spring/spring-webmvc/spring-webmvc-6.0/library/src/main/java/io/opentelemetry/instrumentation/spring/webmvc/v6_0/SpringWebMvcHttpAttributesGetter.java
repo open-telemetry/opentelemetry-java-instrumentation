@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc.v6_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
@@ -103,39 +103,28 @@ enum SpringWebMvcHttpAttributesGetter
     return null;
   }
 
-  @Nullable
-  @Override
-  public String getServerAddress(HttpServletRequest request) {
-    return request.getServerName();
-  }
-
-  @Override
-  public Integer getServerPort(HttpServletRequest request) {
-    return request.getServerPort();
-  }
-
   @Override
   @Nullable
-  public String getClientSocketAddress(
+  public String getNetworkPeerAddress(
       HttpServletRequest request, @Nullable HttpServletResponse response) {
     return request.getRemoteAddr();
   }
 
   @Override
-  public Integer getClientSocketPort(
+  public Integer getNetworkPeerPort(
       HttpServletRequest request, @Nullable HttpServletResponse response) {
     return request.getRemotePort();
   }
 
   @Nullable
   @Override
-  public String getServerSocketAddress(
+  public String getNetworkLocalAddress(
       HttpServletRequest request, @Nullable HttpServletResponse response) {
     return request.getLocalAddr();
   }
 
   @Override
-  public Integer getServerSocketPort(
+  public Integer getNetworkLocalPort(
       HttpServletRequest request, @Nullable HttpServletResponse response) {
     return request.getLocalPort();
   }

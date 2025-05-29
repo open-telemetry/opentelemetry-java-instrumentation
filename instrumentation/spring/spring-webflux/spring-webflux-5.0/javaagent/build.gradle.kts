@@ -52,12 +52,13 @@ dependencies {
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent"))
 
+  testImplementation(project(":instrumentation:spring:spring-webflux:spring-webflux-5.0:testing"))
+
   testImplementation(project(":instrumentation:spring:spring-webflux:spring-webflux-5.3:testing"))
 
   testLibrary("org.springframework.boot:spring-boot-starter-webflux:2.0.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.0.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:2.0.0.RELEASE")
-  testImplementation("org.spockframework:spock-spring:2.4-M1-groovy-4.0")
 }
 
 tasks.withType<Test>().configureEach {
@@ -66,6 +67,7 @@ tasks.withType<Test>().configureEach {
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
   systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 }

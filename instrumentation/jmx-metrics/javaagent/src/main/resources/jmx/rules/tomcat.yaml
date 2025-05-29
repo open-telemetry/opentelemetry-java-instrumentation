@@ -1,6 +1,11 @@
 ---
+# For Tomcat, the default JMX domain is "Catalina:", however with some deployments like embedded in spring-boot
+# we can have the "Tomcat:" domain used, thus we use both MBean names for the metrics.
+
 rules:
-  - bean: Catalina:type=GlobalRequestProcessor,name=*
+  - beans:
+    - Catalina:type=GlobalRequestProcessor,name=*
+    - Tomcat:type=GlobalRequestProcessor,name=*
     unit: "1"
     prefix: http.server.tomcat.
     metricAttribute:
@@ -38,7 +43,10 @@ rules:
         desc: The number of bytes transmitted
         metricAttribute:
           direction: const(sent)
-  - bean: Catalina:type=Manager,host=localhost,context=*
+
+  - beans:
+    - Catalina:type=Manager,host=localhost,context=*
+    - Tomcat:type=Manager,host=localhost,context=*
     unit: "1"
     prefix: http.server.tomcat.
     type: updowncounter
@@ -48,7 +56,10 @@ rules:
       activeSessions:
         metric: sessions.activeSessions
         desc: The number of active sessions
-  - bean: Catalina:type=ThreadPool,name=*
+
+  - beans:
+    - Catalina:type=ThreadPool,name=*
+    - Tomcat:type=ThreadPool,name=*
     unit: "{threads}"
     prefix: http.server.tomcat.
     type: updowncounter
@@ -65,3 +76,4 @@ rules:
         desc: Thread Count of the Thread Pool
         metricAttribute:
           state: const(busy)
+

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.bootstrap.internal;
 
 import static java.util.Collections.emptyList;
 
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import java.util.List;
 
 /**
@@ -16,7 +17,7 @@ import java.util.List;
 public final class ExperimentalConfig {
 
   private static final ExperimentalConfig instance =
-      new ExperimentalConfig(InstrumentationConfig.get());
+      new ExperimentalConfig(AgentInstrumentationConfig.get());
 
   private final InstrumentationConfig config;
   private final List<String> messagingHeaders;
@@ -34,12 +35,12 @@ public final class ExperimentalConfig {
 
   public boolean controllerTelemetryEnabled() {
     return config.getBoolean(
-        "otel.instrumentation.common.experimental.controller-telemetry.enabled", true);
+        "otel.instrumentation.common.experimental.controller-telemetry.enabled", false);
   }
 
   public boolean viewTelemetryEnabled() {
     return config.getBoolean(
-        "otel.instrumentation.common.experimental.view-telemetry.enabled", true);
+        "otel.instrumentation.common.experimental.view-telemetry.enabled", false);
   }
 
   public boolean messagingReceiveInstrumentationEnabled() {

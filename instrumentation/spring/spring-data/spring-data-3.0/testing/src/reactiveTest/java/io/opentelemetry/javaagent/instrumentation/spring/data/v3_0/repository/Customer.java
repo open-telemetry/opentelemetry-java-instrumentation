@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.data.v3_0.repository;
 
+import java.util.Locale;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.springframework.data.annotation.Id;
@@ -49,7 +50,8 @@ public class Customer {
 
   @Override
   public String toString() {
-    return String.format("Customer[id=%d, firstName='%s', lastName='%s']", id, firstName, lastName);
+    return String.format(
+        Locale.ROOT, "Customer[id=%d, firstName='%s', lastName='%s']", id, firstName, lastName);
   }
 
   @Override
@@ -57,10 +59,9 @@ public class Customer {
     if (obj == this) {
       return true;
     }
-    if (!(obj instanceof Customer)) {
+    if (!(obj instanceof Customer other)) {
       return false;
     }
-    Customer other = (Customer) obj;
     return Objects.equals(id, other.id)
         && Objects.equals(firstName, other.firstName)
         && Objects.equals(lastName, other.lastName);

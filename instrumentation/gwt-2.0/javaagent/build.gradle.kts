@@ -33,10 +33,10 @@ sourceSets {
 dependencies {
   // these are needed for compileGwt task
   if (findProperty("testLatestDeps") as Boolean) {
-    compileOnly("org.gwtproject:gwt-user:+")
-    compileOnly("org.gwtproject:gwt-dev:+")
-    compileOnly("org.gwtproject:gwt-servlet:+")
-    testImplementation("org.gwtproject:gwt-servlet:+")
+    compileOnly("org.gwtproject:gwt-user:latest.release")
+    compileOnly("org.gwtproject:gwt-dev:latest.release")
+    compileOnly("org.gwtproject:gwt-servlet:latest.release")
+    testImplementation("org.gwtproject:gwt-servlet:latest.release")
   } else {
     compileOnly("com.google.gwt:gwt-user:2.0.0")
     compileOnly("com.google.gwt:gwt-dev:2.0.0")
@@ -62,13 +62,15 @@ val launcher = javaToolchains.launcherFor {
 
 class CompilerArgumentsProvider : CommandLineArgumentProvider {
   override fun asArguments(): Iterable<String> = listOf(
-    "test.gwt.Greeting", // gwt module
+    // gwt module
+    "test.gwt.Greeting",
     "-war", layout.buildDirectory.dir("testapp/war").get().asFile.absolutePath,
     "-logLevel", "INFO",
     "-localWorkers", "2",
     "-compileReport",
     "-extra", layout.buildDirectory.dir("testapp/extra").get().asFile.absolutePath,
-    "-draftCompile", // makes compile a bit faster
+    // makes compile a bit faster
+    "-draftCompile",
   )
 }
 
@@ -86,6 +88,12 @@ tasks {
     classpath(sourceSets["testapp"].java.srcDirs, sourceSets["testapp"].compileClasspath)
 
     argumentProviders.add(CompilerArgumentsProvider())
+
+    if (findProperty("testLatestDeps") as Boolean) {
+      javaLauncher.set(project.javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(11)
+      })
+    }
   }
 
   val copyTestWebapp by registering(Copy::class) {

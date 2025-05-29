@@ -7,8 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.consumerReceiveInstrumenter;
-import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.enhanceConfig;
-import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -18,14 +16,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContextUtil;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaReceiveRequest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.time.Duration;
-import java.util.Map;
-import java.util.Properties;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -43,36 +39,12 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArgument(0, Map.class)),
-        this.getClass().getName() + "$ConstructorMapAdvice");
-    transformer.applyAdviceToMethod(
-        isConstructor().and(takesArgument(0, Properties.class)),
-        this.getClass().getName() + "$ConstructorPropertiesAdvice");
-    transformer.applyAdviceToMethod(
         named("poll")
             .and(isPublic())
             .and(takesArguments(1))
             .and(takesArgument(0, long.class).or(takesArgument(0, Duration.class)))
             .and(returns(named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
         this.getClass().getName() + "$PollAdvice");
-  }
-
-  @SuppressWarnings("unused")
-  public static class ConstructorMapAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Argument(0) Map<String, Object> config) {
-      enhanceConfig(config);
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class ConstructorPropertiesAdvice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Argument(0) Properties config) {
-      enhanceConfig(config);
-    }
   }
 
   @SuppressWarnings("unused")
@@ -116,7 +88,7 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
         // we're storing the context of the receive span so that process spans can use it as
         // parent context even though the span has ended
         // this is the suggested behavior according to the spec batch receive scenario:
-        // https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/messaging.md#batch-receiving
+        // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md#batch-receiving
         // we're attaching the consumer to the records to be able to retrieve things like consumer
         // group or clientId later
         KafkaConsumerContextUtil.set(records, context, consumer);

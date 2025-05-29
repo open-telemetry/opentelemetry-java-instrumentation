@@ -9,6 +9,7 @@ target
 !**/gradle/wrapper/*
 .gradle
 **/build/
+**/generated/
 examples/**/build/
 
 # Eclipse #
@@ -53,7 +54,6 @@ out/
 /workspace
 java-agent/benchmark-integration/perf-test-settings.rc
 derby.log
-.java-version
 hs_err_pid*
 replay_pid*
 .attach_pid*

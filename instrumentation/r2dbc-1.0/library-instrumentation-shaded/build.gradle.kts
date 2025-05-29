@@ -1,6 +1,5 @@
 plugins {
-  id("com.github.johnrengelman.shadow")
-
+  id("com.gradleup.shadow")
   id("otel.java-conventions")
 }
 
@@ -12,7 +11,9 @@ dependencies {
 
 tasks {
   shadowJar {
-    exclude("META-INF/**/*")
+    exclude {
+      it.path.startsWith("META-INF") && !it.path.startsWith("META-INF/io/opentelemetry/instrumentation/")
+    }
 
     dependencies {
       // including only :r2dbc-1.0:library excludes its transitive dependencies
@@ -21,13 +22,24 @@ tasks {
     }
     relocate(
       "io.r2dbc.proxy",
-      "io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0.shaded.io.r2dbc.proxy"
+      "io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.io.r2dbc.proxy"
+    )
+    relocate(
+      "io.opentelemetry.instrumentation.r2dbc.v1_0",
+      "io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded"
     )
   }
 
   val extractShadowJar by registering(Copy::class) {
     dependsOn(shadowJar)
     from(zipTree(shadowJar.get().archiveFile))
+    exclude("META-INF/**")
     into("build/extracted/shadow")
+  }
+
+  val extractShadowJarSpring by registering(Copy::class) {
+    dependsOn(shadowJar)
+    from(zipTree(shadowJar.get().archiveFile))
+    into("build/extracted/shadow-spring")
   }
 }

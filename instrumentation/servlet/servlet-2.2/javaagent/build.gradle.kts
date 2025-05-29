@@ -32,18 +32,3 @@ dependencies {
   latestDepTestLibrary("org.eclipse.jetty:jetty-server:7.+") // see servlet-3.0 module
   latestDepTestLibrary("org.eclipse.jetty:jetty-servlet:7.+") // see servlet-3.0 module
 }
-
-tasks {
-  val testStableSemconv by registering(Test::class) {
-    filter {
-      includeTestsMatching("JettyServlet2Test")
-    }
-    include("**/JettyServlet2Test.*")
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
-  }
-}

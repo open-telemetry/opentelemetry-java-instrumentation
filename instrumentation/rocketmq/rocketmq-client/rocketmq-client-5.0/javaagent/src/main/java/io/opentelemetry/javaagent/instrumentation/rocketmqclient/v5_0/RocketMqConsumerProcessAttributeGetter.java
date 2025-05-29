@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -28,8 +28,19 @@ enum RocketMqConsumerProcessAttributeGetter
     return messageView.getTopic();
   }
 
+  @Nullable
+  @Override
+  public String getDestinationTemplate(MessageView messageView) {
+    return null;
+  }
+
   @Override
   public boolean isTemporaryDestination(MessageView messageView) {
+    return false;
+  }
+
+  @Override
+  public boolean isAnonymousDestination(MessageView messageView) {
     return false;
   }
 
@@ -39,14 +50,15 @@ enum RocketMqConsumerProcessAttributeGetter
     return null;
   }
 
+  @Nullable
   @Override
-  public Long getMessagePayloadSize(MessageView messageView) {
+  public Long getMessageBodySize(MessageView messageView) {
     return (long) messageView.getBody().remaining();
   }
 
   @Nullable
   @Override
-  public Long getMessagePayloadCompressedSize(MessageView messageView) {
+  public Long getMessageEnvelopeSize(MessageView messageView) {
     return null;
   }
 
@@ -54,6 +66,18 @@ enum RocketMqConsumerProcessAttributeGetter
   @Override
   public String getMessageId(MessageView messageView, @Nullable ConsumeResult unused) {
     return messageView.getMessageId().toString();
+  }
+
+  @Nullable
+  @Override
+  public String getClientId(MessageView messageView) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Long getBatchMessageCount(MessageView messageView, @Nullable ConsumeResult unused) {
+    return null;
   }
 
   @Override

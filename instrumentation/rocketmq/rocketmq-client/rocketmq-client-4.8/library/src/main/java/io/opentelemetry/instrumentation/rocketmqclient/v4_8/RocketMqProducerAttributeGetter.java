@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
-import io.opentelemetry.instrumentation.api.instrumenter.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -18,37 +18,48 @@ enum RocketMqProducerAttributeGetter
   INSTANCE;
 
   @Override
-  public String getSystem(SendMessageContext sendMessageContext) {
+  public String getSystem(SendMessageContext request) {
     return "rocketmq";
   }
 
   @Nullable
   @Override
-  public String getDestination(SendMessageContext sendMessageContext) {
-    Message message = sendMessageContext.getMessage();
+  public String getDestination(SendMessageContext request) {
+    Message message = request.getMessage();
     return message == null ? null : message.getTopic();
   }
 
+  @Nullable
   @Override
-  public boolean isTemporaryDestination(SendMessageContext sendMessageContext) {
+  public String getDestinationTemplate(SendMessageContext request) {
+    return null;
+  }
+
+  @Override
+  public boolean isTemporaryDestination(SendMessageContext request) {
+    return false;
+  }
+
+  @Override
+  public boolean isAnonymousDestination(SendMessageContext request) {
     return false;
   }
 
   @Nullable
   @Override
-  public String getConversationId(SendMessageContext sendMessageContext) {
+  public String getConversationId(SendMessageContext request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long getMessagePayloadSize(SendMessageContext sendMessageContext) {
+  public Long getMessageBodySize(SendMessageContext request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long getMessagePayloadCompressedSize(SendMessageContext sendMessageContext) {
+  public Long getMessageEnvelopeSize(SendMessageContext request) {
     return null;
   }
 
@@ -57,6 +68,18 @@ enum RocketMqProducerAttributeGetter
   public String getMessageId(SendMessageContext request, @Nullable Void unused) {
     SendResult sendResult = request.getSendResult();
     return sendResult == null ? null : sendResult.getMsgId();
+  }
+
+  @Nullable
+  @Override
+  public String getClientId(SendMessageContext request) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Long getBatchMessageCount(SendMessageContext request, @Nullable Void unused) {
+    return null;
   }
 
   @Override

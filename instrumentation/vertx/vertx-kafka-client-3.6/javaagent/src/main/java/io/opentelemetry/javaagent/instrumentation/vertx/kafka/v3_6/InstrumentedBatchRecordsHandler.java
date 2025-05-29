@@ -9,9 +9,9 @@ import static io.opentelemetry.javaagent.instrumentation.vertx.kafka.v3_6.VertxK
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContext;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContextUtil;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaReceiveRequest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.vertx.core.Handler;
 import javax.annotation.Nullable;
@@ -42,15 +42,13 @@ public final class InstrumentedBatchRecordsHandler<K, V> implements Handler<Cons
     boolean previousWrappingEnabled = KafkaClientsConsumerProcessTracing.setEnabled(false);
     try {
       Context context = batchProcessInstrumenter().start(parentContext, request);
-      Throwable error = null;
       try (Scope ignored = context.makeCurrent()) {
         callDelegateHandler(records);
       } catch (Throwable t) {
-        error = t;
+        batchProcessInstrumenter().end(context, request, null, t);
         throw t;
-      } finally {
-        batchProcessInstrumenter().end(context, request, null, error);
       }
+      batchProcessInstrumenter().end(context, request, null, null);
     } finally {
       KafkaClientsConsumerProcessTracing.setEnabled(previousWrappingEnabled);
     }

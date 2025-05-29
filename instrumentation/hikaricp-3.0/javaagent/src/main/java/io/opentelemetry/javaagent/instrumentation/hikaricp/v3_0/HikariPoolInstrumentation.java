@@ -40,7 +40,7 @@ public class HikariPoolInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.Argument(value = 0, readOnly = false) MetricsTrackerFactory userMetricsTracker,
-        @Advice.FieldValue(value = "metricsTracker") AutoCloseable existingMetricsTracker)
+        @Advice.FieldValue("metricsTracker") AutoCloseable existingMetricsTracker)
         throws Exception {
 
       if (existingMetricsTracker != null) {

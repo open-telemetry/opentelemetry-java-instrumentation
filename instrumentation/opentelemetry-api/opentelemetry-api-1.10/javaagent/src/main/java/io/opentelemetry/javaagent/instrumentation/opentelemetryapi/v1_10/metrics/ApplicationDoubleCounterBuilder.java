@@ -12,11 +12,12 @@ import application.io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.function.Consumer;
 
-final class ApplicationDoubleCounterBuilder implements DoubleCounterBuilder {
+public class ApplicationDoubleCounterBuilder implements DoubleCounterBuilder {
 
   private final io.opentelemetry.api.metrics.DoubleCounterBuilder agentBuilder;
 
-  ApplicationDoubleCounterBuilder(io.opentelemetry.api.metrics.DoubleCounterBuilder agentBuilder) {
+  protected ApplicationDoubleCounterBuilder(
+      io.opentelemetry.api.metrics.DoubleCounterBuilder agentBuilder) {
     this.agentBuilder = agentBuilder;
   }
 

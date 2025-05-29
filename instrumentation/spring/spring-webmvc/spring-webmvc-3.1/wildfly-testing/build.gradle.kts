@@ -28,6 +28,11 @@ dependencies {
   testServer("org.wildfly:wildfly-dist:18.0.0.Final@zip")
 }
 
+otelJava {
+  // due to security manager deprecation this test does not work on jdk 23 with default configuration
+  maxJavaVersionForTests.set(JavaVersion.VERSION_22)
+}
+
 tasks {
   // extract wildfly dist, path is used from arquillian.xml
   val setupServer by registering(Copy::class) {
@@ -74,6 +79,7 @@ tasks {
       jvmArgs("--add-modules=java.se")
       // add offset to default port values
       jvmArgs("-Djboss.socket.binding.port-offset=300")
+      jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
       // remove logback-classic from classpath
       classpath = classpath.filter {

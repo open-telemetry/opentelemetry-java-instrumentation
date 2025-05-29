@@ -6,9 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql.VertxSqlClientSingletons.OTEL_CONTEXT_KEY;
-import static io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql.VertxSqlClientSingletons.OTEL_PARENT_CONTEXT_KEY;
-import static io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql.VertxSqlClientSingletons.OTEL_REQUEST_KEY;
 import static io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql.VertxSqlClientSingletons.getSqlConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.v4_0.sql.VertxSqlClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
@@ -98,9 +95,7 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
 
       context = instrumenter().start(parentContext, otelRequest);
       scope = context.makeCurrent();
-      promiseInternal.context().localContextData().put(OTEL_REQUEST_KEY, otelRequest);
-      promiseInternal.context().localContextData().put(OTEL_CONTEXT_KEY, context);
-      promiseInternal.context().localContextData().put(OTEL_PARENT_CONTEXT_KEY, parentContext);
+      VertxSqlClientSingletons.attachRequest(promiseInternal, otelRequest, context, parentContext);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

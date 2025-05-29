@@ -27,8 +27,8 @@ testing {
     // Regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/2403
     val testDisableThreadLocals by registering(JvmTestSuite::class) {
       sources {
-        groovy {
-          setSrcDirs(listOf("src/test/groovy"))
+        java {
+          setSrcDirs(listOf("src/test/java"))
         }
       }
       dependencies {
@@ -40,17 +40,13 @@ testing {
           testTask.configure {
             jvmArgs("-Dlog4j2.is.webapp=false")
             jvmArgs("-Dlog4j2.enable.threadlocals=false")
+            jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
           }
         }
       }
     }
 
     val testAddBaggage by registering(JvmTestSuite::class) {
-      sources {
-        groovy {
-          setSrcDirs(listOf("src/testAddBaggage/groovy"))
-        }
-      }
       dependencies {
         implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
       }
@@ -59,6 +55,24 @@ testing {
         all {
           testTask.configure {
             jvmArgs("-Dotel.instrumentation.log4j-context-data.add-baggage=true")
+            jvmArgs("-Dlog4j2.is.webapp=false")
+            jvmArgs("-Dlog4j2.enable.threadlocals=true")
+          }
+        }
+      }
+    }
+
+    val testLoggingKeys by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
+      }
+
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.instrumentation.common.logging.trace-id=trace_id_test")
+            jvmArgs("-Dotel.instrumentation.common.logging.span-id=span_id_test")
+            jvmArgs("-Dotel.instrumentation.common.logging.trace-flags=trace_flags_test")
             jvmArgs("-Dlog4j2.is.webapp=false")
             jvmArgs("-Dlog4j2.enable.threadlocals=true")
           }
@@ -74,6 +88,7 @@ tasks {
   test {
     jvmArgs("-Dlog4j2.is.webapp=false")
     jvmArgs("-Dlog4j2.enable.threadlocals=true")
+    jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
   }
 
   named("check") {

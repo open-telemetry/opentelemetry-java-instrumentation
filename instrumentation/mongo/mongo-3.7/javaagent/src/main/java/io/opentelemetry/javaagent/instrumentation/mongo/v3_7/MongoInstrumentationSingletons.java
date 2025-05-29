@@ -8,18 +8,18 @@ package io.opentelemetry.javaagent.instrumentation.mongo.v3_7;
 import com.mongodb.event.CommandListener;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.mongo.v3_1.MongoTelemetry;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class MongoInstrumentationSingletons {
 
   public static final CommandListener LISTENER =
       MongoTelemetry.builder(GlobalOpenTelemetry.get())
           .setStatementSanitizationEnabled(
-              InstrumentationConfig.get()
+              AgentInstrumentationConfig.get()
                   .getBoolean(
                       "otel.instrumentation.mongo.statement-sanitizer.enabled",
-                      CommonConfig.get().isStatementSanitizationEnabled()))
+                      AgentCommonConfig.get().isStatementSanitizationEnabled()))
           .build()
           .newCommandListener();
 

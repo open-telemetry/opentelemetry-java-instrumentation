@@ -5,16 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.joddhttp.v4_2;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientExperimentalMetrics;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientMetrics;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
 import jodd.http.HttpRequest;
 import jodd.http.HttpResponse;
 
@@ -24,30 +16,9 @@ public final class JoddHttpSingletons {
   private static final Instrumenter<HttpRequest, HttpResponse> INSTRUMENTER;
 
   static {
-    JoddHttpHttpAttributesGetter httpAttributesGetter = new JoddHttpHttpAttributesGetter();
-
-    InstrumenterBuilder<HttpRequest, HttpResponse> builder =
-        Instrumenter.<HttpRequest, HttpResponse>builder(
-                GlobalOpenTelemetry.get(),
-                INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.builder(httpAttributesGetter)
-                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
-                    .build())
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
-            .addAttributesExtractor(
-                HttpClientAttributesExtractor.builder(httpAttributesGetter)
-                    .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
-                    .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
-                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
-                    .build())
-            .addAttributesExtractor(
-                PeerServiceAttributesExtractor.create(
-                    httpAttributesGetter, CommonConfig.get().getPeerServiceMapping()))
-            .addOperationMetrics(HttpClientMetrics.get());
-    if (CommonConfig.get().shouldEmitExperimentalHttpClientMetrics()) {
-      builder.addOperationMetrics(HttpClientExperimentalMetrics.get());
-    }
-    INSTRUMENTER = builder.buildClientInstrumenter(HttpHeaderSetter.INSTANCE);
+    INSTRUMENTER =
+        JavaagentHttpClientInstrumenters.create(
+            INSTRUMENTATION_NAME, new JoddHttpHttpAttributesGetter(), HttpHeaderSetter.INSTANCE);
   }
 
   public static Instrumenter<HttpRequest, HttpResponse> instrumenter() {

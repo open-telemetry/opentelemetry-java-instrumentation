@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
@@ -45,6 +46,11 @@ public final class InstrumenterUtil {
         instrumenter, parentContext, request, response, error, startTime, endTime);
   }
 
+  public static <REQUEST, RESPONSE> Context suppressSpan(
+      Instrumenter<REQUEST, RESPONSE> instrumenter, Context parentContext, REQUEST request) {
+    return instrumenterAccess.suppressSpan(instrumenter, parentContext, request);
+  }
+
   public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> buildUpstreamInstrumenter(
       InstrumenterBuilder<REQUEST, RESPONSE> builder,
       TextMapGetter<REQUEST> getter,
@@ -60,6 +66,15 @@ public final class InstrumenterUtil {
     // instrumenterBuilderAccess is guaranteed to be non-null here
     return instrumenterBuilderAccess.buildDownstreamInstrumenter(
         builder, setter, spanKindExtractor);
+  }
+
+  @CanIgnoreReturnValue
+  public static <REQUEST, RESPONSE>
+      InstrumenterBuilder<REQUEST, RESPONSE> propagateOperationListenersToOnEnd(
+          InstrumenterBuilder<REQUEST, RESPONSE> builder) {
+    // instrumenterBuilderAccess is guaranteed to be non-null here
+    instrumenterBuilderAccess.propagateOperationListenersToOnEnd(builder);
+    return builder;
   }
 
   private InstrumenterUtil() {}

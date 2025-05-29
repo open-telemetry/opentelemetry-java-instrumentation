@@ -24,7 +24,8 @@ public final class CodeCacheConfigurationHandler implements RecordedEventHandler
   private static final String EVENT_NAME = "jdk.CodeCacheConfiguration";
 
   private static final Attributes ATTR =
-      Attributes.of(Constants.ATTR_TYPE, Constants.NON_HEAP, Constants.ATTR_POOL, "CodeCache");
+      Attributes.of(
+          Constants.ATTR_MEMORY_TYPE, Constants.NON_HEAP, Constants.ATTR_MEMORY_POOL, "CodeCache");
 
   private final List<AutoCloseable> observables = new ArrayList<>();
 

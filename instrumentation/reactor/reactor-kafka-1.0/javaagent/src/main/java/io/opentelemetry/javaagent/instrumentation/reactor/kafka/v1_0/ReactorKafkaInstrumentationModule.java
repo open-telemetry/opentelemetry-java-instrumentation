@@ -20,12 +20,6 @@ public class ReactorKafkaInstrumentationModule extends InstrumentationModule {
   }
 
   @Override
-  public boolean isIndyModule() {
-    // OpenTelemetryMetricsReporter is not available in app class loader
-    return false;
-  }
-
-  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new KafkaReceiverInstrumentation(),

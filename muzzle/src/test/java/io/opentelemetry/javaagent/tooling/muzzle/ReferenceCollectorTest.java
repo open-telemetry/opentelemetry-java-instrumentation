@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.MinimumVisibilityFlag.PACKAGE_OR_HIGHER;
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.MinimumVisibilityFlag.PROTECTED_OR_HIGHER;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.entry;
 
 import external.instrumentation.ExternalHelper;
@@ -30,7 +31,7 @@ import muzzle.TestClasses.HelperAdvice;
 import muzzle.TestClasses.LdcAdvice;
 import muzzle.TestClasses.MethodBodyAdvice;
 import muzzle.TestClasses.Nested;
-import org.assertj.core.api.Assertions;
+import muzzle.other.OtherTestClasses;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -71,16 +72,15 @@ class ReferenceCollectorTest {
         refB,
         "method",
         "(Ljava/lang/String;)Ljava/lang/String;",
-        PROTECTED_OR_HIGHER,
+        PACKAGE_OR_HIGHER,
         OwnershipFlag.NON_STATIC);
-    assertMethod(
-        refB, "methodWithPrimitives", "(Z)V", PROTECTED_OR_HIGHER, OwnershipFlag.NON_STATIC);
-    assertMethod(refB, "staticMethod", "()V", PROTECTED_OR_HIGHER, OwnershipFlag.STATIC);
+    assertMethod(refB, "methodWithPrimitives", "(Z)V", PACKAGE_OR_HIGHER, OwnershipFlag.NON_STATIC);
+    assertMethod(refB, "staticMethod", "()V", PACKAGE_OR_HIGHER, OwnershipFlag.STATIC);
     assertMethod(
         refB,
         "methodWithArrays",
         "([Ljava/lang/String;)[Ljava/lang/Object;",
-        PROTECTED_OR_HIGHER,
+        PACKAGE_OR_HIGHER,
         OwnershipFlag.NON_STATIC);
 
     // field refs
@@ -93,7 +93,7 @@ class ReferenceCollectorTest {
   @Test
   public void protectedRefTest() {
     ReferenceCollector collector = new ReferenceCollector(s -> false);
-    collector.collectReferencesFromAdvice(Nested.B2.class.getName());
+    collector.collectReferencesFromAdvice(OtherTestClasses.Nested.B2.class.getName());
     collector.prune();
     Map<String, ClassRef> references = collector.getReferences();
 
@@ -137,21 +137,21 @@ class ReferenceCollectorTest {
         references.get("muzzle.TestClasses$Nested$SomeImplementation"),
         "someMethod",
         "()V",
-        PROTECTED_OR_HIGHER,
+        PACKAGE_OR_HIGHER,
         OwnershipFlag.NON_STATIC);
     assertThat(references).containsKey("muzzle.TestClasses$Nested$B");
     assertMethod(
         references.get("muzzle.TestClasses$Nested$B"),
         "staticMethod",
         "()V",
-        PROTECTED_OR_HIGHER,
+        PACKAGE_OR_HIGHER,
         OwnershipFlag.STATIC);
     assertThat(references).containsKey("muzzle.TestClasses$Nested$A");
     assertMethod(
         references.get("muzzle.TestClasses$Nested$A"),
         "<init>",
         "()V",
-        PROTECTED_OR_HIGHER,
+        PACKAGE_OR_HIGHER,
         OwnershipFlag.NON_STATIC);
   }
 
@@ -363,13 +363,27 @@ class ReferenceCollectorTest {
             entry(VirtualFieldTestClasses.Key1.class.getName(), State.class.getName()));
   }
 
+  @Test
+  public void shouldCollectVirtualFieldsFromStaticInitializers() {
+    ReferenceCollector collector = new ReferenceCollector(s -> s.endsWith("$Helper"));
+    collector.collectReferencesFromAdvice(
+        VirtualFieldTestClasses.VirtualFieldInStaticInitializerAdvice.class.getName());
+    collector.prune();
+
+    VirtualFieldMappings virtualFieldMappings = collector.getVirtualFieldMappings();
+    assertThat(virtualFieldMappings.entrySet())
+        .containsExactlyInAnyOrder(
+            entry(VirtualFieldTestClasses.Key1.class.getName(), Context.class.getName()),
+            entry(VirtualFieldTestClasses.Key2.class.getName(), Context.class.getName()));
+  }
+
   @ParameterizedTest(name = "{0}")
   @MethodSource
   public void shouldNotCollectVirtualFieldsForInvalidScenario(
       @SuppressWarnings("unused") String desc, String adviceClassName) {
     ReferenceCollector collector = new ReferenceCollector(s -> false);
 
-    Assertions.assertThatExceptionOfType(MuzzleCompilationException.class)
+    assertThatExceptionOfType(MuzzleCompilationException.class)
         .isThrownBy(
             () -> {
               collector.collectReferencesFromAdvice(adviceClassName);

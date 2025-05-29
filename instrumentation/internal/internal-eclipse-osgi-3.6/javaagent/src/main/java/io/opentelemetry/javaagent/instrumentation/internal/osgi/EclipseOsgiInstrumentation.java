@@ -23,7 +23,8 @@ import net.bytebuddy.matcher.ElementMatcher;
  *
  * <p>Any side-effect of the ClassLoaderMatcher's call to ClassLoader.getResource() is generally
  * undesirable, and so this instrumentation patches the behavior and suppresses the "dynamic import"
- * of the missing package/bundle when the call is originating from ClassLoaderMatcher..
+ * of the missing package/bundle when the call is originating from ClassLoaderMatcher, unless the
+ * request is for a package for which we explicitly allow the dynamic imports.
  */
 class EclipseOsgiInstrumentation implements TypeInstrumentation {
 
@@ -45,8 +46,10 @@ class EclipseOsgiInstrumentation implements TypeInstrumentation {
     // "skipOn" is used to skip execution of the instrumented method when a ClassLoaderMatcher is
     // currently executing, since we will be returning false regardless in onExit below
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class, suppress = Throwable.class)
-    public static boolean onEnter() {
-      return InClassLoaderMatcher.get();
+    public static boolean onEnter(@Advice.Argument(0) String packageName) {
+      // disable dynamic imports for everything except io.opentelemetry classes to allow dynamic
+      // import of @WithSpan etc.
+      return InClassLoaderMatcher.get() && !packageName.startsWith("io.opentelemetry.");
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

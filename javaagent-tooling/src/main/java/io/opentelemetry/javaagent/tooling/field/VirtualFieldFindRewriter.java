@@ -9,6 +9,7 @@ import static java.util.logging.Level.FINEST;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings;
@@ -81,12 +82,12 @@ final class VirtualFieldFindRewriter implements AsmVisitorWrapper {
       int writerFlags,
       int readerFlags) {
 
-    return new ClassVisitor(Opcodes.ASM7, classVisitor) {
+    return new ClassVisitor(AsmApi.VERSION, classVisitor) {
       @Override
       public MethodVisitor visitMethod(
           int access, String name, String descriptor, String signature, String[] exceptions) {
         MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
-        return new MethodVisitor(Opcodes.ASM7, mv) {
+        return new MethodVisitor(api, mv) {
           /** The most recent objects pushed to the stack. */
           private final Object[] stack = {null, null};
 

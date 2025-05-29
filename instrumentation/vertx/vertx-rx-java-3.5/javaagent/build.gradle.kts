@@ -29,8 +29,11 @@ testing {
   suites {
     val version35Test by registering(JvmTestSuite::class) {
       dependencies {
-        implementation("org.hsqldb:hsqldb:2.3.4")
+        // this only exists to make Intellij happy since it doesn't (currently at least) understand our
+        // inclusion of this artifact inside :testing-common
+        compileOnly(project.dependencies.project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
 
+        implementation("org.hsqldb:hsqldb:2.3.4")
         compileOnly("io.vertx:vertx-codegen:$vertxVersion")
         implementation("io.vertx:vertx-web:$vertxVersion")
         implementation("io.vertx:vertx-rx-java2:$vertxVersion")
@@ -42,20 +45,25 @@ testing {
 
     val latestDepTest by registering(JvmTestSuite::class) {
       dependencies {
-        implementation("org.hsqldb:hsqldb:2.3.4")
+        // this only exists to make Intellij happy since it doesn't (currently at least) understand our
+        // inclusion of this artifact inside :testing-common
+        compileOnly(project.dependencies.project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
 
-        implementation("io.vertx:vertx-web:+")
-        implementation("io.vertx:vertx-rx-java2:+")
-        implementation("io.vertx:vertx-web-client:+")
-        implementation("io.vertx:vertx-jdbc-client:+")
-        implementation("io.vertx:vertx-circuit-breaker:+")
+        implementation("org.hsqldb:hsqldb:2.3.4")
+        implementation("io.vertx:vertx-web:4.+")
+        implementation("io.vertx:vertx-rx-java2:4.+")
+        implementation("io.vertx:vertx-web-client:4.+")
+        implementation("io.vertx:vertx-jdbc-client:4.+")
+        implementation("io.vertx:vertx-circuit-breaker:4.+")
       }
     }
   }
 }
 
+val testLatestDeps = findProperty("testLatestDeps") as Boolean
+
 tasks {
-  if (findProperty("testLatestDeps") as Boolean) {
+  if (testLatestDeps) {
     // disable regular test running and compiling tasks when latest dep test task is run
     named("test") {
       enabled = false
@@ -63,17 +71,13 @@ tasks {
     named("compileTestGroovy") {
       enabled = false
     }
+  }
 
-    check {
-      dependsOn(testing.suites)
-    }
+  named("latestDepTest") {
+    enabled = testLatestDeps
+  }
 
-    val testStableSemconv by registering(Test::class) {
-      jvmArgs("-Dotel.semconv-stability.opt-in=http")
-    }
-
-    check {
-      dependsOn(testStableSemconv)
-    }
+  check {
+    dependsOn(testing.suites)
   }
 }

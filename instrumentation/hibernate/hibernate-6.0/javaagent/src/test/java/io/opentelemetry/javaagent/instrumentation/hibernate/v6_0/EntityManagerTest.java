@@ -5,19 +5,32 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v6_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.NoResultException;
 import jakarta.persistence.Persistence;
 import jakarta.persistence.Query;
 import java.util.Arrays;
@@ -25,11 +38,12 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public class EntityManagerTest extends AbstractHibernateTest {
+class EntityManagerTest extends AbstractHibernateTest {
   static final EntityManagerFactory entityManagerFactory =
       Persistence.createEntityManagerFactory("test-pu");
 
@@ -112,6 +126,7 @@ public class EntityManagerTest extends AbstractHibernateTest {
         });
   }
 
+  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("provideAttachesStateParameters")
   void testAttachesStateToQuery(Parameter parameter) {
@@ -129,33 +144,55 @@ public class EntityManagerTest extends AbstractHibernateTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace
-                .hasSize(4)
-                .hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span -> assertSessionSpan(span, trace.getSpan(0), parameter.resource),
-                    span ->
-                        span.hasName("SELECT db1.Value")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
-                                equalTo(SemanticAttributes.DB_NAME, "db1"),
-                                equalTo(SemanticAttributes.DB_USER, "sa"),
-                                equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
-                                satisfies(
-                                    SemanticAttributes.DB_STATEMENT,
-                                    val -> val.isInstanceOf(String.class)),
-                                equalTo(SemanticAttributes.DB_OPERATION, "SELECT"),
-                                equalTo(SemanticAttributes.DB_SQL_TABLE, "Value")),
-                    span ->
-                        assertTransactionCommitSpan(
-                            span,
-                            trace.getSpan(0),
-                            trace
-                                .getSpan(1)
-                                .getAttributes()
-                                .get(AttributeKey.stringKey("hibernate.session_id")))));
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span -> assertSessionSpan(span, trace.getSpan(0), parameter.resource),
+                span ->
+                    span.hasName("SELECT db1.Value")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(maybeStable(DB_NAME), "db1"),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "h2:mem:"),
+                            satisfies(
+                                maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
+                            equalTo(maybeStable(DB_OPERATION), "SELECT"),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Value")),
+                span ->
+                    assertTransactionCommitSpan(
+                        span,
+                        trace.getSpan(0),
+                        trace
+                            .getSpan(1)
+                            .getAttributes()
+                            .get(AttributeKey.stringKey("hibernate.session_id")))));
+  }
+
+  @Test
+  void testNoResultExceptionIgnored() {
+    EntityManager entityManager = entityManagerFactory.createEntityManager();
+    Query query = entityManager.createQuery("from Value where id = :id");
+    query.setParameter("id", 1000);
+    assertThatThrownBy(query::getSingleResult).isInstanceOf(NoResultException.class);
+    entityManager.close();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SELECT " + Value.class.getName())
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasStatus(StatusData.unset())
+                        .hasEvents(emptyList()),
+                span ->
+                    span.hasName("SELECT db1.Value")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))));
   }
 
   private static Stream<Arguments> provideHibernateActionParameters() {
@@ -221,7 +258,7 @@ public class EntityManagerTest extends AbstractHibernateTest {
             named(
                 "remove",
                 new Parameter(
-                    "delete",
+                    "remove",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
                     true,
                     true,
@@ -289,32 +326,34 @@ public class EntityManagerTest extends AbstractHibernateTest {
     public final Function<EntityManager, Query> queryBuildMethod;
   }
 
+  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   private static SpanDataAssert assertClientSpan(SpanDataAssert span, SpanData parent) {
     return span.hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
-            equalTo(SemanticAttributes.DB_NAME, "db1"),
-            equalTo(SemanticAttributes.DB_USER, "sa"),
-            equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
-            satisfies(SemanticAttributes.DB_STATEMENT, val -> val.isInstanceOf(String.class)),
-            satisfies(SemanticAttributes.DB_OPERATION, val -> val.isInstanceOf(String.class)),
-            equalTo(SemanticAttributes.DB_SQL_TABLE, "Value"));
+            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+            equalTo(maybeStable(DB_NAME), "db1"),
+            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "h2:mem:"),
+            satisfies(maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
+            satisfies(maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
+            equalTo(maybeStable(DB_SQL_TABLE), "Value"));
   }
 
+  @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   private static SpanDataAssert assertClientSpan(
       SpanDataAssert span, SpanData parent, String spanName) {
     return span.hasName(spanName)
         .hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            equalTo(SemanticAttributes.DB_SYSTEM, "h2"),
-            equalTo(SemanticAttributes.DB_NAME, "db1"),
-            equalTo(SemanticAttributes.DB_USER, "sa"),
-            equalTo(SemanticAttributes.DB_CONNECTION_STRING, "h2:mem:"),
-            satisfies(SemanticAttributes.DB_STATEMENT, val -> val.isInstanceOf(String.class)),
-            satisfies(SemanticAttributes.DB_OPERATION, val -> val.isInstanceOf(String.class)),
-            equalTo(SemanticAttributes.DB_SQL_TABLE, "Value"));
+            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+            equalTo(maybeStable(DB_NAME), "db1"),
+            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"),
+            equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "h2:mem:"),
+            satisfies(maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
+            satisfies(maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
+            equalTo(maybeStable(DB_SQL_TABLE), "Value"));
   }
 
   private static SpanDataAssert assertSessionSpan(

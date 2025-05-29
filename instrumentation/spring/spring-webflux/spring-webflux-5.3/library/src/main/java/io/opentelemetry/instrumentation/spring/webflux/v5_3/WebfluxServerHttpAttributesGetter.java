@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.net.InetSocketAddress;
 import java.util.Collections;
 import java.util.List;
@@ -20,7 +20,7 @@ enum WebfluxServerHttpAttributesGetter
 
   @Override
   public String getHttpRequestMethod(ServerWebExchange request) {
-    return request.getRequest().getMethodValue();
+    return request.getRequest().getMethod().name();
   }
 
   @Override
@@ -81,27 +81,14 @@ enum WebfluxServerHttpAttributesGetter
 
   @Nullable
   @Override
-  public String getServerAddress(ServerWebExchange request) {
-    return request.getRequest().getURI().getHost();
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerPort(ServerWebExchange request) {
-    int port = request.getRequest().getURI().getPort();
-    return port == -1 ? null : port;
-  }
-
-  @Nullable
-  @Override
-  public InetSocketAddress getClientInetSocketAddress(
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
       ServerWebExchange request, @Nullable ServerWebExchange response) {
     return request.getRequest().getRemoteAddress();
   }
 
   @Nullable
   @Override
-  public InetSocketAddress getServerInetSocketAddress(
+  public InetSocketAddress getNetworkLocalInetSocketAddress(
       ServerWebExchange request, @Nullable ServerWebExchange response) {
     return request.getRequest().getLocalAddress();
   }

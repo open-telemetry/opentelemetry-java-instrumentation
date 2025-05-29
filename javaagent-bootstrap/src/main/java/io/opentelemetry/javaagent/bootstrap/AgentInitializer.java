@@ -26,12 +26,25 @@ public final class AgentInitializer {
   @Nullable private static ClassLoader agentClassLoader = null;
   @Nullable private static AgentStarter agentStarter = null;
   private static boolean isSecurityManagerSupportEnabled = false;
+  private static volatile boolean agentStarted = false;
 
-  public static void initialize(Instrumentation inst, File javaagentFile, boolean fromPremain)
+  public static void initialize(
+      Instrumentation inst, File javaagentFile, boolean fromPremain, String agentArgs)
       throws Exception {
     if (agentClassLoader != null) {
       return;
     }
+
+    // this call deliberately uses anonymous class instead of lambda because using lambdas too
+    // early on early jdk8 (see isEarlyOracle18 method) causes jvm to crash. See CrashEarlyJdk8Test.
+    doPrivileged(
+        new PrivilegedAction<Void>() {
+          @Override
+          public Void run() {
+            setSystemProperties(agentArgs);
+            return null;
+          }
+        });
 
     // we expect that at this point agent jar has been appended to boot class path and all agent
     // classes are loaded in boot loader
@@ -51,6 +64,7 @@ public final class AgentInitializer {
             agentStarter = createAgentStarter(agentClassLoader, inst, javaagentFile);
             if (!fromPremain || !delayAgentStart()) {
               agentStarter.start();
+              agentStarted = true;
             }
             return null;
           }
@@ -58,7 +72,11 @@ public final class AgentInitializer {
   }
 
   private static void execute(PrivilegedExceptionAction<Void> action) throws Exception {
-    if (isSecurityManagerSupportEnabled && System.getSecurityManager() != null) {
+    // When security manager support is enabled we use doPrivileged even if security manager is not
+    // present because security manager could be installed later. ByteBuddy initialization captures
+    // the access control context used during transformation. If we don't use doPrivileged here then
+    // that context will not have the privileges if security manager is installed later.
+    if (isSecurityManagerSupportEnabled) {
       doPrivilegedExceptionAction(action);
     } else {
       action.run();
@@ -145,9 +163,25 @@ public final class AgentInitializer {
           @Override
           public Void run() {
             agentStarter.start();
+            agentStarted = true;
             return null;
           }
         });
+  }
+
+  /**
+   * Check whether agent has started or not along with VM.
+   *
+   * <p>This method is used by
+   * io.opentelemetry.javaagent.tooling.AgentStarterImpl#InetAddressClassFileTransformer internally
+   * to check whether agent has started.
+   *
+   * @param vmStarted flag about whether VM has started or not.
+   * @return {@code true} if agent has started or not along with VM, {@code false} otherwise.
+   */
+  @SuppressWarnings("unused")
+  public static boolean isAgentStarted(boolean vmStarted) {
+    return vmStarted && agentStarted;
   }
 
   public static ClassLoader getExtensionsClassLoader() {
@@ -179,4 +213,28 @@ public final class AgentInitializer {
   }
 
   private AgentInitializer() {}
+
+  @SuppressWarnings("SystemOut")
+  static void setSystemProperties(@Nullable String agentArgs) {
+    boolean debug = false;
+    if (agentArgs != null && !agentArgs.isEmpty()) {
+      for (String option : agentArgs.split(";")) {
+        int i = option.indexOf('=');
+        if (i < 0) {
+          System.err.println("Malformed agent argument: " + option);
+          continue;
+        }
+
+        String key = option.substring(0, i).trim();
+        String value = option.substring(i + 1).trim();
+        System.setProperty(key, value);
+        if (key.equals("otel.javaagent.debug")) {
+          debug = Boolean.parseBoolean(value);
+        }
+        if (debug) {
+          System.err.println("Setting property [" + key + "] = " + value);
+        }
+      }
+    }
+  }
 }

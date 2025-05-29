@@ -9,9 +9,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContext;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaConsumerContextUtil;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaProcessRequest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -69,17 +69,23 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
 
   @Override
   public void success(ConsumerRecord<K, V> record, Consumer<K, V> consumer) {
-    end(record, null);
-    if (decorated != null) {
-      decorated.success(record, consumer);
+    try {
+      if (decorated != null) {
+        decorated.success(record, consumer);
+      }
+    } finally {
+      end(record, null);
     }
   }
 
   @Override
   public void failure(ConsumerRecord<K, V> record, Exception exception, Consumer<K, V> consumer) {
-    end(record, exception);
-    if (decorated != null) {
-      decorated.failure(record, exception, consumer);
+    try {
+      if (decorated != null) {
+        decorated.failure(record, exception, consumer);
+      }
+    } finally {
+      end(record, exception);
     }
   }
 
@@ -90,6 +96,30 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
       KafkaProcessRequest request = state.request();
       state.scope().close();
       processInstrumenter.end(state.context(), request, null, error);
+    }
+  }
+
+  @NoMuzzle // method was added in 2.8.0
+  @Override
+  public void afterRecord(ConsumerRecord<K, V> record, Consumer<K, V> consumer) {
+    if (decorated != null) {
+      decorated.afterRecord(record, consumer);
+    }
+  }
+
+  @NoMuzzle // method was added in 2.8.0
+  @Override
+  public void setupThreadState(Consumer<?, ?> consumer) {
+    if (decorated != null) {
+      decorated.setupThreadState(consumer);
+    }
+  }
+
+  @NoMuzzle // method was added in 2.8.0
+  @Override
+  public void clearThreadState(Consumer<?, ?> consumer) {
+    if (decorated != null) {
+      decorated.clearThreadState(consumer);
     }
   }
 }

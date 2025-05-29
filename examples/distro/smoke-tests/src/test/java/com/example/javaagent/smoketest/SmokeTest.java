@@ -31,6 +31,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.utility.MountableFile;
 
 abstract class SmokeTest {
@@ -46,6 +47,8 @@ abstract class SmokeTest {
 
   protected abstract String getTargetImage(int jdk);
 
+  protected abstract WaitStrategy getTargetWaitStrategy();
+
   /** Subclasses can override this method to customise target application's environment */
   protected Map<String, String> getExtraEnv() {
     return Collections.emptyMap();
@@ -54,7 +57,7 @@ abstract class SmokeTest {
   private static GenericContainer backend;
 
   @BeforeAll
-  static void setupSpec() {
+  static void setup() {
     backend =
         new GenericContainer<>(
                 "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend:20221127.3559314891")
@@ -79,17 +82,23 @@ abstract class SmokeTest {
             .withEnv("JAVA_TOOL_OPTIONS", "-javaagent:/opentelemetry-javaagent.jar")
             .withEnv("OTEL_BSP_MAX_EXPORT_BATCH", "1")
             .withEnv("OTEL_BSP_SCHEDULE_DELAY", "10")
+            // TODO (heya) update smoke tests to run using http/protobuf
+            // in the meantime, force smoke tests to use grpc protocol for all exporters
+            .withEnv("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc")
             .withEnv("OTEL_PROPAGATORS", "tracecontext,baggage,demo")
-            .withEnv(getExtraEnv());
+            .withEnv(getExtraEnv())
+            .waitingFor(getTargetWaitStrategy());
     target.start();
   }
 
   @AfterEach
-  void cleanup() throws IOException {
+  void reset() throws IOException {
     client
         .newCall(
             new Request.Builder()
-                .url(String.format("http://localhost:%d/clear", backend.getMappedPort(8080)))
+                .url(
+                    String.format(
+                        "http://%s:%d/clear", backend.getHost(), backend.getMappedPort(8080)))
                 .build())
         .execute()
         .close();
@@ -100,7 +109,7 @@ abstract class SmokeTest {
   }
 
   @AfterAll
-  static void cleanupSpec() {
+  static void cleanup() {
     backend.stop();
   }
 
@@ -149,8 +158,7 @@ abstract class SmokeTest {
         .map(
             it -> {
               ExportTraceServiceRequest.Builder builder = ExportTraceServiceRequest.newBuilder();
-              // TODO(anuraaga): Register parser into object mapper to avoid de -> re ->
-              // deserialize.
+              // TODO: Register parser into object mapper to avoid de -> re -> deserialize.
               try {
                 JsonFormat.parser().merge(OBJECT_MAPPER.writeValueAsString(it), builder);
               } catch (InvalidProtocolBufferException | JsonProcessingException e) {
@@ -169,7 +177,9 @@ abstract class SmokeTest {
 
       Request request =
           new Request.Builder()
-              .url(String.format("http://localhost:%d/get-traces", backend.getMappedPort(8080)))
+              .url(
+                  String.format(
+                      "http://%s:%d/get-traces", backend.getHost(), backend.getMappedPort(8080)))
               .build();
 
       try (ResponseBody body = client.newCall(request).execute().body()) {

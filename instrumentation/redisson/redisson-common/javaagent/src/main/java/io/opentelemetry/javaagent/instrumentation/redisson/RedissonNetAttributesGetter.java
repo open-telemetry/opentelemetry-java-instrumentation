@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson;
 
-import io.opentelemetry.instrumentation.api.instrumenter.network.ServerAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 
-final class RedissonNetAttributesGetter implements ServerAttributesGetter<RedissonRequest, Void> {
+final class RedissonNetAttributesGetter implements NetworkAttributesGetter<RedissonRequest, Void> {
 
   @Override
-  public InetSocketAddress getServerInetSocketAddress(
+  public InetSocketAddress getNetworkPeerInetSocketAddress(
       RedissonRequest request, @Nullable Void unused) {
     return request.getAddress();
   }

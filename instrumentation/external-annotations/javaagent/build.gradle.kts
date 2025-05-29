@@ -18,7 +18,8 @@ dependencies {
   testImplementation("io.opentracing.contrib.dropwizard:dropwizard-opentracing:0.2.2") {
     isTransitive = false
   }
-  testImplementation("com.signalfx.public:signalfx-trace-api:0.48.0-sfx1")
+  testImplementation("com.datadoghq:dd-trace-api:1.43.0")
+  testImplementation("com.signalfx.public:signalfx-trace-api:0.48.0-sfx8")
   // Old and new versions of kamon use different packages for Trace annotation
   testImplementation("io.kamon:kamon-annotation_2.11:0.6.7") {
     isTransitive = false
@@ -39,7 +40,7 @@ tasks {
       includeTestsMatching("ConfiguredTraceAnnotationsTest")
     }
     include("**/ConfiguredTraceAnnotationsTest.*")
-    jvmArgs("-Dotel.instrumentation.external-annotations.include=package.Class\$Name;OuterClass\$InterestingMethod")
+    jvmArgs("-Dotel.instrumentation.external-annotations.include=io.opentelemetry.javaagent.instrumentation.extannotations.OuterClass\$InterestingMethod")
   }
 
   val testExcludeMethodsProperty by registering(Test::class) {
@@ -47,7 +48,9 @@ tasks {
       includeTestsMatching("TracedMethodsExclusionTest")
     }
     include("**/TracedMethodsExclusionTest.*")
-    jvmArgs("-Dotel.instrumentation.external-annotations.exclude-methods=TracedMethodsExclusionTest\$TestClass[excluded,annotatedButExcluded]")
+    jvmArgs(
+      "-Dotel.instrumentation.external-annotations.exclude-methods=io.opentelemetry.javaagent.instrumentation.extannotations.TracedMethodsExclusionTest\$TestClass[excluded,annotatedButExcluded]"
+    )
   }
 
   test {

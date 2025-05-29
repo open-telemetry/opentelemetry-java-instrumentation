@@ -5,33 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.httpclient.v9_2;
 
-import static java.util.Collections.singletonList;
-
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.net.PeerServiceAttributesExtractor;
-import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientHttpAttributesGetter;
-import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientInstrumenterFactory;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyHttpClientInstrumenterBuilderFactory;
+import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 
 public class JettyHttpClientSingletons {
 
   private static final Instrumenter<Request, Response> INSTRUMENTER =
-      JettyClientInstrumenterFactory.create(
-          GlobalOpenTelemetry.get(),
-          builder ->
-              builder
-                  .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
-                  .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
-                  .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
-          builder -> builder.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods()),
-          singletonList(
-              PeerServiceAttributesExtractor.create(
-                  JettyClientHttpAttributesGetter.INSTANCE,
-                  CommonConfig.get().getPeerServiceMapping())),
-          CommonConfig.get().shouldEmitExperimentalHttpClientMetrics());
+      JavaagentHttpClientInstrumenters.create(
+          JettyHttpClientInstrumenterBuilderFactory.create(GlobalOpenTelemetry.get()));
 
   public static Instrumenter<Request, Response> instrumenter() {
     return INSTRUMENTER;

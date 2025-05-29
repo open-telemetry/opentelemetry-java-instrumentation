@@ -20,6 +20,7 @@ import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.ClassicHttpRequest;
 import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.HttpResponse;
 import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
@@ -87,6 +88,26 @@ public class ApacheHttpClientTest {
     void executeRequestWithCallback(ClassicHttpRequest request, URI uri, HttpClientResult result)
         throws Exception {
       getClient(uri).execute(getHost(uri), request, new ResponseHandler(result));
+    }
+  }
+
+  @Nested
+  class ApacheClientNullHttpHostRequestTest extends AbstractTest {
+    @Override
+    ClassicHttpRequest createRequest(String method, URI uri) {
+      // also testing with an absolute path below
+      return new BasicClassicHttpRequest(method, HttpHost.create(uri), fullPathFromUri(uri));
+    }
+
+    @Override
+    ClassicHttpResponse doExecuteRequest(ClassicHttpRequest request, URI uri) throws Exception {
+      return getClient(uri).execute(null, request);
+    }
+
+    @Override
+    void executeRequestWithCallback(ClassicHttpRequest request, URI uri, HttpClientResult result)
+        throws Exception {
+      getClient(uri).execute(null, request, new ResponseHandler(result));
     }
   }
 
@@ -202,6 +223,11 @@ public class ApacheHttpClientTest {
       super.configure(optionsBuilder);
       // apparently apache http client does not report the 302 status code?
       optionsBuilder.setResponseCodeOnRedirectError(null);
+
+      if (Boolean.getBoolean("testLatestDeps")) {
+        optionsBuilder.disableTestHttps();
+        optionsBuilder.disableTestRemoteConnection();
+      }
     }
   }
 

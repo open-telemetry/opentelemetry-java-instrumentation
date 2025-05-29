@@ -91,8 +91,4 @@ public class LibertyRequest {
   public int getClientSocketPort() {
     return clientSocketPort;
   }
-
-  public HttpRequestMessage request() {
-    return httpRequestMessage;
-  }
 }

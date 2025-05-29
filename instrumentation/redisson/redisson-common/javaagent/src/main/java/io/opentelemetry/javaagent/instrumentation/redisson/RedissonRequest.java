@@ -10,8 +10,8 @@ import static java.util.Collections.singletonList;
 
 import com.google.auto.value.AutoValue;
 import io.netty.buffer.ByteBuf;
-import io.opentelemetry.instrumentation.api.db.RedisCommandSanitizer;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -29,12 +29,13 @@ import org.redisson.client.protocol.CommandsData;
 public abstract class RedissonRequest {
 
   private static final RedisCommandSanitizer sanitizer =
-      RedisCommandSanitizer.create(CommonConfig.get().isStatementSanitizationEnabled());
+      RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
   public static RedissonRequest create(InetSocketAddress address, Object command) {
     return new AutoValue_RedissonRequest(address, command);
   }
 
+  @Nullable
   public abstract InetSocketAddress getAddress();
 
   public abstract Object getCommand();
@@ -59,7 +60,7 @@ public abstract class RedissonRequest {
     switch (sanitizedStatements.size()) {
       case 0:
         return null;
-        // optimize for the most common case
+      // optimize for the most common case
       case 1:
         return sanitizedStatements.get(0);
       default:

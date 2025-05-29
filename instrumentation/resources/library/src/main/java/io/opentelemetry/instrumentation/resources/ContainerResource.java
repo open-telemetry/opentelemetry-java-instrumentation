@@ -5,15 +5,21 @@
 
 package io.opentelemetry.instrumentation.resources;
 
-import static io.opentelemetry.semconv.ResourceAttributes.CONTAINER_ID;
-
 import com.google.errorprone.annotations.MustBeClosed;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.UnsupportedCharsetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -21,6 +27,9 @@ import java.util.stream.Stream;
  * v2 runtimes.
  */
 public final class ContainerResource {
+
+  // copied from ContainerIncubatingAttributes
+  private static final AttributeKey<String> CONTAINER_ID = AttributeKey.stringKey("container.id");
 
   static final Filesystem FILESYSTEM_INSTANCE = new Filesystem();
   private static final Resource INSTANCE = buildSingleton();
@@ -66,6 +75,17 @@ public final class ContainerResource {
 
   // Exists for testing
   static class Filesystem {
+    private static final Logger logger = Logger.getLogger(Filesystem.class.getName());
+
+    private final Supplier<String> osNameSupplier;
+
+    Filesystem() {
+      this(() -> System.getProperty("os.name"));
+    }
+
+    Filesystem(Supplier<String> osNameSupplier) {
+      this.osNameSupplier = osNameSupplier;
+    }
 
     boolean isReadable(Path path) {
       return Files.isReadable(path);
@@ -73,7 +93,25 @@ public final class ContainerResource {
 
     @MustBeClosed
     Stream<String> lines(Path path) throws IOException {
-      return Files.lines(path);
+      String osName = osNameSupplier.get();
+      if (osName.equalsIgnoreCase("z/OS") || osName.equalsIgnoreCase("OS/390")) {
+        try {
+          // On z/OS the /proc tree is always encoded with IBM1047 (Canonical name: Cp1047).
+          return Files.lines(path, Charset.forName("Cp1047"));
+        } catch (UnsupportedCharsetException e) {
+          // What charsets are available depends on the instance of the JVM
+          logger.log(Level.WARNING, "Unable to find charset Cp1047", e);
+          return Stream.empty();
+        }
+      } else {
+        return Files.lines(path);
+      }
+    }
+
+    List<String> lineList(Path path) throws IOException {
+      try (Stream<String> lines = lines(path)) {
+        return lines.collect(Collectors.toList());
+      }
     }
   }
 }

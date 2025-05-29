@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.aws;
 
-import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 
 import com.amazonaws.services.sqs.model.PurgeQueueInProgressException;
@@ -23,7 +22,7 @@ import org.slf4j.LoggerFactory;
 class S3CamelTest {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static final Logger logger = LoggerFactory.getLogger(S3CamelTest.class);
 
@@ -38,7 +37,7 @@ class S3CamelTest {
   }
 
   @Test
-  public void camelS3ProducerToCamelSqsConsumer() {
+  void camelS3ProducerToCamelSqsConsumer() {
     String queueName = "s3SqsCamelTest";
     String bucketName = "bucket-test-s3-sqs-camel";
 
@@ -70,17 +69,12 @@ class S3CamelTest {
                     AwsSpanAssertions.s3(span, "S3.PutObject", bucketName, "PUT")
                         .hasParent(trace.getSpan(1)),
                 span ->
-                    AwsSpanAssertions.sqs(span, "SQS.ReceiveMessage", queueUrl, null, CONSUMER)
+                    AwsSpanAssertions.sqs(
+                            span, "s3SqsCamelTest process", queueUrl, queueName, CONSUMER)
                         .hasParent(trace.getSpan(2)),
                 span ->
                     CamelSpanAssertions.sqsConsume(span, queueName, sqsDelay)
                         .hasParent(trace.getSpan(2))),
-        // HTTP "client" receiver span, one per each SQS request
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    AwsSpanAssertions.sqs(span, "SQS.ReceiveMessage", queueUrl, null, CLIENT)
-                        .hasNoParent()),
         // camel cleaning received msg
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -137,11 +131,9 @@ class S3CamelTest {
                         .hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sqs(span, "SQS.ReceiveMessage", queueUrl).hasNoParent()),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
                 span ->
-                    AwsSpanAssertions.sqs(span, "SQS.ReceiveMessage", queueUrl, null, CONSUMER)
+                    AwsSpanAssertions.sqs(
+                            span, "s3SqsCamelTest process", queueUrl, queueName, CONSUMER)
                         .hasNoParent()));
     testing.clearData();
   }

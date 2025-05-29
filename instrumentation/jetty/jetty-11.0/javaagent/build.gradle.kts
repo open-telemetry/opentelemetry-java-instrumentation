@@ -18,22 +18,13 @@ dependencies {
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
+  testInstrumentation(project(":instrumentation:jetty:jetty-12.0:javaagent"))
 
   // jetty-servlet does not exist in jetty 12, so we don't need to explicitly pin it to 11.+
   testLibrary("org.eclipse.jetty:jetty-servlet:11.0.0")
-  latestDepTestLibrary("org.eclipse.jetty:jetty-server:11.+")
+  latestDepTestLibrary("org.eclipse.jetty:jetty-server:11.+") // see jetty-12.0 module
 }
 
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
-}
-
-tasks {
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
-  }
 }

@@ -11,6 +11,7 @@ import static io.opentelemetry.javaagent.tooling.field.GeneratedVirtualFieldName
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.tooling.Utils;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -66,7 +67,7 @@ final class RealFieldInjector implements AsmVisitorWrapper {
       int writerFlags,
       int readerFlags) {
 
-    return new ClassVisitor(Opcodes.ASM7, classVisitor) {
+    return new ClassVisitor(AsmApi.VERSION, classVisitor) {
       // We are using Object class name instead of fieldTypeName here because this gets
       // injected onto the bootstrap class loader where context class may be unavailable
       private final TypeDescription fieldType = TypeDescription.ForLoadedType.of(Object.class);

@@ -4,7 +4,3 @@
 plugins {
   id("otel.javaagent-instrumentation")
 }
-
-dependencies {
-  compileOnly(project(":javaagent-extension-api"))
-}

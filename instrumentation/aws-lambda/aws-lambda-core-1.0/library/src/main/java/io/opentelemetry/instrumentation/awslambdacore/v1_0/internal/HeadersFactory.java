@@ -32,7 +32,7 @@ final class HeadersFactory {
       }
       while (parser.nextToken() != JsonToken.END_OBJECT) {
         parser.nextToken();
-        if (!parser.getCurrentName().equals("headers")) {
+        if (!parser.currentName().equals("headers")) {
           parser.skipChildren();
           continue;
         }
@@ -46,7 +46,7 @@ final class HeadersFactory {
         while (parser.nextToken() != JsonToken.END_OBJECT) {
           String value = parser.nextTextValue();
           if (value != null) {
-            headers.put(parser.getCurrentName(), value);
+            headers.put(parser.currentName(), value);
           }
         }
         return headers;

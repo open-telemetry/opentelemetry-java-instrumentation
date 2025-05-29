@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Collections.emptySet;
 
 import com.ning.http.client.AsyncCompletionHandler;
@@ -21,8 +23,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.instrumentation.testing.junit.http.SemconvStabilityUtil;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.lang.reflect.Method;
 import java.net.ConnectException;
 import java.net.URI;
@@ -38,14 +38,12 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
-  static final String USER_AGENT = "test-user-agent";
-
   AsyncHttpClient client;
 
   @BeforeEach
   void setUp() throws Exception {
     AsyncHttpClientConfig.Builder builder =
-        new AsyncHttpClientConfig.Builder().setUserAgent(USER_AGENT);
+        new AsyncHttpClientConfig.Builder().setUserAgent("test-user-agent");
 
     Method setConnectTimeout;
     try {
@@ -114,7 +112,7 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
 
     // TODO: context is not automatically propagated into callbacks
     Context context = Context.current();
-    // TODO(anuraaga): Do we also need to test ListenableFuture callback?
+    // TODO: Do we also need to test ListenableFuture callback?
     client.executeRequest(
         request,
         new AsyncCompletionHandler<Void>() {
@@ -136,13 +134,10 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
   }
 
   @Override
-  @SuppressWarnings("deprecation") // until old http semconv are dropped in 2.0
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestRedirects();
     optionsBuilder.disableTestHttps();
     optionsBuilder.disableTestReadTimeout();
-
-    optionsBuilder.setUserAgent(USER_AGENT);
 
     optionsBuilder.setExpectedClientSpanNameMapper(
         (uri, method) -> {
@@ -176,8 +171,8 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
           }
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PEER_NAME));
-          attributes.remove(SemconvStabilityUtil.getAttributeKey(SemanticAttributes.NET_PEER_PORT));
+          attributes.remove(SERVER_ADDRESS);
+          attributes.remove(SERVER_PORT);
           return attributes;
         });
   }

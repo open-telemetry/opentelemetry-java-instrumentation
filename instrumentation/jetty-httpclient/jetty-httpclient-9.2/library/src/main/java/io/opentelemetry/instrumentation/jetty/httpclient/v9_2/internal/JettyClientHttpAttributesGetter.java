@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal;
 
-import io.opentelemetry.instrumentation.api.instrumenter.http.HttpClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.internal.HttpProtocolUtil;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.eclipse.jetty.client.api.Request;
@@ -67,11 +68,7 @@ public enum JettyClientHttpAttributesGetter
     if (httpVersion == null) {
       return null;
     }
-    String version = httpVersion.toString();
-    if (version.startsWith("HTTP/")) {
-      version = version.substring("HTTP/".length());
-    }
-    return version;
+    return HttpProtocolUtil.getVersion(httpVersion.toString());
   }
 
   @Override

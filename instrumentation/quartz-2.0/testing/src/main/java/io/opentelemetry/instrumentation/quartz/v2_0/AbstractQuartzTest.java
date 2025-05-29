@@ -14,7 +14,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -51,6 +51,7 @@ public abstract class AbstractQuartzTest {
     scheduler.shutdown();
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void successfulJob() throws Exception {
     Trigger trigger = newTrigger().build();
@@ -71,15 +72,16 @@ public abstract class AbstractQuartzTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(AttributeKey.stringKey("job.system"), "quartz"),
                                 equalTo(
-                                    SemanticAttributes.CODE_NAMESPACE,
+                                    CodeIncubatingAttributes.CODE_NAMESPACE,
                                     SuccessfulJob.class.getName()),
-                                equalTo(SemanticAttributes.CODE_FUNCTION, "execute")),
+                                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "execute")),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void failingJob() throws Exception {
     Trigger trigger = newTrigger().build();
@@ -101,8 +103,9 @@ public abstract class AbstractQuartzTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(AttributeKey.stringKey("job.system"), "quartz"),
                                 equalTo(
-                                    SemanticAttributes.CODE_NAMESPACE, FailingJob.class.getName()),
-                                equalTo(SemanticAttributes.CODE_FUNCTION, "execute"))));
+                                    CodeIncubatingAttributes.CODE_NAMESPACE,
+                                    FailingJob.class.getName()),
+                                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "execute"))));
   }
 
   private static Scheduler createScheduler(String name) throws Exception {

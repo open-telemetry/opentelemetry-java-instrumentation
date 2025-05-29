@@ -1,0 +1,35 @@
+otel:
+  instrumentation:
+    common:
+      db-statement-sanitizer:
+        enabled: false
+    kafka:
+      experimental-span-attributes: true
+    logback-appender:
+      experimental:
+        capture-code-attributes: true
+    http:
+      client:
+        emit-experimental-telemetry: true
+      server:
+        emit-experimental-telemetry: true
+        capture-request-headers: [key]
+  propagators:
+    - b3
+  resource:
+    attributes:
+      attributeFromYaml: true # boolean will be automatically converted to string by spring
+
+application:
+  prop: propValue
+  prop-with-dash: provWithDashValue
+
+spring:
+  kafka:
+    bootstrap-servers: localhost:9094
+    consumer:
+      auto-offset-reset: earliest
+    listener:
+      idle-between-polls: 1000
+    producer:
+      transaction-id-prefix: test-

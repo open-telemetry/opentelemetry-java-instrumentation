@@ -6,10 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +20,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.junit.jupiter.api.Test;
 
 class ThreadPoolExecutorTest {
+
+  @Test
+  void virtualFieldsAdded() {
+    assertThat(VirtualFieldInstalledMarker.class).isAssignableFrom(FutureTask.class);
+  }
 
   @Test
   void shouldPassOriginalRunnableToBeforeAfterMethods() throws InterruptedException {
@@ -32,7 +40,7 @@ class ThreadPoolExecutorTest {
     latch.await(10, TimeUnit.SECONDS);
 
     assertThat(executor.sameTaskBefore).isTrue();
-    assertThat(executor.sameTaskAfter).isTrue();
+    await().untilAsserted(() -> assertThat(executor.sameTaskAfter).isTrue());
   }
 
   // class is configured to be instrumented via otel.instrumentation.executors.include

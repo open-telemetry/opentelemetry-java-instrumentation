@@ -1,0 +1,103 @@
+---
+id: 10b1cbb3-d686-4e00-8709-60490f090c00
+name: model_amazontitan-text-lite-v1_invoke-with-response-stream
+request:
+  url: /model/amazon.titan-text-lite-v1/invoke-with-response-stream
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "inputText" : "List out every country in the world",
+        "textGenerationConfig" : { }
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  base64Body: AAABmgAAAEvUxqtlCzpldmVudC10eXBlBwAFY2h1bmsNOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJieXRlcyI6ImV5SnZkWFJ3ZFhSVVpYaDBJam9pWEc1SVpYSmxJR2x6SUdFZ2JHbHpkQ0J2WmlCbGRtVnllU0JqYjNWdWRISjVJR2x1SUhSb1pTQjNiM0pzWkRwY2JqRXVJRUZtWjJoaGJtbHpkR0Z1WEc0eUxpQkJiR0poYm1saFhHNHpMaUJCYkdkbGNtbGhYRzRpTENKcGJtUmxlQ0k2TUN3aWRHOTBZV3hQZFhSd2RYUlVaWGgwVkc5clpXNURiM1Z1ZENJNmJuVnNiQ3dpWTI5dGNHeGxkR2x2YmxKbFlYTnZiaUk2Ym5Wc2JDd2lhVzV3ZFhSVVpYaDBWRzlyWlc1RGIzVnVkQ0k2TjMwPSIsInAiOiJhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRkdISUoifaI5xSsAAANjAAAAS9wqOEILOmV2ZW50LXR5cGUHAAVjaHVuaw06Y29udGVudC10eXBlBwAQYXBwbGljYXRpb24vanNvbg06bWVzc2FnZS10eXBlBwAFZXZlbnR7ImJ5dGVzIjoiZXlKdmRYUndkWFJVWlhoMElqb2lOQzRnUVc1a2IzSnlZVnh1TlM0Z1FXNW5iMnhoWEc0MkxpQkJiblJwWjNWaElHRnVaQ0JDWVhKaWRXUmhYRzQzTGlCQmNtZGxiblJwYm1GY2JqZ3VJRUZ5YldWdWFXRmNiamt1SUVGMWMzUnlZV3hwWVZ4dU1UQXVJRUYxYzNSeWFXRmNiakV4TGlCQmVtVnlZbUZwYW1GdVhHNHhNaTRnUW1Gb1lXMWhjMXh1TVRNdUlFSmhhSEpoYVc1Y2JqRTBMaUJDWVc1bmJHRmtaWE5vWEc0eE5TNGdRbUZ5WW1Ga2IzTmNiakUyTGlCQ1pXeGhjblZ6WEc0eE55NGdRbVZzWjJsMWJWeHVNVGd1SUVKbGJHbDZaVnh1TVRrdUlFSmxibWx1WEc0eU1DNGdRbWgxZEdGdVhHNHlNUzRnUW05c2FYWnBZVnh1TWpJdUlFSnZjMjVwWVNCaGJtUWdTR1Z5ZW1WbmIzWnBibUZjYmpJekxpQkNiM1J6ZDJGdVlWeHVNaUlzSW1sdVpHVjRJam93TENKMGIzUmhiRTkxZEhCMWRGUmxlSFJVYjJ0bGJrTnZkVzUwSWpveE1qZ3NJbU52YlhCc1pYUnBiMjVTWldGemIyNGlPaUpNUlU1SFZFZ2lMQ0pwYm5CMWRGUmxlSFJVYjJ0bGJrTnZkVzUwSWpwdWRXeHNMQ0poYldGNmIyNHRZbVZrY205amF5MXBiblp2WTJGMGFXOXVUV1YwY21samN5STZleUpwYm5CMWRGUnZhMlZ1UTI5MWJuUWlPamNzSW05MWRIQjFkRlJ2YTJWdVEyOTFiblFpT2pFeU9Dd2lhVzUyYjJOaGRHbHZia3hoZEdWdVkza2lPak0xT0RVc0ltWnBjbk4wUW5sMFpVeGhkR1Z1WTNraU9qSXlPRFI5ZlE9PSIsInAiOiJhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRkdISUpLTE1OT1BRUlMifTosKEc=
+  headers:
+    Date: "Thu, 27 Mar 2025 05:10:04 GMT"
+    Content-Type: application/vnd.amazon.eventstream
+    x-amzn-RequestId: 978fca69-512c-4317-8dbf-d1bf1414b51c
+    X-Amzn-Bedrock-Content-Type: application/json
+uuid: 10b1cbb3-d686-4e00-8709-60490f090c00
+persistent: true
+insertionIndex: 26
+---
+id: 62b3c54e-006a-4bb2-99de-a7899500e481
+name: model_amazontitan-text-lite-v1_invoke-with-response-stream
+request:
+  url: /model/amazon.titan-text-lite-v1/invoke-with-response-stream
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "inputText" : "List out every country in the world"
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  base64Body: AAAC0QAAAEt9cbCTCzpldmVudC10eXBlBwAFY2h1bmsNOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJieXRlcyI6ImV5SnZkWFJ3ZFhSVVpYaDBJam9pWEc1SVpYSmxJR2x6SUdFZ2JHbHpkQ0J2WmlCbGRtVnllU0JqYjNWdWRISjVJR2x1SUhSb1pTQjNiM0pzWkRwY2JqRXVJRlZ1YVhSbFpDQlRkR0YwWlhOY2JqSXVJRU5vYVc1aFhHNHpMaUJKYm1ScFlWeHVOQzRnU1c1a2IyNWxjMmxoWEc0MUxpQkNjbUY2YVd4Y2JqWXVJRkoxYzNOcFlWeHVOeTRnUTJGdVlXUmhYRzQ0TGlCVmJtbDBaV1FnUzJsdVoyUnZiVnh1T1M0Z1IyVnliV0Z1ZVZ4dU1UQXVJRVp5WVc1alpTSXNJbWx1WkdWNElqb3dMQ0owYjNSaGJFOTFkSEIxZEZSbGVIUlViMnRsYmtOdmRXNTBJam8xTml3aVkyOXRjR3hsZEdsdmJsSmxZWE52YmlJNklrWkpUa2xUU0NJc0ltbHVjSFYwVkdWNGRGUnZhMlZ1UTI5MWJuUWlPamNzSW1GdFlYcHZiaTFpWldSeWIyTnJMV2x1ZG05allYUnBiMjVOWlhSeWFXTnpJanA3SW1sdWNIVjBWRzlyWlc1RGIzVnVkQ0k2Tnl3aWIzVjBjSFYwVkc5clpXNURiM1Z1ZENJNk5UWXNJbWx1ZG05allYUnBiMjVNWVhSbGJtTjVJam95TURneUxDSm1hWEp6ZEVKNWRHVk1ZWFJsYm1ONUlqb3lNRGd4ZlgwPSIsInAiOiJhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaMDEyMzQ1NiJ9Co2+Lw==
+  headers:
+    Date: "Thu, 27 Mar 2025 05:41:59 GMT"
+    Content-Type: application/vnd.amazon.eventstream
+    x-amzn-RequestId: 836bf587-0584-46f3-a409-3afcbe3f25ec
+    X-Amzn-Bedrock-Content-Type: application/json
+uuid: 62b3c54e-006a-4bb2-99de-a7899500e481
+persistent: true
+insertionIndex: 28
+---
+id: 22299a58-5fd6-4778-89c1-99b1bea21cf6
+name: model_amazontitan-text-lite-v1_invoke-with-response-stream
+request:
+  url: /model/amazon.titan-text-lite-v1/invoke-with-response-stream
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "inputText" : "List out every country in the world"
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  base64Body: AAABrwAAAEu9B5yTCzpldmVudC10eXBlBwAFY2h1bmsNOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJieXRlcyI6ImV5SnZkWFJ3ZFhSVVpYaDBJam9pWEc1SVpYSmxJR2x6SUdFZ2JHbHpkQ0J2WmlCaGJHd2dkR2hsSUdOdmRXNTBjbWxsY3lCcGJpQjBhR1VnZDI5eWJHUTZYRzVjYmpFdUlGVnVhWFJsWkNCVGRHRjBaWE1nYjJZZ1FXMWxjbWxqWVZ4dU1pNGdTU0lzSW1sdVpHVjRJam93TENKMGIzUmhiRTkxZEhCMWRGUmxlSFJVYjJ0bGJrTnZkVzUwSWpwdWRXeHNMQ0pqYjIxd2JHVjBhVzl1VW1WaGMyOXVJanB1ZFd4c0xDSnBibkIxZEZSbGVIUlViMnRsYmtOdmRXNTBJam8zZlE9PSIsInAiOiJhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ekFCQ0RFRkdISUpLTE1OT1BRUlNUVVZXWFlaMDEyMzQifSsPp2gAAAMjAAAAS4TZYAsLOmV2ZW50LXR5cGUHAAVjaHVuaw06Y29udGVudC10eXBlBwAQYXBwbGljYXRpb24vanNvbg06bWVzc2FnZS10eXBlBwAFZXZlbnR7ImJ5dGVzIjoiZXlKdmRYUndkWFJVWlhoMElqb2libVJ2Ym1WemFXRmNiak11SUVKeVlYcHBiRnh1TkM0Z1EyaHBibUZjYmpVdUlGSjFjM05wWVZ4dU5pNGdRMkZ1WVdSaFhHNDNMaUJWYm1sMFpXUWdTMmx1WjJSdmJWeHVPQzRnUjJWeWJXRnVlVnh1T1M0Z1JuSmhibU5sWEc0eE1DNGdTWFJoYkhsY2JqRXhMaUJCZFhOMGNtRnNhV0ZjYmpFeUxpQkpibVJwWVZ4dU1UTXVJRXBoY0dGdVhHNHhOQzRnVTNCaGFXNWNiakUxTGlCVWRYSnJaWGxjYmpFMkxpQlFhR2xzYVhCd2FXNWxjMXh1TVRjdUlGWnBaWFJ1WVcxY2JqRTRMaUJGWjNsd2RGeHVNVGt1SUVseVlXNWNiakl3TGlCVGIzVjBhQ0JMYjNKbFlWeHVNakV1SUZSb1lXbHNZVzVrWEc0eU1pNGdUV1Y0YVdOdlhHNHlNeTRnVUdWeWRWeHVNalF1SWl3aWFXNWtaWGdpT2pBc0luUnZkR0ZzVDNWMGNIVjBWR1Y0ZEZSdmEyVnVRMjkxYm5RaU9qRXlPQ3dpWTI5dGNHeGxkR2x2YmxKbFlYTnZiaUk2SWt4RlRrZFVTQ0lzSW1sdWNIVjBWR1Y0ZEZSdmEyVnVRMjkxYm5RaU9tNTFiR3dzSW1GdFlYcHZiaTFpWldSeWIyTnJMV2x1ZG05allYUnBiMjVOWlhSeWFXTnpJanA3SW1sdWNIVjBWRzlyWlc1RGIzVnVkQ0k2Tnl3aWIzVjBjSFYwVkc5clpXNURiM1Z1ZENJNk1USTRMQ0pwYm5adlkyRjBhVzl1VEdGMFpXNWplU0k2TXpreU9Td2labWx5YzNSQ2VYUmxUR0YwWlc1amVTSTZNalF5TVgxOSIsInAiOiJhYmNkZSJ9n2TgQg==
+  headers:
+    Date: "Thu, 27 Mar 2025 07:31:42 GMT"
+    Content-Type: application/vnd.amazon.eventstream
+    x-amzn-RequestId: fa312770-8231-4acc-a478-b21363af4eb4
+    X-Amzn-Bedrock-Content-Type: application/json
+uuid: 22299a58-5fd6-4778-89c1-99b1bea21cf6
+persistent: true
+insertionIndex: 30
+---
+id: 99dd8812-89f5-48d0-a5b7-09e43bd4a264
+name: model_amazontitan-text-lite-v1_invoke-with-response-stream
+request:
+  url: /model/amazon.titan-text-lite-v1/invoke-with-response-stream
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "inputText" : "List out every country in the world",
+        "textGenerationConfig" : {
+          "maxTokenCount" : 100,
+          "temperature" : 0.8,
+          "topP" : 1,
+          "stopSequences" : [ "|" ]
+        }
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  base64Body: AAABgQAAAEvD9g32CzpldmVudC10eXBlBwAFY2h1bmsNOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJieXRlcyI6ImV5SnZkWFJ3ZFhSVVpYaDBJam9pWEc1SVpYSmxJR2x6SUhSb1pTQnNhWE4wSUc5bUlHVjJaWEo1SUdOdmRXNTBjbmtnYVc0Z2RHaGxJSGR2Y214a09seHVNUzRnUVdabmFHRnVhWE4wWVc1Y2JqSXVJRUZzWW1GdWFXRmNiak11SUVGc1oyVnlhV0ZjYmlJc0ltbHVaR1Y0SWpvd0xDSjBiM1JoYkU5MWRIQjFkRlJsZUhSVWIydGxia052ZFc1MElqcHVkV3hzTENKamIyMXdiR1YwYVc5dVVtVmhjMjl1SWpwdWRXeHNMQ0pwYm5CMWRGUmxlSFJVYjJ0bGJrTnZkVzUwSWpvM2ZRPT0iLCJwIjoiYWJjZGVmZyJ9uZ/zNgAAAtEAAABLfXGwkws6ZXZlbnQtdHlwZQcABWNodW5rDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsiYnl0ZXMiOiJleUp2ZFhSd2RYUlVaWGgwSWpvaU5DNGdRVzVrYjNKeVlWeHVOUzRnUVc1bmIyeGhYRzQyTGlCQmJuUnBaM1ZoSUdGdVpDQkNZWEppZFdSaFhHNDNMaUJCY21kbGJuUnBibUZjYmpndUlFRnliV1Z1YVdGY2Jqa3VJRUYxYzNSeVlXeHBZVnh1TVRBdUlFRjFjM1J5YVdGY2JqRXhMaUJCZW1WeVltRnBhbUZ1WEc0eE1pNGdRbUZvWVcxaGMxeHVNVE11SUVKaGFISmhhVzVjYmpFMExpQkNZVzVuYkdGa1pYTm9YRzR4TlM0Z1FtRnlZbUZrYjNOY2JqRTJMaUJDWld4aGNuVnpYRzR4Tnk0Z1FtVnNaMmwxYlZ4dU1UZ3VJRUpsYkdsNlpWeHVNVGtpTENKcGJtUmxlQ0k2TUN3aWRHOTBZV3hQZFhSd2RYUlVaWGgwVkc5clpXNURiM1Z1ZENJNk1UQXdMQ0pqYjIxd2JHVjBhVzl1VW1WaGMyOXVJam9pVEVWT1IxUklJaXdpYVc1d2RYUlVaWGgwVkc5clpXNURiM1Z1ZENJNmJuVnNiQ3dpWVcxaGVtOXVMV0psWkhKdlkyc3RhVzUyYjJOaGRHbHZiazFsZEhKcFkzTWlPbnNpYVc1d2RYUlViMnRsYmtOdmRXNTBJam8zTENKdmRYUndkWFJVYjJ0bGJrTnZkVzUwSWpveE1EQXNJbWx1ZG05allYUnBiMjVNWVhSbGJtTjVJam95T1RNMUxDSm1hWEp6ZEVKNWRHVk1ZWFJsYm1ONUlqb3lNVGMxZlgwPSIsInAiOiJhYmMifS8psqs=
+  headers:
+    Date: "Thu, 27 Mar 2025 07:48:37 GMT"
+    Content-Type: application/vnd.amazon.eventstream
+    x-amzn-RequestId: f527236b-19c4-49dd-beed-07d8ac6b3493
+    X-Amzn-Bedrock-Content-Type: application/json
+uuid: 99dd8812-89f5-48d0-a5b7-09e43bd4a264
+persistent: true
+insertionIndex: 32

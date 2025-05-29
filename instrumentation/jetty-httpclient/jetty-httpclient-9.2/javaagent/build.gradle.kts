@@ -18,17 +18,9 @@ dependencies {
 
   library("org.eclipse.jetty:jetty-client:$jettyVers_base9")
 
+  testInstrumentation(project(":instrumentation:jetty-httpclient:jetty-httpclient-12.0:javaagent"))
+
   testImplementation(project(":instrumentation:jetty-httpclient:jetty-httpclient-9.2:testing"))
 
   latestDepTestLibrary("org.eclipse.jetty:jetty-client:9.+") // documented limitation
-}
-
-tasks {
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=http")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
-  }
 }

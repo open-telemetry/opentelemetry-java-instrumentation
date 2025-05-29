@@ -55,8 +55,15 @@ public abstract class AbstractApacheHttpClientTest {
     return client;
   }
 
+  abstract static class ApacheHttpClientTest<T> extends AbstractHttpClientTest<T> {
+    @Override
+    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
+      optionsBuilder.markAsLowLevelInstrumentation();
+    }
+  }
+
   @Nested
-  class ApacheClientHostRequestTest extends AbstractHttpClientTest<BasicHttpRequest> {
+  class ApacheClientHostRequestTest extends ApacheHttpClientTest<BasicHttpRequest> {
 
     @Override
     public BasicHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -90,15 +97,10 @@ public abstract class AbstractApacheHttpClientTest {
         httpClientResult.complete(t);
       }
     }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
-    }
   }
 
   @Nested
-  class ApacheClientHostRequestContextTest extends AbstractHttpClientTest<BasicHttpRequest> {
+  class ApacheClientHostRequestContextTest extends ApacheHttpClientTest<BasicHttpRequest> {
 
     @Override
     public BasicHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -136,15 +138,10 @@ public abstract class AbstractApacheHttpClientTest {
         httpClientResult.complete(t);
       }
     }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
-    }
   }
 
   @Nested
-  class ApacheClientHostAbsoluteUriRequestTest extends AbstractHttpClientTest<BasicHttpRequest> {
+  class ApacheClientHostAbsoluteUriRequestTest extends ApacheHttpClientTest<BasicHttpRequest> {
 
     @Override
     public BasicHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -176,17 +173,12 @@ public abstract class AbstractApacheHttpClientTest {
       } catch (Throwable t) {
         httpClientResult.complete(t);
       }
-    }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
     }
   }
 
   @Nested
   class ApacheClientHostAbsoluteUriRequestContextTest
-      extends AbstractHttpClientTest<BasicHttpRequest> {
+      extends ApacheHttpClientTest<BasicHttpRequest> {
 
     @Override
     public BasicHttpRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -223,15 +215,10 @@ public abstract class AbstractApacheHttpClientTest {
         httpClientResult.complete(t);
       }
     }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
-    }
   }
 
   @Nested
-  class ApacheClientUriRequestTest extends AbstractHttpClientTest<HttpUriRequest> {
+  class ApacheClientUriRequestTest extends ApacheHttpClientTest<HttpUriRequest> {
 
     @Override
     public HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -259,15 +246,10 @@ public abstract class AbstractApacheHttpClientTest {
         httpClientResult.complete(t);
       }
     }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
-    }
   }
 
   @Nested
-  class ApacheClientUriRequestContextTest extends AbstractHttpClientTest<HttpUriRequest> {
+  class ApacheClientUriRequestContextTest extends ApacheHttpClientTest<HttpUriRequest> {
 
     @Override
     public HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -294,11 +276,6 @@ public abstract class AbstractApacheHttpClientTest {
       } catch (Throwable t) {
         httpClientResult.complete(t);
       }
-    }
-
-    @Override
-    protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-      configureTest(optionsBuilder);
     }
   }
 
@@ -329,10 +306,6 @@ public abstract class AbstractApacheHttpClientTest {
       }
       return response;
     };
-  }
-
-  static void configureTest(HttpClientTestOptions.Builder optionsBuilder) {
-    optionsBuilder.setUserAgent("apachehttpclient");
   }
 
   static String fullPathFromUri(URI uri) {

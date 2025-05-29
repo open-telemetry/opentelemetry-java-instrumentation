@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.quartz.v2_0;
 
-import io.opentelemetry.instrumentation.api.instrumenter.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
 import org.quartz.JobExecutionContext;
 
 final class QuartzCodeAttributesGetter implements CodeAttributesGetter<JobExecutionContext> {

@@ -15,11 +15,11 @@ dependencies {
   testLibrary("org.springframework.cloud:spring-cloud-stream:2.2.1.RELEASE")
   testLibrary("org.springframework.cloud:spring-cloud-stream-binder-rabbit:2.2.1.RELEASE")
 
-  latestDepTestLibrary("org.springframework.integration:spring-integration-core:5.+")
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.+")
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter:2.+")
-  latestDepTestLibrary("org.springframework.cloud:spring-cloud-stream:3.+")
-  latestDepTestLibrary("org.springframework.cloud:spring-cloud-stream-binder-rabbit:3.+")
+  latestDepTestLibrary("org.springframework.integration:spring-integration-core:5.+") // documented limitation
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:2.+") // documented limitation
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter:2.+") // documented limitation
+  latestDepTestLibrary("org.springframework.cloud:spring-cloud-stream:3.+") // documented limitation
+  latestDepTestLibrary("org.springframework.cloud:spring-cloud-stream-binder-rabbit:3.+") // documented limitation
 }
 
 tasks {
@@ -35,4 +35,8 @@ configurations.testRuntimeClasspath {
     force("ch.qos.logback:logback-classic:1.2.11")
     force("org.slf4j:slf4j-api:1.7.36")
   }
+}
+
+tasks.withType<Test>().configureEach {
+  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }
