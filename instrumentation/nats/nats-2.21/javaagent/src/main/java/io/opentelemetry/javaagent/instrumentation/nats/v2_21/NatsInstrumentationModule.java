@@ -25,6 +25,7 @@ public class NatsInstrumentationModule extends InstrumentationModule {
     return Arrays.asList(
         new ConnectionSubscribeInstrumentation(),
         new ConnectionPublishInstrumentation(),
+        new ConnectionRequestInstrumentation(),
         new SubscriptionInstrumentation());
   }
 }
