@@ -29,15 +29,12 @@ final class JdbcDataSourceWrapper {
   }
 
   static DataSource wrapIfNecessary(
-      DataSource dataSource,
-      OpenTelemetry openTelemetry,
-      ConfigProperties configProperties) {
+      DataSource dataSource, OpenTelemetry openTelemetry, ConfigProperties configProperties) {
     if (!isRoutingDatasource(dataSource)) {
       return JdbcTelemetry.builder(openTelemetry)
           .setStatementSanitizationEnabled(
               InstrumentationConfigUtil.isStatementSanitizationEnabled(
-                  configProperties,
-                  "otel.instrumentation.jdbc.statement-sanitizer.enabled"))
+                  configProperties, "otel.instrumentation.jdbc.statement-sanitizer.enabled"))
           .setCaptureQueryParameters(
               configProperties.getBoolean(
                   "otel.instrumentation.jdbc.experimental.capture-query-parameters", false))
@@ -49,4 +46,4 @@ final class JdbcDataSourceWrapper {
     }
     return dataSource;
   }
-} 
+}
