@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 import org.apache.log4j.Category;
 import org.apache.log4j.MDC;
 import org.apache.log4j.Priority;
+import org.apache.log4j.spi.LocationInfo;
 
 public final class LogEventMapper {
 
@@ -35,6 +36,11 @@ public final class LogEventMapper {
 
   public static final LogEventMapper INSTANCE = new LogEventMapper();
 
+  private static final AttributeKey<String> CODE_FILEPATH = AttributeKey.stringKey("code.filepath");
+  private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function");
+  private static final AttributeKey<String> CODE_LINENO = AttributeKey.stringKey("code.lineno");
+  private static final AttributeKey<String> CODE_NAMESPACE =
+      AttributeKey.stringKey("code.namespace");
   // copied from org.apache.log4j.Level because it was only introduced in 1.2.12
   private static final int TRACE_INT = 5000;
 
@@ -60,7 +66,13 @@ public final class LogEventMapper {
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
   }
 
-  public void capture(Category logger, Priority level, Object message, Throwable throwable) {
+  boolean captureCodeAttributes =
+      AgentInstrumentationConfig.get()
+          .getBoolean(
+              "otel.instrumentation.log4j-appender.experimental.capture-code-attributes", false);
+
+  public void capture(
+      String fqcn, Category logger, Priority level, Object message, Throwable throwable) {
     String instrumentationName = logger.getName();
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";
@@ -102,6 +114,20 @@ public final class LogEventMapper {
       Thread currentThread = Thread.currentThread();
       attributes.put(ThreadIncubatingAttributes.THREAD_NAME, currentThread.getName());
       attributes.put(ThreadIncubatingAttributes.THREAD_ID, currentThread.getId());
+    }
+
+    if (captureCodeAttributes) {
+      LocationInfo locationInfo = new LocationInfo(new Throwable(), fqcn);
+      String fileName = locationInfo.getFileName();
+      if (fileName != null) {
+        attributes.put(CODE_FILEPATH, fileName);
+      }
+      attributes.put(CODE_NAMESPACE, locationInfo.getClassName());
+      attributes.put(CODE_FUNCTION, locationInfo.getMethodName());
+      String lineNumber = locationInfo.getLineNumber();
+      if (lineNumber != null) {
+        attributes.put(CODE_LINENO, lineNumber);
+      }
     }
 
     builder.setAllAttributes(attributes.build());
