@@ -38,7 +38,7 @@ public final class LogEventMapper {
 
   private static final AttributeKey<String> CODE_FILEPATH = AttributeKey.stringKey("code.filepath");
   private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function");
-  private static final AttributeKey<String> CODE_LINENO = AttributeKey.stringKey("code.lineno");
+  private static final AttributeKey<Long> CODE_LINENO = AttributeKey.longKey("code.lineno");
   private static final AttributeKey<String> CODE_NAMESPACE =
       AttributeKey.stringKey("code.namespace");
   // copied from org.apache.log4j.Level because it was only introduced in 1.2.12
@@ -125,9 +125,15 @@ public final class LogEventMapper {
       attributes.put(CODE_NAMESPACE, locationInfo.getClassName());
       attributes.put(CODE_FUNCTION, locationInfo.getMethodName());
       String lineNumber = locationInfo.getLineNumber();
-      if (lineNumber != null) {
-        attributes.put(CODE_LINENO, lineNumber);
+      int codeLineNo = 0;
+      if (!lineNumber.equals("?")) {
+        try {
+          codeLineNo = Integer.parseInt(lineNumber);
+        }catch (NumberFormatException e) {
+          // ignore
+        }
       }
+      attributes.put(CODE_LINENO, codeLineNo);
     }
 
     builder.setAllAttributes(attributes.build());

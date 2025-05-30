@@ -11,6 +11,12 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FILEPATH;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_LINENO;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -31,6 +37,7 @@ import java.util.stream.Stream;
 import org.apache.log4j.Logger;
 import org.apache.log4j.MDC;
 import org.apache.log4j.helpers.Loader;
+import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AssertAccess;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -38,6 +45,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class Log4j1Test {
 
   static {
@@ -67,6 +75,25 @@ class Log4j1Test {
         Arguments.of(true, true));
   }
 
+  @Test
+  public void testCodeAttributes() {
+    logger.info("this is test message");
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasBody("this is test message")
+                .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                .hasSeverity(Severity.INFO)
+                .hasSeverityText("INFO")
+                .hasAttributesSatisfyingExactly(
+                    equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                    equalTo(THREAD_ID, Thread.currentThread().getId()),
+                    equalTo(CODE_NAMESPACE, Log4j1Test.class.getName()),
+                    equalTo(CODE_FUNCTION, "testCodeAttributes"),
+                    satisfies(CODE_LINENO, AbstractLongAssert::isPositive),
+                    equalTo(CODE_FILEPATH, "Log4j1Test.java")));
+  }
+
   @ParameterizedTest
   @MethodSource("provideParameters")
   public void test(boolean logException, boolean withParent) throws InterruptedException {
@@ -79,7 +106,6 @@ class Log4j1Test {
     test(Logger::error, Logger::error, logException, withParent, "abc", Severity.ERROR, "ERROR");
     testing.clearData();
   }
-
   private static void test(
       LoggerMethod loggerMethod,
       ExceptionLoggerMethod exceptionLoggerMethod,
