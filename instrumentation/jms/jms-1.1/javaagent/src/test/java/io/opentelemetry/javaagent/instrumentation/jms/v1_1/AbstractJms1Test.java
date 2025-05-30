@@ -318,7 +318,7 @@ abstract class AbstractJms1Test {
         arguments(queue, receiveNoWait));
   }
 
-  private static Stream<Arguments> destinationArguments() {
+  protected static Stream<Arguments> destinationArguments() {
     DestinationFactory topic = session -> session.createTopic("someTopic");
     DestinationFactory queue = session -> session.createQueue("someQueue");
     DestinationFactory tempTopic = Session::createTemporaryTopic;
