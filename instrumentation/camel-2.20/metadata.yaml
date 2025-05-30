@@ -1,4 +1,4 @@
-description: This instrumentation provides support for Apache Camel version 2.20.
+description: This instrumentation provides support for Apache Camel and generates spans for each route execution.
 configurations:
   - name: otel.instrumentation.camel.experimental-span-attributes
     description: Enable the capture of experimental span attributes.

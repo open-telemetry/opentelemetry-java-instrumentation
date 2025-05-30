@@ -1,50 +1,55 @@
 #!/bin/bash
+set -euo pipefail
+
+# This script selectively runs tests for specific instrumentations in order to generate telemetry data.
 
 instrumentations=(
+  "apache-httpclient:apache-httpclient-5.0:javaagent:test"
   "alibaba-druid-1.0:javaagent:test"
+  "c3p0-0.9:javaagent:test"
+  "tomcat:tomcat-jdbc:javaagent:test"
+  "hikaricp-3.0:javaagent:test"
+  "apache-dbcp-2.0:javaagent:test"
 )
 
-# Initialize an empty string to hold the Gradle tasks
-gradle_tasks=""
+gradle_tasks=()
 
-# Iterate over each instrumentation
-for instrumentation in "${instrumentations[@]}"; do
-  # Extract the parts of the instrumentation
-  IFS=':' read -r -a parts <<< "$instrumentation"
-  module="${parts[0]}"
-  version="${parts[1]}"
-  type="${parts[2]}"
-  suffix="${parts[3]}"
 
-  # Assemble the path to the instrumentation
-  path="instrumentation/$module/$version"
+for descriptor in "${instrumentations[@]}"; do
+  # Split into array by colon
+  IFS=':' read -r -a parts <<< "$descriptor"
 
-  # Remove any occurrence of /javaagent/ or /library/ from the path
-  path=$(echo "$path" | sed -e 's/\/javaagent//g' -e 's/\/library//g')
+  # Find "javaagent" / "library" token
+  type_idx=-1
+  for i in "${!parts[@]}"; do
+    if [[ ${parts[$i]} == javaagent || ${parts[$i]} == library ]]; then
+      type_idx=$i; break
+    fi
+  done
+  (( type_idx >= 0 )) || { echo "bad descriptor: $descriptor" >&2; continue; }
 
-  # Debugging: Print the path being checked
-  echo "Checking path: $path/.telemetry"
+  type=${parts[$type_idx]}
 
-  # Check if the .telemetry directory exists and remove it if it does
-  if [ -d "$path/.telemetry" ]; then
-    echo "Removing directory: $path/.telemetry"
-    rm -rf "$path/.telemetry"
-  else
-    echo "Directory does not exist: $path/.telemetry"
-  fi
+  # set suffix to the next array element if one exists, otherwise leave it blank.
+  suffix=""; (( type_idx+1 < ${#parts[@]} )) && suffix=${parts[$((type_idx+1))]}
 
-  # Append the Gradle task to the gradle_tasks string with a colon between type and suffix if suffix is non-empty
-  if [ -n "$suffix" ]; then
-    gradle_tasks+=":instrumentation:$module:$version:$type:$suffix"
-  else
-    gradle_tasks+=":instrumentation:$module:$version:$type"
-  fi
+  # Slice the array to keep only the module path parts
+  path_segments=("${parts[@]:0:type_idx}")
+
+  # Join the path segments to form the full path
+  path="instrumentation/$(IFS=/; echo "${path_segments[*]}")"
+
+  [[ -d "$path/.telemetry" ]] && rm -rf "$path/.telemetry"
+
+  task=":instrumentation:$(IFS=:; echo "${path_segments[*]}"):$type"
+  [[ -n $suffix ]] && task+=":$suffix"
+  gradle_tasks+=("$task")
 done
 
 # rerun-tasks is used to force re-running tests that might be cached
-echo Running: ./gradlew "$gradle_tasks" -PcollectMetadata=true --rerun-tasks
-./gradlew "$gradle_tasks" -PcollectMetadata=true --rerun-tasks
-./gradlew :instrumentation-docs:runAnalysis
+echo "Running: ./gradlew ${gradle_tasks[*]} -PcollectMetadata=true --rerun-tasks"
+./gradlew "${gradle_tasks[@]}" -PcollectMetadata=true --rerun-tasks
+#./gradlew :instrumentation-docs:runAnalysis
 
 # Remove all .telemetry directories recursively from the project root
 echo "Searching for and removing all .telemetry directories..."
