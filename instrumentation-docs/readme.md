@@ -8,6 +8,36 @@ Run the analysis to update the instrumentation-list.yaml:
 
 `./gradlew :instrumentation-docs:runAnalysis`
 
+### Metric collection
+
+Until this process is ready for all instrumentations, each module will be modified to include a
+system property feature flag configured for when the tests run:
+
+```kotlin
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    ...
+  }
+}
+```
+
+Then, prior to running the analyzer, run the following command to generate `.telemetry` files:
+
+`./gradlew test -PcollectMetadata=true`
+
+Then run the doc generator
+
+`./gradlew :instrumentation-docs:runAnalysis`
+
+or use the helper script that will run only the currently supported tests (recommended):
+
+```bash
+./instrumentation-docs/collect.sh
+```
+
+This script will also clean up all `.telemetry` files after the analysis is done.
+
 ## Instrumentation Hierarchy
 
 An "InstrumentationModule" represents a module that that targets specific code in a
@@ -70,6 +100,8 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 * configurations settings
   * List of settings that are available for the instrumentation module
   * Each setting has a name, description, type, and default value
+* metrics
+  * List of metrics that the instrumentation module collects, including the metric name, description, type, and attributes
 
 ## Methodology
 
@@ -107,3 +139,14 @@ name is determined by the instrumentation module name:  `io.opentelemetry.{instr
 
 We will implement gatherers for the schemaUrl and scope attributes when instrumentations start
 implementing them.
+
+### Metrics
+
+In order to identify what metrics are emitted from instrumentations, we can hook into the
+`InstrumentationTestRunner` class and collect the metrics generated during runs. We can then
+leverage the `afterTestClass()` in the Agent and library test runners to then write this information
+into temporary files. When we analyze the instrumentation modules, we can read these files and
+generate the metrics section of the instrumentation-list.yaml file.
+
+The data is written into a `.telemetry` directory in the root of each instrumentation module. This
+data will be excluded from git and just generated on demand.
