@@ -10,7 +10,7 @@ val otelContribVersion = "1.46.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.26"
+val groovyVersion = "4.0.27"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -28,7 +28,7 @@ val DEPENDENCY_BOMS = listOf(
   // even if they are only used by test dependencies, so not using junit bom since it is LGPL
 
   "com.fasterxml.jackson:jackson-bom:2.19.0",
-  "com.squareup.okio:okio-bom:3.11.0", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
+  "com.squareup.okio:okio-bom:3.12.0", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
   "com.google.guava:guava-bom:33.4.8-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
@@ -91,7 +91,7 @@ val DEPENDENCIES = listOf(
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
   "com.uber.nullaway:nullaway:0.12.7",
-  "commons-beanutils:commons-beanutils:1.10.1",
+  "commons-beanutils:commons-beanutils:1.11.0",
   "commons-cli:commons-cli:1.9.0",
   "commons-codec:commons-codec:1.18.0",
   "commons-collections:commons-collections:3.2.2",
