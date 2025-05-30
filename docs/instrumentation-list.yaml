@@ -502,7 +502,7 @@ libraries:
   couchbase:
   - name: couchbase-3.1.6
     description: |
-      Couchbase instrumentation is owned upstream. This Couchbase instrumentation works by intercepting the constructor of the CoreEnvironment.Builder class. On construction, it automatically sets the Couchbase requestTracer to use an OpenTelemetryRequestTracer that wraps the agent's TracerProvider. This enables distributed tracing for Couchbase operations using OpenTelemetry, without requiring manual configuration by the user.
+      Couchbase instrumentation is owned upstream. This Couchbase instrumentation manipulates the constructor of the CoreEnvironment.Builder class and sets the Couchbase requestTracer to use an OpenTelemetryRequestTracer that integrates with the OpenTelemetry agent.
     source_path: instrumentation/couchbase/couchbase-3.1.6
     scope:
       name: io.opentelemetry.couchbase-3.1.6
@@ -537,7 +537,7 @@ libraries:
       default: false
   - name: couchbase-3.2
     description: |
-      Couchbase instrumentation is owned upstream. This Couchbase instrumentation works by intercepting the constructor of the CoreEnvironment.Builder class. On construction, it automatically sets the Couchbase requestTracer to use an OpenTelemetryRequestTracer that wraps the agent's TracerProvider. This enables distributed tracing for Couchbase operations using OpenTelemetry, without requiring manual configuration by the user.
+      Couchbase instrumentation is owned upstream. This Couchbase instrumentation manipulates the constructor of the CoreEnvironment.Builder class and sets the Couchbase requestTracer to use an OpenTelemetryRequestTracer that integrates with the OpenTelemetry agent.
     source_path: instrumentation/couchbase/couchbase-3.2
     scope:
       name: io.opentelemetry.couchbase-3.2
@@ -546,7 +546,7 @@ libraries:
       - com.couchbase.client:java-client:[3.2.0,)
   - name: couchbase-3.1
     description: |
-      Couchbase instrumentation is owned upstream. This instrumentation hooks into the CoreEnvironment.Builder constructor and automatically sets the Couchbase requestTracer to use an OpenTelemetry tracer from the agent. This enables distributed tracing for Couchbase operations using OpenTelemetry, without requiring manual configuration by the user.
+      Couchbase instrumentation is owned upstream. This Couchbase instrumentation manipulates the constructor of the CoreEnvironment.Builder class and sets the Couchbase requestTracer to use an OpenTelemetryRequestTracer that integrates with the OpenTelemetry agent.
     source_path: instrumentation/couchbase/couchbase-3.1
     scope:
       name: io.opentelemetry.couchbase-3.1

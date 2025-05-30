@@ -1,9 +1,12 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+# Runs selected Gradle test tasks to regenerate *.telemetry output for
+# individual OpenTelemetry Java agent instrumentations.
+
 set -euo pipefail
 
-# This script selectively runs tests for specific instrumentations in order to generate telemetry data.
-
-instrumentations=(
+readonly INSTRUMENTATIONS=(
+  # <module path (colon-separated)> : <javaagent|library> : [ gradle-task-suffix ]
   "apache-httpclient:apache-httpclient-5.0:javaagent:test"
   "alibaba-druid-1.0:javaagent:test"
   "c3p0-0.9:javaagent:test"
@@ -12,45 +15,107 @@ instrumentations=(
   "apache-dbcp-2.0:javaagent:test"
 )
 
-gradle_tasks=()
+readonly TELEMETRY_DIR_NAME=".telemetry"
 
+# Splits a single descriptor into its three logical parts.
+#   argument $1: descriptor string (ex: "foo:bar:baz:test")
+# Outputs three variables via echo:
+#   1. module_path  - instrumentation/foo/bar
+#   2. task_type    - javaagent | library
+#   3. task_suffix  - test
+parse_descriptor() {
+  local descriptor="$1"
+  local -a parts
 
-for descriptor in "${instrumentations[@]}"; do
-  # Split into array by colon
+  # Convert colon-delimited string into array
   IFS=':' read -r -a parts <<< "$descriptor"
 
-  # Find "javaagent" / "library" token
-  type_idx=-1
+  # Locate "javaagent" or "library" token (there should be exactly one)
+  local type_idx=-1
   for i in "${!parts[@]}"; do
-    if [[ ${parts[$i]} == javaagent || ${parts[$i]} == library ]]; then
-      type_idx=$i; break
+    if [[ ${parts[$i]} == "javaagent" || ${parts[$i]} == "library" ]]; then
+      type_idx=$i
+      break
     fi
   done
-  (( type_idx >= 0 )) || { echo "bad descriptor: $descriptor" >&2; continue; }
 
-  type=${parts[$type_idx]}
+  if [[ $type_idx -lt 0 ]]; then
+    echo "ERROR: malformed descriptor: $descriptor" >&2
+    return 1
+  fi
 
-  # set suffix to the next array element if one exists, otherwise leave it blank.
-  suffix=""; (( type_idx+1 < ${#parts[@]} )) && suffix=${parts[$((type_idx+1))]}
+  local task_type="${parts[$type_idx]}"
 
-  # Slice the array to keep only the module path parts
-  path_segments=("${parts[@]:0:type_idx}")
+  # Optional suffix lives after the type token
+  local task_suffix=""
+  if (( type_idx + 1 < ${#parts[@]} )); then
+    task_suffix="${parts[$((type_idx + 1))]}"
+  fi
 
-  # Join the path segments to form the full path
-  path="instrumentation/$(IFS=/; echo "${path_segments[*]}")"
+  # Join everything *before* the type token with slashes to make
+  # instrumentation/<path>/...
+  local path_segments=("${parts[@]:0:type_idx}")
+  local module_path="instrumentation/$(IFS=/; echo "${path_segments[*]}")"
 
-  [[ -d "$path/.telemetry" ]] && rm -rf "$path/.telemetry"
+  echo "$module_path" "$task_type" "$task_suffix"
+}
 
-  task=":instrumentation:$(IFS=:; echo "${path_segments[*]}"):$type"
-  [[ -n $suffix ]] && task+=":$suffix"
-  gradle_tasks+=("$task")
+# Removes a .telemetry directory if it exists under the given module path.
+delete_existing_telemetry() {
+  local module_path="$1"
+  local telemetry_path="$module_path/$TELEMETRY_DIR_NAME"
+
+  if [[ -d "$telemetry_path" ]]; then
+    rm -rf "$telemetry_path"
+  fi
+}
+
+# Converts the three parsed parts into a Gradle task name.
+#   ex: instrumentation:foo:bar:javaagent:test
+build_gradle_task() {
+  local module_path="$1"   # instrumentation/foo/bar
+  local task_type="$2"     # javaagent | library
+  local task_suffix="$3"   # test | <blank>
+
+  # replace slashes with colons, then append task parts
+  local module_colon_path="${module_path//\//:}"
+  local task=":$module_colon_path:$task_type"
+
+  [[ -n $task_suffix ]] && task+=":$task_suffix"
+  echo "$task"
+}
+
+# Cleans any stray .telemetry directories left in the repo.
+find_and_remove_all_telemetry() {
+  echo "🔍  Removing stray .telemetry directories..."
+  find . -type d -name "$TELEMETRY_DIR_NAME" -exec rm -rf {} +
+}
+
+# Main
+declare -a gradle_tasks=()
+
+for descriptor in "${INSTRUMENTATIONS[@]}"; do
+  # Parse the descriptor into its components
+  if ! read -r module_path task_type task_suffix \
+        < <(parse_descriptor "$descriptor"); then
+    continue   # skip badly-formed descriptor
+  fi
+
+  # Make sure we’re starting fresh for this instrumentation
+  delete_existing_telemetry "$module_path"
+
+  # Build the Gradle task string and queue it
+  gradle_tasks+=( "$(build_gradle_task "$module_path" "$task_type" "$task_suffix")" )
 done
 
-# rerun-tasks is used to force re-running tests that might be cached
-echo "Running: ./gradlew ${gradle_tasks[*]} -PcollectMetadata=true --rerun-tasks"
-./gradlew "${gradle_tasks[@]}" -PcollectMetadata=true --rerun-tasks
-#./gradlew :instrumentation-docs:runAnalysis
+echo
+echo "Running Gradle tasks:"
+printf '    %s\n' "${gradle_tasks[@]}"
+echo
 
-# Remove all .telemetry directories recursively from the project root
-echo "Searching for and removing all .telemetry directories..."
-find . -type d -name ".telemetry" -exec rm -rf {} +
+./gradlew "${gradle_tasks[@]}" \
+  -PcollectMetadata=true \
+  --rerun-tasks
+
+#find_and_remove_all_telemetry
+echo "Telemetry file regeneration complete."
