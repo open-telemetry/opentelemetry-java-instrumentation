@@ -129,7 +129,7 @@ public final class LogEventMapper {
       if (!lineNumber.equals("?")) {
         try {
           codeLineNo = Integer.parseInt(lineNumber);
-        }catch (NumberFormatException e) {
+        } catch (NumberFormatException e) {
           // ignore
         }
       }

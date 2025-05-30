@@ -106,6 +106,7 @@ class Log4j1Test {
     test(Logger::error, Logger::error, logException, withParent, "abc", Severity.ERROR, "ERROR");
     testing.clearData();
   }
+
   private static void test(
       LoggerMethod loggerMethod,
       ExceptionLoggerMethod exceptionLoggerMethod,
