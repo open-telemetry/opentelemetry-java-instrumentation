@@ -64,7 +64,7 @@ public class FinatraRouteInstrumentation implements TypeInstrumentation {
       Class<?> callbackClass = getCallbackClass(route);
       // We expect callback to be an inner class of the controller class. If it is not we are not
       // going to record it at all.
-      if (callbackClass != null && callbackClass.getName().startsWith(controllerClass.getName())) {
+      if (callbackClass != null) {
         request = FinatraRequest.create(controllerClass, callbackClass, "apply");
       } else {
         request = FinatraRequest.create(controllerClass);
