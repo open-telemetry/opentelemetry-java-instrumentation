@@ -45,6 +45,12 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
     HttpRequest.Builder requestBuilder =
         HttpRequest.newBuilder().uri(uri).method(method, HttpRequest.BodyPublishers.noBody());
     headers.forEach(requestBuilder::header);
+    if (client.version() == HttpClient.Version.HTTP_2) {
+      // notify HttpClientTestServer that the request comes from java http client using http/2 so
+      // that the server can work around http/2 tests failing with java.io.IOException: RST_STREAM
+      // received
+      requestBuilder.header("java-http-client-http2", "true");
+    }
     if (uri.toString().contains("/read-timeout")) {
       requestBuilder.timeout(READ_TIMEOUT);
     }
