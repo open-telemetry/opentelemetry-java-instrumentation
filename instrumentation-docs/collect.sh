@@ -64,7 +64,8 @@ parse_descriptor() {
 
   # Join everything before the type token with slashes to make instrumentation/<path>/...
   local path_segments=("${parts[@]:0:type_idx}")
-  local module_path="instrumentation/$(IFS=/; echo "${path_segments[*]}")"
+  local module_path
+  IFS=/ module_path="instrumentation/${path_segments[*]}"
 
   echo "$module_path" "$task_type" "$task_suffix"
 }
