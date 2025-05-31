@@ -249,8 +249,8 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
       assertThat(firstLog.getAttributes().asMap())
           .as("Should capture code attributes")
           .containsEntry(
-              CodeIncubatingAttributes.CODE_NAMESPACE,
-              "org.springframework.boot.StartupInfoLogger");
+              CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+              "org.springframework.boot.StartupInfoLogger.logStarting");
     }
   }
 

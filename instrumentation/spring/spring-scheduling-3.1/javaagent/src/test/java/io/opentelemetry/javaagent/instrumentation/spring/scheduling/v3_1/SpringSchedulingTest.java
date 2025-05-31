@@ -11,8 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION_NAME;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -35,7 +34,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class SpringSchedulingTest {
 
   @RegisterExtension
@@ -69,8 +67,7 @@ class SpringSchedulingTest {
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
                               equalTo(AttributeKey.stringKey("job.system"), "spring_scheduling"),
-                              equalTo(CODE_NAMESPACE, TriggerTask.class.getName()),
-                              equalTo(CODE_FUNCTION, "run"))));
+                              equalTo(CODE_FUNCTION_NAME, TriggerTask.class.getName() + ".run"))));
     }
   }
 
@@ -90,8 +87,7 @@ class SpringSchedulingTest {
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
                               equalTo(AttributeKey.stringKey("job.system"), "spring_scheduling"),
-                              equalTo(CODE_NAMESPACE, IntervalTask.class.getName()),
-                              equalTo(CODE_FUNCTION, "run"))));
+                              equalTo(CODE_FUNCTION_NAME, IntervalTask.class.getName() + ".run"))));
     }
   }
 
@@ -111,15 +107,13 @@ class SpringSchedulingTest {
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
                               equalTo(AttributeKey.stringKey("job.system"), "spring_scheduling"),
-                              equalTo(CODE_FUNCTION, "run"),
                               satisfies(
-                                  CODE_NAMESPACE,
-                                  codeNamespace ->
-                                      codeNamespace
-                                          .isNotBlank()
+                                  CODE_FUNCTION_NAME,
+                                  codeFunctionName ->
+                                      codeFunctionName
                                           .startsWith(
-                                              LambdaTaskConfigurer.class.getName()
-                                                  + "$$Lambda")))));
+                                              LambdaTaskConfigurer.class.getName() + "$$Lambda")
+                                          .endsWith(".run")))));
     }
   }
 
@@ -139,8 +133,9 @@ class SpringSchedulingTest {
                           .hasNoParent()
                           .hasAttributesSatisfyingExactly(
                               equalTo(AttributeKey.stringKey("job.system"), "spring_scheduling"),
-                              equalTo(CODE_NAMESPACE, EnhancedClassTaskConfig.class.getName()),
-                              equalTo(CODE_FUNCTION, "run"))));
+                              equalTo(
+                                  CODE_FUNCTION_NAME,
+                                  EnhancedClassTaskConfig.class.getName() + ".run"))));
     }
   }
 
@@ -161,8 +156,7 @@ class SpringSchedulingTest {
                           .hasStatus(StatusData.error())
                           .hasAttributesSatisfyingExactly(
                               equalTo(AttributeKey.stringKey("job.system"), "spring_scheduling"),
-                              equalTo(CODE_NAMESPACE, TaskWithError.class.getName()),
-                              equalTo(CODE_FUNCTION, "run"))
+                              equalTo(CODE_FUNCTION_NAME, TaskWithError.class.getName() + ".run"))
                           .hasEventsSatisfyingExactly(
                               event ->
                                   event

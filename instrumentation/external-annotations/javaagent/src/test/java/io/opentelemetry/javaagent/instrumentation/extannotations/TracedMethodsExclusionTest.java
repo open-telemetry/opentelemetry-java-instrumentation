@@ -33,8 +33,8 @@ class TracedMethodsExclusionTest {
                     span.hasName("TestClass.annotated")
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE, TestClass.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "annotated"))));
+                                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                TestClass.class.getName() + ".annotated"))));
   }
 
   @Test

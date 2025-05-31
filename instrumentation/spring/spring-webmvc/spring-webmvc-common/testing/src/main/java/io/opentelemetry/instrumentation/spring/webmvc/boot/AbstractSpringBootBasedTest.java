@@ -19,8 +19,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -151,8 +150,7 @@ public abstract class AbstractSpringBootBasedTest
             span.hasName("BasicErrorController.error")
                 .hasKind(SpanKind.INTERNAL)
                 .hasAttributesSatisfyingExactly(
-                    satisfies(CODE_NAMESPACE, v -> v.endsWith(".BasicErrorController")),
-                    equalTo(CODE_FUNCTION, "error")));
+                    satisfies(CODE_FUNCTION_NAME, v -> v.endsWith(".BasicErrorController.error"))));
     return spanAssertions;
   }
 
@@ -169,18 +167,25 @@ public abstract class AbstractSpringBootBasedTest
     span.hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
             satisfies(
-                CODE_NAMESPACE,
+                CODE_FUNCTION_NAME,
                 val ->
                     val.satisfiesAnyOf(
-                        v -> assertThat(v).isEqualTo(OnCommittedResponseWrapper.class.getName()),
                         v ->
                             assertThat(v)
                                 .isEqualTo(
-                                    "org.springframework.security.web.firewall.FirewalledResponse"),
+                                    OnCommittedResponseWrapper.class.getName() + "." + methodName),
                         v ->
                             assertThat(v)
-                                .isEqualTo("jakarta.servlet.http.HttpServletResponseWrapper"))),
-            equalTo(CODE_FUNCTION, methodName));
+                                .isEqualTo(
+                                    "org.springframework.security.web.firewall.FirewalledResponse"
+                                        + "."
+                                        + methodName),
+                        v ->
+                            assertThat(v)
+                                .isEqualTo(
+                                    "jakarta.servlet.http.HttpServletResponseWrapper"
+                                        + "."
+                                        + methodName))));
     return span;
   }
 
@@ -205,10 +210,10 @@ public abstract class AbstractSpringBootBasedTest
       codeNamespace = ResourceHttpRequestHandler.class.getName();
     }
     String codeFunction = handlerSpanName.substring(handlerSpanName.indexOf('.') + 1);
+    codeFunction = codeNamespace + "." + codeFunction;
     span.hasName(handlerSpanName)
         .hasKind(SpanKind.INTERNAL)
-        .hasAttributesSatisfyingExactly(
-            equalTo(CODE_NAMESPACE, codeNamespace), equalTo(CODE_FUNCTION, codeFunction));
+        .hasAttributesSatisfyingExactly(equalTo(CODE_FUNCTION_NAME, codeFunction));
     if (endpoint == EXCEPTION) {
       span.hasStatus(StatusData.error());
       span.hasEventsSatisfyingExactly(

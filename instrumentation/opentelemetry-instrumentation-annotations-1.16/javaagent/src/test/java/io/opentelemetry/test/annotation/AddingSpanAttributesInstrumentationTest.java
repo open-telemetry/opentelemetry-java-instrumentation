@@ -8,8 +8,7 @@ package io.opentelemetry.test.annotation;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION_NAME;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -43,9 +42,9 @@ class AddingSpanAttributesInstrumentationTest {
                         .hasParentSpanId(trace.getSpan(0).getSpanId())
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CODE_NAMESPACE,
-                                ExtractAttributesUsingAddingSpanAttributes.class.getName()),
-                            equalTo(CODE_FUNCTION, "withSpanTakesPrecedence"),
+                                CODE_FUNCTION_NAME,
+                                ExtractAttributesUsingAddingSpanAttributes.class.getName()
+                                    + ".withSpanTakesPrecedence"),
                             equalTo(stringKey("implicitName"), "foo"),
                             equalTo(stringKey("explicitName"), "bar"))));
   }

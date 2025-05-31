@@ -386,16 +386,14 @@ class KotlinCoroutinesInstrumentationTest {
             it.hasName("a1")
               .hasNoParent()
               .hasAttributesSatisfyingExactly(
-                equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, this.javaClass.name),
-                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "annotated1")
+                equalTo(CodeIncubatingAttributes.CODE_FUNCTION_NAME, this.javaClass.name + ".annotated1")
               )
           },
           {
             it.hasName("KotlinCoroutinesInstrumentationTest.annotated2")
               .hasParent(trace.getSpan(0))
               .hasAttributesSatisfyingExactly(
-                equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, this.javaClass.name),
-                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "annotated2"),
+                equalTo(CodeIncubatingAttributes.CODE_FUNCTION_NAME, this.javaClass.name + ".annotated2"),
                 equalTo(AttributeKey.longKey("byteValue"), 1),
                 equalTo(AttributeKey.longKey("intValue"), 4),
                 equalTo(AttributeKey.longKey("longValue"), 5),
@@ -448,8 +446,7 @@ class KotlinCoroutinesInstrumentationTest {
             it.hasName("ClazzWithDefaultConstructorArguments.sayHello")
               .hasNoParent()
               .hasAttributesSatisfyingExactly(
-                equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, ClazzWithDefaultConstructorArguments::class.qualifiedName),
-                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "sayHello")
+                equalTo(CodeIncubatingAttributes.CODE_FUNCTION_NAME, ClazzWithDefaultConstructorArguments::class.qualifiedName + ".sayHello")
               )
           }
         )

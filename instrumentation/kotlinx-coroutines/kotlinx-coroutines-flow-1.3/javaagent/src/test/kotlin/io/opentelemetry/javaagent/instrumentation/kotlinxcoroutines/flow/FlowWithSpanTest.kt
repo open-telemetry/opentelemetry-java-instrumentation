@@ -46,8 +46,7 @@ class FlowWithSpanTest {
             it.hasName("FlowWithSpanTest.simple")
               .hasNoParent()
               .hasAttributesSatisfyingExactly(
-                equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, this.javaClass.name),
-                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "simple")
+                equalTo(CodeIncubatingAttributes.CODE_FUNCTION_NAME, this.javaClass.name + ".simple")
               )
               .has(Condition({ spanData -> spanData.endEpochNanos > flowStartTime }, "end time after $flowStartTime"))
           }

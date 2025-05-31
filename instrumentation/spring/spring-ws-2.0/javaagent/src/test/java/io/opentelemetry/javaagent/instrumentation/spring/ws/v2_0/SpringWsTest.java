@@ -133,9 +133,9 @@ class SpringWsTest extends AbstractHttpServerUsingTest<ConfigurableApplicationCo
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                "io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.HelloEndpoint"),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, methodName))));
+                                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                "io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.HelloEndpoint."
+                                    + methodName))));
   }
 
   @ParameterizedTest
@@ -173,8 +173,8 @@ class SpringWsTest extends AbstractHttpServerUsingTest<ConfigurableApplicationCo
                                             val -> val.isInstanceOf(String.class))))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                "io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.HelloEndpoint"),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, methodName))));
+                                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                "io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.HelloEndpoint."
+                                    + methodName))));
   }
 }

@@ -89,10 +89,9 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasResource(resource)
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("log message 1")
-                    .hasTotalAttributeCount(4));
+                    .hasTotalAttributeCount(3));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void logWithExtras() {
     Instant start = Instant.now();
@@ -118,14 +117,14 @@ abstract class AbstractOpenTelemetryAppenderTest {
                       satisfies(
                           EXCEPTION_STACKTRACE, stackTrace -> stackTrace.contains("logWithExtras")),
                       equalTo(
-                          CodeIncubatingAttributes.CODE_FILEPATH,
+                          CodeIncubatingAttributes.CODE_FILE_PATH,
                           AbstractOpenTelemetryAppenderTest.class.getSimpleName() + ".java"),
                       equalTo(
-                          CodeIncubatingAttributes.CODE_NAMESPACE,
-                          AbstractOpenTelemetryAppenderTest.class.getName()),
-                      equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "logWithExtras"),
+                          CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                          AbstractOpenTelemetryAppenderTest.class.getName() + ".logWithExtras"),
                       satisfies(
-                          CodeIncubatingAttributes.CODE_LINENO, lineNo -> lineNo.isGreaterThan(1)),
+                          CodeIncubatingAttributes.CODE_LINE_NUMBER,
+                          lineNo -> lineNo.isGreaterThan(1)),
                       equalTo(
                           AttributeKey.stringArrayKey("logback.marker"),
                           Collections.singletonList(markerName)));
@@ -157,7 +156,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasResource(resource)
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("log message 1")
-                    .hasTotalAttributeCount(2 + 4) // 4 code attributes
+                    .hasTotalAttributeCount(2 + 3) // 3 code attributes
                     .hasAttributesSatisfying(
                         equalTo(AttributeKey.stringKey("key1"), "val1"),
                         equalTo(AttributeKey.stringKey("key2"), "val2")));
@@ -181,7 +180,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasResource(resource)
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("log message 1")
-                    .hasTotalAttributeCount(1 + 4) // 4 code attributes
+                    .hasTotalAttributeCount(1 + 3) // 3 code attributes
                     .hasAttributesSatisfying(
                         equalTo(AttributeKey.stringKey("test-property"), "test-value")));
   }
