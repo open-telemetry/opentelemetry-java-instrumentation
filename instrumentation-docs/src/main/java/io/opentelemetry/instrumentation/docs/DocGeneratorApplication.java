@@ -7,12 +7,12 @@ package io.opentelemetry.instrumentation.docs;
 
 import static java.util.Locale.Category.FORMAT;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -26,23 +26,35 @@ public class DocGeneratorApplication {
 
   private static final Logger logger = Logger.getLogger(DocGeneratorApplication.class.getName());
 
-  public static void main(String[] args) throws JsonProcessingException {
-    FileManager fileManager = new FileManager("instrumentation/");
+  public static void main(String[] args) throws IOException {
+    // Identify path to repo so we can use absolute paths
+    String baseRepoPath = getRepoPath();
+
+    FileManager fileManager = new FileManager(baseRepoPath);
     List<InstrumentationModule> modules = new InstrumentationAnalyzer(fileManager).analyze();
 
     try (BufferedWriter writer =
         Files.newBufferedWriter(
-            Paths.get("docs/instrumentation-list.yaml"), Charset.defaultCharset())) {
+            Paths.get(baseRepoPath + "/docs/instrumentation-list.yaml"),
+            Charset.defaultCharset())) {
       writer.write("# This file is generated and should not be manually edited.\n");
       writer.write("# The structure and contents are a work in progress and subject to change.\n");
       writer.write(
           "# For more information see: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13468\n\n");
       YamlHelper.generateInstrumentationYaml(modules, writer);
-    } catch (IOException e) {
-      logger.severe("Error writing instrumentation list: " + e.getMessage());
     }
 
     printStats(modules);
+  }
+
+  private static String getRepoPath() throws IOException {
+    URL resource = DocGeneratorApplication.class.getClassLoader().getResource("");
+    if (resource == null) {
+      throw new IOException("Error getting classloader location");
+    }
+    return Paths.get(resource.getPath())
+        .toString()
+        .replace("/instrumentation-docs/build/classes/java/main", "");
   }
 
   private static void printStats(List<InstrumentationModule> modules) {
