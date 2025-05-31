@@ -10,11 +10,13 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.internal.Conditiona
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import javax.sql.DataSource;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -30,10 +32,14 @@ public class JdbcInstrumentationAutoConfiguration {
   public JdbcInstrumentationAutoConfiguration() {}
 
   @Bean
-  // static to avoid "is not eligible for getting processed by all BeanPostProcessors" warning
-  static DataSourcePostProcessor dataSourcePostProcessor(
+  @Primary
+  public DataSource otelDataSource(
+      @Qualifier("dataSource") DataSource originalDataSource,
       ObjectProvider<OpenTelemetry> openTelemetryProvider,
       ObjectProvider<ConfigProperties> configPropertiesProvider) {
-    return new DataSourcePostProcessor(openTelemetryProvider, configPropertiesProvider);
+    return JdbcDataSourceWrapper.wrapIfNecessary(
+        originalDataSource,
+        openTelemetryProvider.getObject(),
+        configPropertiesProvider.getObject());
   }
 }
