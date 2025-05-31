@@ -5,14 +5,24 @@
 
 set -euo pipefail
 
+# Oracle UCP won't run on Apple Silicon, so we need to use colima to run as x86_64
+if [[ "$(uname -m)" == "arm64" || "$(uname -m)" == "aarch64" ]]; then
+  colima start --arch x86_64 --memory 4
+  export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+  export DOCKER_HOST="unix://${HOME}/.colima/docker.sock"
+fi
+
 readonly INSTRUMENTATIONS=(
   # <module path (colon-separated)> : <javaagent|library> : [ gradle-task-suffix ]
+  "apache-dbcp-2.0:javaagent:test"
   "apache-httpclient:apache-httpclient-5.0:javaagent:test"
   "alibaba-druid-1.0:javaagent:test"
   "c3p0-0.9:javaagent:test"
-  "tomcat:tomcat-jdbc:javaagent:test"
   "hikaricp-3.0:javaagent:test"
-  "apache-dbcp-2.0:javaagent:test"
+  "tomcat:tomcat-jdbc:javaagent:test"
+  "oracle-ucp-11.2:javaagent:test"
+  "oshi:javaagent:test"
+  "vibur-dbcp-11.0:javaagent:test"
 )
 
 readonly TELEMETRY_DIR_NAME=".telemetry"
@@ -52,8 +62,7 @@ parse_descriptor() {
     task_suffix="${parts[$((type_idx + 1))]}"
   fi
 
-  # Join everything *before* the type token with slashes to make
-  # instrumentation/<path>/...
+  # Join everything before the type token with slashes to make instrumentation/<path>/...
   local path_segments=("${parts[@]:0:type_idx}")
   local module_path="instrumentation/$(IFS=/; echo "${path_segments[*]}")"
 
@@ -71,7 +80,7 @@ delete_existing_telemetry() {
 }
 
 # Converts the three parsed parts into a Gradle task name.
-#   ex: instrumentation:foo:bar:javaagent:test
+# ex: instrumentation:foo:bar:javaagent:test
 build_gradle_task() {
   local module_path="$1"   # instrumentation/foo/bar
   local task_type="$2"     # javaagent | library
@@ -87,7 +96,7 @@ build_gradle_task() {
 
 # Cleans any stray .telemetry directories left in the repo.
 find_and_remove_all_telemetry() {
-  echo "🔍  Removing stray .telemetry directories..."
+  echo "Removing stray .telemetry directories..."
   find . -type d -name "$TELEMETRY_DIR_NAME" -exec rm -rf {} +
 }
 
@@ -98,7 +107,7 @@ for descriptor in "${INSTRUMENTATIONS[@]}"; do
   # Parse the descriptor into its components
   if ! read -r module_path task_type task_suffix \
         < <(parse_descriptor "$descriptor"); then
-    continue   # skip badly-formed descriptor
+    continue   # skip any badly formed descriptors
   fi
 
   # Make sure we’re starting fresh for this instrumentation
@@ -117,5 +126,7 @@ echo
   -PcollectMetadata=true \
   --rerun-tasks
 
+# uncomment the next line to remove all .telemetry directories
 #find_and_remove_all_telemetry
+
 echo "Telemetry file regeneration complete."

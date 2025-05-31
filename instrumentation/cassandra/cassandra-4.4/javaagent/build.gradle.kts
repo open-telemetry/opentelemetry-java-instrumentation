@@ -35,10 +35,6 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 
-  test {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-  }
-
   check {
     dependsOn(testStableSemconv)
   }
