@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -72,43 +73,18 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   boolean propagateOperationListenersToOnEnd = false;
   boolean enabled = true;
 
-  private static final Map<String, List<ContextCustomizerCustomizer>> CONTEXT_CUSTOMIZER_MAP =
-      new HashMap<>();
-  private static final Map<String, List<AttributesExtractorCustomizer>> ATTRIBUTES_EXTRACTOR_MAP =
-      new HashMap<>();
-  private static final Map<String, List<OperationMetricsCustomizer>> OPERATION_METRICS_MAP =
-      new HashMap<>();
+  private static final Map<Predicate<String>, List<InstrumentationCustomizer>>
+      INSTRUMENTATION_CUSTOMIZER_MAP = new HashMap<>();
 
   static {
-    ServiceLoader.load(ContextCustomizerCustomizer.class)
-        .forEach(
-            customizers -> {
-              for (String name : customizers.instrumentationNames()) {
-                CONTEXT_CUSTOMIZER_MAP
-                    .computeIfAbsent(name, k -> new ArrayList<>())
-                    .add(customizers);
-              }
-            });
+    ServiceLoader<InstrumentationCustomizer> serviceLoader =
+        ServiceLoader.load(InstrumentationCustomizer.class);
 
-    ServiceLoader.load(AttributesExtractorCustomizer.class)
-        .forEach(
-            customizers -> {
-              for (String name : customizers.instrumentationNames()) {
-                ATTRIBUTES_EXTRACTOR_MAP
-                    .computeIfAbsent(name, k -> new ArrayList<>())
-                    .add(customizers);
-              }
-            });
-
-    ServiceLoader.load(OperationMetricsCustomizer.class)
-        .forEach(
-            customizers -> {
-              for (String name : customizers.instrumentationNames()) {
-                OPERATION_METRICS_MAP
-                    .computeIfAbsent(name, k -> new ArrayList<>())
-                    .add(customizers);
-              }
-            });
+    for (InstrumentationCustomizer customizer : serviceLoader) {
+      INSTRUMENTATION_CUSTOMIZER_MAP
+          .computeIfAbsent(customizer.instrumentationNamePredicate(), k -> new ArrayList<>())
+          .add(customizer);
+    }
   }
 
   InstrumenterBuilder(
@@ -120,30 +96,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     this.spanNameExtractor = spanNameExtractor;
     this.instrumentationVersion =
         EmbeddedInstrumentationProperties.findVersion(instrumentationName);
-
-    List<ContextCustomizerCustomizer> contextProviders =
-        CONTEXT_CUSTOMIZER_MAP.get(instrumentationName);
-    if (contextProviders != null) {
-      for (ContextCustomizerCustomizer provider : contextProviders) {
-        addContextCustomizer(provider.get());
-      }
-    }
-
-    List<AttributesExtractorCustomizer> attributeProviders =
-        ATTRIBUTES_EXTRACTOR_MAP.get(instrumentationName);
-    if (attributeProviders != null) {
-      for (AttributesExtractorCustomizer provider : attributeProviders) {
-        addAttributesExtractor(provider.get());
-      }
-    }
-
-    List<OperationMetricsCustomizer> metricsProviders =
-        OPERATION_METRICS_MAP.get(instrumentationName);
-    if (metricsProviders != null) {
-      for (OperationMetricsCustomizer provider : metricsProviders) {
-        addOperationMetrics(provider.get());
-      }
-    }
   }
 
   /**
@@ -347,6 +299,25 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   private Instrumenter<REQUEST, RESPONSE> buildInstrumenter(
       InstrumenterConstructor<REQUEST, RESPONSE> constructor,
       SpanKindExtractor<? super REQUEST> spanKindExtractor) {
+    List<InstrumentationCustomizer> customizers =
+        INSTRUMENTATION_CUSTOMIZER_MAP.entrySet().stream()
+            .filter(entry -> entry.getKey().test(instrumentationName))
+            .map(Map.Entry::getValue)
+            .findFirst()
+            .orElse(null);
+    if (customizers != null) {
+      for (InstrumentationCustomizer customizer : customizers) {
+        if (customizer.getContextCustomizer() != null) {
+          addContextCustomizer(customizer.getContextCustomizer());
+        }
+        if (customizer.getAttributesExtractor() != null) {
+          addAttributesExtractor(customizer.getAttributesExtractor());
+        }
+        if (customizer.getOperationMetrics() != null) {
+          addOperationMetrics(customizer.getOperationMetrics());
+        }
+      }
+    }
     this.spanKindExtractor = spanKindExtractor;
     return constructor.create(this);
   }
