@@ -78,7 +78,6 @@ class NatsInstrumentationRequestTest {
     connection.close();
   }
 
-
   @Test
   void testRequestTimeout() throws InterruptedException {
     // when
@@ -107,7 +106,9 @@ class NatsInstrumentationRequestTest {
     // when
     testing.runWithSpan(
         "parent",
-        () -> connection.requestWithTimeout("sub", new Headers(), new byte[] {0}, Duration.ofSeconds(1)));
+        () ->
+            connection.requestWithTimeout(
+                "sub", new Headers(), new byte[] {0}, Duration.ofSeconds(1)));
 
     // then
     assertCancellationPublishSpan();
@@ -120,7 +121,8 @@ class NatsInstrumentationRequestTest {
     NatsMessage message = NatsMessage.builder().subject("sub").data("x").build();
 
     // when
-    testing.runWithSpan(        "parent",        () -> connection.requestWithTimeout(message, Duration.ofSeconds(1)));
+    testing.runWithSpan(
+        "parent", () -> connection.requestWithTimeout(message, Duration.ofSeconds(1)));
 
     // then
     assertCancellationPublishSpan();
@@ -130,10 +132,12 @@ class NatsInstrumentationRequestTest {
   @Test
   void testRequestFutureTimeoutMessageWithHeaders() throws InterruptedException {
     // given
-    NatsMessage message =     NatsMessage.builder().subject("sub").headers(new Headers()).data("x").build();
+    NatsMessage message =
+        NatsMessage.builder().subject("sub").headers(new Headers()).data("x").build();
 
     // when
-    testing.runWithSpan(        "parent",        () -> connection.requestWithTimeout(message, Duration.ofSeconds(1)));
+    testing.runWithSpan(
+        "parent", () -> connection.requestWithTimeout(message, Duration.ofSeconds(1)));
 
     // then
     assertCancellationPublishSpan();
@@ -143,12 +147,14 @@ class NatsInstrumentationRequestTest {
   @Test
   void testRequestBodyNoHeaders() throws InterruptedException {
     // given
-    Dispatcher dispatcher = connection.createDispatcher(
-        m -> connection.publish(m.getReplyTo(), m.getData())).subscribe("sub");
+    Dispatcher dispatcher =
+        connection
+            .createDispatcher(m -> connection.publish(m.getReplyTo(), m.getData()))
+            .subscribe("sub");
 
     // when
-    testing.runWithSpan("parent",
-        () -> connection.request("sub", new byte[] {0}, Duration.ofSeconds(1)));
+    testing.runWithSpan(
+        "parent", () -> connection.request("sub", new byte[] {0}, Duration.ofSeconds(1)));
     connection.closeDispatcher(dispatcher);
 
     // then
@@ -159,11 +165,14 @@ class NatsInstrumentationRequestTest {
   @Test
   void testRequestFutureBodyNoHeaders() throws InterruptedException {
     // given
-    Dispatcher dispatcher = connection.createDispatcher(
-        m -> connection.publish(m.getReplyTo(), m.getData())).subscribe("sub");
+    Dispatcher dispatcher =
+        connection
+            .createDispatcher(m -> connection.publish(m.getReplyTo(), m.getData()))
+            .subscribe("sub");
 
     // when
-    testing.runWithSpan("parent", () -> connection.request("sub", new byte[] {0}))
+    testing
+        .runWithSpan("parent", () -> connection.request("sub", new byte[] {0}))
         .whenComplete((m, e) -> connection.closeDispatcher(dispatcher));
 
     // then
@@ -174,11 +183,14 @@ class NatsInstrumentationRequestTest {
   @Test
   void testRequestBodyWithHeaders() throws InterruptedException {
     // given
-    Dispatcher dispatcher = connection.createDispatcher(
-        m -> connection.publish(m.getReplyTo(), m.getData())).subscribe("sub");
+    Dispatcher dispatcher =
+        connection
+            .createDispatcher(m -> connection.publish(m.getReplyTo(), m.getData()))
+            .subscribe("sub");
 
     // when
-    testing.runWithSpan("parent",
+    testing.runWithSpan(
+        "parent",
         () -> connection.request("sub", new Headers(), new byte[] {0}, Duration.ofSeconds(1)));
     connection.closeDispatcher(dispatcher);
 
@@ -190,11 +202,14 @@ class NatsInstrumentationRequestTest {
   @Test
   void testRequestFutureBodyWithHeaders() throws InterruptedException {
     // given
-    Dispatcher dispatcher = connection.createDispatcher(
-        m -> connection.publish(m.getReplyTo(), m.getData())).subscribe("sub");
+    Dispatcher dispatcher =
+        connection
+            .createDispatcher(m -> connection.publish(m.getReplyTo(), m.getData()))
+            .subscribe("sub");
 
     // when
-    testing.runWithSpan("parent", () -> connection.request("sub", new Headers(), new byte[] {0}))
+    testing
+        .runWithSpan("parent", () -> connection.request("sub", new Headers(), new byte[] {0}))
         .whenComplete((m, e) -> connection.closeDispatcher(dispatcher));
 
     // then
@@ -205,8 +220,10 @@ class NatsInstrumentationRequestTest {
   @Test
   void testRequestMessageNoHeaders() throws InterruptedException {
     // given
-    Dispatcher dispatcher = connection.createDispatcher(
-        m -> connection.publish(m.getReplyTo(), m.getData())).subscribe("sub");
+    Dispatcher dispatcher =
+        connection
+            .createDispatcher(m -> connection.publish(m.getReplyTo(), m.getData()))
+            .subscribe("sub");
     NatsMessage message = NatsMessage.builder().subject("sub").data("x").build();
 
     // when
@@ -221,12 +238,15 @@ class NatsInstrumentationRequestTest {
   @Test
   void testRequestFutureMessageNoHeaders() throws InterruptedException {
     // given
-    Dispatcher dispatcher = connection.createDispatcher(
-        m -> connection.publish(m.getReplyTo(), m.getData())).subscribe("sub");
+    Dispatcher dispatcher =
+        connection
+            .createDispatcher(m -> connection.publish(m.getReplyTo(), m.getData()))
+            .subscribe("sub");
     NatsMessage message = NatsMessage.builder().subject("sub").data("x").build();
 
     // when
-    testing.runWithSpan("parent", () -> connection.request(message))
+    testing
+        .runWithSpan("parent", () -> connection.request(message))
         .whenComplete((m, e) -> connection.closeDispatcher(dispatcher));
 
     // then
@@ -237,8 +257,10 @@ class NatsInstrumentationRequestTest {
   @Test
   void testRequestMessageWithHeaders() throws InterruptedException {
     // given
-    Dispatcher dispatcher = connection.createDispatcher(
-        m -> connection.publish(m.getReplyTo(), m.getData())).subscribe("sub");
+    Dispatcher dispatcher =
+        connection
+            .createDispatcher(m -> connection.publish(m.getReplyTo(), m.getData()))
+            .subscribe("sub");
     NatsMessage message =
         NatsMessage.builder().subject("sub").headers(new Headers()).data("x").build();
 
@@ -254,13 +276,16 @@ class NatsInstrumentationRequestTest {
   @Test
   void testRequestFutureMessageWithHeaders() throws InterruptedException {
     // given
-    Dispatcher dispatcher = connection.createDispatcher(
-        m -> connection.publish(m.getReplyTo(), m.getData())).subscribe("sub");
+    Dispatcher dispatcher =
+        connection
+            .createDispatcher(m -> connection.publish(m.getReplyTo(), m.getData()))
+            .subscribe("sub");
     NatsMessage message =
         NatsMessage.builder().subject("sub").headers(new Headers()).data("x").build();
 
     // when
-    testing.runWithSpan("parent", () -> connection.request(message))
+    testing
+        .runWithSpan("parent", () -> connection.request(message))
         .whenComplete((m, e) -> connection.closeDispatcher(dispatcher));
 
     // then
@@ -318,7 +343,9 @@ class NatsInstrumentationRequestTest {
                     span.hasName("sub publish")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasException(new CancellationException("Future cancelled, response not registered in time, check connection status."))
+                        .hasException(
+                            new CancellationException(
+                                "Future cancelled, response not registered in time, check connection status."))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_OPERATION, "publish"),
                             equalTo(MESSAGING_SYSTEM, "nats"),

@@ -24,15 +24,15 @@ public class OpenTelemetrySubscription implements Subscription {
 
   private final Connection connection;
   private final Subscription delegate;
-  private final Instrumenter<NatsRequest, Void> consumerInstrumenter;
+  private final Instrumenter<NatsRequest, Void> consumerReceiveInstrumenter;
 
   public OpenTelemetrySubscription(
       Connection connection,
       Subscription subscription,
-      Instrumenter<NatsRequest, Void> consumerInstrumenter) {
+      Instrumenter<NatsRequest, Void> consumerReceiveInstrumenter) {
     this.connection = connection;
     this.delegate = subscription;
-    this.consumerInstrumenter = consumerInstrumenter;
+    this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
   }
 
   @Override
@@ -131,21 +131,21 @@ public class OpenTelemetrySubscription implements Subscription {
 
     Context parentContext = Context.current();
     TimeoutException timeout = null;
-    NatsRequest natsRequest = NatsRequest.create(this.connection, this.getSubject());
+    NatsRequest natsRequest = NatsRequest.create(connection, getSubject());
 
     if (message == null) {
       timeout = new TimeoutException("Timed out waiting for message");
     } else {
-      natsRequest = NatsRequest.create(this.connection, message);
+      natsRequest = NatsRequest.create(connection, message);
     }
 
     if (!Span.fromContext(parentContext).getSpanContext().isValid()
-        || !consumerInstrumenter.shouldStart(parentContext, natsRequest)) {
+        || !consumerReceiveInstrumenter.shouldStart(parentContext, natsRequest)) {
       return message;
     }
 
     InstrumenterUtil.startAndEnd(
-        consumerInstrumenter,
+        consumerReceiveInstrumenter,
         parentContext,
         natsRequest,
         null,

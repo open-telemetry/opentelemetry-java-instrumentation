@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 
@@ -31,13 +32,21 @@ public final class NatsInstrumenterFactory {
       MessagingAttributesExtractor.create(
           NatsRequestMessagingAttributesGetter.VOID_INSTANCE, MessageOperation.PUBLISH);
 
-  public static final SpanNameExtractor<NatsRequest> CONSUMER_SPAN_NAME_EXTRACTOR =
+  public static final SpanNameExtractor<NatsRequest> CONSUMER_RECEIVE_SPAN_NAME_EXTRACTOR =
       MessagingSpanNameExtractor.create(
           NatsRequestMessagingAttributesGetter.VOID_INSTANCE, MessageOperation.RECEIVE);
 
-  public static final AttributesExtractor<NatsRequest, Void> CONSUMER_ATTRIBUTES_EXTRACTOR =
+  public static final AttributesExtractor<NatsRequest, Void> CONSUMER_RECEIVE_ATTRIBUTES_EXTRACTOR =
       MessagingAttributesExtractor.create(
           NatsRequestMessagingAttributesGetter.VOID_INSTANCE, MessageOperation.RECEIVE);
+
+  public static final SpanNameExtractor<NatsRequest> CONSUMER_PROCESS_SPAN_NAME_EXTRACTOR =
+      MessagingSpanNameExtractor.create(
+          NatsRequestMessagingAttributesGetter.VOID_INSTANCE, MessageOperation.PROCESS);
+
+  public static final AttributesExtractor<NatsRequest, Void> CONSUMER_PROCESS_ATTRIBUTES_EXTRACTOR =
+      MessagingAttributesExtractor.create(
+          NatsRequestMessagingAttributesGetter.VOID_INSTANCE, MessageOperation.PROCESS);
 
   public static final AttributesExtractor<NatsRequest, NatsRequest> CLIENT_ATTRIBUTES_EXTRACTOR =
       MessagingAttributesExtractor.create(
@@ -51,16 +60,28 @@ public final class NatsInstrumenterFactory {
         .buildProducerInstrumenter(NatsRequestTextMapSetter.INSTANCE);
   }
 
-  public static Instrumenter<NatsRequest, Void> createConsumerInstrumenter(
+  public static Instrumenter<NatsRequest, Void> createConsumerReceiveInstrumenter(
       OpenTelemetry openTelemetry) {
     return Instrumenter.<NatsRequest, Void>builder(
-            openTelemetry, INSTRUMENTATION_NAME, CONSUMER_SPAN_NAME_EXTRACTOR)
-        .addAttributesExtractor(CONSUMER_ATTRIBUTES_EXTRACTOR)
+            openTelemetry, INSTRUMENTATION_NAME, CONSUMER_RECEIVE_SPAN_NAME_EXTRACTOR)
+        .addAttributesExtractor(CONSUMER_RECEIVE_ATTRIBUTES_EXTRACTOR)
         .addSpanLinksExtractor(
             new PropagatorBasedSpanLinksExtractor<>(
                 openTelemetry.getPropagators().getTextMapPropagator(),
                 NatsRequestTextMapGetter.INSTANCE))
         .buildConsumerInstrumenter(NatsRequestTextMapGetter.INSTANCE);
+  }
+
+  public static Instrumenter<NatsRequest, Void> createConsumerProcessInstrumenter(
+      OpenTelemetry openTelemetry) {
+    return Instrumenter.<NatsRequest, Void>builder(
+            openTelemetry, INSTRUMENTATION_NAME, CONSUMER_PROCESS_SPAN_NAME_EXTRACTOR)
+        .addAttributesExtractor(CONSUMER_PROCESS_ATTRIBUTES_EXTRACTOR)
+        .addSpanLinksExtractor(
+            new PropagatorBasedSpanLinksExtractor<>(
+                openTelemetry.getPropagators().getTextMapPropagator(),
+                NatsRequestTextMapGetter.INSTANCE))
+        .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
   public static Instrumenter<NatsRequest, NatsRequest> createClientInstrumenter(

@@ -46,17 +46,20 @@ public class OpenTelemetryConnection implements Connection {
 
   private final Connection delegate;
   private final Instrumenter<NatsRequest, Void> producerInstrumenter;
-  private final Instrumenter<NatsRequest, Void> consumerInstrumenter;
+  private final Instrumenter<NatsRequest, Void> consumerReceiveInstrumenter;
+  private final Instrumenter<NatsRequest, Void> consumerProcessInstrumenter;
   private final Instrumenter<NatsRequest, NatsRequest> clientInstrumenter;
 
   public OpenTelemetryConnection(
       Connection connection,
       Instrumenter<NatsRequest, Void> producerInstrumenter,
-      Instrumenter<NatsRequest, Void> consumerInstrumenter,
+      Instrumenter<NatsRequest, Void> consumerReceiveInstrumenter,
+      Instrumenter<NatsRequest, Void> consumerProcessInstrumenter,
       Instrumenter<NatsRequest, NatsRequest> clientInstrumenter) {
     this.delegate = connection;
     this.producerInstrumenter = producerInstrumenter;
-    this.consumerInstrumenter = consumerInstrumenter;
+    this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
+    this.consumerProcessInstrumenter = consumerProcessInstrumenter;
     this.clientInstrumenter = clientInstrumenter;
   }
 
@@ -153,23 +156,34 @@ public class OpenTelemetryConnection implements Connection {
   @Override
   public Subscription subscribe(String subject) {
     return new OpenTelemetrySubscription(
-        this, delegate.subscribe(subject), this.consumerInstrumenter);
+        this, delegate.subscribe(subject), this.consumerReceiveInstrumenter);
   }
 
   @Override
   public Subscription subscribe(String subject, String queueName) {
     return new OpenTelemetrySubscription(
-        this, delegate.subscribe(subject, queueName), this.consumerInstrumenter);
+        this, delegate.subscribe(subject, queueName), this.consumerReceiveInstrumenter);
   }
 
   @Override
   public Dispatcher createDispatcher(MessageHandler messageHandler) {
-    return delegate.createDispatcher(messageHandler);
+    OpenTelemetryMessageHandler otelHandler =
+        new OpenTelemetryMessageHandler(
+            this, messageHandler, consumerReceiveInstrumenter, consumerProcessInstrumenter);
+    return new OpenTelemetryDispatcher(
+        this,
+        delegate.createDispatcher(otelHandler),
+        consumerReceiveInstrumenter,
+        consumerProcessInstrumenter);
   }
 
   @Override
   public Dispatcher createDispatcher() {
-    return delegate.createDispatcher();
+    return new OpenTelemetryDispatcher(
+        this,
+        delegate.createDispatcher(),
+        consumerReceiveInstrumenter,
+        consumerProcessInstrumenter);
   }
 
   @Override
