@@ -46,16 +46,15 @@ public class TestConnection implements Connection {
   private final List<TestSubscription> subscriptions =
       Collections.synchronizedList(new LinkedList<>());
 
+  private final List<TestDispatcher> dispatchers = Collections.synchronizedList(new LinkedList<>());
+
   public final Queue<Message> publishedMessages = new ConcurrentLinkedQueue<>();
   public final Queue<Message> requestedMessages = new ConcurrentLinkedQueue<>();
   public final Queue<Message> requestResponseMessages = new ConcurrentLinkedQueue<>();
 
   public void deliver(Message message) {
-    subscriptions.stream()
-        .filter(subscription -> message.getSubject().equalsIgnoreCase(subscription.getSubject()))
-        .forEach(
-            subscription ->
-                subscription.messages.add(new TestMessage(this, subscription, message)));
+    subscriptions.forEach(subscription -> subscription.deliver(message));
+    dispatchers.forEach(dispatcher -> dispatcher.deliver(message));
   }
 
   @Override
@@ -176,16 +175,22 @@ public class TestConnection implements Connection {
 
   @Override
   public Dispatcher createDispatcher(MessageHandler handler) {
-    return null;
+    TestDispatcher dispatcher = new TestDispatcher(handler);
+    dispatchers.add(dispatcher);
+    return dispatcher;
   }
 
   @Override
   public Dispatcher createDispatcher() {
-    return null;
+    TestDispatcher dispatcher = new TestDispatcher();
+    dispatchers.add(dispatcher);
+    return dispatcher;
   }
 
   @Override
-  public void closeDispatcher(Dispatcher dispatcher) {}
+  public void closeDispatcher(Dispatcher dispatcher) {
+    dispatchers.remove(dispatcher);
+  }
 
   @Override
   public void addConnectionListener(ConnectionListener connectionListener) {}

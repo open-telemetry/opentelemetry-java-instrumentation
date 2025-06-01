@@ -107,7 +107,8 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(2, byte[].class))
             .and(takesArgument(3, Duration.class))
             .and(returns(named("java.util.concurrent.CompletableFuture"))),
-        ConnectionRequestInstrumentation.class.getName() + "$RequestFutureTimeoutBodyHeadersAdvice");
+        ConnectionRequestInstrumentation.class.getName()
+            + "$RequestFutureTimeoutBodyHeadersAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("requestWithTimeout"))

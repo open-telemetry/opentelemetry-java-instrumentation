@@ -38,6 +38,12 @@ public class TestSubscription implements Subscription {
     this.dispatcher = dispatcher;
   }
 
+  public void deliver(Message message) {
+    if (message.getSubject().equalsIgnoreCase(getSubject())) {
+      messages.add(message);
+    }
+  }
+
   @Override
   public String getSubject() {
     return subject;
@@ -77,11 +83,18 @@ public class TestSubscription implements Subscription {
   }
 
   @Override
-  public void unsubscribe() {}
+  public void unsubscribe() {
+    if (dispatcher != null) {
+      dispatcher.unsubscribe(subject);
+    }
+  }
 
   @Override
   public Subscription unsubscribe(int after) {
-    return null;
+    if (dispatcher != null) {
+      dispatcher.unsubscribe(subject, after);
+    }
+    return this;
   }
 
   @Override
