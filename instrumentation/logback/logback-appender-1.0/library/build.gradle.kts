@@ -47,6 +47,11 @@ graalvmNative {
 
   binaries.all {
     resources.autodetect()
+
+    agent {
+      buildArgs.add("--initialize-at-build-time=org.junit.platform.launcher.core.HierarchicalOutputDirectoryProvider")
+      buildArgs.add("--initialize-at-build-time=org.junit.platform.launcher.core.LauncherDiscoveryResult\$EngineResultInfo")
+    }
   }
 
   // See https://github.com/graalvm/native-build-tools/issues/572
