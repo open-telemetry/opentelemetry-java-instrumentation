@@ -27,7 +27,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class TestAccessLogWithJetty {
+class TestAccessLogWithJetty {
 
   static RequestLogImpl requestLogImpl = new RequestLogImpl();
   static JettyServer jettyFixture;
@@ -70,7 +70,7 @@ public class TestAccessLogWithJetty {
             logRecord
                 .hasEventName(ACCESS_EVENT_NAME)
                 .hasSeverity(Severity.UNDEFINED_SEVERITY_NUMBER)
-                .hasAttributesSatisfying(
+                .hasAttributesSatisfyingExactly(
                     equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                     equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, Long.valueOf(200)),
                     equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),

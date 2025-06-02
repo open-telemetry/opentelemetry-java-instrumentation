@@ -23,8 +23,7 @@ public class AccessEventMapper {
 
   @SuppressWarnings({"MethodCanBeStatic", "EmptyCatch"})
   // MethodCanBeStatic: This method should eventually refer to configs in this class. So it should
-  // not
-  // be static.
+  // not be static.
   // EmptyCatch: for parsing URI, the input itself is actually one URI, so there is low chance the
   // exception would be thrown. Even when it actually happened, there is not much we can do here.
   private void mapLoggingEvent(LogRecordBuilder builder, IAccessEvent accessEvent) {

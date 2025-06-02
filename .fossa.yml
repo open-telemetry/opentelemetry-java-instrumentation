@@ -660,6 +660,9 @@ targets:
       target: ':instrumentation:log4j:log4j-mdc-1.2:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:logback:logback-access-jetty-12.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:logback:logback-appender-1.0:javaagent'
     - type: gradle
       path: ./

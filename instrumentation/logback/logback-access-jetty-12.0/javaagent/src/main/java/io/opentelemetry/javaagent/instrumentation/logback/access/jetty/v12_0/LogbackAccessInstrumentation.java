@@ -40,8 +40,7 @@ public class LogbackAccessInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(0) Object o, @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      if (o instanceof IAccessEvent) {
-        IAccessEvent event = (IAccessEvent) o;
+      if (o instanceof IAccessEvent event) {
         // need to track call depth across all loggers in order to avoid double capture when one
         // logging framework delegates to another
         callDepth = CallDepth.forClass(LoggerProvider.class);

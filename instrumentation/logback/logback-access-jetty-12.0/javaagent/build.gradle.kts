@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("ch.qos.logback.access")
     module.set("jetty12")
-    versions.set("[2.0.0")
+    versions.set("[2.0.0,)")
     assertInverse.set(true)
   }
 }
