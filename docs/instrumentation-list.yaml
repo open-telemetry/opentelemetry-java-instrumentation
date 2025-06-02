@@ -54,6 +54,46 @@ libraries:
       - com.alibaba:druid:(,)
       library:
       - com.alibaba:druid:1.0.0
+    metrics:
+    - name: db.client.connections.usage
+      description: The number of connections that are currently in state described
+        by the state attribute.
+      type: LONG_SUM
+      unit: connections
+      attributes:
+      - name: pool.name
+        type: STRING
+      - name: state
+        type: STRING
+    - name: db.client.connections.pending_requests
+      description: The number of pending requests for an open connection, cumulative
+        for the entire pool.
+      type: LONG_SUM
+      unit: requests
+      attributes:
+      - name: pool.name
+        type: STRING
+    - name: db.client.connections.max
+      description: The maximum number of open connections allowed.
+      type: LONG_SUM
+      unit: connections
+      attributes:
+      - name: pool.name
+        type: STRING
+    - name: db.client.connections.idle.min
+      description: The minimum number of idle open connections allowed.
+      type: LONG_SUM
+      unit: connections
+      attributes:
+      - name: pool.name
+        type: STRING
+    - name: db.client.connections.idle.max
+      description: The maximum number of idle open connections allowed.
+      type: LONG_SUM
+      unit: connections
+      attributes:
+      - name: pool.name
+        type: STRING
   apache:
   - name: apache-shenyu-2.4
     source_path: instrumentation/apache-shenyu-2.4
@@ -831,7 +871,7 @@ libraries:
         services.
       type: map
       default: ''
-    - name: otel.instrumentation.jdbc.capture-query-parameters
+    - name: otel.instrumentation.jdbc.experimental.capture-query-parameters
       description: |
         Sets whether the query parameters should be captured as span attributes named <code>db.query.parameter.&lt;key&gt;</code>. Enabling this option disables the statement sanitization.<p>WARNING: captured query parameters may contain sensitive information such as passwords, personally identifiable information or protected health info.
       type: boolean
@@ -1910,6 +1950,22 @@ libraries:
     target_versions:
       javaagent:
       - io.vertx:vertx-redis-client:[4.0.0,)
+  - name: vertx-sql-client-5.0
+    source_path: instrumentation/vertx/vertx-sql-client/vertx-sql-client-5.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.vertx-sql-client-5.0
+    target_versions:
+      javaagent:
+      - io.vertx:vertx-sql-client:[5.0.0,)
+  - name: vertx-http-client-5.0
+    source_path: instrumentation/vertx/vertx-http-client/vertx-http-client-5.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.vertx-http-client-5.0
+    target_versions:
+      javaagent:
+      - io.vertx:vertx-core:[5.0.0,)
   - name: vertx-web-3.0
     source_path: instrumentation/vertx/vertx-web-3.0
     scope:
@@ -1918,19 +1974,19 @@ libraries:
       javaagent:
       - io.vertx:vertx-web:[3.0.0,)
   - name: vertx-sql-client-4.0
-    source_path: instrumentation/vertx/vertx-sql-client-4.0
+    source_path: instrumentation/vertx/vertx-sql-client/vertx-sql-client-4.0
     scope:
       name: io.opentelemetry.vertx-sql-client-4.0
     target_versions:
       javaagent:
-      - io.vertx:vertx-sql-client:[4.0.0,)
+      - io.vertx:vertx-sql-client:[4.0.0,5)
   - name: vertx-http-client-4.0
     source_path: instrumentation/vertx/vertx-http-client/vertx-http-client-4.0
     scope:
       name: io.opentelemetry.vertx-http-client-4.0
     target_versions:
       javaagent:
-      - io.vertx:vertx-core:[4.0.0,)
+      - io.vertx:vertx-core:[4.0.0,5)
   - name: vertx-rx-java-3.5
     source_path: instrumentation/vertx/vertx-rx-java-3.5
     scope:
@@ -2051,6 +2107,10 @@ internal:
   source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.32
   scope:
     name: io.opentelemetry.opentelemetry-api-1.32
+- name: opentelemetry-api-1.50
+  source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.50
+  scope:
+    name: io.opentelemetry.opentelemetry-api-1.50
 - name: opentelemetry-api-1.42
   source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.42
   scope:

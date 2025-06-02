@@ -23,7 +23,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.entry;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -38,14 +37,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.ToIntFunction;
-import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
 import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class HttpClientAttributesExtractorTest {
@@ -207,7 +203,32 @@ class HttpClientAttributesExtractorTest {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(UrlSourceToRedact.class)
+  @CsvSource({
+    "https://user1:secret@github.com, https://REDACTED:REDACTED@github.com",
+    "https://user1:secret@github.com/path/, https://REDACTED:REDACTED@github.com/path/",
+    "https://user1:secret@github.com#test.html, https://REDACTED:REDACTED@github.com#test.html",
+    "https://user1:secret@github.com?foo=b@r, https://REDACTED:REDACTED@github.com?foo=b@r",
+    "https://user1:secret@github.com/p@th?foo=b@r, https://REDACTED:REDACTED@github.com/p@th?foo=b@r",
+    "https://github.com/p@th?foo=b@r, https://github.com/p@th?foo=b@r",
+    "https://github.com#t@st.html, https://github.com#t@st.html",
+    "user1:secret@github.com, user1:secret@github.com",
+    "https://github.com@, https://github.com@",
+    "https://service.com?paramA=valA&paramB=valB, https://service.com?paramA=valA&paramB=valB",
+    "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7, https://service.com?AWSAccessKeyId=REDACTED",
+    "https://service.com?Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0%3A377, https://service.com?Signature=REDACTED",
+    "https://service.com?sig=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0, https://service.com?sig=REDACTED",
+    "https://service.com?X-Goog-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0, https://service.com?X-Goog-Signature=REDACTED",
+    "https://service.com?paramA=valA&AWSAccessKeyId=AKIAIOSFODNN7&paramB=valB, https://service.com?paramA=valA&AWSAccessKeyId=REDACTED&paramB=valB",
+    "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&paramA=valA, https://service.com?AWSAccessKeyId=REDACTED&paramA=valA",
+    "https://service.com?paramA=valA&AWSAccessKeyId=AKIAIOSFODNN7, https://service.com?paramA=valA&AWSAccessKeyId=REDACTED",
+    "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&AWSAccessKeyId=ZGIAIOSFODNN7, https://service.com?AWSAccessKeyId=REDACTED&AWSAccessKeyId=REDACTED",
+    "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7#ref, https://service.com?AWSAccessKeyId=REDACTED#ref",
+    "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&aa&bb, https://service.com?AWSAccessKeyId=REDACTED&aa&bb",
+    "https://service.com?aa&bb&AWSAccessKeyId=AKIAIOSFODNN7, https://service.com?aa&bb&AWSAccessKeyId=REDACTED",
+    "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&&, https://service.com?AWSAccessKeyId=REDACTED&&",
+    "https://service.com?&&AWSAccessKeyId=AKIAIOSFODNN7, https://service.com?&&AWSAccessKeyId=REDACTED",
+    "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&a&b#fragment, https://service.com?AWSAccessKeyId=REDACTED&a&b#fragment"
+  })
   void shouldRedactUserInfoAndQueryParameters(String url, String expectedResult) {
     Map<String, String> request = new HashMap<>();
     request.put("urlFull", url);
@@ -221,76 +242,6 @@ class HttpClientAttributesExtractorTest {
     extractor.onStart(attributes, Context.root(), request);
 
     assertThat(attributes.build()).containsOnly(entry(URL_FULL, expectedResult));
-  }
-
-  static final class UrlSourceToRedact implements ArgumentsProvider {
-
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(
-          arguments("https://user1:secret@github.com", "https://REDACTED:REDACTED@github.com"),
-          arguments(
-              "https://user1:secret@github.com/path/",
-              "https://REDACTED:REDACTED@github.com/path/"),
-          arguments(
-              "https://user1:secret@github.com#test.html",
-              "https://REDACTED:REDACTED@github.com#test.html"),
-          arguments(
-              "https://user1:secret@github.com?foo=b@r",
-              "https://REDACTED:REDACTED@github.com?foo=b@r"),
-          arguments(
-              "https://user1:secret@github.com/p@th?foo=b@r",
-              "https://REDACTED:REDACTED@github.com/p@th?foo=b@r"),
-          arguments("https://github.com/p@th?foo=b@r", "https://github.com/p@th?foo=b@r"),
-          arguments("https://github.com#t@st.html", "https://github.com#t@st.html"),
-          arguments("user1:secret@github.com", "user1:secret@github.com"),
-          arguments("https://github.com@", "https://github.com@"),
-          arguments(
-              "https://service.com?paramA=valA&paramB=valB",
-              "https://service.com?paramA=valA&paramB=valB"),
-          arguments(
-              "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7",
-              "https://service.com?AWSAccessKeyId=REDACTED"),
-          arguments(
-              "https://service.com?Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0%3A377",
-              "https://service.com?Signature=REDACTED"),
-          arguments(
-              "https://service.com?sig=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0",
-              "https://service.com?sig=REDACTED"),
-          arguments(
-              "https://service.com?X-Goog-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0",
-              "https://service.com?X-Goog-Signature=REDACTED"),
-          arguments(
-              "https://service.com?paramA=valA&AWSAccessKeyId=AKIAIOSFODNN7&paramB=valB",
-              "https://service.com?paramA=valA&AWSAccessKeyId=REDACTED&paramB=valB"),
-          arguments(
-              "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&paramA=valA",
-              "https://service.com?AWSAccessKeyId=REDACTED&paramA=valA"),
-          arguments(
-              "https://service.com?paramA=valA&AWSAccessKeyId=AKIAIOSFODNN7",
-              "https://service.com?paramA=valA&AWSAccessKeyId=REDACTED"),
-          arguments(
-              "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&AWSAccessKeyId=ZGIAIOSFODNN7",
-              "https://service.com?AWSAccessKeyId=REDACTED&AWSAccessKeyId=REDACTED"),
-          arguments(
-              "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7#ref",
-              "https://service.com?AWSAccessKeyId=REDACTED#ref"),
-          arguments(
-              "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&aa&bb",
-              "https://service.com?AWSAccessKeyId=REDACTED&aa&bb"),
-          arguments(
-              "https://service.com?aa&bb&AWSAccessKeyId=AKIAIOSFODNN7",
-              "https://service.com?aa&bb&AWSAccessKeyId=REDACTED"),
-          arguments(
-              "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&&",
-              "https://service.com?AWSAccessKeyId=REDACTED&&"),
-          arguments(
-              "https://service.com?&&AWSAccessKeyId=AKIAIOSFODNN7",
-              "https://service.com?&&AWSAccessKeyId=REDACTED"),
-          arguments(
-              "https://service.com?AWSAccessKeyId=AKIAIOSFODNN7&a&b#fragment",
-              "https://service.com?AWSAccessKeyId=REDACTED&a&b#fragment"));
-    }
   }
 
   @ParameterizedTest
