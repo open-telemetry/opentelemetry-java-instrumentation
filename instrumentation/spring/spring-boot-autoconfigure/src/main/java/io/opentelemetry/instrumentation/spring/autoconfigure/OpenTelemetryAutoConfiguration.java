@@ -57,17 +57,24 @@ public class OpenTelemetryAutoConfiguration {
 
   public OpenTelemetryAutoConfiguration() {}
 
+  @Bean
+  @ConfigurationPropertiesBinding
+  public OtelMapConverter otelMapConverter() {
+    // This is needed for otlp exporter headers and OtelResourceProperties.
+
+    // We need this converter, even if the SDK is disabled,
+    // because the properties are parsed before the SDK is disabled.
+
+    // We also need this converter if the OpenTelemetry bean is user supplied,
+    // because the environment variables may still contain a value that needs to be converted,
+    // even if the SDK is disabled (and the value thus ignored).
+    return new OtelMapConverter();
+  }
+
   @Configuration
   @Conditional(SdkEnabled.class)
   @ConditionalOnMissingBean(OpenTelemetry.class)
   static class OpenTelemetrySdkConfig {
-
-    @Bean
-    @ConfigurationPropertiesBinding
-    public OtelMapConverter otelMapConverter() {
-      // needed for otlp exporter headers and OtelResourceProperties
-      return new OtelMapConverter();
-    }
 
     @Bean
     public OpenTelemetrySdkComponentLoader openTelemetrySdkComponentLoader(
@@ -132,18 +139,6 @@ public class OpenTelemetryAutoConfiguration {
   @ConditionalOnMissingBean(OpenTelemetry.class)
   @ConditionalOnProperty(name = "otel.sdk.disabled", havingValue = "true")
   static class DisabledOpenTelemetrySdkConfig {
-
-    @Bean
-    @ConfigurationPropertiesBinding
-    // Duplicated in OpenTelemetrySdkConfig and DisabledOpenTelemetrySdkConfig to not expose the
-    // converter in the public API
-    public OtelMapConverter otelMapConverter() {
-      // needed for otlp exporter headers and OtelResourceProperties
-      // we need this converter, even if the SDK is disabled,
-      // because the properties are parsed before the SDK is disabled
-      return new OtelMapConverter();
-    }
-
     @Bean
     public OpenTelemetry openTelemetry() {
       return OpenTelemetry.noop();
