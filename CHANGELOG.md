@@ -2,6 +2,32 @@
 
 ## Unreleased
 
+### Migration notes
+- Tomcat metric `http.server.tomcat.errorCount` --> `tomcat.error.count`
+  - attribute: `name` --> `tomcat.request.processor.name`
+  - type: Gauge --> Counter
+- Tomcat metric `http.server.tomcat.requestCount` --> `tomcat.request.count`
+  - attribute: `name` --> `tomcat.request.processor.name`
+  - type: Gauge --> Counter
+- Tomcat metric `http.server.tomcat.maxTime` --> `tomcat.request.duration.max`
+  - attribute: `name` --> `tomcat.request.processor.name`
+  - unit: `ms` --> `s`
+- Tomcat metric `http.server.tomcat.processingTime` --> `tomcat.request.duration.sum`
+  - attribute: `name` --> `tomcat.request.processor.name`
+  - unit: `ms` --> `s`
+- Tomcat metric `http.server.tomcat.traffic` --> `tomcat.network.io`
+  - attribute: `name` --> `tomcat.request.processor.name`, `direction` --> `network.io.direction`
+- Tomcat metric `http.server.tomcat.sessions.activeSessions` --> `tomcat.session.active.count`
+  - attribute: `context` --> `tomcat.context`
+- Tomcat metric `http.server.tomcat.threads` split into two metrics: `tomcat.thread.count` and `tomcat.thread.busy.count`
+  - attribute: `name` --> `tomcat.thread.pool.name`, `state` removed
+
+### 📈 Enhancements
+
+- Added new Tomcat metrics: `tomcat.session.active.limit`, `tomcat.thread.limit`
+  ([#13650](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13650))
+
+
 ## Version 2.16.0 (2025-05-15)
 
 ### ⚠️⚠️ Breaking changes ⚠️⚠️
@@ -10,7 +36,6 @@
   ([#13794](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13794))
 - Remove deprecated property for disabling kafka metrics
   ([#13803](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13803))
-
 
 ### 🌟 New javaagent instrumentation
 
