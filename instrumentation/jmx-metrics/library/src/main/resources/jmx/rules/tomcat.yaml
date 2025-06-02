@@ -1,0 +1,86 @@
+---
+# For Tomcat, the default JMX domain is "Catalina:", however with some deployments like embedded in spring-boot
+# we can have the "Tomcat:" domain used, thus we use both MBean names for the metrics.
+
+rules:
+  - beans:
+    - Catalina:type=GlobalRequestProcessor,name=*
+    - Tomcat:type=GlobalRequestProcessor,name=*
+    prefix: tomcat.
+    metricAttribute:
+      tomcat.request.processor.name: param(name)
+    mapping:
+      errorCount:
+        metric: error.count
+        type: counter
+        unit: "{error}"
+        desc: The number of errors.
+      requestCount:
+        metric: request.count
+        type: counter
+        unit: "{request}"
+        desc: The number of requests processed.
+      maxTime:
+        metric: request.duration.max
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: The longest request processing time.
+      processingTime:
+        metric: request.duration.sum
+        type: counter
+        sourceUnit: ms
+        unit: s
+        desc: Total time of processing all requests.
+      bytesReceived:
+        metric: &metric network.io
+        type: &type counter
+        unit: &unit By
+        desc: &desc The number of bytes transmitted.
+        metricAttribute:
+          network.io.direction: const(receive)
+      bytesSent:
+        metric: *metric
+        type: *type
+        unit: *unit
+        desc: *desc
+        metricAttribute:
+          network.io.direction: const(transmit)
+
+  - beans:
+    - Catalina:type=Manager,host=localhost,context=*
+    - Tomcat:type=Manager,host=localhost,context=*
+    prefix: tomcat.
+    metricAttribute:
+      tomcat.context: param(context)
+    mapping:
+      activeSessions:
+        metric: session.active.count
+        type: updowncounter
+        unit: "{session}"
+        desc: The number of currently active sessions.
+      maxActiveSessions:
+        metric: session.active.limit
+        type: updowncounter
+        unit: "{session}"
+        desc: Maximum possible number of active sessions.
+
+  - beans:
+    - Catalina:type=ThreadPool,name=*
+    - Tomcat:type=ThreadPool,name=*
+    unit: "{thread}"
+    prefix: tomcat.thread.
+    type: updowncounter
+    metricAttribute:
+      tomcat.thread.pool.name: param(name)
+    mapping:
+      currentThreadCount:
+        metric: count
+        desc: Total thread count of the thread pool.
+      maxThreads:
+        metric: limit
+        desc: Maximum possible number of threads in the thread pool.
+      currentThreadsBusy:
+        metric: busy.count
+        desc: Number of busy threads in the thread pool.
+

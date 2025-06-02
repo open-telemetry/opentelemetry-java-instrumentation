@@ -25,12 +25,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class OpenTelemetryDataSourceTest {
 
@@ -39,7 +37,7 @@ class OpenTelemetryDataSourceTest {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
-  @ArgumentsSource(GetConnectionMethods.class)
+  @MethodSource("getConnectionMethodsArguments")
   void shouldEmitGetConnectionSpans(GetConnectionFunction getConnection) throws SQLException {
     JdbcTelemetry telemetry = JdbcTelemetry.create(testing.getOpenTelemetry());
     DataSource dataSource = telemetry.wrap(new TestDataSource());
@@ -72,7 +70,7 @@ class OpenTelemetryDataSourceTest {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(GetConnectionMethods.class)
+  @MethodSource("getConnectionMethodsArguments")
   void shouldNotEmitGetConnectionSpansWithoutParentSpan(GetConnectionFunction getConnection)
       throws SQLException {
     JdbcTelemetry telemetry = JdbcTelemetry.create(testing.getOpenTelemetry());
@@ -87,14 +85,10 @@ class OpenTelemetryDataSourceTest {
     assertDbInfo(dbInfo);
   }
 
-  static class GetConnectionMethods implements ArgumentsProvider {
-
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) throws Exception {
-      GetConnectionFunction getConnection = DataSource::getConnection;
-      GetConnectionFunction getConnectionWithUserAndPass = ds -> ds.getConnection(null, null);
-      return Stream.of(arguments(getConnection), arguments(getConnectionWithUserAndPass));
-    }
+  private static Stream<Arguments> getConnectionMethodsArguments() {
+    GetConnectionFunction getConnection = DataSource::getConnection;
+    GetConnectionFunction getConnectionWithUserAndPass = ds -> ds.getConnection(null, null);
+    return Stream.of(arguments(getConnection), arguments(getConnectionWithUserAndPass));
   }
 
   @FunctionalInterface

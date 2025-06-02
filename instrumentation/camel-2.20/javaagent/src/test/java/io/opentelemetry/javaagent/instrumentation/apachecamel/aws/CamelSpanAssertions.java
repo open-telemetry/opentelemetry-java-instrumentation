@@ -22,7 +22,7 @@ class CamelSpanAssertions {
     span.hasName(spanName)
         .hasKind(SpanKind.INTERNAL)
         .hasNoParent()
-        .hasAttribute(stringKey("camel.uri"), "direct://" + spanName);
+        .hasAttributesSatisfyingExactly(equalTo(stringKey("camel.uri"), "direct://" + spanName));
   }
 
   static SpanDataAssert sqsProduce(SpanDataAssert span, String queueName) {
@@ -42,7 +42,7 @@ class CamelSpanAssertions {
   static SpanDataAssert sqsConsume(SpanDataAssert span, String queueName, int delay) {
     return span.hasName(queueName)
         .hasKind(SpanKind.INTERNAL)
-        .hasAttributesSatisfying(
+        .hasAttributesSatisfyingExactly(
             equalTo(
                 stringKey("camel.uri"),
                 "aws-sqs://" + queueName + "?amazonSQSClient=%23sqsClient&delay=" + delay),
@@ -54,7 +54,7 @@ class CamelSpanAssertions {
   static SpanDataAssert snsPublish(SpanDataAssert span, String topicName) {
     return span.hasName(topicName)
         .hasKind(SpanKind.INTERNAL)
-        .hasAttributesSatisfying(
+        .hasAttributesSatisfyingExactly(
             equalTo(
                 stringKey("camel.uri"), "aws-sns://" + topicName + "?amazonSNSClient=%23snsClient"),
             equalTo(MESSAGING_DESTINATION_NAME, topicName));
@@ -63,7 +63,7 @@ class CamelSpanAssertions {
   static SpanDataAssert s3(SpanDataAssert span, String bucketName) {
     return span.hasName("aws-s3")
         .hasKind(SpanKind.INTERNAL)
-        .hasAttributesSatisfying(
+        .hasAttributesSatisfyingExactly(
             equalTo(
                 stringKey("camel.uri"), "aws-s3://" + bucketName + "?amazonS3Client=%23s3Client"));
   }

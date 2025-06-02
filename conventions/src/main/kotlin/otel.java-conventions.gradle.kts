@@ -161,7 +161,7 @@ dependencies {
   compileOnly("com.google.errorprone:error_prone_annotations")
 
   codenarc("org.codenarc:CodeNarc:3.6.0")
-  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.24"))
+  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.25"))
 
   modules {
     // checkstyle uses the very old google-collections which causes Java 9 module conflict with
