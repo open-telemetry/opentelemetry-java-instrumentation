@@ -30,9 +30,10 @@ public class AccessEventMapper {
   private void mapLoggingEvent(LogRecordBuilder builder, IAccessEvent accessEvent) {
     URI uri = null;
     try {
-      uri = new URI(accessEvent.getRequestURI());
+      uri = new URI(accessEvent.getRequest().getRequestURL().toString());
     } catch (URISyntaxException ignored) {
     }
+
     builder
         .setSeverity(Severity.UNDEFINED_SEVERITY_NUMBER)
         .setEventName(ACCESS_EVENT_NAME)

@@ -4,9 +4,9 @@ plugins {
 
 muzzle {
   pass {
-    group.set("ch.qos.logback")
-    module.set("logback-access")
-    versions.set("[1.4.7,)")
+    group.set("ch.qos.logback.access")
+    module.set("jetty12")
+    versions.set("[2.0.0")
     assertInverse.set(true)
   }
 }
@@ -25,7 +25,7 @@ dependencies {
   }
 
   if (findProperty("testLatestDeps") as Boolean) {
-    testImplementation("ch.qos.logback:logback-access:latest.release")
+    testImplementation("ch.qos.logback.access:jetty12:latest.release")
   } else {
     testImplementation("ch.qos.logback.access:jetty12") {
       version {
@@ -40,9 +40,4 @@ dependencies {
   }
 
   compileOnly(project(":javaagent-bootstrap"))
-
-  testImplementation("org.awaitility:awaitility")
-}
-
-tasks.withType<Test>().configureEach {
 }
