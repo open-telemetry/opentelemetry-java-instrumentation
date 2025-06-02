@@ -41,3 +41,7 @@ dependencies {
 
   compileOnly(project(":javaagent-bootstrap"))
 }
+
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_17)
+}
