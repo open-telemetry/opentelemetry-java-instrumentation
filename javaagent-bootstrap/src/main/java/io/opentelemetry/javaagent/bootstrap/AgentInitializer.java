@@ -6,11 +6,15 @@
 package io.opentelemetry.javaagent.bootstrap;
 
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.internal.ServiceLoaderUtil;
 import java.io.File;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Constructor;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ServiceLoader;
 import javax.annotation.Nullable;
 
 /**
@@ -62,6 +66,7 @@ public final class AgentInitializer {
           public Void run() throws Exception {
             agentClassLoader = createAgentClassLoader("inst", javaagentFile);
             agentStarter = createAgentStarter(agentClassLoader, inst, javaagentFile);
+            setLoaderFunction();
             if (!fromPremain || !delayAgentStart()) {
               agentStarter.start();
               agentStarted = true;
@@ -210,6 +215,19 @@ public final class AgentInitializer {
         starterClass.getDeclaredConstructor(Instrumentation.class, File.class, boolean.class);
     return (AgentStarter)
         constructor.newInstance(instrumentation, javaagentFile, isSecurityManagerSupportEnabled);
+  }
+
+  /** Sets a custom loader function for the ServiceLoaderUtil to use the agentClassLoader. */
+  private static void setLoaderFunction() {
+    ServiceLoaderUtil.setLoaderFunction(
+        clazz -> {
+          List<Object> instances = new ArrayList<>();
+          ServiceLoader<?> serviceLoader = ServiceLoader.load(clazz, agentClassLoader);
+          for (Object instance : serviceLoader) {
+            instances.add(instance);
+          }
+          return instances;
+        });
   }
 
   private AgentInitializer() {}

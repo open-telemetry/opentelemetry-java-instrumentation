@@ -24,13 +24,13 @@ import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProp
 import io.opentelemetry.instrumentation.api.internal.InstrumenterBuilderAccess;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
+import io.opentelemetry.instrumentation.api.internal.ServiceLoaderUtil;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
@@ -77,10 +77,9 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       INSTRUMENTATION_CUSTOMIZER_MAP = new HashMap<>();
 
   static {
-    ServiceLoader<InstrumentationCustomizer> serviceLoader =
-        ServiceLoader.load(InstrumentationCustomizer.class);
-
-    for (InstrumentationCustomizer customizer : serviceLoader) {
+    List<InstrumentationCustomizer> customizers =
+        ServiceLoaderUtil.load(InstrumentationCustomizer.class);
+    for (InstrumentationCustomizer customizer : customizers) {
       INSTRUMENTATION_CUSTOMIZER_MAP
           .computeIfAbsent(customizer.instrumentationNamePredicate(), k -> new ArrayList<>())
           .add(customizer);
