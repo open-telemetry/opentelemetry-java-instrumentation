@@ -24,7 +24,7 @@
 
 ### 📈 Enhancements
 
-- Added new Tomcat metrics: `tomcat.session.active.limit`, `tomcat.thread.limit`
+- Improved Tomcat metrics alignment to semconv (see Migration notes above for details) and added new Tomcat metrics: `tomcat.session.active.limit`, `tomcat.thread.limit`
   ([#13650](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13650))
 
 
