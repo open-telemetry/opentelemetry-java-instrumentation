@@ -35,12 +35,10 @@ import org.apache.jasper.JasperException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
@@ -103,7 +101,7 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
   }
 
   @ParameterizedTest(name = "GET {0}")
-  @ArgumentsSource(NonErroneousArgs.class)
+  @MethodSource("nonErroneousArgs")
   void testNonErroneousGet(
       String testName, String jspFileName, String jspClassName, String jspClassNamePrefix) {
     AggregatedHttpResponse res = client.get(jspFileName).aggregate().join();
@@ -137,14 +135,11 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                             .build())));
   }
 
-  static class NonErroneousArgs implements ArgumentsProvider {
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(
-          Arguments.of("no java jsp", "/nojava.jsp", "nojava_jsp", ""),
-          Arguments.of("basic loop jsp", "/common/loop.jsp", "loop_jsp", "common."),
-          Arguments.of("invalid HTML markup", "/invalidMarkup.jsp", "invalidMarkup_jsp", ""));
-    }
+  private static Stream<Arguments> nonErroneousArgs() {
+    return Stream.of(
+        Arguments.of("no java jsp", "/nojava.jsp", "nojava_jsp", ""),
+        Arguments.of("basic loop jsp", "/common/loop.jsp", "loop_jsp", "common."),
+        Arguments.of("invalid HTML markup", "/invalidMarkup.jsp", "invalidMarkup_jsp", ""));
   }
 
   @Test
@@ -236,7 +231,7 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
   }
 
   @ParameterizedTest(name = "GET jsp with {0}")
-  @ArgumentsSource(ErroneousRuntimeErrorsArgs.class)
+  @MethodSource("erroneousRuntimeErrorsArgs")
   void testErroneousRuntimeErrorsGet(
       String testName,
       String jspFileName,
@@ -277,25 +272,22 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                             .build())));
   }
 
-  static class ErroneousRuntimeErrorsArgs implements ArgumentsProvider {
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(
-          Arguments.of(
-              "java runtime error",
-              "/runtimeError.jsp",
-              "runtimeError_jsp",
-              ArithmeticException.class,
-              false),
-          Arguments.of(
-              "invalid write",
-              "/invalidWrite.jsp",
-              "invalidWrite_jsp",
-              IndexOutOfBoundsException.class,
-              true),
-          Arguments.of(
-              "invalid write", "/getQuery.jsp", "getQuery_jsp", NullPointerException.class, true));
-    }
+  private static Stream<Arguments> erroneousRuntimeErrorsArgs() {
+    return Stream.of(
+        Arguments.of(
+            "java runtime error",
+            "/runtimeError.jsp",
+            "runtimeError_jsp",
+            ArithmeticException.class,
+            false),
+        Arguments.of(
+            "invalid write",
+            "/invalidWrite.jsp",
+            "invalidWrite_jsp",
+            IndexOutOfBoundsException.class,
+            true),
+        Arguments.of(
+            "invalid write", "/getQuery.jsp", "getQuery_jsp", NullPointerException.class, true));
   }
 
   @Test
@@ -397,7 +389,7 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(CompileErrorsArgs.class)
+  @MethodSource("compileErrorsArgs")
   void testCompileErrorShouldNotProduceRenderTracesAndSpans(
       String jspFileName, String jspClassName, String jspClassNamePrefix) {
     AggregatedHttpResponse res = client.get(jspFileName).aggregate().join();
@@ -442,14 +434,11 @@ class JspInstrumentationBasicTests extends AbstractHttpServerUsingTest<Tomcat> {
                                 "org.apache.jasper.compiler.JDTCompiler"))));
   }
 
-  static class CompileErrorsArgs implements ArgumentsProvider {
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(
-          Arguments.of("/compileError.jsp", "compileError_jsp", ""),
-          Arguments.of(
-              "/forwards/forwardWithCompileError.jsp", "forwardWithCompileError_jsp", "forwards."));
-    }
+  private static Stream<Arguments> compileErrorsArgs() {
+    return Stream.of(
+        Arguments.of("/compileError.jsp", "compileError_jsp", ""),
+        Arguments.of(
+            "/forwards/forwardWithCompileError.jsp", "forwardWithCompileError_jsp", "forwards."));
   }
 
   @ParameterizedTest

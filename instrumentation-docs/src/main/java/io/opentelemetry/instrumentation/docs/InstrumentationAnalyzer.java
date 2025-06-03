@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.docs.parsers.GradleParser.parseGr
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 import io.opentelemetry.instrumentation.docs.internal.DependencyInfo;
+import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
@@ -84,6 +85,14 @@ class InstrumentationAnalyzer {
           throw e;
         }
       }
+
+      String emittedMetrics = fileManager.getMetrics(module.getSrcPath());
+      if (emittedMetrics != null) {
+        EmittedMetrics metrics = YamlHelper.emittedMetricsParser(emittedMetrics);
+        if (metrics != null && metrics.getMetrics() != null) {
+          module.setMetrics(metrics.getMetrics());
+        }
+      }
     }
     return modules;
   }
@@ -92,6 +101,10 @@ class InstrumentationAnalyzer {
     Map<InstrumentationType, Set<String>> versions = new HashMap<>();
     for (String file : files) {
       String fileContents = fileManager.readFileToString(file);
+      if (fileContents == null) {
+        continue;
+      }
+
       DependencyInfo results = null;
 
       if (file.contains("/javaagent/")) {

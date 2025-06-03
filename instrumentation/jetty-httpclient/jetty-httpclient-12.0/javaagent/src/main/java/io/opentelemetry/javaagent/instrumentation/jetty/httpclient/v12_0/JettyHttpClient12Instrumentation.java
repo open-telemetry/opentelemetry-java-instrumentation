@@ -17,6 +17,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.jetty.httpclient.v12_0.internal.JettyClientTracingListener;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -45,63 +46,68 @@ public class JettyHttpClient12Instrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class JettyHttpClient12SendAdvice {
 
+    public static class AdviceLocals {
+      public final Context context;
+      public final Scope scope;
+
+      public AdviceLocals(Context context, Scope scope) {
+        this.context = context;
+        this.scope = scope;
+      }
+    }
+
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnterSend(
-        @Advice.This HttpRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+    public static AdviceLocals onEnterSend(@Advice.This HttpRequest request) {
       // start span
       Context parentContext = Context.current();
-      context = JettyClientTracingListener.handleRequest(parentContext, request, instrumenter());
+      Context context =
+          JettyClientTracingListener.handleRequest(parentContext, request, instrumenter());
       if (context == null) {
-        return;
+        return null;
       }
       // set context for responseListeners
       request.attribute(JETTY_CLIENT_CONTEXT_KEY, parentContext);
 
-      scope = context.makeCurrent();
+      return new AdviceLocals(context, context.makeCurrent());
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExitSend(
         @Advice.This HttpRequest request,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
+        @Advice.Enter @Nullable AdviceLocals locals) {
+
+      if (locals == null) {
         return;
       }
 
       // not ending span here unless error, span ended in the interceptor
-      scope.close();
+      locals.scope.close();
       if (throwable != null) {
-        instrumenter().end(context, request, null, throwable);
+        instrumenter().end(locals.context, request, null, throwable);
       }
     }
   }
 
   @SuppressWarnings("unused")
   public static class JettyHttpClient12NotifyAdvice {
+
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnterNotify(
-        @Advice.This HttpRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      context = (Context) request.getAttributes().get(JETTY_CLIENT_CONTEXT_KEY);
+    public static Scope onEnterNotify(@Advice.This HttpRequest request) {
+      Context context = (Context) request.getAttributes().get(JETTY_CLIENT_CONTEXT_KEY);
       if (context == null) {
-        return;
+        return null;
       }
-      scope = context.makeCurrent();
+      return context.makeCurrent();
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-    public static void onExitNotify(
-        @Advice.Local("otelContext") Context context, @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
+    public static void onExitNotify(@Advice.Enter Scope scope) {
+      if (scope != null) {
+        scope.close();
       }
-
-      scope.close();
     }
   }
 }

@@ -43,30 +43,9 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         if: steps.unzip-patch.outputs.exists == 'true'
         with:
+          repository: "${{ github.event.workflow_run.head_repository.full_name }}"
+          ref: "${{ github.event.workflow_run.head_branch }}"
           token: ${{ steps.otelbot-token.outputs.token }}
-
-      - id: get-pr
-        if: steps.unzip-patch.outputs.exists == 'true'
-        name: Get PR
-        env:
-          PR_BRANCH: |-
-            ${{
-              (github.event.workflow_run.head_repository.owner.login != github.event.workflow_run.repository.owner.login)
-                && format('{0}:{1}', github.event.workflow_run.head_repository.owner.login, github.event.workflow_run.head_branch)
-                || github.event.workflow_run.head_branch
-            }}
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          echo gh pr view "${PR_BRANCH}" --json number --jq .number
-          number=$(gh pr view "${PR_BRANCH}" --json number --jq .number)
-          echo $number
-          echo "number=$number" >> $GITHUB_OUTPUT
-
-      - name: Check out PR branch
-        if: steps.unzip-patch.outputs.exists == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh pr checkout ${{ steps.get-pr.outputs.number }}
 
       - name: Use CLA approved github bot
         if: steps.unzip-patch.outputs.exists == 'true'
@@ -83,14 +62,34 @@ jobs:
           git commit -a -m "./gradlew spotlessApply"
           git push
 
+      - id: get-pr
+        if: steps.unzip-patch.outputs.exists == 'true'
+        name: Get PR
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          PR_BRANCH: |-
+            ${{
+              (github.event.workflow_run.head_repository.owner.login != github.event.workflow_run.repository.owner.login)
+                && format('{0}:{1}', github.event.workflow_run.head_repository.owner.login, github.event.workflow_run.head_branch)
+                || github.event.workflow_run.head_branch
+            }}
+        run: |
+          number=$(gh pr view "$PR_BRANCH" --json number --jq .number)
+          echo "number=$number" >> $GITHUB_OUTPUT
+
       - if: steps.unzip-patch.outputs.exists == 'true' && success()
         env:
+          GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          PR_NUMBER: ${{ steps.get-pr.outputs.number }}
         run: |
-          gh pr comment ${{ steps.get-pr.outputs.number }} --body "🔧 The result from spotlessApply was committed to the PR branch."
+          gh pr comment $PR_NUMBER --body "🔧 The result from spotlessApply was committed to the PR branch."
 
       - if: steps.unzip-patch.outputs.exists == 'true' && failure()
         env:
+          GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          PR_NUMBER: ${{ steps.get-pr.outputs.number }}
         run: |
-          gh pr comment ${{ steps.get-pr.outputs.number }} --body "❌ The result from spotlessApply could not be committed to the PR branch, see logs: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID."
+          gh pr comment $PR_NUMBER --body "❌ The result from spotlessApply could not be committed to the PR branch, see logs: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID."
