@@ -36,7 +36,7 @@ class TestAccessLogWithJetty {
   static final int RANDOM_SERVER_PORT = RandomUtil.getRandomServerPort();
 
   @BeforeEach
-  public void startServer() throws Exception {
+  void startServer() throws Exception {
     requestLogImpl = new RequestLogImpl();
     jettyFixture = new JettyServer(requestLogImpl, RANDOM_SERVER_PORT);
     jettyFixture.start();
@@ -44,7 +44,7 @@ class TestAccessLogWithJetty {
   }
 
   @AfterEach
-  public void stopServer() throws Exception {
+  void stopServer() throws Exception {
     if (jettyFixture != null) {
       jettyFixture.stop();
     }
