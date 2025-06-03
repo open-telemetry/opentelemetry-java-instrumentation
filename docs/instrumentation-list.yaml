@@ -426,8 +426,8 @@ libraries:
         type: STRING
   camel:
   - name: camel-2.20
-    description: This instrumentation provides support for Apache Camel and generates
-      spans for each route execution.
+    description: |
+      This instrumentation provides tracing for Apache Camel 2.x applications by generating spans for each route execution. For Camel versions 3.5 and newer, users should instead use the native 'camel-opentelemetry' component provided directly by the Camel project.
     source_path: instrumentation/camel-2.20
     scope:
       name: io.opentelemetry.camel-2.20
@@ -502,7 +502,7 @@ libraries:
   couchbase:
   - name: couchbase-3.1.6
     description: |
-      Couchbase instrumentation is owned upstream. This Couchbase instrumentation manipulates the constructor of the CoreEnvironment.Builder class and sets the Couchbase requestTracer to use an OpenTelemetryRequestTracer that integrates with the OpenTelemetry agent.
+      Couchbase instrumentation is owned by the Couchbase project. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
     source_path: instrumentation/couchbase/couchbase-3.1.6
     scope:
       name: io.opentelemetry.couchbase-3.1.6
@@ -537,7 +537,7 @@ libraries:
       default: false
   - name: couchbase-3.2
     description: |
-      Couchbase instrumentation is owned upstream. This Couchbase instrumentation manipulates the constructor of the CoreEnvironment.Builder class and sets the Couchbase requestTracer to use an OpenTelemetryRequestTracer that integrates with the OpenTelemetry agent.
+      Couchbase instrumentation is owned by the Couchbase project. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
     source_path: instrumentation/couchbase/couchbase-3.2
     scope:
       name: io.opentelemetry.couchbase-3.2
@@ -546,7 +546,7 @@ libraries:
       - com.couchbase.client:java-client:[3.2.0,)
   - name: couchbase-3.1
     description: |
-      Couchbase instrumentation is owned upstream. This Couchbase instrumentation manipulates the constructor of the CoreEnvironment.Builder class and sets the Couchbase requestTracer to use an OpenTelemetryRequestTracer that integrates with the OpenTelemetry agent.
+      Couchbase instrumentation is owned by the Couchbase project. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
     source_path: instrumentation/couchbase/couchbase-3.1
     scope:
       name: io.opentelemetry.couchbase-3.1
