@@ -73,6 +73,7 @@ public class OpenTelemetryAutoConfiguration {
 
   @Configuration
   @Conditional(SdkEnabled.class)
+  @DependsOn("otelMapConverter")
   @ConditionalOnMissingBean(OpenTelemetry.class)
   static class OpenTelemetrySdkConfig {
 
@@ -136,6 +137,7 @@ public class OpenTelemetryAutoConfiguration {
   }
 
   @Configuration
+  @DependsOn("otelMapConverter")
   @ConditionalOnMissingBean(OpenTelemetry.class)
   @ConditionalOnProperty(name = "otel.sdk.disabled", havingValue = "true")
   static class DisabledOpenTelemetrySdkConfig {
