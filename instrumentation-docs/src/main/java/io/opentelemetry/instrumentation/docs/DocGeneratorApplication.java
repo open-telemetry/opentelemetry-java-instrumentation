@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -28,7 +27,10 @@ public class DocGeneratorApplication {
 
   public static void main(String[] args) throws IOException {
     // Identify path to repo so we can use absolute paths
-    String baseRepoPath = getRepoPath();
+    String baseRepoPath = System.getProperty("basePath");
+    if (baseRepoPath == null) {
+      baseRepoPath = "./";
+    }
 
     FileManager fileManager = new FileManager(baseRepoPath);
     List<InstrumentationModule> modules = new InstrumentationAnalyzer(fileManager).analyze();
@@ -45,16 +47,6 @@ public class DocGeneratorApplication {
     }
 
     printStats(modules);
-  }
-
-  private static String getRepoPath() throws IOException {
-    URL resource = DocGeneratorApplication.class.getClassLoader().getResource("");
-    if (resource == null) {
-      throw new IOException("Error getting classloader location");
-    }
-    return Paths.get(resource.getPath())
-        .toString()
-        .replace("/instrumentation-docs/build/classes/java/main", "");
   }
 
   private static void printStats(List<InstrumentationModule> modules) {
