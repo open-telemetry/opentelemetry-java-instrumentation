@@ -45,7 +45,6 @@ public class VertxReactiveWebServer extends AbstractVerticle {
   public static final String TEST_REQUEST_ID_ATTRIBUTE = "test.request.id";
 
   private static final String CONFIG_HTTP_SERVER_PORT = "http.server.port";
-  // private static JDBCClient client;
   private static io.vertx.reactivex.sqlclient.Pool client;
 
   public static Vertx start(int port)
@@ -101,7 +100,6 @@ public class VertxReactiveWebServer extends AbstractVerticle {
               .requestHandler(router)
               .listen(port)
               .onComplete(it -> startPromise.complete());
-          ;
         });
   }
 
