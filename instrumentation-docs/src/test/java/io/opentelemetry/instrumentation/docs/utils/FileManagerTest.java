@@ -24,7 +24,7 @@ class FileManagerTest {
 
   @BeforeEach
   void setUp() {
-    fileManager = new FileManager(tempDir.toString());
+    fileManager = new FileManager(tempDir.toString() + "/");
   }
 
   @Test

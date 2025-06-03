@@ -30,6 +30,8 @@ public class DocGeneratorApplication {
     String baseRepoPath = System.getProperty("basePath");
     if (baseRepoPath == null) {
       baseRepoPath = "./";
+    } else {
+      baseRepoPath += "/";
     }
 
     FileManager fileManager = new FileManager(baseRepoPath);
@@ -37,8 +39,7 @@ public class DocGeneratorApplication {
 
     try (BufferedWriter writer =
         Files.newBufferedWriter(
-            Paths.get(baseRepoPath + "/docs/instrumentation-list.yaml"),
-            Charset.defaultCharset())) {
+            Paths.get(baseRepoPath + "docs/instrumentation-list.yaml"), Charset.defaultCharset())) {
       writer.write("# This file is generated and should not be manually edited.\n");
       writer.write("# The structure and contents are a work in progress and subject to change.\n");
       writer.write(

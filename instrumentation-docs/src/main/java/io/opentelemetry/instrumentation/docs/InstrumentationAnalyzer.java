@@ -63,11 +63,7 @@ class InstrumentationAnalyzer {
   }
 
   private static String sanitizePathName(String rootPath, String path) {
-    String result = path.replace(rootPath, "").replace("/javaagent", "").replace("/library", "");
-    if (result.startsWith("/")) {
-      result = result.substring(1);
-    }
-    return result;
+    return path.replace(rootPath, "").replace("/javaagent", "").replace("/library", "");
   }
 
   /**

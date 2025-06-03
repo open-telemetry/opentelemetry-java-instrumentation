@@ -21,7 +21,7 @@ public record FileManager(String rootDir) {
   private static final Logger logger = Logger.getLogger(FileManager.class.getName());
 
   public List<InstrumentationPath> getInstrumentationPaths() throws IOException {
-    Path rootPath = Paths.get(rootDir + "/instrumentation");
+    Path rootPath = Paths.get(rootDir + "instrumentation");
 
     try (Stream<Path> walk = Files.walk(rootPath)) {
       return walk.filter(Files::isDirectory)
@@ -77,7 +77,7 @@ public record FileManager(String rootDir) {
   }
 
   public List<String> findBuildGradleFiles(String instrumentationDirectory) {
-    Path rootPath = Paths.get(rootDir + "/" + instrumentationDirectory);
+    Path rootPath = Paths.get(rootDir + instrumentationDirectory);
 
     try (Stream<Path> walk = Files.walk(rootPath)) {
       return walk.filter(Files::isRegularFile)
@@ -95,7 +95,7 @@ public record FileManager(String rootDir) {
 
   @Nullable
   public String getMetaDataFile(String instrumentationDirectory) {
-    String metadataFile = rootDir + "/" + instrumentationDirectory + "/metadata.yaml";
+    String metadataFile = rootDir + instrumentationDirectory + "/metadata.yaml";
     if (Files.exists(Paths.get(metadataFile))) {
       return readFileToString(metadataFile);
     }
