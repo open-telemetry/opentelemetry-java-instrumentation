@@ -49,6 +49,8 @@ graalvmNative {
     resources.autodetect()
 
     agent {
+      // see https://github.com/junit-team/junit5/wiki/Upgrading-to-JUnit-5.13
+      // should not be needed after updating native build tools to 0.11.0
       val initializeAtBuildTime = listOf(
         "org.junit.jupiter.api.DisplayNameGenerator\$IndicativeSentences",
         "org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor\$ClassInfo",
