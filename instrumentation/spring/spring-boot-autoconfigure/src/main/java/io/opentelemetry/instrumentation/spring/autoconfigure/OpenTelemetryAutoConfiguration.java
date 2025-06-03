@@ -59,7 +59,7 @@ public class OpenTelemetryAutoConfiguration {
 
   @Bean
   @ConfigurationPropertiesBinding
-  public OtelMapConverter otelMapConverter() {
+  OtelMapConverter otelMapConverter() {
     // This is needed for otlp exporter headers and OtelResourceProperties.
 
     // We need this converter, even if the SDK is disabled,
