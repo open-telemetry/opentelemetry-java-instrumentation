@@ -7,6 +7,9 @@ package io.opentelemetry.instrumentation.api.internal;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
+import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import java.util.function.Predicate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +22,7 @@ class InstrumentationCustomizerTest {
 
   @Mock private AttributesExtractor<Object, Object> attributesExtractor;
   @Mock private OperationMetrics operationMetrics;
+  @Mock private ContextCustomizer<Object> contextCustomizer;
 
   private InstrumentationCustomizer customizer;
 
@@ -27,6 +31,11 @@ class InstrumentationCustomizerTest {
   void setUp() {
     customizer =
         new InstrumentationCustomizer() {
+          @Override
+          public <REQUEST> ContextCustomizer<REQUEST> getContextCustomizer() {
+            return (ContextCustomizer<REQUEST>) contextCustomizer;
+          }
+
           @Override
           public Predicate<String> instrumentationNamePredicate() {
             return name -> name.startsWith("test.instrumentation");
@@ -43,6 +52,11 @@ class InstrumentationCustomizerTest {
             return operationMetrics;
           }
         };
+  }
+
+  @Test
+  void testGetContextCustomizer() {
+    assertThat(customizer.getContextCustomizer()).isSameAs(contextCustomizer);
   }
 
   @Test
