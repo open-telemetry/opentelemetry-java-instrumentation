@@ -55,7 +55,7 @@ class TestAccessLogWithJetty {
       AgentInstrumentationExtension.create();
 
   @Test
-  void testT() throws IOException {
+  void testJettyServerAccessLog() throws IOException {
     String path = "12312321";
     URL url = new URL("http://localhost:" + RANDOM_SERVER_PORT + "/" + path);
     HttpURLConnection connection = (HttpURLConnection) url.openConnection();
