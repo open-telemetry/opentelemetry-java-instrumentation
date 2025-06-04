@@ -87,6 +87,18 @@ testing {
         // Used by byte-buddy but not brought in as a transitive dependency.
         compileOnly("com.google.code.findbugs:annotations")
       }
+      targets {
+        all {
+          testTask.configure {
+            filter {
+              // Helper class used in test that refers to a class that is missing from the test
+              // classpath. We need to exclude it to avoid junit failing while it is searching for
+              // test classes.
+              excludeTestsMatching("MissingTypeTest\$SomeClass")
+            }
+          }
+        }
+      }
     }
 
     val testPatchBytecodeVersion by registering(JvmTestSuite::class) {

@@ -24,7 +24,7 @@ class FileManagerTest {
 
   @BeforeEach
   void setUp() {
-    fileManager = new FileManager(tempDir.toString());
+    fileManager = new FileManager(tempDir.toString() + "/");
   }
 
   @Test
@@ -51,14 +51,5 @@ class FileManagerTest {
             FileManager.isValidInstrumentationPath(
                 "instrumentation/elasticsearch/elasticsearch-rest-common-5.0"))
         .isFalse();
-  }
-
-  @Test
-  void testFindBuildGradleFiles() throws IOException {
-    Path gradleFile = Files.createFile(tempDir.resolve("build.gradle.kts"));
-    Path nonGradleFile = Files.createFile(tempDir.resolve("gradle.properties"));
-    List<String> gradleFiles = fileManager.findBuildGradleFiles(tempDir.toString());
-    assertThat(gradleFiles).contains(gradleFile.toString());
-    assertThat(gradleFiles).doesNotContain(nonGradleFile.toString());
   }
 }
