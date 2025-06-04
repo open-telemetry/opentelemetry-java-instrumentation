@@ -44,7 +44,7 @@ dependencies {
 
   testImplementation("org.assertj:assertj-core:3.27.3")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.12.2"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.13.0"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")

@@ -41,7 +41,7 @@ class InstrumentationAnalyzerTest {
                 InstrumentationType.LIBRARY));
 
     List<InstrumentationModule> modules =
-        InstrumentationAnalyzer.convertToInstrumentationModules(paths);
+        InstrumentationAnalyzer.convertToInstrumentationModules("test", paths);
 
     assertThat(modules.size()).isEqualTo(2);
 
