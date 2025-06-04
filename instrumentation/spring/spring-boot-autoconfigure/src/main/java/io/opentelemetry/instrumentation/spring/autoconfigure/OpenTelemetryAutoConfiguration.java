@@ -116,7 +116,7 @@ public class OpenTelemetryAutoConfiguration {
     public OpenTelemetry openTelemetry(
         AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
       logger.info(
-          "OpenTelemetry Spring Boot starter has been started: {}",
+          "OpenTelemetry Spring Boot starter ({}) has been started",
           EmbeddedInstrumentationProperties.findVersion(
               "io.opentelemetry.spring-boot-autoconfigure"));
 
