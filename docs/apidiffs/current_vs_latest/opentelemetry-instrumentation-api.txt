@@ -1,5 +1,5 @@
 Comparing source compatibility of opentelemetry-instrumentation-api-2.17.0-SNAPSHOT.jar against opentelemetry-instrumentation-api-2.16.0.jar
-+++  NEW INTERFACE: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.instrumenter.InstrumentationCustomizer  (not serializable)
++++  NEW INTERFACE: PUBLIC(+) ABSTRACT(+) io.opentelemetry.instrumentation.api.internal.InstrumentationCustomizer  (not serializable)
 	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
 	+++  NEW SUPERCLASS: java.lang.Object
 	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor<REQUEST,RESPONSE> getAttributesExtractor()
