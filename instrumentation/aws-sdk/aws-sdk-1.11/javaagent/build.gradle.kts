@@ -47,6 +47,8 @@ dependencies {
   testLibrary("com.amazonaws:aws-java-sdk-kinesis:1.11.106")
   testLibrary("com.amazonaws:aws-java-sdk-dynamodb:1.11.106")
   testLibrary("com.amazonaws:aws-java-sdk-sns:1.11.106")
+  testLibrary("com.amazonaws:aws-java-sdk-stepfunctions:1.11.106")
+  testLibrary("com.amazonaws:aws-java-sdk-lambda:1.11.106")
 
   testImplementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
 

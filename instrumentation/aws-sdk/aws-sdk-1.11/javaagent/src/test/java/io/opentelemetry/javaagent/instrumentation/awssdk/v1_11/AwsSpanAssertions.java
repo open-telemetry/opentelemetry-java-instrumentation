@@ -90,6 +90,7 @@ class AwsSpanAssertions {
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
             equalTo(MESSAGING_DESTINATION_NAME, topicArn),
+            satisfies(stringKey("aws.sns.topic.arn"), v -> v.isInstanceOf(String.class)),
             satisfies(AWS_REQUEST_ID, v -> v.isInstanceOf(String.class)),
             equalTo(RPC_METHOD, rpcMethod),
             equalTo(RPC_SYSTEM, "aws-api"),
