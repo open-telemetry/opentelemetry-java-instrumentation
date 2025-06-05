@@ -3,28 +3,29 @@
 ## Unreleased
 
 ### Migration notes
-- Tomcat metric `http.server.tomcat.errorCount` --> `tomcat.error.count`
-  - attribute: `name` --> `tomcat.request.processor.name`
-  - type: Gauge --> Counter
-- Tomcat metric `http.server.tomcat.requestCount` --> `tomcat.request.count`
-  - attribute: `name` --> `tomcat.request.processor.name`
-  - type: Gauge --> Counter
-- Tomcat metric `http.server.tomcat.maxTime` --> `tomcat.request.duration.max`
-  - attribute: `name` --> `tomcat.request.processor.name`
-  - unit: `ms` --> `s`
-- Tomcat metric `http.server.tomcat.processingTime` --> `tomcat.request.duration.sum`
-  - attribute: `name` --> `tomcat.request.processor.name`
-  - unit: `ms` --> `s`
-- Tomcat metric `http.server.tomcat.traffic` --> `tomcat.network.io`
-  - attribute: `name` --> `tomcat.request.processor.name`, `direction` --> `network.io.direction`
-- Tomcat metric `http.server.tomcat.sessions.activeSessions` --> `tomcat.session.active.count`
-  - attribute: `context` --> `tomcat.context`
-- Tomcat metric `http.server.tomcat.threads` split into two metrics: `tomcat.thread.count` and `tomcat.thread.busy.count`
-  - attribute: `name` --> `tomcat.thread.pool.name`, `state` removed
+- Tomcat metrics definitions provided by JMX Metric Insight subsystem
+  - metric `http.server.tomcat.errorCount` --> `tomcat.error.count`
+    - attribute: `name` --> `tomcat.request.processor.name`
+    - type: Gauge --> Counter
+  - metric `http.server.tomcat.requestCount` --> `tomcat.request.count`
+    - attribute: `name` --> `tomcat.request.processor.name`
+    - type: Gauge --> Counter
+  - metric `http.server.tomcat.maxTime` --> `tomcat.request.duration.max`
+    - attribute: `name` --> `tomcat.request.processor.name`
+    - unit: `ms` --> `s`
+  - metric `http.server.tomcat.processingTime` --> `tomcat.request.duration.sum`
+    - attribute: `name` --> `tomcat.request.processor.name`
+    - unit: `ms` --> `s`
+  - metric `http.server.tomcat.traffic` --> `tomcat.network.io`
+    - attribute: `name` --> `tomcat.request.processor.name`, `direction` --> `network.io.direction`
+  - metric `http.server.tomcat.sessions.activeSessions` --> `tomcat.session.active.count`
+    - attribute: `context` --> `tomcat.context`
+  - metric `http.server.tomcat.threads` split into two metrics: `tomcat.thread.count` and `tomcat.thread.busy.count`
+    - attribute: `name` --> `tomcat.thread.pool.name`, `state` removed
 
 ### 📈 Enhancements
 
-- Improved Tomcat metrics alignment to semconv (see Migration notes above for details) and added new Tomcat metrics: `tomcat.session.active.limit`, `tomcat.thread.limit`
+- **JMX Metric Insight**: improved Tomcat metrics alignment to semconv (see Migration notes above for details) and added new Tomcat metrics: `tomcat.session.active.limit`, `tomcat.thread.limit`
   ([#13650](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13650))
 
 
