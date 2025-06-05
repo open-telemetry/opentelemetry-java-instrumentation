@@ -25,17 +25,8 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    val testLatestDeps = findProperty("testLatestDeps") as Boolean
-    systemProperty("testLatestDeps", testLatestDeps)
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-
-    dependencies {
-      if (testLatestDeps) {
-        // This is only needed for 6.7.0, can be removed when 6.7.1 is released.
-        // See https://github.com/redis/lettuce/issues/3317
-        testLibrary("io.micrometer:micrometer-core:1.5.0")
-      }
-    }
   }
 
   val testStableSemconv by registering(Test::class) {
