@@ -14,7 +14,7 @@ muzzle {
 
 dependencies {
   library("org.springframework.pulsar:spring-pulsar:1.0.0")
-  implementation(project(":instrumentation:pulsar:pulsar-2.8:javaagent"))
+  implementation(project(":instrumentation:pulsar:pulsar-common:javaagent"))
 
   testInstrumentation(project(":instrumentation:pulsar:pulsar-2.8:javaagent"))
 
