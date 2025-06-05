@@ -51,8 +51,7 @@ public interface InstrumentationCustomizer {
    * @param <RESPONSE> the type of response object used by the instrumented library
    * @return an attributes extractor instance, or null if not applicable
    */
-  default <REQUEST, RESPONSE>
-      AttributesExtractor<? super REQUEST, ? super RESPONSE> getAttributesExtractor() {
+  default <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> getAttributesExtractor() {
     return null;
   }
 
@@ -63,7 +62,7 @@ public interface InstrumentationCustomizer {
    * @param <REQUEST> the type of request object used by the instrumented library
    * @return a context customizer instance, or null if not applicable
    */
-  default <REQUEST> ContextCustomizer<? super REQUEST> getContextCustomizer() {
+  default <REQUEST> ContextCustomizer<REQUEST> getContextCustomizer() {
     return null;
   }
 
@@ -74,7 +73,7 @@ public interface InstrumentationCustomizer {
    * @param <REQUEST> the type of request object used by the instrumented library
    * @return a customized {@link SpanNameExtractor}, or null if not applicable
    */
-  default <REQUEST> SpanNameExtractor<? super REQUEST> getSpanNameExtractor() {
+  default <REQUEST> SpanNameExtractor<REQUEST> getSpanNameExtractor() {
     return null;
   }
 }

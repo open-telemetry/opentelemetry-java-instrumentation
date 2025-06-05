@@ -46,18 +46,18 @@ class InstrumentationCustomizerTest {
 
           @Override
           public <REQUEST, RESPONSE>
-              AttributesExtractor<? super REQUEST, ? super RESPONSE> getAttributesExtractor() {
-            return (AttributesExtractor<? super REQUEST, ? super RESPONSE>) attributesExtractor;
+              AttributesExtractor<REQUEST, RESPONSE> getAttributesExtractor() {
+            return (AttributesExtractor<REQUEST, RESPONSE>) attributesExtractor;
           }
 
           @Override
-          public <REQUEST> ContextCustomizer<? super REQUEST> getContextCustomizer() {
-            return (ContextCustomizer<? super REQUEST>) contextCustomizer;
+          public <REQUEST> ContextCustomizer<REQUEST> getContextCustomizer() {
+            return (ContextCustomizer<REQUEST>) contextCustomizer;
           }
 
           @Override
-          public <REQUEST> SpanNameExtractor<? super REQUEST> getSpanNameExtractor() {
-            return (SpanNameExtractor<? super REQUEST>) spanNameExtractor;
+          public <REQUEST> SpanNameExtractor<REQUEST> getSpanNameExtractor() {
+            return (SpanNameExtractor<REQUEST>) spanNameExtractor;
           }
         };
   }
