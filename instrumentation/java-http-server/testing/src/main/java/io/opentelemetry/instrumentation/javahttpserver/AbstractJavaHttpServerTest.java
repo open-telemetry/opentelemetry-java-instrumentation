@@ -58,8 +58,6 @@ public abstract class AbstractJavaHttpServerTest extends AbstractHttpServerTest<
       try (OutputStream os = exchange.getResponseBody()) {
         os.write(bytes);
       }
-    } else {
-      exchange.getResponseBody().close();
     }
   }
 

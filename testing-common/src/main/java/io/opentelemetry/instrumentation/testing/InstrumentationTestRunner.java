@@ -18,12 +18,15 @@ import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
@@ -43,6 +46,7 @@ import org.awaitility.core.ConditionTimeoutException;
 public abstract class InstrumentationTestRunner {
 
   private final TestInstrumenters testInstrumenters;
+  protected Map<String, MetricData> metrics = new HashMap<>();
 
   protected InstrumentationTestRunner(OpenTelemetry openTelemetry) {
     testInstrumenters = new TestInstrumenters(openTelemetry);
@@ -50,7 +54,7 @@ public abstract class InstrumentationTestRunner {
 
   public abstract void beforeTestClass();
 
-  public abstract void afterTestClass();
+  public abstract void afterTestClass() throws IOException;
 
   public abstract void clearAllExportedData();
 
@@ -155,6 +159,10 @@ public abstract class InstrumentationTestRunner {
                         data ->
                             data.getInstrumentationScopeInfo().getName().equals(instrumentationName)
                                 && data.getName().equals(metricName))));
+
+    if (Boolean.getBoolean("collectMetadata")) {
+      collectEmittedMetrics(getExportedMetrics());
+    }
   }
 
   @SafeVarargs
@@ -172,6 +180,18 @@ public abstract class InstrumentationTestRunner {
                 .anySatisfy(metric -> assertions[index].accept(assertThat(metric)));
           }
         });
+
+    if (Boolean.getBoolean("collectMetadata")) {
+      collectEmittedMetrics(getExportedMetrics());
+    }
+  }
+
+  private void collectEmittedMetrics(List<MetricData> metrics) {
+    for (MetricData metric : metrics) {
+      if (!this.metrics.containsKey(metric.getName())) {
+        this.metrics.put(metric.getName(), metric);
+      }
+    }
   }
 
   public final List<LogRecordData> waitForLogRecords(int numberOfLogRecords) {

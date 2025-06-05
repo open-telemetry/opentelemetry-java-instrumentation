@@ -28,7 +28,7 @@ public final class JettyClientTelemetryBuilder {
 
   static {
     Experimental.internalSetEmitExperimentalTelemetry(
-        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientTelemetry(emit));
   }
 
   JettyClientTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -55,7 +55,7 @@ public final class JettyClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<? super Request, ? super Response> attributesExtractor) {
+      AttributesExtractor<Request, Response> attributesExtractor) {
     builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
@@ -105,7 +105,7 @@ public final class JettyClientTelemetryBuilder {
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public JettyClientTelemetryBuilder setSpanNameExtractor(
-      Function<SpanNameExtractor<? super Request>, ? extends SpanNameExtractor<? super Request>>
+      Function<SpanNameExtractor<Request>, SpanNameExtractor<Request>>
           spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;

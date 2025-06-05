@@ -75,11 +75,11 @@ public class RuleParser {
 
     String bean = (String) ruleYaml.remove("bean");
     if (bean != null) {
-      jmxRule.setBean(bean);
+      jmxRule.addBean(bean);
     }
     List<String> beans = (List<String>) ruleYaml.remove("beans");
     if (beans != null) {
-      jmxRule.setBeans(beans);
+      beans.forEach(jmxRule::addBean);
     }
     String prefix = (String) ruleYaml.remove("prefix");
     if (prefix != null) {
@@ -142,11 +142,18 @@ public class RuleParser {
     if (unit != null) {
       out.setUnit(unit);
     }
+    String sourceUnit = (String) metricStructureYaml.remove("sourceUnit");
+    if (sourceUnit != null) {
+      out.setSourceUnit(sourceUnit);
+    }
+
+    Boolean dropNegativeValues = (Boolean) metricStructureYaml.remove("dropNegativeValues");
+    out.setDropNegativeValues(dropNegativeValues);
   }
 
   private static void failOnExtraKeys(Map<String, Object> yaml) {
     if (!yaml.isEmpty()) {
-      throw new IllegalArgumentException("Unrecognized keys found: " + yaml.keySet());
+      throw new IllegalArgumentException("Unrecognized key(s) found: " + yaml.keySet());
     }
   }
 

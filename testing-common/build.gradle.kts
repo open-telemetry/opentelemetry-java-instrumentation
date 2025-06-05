@@ -43,6 +43,7 @@ dependencies {
   api("org.junit.jupiter:junit-jupiter-params")
 
   api("io.opentelemetry:opentelemetry-api")
+  compileOnly("io.opentelemetry:opentelemetry-api-incubator")
   api("io.opentelemetry:opentelemetry-sdk")
   api("io.opentelemetry:opentelemetry-sdk-testing")
   api("io.opentelemetry.semconv:opentelemetry-semconv-incubating")
@@ -51,7 +52,6 @@ dependencies {
   api("org.assertj:assertj-core")
   // Needs to be api dependency due to Spock restriction.
   api("org.awaitility:awaitility")
-  api("com.google.guava:guava")
   api("org.mockito:mockito-core")
   api("org.slf4j:slf4j-api")
 

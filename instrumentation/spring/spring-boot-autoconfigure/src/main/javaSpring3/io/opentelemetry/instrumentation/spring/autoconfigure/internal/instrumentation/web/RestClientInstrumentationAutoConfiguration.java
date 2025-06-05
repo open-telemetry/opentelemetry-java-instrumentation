@@ -20,7 +20,7 @@ import org.springframework.web.client.RestClient;
 /**
  * Configures {@link RestClient} for tracing.
  *
- * <p>Adds Open Telemetry instrumentation to {@link RestClient} beans after initialization.
+ * <p>Adds OpenTelemetry instrumentation to {@link RestClient} beans after initialization.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.

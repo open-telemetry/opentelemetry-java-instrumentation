@@ -186,6 +186,7 @@ public class AbstractRestletServerTest extends AbstractHttpServerTest<Component>
                 () -> {
                   INDEXED_CHILD.collectSpanAttributes(
                       name -> request.getOriginalRef().getQueryAsForm().getFirst(name).getValue());
+                  response.setEntity(INDEXED_CHILD.getBody(), MediaType.TEXT_PLAIN);
                   response.setStatus(Status.valueOf(INDEXED_CHILD.getStatus()));
                 });
           }

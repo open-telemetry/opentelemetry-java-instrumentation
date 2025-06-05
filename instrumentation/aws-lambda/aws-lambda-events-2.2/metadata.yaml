@@ -1,0 +1,9 @@
+description: >
+  Provides full instrumentation of the Lambda library, including standard and custom event types,
+  from `aws-lambda-java-events` 2.2+.
+configurations:
+  - name: otel.instrumentation.aws-lambda.flush-timeout
+    type: int
+    default: 10000
+    description: Flush timeout in milliseconds.
+

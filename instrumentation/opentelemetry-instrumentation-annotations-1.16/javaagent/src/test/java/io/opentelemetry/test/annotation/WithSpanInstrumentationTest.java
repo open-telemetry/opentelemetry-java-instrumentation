@@ -6,6 +6,7 @@
 package io.opentelemetry.test.annotation;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
@@ -106,6 +107,32 @@ class WithSpanInstrumentationTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(CODE_NAMESPACE, TracedWithSpan.class.getName()),
                             equalTo(CODE_FUNCTION, "otel"))));
+  }
+
+  @Test
+  void multipleSpansWithoutParent() {
+    new TracedWithSpan().consumer();
+
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanName("TracedWithSpan.consumer", "TracedWithSpan.withoutParent"),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TracedWithSpan.consumer")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_NAMESPACE, TracedWithSpan.class.getName()),
+                            equalTo(CODE_FUNCTION, "consumer"))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TracedWithSpan.withoutParent")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_NAMESPACE, TracedWithSpan.class.getName()),
+                            equalTo(CODE_FUNCTION, "withoutParent"))));
   }
 
   @Test

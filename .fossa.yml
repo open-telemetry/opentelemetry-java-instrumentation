@@ -78,6 +78,9 @@ targets:
       target: ':instrumentation:apache-shenyu-2.4:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:avaje-jex-3.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:c3p0-0.9:javaagent'
     - type: gradle
       path: ./
@@ -273,9 +276,6 @@ targets:
       target: ':instrumentation:tapestry-5.4:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:tomcat:tomcat-jdbc'
-    - type: gradle
-      path: ./
       target: ':instrumentation:twilio-6.6:javaagent'
     - type: gradle
       path: ./
@@ -426,10 +426,10 @@ targets:
       target: ':instrumentation:elasticsearch:elasticsearch-rest-7.0:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:elasticsearch:elasticsearch-rest-common:javaagent'
+      target: ':instrumentation:elasticsearch:elasticsearch-rest-common-5.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:elasticsearch:elasticsearch-rest-common:library'
+      target: ':instrumentation:elasticsearch:elasticsearch-rest-common-5.0:library'
     - type: gradle
       path: ./
       target: ':instrumentation:elasticsearch:elasticsearch-transport-5.0:javaagent'
@@ -696,12 +696,6 @@ targets:
       target: ':instrumentation:netty:netty-3.8:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:netty:netty-4-common:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:netty:netty-4-common:library'
-    - type: gradle
-      path: ./
       target: ':instrumentation:netty:netty-4.0:javaagent'
     - type: gradle
       path: ./
@@ -714,6 +708,12 @@ targets:
       target: ':instrumentation:netty:netty-common:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:netty:netty-common-4.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:netty:netty-common-4.0:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:okhttp:okhttp-2.2:javaagent'
     - type: gradle
       path: ./
@@ -724,6 +724,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:opensearch:opensearch-rest-1.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:opensearch:opensearch-rest-3.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:opensearch:opensearch-rest-common:javaagent'
@@ -763,6 +766,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.47:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.50:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:pekko:pekko-actor-1.0:javaagent'
@@ -897,6 +903,9 @@ targets:
       target: ':instrumentation:spring:spring-kafka-2.7:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:spring:spring-pulsar-1.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:spring:spring-rabbit-1.0:javaagent'
     - type: gradle
       path: ./
@@ -939,6 +948,9 @@ targets:
       target: ':instrumentation:tomcat:tomcat-common:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:tomcat:tomcat-jdbc:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:vertx:vertx-kafka-client-3.6:javaagent'
     - type: gradle
       path: ./
@@ -946,9 +958,6 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:vertx:vertx-rx-java-3.5:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:vertx:vertx-sql-client-4.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:vertx:vertx-web-3.0:javaagent'
@@ -1011,7 +1020,7 @@ targets:
       target: ':instrumentation:kafka:kafka-clients:kafka-clients-2.6:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:kafka:kafka-clients:kafka-clients-common:library'
+      target: ':instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library'
     - type: gradle
       path: ./
       target: ':instrumentation:log4j:log4j-context-data:log4j-context-data-2.17:javaagent'
@@ -1104,7 +1113,19 @@ targets:
       target: ':instrumentation:vertx:vertx-http-client:vertx-http-client-4.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:vertx:vertx-http-client:vertx-http-client-5.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:vertx:vertx-http-client:vertx-http-client-common:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:vertx:vertx-sql-client:vertx-sql-client-5.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:vertx:vertx-sql-client:vertx-sql-client-common:javaagent'
 
 experimental:
   gradle:

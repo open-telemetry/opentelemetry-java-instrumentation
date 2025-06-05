@@ -214,15 +214,16 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
 
     // JMX based metrics - test one per JMX bean
     List<String> jmxMetrics =
-        new ArrayList<>(
-            Arrays.asList(
-                "jvm.thread.count",
-                "jvm.memory.used",
-                "jvm.system.cpu.load_1m",
-                "jvm.memory.init"));
+        new ArrayList<>(Arrays.asList("jvm.thread.count", "jvm.memory.used", "jvm.memory.init"));
 
-    boolean noNative = System.getProperty("org.graalvm.nativeimage.imagecode") == null;
-    if (noNative) {
+    double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
+    // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13503
+    if (javaVersion < 23) {
+      jmxMetrics.add("jvm.system.cpu.load_1m");
+    }
+
+    boolean nativeImage = System.getProperty("org.graalvm.nativeimage.imagecode") != null;
+    if (!nativeImage) {
       // GraalVM native image does not support buffer pools - have to investigate why
       jmxMetrics.add("jvm.buffer.memory.used");
     }
@@ -238,7 +239,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
     // Log
     List<LogRecordData> exportedLogRecords = testing.getExportedLogRecords();
     assertThat(exportedLogRecords).as("No log record exported.").isNotEmpty();
-    if (noNative) {
+    if (!nativeImage) {
       // log records differ in native image mode due to different startup timing
       LogRecordData firstLog = exportedLogRecords.get(0);
       assertThat(firstLog.getBodyValue().asString())

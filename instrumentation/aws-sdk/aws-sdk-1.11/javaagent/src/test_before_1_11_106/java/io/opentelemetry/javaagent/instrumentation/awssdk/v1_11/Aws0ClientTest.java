@@ -23,6 +23,7 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SE
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -45,7 +46,6 @@ import com.amazonaws.services.ec2.AmazonEC2Client;
 import com.amazonaws.services.rds.AmazonRDSClient;
 import com.amazonaws.services.rds.model.DeleteOptionGroupRequest;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -137,7 +137,7 @@ class Aws0ClientTest {
             "PUT",
             1,
             (Function<AmazonS3Client, Object>) c -> c.createBucket("testbucket"),
-            ImmutableMap.of("aws.bucket.name", "testbucket"),
+            singletonMap("aws.bucket.name", "testbucket"),
             ""),
         Arguments.of(
             new AmazonS3Client().withEndpoint(server.httpUri().toString()),
@@ -146,7 +146,7 @@ class Aws0ClientTest {
             "GET",
             1,
             (Function<AmazonS3Client, Object>) c -> c.getObject("someBucket", "someKey"),
-            ImmutableMap.of("aws.bucket.name", "someBucket"),
+            singletonMap("aws.bucket.name", "someBucket"),
             ""),
         Arguments.of(
             new AmazonEC2Client().withEndpoint(server.httpUri().toString()),
@@ -218,7 +218,6 @@ class Aws0ClientTest {
                               equalTo(RPC_SYSTEM, "aws-api"),
                               satisfies(RPC_SERVICE, v -> v.contains(service)),
                               equalTo(RPC_METHOD, operation),
-                              equalTo(stringKey("aws.endpoint"), server.httpUri().toString()),
                               equalTo(stringKey("aws.agent"), "java-aws-sdk")));
 
                   additionalAttributes.forEach((k, v) -> attributes.add(equalTo(stringKey(k), v)));
@@ -266,7 +265,6 @@ class Aws0ClientTest {
                             equalTo(RPC_SYSTEM, "aws-api"),
                             equalTo(RPC_SERVICE, "Amazon S3"),
                             equalTo(RPC_METHOD, "GetObject"),
-                            equalTo(stringKey("aws.endpoint"), "http://localhost:" + UNUSABLE_PORT),
                             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                             equalTo(stringKey("aws.bucket.name"), "someBucket"),
                             equalTo(ERROR_TYPE, AmazonClientException.class.getName()))));
@@ -304,7 +302,6 @@ class Aws0ClientTest {
                             equalTo(RPC_SYSTEM, "aws-api"),
                             equalTo(RPC_SERVICE, "Amazon S3"),
                             equalTo(RPC_METHOD, "GetObject"),
-                            equalTo(stringKey("aws.endpoint"), "https://s3.amazonaws.com"),
                             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                             equalTo(stringKey("aws.bucket.name"), "someBucket"),
                             equalTo(ERROR_TYPE, IllegalStateException.class.getName()))));
@@ -344,7 +341,6 @@ class Aws0ClientTest {
                             equalTo(RPC_SYSTEM, "aws-api"),
                             equalTo(RPC_SERVICE, "Amazon S3"),
                             equalTo(RPC_METHOD, "GetObject"),
-                            equalTo(stringKey("aws.endpoint"), server.httpUri().toString()),
                             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                             equalTo(stringKey("aws.bucket.name"), "someBucket"),
                             equalTo(ERROR_TYPE, AmazonClientException.class.getName()))));

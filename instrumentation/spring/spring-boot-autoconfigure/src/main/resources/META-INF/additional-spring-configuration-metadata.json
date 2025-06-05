@@ -352,6 +352,18 @@
       "defaultValue": true
     },
     {
+      "name": "otel.instrumentation.jdbc.experimental.capture-query-parameters",
+      "type": "java.lang.Boolean",
+      "description": "Sets whether the query parameters should be captured as span attributes named <code>db.query.parameter.&lt;key&gt;</code>. Enabling this option disables the statement sanitization.<p>WARNING: captured query parameters may contain sensitive information such as passwords, personally identifiable information or protected health info.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.jdbc.experimental.transaction.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables experimental instrumentation to create spans for COMMIT and ROLLBACK operations.",
+      "defaultValue": false
+    },
+    {
       "name": "otel.instrumentation.kafka.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable the Kafka instrumentation.",
@@ -481,6 +493,12 @@
       "type": "java.lang.Boolean",
       "description": "Enables the DB statement sanitization.",
       "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.runtime-telemetry.capture-gc-cause",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of the jvm.gc.cause attribute with the jvm.gc.duration metric.",
+      "defaultValue": false
     },
     {
       "name": "otel.instrumentation.runtime-telemetry.enabled",

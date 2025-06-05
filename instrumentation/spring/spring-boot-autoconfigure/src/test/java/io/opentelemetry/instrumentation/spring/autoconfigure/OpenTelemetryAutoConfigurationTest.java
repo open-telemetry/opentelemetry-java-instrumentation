@@ -88,12 +88,18 @@ class OpenTelemetryAutoConfigurationTest {
                                   configProperties.getList("otel.java.disabled.resource.providers"))
                               .containsExactlyInAnyOrder(
                                   "d",
+                                  "io.opentelemetry.contrib.azure.resource.AzureAksResourceProvider",
+                                  "io.opentelemetry.contrib.azure.resource.AzureAppServiceResourceProvider",
+                                  "io.opentelemetry.contrib.azure.resource.AzureContainersResourceProvider",
+                                  "io.opentelemetry.contrib.azure.resource.AzureFunctionsResourceProvider",
+                                  "io.opentelemetry.contrib.azure.resource.AzureVmResourceProvider",
                                   "io.opentelemetry.contrib.aws.resource.BeanstalkResourceProvider",
                                   "io.opentelemetry.contrib.aws.resource.Ec2ResourceProvider",
                                   "io.opentelemetry.contrib.aws.resource.EcsResourceProvider",
                                   "io.opentelemetry.contrib.aws.resource.EksResourceProvider",
                                   "io.opentelemetry.contrib.aws.resource.LambdaResourceProvider",
                                   "io.opentelemetry.contrib.gcp.resource.GCPResourceProvider",
+                                  "io.opentelemetry.contrib.cloudfoundry.resources.CloudFoundryResourceProvider",
                                   "io.opentelemetry.instrumentation.resources.ResourceProviderPropertiesCustomizerTest$Provider");
                         }));
   }

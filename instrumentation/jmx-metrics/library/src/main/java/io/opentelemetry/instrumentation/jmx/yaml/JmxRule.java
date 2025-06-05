@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
-import javax.management.MBeanServerConnection;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
@@ -42,21 +41,20 @@ public class JmxRule extends MetricStructure {
   //     ATTRIBUTE3:
   //       METRIC_FIELDS3
   // The parser never calls setters for these fields with null arguments
-  @Nullable private String bean;
+
   private List<String> beans;
   @Nullable private String prefix;
   private Map<String, Metric> mapping;
 
-  public String getBean() {
-    return bean;
-  }
-
-  public void setBean(String bean) {
-    this.bean = validateBean(bean);
-  }
-
   public List<String> getBeans() {
     return beans;
+  }
+
+  public void addBean(String bean) {
+    if (beans == null) {
+      beans = new ArrayList<>();
+    }
+    beans.add(validateBean(bean));
   }
 
   private static String validateBean(String name) {
@@ -68,14 +66,6 @@ public class JmxRule extends MetricStructure {
     } catch (MalformedObjectNameException e) {
       throw new IllegalArgumentException("'" + name + "' is not a valid JMX object name", e);
     }
-  }
-
-  public void setBeans(List<String> beans) {
-    List<String> list = new ArrayList<>();
-    for (String name : beans) {
-      list.add(validateBean(name));
-    }
-    this.beans = list;
   }
 
   public void setPrefix(String prefix) {
@@ -90,6 +80,7 @@ public class JmxRule extends MetricStructure {
     return prefix;
   }
 
+  @Nullable
   public String getPrefix() {
     return prefix;
   }
@@ -127,13 +118,10 @@ public class JmxRule extends MetricStructure {
    */
   public MetricDef buildMetricDef() throws Exception {
     BeanGroup group;
-    if (bean != null) {
-      group = BeanGroup.forSingleBean(bean);
-    } else if (beans != null && !beans.isEmpty()) {
-      group = BeanGroup.forBeans(beans);
-    } else {
+    if (beans == null || beans.isEmpty()) {
       throw new IllegalStateException("No ObjectName specified");
     }
+    group = BeanGroup.forBeans(beans);
 
     if (mapping == null || mapping.isEmpty()) {
       throw new IllegalStateException("No MBean attributes specified");
@@ -152,10 +140,11 @@ public class JmxRule extends MetricStructure {
             new MetricInfo(
                 prefix == null ? niceAttributeName : (prefix + niceAttributeName),
                 null,
+                getSourceUnit(),
                 getUnit(),
                 getMetricType());
       } else {
-        metricInfo = m.buildMetricInfo(prefix, niceAttributeName, getUnit(), getMetricType());
+        metricInfo = m.buildMetricInfo(niceAttributeName, this);
       }
 
       List<MetricAttribute> ownAttributes = getAttributeList();
@@ -167,6 +156,14 @@ public class JmxRule extends MetricStructure {
       StateMapping stateMapping = getEffectiveStateMapping(m, this);
 
       if (stateMapping.isEmpty()) {
+
+        // higher priority to metric level, then jmx rule as fallback
+        boolean dropNegative = getEffectiveDropNegativeValues(m, this);
+
+        if (dropNegative) {
+          attrExtractor = BeanAttributeExtractor.filterNegativeValues(attrExtractor);
+        }
+
         metricExtractors.add(new MetricExtractor(attrExtractor, metricInfo, attributeList));
       } else {
 
@@ -201,36 +198,19 @@ public class JmxRule extends MetricStructure {
         }
       }
 
-      BeanAttributeExtractor stateMetricExtractor =
-          new BeanAttributeExtractor(attrExtractor.getAttributeName()) {
+      BeanAttributeExtractor extractor =
+          BeanAttributeExtractor.forStateMetric(attrExtractor, key, stateMapping);
 
-            @Override
-            protected Object getSampleValue(
-                MBeanServerConnection connection, ObjectName objectName) {
-              // metric actual type is sampled in the discovery process, so we have to
-              // make this extractor as extracting integers.
-              return 0;
-            }
-
-            @Override
-            protected Number extractNumericalAttribute(
-                MBeanServerConnection connection, ObjectName objectName) {
-              String rawStateValue = attrExtractor.extractValue(connection, objectName);
-              String mappedStateValue = stateMapping.getStateValue(rawStateValue);
-              return key.equals(mappedStateValue) ? 1 : 0;
-            }
-          };
-
-      // state metric are always up/down counters
+      // state metric are always up/down counters, empty '' unit and no source unit
       MetricInfo stateMetricInfo =
           new MetricInfo(
               metricInfo.getMetricName(),
               metricInfo.getDescription(),
-              metricInfo.getUnit(),
+              null,
+              "",
               MetricInfo.Type.UPDOWNCOUNTER);
 
-      extractors.add(
-          new MetricExtractor(stateMetricExtractor, stateMetricInfo, stateMetricAttributes));
+      extractors.add(new MetricExtractor(extractor, stateMetricInfo, stateMetricAttributes));
     }
     return extractors;
   }
@@ -259,6 +239,14 @@ public class JmxRule extends MetricStructure {
       return rule.getStateMapping();
     } else {
       return m.getStateMapping();
+    }
+  }
+
+  private static boolean getEffectiveDropNegativeValues(Metric m, JmxRule rule) {
+    if (m == null || m.getDropNegativeValues() == null) {
+      return Boolean.TRUE.equals(rule.getDropNegativeValues());
+    } else {
+      return Boolean.TRUE.equals(m.getDropNegativeValues());
     }
   }
 }

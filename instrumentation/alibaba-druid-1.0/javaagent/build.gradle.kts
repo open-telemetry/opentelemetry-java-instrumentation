@@ -18,3 +18,17 @@ dependencies {
 
   testImplementation(project(":instrumentation:alibaba-druid-1.0:testing"))
 }
+
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
+}

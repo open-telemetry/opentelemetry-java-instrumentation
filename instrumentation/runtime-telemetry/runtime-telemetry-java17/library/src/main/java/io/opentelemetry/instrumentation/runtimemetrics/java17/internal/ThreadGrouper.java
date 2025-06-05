@@ -20,8 +20,7 @@ public final class ThreadGrouper {
   public String groupedName(RecordedEvent ev) {
     Object thisField = ev.getValue("eventThread");
     if (thisField instanceof RecordedThread) {
-      RecordedThread thread = (RecordedThread) thisField;
-      return thread.getJavaName();
+      return ((RecordedThread) thisField).getJavaName();
     }
     return null;
   }

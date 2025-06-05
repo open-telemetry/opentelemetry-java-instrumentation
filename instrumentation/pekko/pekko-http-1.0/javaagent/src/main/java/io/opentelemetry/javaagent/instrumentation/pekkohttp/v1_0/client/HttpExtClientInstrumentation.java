@@ -18,6 +18,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pekko.http.scaladsl.HttpExt;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
@@ -40,7 +41,8 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class SingleRequestAdvice {
-    @Advice.AssignReturned.ToArguments(@ToArgument(value = 0, index = 0))
+    @Advice.AssignReturned.ToArguments(
+        @ToArgument(value = 0, index = 0, typing = Assigner.Typing.DYNAMIC))
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Object[] methodEnter(@Advice.Argument(value = 0) HttpRequest request) {
       Context parentContext = currentContext();

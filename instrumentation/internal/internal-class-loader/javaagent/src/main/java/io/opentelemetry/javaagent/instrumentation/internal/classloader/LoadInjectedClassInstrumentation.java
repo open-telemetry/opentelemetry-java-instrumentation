@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.internal.classloader;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.instrumentation.internal.classloader.AdviceUtil.applyInlineAdvice;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -19,6 +20,7 @@ import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -35,7 +37,7 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
+    ElementMatcher.Junction<MethodDescription> methodMatcher =
         isMethod()
             .and(named("loadClass"))
             .and(
@@ -46,8 +48,9 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
                             .and(takesArgument(0, String.class))
                             .and(takesArgument(1, boolean.class))))
             .and(isPublic().or(isProtected()))
-            .and(not(isStatic())),
-        LoadInjectedClassInstrumentation.class.getName() + "$LoadClassAdvice");
+            .and(not(isStatic()));
+    // Inline instrumentation to prevent problems with invokedynamic-recursion
+    applyInlineAdvice(transformer, methodMatcher, this.getClass().getName() + "$LoadClassAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -65,13 +68,11 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class)
-    @Advice.AssignReturned.ToReturned
-    public static Class<?> onExit(
-        @Advice.Return Class<?> result, @Advice.Enter Class<?> loadedClass) {
+    public static void onExit(
+        @Advice.Return(readOnly = false) Class<?> result, @Advice.Enter Class<?> loadedClass) {
       if (loadedClass != null) {
-        return loadedClass;
+        result = loadedClass;
       }
-      return result;
     }
   }
 }

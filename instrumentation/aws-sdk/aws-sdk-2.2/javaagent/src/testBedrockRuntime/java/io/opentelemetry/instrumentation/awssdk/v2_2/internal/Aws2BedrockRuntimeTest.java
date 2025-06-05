@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
+import software.amazon.awssdk.services.bedrockruntime.BedrockRuntimeAsyncClient;
 
 class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
   @RegisterExtension
@@ -23,5 +24,11 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
   @Override
   protected ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder() {
     return ClientOverrideConfiguration.builder();
+  }
+
+  @Override
+  protected BedrockRuntimeAsyncClient configureBedrockRuntimeClient(
+      BedrockRuntimeAsyncClient client) {
+    return client;
   }
 }

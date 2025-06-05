@@ -30,12 +30,10 @@ import org.apache.jasper.JasperException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat> {
 
@@ -97,7 +95,7 @@ class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
   }
 
   @ParameterizedTest(name = "Forward to {0}")
-  @ArgumentsSource(NonErroneousGetForwardArgs.class)
+  @MethodSource("nonErroneousGetForwardArgs")
   void testNonErroneousGetForwardTo(
       String name,
       String forwardFromFileName,
@@ -152,27 +150,24 @@ class JspInstrumentationForwardTests extends AbstractHttpServerUsingTest<Tomcat>
                             .build())));
   }
 
-  static class NonErroneousGetForwardArgs implements ArgumentsProvider {
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(
-          Arguments.of(
-              "no java jsp",
-              "/forwards/forwardToNoJavaJsp.jsp",
-              "/nojava.jsp",
-              "forwardToNoJavaJsp_jsp",
-              "forwards.",
-              "nojava_jsp",
-              ""),
-          Arguments.of(
-              "normal java jsp",
-              "/forwards/forwardToSimpleJava.jsp",
-              "/common/loop.jsp",
-              "forwardToSimpleJava_jsp",
-              "forwards.",
-              "loop_jsp",
-              "common."));
-    }
+  private static Stream<Arguments> nonErroneousGetForwardArgs() {
+    return Stream.of(
+        Arguments.of(
+            "no java jsp",
+            "/forwards/forwardToNoJavaJsp.jsp",
+            "/nojava.jsp",
+            "forwardToNoJavaJsp_jsp",
+            "forwards.",
+            "nojava_jsp",
+            ""),
+        Arguments.of(
+            "normal java jsp",
+            "/forwards/forwardToSimpleJava.jsp",
+            "/common/loop.jsp",
+            "forwardToSimpleJava_jsp",
+            "forwards.",
+            "loop_jsp",
+            "common."));
   }
 
   @Test
