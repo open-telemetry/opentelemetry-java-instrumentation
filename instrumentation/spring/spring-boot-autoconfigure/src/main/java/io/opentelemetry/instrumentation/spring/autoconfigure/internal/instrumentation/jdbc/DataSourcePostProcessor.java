@@ -1,8 +1,3 @@
-/*
- * Copyright The OpenTelemetry Authors
- * SPDX-License-Identifier: Apache-2.0
- */
-
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.jdbc;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -10,8 +5,16 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.jdbc.datasource.JdbcTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.sql.DataSource;
+
+import org.aopalliance.intercept.MethodInterceptor;
+import org.aopalliance.intercept.MethodInvocation;
+import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.aop.scope.ScopedProxyUtils;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.core.Ordered;
@@ -50,7 +53,7 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
         && !isRoutingDatasource(bean)
         && !ScopedProxyUtils.isScopedTarget(beanName)) {
       DataSource dataSource = (DataSource) bean;
-      return JdbcTelemetry.builder(openTelemetryProvider.getObject())
+      DataSource wrapped = JdbcTelemetry.builder(openTelemetryProvider.getObject())
           .setStatementSanitizationEnabled(
               InstrumentationConfigUtil.isStatementSanitizationEnabled(
                   configPropertiesProvider.getObject(),
@@ -66,6 +69,20 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
                   .getBoolean("otel.instrumentation.jdbc.experimental.transaction.enabled", false))
           .build()
           .wrap(dataSource);
+
+      ProxyFactory proxyFactory = new ProxyFactory(DataSource.class);
+      proxyFactory.setTarget(bean);
+      proxyFactory.addAdvice(
+          new MethodInterceptor() {
+            @Nullable
+            @Override
+            public Object invoke(@Nonnull MethodInvocation invocation) throws Throwable {
+              return AopUtils.invokeJoinpointUsingReflection(
+                  wrapped, invocation.getMethod(), invocation.getArguments());
+            }
+          });
+
+      return proxyFactory.getProxy();
     }
     return bean;
   }
