@@ -56,7 +56,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   final OpenTelemetry openTelemetry;
   final String instrumentationName;
-  final SpanNameExtractor<? super REQUEST> spanNameExtractor;
+  SpanNameExtractor<? super REQUEST> spanNameExtractor;
 
   final List<SpanLinksExtractor<? super REQUEST>> spanLinksExtractors = new ArrayList<>();
   final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
@@ -315,6 +315,9 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
         }
         if (customizer.getOperationMetrics() != null) {
           addOperationMetrics(customizer.getOperationMetrics());
+        }
+        if (customizer.getSpanNameExtractor() != null) {
+          this.spanNameExtractor = customizer.getSpanNameExtractor();
         }
       }
     }

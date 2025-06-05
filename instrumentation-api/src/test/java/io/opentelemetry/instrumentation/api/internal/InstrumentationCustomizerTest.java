@@ -10,6 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import java.util.function.Predicate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,9 +21,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class InstrumentationCustomizerTest {
 
-  @Mock private AttributesExtractor<Object, Object> attributesExtractor;
   @Mock private OperationMetrics operationMetrics;
+  @Mock private AttributesExtractor<Object, Object> attributesExtractor;
   @Mock private ContextCustomizer<Object> contextCustomizer;
+  @Mock private SpanNameExtractor<Object> spanNameExtractor;
 
   private InstrumentationCustomizer customizer;
 
@@ -31,10 +33,6 @@ class InstrumentationCustomizerTest {
   void setUp() {
     customizer =
         new InstrumentationCustomizer() {
-          @Override
-          public <REQUEST> ContextCustomizer<REQUEST> getContextCustomizer() {
-            return (ContextCustomizer<REQUEST>) contextCustomizer;
-          }
 
           @Override
           public Predicate<String> instrumentationNamePredicate() {
@@ -42,21 +40,26 @@ class InstrumentationCustomizerTest {
           }
 
           @Override
-          public <REQUEST, RESPONSE>
-              AttributesExtractor<REQUEST, RESPONSE> getAttributesExtractor() {
-            return (AttributesExtractor<REQUEST, RESPONSE>) attributesExtractor;
-          }
-
-          @Override
           public OperationMetrics getOperationMetrics() {
             return operationMetrics;
           }
-        };
-  }
 
-  @Test
-  void testGetContextCustomizer() {
-    assertThat(customizer.getContextCustomizer()).isSameAs(contextCustomizer);
+          @Override
+          public <REQUEST, RESPONSE>
+              AttributesExtractor<? super REQUEST, ? super RESPONSE> getAttributesExtractor() {
+            return (AttributesExtractor<? super REQUEST, ? super RESPONSE>) attributesExtractor;
+          }
+
+          @Override
+          public <REQUEST> ContextCustomizer<? super REQUEST> getContextCustomizer() {
+            return (ContextCustomizer<? super REQUEST>) contextCustomizer;
+          }
+
+          @Override
+          public <REQUEST> SpanNameExtractor<? super REQUEST> getSpanNameExtractor() {
+            return (SpanNameExtractor<? super REQUEST>) spanNameExtractor;
+          }
+        };
   }
 
   @Test
@@ -68,14 +71,25 @@ class InstrumentationCustomizerTest {
   }
 
   @Test
+  void testGetOperationMetrics() {
+    OperationMetrics metrics = customizer.getOperationMetrics();
+    assertThat(metrics).isSameAs(operationMetrics);
+  }
+
+  @Test
   void testGetAttributesExtractor() {
     AttributesExtractor<Object, Object> extractor = customizer.getAttributesExtractor();
     assertThat(extractor).isSameAs(attributesExtractor);
   }
 
   @Test
-  void testGetOperationMetrics() {
-    OperationMetrics metrics = customizer.getOperationMetrics();
-    assertThat(metrics).isSameAs(operationMetrics);
+  void testGetContextCustomizer() {
+    assertThat(customizer.getContextCustomizer()).isSameAs(contextCustomizer);
+  }
+
+  @Test
+  void testGetSpanNameExtractor() {
+    SpanNameExtractor<Object> extractor = customizer.getSpanNameExtractor();
+    assertThat(extractor).isSameAs(spanNameExtractor);
   }
 }
