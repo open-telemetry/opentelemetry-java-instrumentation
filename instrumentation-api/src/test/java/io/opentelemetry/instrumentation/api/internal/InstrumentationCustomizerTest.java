@@ -11,6 +11,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Predicate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,6 +53,13 @@ class InstrumentationCustomizerTest {
           }
 
           @Override
+          public <REQUEST, RESPONSE>
+              List<AttributesExtractor<REQUEST, RESPONSE>> getAttributesExtractors() {
+            return Collections.singletonList(
+                (AttributesExtractor<REQUEST, RESPONSE>) attributesExtractor);
+          }
+
+          @Override
           public <REQUEST> ContextCustomizer<REQUEST> getContextCustomizer() {
             return (ContextCustomizer<REQUEST>) contextCustomizer;
           }
@@ -80,6 +89,12 @@ class InstrumentationCustomizerTest {
   void testGetAttributesExtractor() {
     AttributesExtractor<Object, Object> extractor = customizer.getAttributesExtractor();
     assertThat(extractor).isSameAs(attributesExtractor);
+  }
+
+  @Test
+  void testGetAttributesExtractors() {
+    List<AttributesExtractor<Object, Object>> extractors = customizer.getAttributesExtractors();
+    assertThat(extractors).containsExactly(attributesExtractor);
   }
 
   @Test

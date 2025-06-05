@@ -302,9 +302,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     List<InstrumentationCustomizer> customizers =
         INSTRUMENTATION_CUSTOMIZER_MAP.entrySet().stream()
             .filter(entry -> entry.getKey().test(instrumentationName))
-            .map(Map.Entry::getValue)
-            .findFirst()
-            .orElse(null);
+            .flatMap(entry -> entry.getValue().stream())
+            .collect(Collectors.toList());
     if (customizers != null) {
       for (InstrumentationCustomizer customizer : customizers) {
         if (customizer.getContextCustomizer() != null) {
@@ -312,6 +311,9 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
         }
         if (customizer.getAttributesExtractor() != null) {
           addAttributesExtractor(customizer.getAttributesExtractor());
+        }
+        if (customizer.getAttributesExtractors() != null) {
+          addAttributesExtractors(customizer.getAttributesExtractors());
         }
         if (customizer.getOperationMetrics() != null) {
           addOperationMetrics(customizer.getOperationMetrics());

@@ -9,7 +9,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import java.util.List;
 import java.util.function.Predicate;
+import javax.annotation.Nullable;
 
 /**
  * A service provider interface (SPI) for providing customizations for instrumentation, including
@@ -52,6 +54,23 @@ public interface InstrumentationCustomizer {
    * @return an attributes extractor instance, or null if not applicable
    */
   default <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> getAttributesExtractor() {
+    return null;
+  }
+
+  /**
+   * Returns a list of {@link AttributesExtractor}s that will extract attributes from requests and
+   * responses during the instrumentation process.
+   *
+   * <p>This allows providing multiple extractors for a single instrumentation. The default
+   * implementation returns {@code null} for backward compatibility.
+   *
+   * @param <REQUEST> the type of request object used by the instrumented library
+   * @param <RESPONSE> the type of response object used by the instrumented library
+   * @return a list of attributes extractors, or null if not applicable
+   */
+  @Nullable
+  default <REQUEST, RESPONSE>
+      List<AttributesExtractor<REQUEST, RESPONSE>> getAttributesExtractors() {
     return null;
   }
 
