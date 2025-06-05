@@ -15,6 +15,21 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
   /**
    * Returns a {@link SpanNameExtractor} that constructs the span name according to <a
    * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md#span-name">
+   * messaging semantic conventions</a>: {@code <operation name> <destination name>}.
+   *
+   * @see MessagingAttributesGetter#getDestination(Object) used to extract {@code <destination
+   *     name>}.
+   * @see MessageOperation used to extract {@code <operation name>}.
+   */
+  @Deprecated
+  public static <REQUEST> SpanNameExtractor<REQUEST> create(
+      MessagingAttributesGetter<REQUEST, ?> getter, MessageOperation operation) {
+    return new MessagingSpanNameExtractor<>(getter, operation, null);
+  }
+
+  /**
+   * Returns a {@link SpanNameExtractor} that constructs the span name according to <a
+   * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md#span-name">
    * messaging semantic conventions</a>: {@code <operation name> <destination name> }.
    *
    * @see MessagingAttributesGetter#getDestination(Object) used to extract {@code <operation name>}
@@ -37,7 +52,7 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
   private MessagingSpanNameExtractor(
       MessagingAttributesGetter<REQUEST, ?> getter,
       MessageOperation operation,
-      ServerAttributesGetter<REQUEST> serverAttributesGetter) {
+      @Nullable ServerAttributesGetter<REQUEST> serverAttributesGetter) {
     this.getter = getter;
     this.serverAttributesGetter = serverAttributesGetter;
     this.operation = operation;
@@ -76,7 +91,8 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
     } else if (getter.getDestination(request) != null) {
       destination = getter.getDestination(request);
     } else {
-      if (serverAttributesGetter.getServerAddress(request) != null
+      if (serverAttributesGetter != null
+          && serverAttributesGetter.getServerAddress(request) != null
           && serverAttributesGetter.getServerPort(request) != null) {
         destination =
             serverAttributesGetter.getServerAddress(request)
