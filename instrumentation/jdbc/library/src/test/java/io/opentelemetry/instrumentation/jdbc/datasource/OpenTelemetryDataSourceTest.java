@@ -54,9 +54,8 @@ class OpenTelemetryDataSourceTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                TestDataSource.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "getConnection"),
+                                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                TestDataSource.class.getName() + ".getConnection"),
                             equalTo(maybeStable(DB_SYSTEM), "postgresql"),
                             equalTo(maybeStable(DB_NAME), "dbname"),
                             equalTo(

@@ -11,8 +11,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -122,8 +121,9 @@ class Struts2ActionSpanTest extends AbstractHttpServerTest<Server> {
     }
 
     span.hasAttributesSatisfyingExactly(
-        equalTo(CODE_NAMESPACE, GreetingAction.class.getName()),
-        equalTo(CODE_FUNCTION, endpoint.name().toLowerCase(Locale.ROOT)));
+        equalTo(
+            CODE_FUNCTION_NAME,
+            GreetingAction.class.getName() + "." + endpoint.name().toLowerCase(Locale.ROOT)));
     return span;
   }
 

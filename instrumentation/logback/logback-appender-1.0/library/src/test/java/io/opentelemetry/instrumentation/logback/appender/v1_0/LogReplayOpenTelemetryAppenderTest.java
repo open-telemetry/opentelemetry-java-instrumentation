@@ -74,6 +74,6 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
                 .hasResource(resource)
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("log message 1")
-                .hasTotalAttributeCount(4));
+                .hasTotalAttributeCount(3));
   }
 }

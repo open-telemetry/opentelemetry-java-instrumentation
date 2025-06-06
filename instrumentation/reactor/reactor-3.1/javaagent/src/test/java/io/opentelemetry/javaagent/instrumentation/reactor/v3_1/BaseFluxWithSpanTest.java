@@ -6,8 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.reactor.v3_1;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION_NAME;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
@@ -18,7 +17,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.UnicastProcessor;
 import reactor.test.StepVerifier;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 abstract class BaseFluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, Flux<String>> {
 
   @Override
@@ -77,8 +75,7 @@ abstract class BaseFluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, F
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_NAMESPACE, traced.getClass().getName()),
-                                equalTo(CODE_FUNCTION, "flux")),
+                                equalTo(CODE_FUNCTION_NAME, traced.getClass().getName() + ".flux")),
                     span ->
                         span.hasName("inner-manual")
                             .hasKind(SpanKind.INTERNAL)
@@ -119,8 +116,7 @@ abstract class BaseFluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, F
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_NAMESPACE, traced.getClass().getName()),
-                                equalTo(CODE_FUNCTION, "flux")),
+                                equalTo(CODE_FUNCTION_NAME, traced.getClass().getName() + ".flux")),
                     span ->
                         span.hasName("inner-manual")
                             .hasKind(SpanKind.INTERNAL)

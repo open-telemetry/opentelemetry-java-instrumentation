@@ -1064,9 +1064,8 @@ class JdbcInstrumentationTest {
                               .hasParent(trace.getSpan(0))
                               .hasAttributesSatisfyingExactly(
                                   equalTo(
-                                      CodeIncubatingAttributes.CODE_NAMESPACE,
-                                      datasource.getClass().getName()),
-                                  equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "getConnection"),
+                                      CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                      datasource.getClass().getName() + ".getConnection"),
                                   equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
                                   equalTo(DB_USER, emitStableDatabaseSemconv() ? null : user),
                                   equalTo(maybeStable(DB_NAME), "jdbcunittest"),
@@ -1081,9 +1080,8 @@ class JdbcInstrumentationTest {
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                datasource.getClass().getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "getConnection"),
+                                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                datasource.getClass().getName() + ".getConnection"),
                             equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : user),
                             equalTo(maybeStable(DB_NAME), "jdbcunittest"),

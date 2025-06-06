@@ -115,7 +115,6 @@ class LogbackTest {
     testing.clearData();
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   private static void test(
       Logger logger,
       OneArgLoggerMethod oneArgLoggerMethod,
@@ -164,11 +163,12 @@ class LogbackTest {
                         equalTo(
                             ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
                         equalTo(
-                            CodeIncubatingAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
-                        equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "performLogging"),
+                            CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                            LogbackTest.class.getName() + ".performLogging"),
                         satisfies(
-                            CodeIncubatingAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
-                        equalTo(CodeIncubatingAttributes.CODE_FILEPATH, "LogbackTest.java")));
+                            CodeIncubatingAttributes.CODE_LINE_NUMBER,
+                            AbstractLongAssert::isPositive),
+                        equalTo(CodeIncubatingAttributes.CODE_FILE_PATH, "LogbackTest.java")));
             if (logException) {
               attributeAsserts.addAll(
                   Arrays.asList(
@@ -185,7 +185,6 @@ class LogbackTest {
     }
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testMdc() {
     MDC.put("key1", "val1");
@@ -209,10 +208,12 @@ class LogbackTest {
                     equalTo(
                         ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
                     equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
-                    equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
-                    equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "testMdc"),
-                    satisfies(CodeIncubatingAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
-                    equalTo(CodeIncubatingAttributes.CODE_FILEPATH, "LogbackTest.java")));
+                    equalTo(
+                        CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                        LogbackTest.class.getName() + ".testMdc"),
+                    satisfies(
+                        CodeIncubatingAttributes.CODE_LINE_NUMBER, AbstractLongAssert::isPositive),
+                    equalTo(CodeIncubatingAttributes.CODE_FILE_PATH, "LogbackTest.java")));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -232,10 +233,12 @@ class LogbackTest {
                 equalTo(
                     AttributeKey.stringArrayKey("logback.marker"),
                     Collections.singletonList(markerName)),
-                equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
-                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "testMarker"),
-                satisfies(CodeIncubatingAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
-                equalTo(CodeIncubatingAttributes.CODE_FILEPATH, "LogbackTest.java")));
+                equalTo(
+                    CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                    LogbackTest.class.getName() + ".testMarker"),
+                satisfies(
+                    CodeIncubatingAttributes.CODE_LINE_NUMBER, AbstractLongAssert::isPositive),
+                equalTo(CodeIncubatingAttributes.CODE_FILE_PATH, "LogbackTest.java")));
   }
 
   private static void performLogging(

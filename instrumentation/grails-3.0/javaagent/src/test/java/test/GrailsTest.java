@@ -14,7 +14,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 import grails.boot.GrailsApp;
@@ -38,7 +37,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
-import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
@@ -176,8 +174,8 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
     span.hasKind(SpanKind.INTERNAL)
         .satisfies(spanData -> assertThat(spanData.getName()).endsWith("." + methodName))
         .hasAttributesSatisfyingExactly(
-            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, methodName),
-            satisfies(CodeIncubatingAttributes.CODE_NAMESPACE, AbstractStringAssert::isNotEmpty));
+            satisfies(
+                CodeIncubatingAttributes.CODE_FUNCTION_NAME, v -> v.endsWith("." + methodName)));
     return span;
   }
 
@@ -198,10 +196,9 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
               span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"))
                   .hasKind(SpanKind.INTERNAL)
                   .hasAttributesSatisfyingExactly(
-                      equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "sendError"),
                       satisfies(
-                          CodeIncubatingAttributes.CODE_NAMESPACE,
-                          AbstractStringAssert::isNotEmpty)));
+                          CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                          v -> v.endsWith(".sendError"))));
     }
     return spanAssertions;
   }
