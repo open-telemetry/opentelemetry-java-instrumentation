@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.jdbc;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -5,11 +10,9 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.jdbc.datasource.JdbcTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.sql.DataSource;
-
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.aop.framework.ProxyFactory;
@@ -53,22 +56,24 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
         && !isRoutingDatasource(bean)
         && !ScopedProxyUtils.isScopedTarget(beanName)) {
       DataSource dataSource = (DataSource) bean;
-      DataSource wrapped = JdbcTelemetry.builder(openTelemetryProvider.getObject())
-          .setStatementSanitizationEnabled(
-              InstrumentationConfigUtil.isStatementSanitizationEnabled(
-                  configPropertiesProvider.getObject(),
-                  "otel.instrumentation.jdbc.statement-sanitizer.enabled"))
-          .setCaptureQueryParameters(
-              configPropertiesProvider
-                  .getObject()
-                  .getBoolean(
-                      "otel.instrumentation.jdbc.experimental.capture-query-parameters", false))
-          .setTransactionInstrumenterEnabled(
-              configPropertiesProvider
-                  .getObject()
-                  .getBoolean("otel.instrumentation.jdbc.experimental.transaction.enabled", false))
-          .build()
-          .wrap(dataSource);
+      DataSource wrapped =
+          JdbcTelemetry.builder(openTelemetryProvider.getObject())
+              .setStatementSanitizationEnabled(
+                  InstrumentationConfigUtil.isStatementSanitizationEnabled(
+                      configPropertiesProvider.getObject(),
+                      "otel.instrumentation.jdbc.statement-sanitizer.enabled"))
+              .setCaptureQueryParameters(
+                  configPropertiesProvider
+                      .getObject()
+                      .getBoolean(
+                          "otel.instrumentation.jdbc.experimental.capture-query-parameters", false))
+              .setTransactionInstrumenterEnabled(
+                  configPropertiesProvider
+                      .getObject()
+                      .getBoolean(
+                          "otel.instrumentation.jdbc.experimental.transaction.enabled", false))
+              .build()
+              .wrap(dataSource);
 
       ProxyFactory proxyFactory = new ProxyFactory(DataSource.class);
       proxyFactory.setTarget(bean);
