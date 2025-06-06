@@ -75,7 +75,7 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
               .build()
               .wrap(dataSource);
 
-      ProxyFactory proxyFactory = new ProxyFactory(DataSource.class);
+      ProxyFactory proxyFactory = new ProxyFactory(new Class<?>[] {DataSource.class});
       proxyFactory.setTarget(bean);
       proxyFactory.addAdvice(
           new MethodInterceptor() {
