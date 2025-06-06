@@ -97,7 +97,10 @@ nexusPublishing {
   packageGroup.set("io.opentelemetry")
 
   repositories {
+    // see https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#configuration
     sonatype {
+      nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
+      snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
       username.set(System.getenv("SONATYPE_USER"))
       password.set(System.getenv("SONATYPE_KEY"))
     }
