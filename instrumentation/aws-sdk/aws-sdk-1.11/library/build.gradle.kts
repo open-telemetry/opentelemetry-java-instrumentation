@@ -17,6 +17,11 @@ dependencies {
   testLibrary("com.amazonaws:aws-java-sdk-kinesis:1.11.106")
   testLibrary("com.amazonaws:aws-java-sdk-dynamodb:1.11.106")
   testLibrary("com.amazonaws:aws-java-sdk-sns:1.11.106")
+  testLibrary("com.amazonaws:aws-java-sdk-stepfunctions:1.11.106")
+  testLibrary("com.amazonaws:aws-java-sdk-lambda:1.11.106")
+
+  // Tests on the MacBook indicate that this keeps the core at version 1.11.0.
+  testLibrary("com.amazonaws:aws-java-sdk-secretsmanager:1.11.309")
 
   // last version that does not use json protocol
   latestDepTestLibrary("com.amazonaws:aws-java-sdk-sqs:1.12.583") // documented limitation

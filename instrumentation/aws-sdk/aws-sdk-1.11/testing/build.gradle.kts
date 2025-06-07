@@ -14,6 +14,9 @@ dependencies {
   compileOnly("com.amazonaws:aws-java-sdk-dynamodb:1.11.106")
   compileOnly("com.amazonaws:aws-java-sdk-sns:1.11.106")
   compileOnly("com.amazonaws:aws-java-sdk-sqs:1.11.106")
+  compileOnly("com.amazonaws:aws-java-sdk-secretsmanager:1.11.309")
+  compileOnly("com.amazonaws:aws-java-sdk-stepfunctions:1.11.106")
+  compileOnly("com.amazonaws:aws-java-sdk-lambda:1.11.106")
 
   // needed for SQS - using emq directly as localstack references emq v0.15.7 ie WITHOUT AWS trace header propagation
   implementation("org.elasticmq:elasticmq-rest-sqs_2.13")
