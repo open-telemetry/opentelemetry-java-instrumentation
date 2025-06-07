@@ -15,3 +15,9 @@ dependencies {
   compileOnly("org.apache.tomcat:tomcat-jdbc:8.5.0")
   testImplementation("org.apache.tomcat:tomcat-jdbc:8.5.0")
 }
+
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+}

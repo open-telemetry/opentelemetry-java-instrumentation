@@ -57,7 +57,7 @@ derby.log
 hs_err_pid*
 replay_pid*
 .attach_pid*
-**/.telemetry*
+.telemetry*
 
 !java-agent/benchmark/releases/*.jar
 
