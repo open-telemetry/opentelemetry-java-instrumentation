@@ -32,7 +32,8 @@ public class NatsRequestContextCustomizer implements ContextCustomizer<NatsReque
   public Context onStart(
       Context parentContext, NatsRequest natsRequest, Attributes startAttributes) {
     if (!Span.fromContext(parentContext).getSpanContext().isValid()
-        && natsRequest.getReplyTo() != null && natsRequest.getReplyTo().startsWith("_INBOX.")) {
+        && natsRequest.getReplyTo() != null
+        && natsRequest.getReplyTo().startsWith("_INBOX.")) {
       return propagator.extract(parentContext, natsRequest, NatsRequestTextMapGetter.INSTANCE);
     }
 

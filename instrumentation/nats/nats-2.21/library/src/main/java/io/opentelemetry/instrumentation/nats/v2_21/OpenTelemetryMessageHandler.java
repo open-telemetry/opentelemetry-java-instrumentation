@@ -45,8 +45,15 @@ public class OpenTelemetryMessageHandler implements MessageHandler {
       return;
     }
 
-    Context receiveContext = InstrumenterUtil.startAndEnd(consumerReceiveInstrumenter,
-        parentContext, natsRequest, null, null, timer.startTime(), timer.now());
+    Context receiveContext =
+        InstrumenterUtil.startAndEnd(
+            consumerReceiveInstrumenter,
+            parentContext,
+            natsRequest,
+            null,
+            null,
+            timer.startTime(),
+            timer.now());
 
     if (!consumerProcessInstrumenter.shouldStart(receiveContext, natsRequest)) {
       delegate.onMessage(message);

@@ -312,45 +312,59 @@ class NatsInstrumentationRequestTest {
                             equalTo(
                                 AttributeKey.stringKey("messaging.client_id"),
                                 String.valueOf(clientId))),
-                span -> span
-                    .has(new Condition<>(
-                        data -> data.getName().startsWith("_INBOX.") && data.getName()
-                            .endsWith(" receive"), "Name condition"))
-                    .hasKind(SpanKind.CONSUMER)
-                    .hasParent(trace.getSpan(1))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(MESSAGING_OPERATION, "receive"),
-                        equalTo(MESSAGING_SYSTEM, "nats"),
-                        satisfies(MESSAGING_DESTINATION_NAME, name -> name.startsWith("_INBOX.")),
-                        equalTo(MESSAGING_MESSAGE_BODY_SIZE, 1),
-                        equalTo(
-                            AttributeKey.stringKey("messaging.client_id"),
-                            String.valueOf(clientId))),
-                span -> span
-                    .has(new Condition<>(
-                        data -> data.getName().startsWith("_INBOX.") && data.getName()
-                            .endsWith(" process"), "Name condition"))
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasParent(trace.getSpan(2))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(MESSAGING_OPERATION, "process"),
-                        equalTo(MESSAGING_SYSTEM, "nats"),
-                        satisfies(MESSAGING_DESTINATION_NAME, name -> name.startsWith("_INBOX.")),
-                        equalTo(MESSAGING_MESSAGE_BODY_SIZE, 1),
-                        equalTo(
-                            AttributeKey.stringKey("messaging.client_id"),
-                            String.valueOf(clientId)))),
+                span ->
+                    span.has(
+                            new Condition<>(
+                                data ->
+                                    data.getName().startsWith("_INBOX.")
+                                        && data.getName().endsWith(" receive"),
+                                "Name condition"))
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_OPERATION, "receive"),
+                            equalTo(MESSAGING_SYSTEM, "nats"),
+                            satisfies(
+                                MESSAGING_DESTINATION_NAME, name -> name.startsWith("_INBOX.")),
+                            equalTo(MESSAGING_MESSAGE_BODY_SIZE, 1),
+                            equalTo(
+                                AttributeKey.stringKey("messaging.client_id"),
+                                String.valueOf(clientId))),
+                span ->
+                    span.has(
+                            new Condition<>(
+                                data ->
+                                    data.getName().startsWith("_INBOX.")
+                                        && data.getName().endsWith(" process"),
+                                "Name condition"))
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(2))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_OPERATION, "process"),
+                            equalTo(MESSAGING_SYSTEM, "nats"),
+                            satisfies(
+                                MESSAGING_DESTINATION_NAME, name -> name.startsWith("_INBOX.")),
+                            equalTo(MESSAGING_MESSAGE_BODY_SIZE, 1),
+                            equalTo(
+                                AttributeKey.stringKey("messaging.client_id"),
+                                String.valueOf(clientId)))),
         // dispatcher receive, process, publish, not retesting all properties
-        trace -> trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("sub receive").hasKind(SpanKind.CONSUMER).hasNoParent(),
-            span -> span.hasName("sub process").hasKind(SpanKind.INTERNAL)
-                .hasParent(trace.getSpan(0)),
-            span -> span
-                .has(new Condition<>(
-                    data -> data.getName().startsWith("_INBOX.") && data.getName()
-                        .endsWith(" publish"), "Name condition"))
-                .hasKind(SpanKind.PRODUCER).hasParent(trace.getSpan(1))
-        ));
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("sub receive").hasKind(SpanKind.CONSUMER).hasNoParent(),
+                span ->
+                    span.hasName("sub process")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0)),
+                span ->
+                    span.has(
+                            new Condition<>(
+                                data ->
+                                    data.getName().startsWith("_INBOX.")
+                                        && data.getName().endsWith(" publish"),
+                                "Name condition"))
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(1))));
   }
 
   private static void assertPublishSpanSameTrace() {
@@ -372,45 +386,61 @@ class NatsInstrumentationRequestTest {
                                 String.valueOf(clientId))),
 
                 // dispatcher receive, process, publish, not retesting all properties
-                span -> span.hasName("sub receive").hasKind(SpanKind.CONSUMER)
-                    .hasParent(trace.getSpan(1)),
-                span -> span.hasName("sub process").hasKind(SpanKind.INTERNAL)
-                    .hasParent(trace.getSpan(2)),
-                span -> span
-                    .has(new Condition<>(
-                        data -> data.getName().startsWith("_INBOX.") && data.getName()
-                            .endsWith(" publish"), "Name condition"))
-                    .hasKind(SpanKind.PRODUCER).hasParent(trace.getSpan(3)),
+                span ->
+                    span.hasName("sub receive")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1)),
+                span ->
+                    span.hasName("sub process")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(2)),
+                span ->
+                    span.has(
+                            new Condition<>(
+                                data ->
+                                    data.getName().startsWith("_INBOX.")
+                                        && data.getName().endsWith(" publish"),
+                                "Name condition"))
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(3)),
                 // end dispatcher
 
-                span -> span
-                    .has(new Condition<>(
-                        data -> data.getName().startsWith("_INBOX.") && data.getName()
-                            .endsWith(" receive"), "Name condition"))
-                    .hasKind(SpanKind.CONSUMER)
-                    .hasParent(trace.getSpan(1))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(MESSAGING_OPERATION, "receive"),
-                        equalTo(MESSAGING_SYSTEM, "nats"),
-                        satisfies(MESSAGING_DESTINATION_NAME, name -> name.startsWith("_INBOX.")),
-                        equalTo(MESSAGING_MESSAGE_BODY_SIZE, 1),
-                        equalTo(
-                            AttributeKey.stringKey("messaging.client_id"),
-                            String.valueOf(clientId))),
-                span -> span
-                    .has(new Condition<>(
-                        data -> data.getName().startsWith("_INBOX.") && data.getName()
-                            .endsWith(" process"), "Name condition"))
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasParent(trace.getSpan(5))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(MESSAGING_OPERATION, "process"),
-                        equalTo(MESSAGING_SYSTEM, "nats"),
-                        satisfies(MESSAGING_DESTINATION_NAME, name -> name.startsWith("_INBOX.")),
-                        equalTo(MESSAGING_MESSAGE_BODY_SIZE, 1),
-                        equalTo(
-                            AttributeKey.stringKey("messaging.client_id"),
-                            String.valueOf(clientId)))));
+                span ->
+                    span.has(
+                            new Condition<>(
+                                data ->
+                                    data.getName().startsWith("_INBOX.")
+                                        && data.getName().endsWith(" receive"),
+                                "Name condition"))
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_OPERATION, "receive"),
+                            equalTo(MESSAGING_SYSTEM, "nats"),
+                            satisfies(
+                                MESSAGING_DESTINATION_NAME, name -> name.startsWith("_INBOX.")),
+                            equalTo(MESSAGING_MESSAGE_BODY_SIZE, 1),
+                            equalTo(
+                                AttributeKey.stringKey("messaging.client_id"),
+                                String.valueOf(clientId))),
+                span ->
+                    span.has(
+                            new Condition<>(
+                                data ->
+                                    data.getName().startsWith("_INBOX.")
+                                        && data.getName().endsWith(" process"),
+                                "Name condition"))
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(5))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_OPERATION, "process"),
+                            equalTo(MESSAGING_SYSTEM, "nats"),
+                            satisfies(
+                                MESSAGING_DESTINATION_NAME, name -> name.startsWith("_INBOX.")),
+                            equalTo(MESSAGING_MESSAGE_BODY_SIZE, 1),
+                            equalTo(
+                                AttributeKey.stringKey("messaging.client_id"),
+                                String.valueOf(clientId)))));
   }
 
   private static void assertTimeoutPublishSpan() {
