@@ -41,7 +41,9 @@ public class ConnectionSubscribeInstrumentation implements TypeInstrumentation {
   public static class SubscribeAdvice {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.This Connection connection, @Advice.Return Subscription subscription) {
+        @Advice.This Connection connection,
+        @Advice.Return Subscription subscription
+    ) {
       NatsData.addSubscription(subscription, connection);
     }
   }

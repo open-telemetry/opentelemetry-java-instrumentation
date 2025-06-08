@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.nats.v2_21;
 
 import static io.opentelemetry.instrumentation.nats.v2_21.internal.NatsInstrumenterFactory.createClientInstrumenter;
+import static io.opentelemetry.instrumentation.nats.v2_21.internal.NatsInstrumenterFactory.createConsumerProcessInstrumenter;
 import static io.opentelemetry.instrumentation.nats.v2_21.internal.NatsInstrumenterFactory.createConsumerReceiveInstrumenter;
 import static io.opentelemetry.instrumentation.nats.v2_21.internal.NatsInstrumenterFactory.createProducerInstrumenter;
 
@@ -18,8 +19,11 @@ public final class NatsSingletons {
   public static final Instrumenter<NatsRequest, Void> PRODUCER_INSTRUMENTER =
       createProducerInstrumenter(GlobalOpenTelemetry.get());
 
-  public static final Instrumenter<NatsRequest, Void> CONSUMER_INSTRUMENTER =
+  public static final Instrumenter<NatsRequest, Void> CONSUMER_RECEIVE_INSTRUMENTER =
       createConsumerReceiveInstrumenter(GlobalOpenTelemetry.get());
+
+  public static final Instrumenter<NatsRequest, Void> CONSUMER_PROCESS_INSTRUMENTER =
+      createConsumerProcessInstrumenter(GlobalOpenTelemetry.get());
 
   public static final Instrumenter<NatsRequest, NatsRequest> CLIENT_INSTRUMENTER =
       createClientInstrumenter(GlobalOpenTelemetry.get());
