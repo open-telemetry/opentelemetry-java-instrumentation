@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.nats.v2_21;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.nats.v2_21.NatsSingletons.CONSUMER_INSTRUMENTER;
+import static io.opentelemetry.javaagent.instrumentation.nats.v2_21.NatsSingletons.CONSUMER_RECEIVE_INSTRUMENTER;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -81,12 +81,12 @@ public class SubscriptionInstrumentation implements TypeInstrumentation {
         natsRequest = NatsRequest.create(connection, message);
       }
 
-      if (!CONSUMER_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
+      if (!CONSUMER_RECEIVE_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
         return;
       }
 
       InstrumenterUtil.startAndEnd(
-          CONSUMER_INSTRUMENTER,
+          CONSUMER_RECEIVE_INSTRUMENTER,
           parentContext,
           natsRequest,
           null,

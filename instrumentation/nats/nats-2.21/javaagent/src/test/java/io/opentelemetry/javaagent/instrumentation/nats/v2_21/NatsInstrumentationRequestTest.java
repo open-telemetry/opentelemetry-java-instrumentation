@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.nats.v2_21;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -27,6 +28,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.TimeoutException;
+import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -122,7 +124,7 @@ class NatsInstrumentationRequestTest {
     connection.closeDispatcher(dispatcher);
 
     // then
-    assertPublishSpan();
+    assertPublishSpanSameTrace();
     assertTraceparentHeader();
   }
 
@@ -159,7 +161,7 @@ class NatsInstrumentationRequestTest {
     connection.closeDispatcher(dispatcher);
 
     // then
-    assertPublishSpan();
+    assertPublishSpanSameTrace();
     assertTraceparentHeader();
   }
 
@@ -195,7 +197,7 @@ class NatsInstrumentationRequestTest {
         .whenComplete((m, e) -> connection.closeDispatcher(dispatcher));
 
     // then
-    assertPublishSpan();
+    assertPublishSpanSameTrace();
     assertTraceparentHeader();
   }
 
@@ -234,7 +236,7 @@ class NatsInstrumentationRequestTest {
         .whenComplete((m, e) -> connection.closeDispatcher(dispatcher));
 
     // then
-    assertPublishSpan();
+    assertPublishSpanSameTrace();
     assertTraceparentHeader();
   }
 
@@ -309,9 +311,106 @@ class NatsInstrumentationRequestTest {
                             equalTo(MESSAGING_MESSAGE_BODY_SIZE, 1),
                             equalTo(
                                 AttributeKey.stringKey("messaging.client_id"),
-                                String.valueOf(clientId)))),
-        // dispatcher publish
-        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasKind(SpanKind.PRODUCER)));
+                                String.valueOf(clientId))),
+                span -> span
+                    .has(new Condition<>(
+                        data -> data.getName().startsWith("_INBOX.") && data.getName()
+                            .endsWith(" receive"), "Name condition"))
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(MESSAGING_OPERATION, "receive"),
+                        equalTo(MESSAGING_SYSTEM, "nats"),
+                        satisfies(MESSAGING_DESTINATION_NAME, name -> name.startsWith("_INBOX.")),
+                        equalTo(MESSAGING_MESSAGE_BODY_SIZE, 1),
+                        equalTo(
+                            AttributeKey.stringKey("messaging.client_id"),
+                            String.valueOf(clientId))),
+                span -> span
+                    .has(new Condition<>(
+                        data -> data.getName().startsWith("_INBOX.") && data.getName()
+                            .endsWith(" process"), "Name condition"))
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(2))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(MESSAGING_OPERATION, "process"),
+                        equalTo(MESSAGING_SYSTEM, "nats"),
+                        satisfies(MESSAGING_DESTINATION_NAME, name -> name.startsWith("_INBOX.")),
+                        equalTo(MESSAGING_MESSAGE_BODY_SIZE, 1),
+                        equalTo(
+                            AttributeKey.stringKey("messaging.client_id"),
+                            String.valueOf(clientId)))),
+        // dispatcher receive, process, publish, not retesting all properties
+        trace -> trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("sub receive").hasKind(SpanKind.CONSUMER).hasNoParent(),
+            span -> span.hasName("sub process").hasKind(SpanKind.INTERNAL)
+                .hasParent(trace.getSpan(0)),
+            span -> span
+                .has(new Condition<>(
+                    data -> data.getName().startsWith("_INBOX.") && data.getName()
+                        .endsWith(" publish"), "Name condition"))
+                .hasKind(SpanKind.PRODUCER).hasParent(trace.getSpan(1))
+        ));
+  }
+
+  private static void assertPublishSpanSameTrace() {
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span ->
+                    span.hasName("sub publish")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_OPERATION, "publish"),
+                            equalTo(MESSAGING_SYSTEM, "nats"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "sub"),
+                            equalTo(MESSAGING_MESSAGE_BODY_SIZE, 1),
+                            equalTo(
+                                AttributeKey.stringKey("messaging.client_id"),
+                                String.valueOf(clientId))),
+
+                // dispatcher receive, process, publish, not retesting all properties
+                span -> span.hasName("sub receive").hasKind(SpanKind.CONSUMER)
+                    .hasParent(trace.getSpan(1)),
+                span -> span.hasName("sub process").hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(2)),
+                span -> span
+                    .has(new Condition<>(
+                        data -> data.getName().startsWith("_INBOX.") && data.getName()
+                            .endsWith(" publish"), "Name condition"))
+                    .hasKind(SpanKind.PRODUCER).hasParent(trace.getSpan(3)),
+                // end dispatcher
+
+                span -> span
+                    .has(new Condition<>(
+                        data -> data.getName().startsWith("_INBOX.") && data.getName()
+                            .endsWith(" receive"), "Name condition"))
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(MESSAGING_OPERATION, "receive"),
+                        equalTo(MESSAGING_SYSTEM, "nats"),
+                        satisfies(MESSAGING_DESTINATION_NAME, name -> name.startsWith("_INBOX.")),
+                        equalTo(MESSAGING_MESSAGE_BODY_SIZE, 1),
+                        equalTo(
+                            AttributeKey.stringKey("messaging.client_id"),
+                            String.valueOf(clientId))),
+                span -> span
+                    .has(new Condition<>(
+                        data -> data.getName().startsWith("_INBOX.") && data.getName()
+                            .endsWith(" process"), "Name condition"))
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(5))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(MESSAGING_OPERATION, "process"),
+                        equalTo(MESSAGING_SYSTEM, "nats"),
+                        satisfies(MESSAGING_DESTINATION_NAME, name -> name.startsWith("_INBOX.")),
+                        equalTo(MESSAGING_MESSAGE_BODY_SIZE, 1),
+                        equalTo(
+                            AttributeKey.stringKey("messaging.client_id"),
+                            String.valueOf(clientId)))));
   }
 
   private static void assertTimeoutPublishSpan() {

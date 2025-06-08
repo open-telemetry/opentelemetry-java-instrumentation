@@ -98,8 +98,6 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Thrown Throwable throwable,
-        @Advice.Argument(0) String subject,
-        @Advice.Argument(1) byte[] body,
         @Advice.Local("otelContext") Context otelContext,
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {
@@ -138,9 +136,6 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Thrown Throwable throwable,
-        @Advice.Argument(0) String subject,
-        @Advice.Argument(1) Headers headers,
-        @Advice.Argument(2) byte[] body,
         @Advice.Local("otelContext") Context otelContext,
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {
@@ -179,9 +174,6 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Thrown Throwable throwable,
-        @Advice.Argument(0) String subject,
-        @Advice.Argument(1) String replyTo,
-        @Advice.Argument(2) byte[] body,
         @Advice.Local("otelContext") Context otelContext,
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {
@@ -221,10 +213,6 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Thrown Throwable throwable,
-        @Advice.Argument(0) String subject,
-        @Advice.Argument(1) String replyTo,
-        @Advice.Argument(2) Headers headers,
-        @Advice.Argument(3) byte[] body,
         @Advice.Local("otelContext") Context otelContext,
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {
@@ -261,8 +249,6 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Thrown Throwable throwable,
-        @Advice.This Connection connection,
-        @Advice.Argument(0) Message message,
         @Advice.Local("otelContext") Context otelContext,
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {

@@ -26,6 +26,7 @@ public class NatsInstrumentationModule extends InstrumentationModule {
         new ConnectionSubscribeInstrumentation(),
         new ConnectionPublishInstrumentation(),
         new ConnectionRequestInstrumentation(),
-        new SubscriptionInstrumentation());
+        new SubscriptionInstrumentation(),
+        new MessageHandlerInstrumentation());
   }
 }
