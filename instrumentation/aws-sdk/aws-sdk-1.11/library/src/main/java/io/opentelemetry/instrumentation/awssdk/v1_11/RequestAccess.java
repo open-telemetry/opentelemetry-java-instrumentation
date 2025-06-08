@@ -11,6 +11,8 @@ import java.lang.invoke.MethodType;
 import javax.annotation.Nullable;
 
 final class RequestAccess {
+  private static final String STEP_FUNCTIONS_REQUEST_CLASS_PREFIX =
+      "com.amazonaws.services.stepfunctions.model.";
 
   private static final ClassValue<RequestAccess> REQUEST_ACCESSORS =
       new ClassValue<RequestAccess>() {
@@ -19,6 +21,24 @@ final class RequestAccess {
           return new RequestAccess(type);
         }
       };
+
+  @Nullable
+  static String getStepFunctionsActivityArn(Object request) {
+    if (request == null) {
+      return null;
+    }
+    RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
+    return invokeOrNull(access.getStepFunctionsActivityArn, request);
+  }
+
+  @Nullable
+  static String getStateMachineArn(Object request) {
+    if (request == null) {
+      return null;
+    }
+    RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
+    return invokeOrNull(access.getStateMachineArn, request);
+  }
 
   @Nullable
   static String getBucketName(Object request) {
@@ -74,15 +94,20 @@ final class RequestAccess {
     }
   }
 
-  @Nullable private final MethodHandle getBucketName;
-  @Nullable private final MethodHandle getQueueUrl;
-  @Nullable private final MethodHandle getQueueName;
-  @Nullable private final MethodHandle getStreamName;
-  @Nullable private final MethodHandle getTableName;
-  @Nullable private final MethodHandle getTopicArn;
-  @Nullable private final MethodHandle getTargetArn;
+  @Nullable private MethodHandle getBucketName;
+  @Nullable private MethodHandle getQueueUrl;
+  @Nullable private MethodHandle getQueueName;
+  @Nullable private MethodHandle getStateMachineArn;
+  @Nullable private MethodHandle getStepFunctionsActivityArn;
+  @Nullable private MethodHandle getStreamName;
+  @Nullable private MethodHandle getTableName;
+  @Nullable private MethodHandle getTopicArn;
+  @Nullable private MethodHandle getTargetArn;
 
   private RequestAccess(Class<?> clz) {
+    if (clz == null) {
+      return;
+    }
     getBucketName = findAccessorOrNull(clz, "getBucketName");
     getQueueUrl = findAccessorOrNull(clz, "getQueueUrl");
     getQueueName = findAccessorOrNull(clz, "getQueueName");
@@ -90,6 +115,11 @@ final class RequestAccess {
     getTableName = findAccessorOrNull(clz, "getTableName");
     getTopicArn = findAccessorOrNull(clz, "getTopicArn");
     getTargetArn = findAccessorOrNull(clz, "getTargetArn");
+    String className = clz.getName();
+    if (className.startsWith(STEP_FUNCTIONS_REQUEST_CLASS_PREFIX)) {
+      getStateMachineArn = findAccessorOrNull(clz, "getStateMachineArn");
+      getStepFunctionsActivityArn = findAccessorOrNull(clz, "getActivityArn");
+    }
   }
 
   @Nullable
