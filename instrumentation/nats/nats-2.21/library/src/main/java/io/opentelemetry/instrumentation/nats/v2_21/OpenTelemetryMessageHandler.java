@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.nats.v2_21;
 import io.nats.client.Connection;
 import io.nats.client.Message;
 import io.nats.client.MessageHandler;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
@@ -40,8 +40,7 @@ public class OpenTelemetryMessageHandler implements MessageHandler {
     Context parentContext = Context.current();
     NatsRequest natsRequest = NatsRequest.create(connection, message);
 
-    if (!Span.fromContext(parentContext).getSpanContext().isValid()
-        || !consumerReceiveInstrumenter.shouldStart(parentContext, natsRequest)) {
+    if (!consumerReceiveInstrumenter.shouldStart(parentContext, natsRequest)) {
       delegate.onMessage(message);
       return;
     }
@@ -62,13 +61,15 @@ public class OpenTelemetryMessageHandler implements MessageHandler {
     }
 
     Context processContext = consumerProcessInstrumenter.start(receiveContext, natsRequest);
-    try {
+    InterruptedException exception = null;
+
+    try (Scope ignored = processContext.makeCurrent()) {
       delegate.onMessage(message);
     } catch (InterruptedException e) {
-      consumerProcessInstrumenter.end(processContext, natsRequest, null, e);
+      exception = e;
       throw e;
     } finally {
-      consumerProcessInstrumenter.end(processContext, natsRequest, null, null);
+      consumerProcessInstrumenter.end(processContext, natsRequest, null, exception);
     }
   }
 }

@@ -72,7 +72,9 @@ public class SubscriptionInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      NatsRequest natsRequest = NatsRequest.create(connection, subscription.getSubject());
+      NatsRequest natsRequest =
+          NatsRequest.create(connection, null, subscription.getSubject(), null, null);
+
       if (message == null) {
         timeout = new TimeoutException("Timed out waiting for message");
       } else {

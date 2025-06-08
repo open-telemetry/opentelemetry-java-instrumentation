@@ -78,7 +78,12 @@ public class OpenTelemetryDispatcher implements Dispatcher {
 
   @Override
   public Dispatcher unsubscribe(Subscription subscription) {
-    delegate.unsubscribe(subscription);
+    if (subscription instanceof OpenTelemetrySubscription) {
+      delegate.unsubscribe(((OpenTelemetrySubscription) subscription).getDelegate());
+    } else {
+      delegate.unsubscribe(subscription);
+    }
+
     // from javadoc - Returns: The Dispatcher, so calls can be chained.
     return this;
   }
@@ -92,7 +97,12 @@ public class OpenTelemetryDispatcher implements Dispatcher {
 
   @Override
   public Dispatcher unsubscribe(Subscription subscription, int after) {
-    delegate.unsubscribe(subscription, after);
+    if (subscription instanceof OpenTelemetrySubscription) {
+      delegate.unsubscribe(((OpenTelemetrySubscription) subscription).getDelegate(), after);
+    } else {
+      delegate.unsubscribe(subscription, after);
+    }
+
     // from javadoc - Returns: The Dispatcher, so calls can be chained.
     return this;
   }
@@ -145,5 +155,9 @@ public class OpenTelemetryDispatcher implements Dispatcher {
   @Override
   public CompletableFuture<Boolean> drain(Duration timeout) throws InterruptedException {
     return delegate.drain(timeout);
+  }
+
+  protected Dispatcher getDelegate() {
+    return delegate;
   }
 }

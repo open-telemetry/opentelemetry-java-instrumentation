@@ -33,7 +33,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-class NatsInstrumentationSubscribeTest {
+class NatsInstrumentationSubscriptionTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -98,7 +98,7 @@ class NatsInstrumentationSubscribeTest {
   }
 
   @Test
-  void testSubscribeNoLink() throws InterruptedException {
+  void testNextMessage() throws InterruptedException {
     // given
     Headers headers = new Headers(new Headers(), /* readOnly= */ true);
 
@@ -143,7 +143,7 @@ class NatsInstrumentationSubscribeTest {
 
   @SuppressWarnings("PreferJavaTimeOverload")
   @Test
-  void testSubscribeWithLink() throws InterruptedException {
+  void testNextMessageLink() throws InterruptedException {
     // given
     String linkTraceId = "0af7651916cd43dd8448eb211c80319c";
     Headers headers =

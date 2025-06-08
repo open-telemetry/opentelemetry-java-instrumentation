@@ -74,7 +74,7 @@ class NatsInstrumentationPublishTest {
   }
 
   @Test
-  void testPublishBodyNoHeaders() throws InterruptedException {
+  void testPublishBody() throws InterruptedException {
     // when
     testing.runWithSpan("parent", () -> connection.publish("sub", new byte[] {0}));
 
@@ -84,7 +84,7 @@ class NatsInstrumentationPublishTest {
   }
 
   @Test
-  void testPublishBodyWithHeaders() throws InterruptedException {
+  void testPublishHeadersBody() throws InterruptedException {
     // when
     testing.runWithSpan("parent", () -> connection.publish("sub", new Headers(), new byte[] {0}));
 
@@ -94,7 +94,7 @@ class NatsInstrumentationPublishTest {
   }
 
   @Test
-  void testPublishBodyReplyToNoHeaders() throws InterruptedException {
+  void testPublishReplyToBody() throws InterruptedException {
     // when
     testing.runWithSpan("parent", () -> connection.publish("sub", "rt", new byte[] {0}));
 
@@ -104,7 +104,7 @@ class NatsInstrumentationPublishTest {
   }
 
   @Test
-  void testPublishBodyReplyToWithHeaders() throws InterruptedException {
+  void testPublishReplyToHeadersBody() throws InterruptedException {
     // when
     testing.runWithSpan(
         "parent", () -> connection.publish("sub", "rt", new Headers(), new byte[] {0}));
@@ -115,7 +115,7 @@ class NatsInstrumentationPublishTest {
   }
 
   @Test
-  void testPublishMessageNoHeaders() throws InterruptedException {
+  void testPublishMessage() throws InterruptedException {
     NatsMessage message = NatsMessage.builder().subject("sub").data("x").build();
 
     // when

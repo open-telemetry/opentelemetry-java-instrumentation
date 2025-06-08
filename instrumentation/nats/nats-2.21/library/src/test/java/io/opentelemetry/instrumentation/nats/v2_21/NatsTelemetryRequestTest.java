@@ -50,24 +50,7 @@ class NatsTelemetryRequestTest {
   }
 
   @Test
-  void testRequestFutureTimeout() {
-    // given
-    TestConnection testConnection = new TestConnection();
-    OpenTelemetryConnection connection = telemetry.wrap(testConnection);
-
-    // when
-    testing.runWithSpan(
-        "parent",
-        () -> connection.requestWithTimeout("sub", new byte[] {0}, Duration.ofSeconds(1)));
-
-    // then
-    assertPublishSpan();
-    assertTimeoutPublishSpan();
-    assertNoHeaders(testConnection);
-  }
-
-  @Test
-  void testRequestBodyNoHeaders() throws InterruptedException {
+  void testRequestBody() throws InterruptedException {
     // given
     TestConnection testConnection = new TestConnection();
     OpenTelemetryConnection connection = telemetry.wrap(testConnection);
@@ -87,27 +70,7 @@ class NatsTelemetryRequestTest {
   }
 
   @Test
-  void testRequestFutureBodyNoHeaders() {
-    // given
-    TestConnection testConnection = new TestConnection();
-    OpenTelemetryConnection connection = telemetry.wrap(testConnection);
-
-    // when
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          testConnection.requestResponseMessages.offer(
-              NatsMessage.builder().subject("sub").build());
-          connection.request("sub", new byte[] {0});
-        });
-
-    // then
-    assertPublishSpan();
-    assertNoHeaders(testConnection);
-  }
-
-  @Test
-  void testRequestBodyWithHeaders() throws InterruptedException {
+  void testRequestHeadersBody() throws InterruptedException {
     // given
     TestConnection testConnection = new TestConnection();
     OpenTelemetryConnection connection = telemetry.wrap(testConnection);
@@ -127,27 +90,7 @@ class NatsTelemetryRequestTest {
   }
 
   @Test
-  void testRequestFutureBodyWithHeaders() {
-    // given
-    TestConnection testConnection = new TestConnection();
-    OpenTelemetryConnection connection = telemetry.wrap(testConnection);
-
-    // when
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          testConnection.requestResponseMessages.offer(
-              NatsMessage.builder().subject("sub").build());
-          connection.request("sub", new Headers(), new byte[] {0});
-        });
-
-    // then
-    assertPublishSpan();
-    assertTraceparentHeader(testConnection);
-  }
-
-  @Test
-  void testRequestMessageNoHeaders() throws InterruptedException {
+  void testRequestMessage() throws InterruptedException {
     // given
     TestConnection testConnection = new TestConnection();
     OpenTelemetryConnection connection = telemetry.wrap(testConnection);
@@ -168,28 +111,7 @@ class NatsTelemetryRequestTest {
   }
 
   @Test
-  void testRequestFutureMessageNoHeaders() {
-    // given
-    TestConnection testConnection = new TestConnection();
-    OpenTelemetryConnection connection = telemetry.wrap(testConnection);
-    NatsMessage message = NatsMessage.builder().subject("sub").data("x").build();
-
-    // when
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          testConnection.requestResponseMessages.offer(
-              NatsMessage.builder().subject("sub").build());
-          connection.request(message);
-        });
-
-    // then
-    assertPublishSpan();
-    assertNoHeaders(testConnection);
-  }
-
-  @Test
-  void testRequestMessageWithHeaders() throws InterruptedException {
+  void testRequestMessageHeaders() throws InterruptedException {
     // given
     TestConnection testConnection = new TestConnection();
     OpenTelemetryConnection connection = telemetry.wrap(testConnection);
@@ -211,7 +133,85 @@ class NatsTelemetryRequestTest {
   }
 
   @Test
-  void testRequestFutureMessageWithHeaders() {
+  void testRequestFutureTimeout() {
+    // given
+    TestConnection testConnection = new TestConnection();
+    OpenTelemetryConnection connection = telemetry.wrap(testConnection);
+
+    // when
+    testing.runWithSpan(
+        "parent",
+        () -> connection.requestWithTimeout("sub", new byte[] {0}, Duration.ofSeconds(1)));
+
+    // then
+    assertPublishSpan();
+    assertTimeoutPublishSpan();
+    assertNoHeaders(testConnection);
+  }
+
+  @Test
+  void testRequestFutureBody() {
+    // given
+    TestConnection testConnection = new TestConnection();
+    OpenTelemetryConnection connection = telemetry.wrap(testConnection);
+
+    // when
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          testConnection.requestResponseMessages.offer(
+              NatsMessage.builder().subject("sub").build());
+          connection.request("sub", new byte[] {0});
+        });
+
+    // then
+    assertPublishSpan();
+    assertNoHeaders(testConnection);
+  }
+
+  @Test
+  void testRequestFutureHeadersBody() {
+    // given
+    TestConnection testConnection = new TestConnection();
+    OpenTelemetryConnection connection = telemetry.wrap(testConnection);
+
+    // when
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          testConnection.requestResponseMessages.offer(
+              NatsMessage.builder().subject("sub").build());
+          connection.request("sub", new Headers(), new byte[] {0});
+        });
+
+    // then
+    assertPublishSpan();
+    assertTraceparentHeader(testConnection);
+  }
+
+  @Test
+  void testRequestFutureMessage() {
+    // given
+    TestConnection testConnection = new TestConnection();
+    OpenTelemetryConnection connection = telemetry.wrap(testConnection);
+    NatsMessage message = NatsMessage.builder().subject("sub").data("x").build();
+
+    // when
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          testConnection.requestResponseMessages.offer(
+              NatsMessage.builder().subject("sub").build());
+          connection.request(message);
+        });
+
+    // then
+    assertPublishSpan();
+    assertNoHeaders(testConnection);
+  }
+
+  @Test
+  void testRequestFutureMessageHeaders() {
     // given
     TestConnection testConnection = new TestConnection();
     OpenTelemetryConnection connection = telemetry.wrap(testConnection);

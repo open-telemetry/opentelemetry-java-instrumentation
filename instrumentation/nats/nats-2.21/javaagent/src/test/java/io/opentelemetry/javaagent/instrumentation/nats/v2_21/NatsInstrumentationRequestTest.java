@@ -90,62 +90,7 @@ class NatsInstrumentationRequestTest {
   }
 
   @Test
-  void testRequestFutureTimeoutBodyNoHeaders() throws InterruptedException {
-    // when
-    testing.runWithSpan(
-        "parent",
-        () -> connection.requestWithTimeout("sub", new byte[] {0}, Duration.ofSeconds(1)));
-
-    // then
-    assertCancellationPublishSpan();
-    assertNoHeaders();
-  }
-
-  @Test
-  void testRequestFutureTimeoutBodyWithHeaders() throws InterruptedException {
-    // when
-    testing.runWithSpan(
-        "parent",
-        () ->
-            connection.requestWithTimeout(
-                "sub", new Headers(), new byte[] {0}, Duration.ofSeconds(1)));
-
-    // then
-    assertCancellationPublishSpan();
-    assertTraceparentHeader();
-  }
-
-  @Test
-  void testRequestFutureTimeoutMessageNoHeaders() throws InterruptedException {
-    // given
-    NatsMessage message = NatsMessage.builder().subject("sub").data("x").build();
-
-    // when
-    testing.runWithSpan(
-        "parent", () -> connection.requestWithTimeout(message, Duration.ofSeconds(1)));
-
-    // then
-    assertCancellationPublishSpan();
-    assertNoHeaders();
-  }
-
-  @Test
-  void testRequestFutureTimeoutMessageWithHeaders() throws InterruptedException {
-    // given
-    NatsMessage message =
-        NatsMessage.builder().subject("sub").headers(new Headers()).data("x").build();
-
-    // when
-    testing.runWithSpan(
-        "parent", () -> connection.requestWithTimeout(message, Duration.ofSeconds(1)));
-
-    // then
-    assertCancellationPublishSpan();
-    assertTraceparentHeader();
-  }
-
-  @Test
-  void testRequestBodyNoHeaders() throws InterruptedException {
+  void testRequestBody() throws InterruptedException {
     // given
     Dispatcher dispatcher =
         connection
@@ -163,25 +108,7 @@ class NatsInstrumentationRequestTest {
   }
 
   @Test
-  void testRequestFutureBodyNoHeaders() throws InterruptedException {
-    // given
-    Dispatcher dispatcher =
-        connection
-            .createDispatcher(m -> connection.publish(m.getReplyTo(), m.getData()))
-            .subscribe("sub");
-
-    // when
-    testing
-        .runWithSpan("parent", () -> connection.request("sub", new byte[] {0}))
-        .whenComplete((m, e) -> connection.closeDispatcher(dispatcher));
-
-    // then
-    assertPublishSpan();
-    assertNoHeaders();
-  }
-
-  @Test
-  void testRequestBodyWithHeaders() throws InterruptedException {
+  void testRequestHeadersBody() throws InterruptedException {
     // given
     Dispatcher dispatcher =
         connection
@@ -200,7 +127,62 @@ class NatsInstrumentationRequestTest {
   }
 
   @Test
-  void testRequestFutureBodyWithHeaders() throws InterruptedException {
+  void testRequestMessage() throws InterruptedException {
+    // given
+    Dispatcher dispatcher =
+        connection
+            .createDispatcher(m -> connection.publish(m.getReplyTo(), m.getData()))
+            .subscribe("sub");
+    NatsMessage message = NatsMessage.builder().subject("sub").data("x").build();
+
+    // when
+    testing.runWithSpan("parent", () -> connection.request(message, Duration.ofSeconds(1)));
+    connection.closeDispatcher(dispatcher);
+
+    // then
+    assertPublishSpan();
+    assertNoHeaders();
+  }
+
+  @Test
+  void testRequestMessageHeaders() throws InterruptedException {
+    // given
+    Dispatcher dispatcher =
+        connection
+            .createDispatcher(m -> connection.publish(m.getReplyTo(), m.getData()))
+            .subscribe("sub");
+    NatsMessage message =
+        NatsMessage.builder().subject("sub").headers(new Headers()).data("x").build();
+
+    // when
+    testing.runWithSpan("parent", () -> connection.request(message, Duration.ofSeconds(1)));
+    connection.closeDispatcher(dispatcher);
+
+    // then
+    assertPublishSpan();
+    assertTraceparentHeader();
+  }
+
+  @Test
+  void testRequestFutureBody() throws InterruptedException {
+    // given
+    Dispatcher dispatcher =
+        connection
+            .createDispatcher(m -> connection.publish(m.getReplyTo(), m.getData()))
+            .subscribe("sub");
+
+    // when
+    testing
+        .runWithSpan("parent", () -> connection.request("sub", new byte[] {0}))
+        .whenComplete((m, e) -> connection.closeDispatcher(dispatcher));
+
+    // then
+    assertPublishSpan();
+    assertNoHeaders();
+  }
+
+  @Test
+  void testRequestFutureHeadersBody() throws InterruptedException {
     // given
     Dispatcher dispatcher =
         connection
@@ -218,25 +200,7 @@ class NatsInstrumentationRequestTest {
   }
 
   @Test
-  void testRequestMessageNoHeaders() throws InterruptedException {
-    // given
-    Dispatcher dispatcher =
-        connection
-            .createDispatcher(m -> connection.publish(m.getReplyTo(), m.getData()))
-            .subscribe("sub");
-    NatsMessage message = NatsMessage.builder().subject("sub").data("x").build();
-
-    // when
-    testing.runWithSpan("parent", () -> connection.request(message, Duration.ofSeconds(1)));
-    connection.closeDispatcher(dispatcher);
-
-    // then
-    assertPublishSpan();
-    assertNoHeaders();
-  }
-
-  @Test
-  void testRequestFutureMessageNoHeaders() throws InterruptedException {
+  void testRequestFutureMessage() throws InterruptedException {
     // given
     Dispatcher dispatcher =
         connection
@@ -255,7 +219,7 @@ class NatsInstrumentationRequestTest {
   }
 
   @Test
-  void testRequestMessageWithHeaders() throws InterruptedException {
+  void testRequestFutureMessageHeaders() throws InterruptedException {
     // given
     Dispatcher dispatcher =
         connection
@@ -265,8 +229,9 @@ class NatsInstrumentationRequestTest {
         NatsMessage.builder().subject("sub").headers(new Headers()).data("x").build();
 
     // when
-    testing.runWithSpan("parent", () -> connection.request(message, Duration.ofSeconds(1)));
-    connection.closeDispatcher(dispatcher);
+    testing
+        .runWithSpan("parent", () -> connection.request(message))
+        .whenComplete((m, e) -> connection.closeDispatcher(dispatcher));
 
     // then
     assertPublishSpan();
@@ -274,22 +239,57 @@ class NatsInstrumentationRequestTest {
   }
 
   @Test
-  void testRequestFutureMessageWithHeaders() throws InterruptedException {
+  void testRequestTimeoutFutureBody() throws InterruptedException {
+    // when
+    testing.runWithSpan(
+        "parent",
+        () -> connection.requestWithTimeout("sub", new byte[] {0}, Duration.ofSeconds(1)));
+
+    // then
+    assertCancellationPublishSpan();
+    assertNoHeaders();
+  }
+
+  @Test
+  void testRequestTimeoutFutureHeadersBody() throws InterruptedException {
+    // when
+    testing.runWithSpan(
+        "parent",
+        () ->
+            connection.requestWithTimeout(
+                "sub", new Headers(), new byte[] {0}, Duration.ofSeconds(1)));
+
+    // then
+    assertCancellationPublishSpan();
+    assertTraceparentHeader();
+  }
+
+  @Test
+  void testRequestTimeoutFutureMessage() throws InterruptedException {
     // given
-    Dispatcher dispatcher =
-        connection
-            .createDispatcher(m -> connection.publish(m.getReplyTo(), m.getData()))
-            .subscribe("sub");
+    NatsMessage message = NatsMessage.builder().subject("sub").data("x").build();
+
+    // when
+    testing.runWithSpan(
+        "parent", () -> connection.requestWithTimeout(message, Duration.ofSeconds(1)));
+
+    // then
+    assertCancellationPublishSpan();
+    assertNoHeaders();
+  }
+
+  @Test
+  void testRequestTimeoutFutureMessageHeaders() throws InterruptedException {
+    // given
     NatsMessage message =
         NatsMessage.builder().subject("sub").headers(new Headers()).data("x").build();
 
     // when
-    testing
-        .runWithSpan("parent", () -> connection.request(message))
-        .whenComplete((m, e) -> connection.closeDispatcher(dispatcher));
+    testing.runWithSpan(
+        "parent", () -> connection.requestWithTimeout(message, Duration.ofSeconds(1)));
 
     // then
-    assertPublishSpan();
+    assertCancellationPublishSpan();
     assertTraceparentHeader();
   }
 

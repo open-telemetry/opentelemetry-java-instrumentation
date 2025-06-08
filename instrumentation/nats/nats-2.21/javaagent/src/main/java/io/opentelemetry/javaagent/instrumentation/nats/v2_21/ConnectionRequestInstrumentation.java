@@ -56,7 +56,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(2, byte[].class))
             .and(takesArgument(3, Duration.class))
             .and(returns(named("io.nats.client.Message"))),
-        ConnectionRequestInstrumentation.class.getName() + "$RequestBodyHeadersAdvice");
+        ConnectionRequestInstrumentation.class.getName() + "$RequestHeadersBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("request"))
@@ -81,7 +81,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, named("io.nats.client.impl.Headers")))
             .and(takesArgument(2, byte[].class))
             .and(returns(named("java.util.concurrent.CompletableFuture"))),
-        ConnectionRequestInstrumentation.class.getName() + "$RequestFutureBodyHeadersAdvice");
+        ConnectionRequestInstrumentation.class.getName() + "$RequestFutureHeadersBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("request"))
@@ -97,7 +97,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, byte[].class))
             .and(takesArgument(2, Duration.class))
             .and(returns(named("java.util.concurrent.CompletableFuture"))),
-        ConnectionRequestInstrumentation.class.getName() + "$RequestFutureTimeoutBodyAdvice");
+        ConnectionRequestInstrumentation.class.getName() + "$RequestTimeoutFutureBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("requestWithTimeout"))
@@ -108,7 +108,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(3, Duration.class))
             .and(returns(named("java.util.concurrent.CompletableFuture"))),
         ConnectionRequestInstrumentation.class.getName()
-            + "$RequestFutureTimeoutBodyHeadersAdvice");
+            + "$RequestTimeoutFutureHeadersBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("requestWithTimeout"))
@@ -116,7 +116,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, named("io.nats.client.Message")))
             .and(takesArgument(1, Duration.class))
             .and(returns(named("java.util.concurrent.CompletableFuture"))),
-        ConnectionRequestInstrumentation.class.getName() + "$RequestFutureTimeoutMessageAdvice");
+        ConnectionRequestInstrumentation.class.getName() + "$RequestTimeoutFutureMessageAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -130,7 +130,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context otelContext,
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {
-      natsRequest = NatsRequest.create(connection, subject, body);
+      natsRequest = NatsRequest.create(connection, null, subject, null, body);
       Context parentContext = Context.current();
 
       if (!CLIENT_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
@@ -167,7 +167,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class RequestBodyHeadersAdvice {
+  public static class RequestHeadersBodyAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
@@ -178,7 +178,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context otelContext,
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {
-      natsRequest = NatsRequest.create(connection, subject, headers, body);
+      natsRequest = NatsRequest.create(connection, null, subject, headers, body);
       Context parentContext = Context.current();
 
       if (!CLIENT_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
@@ -272,7 +272,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelParentContext") Context otelParentContext,
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {
-      natsRequest = NatsRequest.create(connection, subject, body);
+      natsRequest = NatsRequest.create(connection, null, subject, null, body);
       otelParentContext = Context.current();
 
       if (!CLIENT_INSTRUMENTER.shouldStart(otelParentContext, natsRequest)) {
@@ -308,7 +308,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class RequestFutureBodyHeadersAdvice {
+  public static class RequestFutureHeadersBodyAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
@@ -320,7 +320,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelParentContext") Context otelParentContext,
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {
-      natsRequest = NatsRequest.create(connection, subject, headers, body);
+      natsRequest = NatsRequest.create(connection, null, subject, headers, body);
       otelParentContext = Context.current();
 
       if (!CLIENT_INSTRUMENTER.shouldStart(otelParentContext, natsRequest)) {
@@ -402,7 +402,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class RequestFutureTimeoutBodyAdvice {
+  public static class RequestTimeoutFutureBodyAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
@@ -413,7 +413,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelParentContext") Context otelParentContext,
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {
-      natsRequest = NatsRequest.create(connection, subject, body);
+      natsRequest = NatsRequest.create(connection, null, subject, null, body);
       otelParentContext = Context.current();
 
       if (!CLIENT_INSTRUMENTER.shouldStart(otelParentContext, natsRequest)) {
@@ -449,7 +449,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class RequestFutureTimeoutBodyHeadersAdvice {
+  public static class RequestTimeoutFutureHeadersBodyAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
@@ -461,7 +461,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelParentContext") Context otelParentContext,
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {
-      natsRequest = NatsRequest.create(connection, subject, headers, body);
+      natsRequest = NatsRequest.create(connection, null, subject, headers, body);
       otelParentContext = Context.current();
 
       if (!CLIENT_INSTRUMENTER.shouldStart(otelParentContext, natsRequest)) {
@@ -497,7 +497,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class RequestFutureTimeoutMessageAdvice {
+  public static class RequestTimeoutFutureMessageAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(

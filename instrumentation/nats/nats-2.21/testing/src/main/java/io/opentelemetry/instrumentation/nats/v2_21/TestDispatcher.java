@@ -43,14 +43,7 @@ public class TestDispatcher implements Dispatcher {
             }
           }
         });
-    subscriptions.forEach(
-        (subscription, handler) -> {
-          subscription.deliver(message);
-          try {
-            handler.onMessage(message);
-          } catch (InterruptedException ignored) {
-          }
-        });
+    subscriptions.forEach((subscription, handler) -> subscription.deliver(message, handler));
   }
 
   @Override
@@ -84,30 +77,38 @@ public class TestDispatcher implements Dispatcher {
 
   @Override
   public Dispatcher unsubscribe(String subject) {
-    subjects.remove(subject);
-    return this;
+    if (subjects.contains(subject)) {
+      subjects.remove(subject);
+      return this;
+    }
+    throw new IllegalStateException("Cannot unsubscribe to " + subject);
   }
 
   @Override
   public Dispatcher unsubscribe(Subscription subscription) {
     if (subscription instanceof TestSubscription) {
       subscriptions.remove(subscription);
+      return this;
     }
-    return this;
+    throw new IllegalArgumentException("Unexpected subscription: " + subscription);
   }
 
   @Override
   public Dispatcher unsubscribe(String subject, int after) {
-    subjects.remove(subject);
-    return this;
+    if (subjects.contains(subject)) {
+      subjects.remove(subject);
+      return this;
+    }
+    throw new IllegalStateException("Cannot unsubscribe to " + subject);
   }
 
   @Override
   public Dispatcher unsubscribe(Subscription subscription, int after) {
     if (subscription instanceof TestSubscription) {
       subscriptions.remove(subscription);
+      return this;
     }
-    return this;
+    throw new IllegalArgumentException("Unexpected subscription: " + subscription);
   }
 
   @Override

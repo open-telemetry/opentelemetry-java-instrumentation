@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.nats.v2_21;
 
 import io.nats.client.Dispatcher;
 import io.nats.client.Message;
+import io.nats.client.MessageHandler;
 import io.nats.client.Subscription;
 import java.time.Duration;
 import java.util.Queue;
@@ -38,9 +39,16 @@ public class TestSubscription implements Subscription {
     this.dispatcher = dispatcher;
   }
 
-  public void deliver(Message message) {
+  @SuppressWarnings("EmptyCatch")
+  public void deliver(Message message, MessageHandler handler) {
     if (message.getSubject().equalsIgnoreCase(getSubject())) {
       messages.add(message);
+      if (handler != null) {
+        try {
+          handler.onMessage(message);
+        } catch (InterruptedException e) {
+        }
+      }
     }
   }
 
@@ -85,16 +93,21 @@ public class TestSubscription implements Subscription {
   @Override
   public void unsubscribe() {
     if (dispatcher != null) {
-      dispatcher.unsubscribe(subject);
+      dispatcher.unsubscribe(this);
+      return;
     }
+    throw new IllegalStateException(
+        "Subscriptions that belong to a dispatcher cannot be unsubscribed.");
   }
 
   @Override
   public Subscription unsubscribe(int after) {
     if (dispatcher != null) {
-      dispatcher.unsubscribe(subject, after);
+      dispatcher.unsubscribe(this, after);
+      return this;
     }
-    return this;
+    throw new IllegalStateException(
+        "Subscriptions that belong to a dispatcher cannot be unsubscribed.");
   }
 
   @Override
