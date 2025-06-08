@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-class NatsTelemetrySubscribeTest {
+class NatsTelemetrySubscriptionTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -33,7 +33,7 @@ class NatsTelemetrySubscribeTest {
   static final NatsTelemetry telemetry = NatsTelemetry.create(testing.getOpenTelemetry());
 
   @Test
-  void testSubscribeTimeout() throws InterruptedException {
+  void testNextMessageTimeout() throws InterruptedException {
     // given
     TestConnection testConnection = new TestConnection();
     OpenTelemetryConnection connection = telemetry.wrap(testConnection);
@@ -61,7 +61,7 @@ class NatsTelemetrySubscribeTest {
   }
 
   @Test
-  void testSubscribeNoLink() throws InterruptedException {
+  void testNextMessage() throws InterruptedException {
     // given
     TestConnection testConnection = new TestConnection();
     OpenTelemetryConnection connection = telemetry.wrap(testConnection);
@@ -90,7 +90,7 @@ class NatsTelemetrySubscribeTest {
 
   @SuppressWarnings("PreferJavaTimeOverload")
   @Test
-  void testSubscribeWithLink() throws InterruptedException {
+  void testNextMessageLink() throws InterruptedException {
     // given
     TestConnection testConnection = new TestConnection();
     OpenTelemetryConnection connection = telemetry.wrap(testConnection);

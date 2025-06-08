@@ -32,7 +32,7 @@ class NatsTelemetryPublishTest {
   static final NatsTelemetry telemetry = NatsTelemetry.create(testing.getOpenTelemetry());
 
   @Test
-  void testPublishBodyNoHeaders() {
+  void testPublishBody() {
     // given
     TestConnection testConnection = new TestConnection();
     OpenTelemetryConnection connection = telemetry.wrap(testConnection);
@@ -46,7 +46,7 @@ class NatsTelemetryPublishTest {
   }
 
   @Test
-  void testPublishBodyWithHeaders() {
+  void testPublishHeadersBody() {
     // given
     TestConnection testConnection = new TestConnection();
     OpenTelemetryConnection connection = telemetry.wrap(testConnection);
@@ -60,7 +60,7 @@ class NatsTelemetryPublishTest {
   }
 
   @Test
-  void testPublishBodyReplyToNoHeaders() {
+  void testPublishReplyToBody() {
     // given
     TestConnection testConnection = new TestConnection();
     OpenTelemetryConnection connection = telemetry.wrap(testConnection);
@@ -74,7 +74,7 @@ class NatsTelemetryPublishTest {
   }
 
   @Test
-  void testPublishBodyReplyToWithHeaders() {
+  void testPublishReplyToHeadersBody() {
     // given
     TestConnection testConnection = new TestConnection();
     OpenTelemetryConnection connection = telemetry.wrap(testConnection);
@@ -89,7 +89,7 @@ class NatsTelemetryPublishTest {
   }
 
   @Test
-  void testPublishMessageNoHeaders() {
+  void testPublishMessage() {
     // given
     TestConnection testConnection = new TestConnection();
     OpenTelemetryConnection connection = telemetry.wrap(testConnection);
@@ -104,7 +104,7 @@ class NatsTelemetryPublishTest {
   }
 
   @Test
-  void testPublishMessageWithHeaders() {
+  void testPublishMessageHeaders() {
     // given
     TestConnection testConnection = new TestConnection();
     OpenTelemetryConnection connection = telemetry.wrap(testConnection);

@@ -42,13 +42,4 @@ public class MessageConsumer implements BiConsumer<Message, Throwable> {
       instrumenter.end(context, request, null, throwable);
     }
   }
-
-  /*messageFuture = messageFuture.whenComplete((message, exception) -> {
-    if (message != null) {
-      NatsRequest response = NatsRequest.create(connection, message);
-      CLIENT_INSTRUMENTER.end(otelContext, natsRequest, response, throwable);
-    } else {
-      CLIENT_INSTRUMENTER.end(otelContext, natsRequest, null, exception);
-    }
-  });*/
 }

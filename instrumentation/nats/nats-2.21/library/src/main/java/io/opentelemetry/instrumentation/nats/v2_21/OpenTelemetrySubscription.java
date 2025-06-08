@@ -9,7 +9,6 @@ import io.nats.client.Connection;
 import io.nats.client.Dispatcher;
 import io.nats.client.Message;
 import io.nats.client.Subscription;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
@@ -123,6 +122,10 @@ public class OpenTelemetrySubscription implements Subscription {
     return delegate.drain(timeout);
   }
 
+  protected Subscription getDelegate() {
+    return delegate;
+  }
+
   private Message wrapNextMessage(
       ThrowingSupplier2<Message, InterruptedException, IllegalStateException> nextMessage)
       throws InterruptedException {
@@ -131,7 +134,7 @@ public class OpenTelemetrySubscription implements Subscription {
 
     Context parentContext = Context.current();
     TimeoutException timeout = null;
-    NatsRequest natsRequest = NatsRequest.create(connection, getSubject());
+    NatsRequest natsRequest = NatsRequest.create(connection, null, getSubject(), null, null);
 
     if (message == null) {
       timeout = new TimeoutException("Timed out waiting for message");
@@ -139,8 +142,7 @@ public class OpenTelemetrySubscription implements Subscription {
       natsRequest = NatsRequest.create(connection, message);
     }
 
-    if (!Span.fromContext(parentContext).getSpanContext().isValid()
-        || !consumerReceiveInstrumenter.shouldStart(parentContext, natsRequest)) {
+    if (!consumerReceiveInstrumenter.shouldStart(parentContext, natsRequest)) {
       return message;
     }
 

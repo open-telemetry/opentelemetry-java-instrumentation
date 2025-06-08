@@ -20,27 +20,23 @@ import javax.annotation.Nullable;
 @AutoValue
 public abstract class NatsRequest {
 
-  public static NatsRequest create(Connection connection, String subject) {
-    return create(connection, subject, null);
-  }
-
-  public static NatsRequest create(Connection connection, String subject, byte[] data) {
-    return create(connection, subject, null, data);
-  }
-
   public static NatsRequest create(Connection connection, Message message) {
     return create(
         message.getConnection() == null ? connection : message.getConnection(),
+        message.getReplyTo(),
         message.getSubject(),
         message.getHeaders(),
         message.getData());
   }
 
   public static NatsRequest create(
-      Connection connection, String subject, Headers headers, byte[] data) {
+      Connection connection, String replyTo, String subject, Headers headers, byte[] data) {
     return new AutoValue_NatsRequest(
-        connection.getServerInfo().getClientId(), subject, headers, getDataSize(data));
+        replyTo, connection.getServerInfo().getClientId(), subject, headers, getDataSize(data));
   }
+
+  @Nullable
+  public abstract String getReplyTo();
 
   public abstract int getClientId();
 

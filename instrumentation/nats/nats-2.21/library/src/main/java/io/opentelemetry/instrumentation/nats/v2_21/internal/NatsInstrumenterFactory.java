@@ -69,6 +69,8 @@ public final class NatsInstrumenterFactory {
             new PropagatorBasedSpanLinksExtractor<>(
                 openTelemetry.getPropagators().getTextMapPropagator(),
                 NatsRequestTextMapGetter.INSTANCE))
+        .addContextCustomizer(
+            new NatsRequestContextCustomizer(openTelemetry.getPropagators().getTextMapPropagator()))
         .buildConsumerInstrumenter(NatsRequestTextMapGetter.INSTANCE);
   }
 
@@ -77,11 +79,7 @@ public final class NatsInstrumenterFactory {
     return Instrumenter.<NatsRequest, Void>builder(
             openTelemetry, INSTRUMENTATION_NAME, CONSUMER_PROCESS_SPAN_NAME_EXTRACTOR)
         .addAttributesExtractor(CONSUMER_PROCESS_ATTRIBUTES_EXTRACTOR)
-        .addSpanLinksExtractor(
-            new PropagatorBasedSpanLinksExtractor<>(
-                openTelemetry.getPropagators().getTextMapPropagator(),
-                NatsRequestTextMapGetter.INSTANCE))
-        .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
+        .buildInstrumenter(SpanKindExtractor.alwaysInternal());
   }
 
   public static Instrumenter<NatsRequest, NatsRequest> createClientInstrumenter(
@@ -89,10 +87,6 @@ public final class NatsInstrumenterFactory {
     return Instrumenter.<NatsRequest, NatsRequest>builder(
             openTelemetry, INSTRUMENTATION_NAME, PRODUCER_SPAN_NAME_EXTRACTOR)
         .addAttributesExtractor(CLIENT_ATTRIBUTES_EXTRACTOR)
-        .addSpanLinksExtractor(
-            new PropagatorBasedSpanLinksExtractor<>(
-                openTelemetry.getPropagators().getTextMapPropagator(),
-                NatsRequestTextMapGetter.INSTANCE))
         .buildClientInstrumenter(NatsRequestTextMapSetter.INSTANCE);
   }
 

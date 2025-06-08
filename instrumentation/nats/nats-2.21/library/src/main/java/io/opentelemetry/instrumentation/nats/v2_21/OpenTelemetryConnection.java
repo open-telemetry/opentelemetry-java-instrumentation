@@ -28,7 +28,6 @@ import io.nats.client.StreamContext;
 import io.nats.client.Subscription;
 import io.nats.client.api.ServerInfo;
 import io.nats.client.impl.Headers;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -65,26 +64,28 @@ public class OpenTelemetryConnection implements Connection {
 
   @Override
   public void publish(String subject, byte[] body) {
-    wrapPublish(NatsRequest.create(this, subject, body), () -> delegate.publish(subject, body));
+    wrapPublish(
+        NatsRequest.create(this, null, subject, null, body), () -> delegate.publish(subject, body));
   }
 
   @Override
   public void publish(String subject, Headers headers, byte[] body) {
     wrapPublish(
-        NatsRequest.create(this, subject, headers, body),
+        NatsRequest.create(this, null, subject, headers, body),
         () -> delegate.publish(subject, headers, body));
   }
 
   @Override
   public void publish(String subject, String replyTo, byte[] body) {
     wrapPublish(
-        NatsRequest.create(this, subject, body), () -> delegate.publish(subject, replyTo, body));
+        NatsRequest.create(this, replyTo, subject, null, body),
+        () -> delegate.publish(subject, replyTo, body));
   }
 
   @Override
   public void publish(String subject, String replyTo, Headers headers, byte[] body) {
     wrapPublish(
-        NatsRequest.create(this, subject, headers, body),
+        NatsRequest.create(this, replyTo, subject, headers, body),
         () -> delegate.publish(subject, replyTo, headers, body));
   }
 
@@ -97,14 +98,15 @@ public class OpenTelemetryConnection implements Connection {
   public Message request(String subject, byte[] body, Duration timeout)
       throws InterruptedException {
     return wrapRequest(
-        NatsRequest.create(this, subject, body), () -> delegate.request(subject, body, timeout));
+        NatsRequest.create(this, null, subject, null, body),
+        () -> delegate.request(subject, body, timeout));
   }
 
   @Override
   public Message request(String subject, Headers headers, byte[] body, Duration timeout)
       throws InterruptedException {
     return wrapRequest(
-        NatsRequest.create(this, subject, headers, body),
+        NatsRequest.create(this, null, subject, headers, body),
         () -> delegate.request(subject, headers, body, timeout));
   }
 
@@ -116,13 +118,13 @@ public class OpenTelemetryConnection implements Connection {
   @Override
   public CompletableFuture<Message> request(String subject, byte[] body) {
     return wrapRequest(
-        NatsRequest.create(this, subject, body), () -> delegate.request(subject, body));
+        NatsRequest.create(this, null, subject, null, body), () -> delegate.request(subject, body));
   }
 
   @Override
   public CompletableFuture<Message> request(String subject, Headers headers, byte[] body) {
     return wrapRequest(
-        NatsRequest.create(this, subject, headers, body),
+        NatsRequest.create(this, null, subject, headers, body),
         () -> delegate.request(subject, headers, body));
   }
 
@@ -135,7 +137,7 @@ public class OpenTelemetryConnection implements Connection {
   public CompletableFuture<Message> requestWithTimeout(
       String subject, byte[] body, Duration timeout) {
     return wrapRequest(
-        NatsRequest.create(this, subject, body),
+        NatsRequest.create(this, null, subject, null, body),
         () -> delegate.requestWithTimeout(subject, body, timeout));
   }
 
@@ -143,7 +145,7 @@ public class OpenTelemetryConnection implements Connection {
   public CompletableFuture<Message> requestWithTimeout(
       String subject, Headers headers, byte[] body, Duration timeout) {
     return wrapRequest(
-        NatsRequest.create(this, subject, headers, body),
+        NatsRequest.create(this, null, subject, headers, body),
         () -> delegate.requestWithTimeout(subject, headers, body, timeout));
   }
 
@@ -156,13 +158,13 @@ public class OpenTelemetryConnection implements Connection {
   @Override
   public Subscription subscribe(String subject) {
     return new OpenTelemetrySubscription(
-        this, delegate.subscribe(subject), this.consumerReceiveInstrumenter);
+        this, delegate.subscribe(subject), consumerReceiveInstrumenter);
   }
 
   @Override
   public Subscription subscribe(String subject, String queueName) {
     return new OpenTelemetrySubscription(
-        this, delegate.subscribe(subject, queueName), this.consumerReceiveInstrumenter);
+        this, delegate.subscribe(subject, queueName), consumerReceiveInstrumenter);
   }
 
   @Override
@@ -188,6 +190,11 @@ public class OpenTelemetryConnection implements Connection {
 
   @Override
   public void closeDispatcher(Dispatcher dispatcher) {
+    if (dispatcher instanceof OpenTelemetryDispatcher) {
+      delegate.closeDispatcher(((OpenTelemetryDispatcher) dispatcher).getDelegate());
+      return;
+    }
+
     delegate.closeDispatcher(dispatcher);
   }
 
@@ -384,8 +391,7 @@ public class OpenTelemetryConnection implements Connection {
   private void wrapPublish(NatsRequest natsRequest, Runnable publish) {
     Context parentContext = Context.current();
 
-    if (!Span.fromContext(parentContext).getSpanContext().isValid()
-        || !producerInstrumenter.shouldStart(parentContext, natsRequest)) {
+    if (!producerInstrumenter.shouldStart(parentContext, natsRequest)) {
       publish.run();
       return;
     }
@@ -403,8 +409,7 @@ public class OpenTelemetryConnection implements Connection {
       throws InterruptedException {
     Context parentContext = Context.current();
 
-    if (!Span.fromContext(parentContext).getSpanContext().isValid()
-        || !clientInstrumenter.shouldStart(parentContext, natsRequest)) {
+    if (!clientInstrumenter.shouldStart(parentContext, natsRequest)) {
       return request.call();
     }
 
@@ -431,25 +436,22 @@ public class OpenTelemetryConnection implements Connection {
       NatsRequest natsRequest, Supplier<CompletableFuture<Message>> request) {
     Context parentContext = Context.current();
 
-    if (!Span.fromContext(parentContext).getSpanContext().isValid()
-        || !clientInstrumenter.shouldStart(parentContext, natsRequest)) {
+    if (!clientInstrumenter.shouldStart(parentContext, natsRequest)) {
       return request.get();
     }
 
     Context context = clientInstrumenter.start(parentContext, natsRequest);
 
-    try (Scope ignored = context.makeCurrent()) {
-      return request
-          .get()
-          .whenComplete(
-              (message, exception) -> {
-                if (message != null) {
-                  NatsRequest response = NatsRequest.create(this, message);
-                  clientInstrumenter.end(context, natsRequest, response, exception);
-                } else {
-                  clientInstrumenter.end(context, natsRequest, null, exception);
-                }
-              });
-    }
+    return request
+        .get()
+        .whenComplete(
+            (message, exception) -> {
+              if (message != null) {
+                NatsRequest response = NatsRequest.create(this, message);
+                clientInstrumenter.end(context, natsRequest, response, exception);
+              } else {
+                clientInstrumenter.end(context, natsRequest, null, exception);
+              }
+            });
   }
 }

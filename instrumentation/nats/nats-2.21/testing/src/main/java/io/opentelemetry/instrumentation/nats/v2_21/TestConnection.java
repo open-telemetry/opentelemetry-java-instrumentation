@@ -53,7 +53,7 @@ public class TestConnection implements Connection {
   public final Queue<Message> requestResponseMessages = new ConcurrentLinkedQueue<>();
 
   public void deliver(Message message) {
-    subscriptions.forEach(subscription -> subscription.deliver(message));
+    subscriptions.forEach(subscription -> subscription.deliver(message, null));
     dispatchers.forEach(dispatcher -> dispatcher.deliver(message));
   }
 

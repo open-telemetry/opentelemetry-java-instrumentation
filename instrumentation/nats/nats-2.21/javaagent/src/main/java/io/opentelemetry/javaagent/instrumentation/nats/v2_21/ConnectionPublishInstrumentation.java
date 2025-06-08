@@ -47,7 +47,7 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, named("io.nats.client.impl.Headers")))
             .and(takesArgument(2, byte[].class)),
-        ConnectionPublishInstrumentation.class.getName() + "$PublishBodyHeadersAdvice");
+        ConnectionPublishInstrumentation.class.getName() + "$PublishHeadersBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("publish"))
@@ -55,7 +55,7 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, String.class))
             .and(takesArgument(2, byte[].class)),
-        ConnectionPublishInstrumentation.class.getName() + "$PublishBodyReplyToAdvice");
+        ConnectionPublishInstrumentation.class.getName() + "$PublishReplyToBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("publish"))
@@ -64,7 +64,7 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, String.class))
             .and(takesArgument(2, named("io.nats.client.impl.Headers")))
             .and(takesArgument(3, byte[].class)),
-        ConnectionPublishInstrumentation.class.getName() + "$PublishBodyReplyToHeadersAdvice");
+        ConnectionPublishInstrumentation.class.getName() + "$PublishReplyToHeadersBodyAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("publish"))
@@ -85,7 +85,7 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {
       Context parentContext = Context.current();
-      natsRequest = NatsRequest.create(connection, subject, body);
+      natsRequest = NatsRequest.create(connection, null, subject, null, body);
 
       if (!PRODUCER_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
         return;
@@ -113,7 +113,7 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class PublishBodyHeadersAdvice {
+  public static class PublishHeadersBodyAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
@@ -125,7 +125,7 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {
       Context parentContext = Context.current();
-      natsRequest = NatsRequest.create(connection, subject, headers, body);
+      natsRequest = NatsRequest.create(connection, null, subject, headers, body);
 
       if (!PRODUCER_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
         return;
@@ -154,7 +154,7 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class PublishBodyReplyToAdvice {
+  public static class PublishReplyToBodyAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
@@ -166,7 +166,7 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {
       Context parentContext = Context.current();
-      natsRequest = NatsRequest.create(connection, subject, body);
+      natsRequest = NatsRequest.create(connection, replyTo, subject, null, body);
 
       if (!PRODUCER_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
         return;
@@ -195,7 +195,7 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class PublishBodyReplyToHeadersAdvice {
+  public static class PublishReplyToHeadersBodyAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
@@ -208,7 +208,7 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {
       Context parentContext = Context.current();
-      natsRequest = NatsRequest.create(connection, subject, headers, body);
+      natsRequest = NatsRequest.create(connection, replyTo, subject, headers, body);
 
       if (!PRODUCER_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
         return;
