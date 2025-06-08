@@ -50,8 +50,7 @@ public class MessageHandlerInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Message message,
         @Advice.Local("otelContext") Context otelContext,
         @Advice.Local("otelScope") Scope otelScope,
-        @Advice.Local("natsRequest") NatsRequest natsRequest
-    ) {
+        @Advice.Local("natsRequest") NatsRequest natsRequest) {
       Timer timer = Timer.start();
 
       Context parentContext = Context.current();
@@ -61,8 +60,15 @@ public class MessageHandlerInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      Context receiveContext = InstrumenterUtil.startAndEnd(CONSUMER_RECEIVE_INSTRUMENTER, parentContext, natsRequest, null,
-          null, timer.startTime(), timer.now());
+      Context receiveContext =
+          InstrumenterUtil.startAndEnd(
+              CONSUMER_RECEIVE_INSTRUMENTER,
+              parentContext,
+              natsRequest,
+              null,
+              null,
+              timer.startTime(),
+              timer.now());
 
       if (!CONSUMER_PROCESS_INSTRUMENTER.shouldStart(receiveContext, natsRequest)) {
         return;
@@ -77,8 +83,7 @@ public class MessageHandlerInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context otelContext,
         @Advice.Local("otelScope") Scope otelScope,
-        @Advice.Local("natsRequest") NatsRequest natsRequest
-    ) {
+        @Advice.Local("natsRequest") NatsRequest natsRequest) {
       if (otelScope == null) {
         return;
       }
@@ -87,5 +92,4 @@ public class MessageHandlerInstrumentation implements TypeInstrumentation {
       CONSUMER_PROCESS_INSTRUMENTER.end(otelContext, natsRequest, null, throwable);
     }
   }
-
 }
