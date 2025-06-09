@@ -1,16 +1,19 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.jdbc;
-
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-
-import javax.sql.DataSource;
-import java.sql.Connection;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
+
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import java.sql.Connection;
+import javax.sql.DataSource;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.ObjectProvider;
 
 class DataSourcePostProcessorTest {
 
@@ -41,9 +44,8 @@ class DataSourcePostProcessorTest {
       ObjectProvider<OpenTelemetry> openTelemetryProvider = () -> openTelemetry;
       ObjectProvider<ConfigProperties> configPropertiesProvider = () -> configProperties;
 
-      DataSourcePostProcessor postProcessor = new DataSourcePostProcessor(
-          openTelemetryProvider, configPropertiesProvider
-      );
+      DataSourcePostProcessor postProcessor =
+          new DataSourcePostProcessor(openTelemetryProvider, configPropertiesProvider);
 
       // Act
       Object processed = postProcessor.postProcessAfterInitialization(original, "myDataSource");
