@@ -42,15 +42,15 @@ public final class FinatraSingletons {
     HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, routeInfo.path());
   }
 
-  private static final VirtualField<Route, Class<?>> callbackClassFiled =
+  private static final VirtualField<Route, Class<?>> callbackClassField =
       VirtualField.find(Route.class, Class.class);
 
   public static void setCallbackClass(Route route, Class<?> clazz) {
-    callbackClassFiled.set(route, clazz);
+    callbackClassField.set(route, clazz);
   }
 
   public static Class<?> getCallbackClass(Route route) {
-    return callbackClassFiled.get(route);
+    return callbackClassField.get(route);
   }
 
   private FinatraSingletons() {}
