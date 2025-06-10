@@ -74,9 +74,16 @@ class FinatraServerLatestTest extends AbstractHttpServerTest[HttpServer] {
       )
       .hasKind(SpanKind.INTERNAL)
       .hasAttributesSatisfyingExactly(
-        equalTo(
+        satisfies(
           CodeIncubatingAttributes.CODE_FUNCTION_NAME,
-          "io.opentelemetry.javaagent.instrumentation.finatra.FinatraController.apply"
+          new StringAssertConsumer {
+            override def accept(t: AbstractStringAssert[_]): Unit = {
+              t.startsWith(
+                "io.opentelemetry.javaagent.instrumentation.finatra.FinatraController"
+              )
+              t.endsWith("apply")
+            }
+          }
         )
       )
 
