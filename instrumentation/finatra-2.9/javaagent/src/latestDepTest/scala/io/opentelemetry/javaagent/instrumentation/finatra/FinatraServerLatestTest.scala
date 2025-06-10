@@ -14,10 +14,15 @@ import io.opentelemetry.instrumentation.testing.junit.http.{
   HttpServerTestOptions,
   ServerEndpoint
 }
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.{
+  StringAssertConsumer,
+  equalTo,
+  satisfies
+}
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert
 import io.opentelemetry.sdk.trace.data.StatusData
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
+import org.assertj.core.api.AbstractStringAssert
 import org.junit.jupiter.api.extension.RegisterExtension
 
 import java.util.concurrent.Executors
@@ -71,7 +76,7 @@ class FinatraServerLatestTest extends AbstractHttpServerTest[HttpServer] {
       .hasAttributesSatisfyingExactly(
         equalTo(
           CodeIncubatingAttributes.CODE_FUNCTION_NAME,
-          "io.opentelemetry.javaagent.instrumentation.finatra.FinatraController"
+          "io.opentelemetry.javaagent.instrumentation.finatra.FinatraController.apply"
         )
       )
 

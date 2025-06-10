@@ -41,17 +41,16 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
 }
 
+val testLatestDeps = findProperty("testLatestDeps") as Boolean
+
 testing {
   suites {
     val testInitialization by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project(":instrumentation:reactor:reactor-3.1:library"))
         implementation(project(":instrumentation-annotations"))
-        if (findProperty("testLatestDeps") as Boolean) {
-          implementation("io.projectreactor:reactor-test:latest.release")
-        } else {
-          implementation("io.projectreactor:reactor-test:3.1.0.RELEASE")
-        }
+        val version = if (testLatestDeps) "latest.release" else "3.1.0.RELEASE"
+        implementation("io.projectreactor:reactor-test:$version")
       }
     }
   }

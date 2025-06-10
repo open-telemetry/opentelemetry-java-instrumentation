@@ -12,7 +12,7 @@ dependencies {
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.19.0")
   implementation("io.opentelemetry:opentelemetry-sdk-common")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.12.2"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.13.1"))
   testImplementation("org.assertj:assertj-core:3.27.3")
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
@@ -22,6 +22,7 @@ tasks {
   val runAnalysis by registering(JavaExec::class) {
     dependsOn(classes)
 
+    systemProperty("basePath", project.rootDir)
     mainClass.set("io.opentelemetry.instrumentation.docs.DocGeneratorApplication")
     classpath(sourceSets["main"].runtimeClasspath)
   }

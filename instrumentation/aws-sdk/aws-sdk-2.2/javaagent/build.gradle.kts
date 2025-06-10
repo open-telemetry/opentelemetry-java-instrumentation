@@ -132,24 +132,16 @@ testing {
   suites {
     val s3PresignerTest by registering(JvmTestSuite::class) {
       dependencies {
-        if (latestDepTest) {
-          implementation("software.amazon.awssdk:s3:latest.release")
-        } else {
-          implementation("software.amazon.awssdk:s3:2.10.12")
-        }
+        val version = if (latestDepTest) "latest.release" else "2.10.12"
+        implementation("software.amazon.awssdk:s3:$version")
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
       }
     }
 
     val s3CrtTest by registering(JvmTestSuite::class) {
       dependencies {
-        if (latestDepTest) {
-          implementation("software.amazon.awssdk:s3:latest.release")
-          implementation("software.amazon.awssdk.crt:aws-crt:latest.release")
-        } else {
-          implementation("software.amazon.awssdk:s3:2.27.21")
-          implementation("software.amazon.awssdk.crt:aws-crt:0.30.11")
-        }
+        implementation("software.amazon.awssdk:s3:" + if (latestDepTest) "latest.release" else "2.27.21")
+        implementation("software.amazon.awssdk.crt:aws-crt:" + if (latestDepTest) "latest.release" else "0.30.11")
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
         implementation("org.testcontainers:localstack")
       }
@@ -158,12 +150,9 @@ testing {
     val testBedrockRuntime by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
-        if (findProperty("testLatestDeps") as Boolean) {
-          implementation("software.amazon.awssdk:bedrockruntime:latest.release")
-        } else {
-          // First release with Converse API
-          implementation("software.amazon.awssdk:bedrockruntime:2.25.63")
-        }
+        // 2.25.63 is the first release with Converse API
+        val version = if (latestDepTest) "latest.release" else "2.25.63"
+        implementation("software.amazon.awssdk:bedrockruntime:$version")
       }
 
       targets {

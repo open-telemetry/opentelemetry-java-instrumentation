@@ -46,13 +46,11 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.extension.ExtensionContext
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.Arguments
 import org.junit.jupiter.params.provider.Arguments.arguments
-import org.junit.jupiter.params.provider.ArgumentsProvider
-import org.junit.jupiter.params.provider.ArgumentsSource
+import org.junit.jupiter.params.provider.MethodSource
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.function.Consumer
@@ -83,7 +81,7 @@ class KotlinCoroutinesInstrumentationTest {
   val tracer = testing.openTelemetry.getTracer("test")
 
   @ParameterizedTest
-  @ArgumentsSource(DispatchersSource::class)
+  @MethodSource("dispatchersSourceArguments")
   fun `cancellation prevents trace`(dispatcher: DispatcherWrapper) {
     runCatching {
       runTest(dispatcher) {
@@ -116,7 +114,7 @@ class KotlinCoroutinesInstrumentationTest {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(DispatchersSource::class)
+  @MethodSource("dispatchersSourceArguments")
   fun `propagates across nested jobs`(dispatcher: DispatcherWrapper) {
     runTest(dispatcher) {
       val goodDeferred = async { 1 }
@@ -310,7 +308,7 @@ class KotlinCoroutinesInstrumentationTest {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(DispatchersSource::class)
+  @MethodSource("dispatchersSourceArguments")
   fun `traced mono`(dispatcherWrapper: DispatcherWrapper) {
     runTest(dispatcherWrapper) {
       mono(dispatcherWrapper.dispatcher) {
@@ -337,7 +335,7 @@ class KotlinCoroutinesInstrumentationTest {
   private val animalKey: ContextKey<String> = ContextKey.named("animal")
 
   @ParameterizedTest
-  @ArgumentsSource(DispatchersSource::class)
+  @MethodSource("dispatchersSourceArguments")
   fun `context contains expected value`(dispatcher: DispatcherWrapper) {
     runTest(dispatcher) {
       val context1 = Context.current().with(animalKey, "cat")
@@ -509,18 +507,16 @@ class KotlinCoroutinesInstrumentationTest {
     span.end()
   }
 
-  class DispatchersSource : ArgumentsProvider {
-    override fun provideArguments(context: ExtensionContext?): Stream<out Arguments> = Stream.of(
-      // Wrap dispatchers since it seems that ParameterizedTest tries to automatically close
-      // Closeable arguments with no way to avoid it.
-      arguments(DispatcherWrapper(Dispatchers.Default)),
-      arguments(DispatcherWrapper(Dispatchers.IO)),
-      arguments(DispatcherWrapper(Dispatchers.Unconfined)),
-      arguments(DispatcherWrapper(threadPool.asCoroutineDispatcher())),
-      arguments(DispatcherWrapper(singleThread.asCoroutineDispatcher())),
-      arguments(DispatcherWrapper(vertx.dispatcher()))
-    )
-  }
+  private fun dispatchersSourceArguments(): Stream<Arguments> = Stream.of(
+    // Wrap dispatchers since it seems that ParameterizedTest tries to automatically close
+    // Closeable arguments with no way to avoid it.
+    arguments(DispatcherWrapper(Dispatchers.Default)),
+    arguments(DispatcherWrapper(Dispatchers.IO)),
+    arguments(DispatcherWrapper(Dispatchers.Unconfined)),
+    arguments(DispatcherWrapper(threadPool.asCoroutineDispatcher())),
+    arguments(DispatcherWrapper(singleThread.asCoroutineDispatcher())),
+    arguments(DispatcherWrapper(vertx.dispatcher()))
+  )
 
   class DispatcherWrapper(val dispatcher: CoroutineDispatcher) {
     override fun toString(): String = dispatcher.toString()
@@ -563,7 +559,7 @@ class KotlinCoroutinesInstrumentationTest {
   // regression test for
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/11411
   @ParameterizedTest
-  @ArgumentsSource(DispatchersSource::class)
+  @MethodSource("dispatchersSourceArguments")
   fun `dispatch does not propagate context`(dispatcher: DispatcherWrapper) {
     Assumptions.assumeTrue(dispatcher.dispatcher != Dispatchers.Unconfined)
 

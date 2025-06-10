@@ -17,25 +17,17 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 
-public class FileManager {
+public record FileManager(String rootDir) {
   private static final Logger logger = Logger.getLogger(FileManager.class.getName());
-  private final String rootDir;
 
-  public FileManager(String rootDir) {
-    this.rootDir = rootDir;
-  }
-
-  public List<InstrumentationPath> getInstrumentationPaths() {
-    Path rootPath = Paths.get(rootDir);
+  public List<InstrumentationPath> getInstrumentationPaths() throws IOException {
+    Path rootPath = Paths.get(rootDir + "instrumentation");
 
     try (Stream<Path> walk = Files.walk(rootPath)) {
       return walk.filter(Files::isDirectory)
           .filter(dir -> isValidInstrumentationPath(dir.toString()))
           .map(dir -> parseInstrumentationPath(dir.toString()))
           .collect(Collectors.toList());
-    } catch (IOException e) {
-      logger.severe("Error traversing directory: " + e.getMessage());
-      return new ArrayList<>();
     }
   }
 
@@ -85,7 +77,7 @@ public class FileManager {
   }
 
   public List<String> findBuildGradleFiles(String instrumentationDirectory) {
-    Path rootPath = Paths.get(instrumentationDirectory);
+    Path rootPath = Paths.get(rootDir + instrumentationDirectory);
 
     try (Stream<Path> walk = Files.walk(rootPath)) {
       return walk.filter(Files::isRegularFile)
@@ -103,7 +95,7 @@ public class FileManager {
 
   @Nullable
   public String getMetaDataFile(String instrumentationDirectory) {
-    String metadataFile = instrumentationDirectory + "/metadata.yaml";
+    String metadataFile = rootDir + instrumentationDirectory + "/metadata.yaml";
     if (Files.exists(Paths.get(metadataFile))) {
       return readFileToString(metadataFile);
     }
@@ -111,41 +103,12 @@ public class FileManager {
   }
 
   @Nullable
-  public String readFileToString(String filePath) {
+  public static String readFileToString(String filePath) {
     try {
       return Files.readString(Paths.get(filePath));
     } catch (IOException e) {
       logger.severe("Error reading file: " + e.getMessage());
       return null;
     }
-  }
-
-  /**
-   * Looks for metric files in the .telemetry directory
-   *
-   * @param instrumentationDirectory the directory to traverse
-   * @return contents of file
-   */
-  public String getMetrics(String instrumentationDirectory) {
-    StringBuilder metricsContent = new StringBuilder();
-    Path telemetryDir = Paths.get(instrumentationDirectory, ".telemetry");
-
-    if (Files.exists(telemetryDir) && Files.isDirectory(telemetryDir)) {
-      try (Stream<Path> files = Files.list(telemetryDir)) {
-        files
-            .filter(path -> path.getFileName().toString().startsWith("metrics-"))
-            .forEach(
-                path -> {
-                  String content = readFileToString(path.toString());
-                  if (content != null) {
-                    metricsContent.append(content).append("\n");
-                  }
-                });
-      } catch (IOException e) {
-        logger.severe("Error reading metrics files: " + e.getMessage());
-      }
-    }
-
-    return metricsContent.toString();
   }
 }

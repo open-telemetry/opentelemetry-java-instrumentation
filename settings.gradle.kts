@@ -12,7 +12,7 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.2.1"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.3"
   id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
