@@ -5,12 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
-import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsExperimentalAttributes.AWS_BUCKET_NAME;
-import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsExperimentalAttributes.AWS_QUEUE_NAME;
-import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsExperimentalAttributes.AWS_QUEUE_URL;
-import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsExperimentalAttributes.AWS_SECRET_ARN;
-import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsExperimentalAttributes.AWS_STREAM_NAME;
-import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsExperimentalAttributes.AWS_TABLE_NAME;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.FieldMapping.request;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.FieldMapping.response;
 
@@ -20,12 +15,12 @@ import java.util.List;
 import java.util.Map;
 
 enum AwsSdkRequestType {
-  S3(request(AWS_BUCKET_NAME.getKey(), "Bucket")),
-  SQS(request(AWS_QUEUE_URL.getKey(), "QueueUrl"), request(AWS_QUEUE_NAME.getKey(), "QueueName")),
-  KINESIS(request(AWS_STREAM_NAME.getKey(), "StreamName")),
-  DYNAMODB(request(AWS_TABLE_NAME.getKey(), "TableName")),
+  S3(request("aws.bucket.name", "Bucket")),
+  SQS(request("aws.queue.url", "QueueUrl"), request("aws.queue.name", "QueueName")),
+  KINESIS(request("aws.stream.name", "StreamName")),
+  DYNAMODB(request("aws.table.name", "TableName")),
   BEDROCK_RUNTIME(),
-  SECRETSMANAGER(response(AWS_SECRET_ARN.getKey(), "ARN")),
+  SECRETSMANAGER(response(AttributeKeys.AWS_SECRETSMANAGER_SECRET_ARN.getKey(), "ARN")),
   SNS(
       /*
        * Only one of TopicArn and TargetArn are permitted on an SNS request.
@@ -46,6 +41,10 @@ enum AwsSdkRequestType {
   }
 
   private static class AttributeKeys {
+    // Copied from AwsIncubatingAttributes
+    static final AttributeKey<String> AWS_SECRETSMANAGER_SECRET_ARN =
+        stringKey("aws.secretsmanager.secret.arn");
+
     // copied from MessagingIncubatingAttributes
     static final AttributeKey<String> MESSAGING_DESTINATION_NAME =
         AttributeKey.stringKey("messaging.destination.name");
