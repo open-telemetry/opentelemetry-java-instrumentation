@@ -74,7 +74,7 @@ class FinatraServerTest extends AbstractHttpServerTest[HttpServer] {
         "FinatraController"
       )
       .hasKind(SpanKind.INTERNAL)
-      .hasAttributesSatisfyingExactly(,
+      .hasAttributesSatisfyingExactly(
         equalTo(
           CodeIncubatingAttributes.CODE_FUNCTION_NAME,
           "io.opentelemetry.javaagent.instrumentation.finatra.FinatraController.apply"
