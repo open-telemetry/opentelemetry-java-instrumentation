@@ -9,8 +9,6 @@ import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttri
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_BUCKET_NAME;
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_QUEUE_NAME;
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_QUEUE_URL;
-import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_STATE_MACHINE_ARN;
-import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_STEP_FUNCTIONS_ACTIVITY_ARN;
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_STREAM_NAME;
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_TABLE_NAME;
 
@@ -37,13 +35,6 @@ class AwsSdkExperimentalAttributesExtractor
     setRequestAttribute(attributes, AWS_QUEUE_NAME, originalRequest, RequestAccess::getQueueName);
     setRequestAttribute(attributes, AWS_STREAM_NAME, originalRequest, RequestAccess::getStreamName);
     setRequestAttribute(attributes, AWS_TABLE_NAME, originalRequest, RequestAccess::getTableName);
-    setRequestAttribute(
-        attributes, AWS_STATE_MACHINE_ARN, originalRequest, RequestAccess::getStateMachineArn);
-    setRequestAttribute(
-        attributes,
-        AWS_STEP_FUNCTIONS_ACTIVITY_ARN,
-        originalRequest,
-        RequestAccess::getStepFunctionsActivityArn);
   }
 
   private static void setRequestAttribute(
@@ -63,16 +54,5 @@ class AwsSdkExperimentalAttributesExtractor
       Context context,
       Request<?> request,
       @Nullable Response<?> response,
-      @Nullable Throwable error) {
-    if (response != null) {
-      Object awsResp = response.getAwsResponse();
-      setRequestAttribute(
-          attributes, AWS_STATE_MACHINE_ARN, awsResp, RequestAccess::getStateMachineArn);
-      setRequestAttribute(
-          attributes,
-          AWS_STEP_FUNCTIONS_ACTIVITY_ARN,
-          awsResp,
-          RequestAccess::getStepFunctionsActivityArn);
-    }
-  }
+      @Nullable Throwable error) {}
 }

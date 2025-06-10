@@ -13,6 +13,7 @@ import com.amazonaws.services.stepfunctions.AWSStepFunctions;
 import com.amazonaws.services.stepfunctions.AWSStepFunctionsClientBuilder;
 import com.amazonaws.services.stepfunctions.model.DescribeActivityRequest;
 import com.amazonaws.services.stepfunctions.model.DescribeStateMachineRequest;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
@@ -25,6 +26,17 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 public abstract class AbstractStepFunctionsClientTest extends AbstractBaseAwsClientTest {
+
+  //  Copied from semconv. These two keys are not available in the current version of semconv.
+  //  They can be replaced with direct imports when the new version of semconv is in.
+  //  import static
+  // io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_STEP_FUNCTIONS_ACTIVITY_ARN;
+  //  import static
+  // io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN;
+  private static final AttributeKey<String> AWS_STEP_FUNCTIONS_ACTIVITY_ARN =
+      stringKey("aws.step_functions.activity.arn");
+  private static final AttributeKey<String> AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN =
+      stringKey("aws.step_functions.state_machine.arn");
 
   public abstract AWSStepFunctionsClientBuilder configureClient(
       AWSStepFunctionsClientBuilder client);
@@ -61,15 +73,14 @@ public abstract class AbstractStepFunctionsClientTest extends AbstractBaseAwsCli
     return Stream.of(
         Arguments.of(
             "DescribeStateMachine",
-            singletonList(
-                equalTo(stringKey("aws.stepfunctions.state_machine.arn"), "stateMachineArn")),
+            singletonList(equalTo(AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN, "stateMachineArn")),
             (Function<AWSStepFunctions, Object>)
                 c ->
                     c.describeStateMachine(
                         new DescribeStateMachineRequest().withStateMachineArn("stateMachineArn"))),
         Arguments.of(
             "DescribeActivity",
-            singletonList(equalTo(stringKey("aws.stepfunctions.activity.arn"), "activityArn")),
+            singletonList(equalTo(AWS_STEP_FUNCTIONS_ACTIVITY_ARN, "activityArn")),
             (Function<AWSStepFunctions, Object>)
                 c ->
                     c.describeActivity(
