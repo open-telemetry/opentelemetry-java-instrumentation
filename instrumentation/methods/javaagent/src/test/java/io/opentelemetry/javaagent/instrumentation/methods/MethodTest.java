@@ -62,7 +62,7 @@ class MethodTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("InitialDirContext.search")
-                        .hasKind(SpanKind.INTERNAL)
+                        .hasKind(SpanKind.CLIENT)
                         .hasException(throwableReference.get())
                         .hasAttributesSatisfyingExactly(
                             codeFunctionAssertions(InitialDirContext.class, "search"))));
@@ -93,7 +93,7 @@ class MethodTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("ConfigTracedCompletableFuture.getResult")
-                        .hasKind(SpanKind.INTERNAL)
+                        .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
                             codeFunctionAssertions(
                                 ConfigTracedCompletableFuture.class, "getResult"))));
