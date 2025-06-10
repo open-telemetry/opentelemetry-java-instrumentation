@@ -52,9 +52,12 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   // The node at .instrumentation.java
   private final DeclarativeConfigProperties instrumentationJavaNode;
+  // The node at .instrumentation.java.vendor
+  private final DeclarativeConfigProperties vendorNode;
 
   DeclarativeConfigPropertiesBridge(DeclarativeConfigProperties instrumentationNode) {
     instrumentationJavaNode = instrumentationNode.getStructured("java", empty());
+    vendorNode = instrumentationJavaNode.getStructured("vendor", empty()); // vendor could go to instrumentation.general instead
   }
 
   @Nullable
@@ -129,17 +132,19 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   @Nullable
   private <T> T getPropertyValue(
-      String property, BiFunction<DeclarativeConfigProperties, String, T> extractor) {
-    if (!property.startsWith(OTEL_INSTRUMENTATION_PREFIX)) {
-      return null;
+      String propertyName, BiFunction<DeclarativeConfigProperties, String, T> extractor) {
+    if (!propertyName.startsWith(OTEL_INSTRUMENTATION_PREFIX)) {
+      return getVendorPropertyValue(propertyName, extractor);
     }
-    String suffix = property.substring(OTEL_INSTRUMENTATION_PREFIX.length());
-    // Split the remainder of the property on ".", and walk to the N-1 entry
-    String[] segments = suffix.split("\\.");
+    String suffix = propertyName.substring(OTEL_INSTRUMENTATION_PREFIX.length());
+    return getPropertyValue(instrumentationJavaNode, suffix, extractor);
+  }
+
+  private static <T> T getPropertyValue(DeclarativeConfigProperties target, String propertyName, BiFunction<DeclarativeConfigProperties, String,T> extractor) {
+    String[] segments = propertyName.split("\\.");
     if (segments.length == 0) {
       return null;
     }
-    DeclarativeConfigProperties target = instrumentationJavaNode;
     if (segments.length > 1) {
       for (int i = 0; i < segments.length - 1; i++) {
         target = target.getStructured(segments[i], empty());
@@ -148,4 +153,9 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
     String lastPart = segments[segments.length - 1];
     return extractor.apply(target, lastPart);
   }
+
+  private <T> T getVendorPropertyValue(String propertyName, BiFunction<DeclarativeConfigProperties, String,T> extractor) {
+    return getPropertyValue(vendorNode, propertyName, extractor);
+  }
+
 }
