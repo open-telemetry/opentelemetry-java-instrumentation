@@ -137,7 +137,8 @@ class DeclarativeConfigPropertiesBridgeTest {
     assertThat(bridge.getMap("otel.instrumentation.other-instrumentation.map_key", expectedMap))
         .isEqualTo(expectedMap);
 
-    // verify vendor specific property names are preserved in unchanged form (prefix is not stripped as for otel.instrumentation.*)
+    // verify vendor specific property names are preserved in unchanged form (prefix is not stripped
+    // as for otel.instrumentation.*)
     assertThat(bridge.getBoolean("acme.full_name.preserved")).isTrue();
   }
 }

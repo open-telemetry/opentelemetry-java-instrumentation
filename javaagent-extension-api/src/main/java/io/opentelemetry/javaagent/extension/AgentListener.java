@@ -25,5 +25,4 @@ public interface AgentListener extends Ordered {
    * on an {@link Instrumentation}.
    */
   void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk);
-
 }

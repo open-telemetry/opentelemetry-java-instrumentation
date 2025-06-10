@@ -19,7 +19,8 @@ public class JarAnalyzerInstaller implements BeforeAgentListener {
 
   @Override
   public void beforeAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
-    ConfigProperties config = ConfigPropertiesUtil.resolveConfigProperties(autoConfiguredOpenTelemetrySdk);
+    ConfigProperties config =
+        ConfigPropertiesUtil.resolveConfigProperties(autoConfiguredOpenTelemetrySdk);
 
     boolean enabled =
         config.getBoolean("otel.instrumentation.runtime-telemetry.package-emitter.enabled", false);

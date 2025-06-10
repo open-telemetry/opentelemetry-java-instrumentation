@@ -57,7 +57,9 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   DeclarativeConfigPropertiesBridge(DeclarativeConfigProperties instrumentationNode) {
     instrumentationJavaNode = instrumentationNode.getStructured("java", empty());
-    vendorNode = instrumentationJavaNode.getStructured("vendor", empty()); // vendor could go to instrumentation.general instead
+    vendorNode =
+        instrumentationJavaNode.getStructured(
+            "vendor", empty()); // vendor could go to instrumentation.general instead
   }
 
   @Nullable
@@ -140,7 +142,10 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
     return getPropertyValue(instrumentationJavaNode, suffix, extractor);
   }
 
-  private static <T> T getPropertyValue(DeclarativeConfigProperties target, String propertyName, BiFunction<DeclarativeConfigProperties, String,T> extractor) {
+  private static <T> T getPropertyValue(
+      DeclarativeConfigProperties target,
+      String propertyName,
+      BiFunction<DeclarativeConfigProperties, String, T> extractor) {
     String[] segments = propertyName.split("\\.");
     if (segments.length == 0) {
       return null;
@@ -154,8 +159,8 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
     return extractor.apply(target, lastPart);
   }
 
-  private <T> T getVendorPropertyValue(String propertyName, BiFunction<DeclarativeConfigProperties, String,T> extractor) {
+  private <T> T getVendorPropertyValue(
+      String propertyName, BiFunction<DeclarativeConfigProperties, String, T> extractor) {
     return getPropertyValue(vendorNode, propertyName, extractor);
   }
-
 }
