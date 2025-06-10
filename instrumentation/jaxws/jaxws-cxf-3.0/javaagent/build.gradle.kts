@@ -18,6 +18,7 @@ dependencies {
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
   library("org.apache.cxf:cxf-rt-frontend-jaxws:3.0.0")
+
   compileOnly("javax.servlet:javax.servlet-api:3.0.1")
   compileOnly("jakarta.servlet:jakarta.servlet-api:5.0.0")
   compileOnly(project(":muzzle"))

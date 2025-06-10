@@ -29,6 +29,8 @@ dependencies {
   testLibrary("software.amazon.awssdk:ses:2.2.0")
 }
 
+val testLatestDeps = findProperty("testLatestDeps") as Boolean
+
 testing {
   suites {
     val testCoreOnly by registering(JvmTestSuite::class) {
@@ -36,17 +38,11 @@ testing {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
         compileOnly("software.amazon.awssdk:sqs:2.2.0")
-        if (findProperty("testLatestDeps") as Boolean) {
-          implementation("software.amazon.awssdk:aws-core:latest.release")
-          implementation("software.amazon.awssdk:aws-json-protocol:latest.release")
-          implementation("software.amazon.awssdk:dynamodb:latest.release")
-          implementation("software.amazon.awssdk:lambda:latest.release")
-        } else {
-          implementation("software.amazon.awssdk:aws-core:2.2.0")
-          implementation("software.amazon.awssdk:aws-json-protocol:2.2.0")
-          implementation("software.amazon.awssdk:dynamodb:2.2.0")
-          implementation("software.amazon.awssdk:lambda:2.2.0")
-        }
+        val version = if (testLatestDeps) "latest.release" else "2.2.0"
+        implementation("software.amazon.awssdk:aws-core:$version")
+        implementation("software.amazon.awssdk:aws-json-protocol:$version")
+        implementation("software.amazon.awssdk:dynamodb:$version")
+        implementation("software.amazon.awssdk:lambda:$version")
       }
     }
 
@@ -54,11 +50,8 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
-        if (findProperty("testLatestDeps") as Boolean) {
-          implementation("software.amazon.awssdk:lambda:latest.release")
-        } else {
-          implementation("software.amazon.awssdk:lambda:2.17.0")
-        }
+        val version = if (testLatestDeps) "latest.release" else "2.17.0"
+        implementation("software.amazon.awssdk:lambda:$version")
       }
     }
 
@@ -66,11 +59,8 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
-        if (findProperty("testLatestDeps") as Boolean) {
-          implementation("software.amazon.awssdk:bedrockruntime:latest.release")
-        } else {
-          implementation("software.amazon.awssdk:bedrockruntime:2.25.63")
-        }
+        val version = if (testLatestDeps) "latest.release" else "2.25.63"
+        implementation("software.amazon.awssdk:bedrockruntime:$version")
       }
     }
   }

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.TracerProvider;
+import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelMapConverter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
@@ -28,6 +29,8 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -54,6 +57,8 @@ import org.springframework.core.env.Environment;
   OtelSpringProperties.class
 })
 public class OpenTelemetryAutoConfiguration {
+  private static final Logger logger =
+      LoggerFactory.getLogger(OpenTelemetryAutoConfiguration.class);
 
   public OpenTelemetryAutoConfiguration() {}
 
@@ -110,6 +115,11 @@ public class OpenTelemetryAutoConfiguration {
     @Bean
     public OpenTelemetry openTelemetry(
         AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
+      logger.info(
+          "OpenTelemetry Spring Boot starter ({}) has been started",
+          EmbeddedInstrumentationProperties.findVersion(
+              "io.opentelemetry.spring-boot-autoconfigure"));
+
       return autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk();
     }
 
@@ -146,6 +156,8 @@ public class OpenTelemetryAutoConfiguration {
 
     @Bean
     public OpenTelemetry openTelemetry() {
+      logger.info("OpenTelemetry Spring Boot starter has been disabled");
+
       return OpenTelemetry.noop();
     }
 

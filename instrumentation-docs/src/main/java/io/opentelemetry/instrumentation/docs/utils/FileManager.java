@@ -15,29 +15,23 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 
-public class FileManager {
+public record FileManager(String rootDir) {
   private static final Logger logger = Logger.getLogger(FileManager.class.getName());
-  private final String rootDir;
 
-  public FileManager(String rootDir) {
-    this.rootDir = rootDir;
-  }
-
-  public List<InstrumentationPath> getInstrumentationPaths() {
-    Path rootPath = Paths.get(rootDir);
+  public List<InstrumentationPath> getInstrumentationPaths() throws IOException {
+    Path rootPath = Paths.get(rootDir + "instrumentation");
 
     try (Stream<Path> walk = Files.walk(rootPath)) {
       return walk.filter(Files::isDirectory)
           .filter(dir -> isValidInstrumentationPath(dir.toString()))
           .map(dir -> parseInstrumentationPath(dir.toString()))
           .collect(Collectors.toList());
-    } catch (IOException e) {
-      logger.severe("Error traversing directory: " + e.getMessage());
-      return new ArrayList<>();
     }
   }
 
+  @Nullable
   private static InstrumentationPath parseInstrumentationPath(String filePath) {
     if (filePath == null || filePath.isEmpty()) {
       return null;
@@ -74,7 +68,8 @@ public class FileManager {
       return false;
     }
 
-    if (filePath.matches(".*(/test/|/testing|/build/|-common/|-common-|common-|bootstrap/src).*")) {
+    if (filePath.matches(
+        ".*(/test/|/testing|/build/|-common/|-common-|common-|-testing|bootstrap/src).*")) {
       return false;
     }
 
@@ -82,7 +77,7 @@ public class FileManager {
   }
 
   public List<String> findBuildGradleFiles(String instrumentationDirectory) {
-    Path rootPath = Paths.get(instrumentationDirectory);
+    Path rootPath = Paths.get(rootDir + instrumentationDirectory);
 
     try (Stream<Path> walk = Files.walk(rootPath)) {
       return walk.filter(Files::isRegularFile)
@@ -98,15 +93,17 @@ public class FileManager {
     }
   }
 
+  @Nullable
   public String getMetaDataFile(String instrumentationDirectory) {
-    String metadataFile = instrumentationDirectory + "/metadata.yaml";
+    String metadataFile = rootDir + instrumentationDirectory + "/metadata.yaml";
     if (Files.exists(Paths.get(metadataFile))) {
       return readFileToString(metadataFile);
     }
     return null;
   }
 
-  public String readFileToString(String filePath) {
+  @Nullable
+  public static String readFileToString(String filePath) {
     try {
       return Files.readString(Paths.get(filePath));
     } catch (IOException e) {

@@ -476,15 +476,15 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                         PublishRequest.builder()
                             .message("somemessage")
                             .topicArn("somearn")
-                            .build()),
-            Arguments.of(
-                (Function<SnsClient, Object>)
-                    c ->
-                        c.publish(
-                            PublishRequest.builder()
-                                .message("somemessage")
-                                .targetArn("somearn")
-                                .build()))));
+                            .build())),
+        Arguments.of(
+            (Function<SnsClient, Object>)
+                c ->
+                    c.publish(
+                        PublishRequest.builder()
+                            .message("somemessage")
+                            .targetArn("somearn")
+                            .build())));
   }
 
   @ParameterizedTest

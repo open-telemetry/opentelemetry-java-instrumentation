@@ -26,8 +26,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 class SingleServiceCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationContext> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   @Override
   protected ConfigurableApplicationContext setupServer() {

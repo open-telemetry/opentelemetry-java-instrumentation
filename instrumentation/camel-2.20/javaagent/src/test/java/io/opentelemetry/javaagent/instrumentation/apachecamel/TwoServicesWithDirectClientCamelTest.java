@@ -42,8 +42,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 class TwoServicesWithDirectClientCamelTest
     extends AbstractHttpServerUsingTest<ConfigurableApplicationContext> {
   @RegisterExtension
-  public static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   private static CamelContext clientContext;
 
