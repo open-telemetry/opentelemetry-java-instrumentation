@@ -92,10 +92,16 @@ class InstrumentationAnalyzer {
         }
       }
 
-      EmittedMetrics metrics =
+      Map<String, EmittedMetrics> metrics =
           MetricParser.getMetricsFromFiles(fileManager.rootDir(), module.getSrcPath());
-      if (!metrics.getMetrics().isEmpty()) {
-        module.setMetrics(metrics.getMetrics());
+
+      if (!metrics.isEmpty()) {
+        for (Map.Entry<String, EmittedMetrics> entry : metrics.entrySet()) {
+          if (entry.getValue() == null || entry.getValue().getMetrics() == null) {
+            continue;
+          }
+          module.getMetrics().putIfAbsent(entry.getKey(), entry.getValue().getMetrics());
+        }
       }
     }
     return modules;

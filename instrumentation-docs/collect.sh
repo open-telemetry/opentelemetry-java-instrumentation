@@ -1,7 +1,8 @@
 #!/bin/bash
 
 instrumentations=(
-  "alibaba-druid-1.0:javaagent:test"
+#  "alibaba-druid-1.0:javaagent:test"
+  "alibaba-druid-1.0:javaagent:testStableSemconv"
 )
 
 # Initialize an empty string to hold the Gradle tasks
@@ -9,7 +10,7 @@ gradle_tasks=""
 
 # Iterate over each instrumentation
 for instrumentation in "${instrumentations[@]}"; do
-  # Extract the parts of the instrumentation
+   Extract the parts of the instrumentation
   IFS=':' read -r -a parts <<< "$instrumentation"
   module="${parts[0]}"
   version="${parts[1]}"
@@ -26,12 +27,12 @@ for instrumentation in "${instrumentations[@]}"; do
   echo "Checking path: $path/.telemetry"
 
   # Check if the .telemetry directory exists and remove it if it does
-  if [ -d "$path/.telemetry" ]; then
-    echo "Removing directory: $path/.telemetry"
-    rm -rf "$path/.telemetry"
-  else
-    echo "Directory does not exist: $path/.telemetry"
-  fi
+#  if [ -d "$path/.telemetry" ]; then
+#    echo "Removing directory: $path/.telemetry"
+#    rm -rf "$path/.telemetry"
+#  else
+#    echo "Directory does not exist: $path/.telemetry"
+#  fi
 
   # Append the Gradle task to the gradle_tasks string with a colon between type and suffix if suffix is non-empty
   if [ -n "$suffix" ]; then
@@ -44,8 +45,8 @@ done
 # rerun-tasks is used to force re-running tests that might be cached
 echo Running: ./gradlew "$gradle_tasks" -PcollectMetadata=true --rerun-tasks
 ./gradlew "$gradle_tasks" -PcollectMetadata=true --rerun-tasks
-./gradlew :instrumentation-docs:runAnalysis
+#./gradlew :instrumentation-docs:runAnalysis
 
 # Remove all .telemetry directories recursively from the project root
-echo "Searching for and removing all .telemetry directories..."
-find . -type d -name ".telemetry" -exec rm -rf {} +
+#echo "Searching for and removing all .telemetry directories..."
+#find . -type d -name ".telemetry" -exec rm -rf {} +

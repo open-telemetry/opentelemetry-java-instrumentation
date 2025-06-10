@@ -312,7 +312,7 @@ class YamlHelperTest {
             .namespace("mylib")
             .group("mylib")
             .targetVersions(targetVersions)
-            .metrics(List.of(metric))
+            .metrics(Map.of("default", List.of(metric)))
             .build());
 
     StringWriter stringWriter = new StringWriter();

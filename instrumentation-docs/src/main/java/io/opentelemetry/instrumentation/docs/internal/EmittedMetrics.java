@@ -9,18 +9,31 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
+ * Representation of metrics emitted by an instrumentation. Includes context about whether emitted
+ * by default or via a configuration option. This class is internal and is hence not for public use.
+ * Its APIs are unstable and can change at any time.
  */
 public class EmittedMetrics {
+  // Condition in which the metrics are emitted (ex: default, or configuration option names).
+  private String when;
   private List<Metric> metrics;
 
   public EmittedMetrics() {
+    this.when = "";
     this.metrics = new ArrayList<>();
   }
 
-  public EmittedMetrics(List<Metric> metrics) {
+  public EmittedMetrics(String when, List<Metric> metrics) {
+    this.when = "";
     this.metrics = metrics;
+  }
+
+  public String getWhen() {
+    return when;
+  }
+
+  public void setWhen(String when) {
+    this.when = when;
   }
 
   public List<Metric> getMetrics() {
