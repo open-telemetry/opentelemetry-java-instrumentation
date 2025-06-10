@@ -140,7 +140,7 @@ public class YamlHelper {
         Map<String, Object> telemetryEntry = new LinkedHashMap<>();
         telemetryEntry.put("when", group);
         List<EmittedMetrics.Metric> metrics =
-            module.getMetrics().getOrDefault(group, Collections.emptyList());
+            new ArrayList<>(module.getMetrics().getOrDefault(group, Collections.emptyList()));
         List<Map<String, Object>> metricsList = new ArrayList<>();
 
         // sort metrics by name for some determinism in the order
