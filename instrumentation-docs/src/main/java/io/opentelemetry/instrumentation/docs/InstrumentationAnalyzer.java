@@ -100,7 +100,7 @@ class InstrumentationAnalyzer {
           if (entry.getValue() == null || entry.getValue().getMetrics() == null) {
             continue;
           }
-          module.getMetrics().putIfAbsent(entry.getKey(), entry.getValue().getMetrics());
+          module.getMetrics().put(entry.getKey(), entry.getValue().getMetrics());
         }
       }
     }

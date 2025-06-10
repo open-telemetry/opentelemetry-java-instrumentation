@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import java.io.BufferedWriter;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -141,8 +142,12 @@ public class YamlHelper {
         List<EmittedMetrics.Metric> metrics =
             module.getMetrics().getOrDefault(group, Collections.emptyList());
         List<Map<String, Object>> metricsList = new ArrayList<>();
+
+        // sort metrics by name for some determinism in the order
+        metrics.sort(Comparator.comparing(EmittedMetrics.Metric::getName));
+
         for (EmittedMetrics.Metric metric : metrics) {
-          metricsList.add(getObjectMap(metric));
+          metricsList.add(getMetricsMap(metric));
         }
         telemetryEntry.put("metrics", metricsList);
         telemetryList.add(telemetryEntry);
@@ -216,27 +221,7 @@ public class YamlHelper {
     return conf;
   }
 
-//  private static Map<String, List<Map<String, Object>>> getMetricsList(
-//      InstrumentationModule module) {
-//    Map<String, List<Map<String, Object>>> metricsMap = new LinkedHashMap<>();
-//    if (module.getMetrics() == null) {
-//      return metricsMap;
-//    }
-//
-//    for (Map.Entry<String, List<EmittedMetrics.Metric>> metricEntry :
-//        module.getMetrics().entrySet()) {
-//      List<Map<String, Object>> metricsList = new ArrayList<>();
-//      for (EmittedMetrics.Metric metric : metricEntry.getValue()) {
-//        Map<String, Object> innerMetricMap = getObjectMap(metric);
-//        metricsList.add(innerMetricMap);
-//      }
-//      metricsMap.put(metricEntry.getKey(), metricsList);
-//    }
-//
-//    return metricsMap;
-//  }
-
-  private static Map<String, Object> getObjectMap(EmittedMetrics.Metric metric) {
+  private static Map<String, Object> getMetricsMap(EmittedMetrics.Metric metric) {
     Map<String, Object> innerMetricMap = new LinkedHashMap<>();
     innerMetricMap.put("name", metric.getName());
     innerMetricMap.put("description", metric.getDescription());

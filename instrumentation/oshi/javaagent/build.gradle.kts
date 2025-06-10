@@ -22,20 +22,18 @@ dependencies {
   testImplementation(project(":instrumentation:oshi:testing"))
 }
 
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
-
-
 tasks {
-  test {
-    systemProperty("collectMetadata", collectMetadata)
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
   val testExperimental by registering(Test::class) {
     jvmArgs("-Dotel.instrumentation.oshi.experimental-metrics.enabled=true")
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-
-    systemProperty("collectMetadata", collectMetadata)
-    systemProperty("metaDataConfig", "otel.semconv-stability.opt-in=database")
+    systemProperty("testExperimental", "true")
+    systemProperty("metaDataConfig", "otel.instrumentation.oshi.experimental-metrics.enabled=true")
   }
 
+  check {
+    dependsOn(testExperimental)
+  }
 }
