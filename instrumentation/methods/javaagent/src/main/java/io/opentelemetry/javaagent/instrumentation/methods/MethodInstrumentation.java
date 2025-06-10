@@ -42,8 +42,8 @@ public class MethodInstrumentation implements TypeInstrumentation {
   public MethodInstrumentation(String className, Set<String> methodNames) {
     this.className = className;
     this.internalMethodNames = filterMethodNames(className, methodNames, SpanKind.INTERNAL, true);
-    this.serverMethodNames = filterMethodNames(className, methodNames, SpanKind.CLIENT, false);
-    this.clientMethodNames = filterMethodNames(className, methodNames, SpanKind.SERVER, false);
+    this.serverMethodNames = filterMethodNames(className, methodNames, SpanKind.SERVER, false);
+    this.clientMethodNames = filterMethodNames(className, methodNames, SpanKind.CLIENT, false);
   }
 
   private static Set<String> filterMethodNames(
