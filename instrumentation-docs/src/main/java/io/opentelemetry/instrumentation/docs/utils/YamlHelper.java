@@ -132,6 +132,7 @@ public class YamlHelper {
 
     // Get telemetry grouping list
     Set<String> telemetryGroups = module.getMetrics().keySet();
+
     if (!telemetryGroups.isEmpty()) {
       List<Map<String, Object>> telemetryList = new ArrayList<>();
       for (String group : telemetryGroups) {
@@ -148,12 +149,6 @@ public class YamlHelper {
       }
       moduleMap.put("telemetry", telemetryList);
     }
-
-    if (!module.getMetrics().isEmpty()) {
-      Map<String, List<Map<String, Object>>> metricsList = getMetricsList(module);
-      moduleMap.put("metrics", metricsList);
-    }
-
     return moduleMap;
   }
 
@@ -221,25 +216,25 @@ public class YamlHelper {
     return conf;
   }
 
-  private static Map<String, List<Map<String, Object>>> getMetricsList(
-      InstrumentationModule module) {
-    Map<String, List<Map<String, Object>>> metricsMap = new LinkedHashMap<>();
-    if (module.getMetrics() == null) {
-      return metricsMap;
-    }
-
-    for (Map.Entry<String, List<EmittedMetrics.Metric>> metricEntry :
-        module.getMetrics().entrySet()) {
-      List<Map<String, Object>> metricsList = new ArrayList<>();
-      for (EmittedMetrics.Metric metric : metricEntry.getValue()) {
-        Map<String, Object> innerMetricMap = getObjectMap(metric);
-        metricsList.add(innerMetricMap);
-      }
-      metricsMap.put(metricEntry.getKey(), metricsList);
-    }
-
-    return metricsMap;
-  }
+//  private static Map<String, List<Map<String, Object>>> getMetricsList(
+//      InstrumentationModule module) {
+//    Map<String, List<Map<String, Object>>> metricsMap = new LinkedHashMap<>();
+//    if (module.getMetrics() == null) {
+//      return metricsMap;
+//    }
+//
+//    for (Map.Entry<String, List<EmittedMetrics.Metric>> metricEntry :
+//        module.getMetrics().entrySet()) {
+//      List<Map<String, Object>> metricsList = new ArrayList<>();
+//      for (EmittedMetrics.Metric metric : metricEntry.getValue()) {
+//        Map<String, Object> innerMetricMap = getObjectMap(metric);
+//        metricsList.add(innerMetricMap);
+//      }
+//      metricsMap.put(metricEntry.getKey(), metricsList);
+//    }
+//
+//    return metricsMap;
+//  }
 
   private static Map<String, Object> getObjectMap(EmittedMetrics.Metric metric) {
     Map<String, Object> innerMetricMap = new LinkedHashMap<>();

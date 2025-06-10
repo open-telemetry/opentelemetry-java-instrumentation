@@ -14,15 +14,22 @@ fi
 
 readonly INSTRUMENTATIONS=(
   # <module path (colon-separated)> : <javaagent|library> : [ gradle-task-suffix ]
-  "apache-dbcp-2.0:javaagent:test"
-  "apache-httpclient:apache-httpclient-5.0:javaagent:test"
-  "alibaba-druid-1.0:javaagent:test"
-  "c3p0-0.9:javaagent:test"
-  "hikaricp-3.0:javaagent:test"
-  "tomcat:tomcat-jdbc:javaagent:test"
-  "oracle-ucp-11.2:javaagent:test"
+#  "alibaba-druid-1.0:javaagent:test"
+#  "alibaba-druid-1.0:javaagent:testStableSemconv"
+#  "apache-dbcp-2.0:javaagent:test"
+#  "apache-dbcp-2.0:javaagent:testStableSemconv"
+#  "apache-httpclient:apache-httpclient-5.0:javaagent:test"
+#  "c3p0-0.9:javaagent:test"
+#  "c3p0-0.9:javaagent:testStableSemconv"
+#  "hikaricp-3.0:javaagent:test"
+#  "hikaricp-3.0:javaagent:testStableSemconv"
+#  "tomcat:tomcat-jdbc:javaagent:test"
+#  "tomcat:tomcat-jdbc:javaagent:testStableSemconv"
+#  "oracle-ucp-11.2:javaagent:test"
+#  "oracle-ucp-11.2:javaagent:testStableSemconv"
   "oshi:javaagent:test"
-  "vibur-dbcp-11.0:javaagent:test"
+  "oshi:javaagent:testExperimental"
+#  "vibur-dbcp-11.0:javaagent:test"
 )
 
 readonly TELEMETRY_DIR_NAME=".telemetry"
