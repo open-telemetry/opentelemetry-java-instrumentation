@@ -19,7 +19,8 @@ public final class MethodsConfigurationParser {
   private static final Logger logger = Logger.getLogger(MethodsConfigurationParser.class.getName());
 
   private static final String PACKAGE_CLASS_NAME_REGEX = "[\\w.$]+";
-  private static final String METHOD_LIST_REGEX = "(?:\\s*\\w+\\s*,)*+(?:\\s*\\w+)?\\s*";
+  private static final String METHOD_LIST_REGEX =
+      "(?:\\s*\\w+(=\\w+)?\\s*,)*+(?:\\s*\\w+(=\\w+)?)?\\s*";
   private static final String CONFIG_FORMAT =
       PACKAGE_CLASS_NAME_REGEX + "(?:\\[" + METHOD_LIST_REGEX + "])?";
 

@@ -46,7 +46,9 @@ public class MethodInstrumentationModule extends InstrumentationModule {
     return typeInstrumentations.isEmpty()
         ? emptyList()
         : Arrays.asList(
+            "io.opentelemetry.javaagent.instrumentation.methods.MethodAndType",
             "io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons",
+            "io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons$1",
             "io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons$BootstrapLoader");
   }
 
