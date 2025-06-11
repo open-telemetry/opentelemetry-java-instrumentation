@@ -101,8 +101,8 @@ final class RequestAccess {
   @Nullable private final MethodHandle getTableName;
   @Nullable private final MethodHandle getTopicArn;
   @Nullable private final MethodHandle getTargetArn;
-  @Nullable private MethodHandle getStateMachineArn;
-  @Nullable private MethodHandle getStepFunctionsActivityArn;
+  @Nullable private final MethodHandle getStateMachineArn;
+  @Nullable private final MethodHandle getStepFunctionsActivityArn;
 
   private RequestAccess(Class<?> clz) {
     getBucketName = findAccessorOrNull(clz, "getBucketName");
@@ -112,11 +112,9 @@ final class RequestAccess {
     getTableName = findAccessorOrNull(clz, "getTableName");
     getTopicArn = findAccessorOrNull(clz, "getTopicArn");
     getTargetArn = findAccessorOrNull(clz, "getTargetArn");
-    String className = clz.getName();
-    if (className.startsWith(STEP_FUNCTIONS_REQUEST_CLASS_PREFIX)) {
-      getStateMachineArn = findAccessorOrNull(clz, "getStateMachineArn");
-      getStepFunctionsActivityArn = findAccessorOrNull(clz, "getActivityArn");
-    }
+    boolean isStepFunction = clz.getName().startsWith(STEP_FUNCTIONS_REQUEST_CLASS_PREFIX);
+    getStateMachineArn = isStepFunction ? findAccessorOrNull(clz, "getStateMachineArn") : null;
+    getStepFunctionsActivityArn = isStepFunction ? findAccessorOrNull(clz, "getActivityArn") : null;
   }
 
   @Nullable
