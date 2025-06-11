@@ -26,4 +26,8 @@ tasks {
   withType<Test>().configureEach {
     jvmArgs("-Dotel.instrumentation.oshi.experimental-metrics.enabled=true")
   }
+
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
 }

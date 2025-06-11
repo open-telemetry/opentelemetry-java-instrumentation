@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.propertie
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
@@ -71,6 +72,19 @@ class SpringConfigPropertiesTest {
   void mapFlatHeaders(String key) {
     this.contextRunner
         .withSystemProperties(key + "=a=1,b=2")
+        .run(
+            context ->
+                assertThat(getConfig(context).getMap(key))
+                    .containsExactly(entry("a", "1"), entry("b", "2")));
+  }
+
+  @ParameterizedTest
+  @MethodSource("headerKeys")
+  @DisplayName("should map headers from spring properties with user supplied OpenTelemetry bean")
+  void mapFlatHeadersWithUserSuppliedOtelBean(String key) {
+    this.contextRunner
+        .withSystemProperties(key + "=a=1,b=2")
+        .withBean(OpenTelemetry.class, OpenTelemetry::noop)
         .run(
             context ->
                 assertThat(getConfig(context).getMap(key))
