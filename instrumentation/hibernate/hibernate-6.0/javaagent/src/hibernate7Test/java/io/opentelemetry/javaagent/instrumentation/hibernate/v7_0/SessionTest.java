@@ -68,7 +68,10 @@ class SessionTest extends AbstractHibernateTest {
           session.getTransaction().commit();
           session.close();
         });
-    assertTraces(parameter, "refresh".equals(parameter.methodName));
+    assertTraces(
+        parameter,
+        "refresh".equals(parameter.methodName)
+            || (Boolean.getBoolean("testLatestDeps") && "lock".equals(parameter.methodName)));
   }
 
   @ParameterizedTest(name = "{index}: {0}")

@@ -69,6 +69,8 @@ tasks {
   withType<Test>().configureEach {
     // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   }
 
   named("compileHibernate7TestJava", JavaCompile::class).configure {
