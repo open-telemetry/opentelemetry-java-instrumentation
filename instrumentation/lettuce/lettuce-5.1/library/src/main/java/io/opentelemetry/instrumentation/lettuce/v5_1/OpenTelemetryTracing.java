@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter.splitArgs;
-import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 
@@ -349,7 +348,7 @@ final class OpenTelemetryTracing implements Tracing {
         argsString = value;
         return this;
       }
-      if (key.equals(DB_NAMESPACE.getKey()) && SemconvStability.emitOldDatabaseSemconv()) {
+      if (key.equals("db.namespace") && SemconvStability.emitOldDatabaseSemconv()) {
         // map backwards into db.redis.database.index
         long val = Long.parseLong(value);
         if (span != null) {
