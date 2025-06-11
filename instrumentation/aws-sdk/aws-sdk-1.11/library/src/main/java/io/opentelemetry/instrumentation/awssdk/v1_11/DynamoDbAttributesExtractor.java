@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.api.common.AttributeKey;
@@ -16,9 +19,6 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
-
-import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
-import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 
 class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Response<?>> {
 
