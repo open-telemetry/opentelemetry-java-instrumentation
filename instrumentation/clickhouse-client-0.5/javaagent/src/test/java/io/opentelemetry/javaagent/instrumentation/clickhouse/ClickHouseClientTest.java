@@ -185,6 +185,7 @@ class ClickHouseClientTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // using deprecated semconv
   void testExecuteAndWaitThrowsException() {
     Throwable thrown =
         catchThrowable(
