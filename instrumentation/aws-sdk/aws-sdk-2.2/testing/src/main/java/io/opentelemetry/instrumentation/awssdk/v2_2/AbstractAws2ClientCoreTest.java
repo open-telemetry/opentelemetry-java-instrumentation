@@ -104,6 +104,7 @@ public abstract class AbstractAws2ClientCoreTest {
     server.beforeTestExecution(null);
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private void validateOperationResponse(String operation, Object response) {
     assertThat(response).isNotNull();
     assertThat(response.getClass().getSimpleName()).startsWith(operation);

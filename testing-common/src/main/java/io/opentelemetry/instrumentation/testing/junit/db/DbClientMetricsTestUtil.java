@@ -16,6 +16,7 @@ public class DbClientMetricsTestUtil {
 
   private DbClientMetricsTestUtil() {}
 
+  @SuppressWarnings("deprecation") // using deprecated db semconv
   public static void assertDurationMetric(
       InstrumentationExtension testing,
       String instrumentationName,
