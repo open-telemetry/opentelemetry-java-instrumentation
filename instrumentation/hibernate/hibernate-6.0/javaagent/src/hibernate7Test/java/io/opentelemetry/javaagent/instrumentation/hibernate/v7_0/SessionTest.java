@@ -52,6 +52,8 @@ class SessionTest extends AbstractHibernateTest {
   @MethodSource("provideHibernateActionParameters")
   void testHibernateAction(Parameter parameter) {
     Session session = sessionFactory.openSession();
+    session.beginTransaction();
+
     Value value = session.merge(prepopulated.get(0));
     testing.waitForTraces(1);
     testing.clearData();
@@ -59,7 +61,6 @@ class SessionTest extends AbstractHibernateTest {
     testing.runWithSpan(
         "parent",
         () -> {
-          session.beginTransaction();
           try {
             parameter.sessionMethodTest.accept(session, value);
           } catch (RuntimeException e) {
