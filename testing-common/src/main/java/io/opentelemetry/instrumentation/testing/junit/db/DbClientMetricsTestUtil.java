@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.testing.junit.db;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -16,7 +16,6 @@ public class DbClientMetricsTestUtil {
 
   private DbClientMetricsTestUtil() {}
 
-  @SuppressWarnings("deprecation") // using deprecated db semconv
   public static void assertDurationMetric(
       InstrumentationExtension testing,
       String instrumentationName,
