@@ -15,15 +15,14 @@ import javax.annotation.Nullable;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.SdkExecutionAttribute;
 
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+
 class DynamoDbAttributesExtractor implements AttributesExtractor<ExecutionAttributes, Response> {
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
-  private static final AttributeKey<String> DB_OPERATION_NAME =
-      AttributeKey.stringKey("db.operation.name");
   private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
-  private static final AttributeKey<String> DB_SYSTEM_NAME =
-      AttributeKey.stringKey("db.system.name");
 
   // copied from DbIncubatingAttributes.DbSystemIncubatingValues
   private static final String DYNAMODB = "dynamodb";
