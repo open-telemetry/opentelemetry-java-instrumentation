@@ -18,12 +18,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -35,7 +38,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.aop.aspectj.annotation.AspectJProxyFactory;
 import org.springframework.core.ParameterNameDiscoverer;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class InstrumentationWithSpanAspectTest {
 
   @RegisterExtension
@@ -50,9 +52,22 @@ class InstrumentationWithSpanAspectTest {
     return new InstrumentationWithSpanAspect(openTelemetry, parameterNameDiscoverer);
   }
 
-  protected AttributeAssertion assertCodeFunction(String method) {
-    return satisfies(
-        CODE_FUNCTION_NAME, val -> val.endsWith(unproxiedTesterClassName + "." + method));
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  protected List<AttributeAssertion> assertCodeFunction(String method) {
+    List<AttributeAssertion> assertions = new ArrayList<>();
+    if (SemconvStability.isEmitStableCodeSemconv()) {
+      assertions.add(
+          satisfies(
+              CODE_FUNCTION_NAME, val -> val.endsWith(unproxiedTesterClassName + "." + method)));
+    }
+    if (SemconvStability.isEmitOldCodeSemconv()) {
+      assertions.add(
+          satisfies(
+              CodeIncubatingAttributes.CODE_NAMESPACE,
+              val -> val.endsWith(unproxiedTesterClassName)));
+      assertions.add(equalTo(CodeIncubatingAttributes.CODE_FUNCTION, method));
+    }
+    return assertions;
   }
 
   @BeforeEach
@@ -166,6 +181,11 @@ class InstrumentationWithSpanAspectTest {
         "parent", () -> withSpanTester.withSpanAttributes("foo", "bar", "baz", null, "fizz"));
 
     // then
+    List<AttributeAssertion> assertions = assertCodeFunction("withSpanAttributes");
+    assertions.add(equalTo(stringKey("discoveredName"), "foo"));
+    assertions.add(equalTo(stringKey("implicitName"), "bar"));
+    assertions.add(equalTo(stringKey("explicitName"), "baz"));
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -174,11 +194,7 @@ class InstrumentationWithSpanAspectTest {
                     span.hasName(unproxiedTesterSimpleClassName + ".withSpanAttributes")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            assertCodeFunction("withSpanAttributes"),
-                            equalTo(stringKey("discoveredName"), "foo"),
-                            equalTo(stringKey("implicitName"), "bar"),
-                            equalTo(stringKey("explicitName"), "baz"))));
+                        .hasAttributesSatisfyingExactly(assertions)));
   }
 
   @Test
