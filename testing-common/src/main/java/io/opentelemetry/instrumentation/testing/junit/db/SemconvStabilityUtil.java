@@ -35,7 +35,7 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.HashMap;
 import java.util.Map;
 
-// until old database and code semconv are dropped in 3.0
+// until old database semconv are dropped in 3.0
 public class SemconvStabilityUtil {
 
   private static final Map<AttributeKey<?>, AttributeKey<?>> oldToNewMap = buildMap();

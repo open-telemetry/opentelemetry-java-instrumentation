@@ -14,12 +14,10 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.CodeAttributes;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
@@ -42,20 +40,7 @@ class WithSpanInstrumentationTest {
       AgentInstrumentationExtension.create();
 
   private static List<AttributeAssertion> codeAttributeAssertions(String methodName) {
-    return codeAttributeAssertions(TracedWithSpan.class.getName(), methodName);
-  }
-
-  @SuppressWarnings("deprecation") // testing deprecated code semconv
-  private static List<AttributeAssertion> codeAttributeAssertions(String type, String methodName) {
-    List<AttributeAssertion> assertions = new ArrayList<>();
-    if (SemconvStability.isEmitStableCodeSemconv()) {
-      assertions.add(equalTo(CodeAttributes.CODE_FUNCTION_NAME, type + "." + methodName));
-    }
-    if (SemconvStability.isEmitOldCodeSemconv()) {
-      assertions.add(equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, type));
-      assertions.add(equalTo(CodeIncubatingAttributes.CODE_FUNCTION, methodName));
-    }
-    return assertions;
+    return SemconvCodeStabilityUtil.codeFunctionAssertions(TracedWithSpan.class, methodName);
   }
 
   @Test
@@ -396,7 +381,8 @@ class WithSpanInstrumentationTest {
                       .hasKind(SpanKind.INTERNAL)
                       .hasNoParent()
                       .hasAttributesSatisfying(
-                          codeAttributeAssertions("GeneratedJava6TestClass", "run"));
+                          SemconvCodeStabilityUtil.codeFunctionAssertions(
+                              "GeneratedJava6TestClass", "run"));
                 },
                 span ->
                     span.hasName("intercept")

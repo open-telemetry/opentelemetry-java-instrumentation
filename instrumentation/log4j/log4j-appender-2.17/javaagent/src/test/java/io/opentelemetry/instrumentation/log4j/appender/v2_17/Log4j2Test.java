@@ -24,13 +24,13 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.stream.Stream;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -114,7 +114,7 @@ class Log4j2Test {
                         ? testing.spans().get(0).getSpanContext()
                         : SpanContext.getInvalid());
 
-            List<AttributeAssertion> attributeAsserts =
+            SemconvStabilityUtil.List<AttributeAssertion> attributeAsserts =
                 new ArrayList<>(
                     Arrays.asList(
                         equalTo(THREAD_NAME, Thread.currentThread().getName()),
