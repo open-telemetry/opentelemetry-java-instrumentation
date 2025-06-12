@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SECRETSMANAGER_SECRET_ARN;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -27,7 +28,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -106,10 +106,6 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
   // of the virtual bucket changes introduced by aws sdk v2.18.0. When using IP, there is no way to
   // prefix the hostname with the bucket name as label.
   private final URI clientUri = URI.create("http://localhost:" + server.httpPort());
-
-  // Copied from AwsIncubatingAttributes. Not available in current version of semconv.
-  private static final AttributeKey<String> AWS_SECRETSMANAGER_SECRET_ARN =
-      stringKey("aws.secretsmanager.secret.arn");
 
   private static final String ec2BodyContent =
       "<AllocateAddressResponse xmlns=\"http://ec2.amazonaws.com/doc/2016-11-15/\">"
@@ -240,7 +236,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     if (service.equals("SecretsManager")) {
       attributes.add(
           equalTo(
-              stringKey(AWS_SECRETSMANAGER_SECRET_ARN.getKey()),
+              AWS_SECRETSMANAGER_SECRET_ARN,
               "arn:aws:secretsmanager:us-east-1:123456789012:secret:MySecretFromCLI-sNkBwD"));
     }
 
