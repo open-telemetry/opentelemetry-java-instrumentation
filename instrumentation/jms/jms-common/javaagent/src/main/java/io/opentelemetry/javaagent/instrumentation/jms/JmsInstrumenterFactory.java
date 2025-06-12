@@ -18,7 +18,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.internal.PropagatorBasedBaggageExtractor;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -80,10 +79,6 @@ public final class JmsInstrumenterFactory {
           new PropagatorBasedSpanLinksExtractor<>(
               openTelemetry.getPropagators().getTextMapPropagator(),
               MessagePropertyGetter.INSTANCE));
-      builder.addContextCustomizer(
-          new PropagatorBasedBaggageExtractor<>(
-              openTelemetry.getPropagators().getTextMapPropagator(),
-              MessagePropertyGetter.INSTANCE));
     }
     return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
@@ -104,10 +99,6 @@ public final class JmsInstrumenterFactory {
         && (messagingReceiveInstrumentationEnabled || emitStableMessagingSemconv())) {
       builder.addSpanLinksExtractor(
           new PropagatorBasedSpanLinksExtractor<>(
-              openTelemetry.getPropagators().getTextMapPropagator(),
-              MessagePropertyGetter.INSTANCE));
-      builder.addContextCustomizer(
-          new PropagatorBasedBaggageExtractor<>(
               openTelemetry.getPropagators().getTextMapPropagator(),
               MessagePropertyGetter.INSTANCE));
       return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
