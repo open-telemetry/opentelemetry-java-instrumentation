@@ -6,15 +6,14 @@
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFileAndLineAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FILE_PATH;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_LINE_NUMBER;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
 import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -39,7 +38,6 @@ import org.apache.logging.log4j.core.impl.Log4jLogEvent;
 import org.apache.logging.log4j.message.FormattedMessage;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
-import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AssertAccess;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -284,11 +282,8 @@ abstract class AbstractOpenTelemetryAppenderTest {
     }
 
     List<AttributeAssertion> result = new ArrayList<>(Arrays.asList(assertions));
-    result.addAll(
-        Arrays.asList(
-            equalTo(CODE_FUNCTION_NAME, testClass.getName() + "." + methodName),
-            satisfies(CODE_LINE_NUMBER, AbstractLongAssert::isPositive),
-            equalTo(CODE_FILE_PATH, testClass.getSimpleName() + ".java")));
+    result.addAll(codeFunctionAssertions(testClass, methodName));
+    result.addAll(codeFileAndLineAssertions(testClass.getSimpleName() + ".java"));
     return result;
   }
 }
