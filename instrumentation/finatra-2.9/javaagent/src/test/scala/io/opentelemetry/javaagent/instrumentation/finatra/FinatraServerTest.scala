@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.finatra
 
 import com.twitter.finatra.http.HttpServer
 import io.opentelemetry.api.trace.SpanKind
+import io.opentelemetry.instrumentation.api.internal.SemconvStability
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.{
   AbstractHttpServerTest,
@@ -16,14 +17,21 @@ import io.opentelemetry.instrumentation.testing.junit.http.{
 }
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.{
   StringAssertConsumer,
+  equalTo,
   satisfies
 }
-import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
+import io.opentelemetry.sdk.testing.assertj.{
+  AttributeAssertion,
+  SpanDataAssert,
+  TraceAssert
+}
 import io.opentelemetry.sdk.trace.data.StatusData
 import io.opentelemetry.semconv.CodeAttributes
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 import org.assertj.core.api.AbstractStringAssert
 import org.junit.jupiter.api.extension.RegisterExtension
 
+import java.util
 import java.util.concurrent.Executors
 import java.util.function.{Consumer, Predicate}
 import scala.concurrent.{ExecutionContext, Future}
@@ -63,17 +71,16 @@ class FinatraServerTest extends AbstractHttpServerTest[HttpServer] {
     options.setResponseCodeOnNonStandardHttpMethod(400)
   }
 
+  @SuppressWarnings("deprecation") // testing deprecated code semconv
   override protected def assertHandlerSpan(
       span: SpanDataAssert,
       method: String,
       endpoint: ServerEndpoint
   ): SpanDataAssert = {
-    span
-      .hasName(
-        "FinatraController"
-      )
-      .hasKind(SpanKind.INTERNAL)
-      .hasAttributesSatisfyingExactly(
+
+    val assertions = new util.ArrayList[AttributeAssertion]
+    if (SemconvStability.isEmitStableCodeSemconv) {
+      assertions.add(
         satisfies(
           CodeAttributes.CODE_FUNCTION_NAME,
           new StringAssertConsumer {
@@ -86,6 +93,29 @@ class FinatraServerTest extends AbstractHttpServerTest[HttpServer] {
           }
         )
       )
+    }
+    if (SemconvStability.isEmitOldCodeSemconv) {
+      assertions.add(
+        satisfies(
+          CodeIncubatingAttributes.CODE_NAMESPACE,
+          new StringAssertConsumer {
+            override def accept(t: AbstractStringAssert[_]): Unit = {
+              t.startsWith(
+                "io.opentelemetry.javaagent.instrumentation.finatra.FinatraController"
+              )
+            }
+          }
+        )
+      )
+      assertions.add(equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "apply"))
+    }
+
+    span
+      .hasName(
+        "FinatraController"
+      )
+      .hasKind(SpanKind.INTERNAL)
+      .hasAttributesSatisfyingExactly(assertions)
 
     if (endpoint == ServerEndpoint.EXCEPTION) {
       span
