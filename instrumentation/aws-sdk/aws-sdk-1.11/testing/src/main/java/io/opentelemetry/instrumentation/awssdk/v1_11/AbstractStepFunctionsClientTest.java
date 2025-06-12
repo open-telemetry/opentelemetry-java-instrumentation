@@ -5,15 +5,15 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_STEP_FUNCTIONS_ACTIVITY_ARN;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN;
 import static java.util.Collections.singletonList;
 
 import com.amazonaws.services.stepfunctions.AWSStepFunctions;
 import com.amazonaws.services.stepfunctions.AWSStepFunctionsClientBuilder;
 import com.amazonaws.services.stepfunctions.model.DescribeActivityRequest;
 import com.amazonaws.services.stepfunctions.model.DescribeStateMachineRequest;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
@@ -26,17 +26,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 public abstract class AbstractStepFunctionsClientTest extends AbstractBaseAwsClientTest {
-
-  //  Copied from semconv. These two keys are not available in the current version of semconv.
-  //  They can be replaced with direct imports when the new version of semconv is in.
-  //  import static
-  // io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_STEP_FUNCTIONS_ACTIVITY_ARN;
-  //  import static
-  // io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN;
-  private static final AttributeKey<String> AWS_STEP_FUNCTIONS_ACTIVITY_ARN =
-      stringKey("aws.step_functions.activity.arn");
-  private static final AttributeKey<String> AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN =
-      stringKey("aws.step_functions.state_machine.arn");
 
   public abstract AWSStepFunctionsClientBuilder configureClient(
       AWSStepFunctionsClientBuilder client);
