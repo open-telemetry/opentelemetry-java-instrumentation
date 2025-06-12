@@ -20,11 +20,7 @@ import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.{
   equalTo,
   satisfies
 }
-import io.opentelemetry.sdk.testing.assertj.{
-  AttributeAssertion,
-  SpanDataAssert,
-  TraceAssert
-}
+import io.opentelemetry.sdk.testing.assertj.{AttributeAssertion, SpanDataAssert}
 import io.opentelemetry.sdk.trace.data.StatusData
 import io.opentelemetry.semconv.CodeAttributes
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
@@ -33,7 +29,7 @@ import org.junit.jupiter.api.extension.RegisterExtension
 
 import java.util
 import java.util.concurrent.Executors
-import java.util.function.{Consumer, Predicate}
+import java.util.function.Predicate
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
 
@@ -71,7 +67,6 @@ class FinatraServerTest extends AbstractHttpServerTest[HttpServer] {
     options.setResponseCodeOnNonStandardHttpMethod(400)
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated code semconv
   override protected def assertHandlerSpan(
       span: SpanDataAssert,
       method: String,
