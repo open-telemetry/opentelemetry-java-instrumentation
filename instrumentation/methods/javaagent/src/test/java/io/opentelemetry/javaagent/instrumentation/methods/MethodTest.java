@@ -5,9 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.methods;
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.trace.Span;
@@ -40,9 +39,7 @@ class MethodTest {
                     span.hasName("ConfigTracedCallable.call")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                ConfigTracedCallable.class.getName() + ".call"))));
+                            codeFunctionAssertions(ConfigTracedCallable.class, "call"))));
   }
 
   @Test
@@ -68,9 +65,7 @@ class MethodTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasException(throwableReference.get())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                InitialDirContext.class.getName() + ".search"))));
+                            codeFunctionAssertions(InitialDirContext.class, "search"))));
   }
 
   static class ConfigTracedCallable implements Callable<String> {
@@ -100,9 +95,8 @@ class MethodTest {
                     span.hasName("ConfigTracedCompletableFuture.getResult")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                ConfigTracedCompletableFuture.class.getName() + ".getResult"))));
+                            codeFunctionAssertions(
+                                ConfigTracedCompletableFuture.class, "getResult"))));
   }
 
   static class ConfigTracedCompletableFuture {
