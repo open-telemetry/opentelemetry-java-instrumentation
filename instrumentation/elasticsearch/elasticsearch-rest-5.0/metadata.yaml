@@ -1,0 +1,5 @@
+configurations:
+  - name: otel.instrumentation.elasticsearch.capture-search-query
+    description: Enable the capture of search query bodies. Attention: Elasticsearch queries may contain personal or sensitive information.
+    type: boolean
+    default: false
