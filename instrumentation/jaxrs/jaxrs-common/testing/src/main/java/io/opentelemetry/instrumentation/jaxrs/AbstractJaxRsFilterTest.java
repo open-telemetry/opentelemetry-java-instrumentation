@@ -15,8 +15,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
@@ -138,18 +141,17 @@ public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServer
                     },
                     span -> {
                       span.hasName(controllerName).hasParent(trace.getSpan(0));
+                      List<AttributeAssertion> assertions;
                       if (abortPrematch) {
-                        span.hasAttributesSatisfyingExactly(
-                            satisfies(
-                                CODE_FUNCTION_NAME,
-                                name ->
-                                    name.endsWith("JaxRsFilterTest$PrematchRequestFilter.filter")));
+                        assertions =
+                            SemconvCodeStabilityUtil.codeFunctionAssertions(
+                                "JaxRsFilterTest$PrematchRequestFilter", "filter");
                       } else {
-                        span.hasAttributesSatisfyingExactly(
-                            satisfies(
-                                CODE_FUNCTION_NAME,
-                                name -> name.contains("Resource$Test").endsWith(".hello")));
+                        assertions =
+                            SemconvCodeStabilityUtil.codeFunctionAssertions(
+                                "Resource$Test", "hello");
                       }
+                      span.hasAttributesSatisfyingExactly(assertions);
                     }));
   }
 

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.scheduling;
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -15,12 +16,16 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -62,9 +67,22 @@ class SchedulingInstrumentationAspectTest {
     schedulingTester = factory.getProxy();
   }
 
-  protected AttributeAssertion assertCodeFunction(String method) {
-    return satisfies(
-        CODE_FUNCTION_NAME, val -> val.isEqualTo(unproxiedTesterClassName + "." + method));
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  protected List<AttributeAssertion> assertCodeFunction(String method) {
+    List<AttributeAssertion> assertions = new ArrayList<>();
+    if (SemconvStability.isEmitStableCodeSemconv()) {
+      assertions.add(
+          satisfies(
+              CODE_FUNCTION_NAME, val -> val.endsWith(unproxiedTesterClassName + "." + method)));
+    }
+    if (SemconvStability.isEmitOldCodeSemconv()) {
+      assertions.add(
+          satisfies(
+              CodeIncubatingAttributes.CODE_NAMESPACE,
+              val -> val.endsWith(unproxiedTesterClassName)));
+      assertions.add(equalTo(CodeIncubatingAttributes.CODE_FUNCTION, method));
+    }
+    return assertions;
   }
 
   @Test
