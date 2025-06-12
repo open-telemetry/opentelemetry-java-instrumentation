@@ -25,7 +25,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.semconv.CodeAttributes;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.UUID;
@@ -122,8 +122,7 @@ class TomcatAsyncTest extends AbstractHttpServerTest<Tomcat> {
     span.hasKind(SpanKind.INTERNAL)
         .satisfies(spanData -> assertThat(spanData.getName()).endsWith("." + methodName))
         .hasAttributesSatisfyingExactly(
-            satisfies(
-                CodeIncubatingAttributes.CODE_FUNCTION_NAME, v -> v.endsWith("." + methodName)));
+            satisfies(CodeAttributes.CODE_FUNCTION_NAME, v -> v.endsWith("." + methodName)));
     return span;
   }
 }

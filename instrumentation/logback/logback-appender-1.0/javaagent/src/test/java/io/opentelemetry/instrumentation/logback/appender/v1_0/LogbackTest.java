@@ -19,7 +19,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.semconv.CodeAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -163,7 +163,7 @@ class LogbackTest {
                         equalTo(
                             ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
                         equalTo(
-                            CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                            CodeAttributes.CODE_FUNCTION_NAME,
                             LogbackTest.class.getName() + ".performLogging"),
                         satisfies(
                             CodeIncubatingAttributes.CODE_LINE_NUMBER,
@@ -209,7 +209,7 @@ class LogbackTest {
                         ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
                     equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
                     equalTo(
-                        CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                        CodeAttributes.CODE_FUNCTION_NAME,
                         LogbackTest.class.getName() + ".testMdc"),
                     satisfies(
                         CodeIncubatingAttributes.CODE_LINE_NUMBER, AbstractLongAssert::isPositive),
@@ -234,8 +234,7 @@ class LogbackTest {
                     AttributeKey.stringArrayKey("logback.marker"),
                     Collections.singletonList(markerName)),
                 equalTo(
-                    CodeIncubatingAttributes.CODE_FUNCTION_NAME,
-                    LogbackTest.class.getName() + ".testMarker"),
+                    CodeAttributes.CODE_FUNCTION_NAME, LogbackTest.class.getName() + ".testMarker"),
                 satisfies(
                     CodeIncubatingAttributes.CODE_LINE_NUMBER, AbstractLongAssert::isPositive),
                 equalTo(CodeIncubatingAttributes.CODE_FILE_PATH, "LogbackTest.java")));

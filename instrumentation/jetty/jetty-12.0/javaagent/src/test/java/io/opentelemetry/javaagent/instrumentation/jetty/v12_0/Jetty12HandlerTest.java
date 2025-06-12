@@ -24,7 +24,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.semconv.CodeAttributes;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import org.eclipse.jetty.server.Handler;
@@ -75,7 +75,7 @@ class Jetty12HandlerTest extends AbstractHttpServerTest<Server> {
         .satisfies(spanData -> assertThat(spanData.getName()).endsWith("." + methodName))
         .hasAttributesSatisfyingExactly(
             equalTo(
-                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                CodeAttributes.CODE_FUNCTION_NAME,
                 "org.eclipse.jetty.server.Response." + methodName));
     return span;
   }

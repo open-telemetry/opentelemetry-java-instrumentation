@@ -19,7 +19,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.semconv.CodeAttributes;
 import io.opentelemetry.test.hello_web_service.HelloRequest;
 import io.opentelemetry.test.hello_web_service.HelloRequestSoapAction;
 import io.opentelemetry.test.hello_web_service.HelloRequestWsAction;
@@ -133,7 +133,7 @@ class SpringWsTest extends AbstractHttpServerUsingTest<ConfigurableApplicationCo
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                CodeAttributes.CODE_FUNCTION_NAME,
                                 "io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.HelloEndpoint."
                                     + methodName))));
   }

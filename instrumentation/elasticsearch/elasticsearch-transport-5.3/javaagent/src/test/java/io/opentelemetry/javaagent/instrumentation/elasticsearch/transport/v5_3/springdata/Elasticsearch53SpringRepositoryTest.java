@@ -17,10 +17,11 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.io.File;
+import java.util.List;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -308,9 +309,7 @@ class Elasticsearch53SpringRepositoryTest {
                             equalTo(stringKey("elasticsearch.request.search.types"), "doc"))));
   }
 
-  private static AttributeAssertion assertFunctionName(String methodName) {
-    return equalTo(
-        CodeIncubatingAttributes.CODE_FUNCTION_NAME,
-        DocRepository.class.getName() + "." + methodName);
+  private static List<AttributeAssertion> assertFunctionName(String methodName) {
+    return SemconvCodeStabilityUtil.codeFunctionAssertions(DocRepository.class, methodName);
   }
 }

@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.semconv.CodeAttributes;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collection;
@@ -96,8 +96,7 @@ class HttpServletResponseTest {
   }
 
   private static AttributeAssertion assertCodeFunction(String method) {
-    return equalTo(
-        CodeIncubatingAttributes.CODE_FUNCTION_NAME, TestResponse.class.getName() + "." + method);
+    return equalTo(CodeAttributes.CODE_FUNCTION_NAME, TestResponse.class.getName() + "." + method);
   }
 
   @Test

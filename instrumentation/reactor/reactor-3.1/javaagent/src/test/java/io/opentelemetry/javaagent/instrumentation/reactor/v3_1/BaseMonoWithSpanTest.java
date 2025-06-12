@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.v3_1;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
@@ -75,14 +74,13 @@ abstract class BaseMonoWithSpanTest extends AbstractWithSpanTest<Mono<String>, M
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    CODE_FUNCTION_NAME, traced.getClass().getName() + ".outer")),
+                                codeFunctionAssertions(traced.getClass(), "outer")),
                     span ->
                         span.hasName("TracedWithSpan.mono")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_FUNCTION_NAME, traced.getClass().getName() + ".mono")),
+                                codeFunctionAssertions(traced.getClass(), "mono")),
                     span ->
                         span.hasName("inner-manual")
                             .hasKind(SpanKind.INTERNAL)
@@ -124,7 +122,7 @@ abstract class BaseMonoWithSpanTest extends AbstractWithSpanTest<Mono<String>, M
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_FUNCTION_NAME, traced.getClass().getName() + ".mono")),
+                                codeFunctionAssertions(traced.getClass(), "mono")),
                     span ->
                         span.hasName("inner-manual")
                             .hasKind(SpanKind.INTERNAL)

@@ -29,7 +29,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.semconv.CodeAttributes;
 import java.util.List;
 import java.util.Optional;
 import org.hibernate.Version;
@@ -100,7 +100,7 @@ public abstract class AbstractSpringJpaTest<
   }
 
   private static AttributeAssertion assertCodeFunction(String repoClassName, String methodName) {
-    return equalTo(CodeIncubatingAttributes.CODE_FUNCTION_NAME, repoClassName + "." + methodName);
+    return equalTo(CodeAttributes.CODE_FUNCTION_NAME, repoClassName + "." + methodName);
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation

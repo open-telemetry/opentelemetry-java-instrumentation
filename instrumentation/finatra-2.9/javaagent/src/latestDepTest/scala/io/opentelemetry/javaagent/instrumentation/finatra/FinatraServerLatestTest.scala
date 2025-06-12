@@ -21,7 +21,7 @@ import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.{
 }
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert
 import io.opentelemetry.sdk.trace.data.StatusData
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
+import io.opentelemetry.semconv.CodeAttributes
 import org.assertj.core.api.AbstractStringAssert
 import org.junit.jupiter.api.extension.RegisterExtension
 
@@ -75,7 +75,7 @@ class FinatraServerLatestTest extends AbstractHttpServerTest[HttpServer] {
       .hasKind(SpanKind.INTERNAL)
       .hasAttributesSatisfyingExactly(
         satisfies(
-          CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+          CodeAttributes.CODE_FUNCTION_NAME,
           new StringAssertConsumer {
             override def accept(t: AbstractStringAssert[_]): Unit = {
               t.startsWith(

@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.hello.HelloServiceImpl;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.semconv.CodeAttributes;
 import io.opentelemetry.test.hello_web_service.Hello2Request;
 import io.opentelemetry.test.hello_web_service.Hello2Response;
 import io.opentelemetry.test.hello_web_service.HelloRequest;
@@ -131,7 +131,7 @@ public class AbstractJaxWs2Test extends AbstractHttpServerUsingTest<Server> {
                             .hasKind(SpanKind.INTERNAL)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(
-                                    CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                    CodeAttributes.CODE_FUNCTION_NAME,
                                     HelloServiceImpl.class.getName()
                                         + "."
                                         + testMethod.methodName())));
@@ -176,7 +176,7 @@ public class AbstractJaxWs2Test extends AbstractHttpServerUsingTest<Server> {
                             .hasException(expectedException)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(
-                                    CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                    CodeAttributes.CODE_FUNCTION_NAME,
                                     HelloServiceImpl.class.getName()
                                         + "."
                                         + testMethod.methodName())));

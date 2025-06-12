@@ -19,7 +19,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.semconv.CodeAttributes;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
@@ -83,7 +83,7 @@ class ContextBridgeTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                CodeAttributes.CODE_FUNCTION_NAME,
                                 runnable.getClass().getName() + ".run"),
                             equalTo(stringKey("cat"), "yes"))));
   }
@@ -147,7 +147,7 @@ class ContextBridgeTest {
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                CodeAttributes.CODE_FUNCTION_NAME,
                                 runnable.getClass().getName() + ".run"),
                             equalTo(stringKey("cat"), "yes"))));
   }

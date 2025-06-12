@@ -22,10 +22,10 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.ClientAttributes;
+import io.opentelemetry.semconv.CodeAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import java.net.URI;
@@ -249,7 +249,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
       assertThat(firstLog.getAttributes().asMap())
           .as("Should capture code attributes")
           .containsEntry(
-              CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+              CodeAttributes.CODE_FUNCTION_NAME,
               "org.springframework.boot.StartupInfoLogger.logStarting");
     }
   }

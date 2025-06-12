@@ -28,7 +28,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.semconv.CodeAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -174,8 +174,7 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
     span.hasKind(SpanKind.INTERNAL)
         .satisfies(spanData -> assertThat(spanData.getName()).endsWith("." + methodName))
         .hasAttributesSatisfyingExactly(
-            satisfies(
-                CodeIncubatingAttributes.CODE_FUNCTION_NAME, v -> v.endsWith("." + methodName)));
+            satisfies(CodeAttributes.CODE_FUNCTION_NAME, v -> v.endsWith("." + methodName)));
     return span;
   }
 
@@ -196,9 +195,7 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
               span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"))
                   .hasKind(SpanKind.INTERNAL)
                   .hasAttributesSatisfyingExactly(
-                      satisfies(
-                          CodeIncubatingAttributes.CODE_FUNCTION_NAME,
-                          v -> v.endsWith(".sendError"))));
+                      satisfies(CodeAttributes.CODE_FUNCTION_NAME, v -> v.endsWith(".sendError"))));
     }
     return spanAssertions;
   }

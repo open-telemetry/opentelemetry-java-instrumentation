@@ -20,7 +20,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.semconv.CodeAttributes;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.time.Instant;
@@ -120,7 +120,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
                           CodeIncubatingAttributes.CODE_FILE_PATH,
                           AbstractOpenTelemetryAppenderTest.class.getSimpleName() + ".java"),
                       equalTo(
-                          CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                          CodeAttributes.CODE_FUNCTION_NAME,
                           AbstractOpenTelemetryAppenderTest.class.getName() + ".logWithExtras"),
                       satisfies(
                           CodeIncubatingAttributes.CODE_LINE_NUMBER,

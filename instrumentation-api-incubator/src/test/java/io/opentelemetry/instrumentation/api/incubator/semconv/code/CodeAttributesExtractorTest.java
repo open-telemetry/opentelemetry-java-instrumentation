@@ -12,6 +12,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.semconv.CodeAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.util.Collections;
@@ -60,6 +61,8 @@ class CodeAttributesExtractorTest {
 
     // then
     Attributes attributes = startAttributes.build();
+    SemconvCodeStabilityUtil.codeFunctionAssertions(TestClass.class, "doSomething");
+
     if (SemconvStability.isEmitStableCodeSemconv()) {
       assertThat(attributes)
           .containsEntry(

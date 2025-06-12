@@ -10,7 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.semconv.CodeAttributes;
 import java.lang.reflect.Proxy;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,7 +36,7 @@ class JwsAnnotationsTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                CodeAttributes.CODE_FUNCTION_NAME,
                                 WebServiceClass.class.getName() + ".doSomethingPublic"))));
   }
 
@@ -56,7 +56,7 @@ class JwsAnnotationsTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                CodeAttributes.CODE_FUNCTION_NAME,
                                 WebServiceFromInterface.class.getName()
                                     + ".partOfPublicInterface"))));
   }
@@ -81,7 +81,7 @@ class JwsAnnotationsTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                CodeAttributes.CODE_FUNCTION_NAME,
                                 WebServiceFromInterface.class.getName()
                                     + ".partOfPublicInterface"))));
   }

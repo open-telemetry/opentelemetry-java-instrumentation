@@ -5,16 +5,18 @@
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.rxjava.v2_0.AbstractTracedWithSpan;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
@@ -41,8 +43,22 @@ public abstract class BaseRxJava2WithSpanTest {
 
   protected abstract InstrumentationExtension testing();
 
-  protected static AttributeAssertion assertCodeFunction(String method) {
-    return satisfies(CODE_FUNCTION_NAME, val -> val.endsWith(".TracedWithSpan." + method));
+  @SuppressWarnings("deprecation") // testing deprecated code semconv
+  protected static List<AttributeAssertion> assertCodeFunction(String method) {
+    List<AttributeAssertion> assertions = new ArrayList<>();
+    if (SemconvStability.isEmitStableCodeSemconv()) {
+      assertions.add(
+          satisfies(CODE_FUNCTION_NAME, val -> val.endsWith(".TracedWithSpan." + method)));
+    }
+    if (SemconvStability.isEmitOldCodeSemconv()) {
+      assertions.add(
+          satisfies(
+              CodeIncubatingAttributes.CODE_NAMESPACE,
+              val -> val.endsWith(".TracedWithSpan" + method)));
+      assertions.add(equalTo(CodeIncubatingAttributes.CODE_FUNCTION, method));
+    }
+
+    return assertions;
   }
 
   @Test
@@ -145,6 +161,9 @@ public abstract class BaseRxJava2WithSpanTest {
     List<List<SpanData>> traces = testing().waitForTraces(0);
     assertThat(traces).isEmpty();
 
+    List<AttributeAssertion> assertions = assertCodeFunction("completable");
+    assertions.add(equalTo(RXJAVA_CANCELED, true));
+
     observer.cancel();
     testing()
         .waitAndAssertTraces(
@@ -154,9 +173,7 @@ public abstract class BaseRxJava2WithSpanTest {
                         span.hasName("TracedWithSpan.completable")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                assertCodeFunction("completable"),
-                                equalTo(RXJAVA_CANCELED, true))));
+                            .hasAttributesSatisfyingExactly(assertions)));
   }
 
   @Test
@@ -279,6 +296,9 @@ public abstract class BaseRxJava2WithSpanTest {
     List<List<SpanData>> traces = testing().waitForTraces(0);
     assertThat(traces).isEmpty();
 
+    List<AttributeAssertion> assertions = assertCodeFunction("maybe");
+    assertions.add(equalTo(RXJAVA_CANCELED, true));
+
     observer.cancel();
     testing()
         .waitAndAssertTraces(
@@ -288,8 +308,7 @@ public abstract class BaseRxJava2WithSpanTest {
                         span.hasName("TracedWithSpan.maybe")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                assertCodeFunction("maybe"), equalTo(RXJAVA_CANCELED, true))));
+                            .hasAttributesSatisfyingExactly(assertions)));
   }
 
   @Test
@@ -395,6 +414,9 @@ public abstract class BaseRxJava2WithSpanTest {
     List<List<SpanData>> traces = testing().waitForTraces(0);
     assertThat(traces).isEmpty();
 
+    List<AttributeAssertion> assertions = assertCodeFunction("single");
+    assertions.add(equalTo(RXJAVA_CANCELED, true));
+
     observer.cancel();
     testing()
         .waitAndAssertTraces(
@@ -404,8 +426,7 @@ public abstract class BaseRxJava2WithSpanTest {
                         span.hasName("TracedWithSpan.single")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                assertCodeFunction("single"), equalTo(RXJAVA_CANCELED, true))));
+                            .hasAttributesSatisfyingExactly(assertions)));
   }
 
   @Test
@@ -533,6 +554,9 @@ public abstract class BaseRxJava2WithSpanTest {
     traces = testing().waitForTraces(0);
     assertThat(traces).isEmpty();
 
+    List<AttributeAssertion> assertions = assertCodeFunction("observable");
+    assertions.add(equalTo(RXJAVA_CANCELED, true));
+
     observer.cancel();
     testing()
         .waitAndAssertTraces(
@@ -542,8 +566,7 @@ public abstract class BaseRxJava2WithSpanTest {
                         span.hasName("TracedWithSpan.observable")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                assertCodeFunction("observable"), equalTo(RXJAVA_CANCELED, true))));
+                            .hasAttributesSatisfyingExactly(assertions)));
   }
 
   @Test
@@ -671,6 +694,9 @@ public abstract class BaseRxJava2WithSpanTest {
     traces = testing().waitForTraces(0);
     assertThat(traces).isEmpty();
 
+    List<AttributeAssertion> assertions = assertCodeFunction("flowable");
+    assertions.add(equalTo(RXJAVA_CANCELED, true));
+
     observer.cancel();
     testing()
         .waitAndAssertTraces(
@@ -680,8 +706,7 @@ public abstract class BaseRxJava2WithSpanTest {
                         span.hasName("TracedWithSpan.flowable")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                assertCodeFunction("flowable"), equalTo(RXJAVA_CANCELED, true))));
+                            .hasAttributesSatisfyingExactly(assertions)));
   }
 
   @Test
@@ -817,6 +842,9 @@ public abstract class BaseRxJava2WithSpanTest {
 
     observer.cancel();
 
+    List<AttributeAssertion> assertions = assertCodeFunction("parallelFlowable");
+    assertions.add(equalTo(RXJAVA_CANCELED, true));
+
     testing()
         .waitAndAssertTraces(
             trace ->
@@ -825,9 +853,7 @@ public abstract class BaseRxJava2WithSpanTest {
                         span.hasName("TracedWithSpan.parallelFlowable")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                assertCodeFunction("parallelFlowable"),
-                                equalTo(RXJAVA_CANCELED, true))));
+                            .hasAttributesSatisfyingExactly(assertions)));
   }
 
   @Test
@@ -893,6 +919,9 @@ public abstract class BaseRxJava2WithSpanTest {
     List<List<SpanData>> traces = testing().waitForTraces(0);
     assertThat(traces).isEmpty();
 
+    List<AttributeAssertion> assertions = assertCodeFunction("publisher");
+    assertions.add(equalTo(RXJAVA_CANCELED, true));
+
     observer.cancel();
     testing()
         .waitAndAssertTraces(
@@ -902,8 +931,7 @@ public abstract class BaseRxJava2WithSpanTest {
                         span.hasName("TracedWithSpan.publisher")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                assertCodeFunction("publisher"), equalTo(RXJAVA_CANCELED, true))));
+                            .hasAttributesSatisfyingExactly(assertions)));
   }
 
   static class CustomPublisher implements Publisher<String>, Subscription {

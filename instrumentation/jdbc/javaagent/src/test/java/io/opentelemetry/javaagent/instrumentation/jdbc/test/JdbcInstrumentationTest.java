@@ -40,7 +40,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.semconv.CodeAttributes;
 import java.beans.PropertyVetoException;
 import java.io.Closeable;
 import java.io.IOException;
@@ -1064,7 +1064,7 @@ class JdbcInstrumentationTest {
                               .hasParent(trace.getSpan(0))
                               .hasAttributesSatisfyingExactly(
                                   equalTo(
-                                      CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                      CodeAttributes.CODE_FUNCTION_NAME,
                                       datasource.getClass().getName() + ".getConnection"),
                                   equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
                                   equalTo(DB_USER, emitStableDatabaseSemconv() ? null : user),
@@ -1080,7 +1080,7 @@ class JdbcInstrumentationTest {
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+                                CodeAttributes.CODE_FUNCTION_NAME,
                                 datasource.getClass().getName() + ".getConnection"),
                             equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
                             equalTo(DB_USER, emitStableDatabaseSemconv() ? null : user),

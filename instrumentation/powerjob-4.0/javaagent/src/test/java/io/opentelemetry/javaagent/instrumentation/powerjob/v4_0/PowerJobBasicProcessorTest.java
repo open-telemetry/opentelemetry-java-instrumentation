@@ -18,7 +18,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.semconv.CodeAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import javax.sql.DataSource;
@@ -343,7 +343,7 @@ class PowerJobBasicProcessorTest {
     List<AttributeAssertion> attributeAssertions =
         new ArrayList<>(
             asList(
-                equalTo(CodeIncubatingAttributes.CODE_FUNCTION_NAME, codeNamespace + ".process"),
+                equalTo(CodeAttributes.CODE_FUNCTION_NAME, codeNamespace + ".process"),
                 equalTo(AttributeKey.stringKey("job.system"), "powerjob"),
                 equalTo(AttributeKey.longKey("scheduling.powerjob.job.id"), jobId),
                 equalTo(AttributeKey.stringKey("scheduling.powerjob.job.type"), jobType)));

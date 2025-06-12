@@ -18,7 +18,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.testing.assertj.TraceAssert
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
+import io.opentelemetry.semconv.CodeAttributes
 import io.vertx.core.Vertx
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.CompletableDeferred
@@ -384,14 +384,14 @@ class KotlinCoroutinesInstrumentationTest {
             it.hasName("a1")
               .hasNoParent()
               .hasAttributesSatisfyingExactly(
-                equalTo(CodeIncubatingAttributes.CODE_FUNCTION_NAME, this.javaClass.name + ".annotated1")
+                equalTo(CodeAttributes.CODE_FUNCTION_NAME, this.javaClass.name + ".annotated1")
               )
           },
           {
             it.hasName("KotlinCoroutinesInstrumentationTest.annotated2")
               .hasParent(trace.getSpan(0))
               .hasAttributesSatisfyingExactly(
-                equalTo(CodeIncubatingAttributes.CODE_FUNCTION_NAME, this.javaClass.name + ".annotated2"),
+                equalTo(CodeAttributes.CODE_FUNCTION_NAME, this.javaClass.name + ".annotated2"),
                 equalTo(AttributeKey.longKey("byteValue"), 1),
                 equalTo(AttributeKey.longKey("intValue"), 4),
                 equalTo(AttributeKey.longKey("longValue"), 5),
@@ -444,7 +444,7 @@ class KotlinCoroutinesInstrumentationTest {
             it.hasName("ClazzWithDefaultConstructorArguments.sayHello")
               .hasNoParent()
               .hasAttributesSatisfyingExactly(
-                equalTo(CodeIncubatingAttributes.CODE_FUNCTION_NAME, ClazzWithDefaultConstructorArguments::class.qualifiedName + ".sayHello")
+                equalTo(CodeAttributes.CODE_FUNCTION_NAME, ClazzWithDefaultConstructorArguments::class.qualifiedName + ".sayHello")
               )
           }
         )
