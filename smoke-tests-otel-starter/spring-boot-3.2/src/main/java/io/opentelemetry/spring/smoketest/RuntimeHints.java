@@ -29,8 +29,6 @@ public class RuntimeHints implements RuntimeHintsRegistrar {
             });
 
     // Register proxy hints for DataSource AOP proxy used by DataSourcePostProcessor
-    hints
-        .proxies()
-        .registerJdkProxy(TypeReference.of("javax.sql.DataSource"));
+    hints.proxies().registerJdkProxy(TypeReference.of("javax.sql.DataSource"));
   }
 }

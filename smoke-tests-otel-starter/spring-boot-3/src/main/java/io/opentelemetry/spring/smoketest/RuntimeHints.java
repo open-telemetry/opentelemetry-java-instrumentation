@@ -36,9 +36,6 @@ public class RuntimeHints implements RuntimeHintsRegistrar {
     hints
         .proxies()
         .registerJdkProxy(
-            DataSource.class,
-            SpringProxy.class,
-            Advised.class,
-            DecoratingProxy.class);
+            DataSource.class, SpringProxy.class, Advised.class, DecoratingProxy.class);
   }
 }
