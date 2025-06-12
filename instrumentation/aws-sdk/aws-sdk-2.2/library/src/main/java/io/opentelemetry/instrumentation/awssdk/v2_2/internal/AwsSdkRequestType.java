@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.FieldMapping.request;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.FieldMapping.response;
 
 import io.opentelemetry.api.common.AttributeKey;
 import java.util.Collections;
@@ -18,6 +20,7 @@ enum AwsSdkRequestType {
   KINESIS(request("aws.stream.name", "StreamName")),
   DYNAMODB(request("aws.table.name", "TableName")),
   BEDROCK_RUNTIME(),
+  SECRETSMANAGER(response(AttributeKeys.AWS_SECRETSMANAGER_SECRET_ARN.getKey(), "ARN")),
   SNS(
       /*
        * Only one of TopicArn and TargetArn are permitted on an SNS request.
@@ -38,6 +41,10 @@ enum AwsSdkRequestType {
   }
 
   private static class AttributeKeys {
+    // Copied from AwsIncubatingAttributes
+    static final AttributeKey<String> AWS_SECRETSMANAGER_SECRET_ARN =
+        stringKey("aws.secretsmanager.secret.arn");
+
     // copied from MessagingIncubatingAttributes
     static final AttributeKey<String> MESSAGING_DESTINATION_NAME =
         AttributeKey.stringKey("messaging.destination.name");
