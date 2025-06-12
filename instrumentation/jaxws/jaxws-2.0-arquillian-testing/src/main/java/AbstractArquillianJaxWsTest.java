@@ -123,6 +123,6 @@ public abstract class AbstractArquillianJaxWsTest {
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
             SemconvCodeStabilityUtil.codeFunctionAssertions(
-                "test." + service + "Impl.", methodName));
+                "test." + service + "Impl", methodName));
   }
 }
