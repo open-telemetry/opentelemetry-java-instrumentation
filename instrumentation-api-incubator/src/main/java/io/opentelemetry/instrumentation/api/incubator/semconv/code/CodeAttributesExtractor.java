@@ -11,6 +11,8 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.semconv.CodeAttributes;
 import javax.annotation.Nullable;
 
 /**
@@ -22,8 +24,9 @@ public final class CodeAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   // copied from CodeIncubatingAttributes
-  private static final AttributeKey<String> CODE_FUNCTION_NAME =
-      AttributeKey.stringKey("code.function.name");
+  private static final AttributeKey<String> CODE_NAMESPACE =
+      AttributeKey.stringKey("code.namespace");
+  private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function");
 
   /** Creates the code attributes extractor. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
@@ -43,6 +46,10 @@ public final class CodeAttributesExtractor<REQUEST, RESPONSE>
     Class<?> cls = getter.getCodeClass(request);
     if (cls != null) {
       sb.append(cls.getName());
+
+      if (SemconvStability.isEmitOldCodeSemconv()) {
+        internalSet(attributes, CODE_NAMESPACE, cls.getName());
+      }
     }
     String methodName = getter.getMethodName(request);
     if (methodName != null) {
@@ -50,9 +57,12 @@ public final class CodeAttributesExtractor<REQUEST, RESPONSE>
         sb.append(".");
       }
       sb.append(methodName);
+      if (SemconvStability.isEmitOldCodeSemconv()) {
+        internalSet(attributes, CODE_FUNCTION, methodName);
+      }
     }
-    if (sb.length() > 0) {
-      internalSet(attributes, CODE_FUNCTION_NAME, sb.toString());
+    if (SemconvStability.isEmitStableCodeSemconv() && sb.length() > 0) {
+      internalSet(attributes, CodeAttributes.CODE_FUNCTION_NAME, sb.toString());
     }
   }
 
