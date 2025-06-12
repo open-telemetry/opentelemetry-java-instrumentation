@@ -28,6 +28,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSan
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
+import io.opentelemetry.semconv.DbAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.net.URI;
 import java.util.Map;
@@ -125,7 +126,7 @@ class DbSpanDecorator extends BaseSpanDecorator {
     super.pre(attributes, exchange, endpoint, camelDirection);
 
     if (SemconvStability.emitStableDatabaseSemconv()) {
-      attributes.put(DbIncubatingAttributes.DB_SYSTEM_NAME, system);
+      attributes.put(DbAttributes.DB_SYSTEM_NAME, system);
     }
     if (SemconvStability.emitOldDatabaseSemconv()) {
       attributes.put(DbIncubatingAttributes.DB_SYSTEM, system);
@@ -133,7 +134,7 @@ class DbSpanDecorator extends BaseSpanDecorator {
     String statement = getStatement(exchange, endpoint);
     if (statement != null) {
       if (SemconvStability.emitStableDatabaseSemconv()) {
-        attributes.put(DbIncubatingAttributes.DB_QUERY_TEXT, statement);
+        attributes.put(DbAttributes.DB_QUERY_TEXT, statement);
       }
       if (SemconvStability.emitOldDatabaseSemconv()) {
         attributes.put(DbIncubatingAttributes.DB_STATEMENT, statement);
@@ -142,7 +143,7 @@ class DbSpanDecorator extends BaseSpanDecorator {
     String dbName = getDbName(endpoint);
     if (dbName != null) {
       if (SemconvStability.emitStableDatabaseSemconv()) {
-        attributes.put(DbIncubatingAttributes.DB_NAMESPACE, dbName);
+        attributes.put(DbAttributes.DB_NAMESPACE, dbName);
       }
       if (SemconvStability.emitOldDatabaseSemconv()) {
         attributes.put(DbIncubatingAttributes.DB_NAME, dbName);
