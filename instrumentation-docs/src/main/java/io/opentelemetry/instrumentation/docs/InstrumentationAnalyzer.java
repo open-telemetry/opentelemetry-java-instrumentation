@@ -95,13 +95,11 @@ class InstrumentationAnalyzer {
       Map<String, EmittedMetrics> metrics =
           MetricParser.getMetricsFromFiles(fileManager.rootDir(), module.getSrcPath());
 
-      if (!metrics.isEmpty()) {
-        for (Map.Entry<String, EmittedMetrics> entry : metrics.entrySet()) {
-          if (entry.getValue() == null || entry.getValue().getMetrics() == null) {
-            continue;
-          }
-          module.getMetrics().put(entry.getKey(), entry.getValue().getMetrics());
+      for (Map.Entry<String, EmittedMetrics> entry : metrics.entrySet()) {
+        if (entry.getValue() == null || entry.getValue().getMetrics() == null) {
+          continue;
         }
+        module.getMetrics().put(entry.getKey(), entry.getValue().getMetrics());
       }
     }
     return modules;
