@@ -26,11 +26,17 @@ testing {
         all {
           testTask.configure {
             jvmArgs(
-              "-Dotel.experimental.config.file=$projectDir/src/declarativeConfigTest/resources/declarative-config.yaml",
+              "-Dotel.experimental.config.file=$projectDir/src/declarativeConfigTest/resources/declarative-config.yaml"
             )
           }
         }
       }
     }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
   }
 }
