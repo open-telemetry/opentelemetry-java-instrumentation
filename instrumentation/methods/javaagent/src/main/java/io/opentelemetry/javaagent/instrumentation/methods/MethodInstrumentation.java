@@ -21,11 +21,7 @@ import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperat
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.Locale;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
@@ -37,48 +33,12 @@ public class MethodInstrumentation implements TypeInstrumentation {
   private final Set<String> serverMethodNames;
   private final Set<String> clientMethodNames;
 
-  private static final Logger logger = Logger.getLogger(MethodInstrumentation.class.getName());
-
-  public MethodInstrumentation(String className, Set<String> methodNames) {
+  public MethodInstrumentation(String className, Set<String> internalMethodNames,
+      Set<String> serverMethodNames, Set<String> clientMethodNames) {
     this.className = className;
-    this.internalMethodNames = filterMethodNames(className, methodNames, SpanKind.INTERNAL, true);
-    this.serverMethodNames = filterMethodNames(className, methodNames, SpanKind.SERVER, false);
-    this.clientMethodNames = filterMethodNames(className, methodNames, SpanKind.CLIENT, false);
-  }
-
-  private static Set<String> filterMethodNames(
-      String className, Set<String> methodNames, SpanKind kind, boolean isDefault) {
-    String suffix = "=" + kind.name();
-    Set<String> methods =
-        methodNames.stream()
-            .filter(
-                methodName ->
-                    methodName.toUpperCase(Locale.ROOT).endsWith(suffix)
-                        || (!methodName.contains("=") && isDefault))
-            .map(
-                methodName ->
-                    methodName.contains("=")
-                        ? methodName.substring(0, methodName.indexOf('='))
-                        : methodName)
-            .collect(Collectors.toSet());
-    logMethods(className, methods, kind);
-    return methods;
-  }
-
-  private static void logMethods(String className, Set<String> methodNames, SpanKind spanKind) {
-    if (!logger.isLoggable(Level.FINE) || methodNames.isEmpty()) {
-      return;
-    }
-    logger.log(
-        Level.FINE,
-        "Tracing class {0} with methods {1} using span kind {2}",
-        new Object[] {
-          className,
-          methodNames.stream()
-              .map(name -> className + "." + name)
-              .collect(Collectors.joining(", ")),
-          spanKind.name()
-        });
+    this.internalMethodNames = internalMethodNames;
+    this.serverMethodNames = serverMethodNames;
+    this.clientMethodNames = clientMethodNames;
   }
 
   @Override

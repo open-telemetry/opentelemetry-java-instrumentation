@@ -8,11 +8,13 @@ package io.opentelemetry.javaagent.instrumentation.methods;
 import static java.util.Collections.emptyList;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,15 +30,24 @@ public class MethodInstrumentationModule extends InstrumentationModule {
   public MethodInstrumentationModule() {
     super("methods");
 
+    DeclarativeConfigProperties methods =
+        AgentInstrumentationConfig.get().getDeclarativeConfig("methods");
+    typeInstrumentations =
+        methods != null ? MethodsConfig.parseDeclarativeConfig(methods) : parseConfigProperties();
+  }
+
+  private static List<TypeInstrumentation> parseConfigProperties() {
     Map<String, Set<String>> classMethodsToTrace =
         MethodsConfigurationParser.parse(
             AgentInstrumentationConfig.get().getString(TRACE_METHODS_CONFIG));
 
-    typeInstrumentations =
-        classMethodsToTrace.entrySet().stream()
-            .filter(e -> !e.getValue().isEmpty())
-            .map(e -> new MethodInstrumentation(e.getKey(), e.getValue()))
-            .collect(Collectors.toList());
+    return classMethodsToTrace.entrySet().stream()
+        .filter(e -> !e.getValue().isEmpty())
+        .map(
+            e ->
+                new MethodInstrumentation(
+                    e.getKey(), e.getValue(), Collections.emptySet(), Collections.emptySet()))
+        .collect(Collectors.toList());
   }
 
   // the default configuration has empty "otel.instrumentation.methods.include", and so doesn't
