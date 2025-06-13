@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.methods;
 
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.trace.Span;
@@ -24,11 +26,13 @@ import javax.naming.ldap.InitialLdapContext;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class MethodTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void methodTraced() {
     assertThat(new ConfigTracedCallable().call()).isEqualTo("Hello!");
@@ -39,7 +43,8 @@ class MethodTest {
                     span.hasName("ConfigTracedCallable.call")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(ConfigTracedCallable.class, "call"))));
+                            equalTo(CODE_NAMESPACE, ConfigTracedCallable.class.getName()),
+                            equalTo(CODE_FUNCTION, "call"))));
   }
 
   @Test
@@ -62,10 +67,11 @@ class MethodTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("InitialDirContext.search")
-                        .hasKind(SpanKind.INTERNAL)
+                        .hasKind(SpanKind.CLIENT)
                         .hasException(throwableReference.get())
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(InitialDirContext.class, "search"))));
+                            equalTo(CODE_NAMESPACE, InitialDirContext.class.getName()),
+                            equalTo(CODE_FUNCTION, "search"))));
   }
 
   static class ConfigTracedCallable implements Callable<String> {
@@ -93,10 +99,10 @@ class MethodTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("ConfigTracedCompletableFuture.getResult")
-                        .hasKind(SpanKind.INTERNAL)
+                        .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
-                            codeFunctionAssertions(
-                                ConfigTracedCompletableFuture.class, "getResult"))));
+                            equalTo(CODE_NAMESPACE, ConfigTracedCompletableFuture.class.getName()),
+                            equalTo(CODE_FUNCTION, "getResult"))));
   }
 
   static class ConfigTracedCompletableFuture {
