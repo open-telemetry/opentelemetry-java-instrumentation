@@ -24,6 +24,8 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
   private static final AttributeKey<String> AWS_REQUEST_ID = stringKey("aws.request_id");
 
   // Copied from AwsIncubatingAttributes
+  private static final AttributeKey<String> AWS_SECRETSMANAGER_SECRET_ARN =
+      stringKey("aws.secretsmanager.secret.arn");
   private static final AttributeKey<String> AWS_STEP_FUNCTIONS_ACTIVITY_ARN =
       stringKey("aws.step_functions.activity.arn");
   private static final AttributeKey<String> AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN =
@@ -43,6 +45,8 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, Request<?> request) {
     Object originalRequest = request.getOriginalRequest();
+    setAttribute(
+        attributes, AWS_SECRETSMANAGER_SECRET_ARN, originalRequest, RequestAccess::getSecretArn);
     setAttribute(
         attributes,
         AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN,
@@ -64,6 +68,7 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
       @Nullable Throwable error) {
     if (response != null) {
       Object awsResp = response.getAwsResponse();
+      setAttribute(attributes, AWS_SECRETSMANAGER_SECRET_ARN, awsResp, RequestAccess::getSecretArn);
       setAttribute(
           attributes,
           AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN,
