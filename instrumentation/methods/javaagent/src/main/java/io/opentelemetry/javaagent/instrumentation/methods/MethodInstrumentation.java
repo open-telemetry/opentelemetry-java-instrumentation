@@ -33,8 +33,11 @@ public class MethodInstrumentation implements TypeInstrumentation {
   private final Set<String> serverMethodNames;
   private final Set<String> clientMethodNames;
 
-  public MethodInstrumentation(String className, Set<String> internalMethodNames,
-      Set<String> serverMethodNames, Set<String> clientMethodNames) {
+  public MethodInstrumentation(
+      String className,
+      Set<String> internalMethodNames,
+      Set<String> serverMethodNames,
+      Set<String> clientMethodNames) {
     this.className = className;
     this.internalMethodNames = internalMethodNames;
     this.serverMethodNames = serverMethodNames;
