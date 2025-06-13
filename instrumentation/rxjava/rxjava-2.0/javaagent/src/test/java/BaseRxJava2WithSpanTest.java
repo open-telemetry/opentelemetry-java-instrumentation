@@ -3,20 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionSuffixAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.rxjava.v2_0.AbstractTracedWithSpan;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
 import io.reactivex.Maybe;
@@ -29,7 +26,6 @@ import io.reactivex.subjects.MaybeSubject;
 import io.reactivex.subjects.SingleSubject;
 import io.reactivex.subjects.UnicastSubject;
 import io.reactivex.subscribers.TestSubscriber;
-import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
@@ -44,26 +40,8 @@ public abstract class BaseRxJava2WithSpanTest {
 
   protected abstract InstrumentationExtension testing();
 
-  @SuppressWarnings("deprecation") // testing deprecated code semconv
-  protected static List<AttributeAssertion> assertCodeFunction(String method) {
-    List<AttributeAssertion> assertions = new ArrayList<>();
-    if (SemconvStability.isEmitStableCodeSemconv()) {
-      assertions.add(
-          satisfies(CODE_FUNCTION_NAME, val -> val.endsWith(".TracedWithSpan." + method)));
-    }
-    if (SemconvStability.isEmitOldCodeSemconv()) {
-      assertions.add(
-          satisfies(
-              CodeIncubatingAttributes.CODE_NAMESPACE,
-              val -> val.endsWith(".TracedWithSpan" + method)));
-      assertions.add(equalTo(CodeIncubatingAttributes.CODE_FUNCTION, method));
-    }
-
-    return assertions;
-  }
-
   private static List<AttributeAssertion> assertCancelled(String method) {
-    List<AttributeAssertion> assertions = assertCodeFunction(method);
+    List<AttributeAssertion> assertions = codeFunctionSuffixAssertions("TracedWithSpan", method);
     assertions.add(equalTo(RXJAVA_CANCELED, true));
     return assertions;
   }
@@ -82,7 +60,8 @@ public abstract class BaseRxJava2WithSpanTest {
                         span.hasName("TracedWithSpan.completable")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(assertCodeFunction("completable"))));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionSuffixAssertions("TracedWithSpan", "completable"))));
   }
 
   @Test
@@ -107,7 +86,8 @@ public abstract class BaseRxJava2WithSpanTest {
                         span.hasName("TracedWithSpan.completable")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(assertCodeFunction("completable"))));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionSuffixAssertions("TracedWithSpan", "completable"))));
   }
 
   @Test
@@ -127,7 +107,8 @@ public abstract class BaseRxJava2WithSpanTest {
                             .hasNoParent()
                             .hasStatus(StatusData.error())
                             .hasException(error)
-                            .hasAttributesSatisfyingExactly(assertCodeFunction("completable"))));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionSuffixAssertions("TracedWithSpan", "completable"))));
   }
 
   @Test
@@ -154,7 +135,8 @@ public abstract class BaseRxJava2WithSpanTest {
                             .hasNoParent()
                             .hasStatus(StatusData.error())
                             .hasException(error)
-                            .hasAttributesSatisfyingExactly(assertCodeFunction("completable"))));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionSuffixAssertions("TracedWithSpan", "completable"))));
   }
 
   @Test
@@ -195,7 +177,8 @@ public abstract class BaseRxJava2WithSpanTest {
                         span.hasName("TracedWithSpan.maybe")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(assertCodeFunction("maybe"))));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionSuffixAssertions("TracedWithSpan", "maybe"))));
   }
 
   @Test
@@ -212,7 +195,8 @@ public abstract class BaseRxJava2WithSpanTest {
                         span.hasName("TracedWithSpan.maybe")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(assertCodeFunction("maybe"))));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionSuffixAssertions("TracedWithSpan", "maybe"))));
   }
 
   @Test
@@ -238,7 +222,8 @@ public abstract class BaseRxJava2WithSpanTest {
                         span.hasName("TracedWithSpan.maybe")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(assertCodeFunction("maybe"))));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionSuffixAssertions("TracedWithSpan", "maybe"))));
   }
 
   @Test
@@ -258,7 +243,8 @@ public abstract class BaseRxJava2WithSpanTest {
                             .hasNoParent()
                             .hasStatus(StatusData.error())
                             .hasException(error)
-                            .hasAttributesSatisfyingExactly(assertCodeFunction("maybe"))));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionSuffixAssertions("TracedWithSpan", "maybe"))));
   }
 
   @Test
@@ -286,7 +272,8 @@ public abstract class BaseRxJava2WithSpanTest {
                             .hasNoParent()
                             .hasStatus(StatusData.error())
                             .hasException(error)
-                            .hasAttributesSatisfyingExactly(assertCodeFunction("maybe"))));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionSuffixAssertions("TracedWithSpan", "maybe"))));
   }
 
   @Test
@@ -327,7 +314,8 @@ public abstract class BaseRxJava2WithSpanTest {
                         span.hasName("TracedWithSpan.single")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(assertCodeFunction("single"))));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionSuffixAssertions("TracedWithSpan", "single"))));
   }
 
   @Test
@@ -353,7 +341,8 @@ public abstract class BaseRxJava2WithSpanTest {
                         span.hasName("TracedWithSpan.single")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(assertCodeFunction("single"))));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionSuffixAssertions("TracedWithSpan", "single"))));
   }
 
   @Test
@@ -373,7 +362,8 @@ public abstract class BaseRxJava2WithSpanTest {
                             .hasNoParent()
                             .hasStatus(StatusData.error())
                             .hasException(error)
-                            .hasAttributesSatisfyingExactly(assertCodeFunction("single"))));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionSuffixAssertions("TracedWithSpan", "single"))));
   }
 
   @Test
@@ -401,7 +391,8 @@ public abstract class BaseRxJava2WithSpanTest {
                             .hasNoParent()
                             .hasStatus(StatusData.error())
                             .hasException(error)
-                            .hasAttributesSatisfyingExactly(assertCodeFunction("single"))));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionSuffixAssertions("TracedWithSpan", "single"))));
   }
 
   @Test
@@ -442,7 +433,8 @@ public abstract class BaseRxJava2WithSpanTest {
                         span.hasName("TracedWithSpan.observable")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(assertCodeFunction("observable"))));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionSuffixAssertions("TracedWithSpan", "observable"))));
   }
 
   @Test
@@ -474,7 +466,8 @@ public abstract class BaseRxJava2WithSpanTest {
                         span.hasName("TracedWithSpan.observable")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(assertCodeFunction("observable"))));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionSuffixAssertions("TracedWithSpan", "observable"))));
   }
 
   @Test
@@ -494,7 +487,8 @@ public abstract class BaseRxJava2WithSpanTest {
                             .hasNoParent()
                             .hasStatus(StatusData.error())
                             .hasException(error)
-                            .hasAttributesSatisfyingExactly(assertCodeFunction("observable"))));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionSuffixAssertions("TracedWithSpan", "observable"))));
   }
 
   @Test
@@ -530,7 +524,8 @@ public abstract class BaseRxJava2WithSpanTest {
                             .hasNoParent()
                             .hasStatus(StatusData.error())
                             .hasException(error)
-                            .hasAttributesSatisfyingExactly(assertCodeFunction("observable"))));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionSuffixAssertions("TracedWithSpan", "observable"))));
   }
 
   @Test
@@ -579,7 +574,8 @@ public abstract class BaseRxJava2WithSpanTest {
                         span.hasName("TracedWithSpan.flowable")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(assertCodeFunction("flowable"))));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionSuffixAssertions("TracedWithSpan", "flowable"))));
   }
 
   @Test
@@ -612,7 +608,8 @@ public abstract class BaseRxJava2WithSpanTest {
                         span.hasName("TracedWithSpan.flowable")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(assertCodeFunction("flowable"))));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionSuffixAssertions("TracedWithSpan", "flowable"))));
   }
 
   @Test
@@ -631,7 +628,8 @@ public abstract class BaseRxJava2WithSpanTest {
                             .hasNoParent()
                             .hasStatus(StatusData.error())
                             .hasException(error)
-                            .hasAttributesSatisfyingExactly(assertCodeFunction("flowable"))));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionSuffixAssertions("TracedWithSpan", "flowable"))));
   }
 
   @Test
@@ -667,7 +665,8 @@ public abstract class BaseRxJava2WithSpanTest {
                             .hasNoParent()
                             .hasStatus(StatusData.error())
                             .hasException(error)
-                            .hasAttributesSatisfyingExactly(assertCodeFunction("flowable"))));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionSuffixAssertions("TracedWithSpan", "flowable"))));
   }
 
   @Test
@@ -717,7 +716,8 @@ public abstract class BaseRxJava2WithSpanTest {
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
-                                assertCodeFunction("parallelFlowable"))));
+                                codeFunctionSuffixAssertions(
+                                    "TracedWithSpan", "parallelFlowable"))));
   }
 
   @Test
@@ -751,7 +751,8 @@ public abstract class BaseRxJava2WithSpanTest {
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
-                                assertCodeFunction("parallelFlowable"))));
+                                codeFunctionSuffixAssertions(
+                                    "TracedWithSpan", "parallelFlowable"))));
   }
 
   @Test
@@ -772,7 +773,8 @@ public abstract class BaseRxJava2WithSpanTest {
                             .hasStatus(StatusData.error())
                             .hasException(error)
                             .hasAttributesSatisfyingExactly(
-                                assertCodeFunction("parallelFlowable"))));
+                                codeFunctionSuffixAssertions(
+                                    "TracedWithSpan", "parallelFlowable"))));
   }
 
   @Test
@@ -810,7 +812,8 @@ public abstract class BaseRxJava2WithSpanTest {
                             .hasStatus(StatusData.error())
                             .hasException(error)
                             .hasAttributesSatisfyingExactly(
-                                assertCodeFunction("parallelFlowable"))));
+                                codeFunctionSuffixAssertions(
+                                    "TracedWithSpan", "parallelFlowable"))));
   }
 
   @Test
@@ -866,7 +869,8 @@ public abstract class BaseRxJava2WithSpanTest {
                         span.hasName("TracedWithSpan.publisher")
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
-                            .hasAttributesSatisfyingExactly(assertCodeFunction("publisher"))));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionSuffixAssertions("TracedWithSpan", "publisher"))));
   }
 
   @Test
@@ -894,7 +898,8 @@ public abstract class BaseRxJava2WithSpanTest {
                             .hasNoParent()
                             .hasStatus(StatusData.error())
                             .hasException(error)
-                            .hasAttributesSatisfyingExactly(assertCodeFunction("publisher"))));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionSuffixAssertions("TracedWithSpan", "publisher"))));
   }
 
   @Test

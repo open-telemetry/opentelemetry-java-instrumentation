@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc.boot;
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionSuffixAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -150,7 +152,7 @@ public abstract class AbstractSpringBootBasedTest
             span.hasName("BasicErrorController.error")
                 .hasKind(SpanKind.INTERNAL)
                 .hasAttributesSatisfyingExactly(
-                    satisfies(CODE_FUNCTION_NAME, v -> v.endsWith(".BasicErrorController.error"))));
+                    codeFunctionSuffixAssertions(".BasicErrorController", "error")));
     return spanAssertions;
   }
 
@@ -210,10 +212,9 @@ public abstract class AbstractSpringBootBasedTest
       codeNamespace = ResourceHttpRequestHandler.class.getName();
     }
     String codeFunction = handlerSpanName.substring(handlerSpanName.indexOf('.') + 1);
-    codeFunction = codeNamespace + "." + codeFunction;
     span.hasName(handlerSpanName)
         .hasKind(SpanKind.INTERNAL)
-        .hasAttributesSatisfyingExactly(equalTo(CODE_FUNCTION_NAME, codeFunction));
+        .hasAttributesSatisfyingExactly(codeFunctionAssertions(codeNamespace, codeFunction));
     if (endpoint == EXCEPTION) {
       span.hasStatus(StatusData.error());
       span.hasEventsSatisfyingExactly(
