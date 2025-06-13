@@ -65,6 +65,18 @@ testing {
         implementation("software.amazon.awssdk:bedrockruntime:$version")
       }
     }
+
+    val testMetricPublisher by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
+        // Add AWS SDK metric dependencies specifically for this test suite
+        implementation("software.amazon.awssdk:sdk-core:2.25.63")
+        implementation("software.amazon.awssdk:metrics-spi:2.25.63")
+        // Add main source set as a dependency
+        implementation(sourceSets["main"].output)
+      }
+    }
   }
 }
 
