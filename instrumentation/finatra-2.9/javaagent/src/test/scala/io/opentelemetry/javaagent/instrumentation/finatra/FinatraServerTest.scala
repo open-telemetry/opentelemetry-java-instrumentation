@@ -9,6 +9,8 @@ import com.twitter.finatra.http.HttpServer
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.api.internal.SemconvStability
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionPrefixAssertions
 import io.opentelemetry.instrumentation.testing.junit.http.{
   AbstractHttpServerTest,
   HttpServerInstrumentationExtension,
@@ -72,45 +74,17 @@ class FinatraServerTest extends AbstractHttpServerTest[HttpServer] {
       method: String,
       endpoint: ServerEndpoint
   ): SpanDataAssert = {
-
-    val assertions = new util.ArrayList[AttributeAssertion]
-    if (SemconvStability.isEmitStableCodeSemconv) {
-      assertions.add(
-        satisfies(
-          CodeAttributes.CODE_FUNCTION_NAME,
-          new StringAssertConsumer {
-            override def accept(t: AbstractStringAssert[_]): Unit = {
-              t.startsWith(
-                "io.opentelemetry.javaagent.instrumentation.finatra.FinatraController"
-              )
-              t.endsWith("apply")
-            }
-          }
-        )
-      )
-    }
-    if (SemconvStability.isEmitOldCodeSemconv) {
-      assertions.add(
-        satisfies(
-          CodeIncubatingAttributes.CODE_NAMESPACE,
-          new StringAssertConsumer {
-            override def accept(t: AbstractStringAssert[_]): Unit = {
-              t.startsWith(
-                "io.opentelemetry.javaagent.instrumentation.finatra.FinatraController"
-              )
-            }
-          }
-        )
-      )
-      assertions.add(equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "apply"))
-    }
-
     span
       .hasName(
         "FinatraController"
       )
       .hasKind(SpanKind.INTERNAL)
-      .hasAttributesSatisfyingExactly(assertions)
+      .hasAttributesSatisfyingExactly(
+        codeFunctionPrefixAssertions(
+          "io.opentelemetry.javaagent.instrumentation.finatra.FinatraController",
+          "apply"
+        )
+      )
 
     if (endpoint == ServerEndpoint.EXCEPTION) {
       span

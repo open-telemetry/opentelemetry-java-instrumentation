@@ -20,8 +20,8 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.semconv.CodeAttributes;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
@@ -78,17 +78,14 @@ class ContextBridgeTest {
     // When
     runnable.run();
     // Then
+    List<AttributeAssertion> assertions =
+        SemconvCodeStabilityUtil.codeFunctionAssertions(runnable.getClass(), "run");
+    assertions.add(equalTo(stringKey("cat"), "yes"));
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("test")
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly( // equal
-                            equalTo(
-                                CodeAttributes.CODE_FUNCTION_NAME,
-                                runnable.getClass().getName() + ".run"),
-                            equalTo(stringKey("cat"), "yes"))));
+                    span.hasName("test").hasNoParent().hasAttributesSatisfyingExactly(assertions)));
   }
 
   @Test
