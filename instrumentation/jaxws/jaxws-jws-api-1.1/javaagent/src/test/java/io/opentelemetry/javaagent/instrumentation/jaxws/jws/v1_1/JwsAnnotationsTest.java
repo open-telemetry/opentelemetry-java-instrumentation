@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.jws.v1_1;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.CodeAttributes;
 import java.lang.reflect.Proxy;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,9 +34,7 @@ class JwsAnnotationsTest {
                         .hasNoParent()
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeAttributes.CODE_FUNCTION_NAME,
-                                WebServiceClass.class.getName() + ".doSomethingPublic"))));
+                            codeFunctionAssertions(WebServiceClass.class, "doSomethingPublic"))));
   }
 
   @Test
@@ -55,10 +52,8 @@ class JwsAnnotationsTest {
                         .hasNoParent()
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeAttributes.CODE_FUNCTION_NAME,
-                                WebServiceFromInterface.class.getName()
-                                    + ".partOfPublicInterface"))));
+                            codeFunctionAssertions(
+                                WebServiceClass.class, "partOfPublicInterface"))));
   }
 
   @Test
@@ -80,9 +75,7 @@ class JwsAnnotationsTest {
                         .hasNoParent()
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeAttributes.CODE_FUNCTION_NAME,
-                                WebServiceFromInterface.class.getName()
-                                    + ".partOfPublicInterface"))));
+                            codeFunctionAssertions(
+                                WebServiceFromInterface.class, "partOfPublicInterface"))));
   }
 }

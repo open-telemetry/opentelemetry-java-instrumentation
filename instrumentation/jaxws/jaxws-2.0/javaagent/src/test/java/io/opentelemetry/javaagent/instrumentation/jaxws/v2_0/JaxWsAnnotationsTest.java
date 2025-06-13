@@ -5,12 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.CodeAttributes;
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -30,8 +28,7 @@ class JaxWsAnnotationsTest {
                         .hasNoParent()
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeAttributes.CODE_FUNCTION_NAME,
-                                SoapProvider.class.getName() + ".invoke"))));
+                            SemconvCodeStabilityUtil.codeFunctionAssertions(
+                                SoapProvider.class, "invoke"))));
   }
 }

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFileAndLineAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -16,15 +18,17 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.core.ContextBase;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.CodeAttributes;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.assertj.core.api.AssertAccess;
@@ -89,7 +93,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasResource(resource)
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("log message 1")
-                    .hasTotalAttributeCount(3));
+                    .hasTotalAttributeCount(SemconvStability.isEmitStableCodeSemconv() ? 2 : 3));
   }
 
   @Test
@@ -101,6 +105,19 @@ abstract class AbstractOpenTelemetryAppenderTest {
 
     executeAfterLogsExecution();
 
+    List<AttributeAssertion> assertions =
+        codeFunctionAssertions(AbstractOpenTelemetryAppenderTest.class, "logWithExtras");
+    assertions.addAll(
+        codeFileAndLineAssertions(
+            AbstractOpenTelemetryAppenderTest.class.getSimpleName() + ".java"));
+    assertions.add(equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()));
+    assertions.add(equalTo(EXCEPTION_MESSAGE, "Error!"));
+    assertions.add(
+        satisfies(EXCEPTION_STACKTRACE, stackTrace -> stackTrace.contains("logWithExtras")));
+    assertions.add(
+        equalTo(
+            AttributeKey.stringArrayKey("logback.marker"), Collections.singletonList(markerName)));
+
     Instant now = Instant.now();
     getTesting()
         .waitAndAssertLogRecords(
@@ -111,23 +128,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
                   .hasBody("log message 1")
                   .hasSeverity(Severity.INFO)
                   .hasSeverityText("INFO")
-                  .hasAttributesSatisfyingExactly(
-                      equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
-                      equalTo(EXCEPTION_MESSAGE, "Error!"),
-                      satisfies(
-                          EXCEPTION_STACKTRACE, stackTrace -> stackTrace.contains("logWithExtras")),
-                      equalTo(
-                          CodeIncubatingAttributes.CODE_FILE_PATH,
-                          AbstractOpenTelemetryAppenderTest.class.getSimpleName() + ".java"),
-                      equalTo(
-                          CodeAttributes.CODE_FUNCTION_NAME,
-                          AbstractOpenTelemetryAppenderTest.class.getName() + ".logWithExtras"),
-                      satisfies(
-                          CodeIncubatingAttributes.CODE_LINE_NUMBER,
-                          lineNo -> lineNo.isGreaterThan(1)),
-                      equalTo(
-                          AttributeKey.stringArrayKey("logback.marker"),
-                          Collections.singletonList(markerName)));
+                  .hasAttributesSatisfyingExactly(assertions);
 
               LogRecordData logRecordData = AssertAccess.getActual(logRecord);
               assertThat(logRecordData.getTimestampEpochNanos())

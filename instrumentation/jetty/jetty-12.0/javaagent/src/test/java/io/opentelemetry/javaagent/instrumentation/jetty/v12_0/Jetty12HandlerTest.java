@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.v12_0;
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES_WITHOUT_ROUTE;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -14,7 +15,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -24,7 +24,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.semconv.CodeAttributes;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import org.eclipse.jetty.server.Handler;
@@ -74,9 +73,7 @@ class Jetty12HandlerTest extends AbstractHttpServerTest<Server> {
     span.hasKind(SpanKind.INTERNAL)
         .satisfies(spanData -> assertThat(spanData.getName()).endsWith("." + methodName))
         .hasAttributesSatisfyingExactly(
-            equalTo(
-                CodeAttributes.CODE_FUNCTION_NAME,
-                "org.eclipse.jetty.server.Response." + methodName));
+            codeFunctionAssertions("org.eclipse.jetty.server.Response", methodName));
     return span;
   }
 
