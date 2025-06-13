@@ -54,7 +54,7 @@ public class SemconvCodeStabilityUtil {
   }
 
   @SuppressWarnings("deprecation") // testing deprecated code semconv
-  public static List<AttributeAssertion> codeAttributeSuffixAssertions(String methodName) {
+  public static List<AttributeAssertion> codeFunctionSuffixAssertions(String methodName) {
     List<AttributeAssertion> assertions = new ArrayList<>();
     if (SemconvStability.isEmitStableCodeSemconv()) {
       assertions.add(
@@ -69,7 +69,7 @@ public class SemconvCodeStabilityUtil {
   }
 
   @SuppressWarnings("deprecation") // testing deprecated code semconv
-  public static List<AttributeAssertion> codeAttributeSuffixAssertions(
+  public static List<AttributeAssertion> codeFunctionSuffixAssertions(
       String namespaceSuffix, String methodName) {
     List<AttributeAssertion> assertions = new ArrayList<>();
     if (SemconvStability.isEmitStableCodeSemconv()) {

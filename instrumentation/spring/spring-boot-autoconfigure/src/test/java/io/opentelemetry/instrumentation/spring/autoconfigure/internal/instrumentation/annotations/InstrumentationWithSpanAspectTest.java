@@ -8,25 +8,21 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
-import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.annotations.SpanAttribute;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -50,24 +46,6 @@ class InstrumentationWithSpanAspectTest {
   WithSpanAspect newWithSpanAspect(
       OpenTelemetry openTelemetry, ParameterNameDiscoverer parameterNameDiscoverer) {
     return new InstrumentationWithSpanAspect(openTelemetry, parameterNameDiscoverer);
-  }
-
-  @SuppressWarnings("deprecation") // using deprecated semconv
-  protected List<AttributeAssertion> assertCodeFunction(String method) {
-    List<AttributeAssertion> assertions = new ArrayList<>();
-    if (SemconvStability.isEmitStableCodeSemconv()) {
-      assertions.add(
-          satisfies(
-              CODE_FUNCTION_NAME, val -> val.endsWith(unproxiedTesterClassName + "." + method)));
-    }
-    if (SemconvStability.isEmitOldCodeSemconv()) {
-      assertions.add(
-          satisfies(
-              CodeIncubatingAttributes.CODE_NAMESPACE,
-              val -> val.endsWith(unproxiedTesterClassName)));
-      assertions.add(equalTo(CodeIncubatingAttributes.CODE_FUNCTION, method));
-    }
-    return assertions;
   }
 
   @BeforeEach
@@ -112,7 +90,8 @@ class InstrumentationWithSpanAspectTest {
                     span.hasName(unproxiedTesterSimpleClassName + ".testWithSpan")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(assertCodeFunction("testWithSpan"))));
+                        .hasAttributesSatisfyingExactly(
+                            codeFunctionAssertions(unproxiedTesterClassName, "testWithSpan"))));
   }
 
   @Test
@@ -134,7 +113,8 @@ class InstrumentationWithSpanAspectTest {
                             .hasKind(INTERNAL)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                assertCodeFunction("testWithSpanWithValue"))));
+                                codeFunctionAssertions(
+                                    unproxiedTesterClassName, "testWithSpanWithValue"))));
   }
 
   @Test
@@ -152,7 +132,8 @@ class InstrumentationWithSpanAspectTest {
                         .hasKind(INTERNAL)
                         .hasStatus(StatusData.error())
                         .hasAttributesSatisfyingExactly(
-                            assertCodeFunction("testWithSpanWithException"))));
+                            codeFunctionAssertions(
+                                unproxiedTesterClassName, "testWithSpanWithException"))));
   }
 
   @Test
@@ -171,7 +152,9 @@ class InstrumentationWithSpanAspectTest {
                     span.hasName(unproxiedTesterSimpleClassName + ".testWithClientSpan")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(assertCodeFunction("testWithClientSpan"))));
+                        .hasAttributesSatisfyingExactly(
+                            codeFunctionAssertions(
+                                unproxiedTesterClassName, "testWithClientSpan"))));
   }
 
   @Test
@@ -181,7 +164,8 @@ class InstrumentationWithSpanAspectTest {
         "parent", () -> withSpanTester.withSpanAttributes("foo", "bar", "baz", null, "fizz"));
 
     // then
-    List<AttributeAssertion> assertions = assertCodeFunction("withSpanAttributes");
+    List<AttributeAssertion> assertions =
+        codeFunctionAssertions(unproxiedTesterClassName, "withSpanAttributes");
     assertions.add(equalTo(stringKey("discoveredName"), "foo"));
     assertions.add(equalTo(stringKey("implicitName"), "bar"));
     assertions.add(equalTo(stringKey("explicitName"), "baz"));
@@ -215,7 +199,8 @@ class InstrumentationWithSpanAspectTest {
                         .hasKind(INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            assertCodeFunction("testWithoutParentSpan"))));
+                            codeFunctionAssertions(
+                                unproxiedTesterClassName, "testWithoutParentSpan"))));
   }
 
   static class InstrumentationWithSpanTester {
@@ -298,7 +283,8 @@ class InstrumentationWithSpanAspectTest {
                           .hasKind(INTERNAL)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              assertCodeFunction("testAsyncCompletionStage"))));
+                              codeFunctionAssertions(
+                                  unproxiedTesterClassName, "testAsyncCompletionStage"))));
     }
 
     @Test
@@ -330,7 +316,8 @@ class InstrumentationWithSpanAspectTest {
                           .hasStatus(StatusData.error())
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              assertCodeFunction("testAsyncCompletionStage"))));
+                              codeFunctionAssertions(
+                                  unproxiedTesterClassName, "testAsyncCompletionStage"))));
     }
 
     @Test
@@ -349,7 +336,8 @@ class InstrumentationWithSpanAspectTest {
                           .hasKind(INTERNAL)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              assertCodeFunction("testAsyncCompletionStage"))));
+                              codeFunctionAssertions(
+                                  unproxiedTesterClassName, "testAsyncCompletionStage"))));
     }
   }
 
@@ -385,7 +373,8 @@ class InstrumentationWithSpanAspectTest {
                           .hasKind(INTERNAL)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              assertCodeFunction("testAsyncCompletableFuture"))));
+                              codeFunctionAssertions(
+                                  unproxiedTesterClassName, "testAsyncCompletableFuture"))));
     }
 
     @Test
@@ -417,7 +406,8 @@ class InstrumentationWithSpanAspectTest {
                           .hasStatus(StatusData.error())
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              assertCodeFunction("testAsyncCompletableFuture"))));
+                              codeFunctionAssertions(
+                                  unproxiedTesterClassName, "testAsyncCompletableFuture"))));
     }
 
     @Test
@@ -438,7 +428,8 @@ class InstrumentationWithSpanAspectTest {
                           .hasKind(INTERNAL)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              assertCodeFunction("testAsyncCompletableFuture"))));
+                              codeFunctionAssertions(
+                                  unproxiedTesterClassName, "testAsyncCompletableFuture"))));
     }
 
     @Test
@@ -461,7 +452,8 @@ class InstrumentationWithSpanAspectTest {
                           .hasStatus(StatusData.error())
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              assertCodeFunction("testAsyncCompletableFuture"))));
+                              codeFunctionAssertions(
+                                  unproxiedTesterClassName, "testAsyncCompletableFuture"))));
     }
 
     @Test
@@ -480,7 +472,8 @@ class InstrumentationWithSpanAspectTest {
                           .hasKind(INTERNAL)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              assertCodeFunction("testAsyncCompletableFuture"))));
+                              codeFunctionAssertions(
+                                  unproxiedTesterClassName, "testAsyncCompletableFuture"))));
     }
   }
 }

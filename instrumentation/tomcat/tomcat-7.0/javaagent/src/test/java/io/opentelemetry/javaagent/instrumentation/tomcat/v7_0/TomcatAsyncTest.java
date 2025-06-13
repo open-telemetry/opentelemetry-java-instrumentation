@@ -121,7 +121,7 @@ class TomcatAsyncTest extends AbstractHttpServerTest<Tomcat> {
     span.hasKind(SpanKind.INTERNAL)
         .satisfies(spanData -> assertThat(spanData.getName()).endsWith("." + methodName))
         .hasAttributesSatisfyingExactly(
-            SemconvCodeStabilityUtil.codeAttributeSuffixAssertions(methodName));
+            SemconvCodeStabilityUtil.codeFunctionSuffixAssertions(methodName));
     return span;
   }
 }
