@@ -73,7 +73,10 @@ final class RequestAccess {
   }
 
   @Nullable
-  static String getTopicArn(Object request) {
+  static String getSnsTopicArn(Object request) {
+    if (request == null) {
+      return null;
+    }
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
     return invokeOrNull(access.getTopicArn, request);
   }
