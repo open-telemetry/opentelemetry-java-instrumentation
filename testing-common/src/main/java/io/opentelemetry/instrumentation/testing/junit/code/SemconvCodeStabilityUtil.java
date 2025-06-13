@@ -10,6 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.semconv.CodeAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.util.ArrayList;
@@ -24,17 +25,9 @@ public class SemconvCodeStabilityUtil {
     return codeFunctionAssertions(type.getName(), methodName);
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated code semconv
   public static List<AttributeAssertion> codeFunctionAssertions(String type, String methodName) {
-    List<AttributeAssertion> assertions = new ArrayList<>();
-    if (SemconvStability.isEmitStableCodeSemconv()) {
-      assertions.add(equalTo(CodeAttributes.CODE_FUNCTION_NAME, type + "." + methodName));
-    }
-    if (SemconvStability.isEmitOldCodeSemconv()) {
-      assertions.add(equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, type));
-      assertions.add(equalTo(CodeIncubatingAttributes.CODE_FUNCTION, methodName));
-    }
-    return assertions;
+    return internalFunctionAssert(
+        methodName, v -> v.isEqualTo(type + "." + methodName), v -> v.isEqualTo(type));
   }
 
   @SuppressWarnings("deprecation") // testing deprecated code semconv
@@ -53,35 +46,39 @@ public class SemconvCodeStabilityUtil {
     return assertions;
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated code semconv
   public static List<AttributeAssertion> codeFunctionSuffixAssertions(String methodName) {
-    List<AttributeAssertion> assertions = new ArrayList<>();
-    if (SemconvStability.isEmitStableCodeSemconv()) {
-      assertions.add(
-          satisfies(CodeAttributes.CODE_FUNCTION_NAME, v -> v.endsWith("." + methodName)));
-    }
-    if (SemconvStability.isEmitOldCodeSemconv()) {
-      assertions.add(equalTo(CodeIncubatingAttributes.CODE_FUNCTION, methodName));
-      assertions.add(
-          satisfies(CodeIncubatingAttributes.CODE_NAMESPACE, AbstractStringAssert::isNotEmpty));
-    }
-    return assertions;
+    return internalFunctionAssert(
+        methodName, v -> v.endsWith("." + methodName), AbstractStringAssert::isNotEmpty);
+  }
+
+  public static List<AttributeAssertion> codeFunctionSuffixAssertions(
+      String namespaceSuffix, String methodName) {
+    return internalFunctionAssert(
+        methodName,
+        v -> v.endsWith(namespaceSuffix + "." + methodName),
+        v -> v.endsWith(namespaceSuffix));
+  }
+
+  public static List<AttributeAssertion> codeFunctionPrefixAssertions(
+      String namespacePrefix, String methodName) {
+    return internalFunctionAssert(
+        methodName,
+        v -> v.startsWith(namespacePrefix).endsWith(methodName),
+        v -> v.startsWith(namespacePrefix));
   }
 
   @SuppressWarnings("deprecation") // testing deprecated code semconv
-  public static List<AttributeAssertion> codeFunctionSuffixAssertions(
-      String namespaceSuffix, String methodName) {
+  private static List<AttributeAssertion> internalFunctionAssert(
+      String methodName,
+      OpenTelemetryAssertions.StringAssertConsumer functionNameAssert,
+      OpenTelemetryAssertions.StringAssertConsumer namespaceAssert) {
     List<AttributeAssertion> assertions = new ArrayList<>();
     if (SemconvStability.isEmitStableCodeSemconv()) {
-      assertions.add(
-          satisfies(
-              CodeAttributes.CODE_FUNCTION_NAME,
-              v -> v.endsWith(namespaceSuffix + "." + methodName)));
+      assertions.add(satisfies(CodeAttributes.CODE_FUNCTION_NAME, functionNameAssert));
     }
     if (SemconvStability.isEmitOldCodeSemconv()) {
       assertions.add(equalTo(CodeIncubatingAttributes.CODE_FUNCTION, methodName));
-      assertions.add(
-          satisfies(CodeIncubatingAttributes.CODE_NAMESPACE, v -> v.endsWith(namespaceSuffix)));
+      assertions.add(satisfies(CodeIncubatingAttributes.CODE_NAMESPACE, namespaceAssert));
     }
     return assertions;
   }

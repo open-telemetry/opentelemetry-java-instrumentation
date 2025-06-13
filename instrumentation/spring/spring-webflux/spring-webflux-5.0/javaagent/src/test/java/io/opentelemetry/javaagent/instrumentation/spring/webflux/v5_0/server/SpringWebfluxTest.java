@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server;
 
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionPrefixAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
-import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
@@ -595,11 +595,8 @@ public class SpringWebfluxTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            satisfies(
-                                CODE_FUNCTION_NAME,
-                                val ->
-                                    val.startsWith("server.RedirectComponent$$Lambda")
-                                        .endsWith(".handle")))),
+                            codeFunctionPrefixAssertions(
+                                "server.RedirectComponent$$Lambda", "handle"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -625,11 +622,8 @@ public class SpringWebfluxTest {
                   span.hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
-                          satisfies(
-                              CODE_FUNCTION_NAME,
-                              val ->
-                                  val.startsWith(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
-                                      .endsWith(".handle")));
+                          codeFunctionPrefixAssertions(
+                              INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX, "handle"));
                 }));
   }
 
@@ -751,11 +745,8 @@ public class SpringWebfluxTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            satisfies(
-                                CODE_FUNCTION_NAME,
-                                val ->
-                                    val.startsWith("server.SpringWebFluxTestApplication$$Lambda")
-                                        .endsWith(".handle")))));
+                            codeFunctionPrefixAssertions(
+                                "server.SpringWebFluxTestApplication$$Lambda", "handle"))));
 
     SpringWebFluxTestApplication.resumeSlowRequest();
   }

@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.spring.scheduling.v3_1;
 
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionPrefixAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
@@ -103,6 +103,10 @@ class SpringSchedulingTest {
       LambdaTaskConfigurer configurer = context.getBean(LambdaTaskConfigurer.class);
       configurer.singleUseLatch.await(2000, TimeUnit.MILLISECONDS);
 
+      List<AttributeAssertion> assertions =
+          codeFunctionPrefixAssertions(LambdaTaskConfigurer.class.getName() + "$$Lambda", "run");
+      assertions.add(equalTo(AttributeKey.stringKey("job.system"), "spring_scheduling"));
+
       assertThat(configurer).isNotNull();
       testing.waitAndAssertTraces(
           trace ->
@@ -110,15 +114,7 @@ class SpringSchedulingTest {
                   span ->
                       span.hasName("LambdaTaskConfigurer$$Lambda.run")
                           .hasNoParent()
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(AttributeKey.stringKey("job.system"), "spring_scheduling"),
-                              satisfies(
-                                  CODE_FUNCTION_NAME,
-                                  codeFunctionName ->
-                                      codeFunctionName
-                                          .startsWith(
-                                              LambdaTaskConfigurer.class.getName() + "$$Lambda")
-                                          .endsWith(".run")))));
+                          .hasAttributesSatisfyingExactly(assertions)));
     }
   }
 
