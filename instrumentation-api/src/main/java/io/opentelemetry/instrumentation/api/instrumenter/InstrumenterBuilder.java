@@ -21,14 +21,19 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.instrumentation.api.internal.InstrumentationCustomizer;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterBuilderAccess;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
+import io.opentelemetry.instrumentation.api.internal.ServiceLoaderUtil;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -51,7 +56,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   final OpenTelemetry openTelemetry;
   final String instrumentationName;
-  final SpanNameExtractor<? super REQUEST> spanNameExtractor;
+  SpanNameExtractor<? super REQUEST> spanNameExtractor;
 
   final List<SpanLinksExtractor<? super REQUEST>> spanLinksExtractors = new ArrayList<>();
   final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
@@ -68,6 +73,19 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.getDefault();
   boolean propagateOperationListenersToOnEnd = false;
   boolean enabled = true;
+
+  private static final Map<Predicate<String>, List<InstrumentationCustomizer>>
+      INSTRUMENTATION_CUSTOMIZER_MAP = new HashMap<>();
+
+  static {
+    List<InstrumentationCustomizer> customizers =
+        ServiceLoaderUtil.load(InstrumentationCustomizer.class);
+    for (InstrumentationCustomizer customizer : customizers) {
+      INSTRUMENTATION_CUSTOMIZER_MAP
+          .computeIfAbsent(customizer.instrumentationNamePredicate(), k -> new ArrayList<>())
+          .add(customizer);
+    }
+  }
 
   InstrumenterBuilder(
       OpenTelemetry openTelemetry,
@@ -281,6 +299,30 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   private Instrumenter<REQUEST, RESPONSE> buildInstrumenter(
       InstrumenterConstructor<REQUEST, RESPONSE> constructor,
       SpanKindExtractor<? super REQUEST> spanKindExtractor) {
+    List<InstrumentationCustomizer> customizers =
+        INSTRUMENTATION_CUSTOMIZER_MAP.entrySet().stream()
+            .filter(entry -> entry.getKey().test(instrumentationName))
+            .flatMap(entry -> entry.getValue().stream())
+            .collect(Collectors.toList());
+    if (customizers != null) {
+      for (InstrumentationCustomizer customizer : customizers) {
+        if (customizer.getContextCustomizer() != null) {
+          addContextCustomizer(customizer.getContextCustomizer());
+        }
+        if (customizer.getAttributesExtractor() != null) {
+          addAttributesExtractor(customizer.getAttributesExtractor());
+        }
+        if (customizer.getAttributesExtractors() != null) {
+          addAttributesExtractors(customizer.getAttributesExtractors());
+        }
+        if (customizer.getOperationMetrics() != null) {
+          addOperationMetrics(customizer.getOperationMetrics());
+        }
+        if (customizer.getSpanNameExtractor() != null) {
+          this.spanNameExtractor = customizer.getSpanNameExtractor();
+        }
+      }
+    }
     this.spanKindExtractor = spanKindExtractor;
     return constructor.create(this);
   }
