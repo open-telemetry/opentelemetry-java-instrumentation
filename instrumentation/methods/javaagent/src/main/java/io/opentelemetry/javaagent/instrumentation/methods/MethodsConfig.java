@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.methods;
 
 import static java.util.Collections.emptyList;
 
-import com.google.common.base.Strings;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.HashSet;
@@ -33,7 +32,7 @@ public class MethodsConfig {
   private static Stream<MethodInstrumentation> parseMethodInstrumentation(
       DeclarativeConfigProperties config) {
     String clazz = config.getString("class");
-    if (Strings.isNullOrEmpty(clazz)) {
+    if (isNullOrEmpty(clazz)) {
       logger.log(Level.WARNING, "Invalid methods configuration - class name missing: {0}", config);
       return Stream.empty();
     }
@@ -44,7 +43,7 @@ public class MethodsConfig {
     List<DeclarativeConfigProperties> methods = config.getStructuredList("methods", emptyList());
     for (DeclarativeConfigProperties method : methods) {
       String methodName = method.getString("name");
-      if (Strings.isNullOrEmpty(methodName)) {
+      if (isNullOrEmpty(methodName)) {
         logger.log(
             Level.WARNING, "Invalid methods configuration - method name missing: {0}", method);
         continue;
@@ -67,5 +66,9 @@ public class MethodsConfig {
     }
 
     return Stream.of(new MethodInstrumentation(clazz, internal, server, client));
+  }
+
+  private static boolean isNullOrEmpty(String s) {
+    return s == null || s.isEmpty();
   }
 }
