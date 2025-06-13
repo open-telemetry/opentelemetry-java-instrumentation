@@ -45,7 +45,8 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                           equalTo(MESSAGING_SYSTEM, "kafka"),
                           equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                           equalTo(MESSAGING_OPERATION, "publish"),
-                          satisfies(MESSAGING_KAFKA_BOOTSTRAP_SERVERS, AbstractStringAssert::isNotEmpty),
+                          satisfies(
+                              MESSAGING_KAFKA_BOOTSTRAP_SERVERS, AbstractStringAssert::isNotEmpty),
                           satisfies(
                               MESSAGING_CLIENT_ID,
                               stringAssert -> stringAssert.startsWith("producer"))));
@@ -69,7 +70,9 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                             equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                             equalTo(MESSAGING_OPERATION, "receive"),
                             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
-                            satisfies(MESSAGING_KAFKA_BOOTSTRAP_SERVERS, AbstractStringAssert::isNotEmpty),
+                            satisfies(
+                                MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+                                AbstractStringAssert::isNotEmpty),
                             satisfies(
                                 MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("consumer")),
@@ -86,7 +89,9 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                             equalTo(
                                 MESSAGING_MESSAGE_BODY_SIZE,
                                 greeting.getBytes(StandardCharsets.UTF_8).length),
-                            satisfies(MESSAGING_KAFKA_BOOTSTRAP_SERVERS, AbstractStringAssert::isNotEmpty),
+                            satisfies(
+                                MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+                                AbstractStringAssert::isNotEmpty),
                             satisfies(
                                 MESSAGING_DESTINATION_PARTITION_ID,
                                 AbstractStringAssert::isNotEmpty),
