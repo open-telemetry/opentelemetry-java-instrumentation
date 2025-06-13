@@ -21,12 +21,18 @@ permissions:
 
 jobs:
   analyze:
+    name: Analyze (${{ matrix.language }})
     permissions:
       contents: read
       actions: read  # for github/codeql-action/init to get workflow details
       security-events: write  # for github/codeql-action/analyze to upload SARIF results
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: actions
+          - language: java
     runs-on: oracle-8cpu-32gb-x86-64
-
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
@@ -44,7 +50,8 @@ jobs:
           # and so it uses more parallelism which uses more memory
           sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx8g /" gradle.properties
 
-      - name: Setup Gradle
+      - name: Set up Gradle
+        if: matrix.language == 'java'
         uses: gradle/actions/setup-gradle@8379f6a1328ee0e06e2bb424dadb7b159856a326 # v4.4.0
         with:
           cache-read-only: ${{ github.event_name == 'pull_request' }}
@@ -52,12 +59,13 @@ jobs:
       - name: Initialize CodeQL
         uses: github/codeql-action/init@fca7ace96b7d713c7035871441bd52efbe39e27e # v3.28.19
         with:
-          languages: java, actions
+          languages: ${{ matrix.language }}
           # using "latest" helps to keep up with the latest Kotlin support
           # see https://github.com/github/codeql-action/issues/1555#issuecomment-1452228433
           tools: latest
 
-      - name: Build
+      - name: Assemble
+        if: matrix.language == 'java'
         # --no-build-cache is required for codeql to analyze all modules
         # --no-daemon is required for codeql to observe the compilation
         # (see https://docs.github.com/en/code-security/codeql-cli/getting-started-with-the-codeql-cli/preparing-your-code-for-codeql-analysis#specifying-build-commands)
@@ -66,3 +74,5 @@ jobs:
 
       - name: Perform CodeQL analysis
         uses: github/codeql-action/analyze@fca7ace96b7d713c7035871441bd52efbe39e27e # v3.28.19
+        with:
+          category: "/language:${{matrix.language}}"

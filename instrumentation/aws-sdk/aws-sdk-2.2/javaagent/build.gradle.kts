@@ -121,9 +121,10 @@ dependencies {
   testLibrary("software.amazon.awssdk:lambda:2.2.0")
   testLibrary("software.amazon.awssdk:rds:2.2.0")
   testLibrary("software.amazon.awssdk:s3:2.2.0")
-  testLibrary("software.amazon.awssdk:sqs:2.2.0")
-  testLibrary("software.amazon.awssdk:sns:2.2.0")
   testLibrary("software.amazon.awssdk:ses:2.2.0")
+  testLibrary("software.amazon.awssdk:secretsmanager:2.2.0")
+  testLibrary("software.amazon.awssdk:sns:2.2.0")
+  testLibrary("software.amazon.awssdk:sqs:2.2.0")
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean

@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter.splitArgs;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.lettuce.core.output.CommandOutput;
@@ -42,10 +44,7 @@ final class OpenTelemetryTracing implements Tracing {
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
-  private static final AttributeKey<String> DB_SYSTEM_NAME =
-      AttributeKey.stringKey("db.system.name");
   private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
-  private static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.query.text");
   private static final AttributeKey<Long> DB_REDIS_DATABASE_INDEX =
       AttributeKey.longKey("db.redis.database_index");
   // copied from DbIncubatingAttributes.DbSystemIncubatingValues
