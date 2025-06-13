@@ -1,0 +1,5 @@
+[tasks.graalvm-native-tests]
+tools.java   = "graalvm-community-22.0.2"
+file = ".github/scripts/native-tests.sh"
+# todo figure out how to pass this env.TEST_LATEST_DEPS = "{{flag(name='latest-deps')}}"
+
