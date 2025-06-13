@@ -9,8 +9,10 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -26,7 +28,7 @@ public class InstrumentationModule {
   private final String namespace;
   private final String group;
   private final InstrumentationScopeInfo scopeInfo;
-  @Nullable private List<EmittedMetrics.Metric> metrics;
+  private Map<String, List<EmittedMetrics.Metric>> metrics;
 
   @Nullable private Map<InstrumentationType, Set<String>> targetVersions;
 
@@ -44,11 +46,11 @@ public class InstrumentationModule {
     requireNonNull(builder.namespace, "namespace required");
     requireNonNull(builder.group, "group required");
 
+    this.metrics = Objects.requireNonNullElseGet(builder.metrics, HashMap::new);
     this.srcPath = builder.srcPath;
     this.instrumentationName = builder.instrumentationName;
     this.namespace = builder.namespace;
     this.group = builder.group;
-    this.metrics = builder.metrics;
     this.metadata = builder.metadata;
     this.targetVersions = builder.targetVersions;
     this.minJavaVersion = builder.minJavaVersion;
@@ -93,8 +95,7 @@ public class InstrumentationModule {
     return minJavaVersion;
   }
 
-  @Nullable
-  public List<EmittedMetrics.Metric> getMetrics() {
+  public Map<String, List<EmittedMetrics.Metric>> getMetrics() {
     return metrics;
   }
 
@@ -110,7 +111,7 @@ public class InstrumentationModule {
     this.minJavaVersion = minJavaVersion;
   }
 
-  public void setMetrics(List<EmittedMetrics.Metric> metrics) {
+  public void setMetrics(Map<String, List<EmittedMetrics.Metric>> metrics) {
     this.metrics = metrics;
   }
 
@@ -126,7 +127,7 @@ public class InstrumentationModule {
     @Nullable private Integer minJavaVersion;
     @Nullable private InstrumentationMetaData metadata;
     @Nullable private Map<InstrumentationType, Set<String>> targetVersions;
-    @Nullable private List<EmittedMetrics.Metric> metrics;
+    @Nullable private Map<String, List<EmittedMetrics.Metric>> metrics;
 
     @CanIgnoreReturnValue
     public Builder srcPath(String srcPath) {
@@ -171,7 +172,7 @@ public class InstrumentationModule {
     }
 
     @CanIgnoreReturnValue
-    public Builder metrics(List<EmittedMetrics.Metric> metrics) {
+    public Builder metrics(Map<String, List<EmittedMetrics.Metric>> metrics) {
       this.metrics = metrics;
       return this;
     }
