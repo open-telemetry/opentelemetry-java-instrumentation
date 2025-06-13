@@ -712,6 +712,12 @@ libraries:
     target_versions:
       javaagent:
       - org.elasticsearch.client:elasticsearch-rest-client:[6.4,7.0)
+    configurations:
+    - name: otel.instrumentation.elasticsearch.capture-search-query
+      description: |
+        Enable the capture of search query bodies. It is important to note that Elasticsearch queries may contain personal or sensitive information.
+      type: boolean
+      default: false
   - name: elasticsearch-api-client-7.16
     source_path: instrumentation/elasticsearch/elasticsearch-api-client-7.16
     scope:
@@ -728,6 +734,13 @@ libraries:
       javaagent:
       - org.elasticsearch.client:rest:[5.0,6.4)
       - org.elasticsearch.client:elasticsearch-rest-client:[5.0,6.4)
+    configurations:
+    - name: otel.instrumentation.elasticsearch.capture-search-query
+      description: |
+        Enable the capture of search query bodies. It is important to note that Elasticsearch queries
+        may contain personal or sensitive information.
+      type: boolean
+      default: false
   - name: elasticsearch-rest-7.0
     source_path: instrumentation/elasticsearch/elasticsearch-rest-7.0
     scope:
@@ -737,6 +750,12 @@ libraries:
       - org.elasticsearch.client:elasticsearch-rest-client:[7.0,)
       library:
       - org.elasticsearch.client:elasticsearch-rest-client:7.0.0
+    configurations:
+    - name: otel.instrumentation.elasticsearch.capture-search-query
+      description: |
+        Enable the capture of search query bodies. It is important to note that Elasticsearch queries may contain personal or sensitive information.
+      type: boolean
+      default: false
   - name: elasticsearch-transport-6.0
     source_path: instrumentation/elasticsearch/elasticsearch-transport-6.0
     scope:
