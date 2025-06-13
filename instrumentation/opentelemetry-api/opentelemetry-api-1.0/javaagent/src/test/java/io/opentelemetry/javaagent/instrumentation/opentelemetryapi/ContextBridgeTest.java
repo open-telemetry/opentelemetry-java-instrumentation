@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -19,7 +20,9 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.semconv.CodeAttributes;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
@@ -81,7 +84,7 @@ class ContextBridgeTest {
                 span ->
                     span.hasName("test")
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
+                        .hasAttributesSatisfyingExactly( // equal
                             equalTo(
                                 CodeAttributes.CODE_FUNCTION_NAME,
                                 runnable.getClass().getName() + ".run"),
@@ -138,18 +141,15 @@ class ContextBridgeTest {
     // When
     runnable.run();
 
+    List<AttributeAssertion> assertions = codeFunctionAssertions(runnable.getClass(), "run");
+    assertions.add(equalTo(stringKey("cat"), "yes"));
+
     // Then
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("test")
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeAttributes.CODE_FUNCTION_NAME,
-                                runnable.getClass().getName() + ".run"),
-                            equalTo(stringKey("cat"), "yes"))));
+                    span.hasName("test").hasNoParent().hasAttributesSatisfyingExactly(assertions)));
   }
 
   @Test

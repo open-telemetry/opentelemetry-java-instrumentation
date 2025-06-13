@@ -5,10 +5,9 @@
 
 package io.opentelemetry.instrumentation.jaxrs;
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -18,6 +17,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
@@ -189,6 +189,14 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
     assertThat(response.status().code()).isEqualTo(testKind.statusCode);
     testKind.assertBody(response.contentUtf8());
 
+    List<AttributeAssertion> attributeAssertions =
+        codeFunctionAssertions(
+            "io.opentelemetry.instrumentation.jaxrs.v2_0.test.JaxRsTestResource", "asyncOp");
+
+    if (testKind == AsyncResponseTestKind.CANCELED) {
+      attributeAssertions.add(equalTo(AttributeKey.booleanKey("jaxrs.canceled"), true));
+    }
+
     testing()
         .waitAndAssertTraces(
             trace -> {
@@ -210,13 +218,7 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
                             span.hasName("JaxRsTestResource.asyncOp")
                                 .hasKind(SpanKind.INTERNAL)
                                 .hasParent(trace.getSpan(0))
-                                .hasAttributesSatisfyingExactly(
-                                    satisfies(
-                                        CODE_FUNCTION_NAME,
-                                        name -> name.endsWith("JaxRsTestResource.asyncOp")),
-                                    equalTo(
-                                        AttributeKey.booleanKey("jaxrs.canceled"),
-                                        testKind == AsyncResponseTestKind.CANCELED ? true : null));
+                                .hasAttributesSatisfyingExactly(attributeAssertions);
                             if (testKind == AsyncResponseTestKind.FAILING) {
                               span.hasStatus(StatusData.error())
                                   .hasException(new IllegalStateException("failure"));
@@ -299,9 +301,9 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
                           .hasKind(SpanKind.INTERNAL)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              equalTo(
-                                  CODE_FUNCTION_NAME,
-                                  "io.opentelemetry.instrumentation.jaxrs.v2_0.test.JaxRsTestResource.jaxRs21Async"));
+                              codeFunctionAssertions(
+                                  "io.opentelemetry.instrumentation.jaxrs.v2_0.test.JaxRsTestResource",
+                                  "jaxRs21Async"));
                       if (testKind == CompletionStageTestKind.FAILING) {
                         span.hasStatus(StatusData.error())
                             .hasException(new IllegalStateException("failure"));
@@ -316,7 +318,7 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
     return span.hasName("JaxRsTestResource." + methodName)
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
-            satisfies(
-                CODE_FUNCTION_NAME, name -> name.endsWith("JaxRsTestResource." + methodName)));
+            codeFunctionAssertions(
+                "io.opentelemetry.instrumentation.jaxrs.v2_0.test.JaxRsTestResource", methodName));
   }
 }

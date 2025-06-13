@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spring.data;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -26,10 +27,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.CodeAttributes;
 import java.util.List;
 import java.util.Optional;
 import org.hibernate.Version;
@@ -83,7 +82,7 @@ public abstract class AbstractSpringJpaTest<
         span ->
             span.hasName("JpaCustomerRepository.save")
                 .hasKind(SpanKind.INTERNAL)
-                .hasAttributesSatisfyingExactly(assertCodeFunction(repoClassName, "save")),
+                .hasAttributesSatisfyingExactly(codeFunctionAssertions(repoClassName, "save")),
         span ->
             span.hasName("INSERT test.JpaCustomer")
                 .hasKind(SpanKind.CLIENT)
@@ -99,17 +98,13 @@ public abstract class AbstractSpringJpaTest<
                     equalTo(maybeStable(DB_SQL_TABLE), "JpaCustomer")));
   }
 
-  private static AttributeAssertion assertCodeFunction(String repoClassName, String methodName) {
-    return equalTo(CodeAttributes.CODE_FUNCTION_NAME, repoClassName + "." + methodName);
-  }
-
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   static void assertHibernateTrace(TraceAssert trace, String repoClassName) {
     trace.hasSpansSatisfyingExactly(
         span ->
             span.hasName("JpaCustomerRepository.save")
                 .hasKind(SpanKind.INTERNAL)
-                .hasAttributesSatisfyingExactly(assertCodeFunction(repoClassName, "save")),
+                .hasAttributesSatisfyingExactly(codeFunctionAssertions(repoClassName, "save")),
         span ->
             span.hasName("CALL test")
                 .hasKind(SpanKind.CLIENT)
@@ -156,7 +151,7 @@ public abstract class AbstractSpringJpaTest<
                     span.hasName("JpaCustomerRepository.findAll")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            assertCodeFunction(repoClassName, "findAll")),
+                            codeFunctionAssertions(repoClassName, "findAll")),
                 span ->
                     span.hasName("SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
@@ -192,7 +187,8 @@ public abstract class AbstractSpringJpaTest<
                 span ->
                     span.hasName("JpaCustomerRepository.save")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasAttributesSatisfyingExactly(assertCodeFunction(repoClassName, "save")),
+                        .hasAttributesSatisfyingExactly(
+                            codeFunctionAssertions(repoClassName, "save")),
                 span ->
                     span.hasName("SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
@@ -231,7 +227,7 @@ public abstract class AbstractSpringJpaTest<
                     span.hasName("JpaCustomerRepository.findByLastName")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            assertCodeFunction(repoClassName, "findByLastName")),
+                            codeFunctionAssertions(repoClassName, "findByLastName")),
                 span ->
                     span.hasName("SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
@@ -256,7 +252,7 @@ public abstract class AbstractSpringJpaTest<
                     span.hasName("JpaCustomerRepository.delete")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            assertCodeFunction(repoClassName, "delete")),
+                            codeFunctionAssertions(repoClassName, "delete")),
                 span ->
                     span.hasName("SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
@@ -303,7 +299,7 @@ public abstract class AbstractSpringJpaTest<
                     span.hasName("JpaCustomerRepository.findSpecialCustomers")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            assertCodeFunction(repoClassName, "findSpecialCustomers")),
+                            codeFunctionAssertions(repoClassName, "findSpecialCustomers")),
                 span ->
                     span.hasName("SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
@@ -349,7 +345,7 @@ public abstract class AbstractSpringJpaTest<
                         .hasStatus(StatusData.error())
                         .hasException(expectedException)
                         .hasAttributesSatisfyingExactly(
-                            assertCodeFunction(repoClassName, "findOneByLastName")),
+                            codeFunctionAssertions(repoClassName, "findOneByLastName")),
                 span ->
                     span.hasName("SELECT test.JpaCustomer")
                         .hasKind(SpanKind.CLIENT)
