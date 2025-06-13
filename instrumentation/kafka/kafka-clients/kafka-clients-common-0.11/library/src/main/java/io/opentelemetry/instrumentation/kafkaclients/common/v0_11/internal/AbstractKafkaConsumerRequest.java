@@ -11,10 +11,12 @@ abstract class AbstractKafkaConsumerRequest {
 
   @Nullable private final String consumerGroup;
   @Nullable private final String clientId;
+  @Nullable private final String bootstrapServers;
 
-  AbstractKafkaConsumerRequest(String consumerGroup, String clientId) {
+  AbstractKafkaConsumerRequest(String consumerGroup, String clientId, String bootstrapServers) {
     this.consumerGroup = consumerGroup;
     this.clientId = clientId;
+    this.bootstrapServers = bootstrapServers;
   }
 
   @Nullable
@@ -25,6 +27,11 @@ abstract class AbstractKafkaConsumerRequest {
   @Nullable
   public String getClientId() {
     return clientId;
+  }
+
+  @Nullable
+  public String getBootstrapServers() {
+    return bootstrapServers;
   }
 
   @Nullable

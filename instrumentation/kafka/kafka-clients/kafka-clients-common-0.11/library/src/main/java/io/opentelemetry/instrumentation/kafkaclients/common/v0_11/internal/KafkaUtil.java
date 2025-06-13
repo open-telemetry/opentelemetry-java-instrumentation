@@ -33,6 +33,9 @@ public final class KafkaUtil {
   private static final MethodHandle GET_GROUP_METADATA;
   private static final MethodHandle GET_GROUP_ID;
 
+  private static final VirtualField<Consumer<?, ?>, String> consumerVirtualField =
+      VirtualField.find(Consumer.class, String.class);
+
   static {
     MethodHandle getGroupMetadata;
     MethodHandle getGroupId;
@@ -64,6 +67,11 @@ public final class KafkaUtil {
   @Nullable
   public static String getClientId(Consumer<?, ?> consumer) {
     return getConsumerInfo(consumer).get(CLIENT_ID);
+  }
+
+  @Nullable
+  public static String getBootstrapServers(Consumer<?, ?> consumer) {
+    return consumerVirtualField.get(consumer);
   }
 
   private static Map<String, String> getConsumerInfo(Consumer<?, ?> consumer) {

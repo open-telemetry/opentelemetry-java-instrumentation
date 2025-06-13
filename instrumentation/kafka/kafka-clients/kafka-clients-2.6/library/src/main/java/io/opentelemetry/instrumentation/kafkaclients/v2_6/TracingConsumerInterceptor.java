@@ -34,6 +34,7 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
                   "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false))
           .build();
 
+  private String bootstrapServers;
   private String consumerGroup;
   private String clientId;
 
@@ -42,12 +43,13 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
   public ConsumerRecords<K, V> onConsume(ConsumerRecords<K, V> records) {
     // timer should be started before fetching ConsumerRecords, but there is no callback for that
     Timer timer = Timer.start();
-    Context receiveContext = telemetry.buildAndFinishSpan(records, consumerGroup, clientId, timer);
+    Context receiveContext =
+        telemetry.buildAndFinishSpan(records, consumerGroup, clientId, bootstrapServers, timer);
     if (receiveContext == null) {
       receiveContext = Context.current();
     }
     KafkaConsumerContext consumerContext =
-        KafkaConsumerContextUtil.create(receiveContext, consumerGroup, clientId);
+        KafkaConsumerContextUtil.create(receiveContext, consumerGroup, clientId, bootstrapServers);
     return telemetry.addTracing(records, consumerContext);
   }
 
@@ -59,6 +61,7 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
 
   @Override
   public void configure(Map<String, ?> configs) {
+    bootstrapServers = Objects.toString(configs.get(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG), null);
     consumerGroup = Objects.toString(configs.get(ConsumerConfig.GROUP_ID_CONFIG), null);
     clientId = Objects.toString(configs.get(ConsumerConfig.CLIENT_ID_CONFIG), null);
 
