@@ -69,30 +69,36 @@ public final class MetaDataCollector {
 
     Path metricsPath =
         Paths.get(instrumentationPath, TMP_DIR, "metrics-" + UUID.randomUUID() + ".yaml");
-    try (BufferedWriter writer = Files.newBufferedWriter(metricsPath.toFile().toPath(), UTF_8)) {
 
-      if (!metrics.isEmpty()) {
-        writer.write("metrics:\n");
-        for (MetricData metric : metrics.values()) {
-          writer.write("  - name: " + metric.getName() + "\n");
-          writer.write("    description: " + metric.getDescription() + "\n");
-          writer.write("    type: " + metric.getType().toString() + "\n");
-          writer.write("    unit: " + sanitizeUnit(metric.getUnit()) + "\n");
-          writer.write("    attributes: \n");
-          metric.getData().getPoints().stream()
-              .findFirst()
-              .get()
-              .getAttributes()
-              .forEach(
-                  (key, value) -> {
-                    try {
-                      writer.write("      - name: " + key.getKey() + "\n");
-                      writer.write("        type: " + key.getType().toString() + "\n");
-                    } catch (IOException e) {
-                      throw new IllegalStateException(e);
-                    }
-                  });
-        }
+    try (BufferedWriter writer = Files.newBufferedWriter(metricsPath.toFile().toPath(), UTF_8)) {
+      String config = System.getProperty("metaDataConfig");
+      String when = "default";
+      if (config != null && !config.isEmpty()) {
+        when = config;
+      }
+
+      writer.write("when: " + when + "\n");
+
+      writer.write("metrics:\n");
+      for (MetricData metric : metrics.values()) {
+        writer.write("  - name: " + metric.getName() + "\n");
+        writer.write("    description: " + metric.getDescription() + "\n");
+        writer.write("    type: " + metric.getType().toString() + "\n");
+        writer.write("    unit: " + sanitizeUnit(metric.getUnit()) + "\n");
+        writer.write("    attributes: \n");
+        metric.getData().getPoints().stream()
+            .findFirst()
+            .get()
+            .getAttributes()
+            .forEach(
+                (key, value) -> {
+                  try {
+                    writer.write("      - name: " + key.getKey() + "\n");
+                    writer.write("        type: " + key.getType().toString() + "\n");
+                  } catch (IOException e) {
+                    throw new IllegalStateException(e);
+                  }
+                });
       }
     }
   }

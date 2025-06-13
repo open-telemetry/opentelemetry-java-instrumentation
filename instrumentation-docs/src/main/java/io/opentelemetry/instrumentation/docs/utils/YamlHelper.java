@@ -16,9 +16,12 @@ import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import java.io.BufferedWriter;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -128,11 +131,29 @@ public class YamlHelper {
     addTargetVersions(module, moduleMap);
     addConfigurations(module, moduleMap);
 
-    if (module.getMetrics() != null) {
-      List<Map<String, Object>> metricsList = getMetricsList(module);
-      moduleMap.put("metrics", metricsList);
-    }
+    // Get telemetry grouping list
+    Set<String> telemetryGroups = module.getMetrics().keySet();
 
+    if (!telemetryGroups.isEmpty()) {
+      List<Map<String, Object>> telemetryList = new ArrayList<>();
+      for (String group : telemetryGroups) {
+        Map<String, Object> telemetryEntry = new LinkedHashMap<>();
+        telemetryEntry.put("when", group);
+        List<EmittedMetrics.Metric> metrics =
+            new ArrayList<>(module.getMetrics().getOrDefault(group, Collections.emptyList()));
+        List<Map<String, Object>> metricsList = new ArrayList<>();
+
+        // sort metrics by name for some determinism in the order
+        metrics.sort(Comparator.comparing(EmittedMetrics.Metric::getName));
+
+        for (EmittedMetrics.Metric metric : metrics) {
+          metricsList.add(getMetricsMap(metric));
+        }
+        telemetryEntry.put("metrics", metricsList);
+        telemetryList.add(telemetryEntry);
+      }
+      moduleMap.put("telemetry", telemetryList);
+    }
     return moduleMap;
   }
 
@@ -200,30 +221,22 @@ public class YamlHelper {
     return conf;
   }
 
-  private static List<Map<String, Object>> getMetricsList(InstrumentationModule module) {
-    List<Map<String, Object>> metricsList = new ArrayList<>();
-    if (module.getMetrics() == null) {
-      return metricsList;
-    }
+  private static Map<String, Object> getMetricsMap(EmittedMetrics.Metric metric) {
+    Map<String, Object> innerMetricMap = new LinkedHashMap<>();
+    innerMetricMap.put("name", metric.getName());
+    innerMetricMap.put("description", metric.getDescription());
+    innerMetricMap.put("type", metric.getType());
+    innerMetricMap.put("unit", metric.getUnit());
 
-    for (EmittedMetrics.Metric metric : module.getMetrics()) {
-      Map<String, Object> metricMap = new LinkedHashMap<>();
-      metricMap.put("name", metric.getName());
-      metricMap.put("description", metric.getDescription());
-      metricMap.put("type", metric.getType());
-      metricMap.put("unit", metric.getUnit());
-
-      List<Map<String, Object>> attributes = new ArrayList<>();
-      for (EmittedMetrics.Attribute attribute : metric.getAttributes()) {
-        Map<String, Object> attributeMap = new LinkedHashMap<>();
-        attributeMap.put("name", attribute.getName());
-        attributeMap.put("type", attribute.getType());
-        attributes.add(attributeMap);
-      }
-      metricMap.put("attributes", attributes);
-      metricsList.add(metricMap);
+    List<Map<String, Object>> attributes = new ArrayList<>();
+    for (EmittedMetrics.Attribute attribute : metric.getAttributes()) {
+      Map<String, Object> attributeMap = new LinkedHashMap<>();
+      attributeMap.put("name", attribute.getName());
+      attributeMap.put("type", attribute.getType());
+      attributes.add(attributeMap);
     }
-    return metricsList;
+    innerMetricMap.put("attributes", attributes);
+    return innerMetricMap;
   }
 
   public static InstrumentationMetaData metaDataParser(String input)

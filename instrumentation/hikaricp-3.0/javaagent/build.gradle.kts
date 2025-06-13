@@ -22,13 +22,18 @@ dependencies {
   testImplementation(project(":instrumentation:hikaricp-3.0:testing"))
 }
 
+val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+
 tasks {
   val testStableSemconv by registering(Test::class) {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
+
+    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("metaDataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   test {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", collectMetadata)
   }
 
   check {

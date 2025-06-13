@@ -22,6 +22,35 @@ tasks {
 }
 ```
 
+Sometimes instrumentation will behave differently based on configuration options, and we can
+differentiate between these configurations by using the `metaDataConfig` system property. When the
+telemetry is written to a file, the value of this property will be included, or it will default to
+a `default` attribution.
+
+For example, to collect and write metadata for the `otel.semconv-stability.opt-in=database` option
+set for an instrumentation:
+
+```kotlin
+val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+
+    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("metaDataConfig", "otel.semconv-stability.opt-in=database")
+  }
+
+  test {
+    systemProperty("collectMetadata", collectMetadata)
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
+}
+```
+
 Then, prior to running the analyzer, run the following command to generate `.telemetry` files:
 
 `./gradlew test -PcollectMetadata=true`
@@ -35,8 +64,6 @@ or use the helper script that will run only the currently supported tests (recom
 ```bash
 ./instrumentation-docs/collect.sh
 ```
-
-This script will also clean up all `.telemetry` files after the analysis is done.
 
 ## Instrumentation Hierarchy
 
@@ -101,7 +128,8 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
   * List of settings that are available for the instrumentation module
   * Each setting has a name, description, type, and default value
 * metrics
-  * List of metrics that the instrumentation module collects, including the metric name, description, type, and attributes
+  * List of metrics that the instrumentation module collects, including the metric name, description, type, and attributes.
+  * Separate lists for the metrics emitted by default vs via configuration options.
 
 ## Methodology
 
@@ -150,3 +178,6 @@ generate the metrics section of the instrumentation-list.yaml file.
 
 The data is written into a `.telemetry` directory in the root of each instrumentation module. This
 data will be excluded from git and just generated on demand.
+
+Each file has a `when` value along with the list of metrics that indicates whether the telemetry is emitted by default or via a
+configuration option.

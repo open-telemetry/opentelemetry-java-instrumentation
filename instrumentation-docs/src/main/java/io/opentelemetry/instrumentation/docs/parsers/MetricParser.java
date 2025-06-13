@@ -13,7 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,9 +29,9 @@ public class MetricParser {
    * @param instrumentationDirectory the directory to traverse
    * @return contents of aggregated files
    */
-  public static EmittedMetrics getMetricsFromFiles(
+  public static Map<String, EmittedMetrics> getMetricsFromFiles(
       String rootDir, String instrumentationDirectory) {
-    StringBuilder metricsContent = new StringBuilder("metrics:\n");
+    Map<String, StringBuilder> metricsByWhen = new HashMap<>();
     Path telemetryDir = Paths.get(rootDir + "/" + instrumentationDirectory, ".telemetry");
 
     if (Files.exists(telemetryDir) && Files.isDirectory(telemetryDir)) {
@@ -43,11 +42,17 @@ public class MetricParser {
                 path -> {
                   String content = FileManager.readFileToString(path.toString());
                   if (content != null) {
-                    // Skip the first line of yaml ("metrics:") so we can aggregate into one list
-                    int firstNewline = content.indexOf('\n');
-                    if (firstNewline != -1) {
-                      String contentWithoutFirstLine = content.substring(firstNewline + 1);
-                      metricsContent.append(contentWithoutFirstLine);
+                    String when = content.substring(0, content.indexOf('\n'));
+                    String whenKey = when.replace("when: ", "");
+
+                    metricsByWhen.putIfAbsent(whenKey, new StringBuilder("metrics:\n"));
+
+                    // Skip the metric label ("metrics:") so we can aggregate into one list
+                    int metricsIndex = content.indexOf("metrics:\n");
+                    if (metricsIndex != -1) {
+                      String contentAfterMetrics =
+                          content.substring(metricsIndex + "metrics:\n".length());
+                      metricsByWhen.get(whenKey).append(contentAfterMetrics);
                     }
                   }
                 });
@@ -56,31 +61,38 @@ public class MetricParser {
       }
     }
 
-    return parseMetrics(metricsContent.toString());
+    return parseMetrics(metricsByWhen);
   }
 
   /**
-   * Takes in a raw string representation of the aggregated EmittedMetrics yaml, deduplicates the
-   * metrics by name and then returns a new EmittedMetrics object.
+   * Takes in a raw string representation of the aggregated EmittedMetrics yaml map, separated by
+   * the `when`, indicating the conditions under which the metrics are emitted. deduplicates the
+   * metrics by name and then returns a new map EmittedMetrics objects.
    *
    * @param input raw string representation of EmittedMetrics yaml
-   * @return EmittedMetrics
+   * @return {@code Map<String, EmittedMetrics>} where the key is the `when` condition
    */
   // visible for testing
-  public static EmittedMetrics parseMetrics(String input) {
-    EmittedMetrics metrics = YamlHelper.emittedMetricsParser(input);
-    if (metrics.getMetrics() == null) {
-      return new EmittedMetrics(Collections.emptyList());
-    }
+  public static Map<String, EmittedMetrics> parseMetrics(Map<String, StringBuilder> input) {
+    Map<String, EmittedMetrics> metricsMap = new HashMap<>();
+    for (Map.Entry<String, StringBuilder> entry : input.entrySet()) {
+      String when = entry.getKey();
+      StringBuilder content = entry.getValue();
 
-    // deduplicate metrics by name
-    Map<String, EmittedMetrics.Metric> deduplicatedMetrics = new HashMap<>();
-    for (EmittedMetrics.Metric metric : metrics.getMetrics()) {
-      deduplicatedMetrics.put(metric.getName(), metric);
-    }
+      EmittedMetrics metrics = YamlHelper.emittedMetricsParser(content.toString());
+      if (metrics.getMetrics() == null) {
+        continue;
+      }
 
-    List<EmittedMetrics.Metric> uniqueMetrics = new ArrayList<>(deduplicatedMetrics.values());
-    return new EmittedMetrics(uniqueMetrics);
+      Map<String, EmittedMetrics.Metric> deduplicatedMetrics = new HashMap<>();
+      for (EmittedMetrics.Metric metric : metrics.getMetrics()) {
+        deduplicatedMetrics.put(metric.getName(), metric);
+      }
+
+      List<EmittedMetrics.Metric> uniqueMetrics = new ArrayList<>(deduplicatedMetrics.values());
+      metricsMap.put(when, new EmittedMetrics(when, uniqueMetrics));
+    }
+    return metricsMap;
   }
 
   private MetricParser() {}

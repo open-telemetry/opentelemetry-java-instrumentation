@@ -312,7 +312,7 @@ class YamlHelperTest {
             .namespace("mylib")
             .group("mylib")
             .targetVersions(targetVersions)
-            .metrics(List.of(metric))
+            .metrics(Map.of("default", List.of(metric)))
             .build());
 
     StringWriter stringWriter = new StringWriter();
@@ -332,22 +332,24 @@ class YamlHelperTest {
             target_versions:
               library:
               - org.apache.mylib:mylib-core:2.3.0
-            metrics:
-            - name: db.client.operation.duration
-              description: Duration of database client operations.
-              type: HISTOGRAM
-              unit: s
-              attributes:
-              - name: db.namespace
-                type: STRING
-              - name: db.operation.name
-                type: STRING
-              - name: db.system.name
-                type: STRING
-              - name: server.address
-                type: STRING
-              - name: server.port
-                type: LONG
+            telemetry:
+            - when: default
+              metrics:
+              - name: db.client.operation.duration
+                description: Duration of database client operations.
+                type: HISTOGRAM
+                unit: s
+                attributes:
+                - name: db.namespace
+                  type: STRING
+                - name: db.operation.name
+                  type: STRING
+                - name: db.system.name
+                  type: STRING
+                - name: server.address
+                  type: STRING
+                - name: server.port
+                  type: LONG
         """;
 
     assertThat(expectedYaml).isEqualTo(stringWriter.toString());
