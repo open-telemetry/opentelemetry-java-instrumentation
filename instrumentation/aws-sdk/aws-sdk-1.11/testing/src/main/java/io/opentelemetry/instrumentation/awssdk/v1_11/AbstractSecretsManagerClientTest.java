@@ -12,6 +12,7 @@ import static java.util.Collections.singletonList;
 import com.amazonaws.services.secretsmanager.AWSSecretsManager;
 import com.amazonaws.services.secretsmanager.AWSSecretsManagerClientBuilder;
 import com.amazonaws.services.secretsmanager.model.CreateSecretRequest;
+import com.amazonaws.services.secretsmanager.model.DescribeSecretRequest;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
@@ -30,7 +31,7 @@ public abstract class AbstractSecretsManagerClientTest extends AbstractBaseAwsCl
   }
 
   @Test
-  public void sendRequestWithMockedResponse() throws Exception {
+  public void sendCreateSecretRequestWithMockedResponse() throws Exception {
     AWSSecretsManagerClientBuilder clientBuilder = AWSSecretsManagerClientBuilder.standard();
     AWSSecretsManager client =
         configureClient(clientBuilder)
@@ -58,5 +59,35 @@ public abstract class AbstractSecretsManagerClientTest extends AbstractBaseAwsCl
 
     assertRequestWithMockedResponse(
         response, client, "AWSSecretsManager", "CreateSecret", "POST", additionalAttributes);
+  }
+
+  @Test
+  public void sendDescribeSecretRequestWithMockedResponse() throws Exception {
+    AWSSecretsManagerClientBuilder clientBuilder = AWSSecretsManagerClientBuilder.standard();
+    AWSSecretsManager client =
+        configureClient(clientBuilder)
+            .withEndpointConfiguration(endpoint)
+            .withCredentials(credentialsProvider)
+            .build();
+
+    String body =
+        "{"
+            + "\"ARN\": \"arn:aws:secretsmanager:us-east-1:123456789012:secret:My-Secret-Id-WzAXar\","
+            + "\"Name\": \"My-Secret-Id\","
+            + "\"VersionId\": \"EXAMPLE1-90ab-cdef-fedc-ba987SECRET1\""
+            + "}";
+
+    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, body));
+    Object response = client.describeSecret(
+            new DescribeSecretRequest().withSecretId("My-Secret-Id"));
+
+    List<AttributeAssertion> additionalAttributes =
+        singletonList(
+            equalTo(
+                AWS_SECRETSMANAGER_SECRET_ARN,
+                "arn:aws:secretsmanager:us-east-1:123456789012:secret:My-Secret-Id-WzAXar"));
+
+    assertRequestWithMockedResponse(
+        response, client, "AWSSecretsManager", "DescribeSecret", "POST", additionalAttributes);
   }
 }

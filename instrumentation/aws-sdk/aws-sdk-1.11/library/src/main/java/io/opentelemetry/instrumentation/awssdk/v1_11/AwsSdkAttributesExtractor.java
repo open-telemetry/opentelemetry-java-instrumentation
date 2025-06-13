@@ -46,8 +46,6 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
   public void onStart(AttributesBuilder attributes, Context parentContext, Request<?> request) {
     Object originalRequest = request.getOriginalRequest();
     setAttribute(
-        attributes, AWS_SECRETSMANAGER_SECRET_ARN, originalRequest, RequestAccess::getSecretArn);
-    setAttribute(
         attributes,
         AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN,
         originalRequest,
@@ -66,8 +64,8 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
       Request<?> request,
       @Nullable Response<?> response,
       @Nullable Throwable error) {
-    if (response != null) {
-      Object awsResp = response.getAwsResponse();
+    Object awsResp = getAwsResponse(response);
+    if (awsResp != null) {
       setAttribute(attributes, AWS_SECRETSMANAGER_SECRET_ARN, awsResp, RequestAccess::getSecretArn);
       setAttribute(
           attributes,
@@ -110,5 +108,12 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
     if (value != null) {
       attributes.put(key, value);
     }
+  }
+
+  private static Object getAwsResponse(Response<?> response) {
+    if (response == null) {
+      return null;
+    }
+    return response.getAwsResponse();
   }
 }
