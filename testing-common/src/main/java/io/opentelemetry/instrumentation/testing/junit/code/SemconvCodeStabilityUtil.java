@@ -74,7 +74,9 @@ public class SemconvCodeStabilityUtil {
     List<AttributeAssertion> assertions = new ArrayList<>();
     if (SemconvStability.isEmitStableCodeSemconv()) {
       assertions.add(
-          satisfies(CodeAttributes.CODE_FUNCTION_NAME, v -> v.endsWith("." + methodName)));
+          satisfies(
+              CodeAttributes.CODE_FUNCTION_NAME,
+              v -> v.endsWith(namespaceSuffix + "." + methodName)));
     }
     if (SemconvStability.isEmitOldCodeSemconv()) {
       assertions.add(equalTo(CodeIncubatingAttributes.CODE_FUNCTION, methodName));

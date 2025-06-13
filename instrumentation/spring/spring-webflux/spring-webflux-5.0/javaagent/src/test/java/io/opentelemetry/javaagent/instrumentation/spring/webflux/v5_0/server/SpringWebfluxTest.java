@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server;
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -45,7 +46,6 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -144,16 +144,15 @@ public class SpringWebfluxTest {
                 }));
   }
 
-  private static @NotNull AttributeAssertion assertCodeFunction(Parameter parameter) {
+  private static List<AttributeAssertion> assertCodeFunction(Parameter parameter) {
     String expectedFunctionName =
         parameter.annotatedMethod == null ? "handle" : parameter.annotatedMethod;
     String expectedPrefix =
         parameter.annotatedMethod == null
             ? INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX
             : TestController.class.getName();
-    return satisfies(
-        CODE_FUNCTION_NAME,
-        val -> val.endsWith("." + expectedFunctionName).startsWith(expectedPrefix));
+
+    return codeFunctionAssertions(expectedPrefix, expectedFunctionName);
   }
 
   private static Stream<Arguments> provideParameters() {
@@ -428,9 +427,9 @@ public class SpringWebfluxTest {
                         .hasStatus(StatusData.error())
                         .hasEventsSatisfyingExactly(SpringWebfluxTest::resource404Exception)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                "org.springframework.web.reactive.resource.ResourceWebHandler.handle"))));
+                            codeFunctionAssertions(
+                                "org.springframework.web.reactive.resource.ResourceWebHandler.handle",
+                                "handle"))));
   }
 
   private static void resource404Exception(EventDataAssert event) {
@@ -485,9 +484,7 @@ public class SpringWebfluxTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                EchoHandlerFunction.class.getName() + ".handle")),
+                            codeFunctionAssertions(EchoHandlerFunction.class, "handle")),
                 span ->
                     span.hasName("echo").hasParent(trace.getSpan(1)).hasTotalAttributeCount(0)));
   }
