@@ -78,8 +78,8 @@ public abstract class AbstractSecretsManagerClientTest extends AbstractBaseAwsCl
             + "}";
 
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, body));
-    Object response = client.describeSecret(
-            new DescribeSecretRequest().withSecretId("My-Secret-Id"));
+    Object response =
+        client.describeSecret(new DescribeSecretRequest().withSecretId("My-Secret-Id"));
 
     List<AttributeAssertion> additionalAttributes =
         singletonList(
