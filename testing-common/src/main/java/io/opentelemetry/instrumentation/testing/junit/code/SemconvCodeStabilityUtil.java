@@ -15,6 +15,7 @@ import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import org.assertj.core.api.AbstractLongAssert;
+import org.assertj.core.api.AbstractStringAssert;
 
 // until old code semconv are dropped in 3.0
 public class SemconvCodeStabilityUtil {
@@ -49,6 +50,37 @@ public class SemconvCodeStabilityUtil {
           satisfies(CodeIncubatingAttributes.CODE_LINE_NUMBER, AbstractLongAssert::isPositive));
     }
 
+    return assertions;
+  }
+
+  @SuppressWarnings("deprecation") // testing deprecated code semconv
+  public static List<AttributeAssertion> codeAttributeSuffixAssertions(String methodName) {
+    List<AttributeAssertion> assertions = new ArrayList<>();
+    if (SemconvStability.isEmitStableCodeSemconv()) {
+      assertions.add(
+          satisfies(CodeAttributes.CODE_FUNCTION_NAME, v -> v.endsWith("." + methodName)));
+    }
+    if (SemconvStability.isEmitOldCodeSemconv()) {
+      assertions.add(equalTo(CodeIncubatingAttributes.CODE_FUNCTION, methodName));
+      assertions.add(
+          satisfies(CodeIncubatingAttributes.CODE_NAMESPACE, AbstractStringAssert::isNotEmpty));
+    }
+    return assertions;
+  }
+
+  @SuppressWarnings("deprecation") // testing deprecated code semconv
+  public static List<AttributeAssertion> codeAttributeSuffixAssertions(
+      String namespaceSuffix, String methodName) {
+    List<AttributeAssertion> assertions = new ArrayList<>();
+    if (SemconvStability.isEmitStableCodeSemconv()) {
+      assertions.add(
+          satisfies(CodeAttributes.CODE_FUNCTION_NAME, v -> v.endsWith("." + methodName)));
+    }
+    if (SemconvStability.isEmitOldCodeSemconv()) {
+      assertions.add(equalTo(CodeIncubatingAttributes.CODE_FUNCTION, methodName));
+      assertions.add(
+          satisfies(CodeIncubatingAttributes.CODE_NAMESPACE, v -> v.endsWith(namespaceSuffix)));
+    }
     return assertions;
   }
 
