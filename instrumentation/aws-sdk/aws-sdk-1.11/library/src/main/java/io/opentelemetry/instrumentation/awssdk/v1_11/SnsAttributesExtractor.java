@@ -32,7 +32,7 @@ public class SnsAttributesExtractor implements AttributesExtractor<Request<?>, R
    * falling back to the target ARN. If neither is found null is returned.
    */
   private static String findMessageDestination(AmazonWebServiceRequest request) {
-    String destination = RequestAccess.getTopicArn(request);
+    String destination = RequestAccess.getSnsTopicArn(request);
     if (destination != null) {
       return destination;
     }
