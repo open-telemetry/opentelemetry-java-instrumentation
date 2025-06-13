@@ -71,6 +71,9 @@ public abstract class AbstractReactorKafkaTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
+  protected static final AttributeKey<String> MESSAGING_KAFKA_BOOTSTRAP_SERVERS =
+      AttributeKey.stringKey("messaging.kafka.bootstrap.servers");
+
   static KafkaContainer kafka;
   protected static KafkaSender<String, String> sender;
   protected static KafkaReceiver<String, String> receiver;
@@ -192,6 +195,7 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(MESSAGING_OPERATION, "publish"),
+                satisfies(MESSAGING_KAFKA_BOOTSTRAP_SERVERS, AbstractStringAssert::isNotEmpty),
                 satisfies(
                     AttributeKey.stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("producer")),
@@ -212,6 +216,7 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION, "receive"),
+                satisfies(MESSAGING_KAFKA_BOOTSTRAP_SERVERS, AbstractStringAssert::isNotEmpty),
                 satisfies(
                     AttributeKey.stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("consumer")),
@@ -231,6 +236,7 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(MESSAGING_OPERATION, "process"),
+                satisfies(MESSAGING_KAFKA_BOOTSTRAP_SERVERS, AbstractStringAssert::isNotEmpty),
                 satisfies(
                     AttributeKey.stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("consumer")),
