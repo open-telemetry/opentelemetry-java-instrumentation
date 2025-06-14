@@ -6,19 +6,20 @@
 package io.opentelemetry.javaagent.instrumentation.extannotations;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentracing.contrib.dropwizard.Trace;
+import java.util.List;
 import java.util.concurrent.Callable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class TraceAnnotationsTest {
 
   @RegisterExtension
@@ -29,24 +30,32 @@ class TraceAnnotationsTest {
     // Test single span in new trace
     SayTracedHello.sayHello();
 
+    List<AttributeAssertion> assertions = assertCodeFunction("sayHello");
+    assertions.add(equalTo(stringKey("myattr"), "test"));
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("SayTracedHello.sayHello")
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                SayTracedHello.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "sayHello"),
-                            equalTo(stringKey("myattr"), "test"))));
+                        .hasAttributesSatisfyingExactly(assertions)));
+  }
+
+  private static List<AttributeAssertion> assertCodeFunction(String methodName) {
+    return codeFunctionAssertions(SayTracedHello.class, methodName);
   }
 
   @Test
   void testComplexCaseAnnotations() {
     // Test new trace with 2 children spans
     SayTracedHello.sayHelloSayHa();
+    List<AttributeAssertion> assertions1 = assertCodeFunction("sayHelloSayHa");
+    assertions1.add(equalTo(stringKey("myattr"), "test2"));
+    List<AttributeAssertion> assertions2 = assertCodeFunction("sayHello");
+    assertions2.add(equalTo(stringKey("myattr"), "test"));
+    List<AttributeAssertion> assertions3 = assertCodeFunction("sayHello");
+    assertions3.add(equalTo(stringKey("myattr"), "test"));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -54,30 +63,15 @@ class TraceAnnotationsTest {
                 span ->
                     span.hasName("SayTracedHello.sayHelloSayHa")
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                SayTracedHello.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "sayHelloSayHa"),
-                            equalTo(stringKey("myattr"), "test2")),
+                        .hasAttributesSatisfyingExactly(assertions1),
                 span ->
                     span.hasName("SayTracedHello.sayHello")
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                SayTracedHello.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "sayHello"),
-                            equalTo(stringKey("myattr"), "test")),
+                        .hasAttributesSatisfyingExactly(assertions2),
                 span ->
                     span.hasName("SayTracedHello.sayHello")
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                SayTracedHello.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "sayHello"),
-                            equalTo(stringKey("myattr"), "test"))));
+                        .hasAttributesSatisfyingExactly(assertions3)));
   }
 
   @Test
@@ -91,11 +85,7 @@ class TraceAnnotationsTest {
                     span.hasName("SayTracedHello.sayError")
                         .hasStatus(StatusData.error())
                         .hasException(thrown)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                SayTracedHello.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "sayError"))));
+                        .hasAttributesSatisfyingExactly(assertCodeFunction("sayError"))));
   }
 
   @Test
@@ -109,10 +99,8 @@ class TraceAnnotationsTest {
                 span ->
                     span.hasName("SayTracedHello$1.call")
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                SayTracedHello.class.getName() + "$1"),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "call"))));
+                            codeFunctionAssertions(
+                                SayTracedHello.class.getName() + "$1", "call"))));
 
     // Test anonymous classes with no package
     new Callable<String>() {
@@ -129,18 +117,13 @@ class TraceAnnotationsTest {
                 span ->
                     span.hasName("SayTracedHello$1.call")
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                SayTracedHello.class.getName() + "$1"),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "call"))),
+                            codeFunctionAssertions(SayTracedHello.class.getName() + "$1", "call"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("TraceAnnotationsTest$1.call")
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                TraceAnnotationsTest.class.getName() + "$1"),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "call"))));
+                            codeFunctionAssertions(
+                                TraceAnnotationsTest.class.getName() + "$1", "call"))));
   }
 }
