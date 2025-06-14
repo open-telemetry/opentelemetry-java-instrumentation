@@ -128,6 +128,7 @@ dependencies {
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
+val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
 
 testing {
   suites {
@@ -169,8 +170,6 @@ testing {
   }
 }
 
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
-
 tasks {
   val testExperimentalSqs by registering(Test::class) {
     filter {
@@ -192,6 +191,7 @@ tasks {
       excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
     systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+    systemProperty("collectMetadata", collectMetadata)
   }
 
   check {
@@ -221,7 +221,6 @@ tasks {
     systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
 
-    systemProperty("collectMetadata", collectMetadata)
     systemProperty("metaDataConfig", "otel.semconv-stability.opt-in=database")
   }
 
