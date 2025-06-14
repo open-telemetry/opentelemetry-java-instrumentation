@@ -31,6 +31,9 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
   private static final AttributeKey<String> MESSAGING_CLIENT_ID =
       AttributeKey.stringKey("messaging.client_id");
 
+  protected static final AttributeKey<String> MESSAGING_KAFKA_BOOTSTRAP_SERVERS =
+      AttributeKey.stringKey("messaging.kafka.bootstrap.servers");
+
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void shouldInstrumentProducerAndConsumer() {
@@ -65,6 +68,7 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                 "testTopic"),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
+                            satisfies(MESSAGING_KAFKA_BOOTSTRAP_SERVERS, AbstractStringAssert::isNotEmpty),
                             satisfies(
                                 MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("producer")),
@@ -86,6 +90,7 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                 "testTopic"),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
+                            satisfies(MESSAGING_KAFKA_BOOTSTRAP_SERVERS, AbstractStringAssert::isNotEmpty),
                             satisfies(
                                 MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                                 AbstractLongAssert::isNotNegative),
