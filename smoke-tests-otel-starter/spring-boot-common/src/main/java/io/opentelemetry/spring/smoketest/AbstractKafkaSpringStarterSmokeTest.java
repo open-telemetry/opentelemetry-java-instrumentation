@@ -68,7 +68,9 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                 "testTopic"),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
-                            satisfies(MESSAGING_KAFKA_BOOTSTRAP_SERVERS, AbstractStringAssert::isNotEmpty),
+                            satisfies(
+                                MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+                                AbstractStringAssert::isNotEmpty),
                             satisfies(
                                 MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("producer")),
@@ -90,7 +92,9 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
                                 MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME,
                                 "testTopic"),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
-                            satisfies(MESSAGING_KAFKA_BOOTSTRAP_SERVERS, AbstractStringAssert::isNotEmpty),
+                            satisfies(
+                                MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+                                AbstractStringAssert::isNotEmpty),
                             satisfies(
                                 MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                                 AbstractLongAssert::isNotNegative),
