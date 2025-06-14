@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.Iterator;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -23,9 +22,6 @@ public final class KafkaProducerRequest {
   private final ProducerRecord<?, ?> record;
   @Nullable private final String clientId;
   @Nullable private final String bootstrapServers;
-
-  private static final VirtualField<Producer<?, ?>, String> producerStringVirtualField =
-      VirtualField.find(Producer.class, String.class);
 
   public static KafkaProducerRequest create(ProducerRecord<?, ?> record, Producer<?, ?> producer) {
     return new KafkaProducerRequest(
@@ -69,6 +65,6 @@ public final class KafkaProducerRequest {
   }
 
   private static String extractBootstrapServers(Producer<?, ?> producer) {
-    return producerStringVirtualField.get(producer);
+    return KafkaUtil.getBootstrapServers(producer);
   }
 }
