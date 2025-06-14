@@ -12,6 +12,7 @@ dependencies {
   compileOnly("com.amazonaws:aws-java-sdk-kinesis:1.11.106")
   compileOnly("com.amazonaws:aws-java-sdk-rds:1.11.106")
   compileOnly("com.amazonaws:aws-java-sdk-s3:1.11.106")
+  compileOnly("com.amazonaws:aws-java-sdk-secretsmanager:1.12.80")
   compileOnly("com.amazonaws:aws-java-sdk-sns:1.11.106")
   compileOnly("com.amazonaws:aws-java-sdk-sqs:1.11.106")
   compileOnly("com.amazonaws:aws-java-sdk-stepfunctions:1.11.106")

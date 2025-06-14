@@ -36,12 +36,25 @@ if (!(findProperty("testLatestDeps") as Boolean)) {
   }
 }
 
+testing {
+  suites {
+    val testSecretsManager by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project())
+        implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
+        implementation("com.amazonaws:aws-java-sdk-secretsmanager:1.12.80")
+      }
+    }
+  }
+}
+
 tasks {
   val testStableSemconv by registering(Test::class) {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 
   check {
+    dependsOn(testing.suites)
     dependsOn(testStableSemconv)
   }
 }
