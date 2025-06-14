@@ -24,6 +24,39 @@ libraries:
       - com.typesafe.akka:akka-http_2.12:[10,)
       - com.typesafe.akka:akka-http_2.13:[10,)
       - com.typesafe.akka:akka-http_2.11:[10,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
   - name: akka-actor-fork-join-2.5
     source_path: instrumentation/akka/akka-actor-fork-join-2.5
     scope:
@@ -163,6 +196,24 @@ libraries:
     target_versions:
       javaagent:
       - org.apache.httpcomponents:httpasyncclient:[4.1,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: apache-httpclient-4.3
     source_path: instrumentation/apache-httpclient/apache-httpclient-4.3
     scope:
@@ -404,6 +455,22 @@ libraries:
       description: Allows configuring headers to capture as span attributes.
       type: list
       default: ''
+    telemetry:
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: aws-sdk-2.2
     source_path: instrumentation/aws-sdk/aws-sdk-2.2
     scope:
@@ -450,6 +517,44 @@ libraries:
         should be recorded as events for the SDK span.
       type: boolean
       default: false
+    telemetry:
+    - when: default
+      metrics:
+      - name: gen_ai.client.operation.duration
+        description: GenAI operation duration.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: gen_ai.operation.name
+          type: STRING
+        - name: gen_ai.request.model
+          type: STRING
+        - name: gen_ai.system
+          type: STRING
+      - name: gen_ai.client.token.usage
+        description: Measures number of input and output tokens used.
+        type: HISTOGRAM
+        unit: token
+        attributes:
+        - name: gen_ai.operation.name
+          type: STRING
+        - name: gen_ai.request.model
+          type: STRING
+        - name: gen_ai.system
+          type: STRING
+        - name: gen_ai.token.type
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
   azure:
   - name: azure-core-1.36
     source_path: instrumentation/azure-core/azure-core-1.36
@@ -833,6 +938,22 @@ libraries:
     target_versions:
       javaagent:
       - com.google.http-client:google-http-client:[1.19.0,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   grails:
   - name: grails-3.0
     source_path: instrumentation/grails-3.0
@@ -1081,6 +1202,24 @@ libraries:
     target_versions:
       javaagent:
       - Java 8+
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   hystrix:
   - name: hystrix-1.4
     source_path: instrumentation/hystrix-1.4
@@ -1113,6 +1252,24 @@ libraries:
     target_versions:
       javaagent:
       - Java 11+
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   javalin:
   - name: javalin-5.0
     source_path: instrumentation/javalin-5.0
@@ -1318,6 +1475,24 @@ libraries:
       - org.eclipse.jetty:jetty-client:[12,)
       library:
       - org.eclipse.jetty:jetty-client:12.0.0
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: jetty-12.0
     source_path: instrumentation/jetty/jetty-12.0
     minimum_java_version: 17
@@ -1342,6 +1517,24 @@ libraries:
       - org.eclipse.jetty:jetty-client:[9.2,10)
       library:
       - org.eclipse.jetty:jetty-client:[9.2.0.v20140526,9.+)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: jetty-11.0
     source_path: instrumentation/jetty/jetty-11.0
     minimum_java_version: 11
@@ -1376,6 +1569,24 @@ libraries:
     target_versions:
       javaagent:
       - org.jodd:jodd-http:[4.2.0,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   jsf:
   - name: jsf-myfaces-3.0
     source_path: instrumentation/jsf/jsf-myfaces-3.0
@@ -1667,6 +1878,37 @@ libraries:
     target_versions:
       javaagent:
       - io.netty:netty:[3.8.0.Final,4)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
   - name: netty-4.0
     source_path: instrumentation/netty/netty-4.0
     scope:
@@ -1675,6 +1917,46 @@ libraries:
       javaagent:
       - io.netty:netty-all:[4.0.0.Final,4.1.0.Final)
       - io.netty:netty-codec-http:[4.0.0.Final,4.1.0.Final)
+    configurations:
+    - name: otel.instrumentation.netty.connection-telemetry.enabled
+      description: Enable the creation of Connect and DNS spans
+      type: boolean
+      default: false
+    - name: otel.instrumentation.netty.ssl-telemetry.enabled
+      description: Enable SSL telemetry
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
   - name: netty-4.1
     source_path: instrumentation/netty/netty-4.1
     scope:
@@ -1685,6 +1967,46 @@ libraries:
       - io.netty:netty-all:[4.1.0.Final,5.0.0)
       library:
       - io.netty:netty-codec-http:4.1.0.Final
+    configurations:
+    - name: otel.instrumentation.netty.connection-telemetry.enabled
+      description: Enable the creation of Connect and DNS spans
+      type: boolean
+      default: false
+    - name: otel.instrumentation.netty.ssl-telemetry.enabled
+      description: Enable SSL telemetry
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
   okhttp:
   - name: okhttp-3.0
     source_path: instrumentation/okhttp/okhttp-3.0
@@ -1695,6 +2017,24 @@ libraries:
       - com.squareup.okhttp3:okhttp:[3.0,)
       library:
       - com.squareup.okhttp3:okhttp:3.0.0
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: okhttp-2.2
     source_path: instrumentation/okhttp/okhttp-2.2
     scope:
@@ -1702,6 +2042,24 @@ libraries:
     target_versions:
       javaagent:
       - com.squareup.okhttp:okhttp:[2.2,3)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   opensearch:
   - name: opensearch-rest-3.0
     source_path: instrumentation/opensearch/opensearch-rest-3.0
@@ -1968,6 +2326,39 @@ libraries:
       - org.apache.pekko:pekko-http_3:[1.0,)
       - com.softwaremill.sttp.tapir:tapir-pekko-http-server_2.13:[1.7,)
       - org.apache.pekko:pekko-http_2.13:[1.0,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
   play:
   - name: play-ws-1.0
     source_path: instrumentation/play/play-ws/play-ws-1.0
@@ -1977,6 +2368,22 @@ libraries:
       javaagent:
       - com.typesafe.play:play-ahc-ws-standalone_2.12:[1.0.0,2.0.0)
       - com.typesafe.play:play-ahc-ws-standalone_2.11:[1.0.0,2.0.0)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: play-mvc-2.6
     source_path: instrumentation/play/play-mvc/play-mvc-2.6
     scope:
@@ -2002,6 +2409,22 @@ libraries:
       - com.typesafe.play:play-ahc-ws-standalone_2.12:[2.0.0,2.1.0)
       - com.typesafe.play:play-ahc-ws-standalone_2.13:[2.0.6,2.1.0)
       - com.typesafe.play:play-ahc-ws-standalone_2.11:[2.0.0,]
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: play-ws-2.1
     source_path: instrumentation/play/play-ws/play-ws-2.1
     scope:
@@ -2010,6 +2433,22 @@ libraries:
       javaagent:
       - com.typesafe.play:play-ahc-ws-standalone_2.13:[2.1.0,]
       - com.typesafe.play:play-ahc-ws-standalone_2.12:[2.1.0,]
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   powerjob:
   - name: powerjob-4.0
     source_path: instrumentation/powerjob-4.0
@@ -2108,6 +2547,24 @@ libraries:
     target_versions:
       javaagent:
       - io.projectreactor.netty:reactor-netty:[0.8.2.RELEASE,1.0.0)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: reactor-netty-1.0
     source_path: instrumentation/reactor/reactor-netty/reactor-netty-1.0
     scope:
@@ -2116,6 +2573,29 @@ libraries:
       javaagent:
       - io.projectreactor.netty:reactor-netty-http:[1.0.0,)
       - io.projectreactor.netty:reactor-netty:[1.0.0,)
+    configurations:
+    - name: otel.instrumentation.reactor-netty.connection-telemetry.enabled
+      description: Enable the creation of Connect and DNS spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   rediscala:
   - name: rediscala-1.8
     source_path: instrumentation/rediscala-1.8
@@ -2322,6 +2802,37 @@ libraries:
       - io.projectreactor.ipc:reactor-netty:[0.7.0.RELEASE,)
       - org.springframework:spring-webflux:[5.0.0.RELEASE,)
       - io.projectreactor.netty:reactor-netty:[0.8.0.RELEASE,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
   - name: spring-webflux-5.3
     source_path: instrumentation/spring/spring-webflux/spring-webflux-5.3
     scope:
@@ -2638,6 +3149,28 @@ libraries:
     target_versions:
       javaagent:
       - io.vertx:vertx-redis-client:[4.0.0,)
+    telemetry:
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: vertx-sql-client-5.0
     source_path: instrumentation/vertx/vertx-sql-client/vertx-sql-client-5.0
     minimum_java_version: 11
@@ -2646,6 +3179,24 @@ libraries:
     target_versions:
       javaagent:
       - io.vertx:vertx-sql-client:[5.0.0,)
+    telemetry:
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: vertx-http-client-5.0
     source_path: instrumentation/vertx/vertx-http-client/vertx-http-client-5.0
     minimum_java_version: 11
@@ -2654,6 +3205,24 @@ libraries:
     target_versions:
       javaagent:
       - io.vertx:vertx-core:[5.0.0,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: vertx-web-3.0
     source_path: instrumentation/vertx/vertx-web-3.0
     scope:
@@ -2668,6 +3237,24 @@ libraries:
     target_versions:
       javaagent:
       - io.vertx:vertx-sql-client:[4.0.0,5)
+    telemetry:
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: vertx-http-client-4.0
     source_path: instrumentation/vertx/vertx-http-client/vertx-http-client-4.0
     scope:
@@ -2675,6 +3262,24 @@ libraries:
     target_versions:
       javaagent:
       - io.vertx:vertx-core:[4.0.0,5)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: vertx-rx-java-3.5
     source_path: instrumentation/vertx/vertx-rx-java-3.5
     scope:
@@ -2689,6 +3294,22 @@ libraries:
     target_versions:
       javaagent:
       - io.vertx:vertx-core:[3.0.0,4.0.0)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   vibur:
   - name: vibur-dbcp-11.0
     description: Instrumentation for the vibur-dbcp library, which provides connection
