@@ -43,6 +43,7 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.KStream;
+import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -113,6 +114,8 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                           equalTo(MESSAGING_SYSTEM, KAFKA),
                           equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
                           equalTo(MESSAGING_OPERATION, "publish"),
+                          satisfies(
+                              MESSAGING_KAFKA_BOOTSTRAP_SERVERS, AbstractStringAssert::isNotEmpty),
                           satisfies(MESSAGING_CLIENT_ID, k -> k.startsWith("producer")),
                           satisfies(
                               MESSAGING_DESTINATION_PARTITION_ID,
@@ -131,6 +134,9 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                             equalTo(MESSAGING_SYSTEM, KAFKA),
                             equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
                             equalTo(MESSAGING_OPERATION, "receive"),
+                            satisfies(
+                                MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+                                AbstractStringAssert::isNotEmpty),
                             satisfies(MESSAGING_CLIENT_ID, k -> k.endsWith("consumer")),
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
                 if (Boolean.getBoolean("testLatestDeps")) {
@@ -149,6 +155,9 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                             equalTo(MESSAGING_SYSTEM, KAFKA),
                             equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
                             equalTo(MESSAGING_OPERATION, "process"),
+                            satisfies(
+                                MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+                                AbstractStringAssert::isNotEmpty),
                             satisfies(MESSAGING_CLIENT_ID, k -> k.endsWith("consumer")),
                             satisfies(MESSAGING_MESSAGE_BODY_SIZE, k -> k.isInstanceOf(Long.class)),
                             satisfies(
@@ -180,6 +189,8 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                           equalTo(MESSAGING_SYSTEM, KAFKA),
                           equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
                           equalTo(MESSAGING_OPERATION, "publish"),
+                          satisfies(
+                              MESSAGING_KAFKA_BOOTSTRAP_SERVERS, AbstractStringAssert::isNotEmpty),
                           satisfies(MESSAGING_CLIENT_ID, k -> k.endsWith("producer")),
                           satisfies(
                               MESSAGING_DESTINATION_PARTITION_ID,
@@ -198,6 +209,9 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                               equalTo(MESSAGING_SYSTEM, KAFKA),
                               equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
                               equalTo(MESSAGING_OPERATION, "receive"),
+                              satisfies(
+                                  MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+                                  AbstractStringAssert::isNotEmpty),
                               satisfies(MESSAGING_CLIENT_ID, k -> k.startsWith("consumer")),
                               equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
                   if (Boolean.getBoolean("testLatestDeps")) {
@@ -216,6 +230,9 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                               equalTo(MESSAGING_SYSTEM, KAFKA),
                               equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
                               equalTo(MESSAGING_OPERATION, "process"),
+                              satisfies(
+                                  MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+                                  AbstractStringAssert::isNotEmpty),
                               satisfies(MESSAGING_CLIENT_ID, k -> k.startsWith("consumer")),
                               satisfies(
                                   MESSAGING_MESSAGE_BODY_SIZE, k -> k.isInstanceOf(Long.class)),

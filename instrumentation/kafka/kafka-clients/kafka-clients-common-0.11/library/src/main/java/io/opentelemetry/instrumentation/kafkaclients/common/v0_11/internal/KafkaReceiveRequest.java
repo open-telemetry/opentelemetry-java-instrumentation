@@ -19,24 +19,36 @@ public class KafkaReceiveRequest extends AbstractKafkaConsumerRequest {
 
   public static KafkaReceiveRequest create(
       ConsumerRecords<?, ?> records, @Nullable Consumer<?, ?> consumer) {
-    return create(records, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer));
+    return create(
+        records,
+        KafkaUtil.getConsumerGroup(consumer),
+        KafkaUtil.getClientId(consumer),
+        KafkaUtil.getBootstrapServers(consumer));
   }
 
   public static KafkaReceiveRequest create(
       KafkaConsumerContext consumerContext, ConsumerRecords<?, ?> records) {
     String consumerGroup = consumerContext != null ? consumerContext.getConsumerGroup() : null;
     String clientId = consumerContext != null ? consumerContext.getClientId() : null;
-    return create(records, consumerGroup, clientId);
+    String bootstrapServers =
+        consumerContext != null ? consumerContext.getBootstrapServers() : null;
+    return create(records, consumerGroup, clientId, bootstrapServers);
   }
 
   public static KafkaReceiveRequest create(
-      ConsumerRecords<?, ?> records, String consumerGroup, String clientId) {
-    return new KafkaReceiveRequest(records, consumerGroup, clientId);
+      ConsumerRecords<?, ?> records,
+      String consumerGroup,
+      String clientId,
+      String bootstrapServers) {
+    return new KafkaReceiveRequest(records, consumerGroup, clientId, bootstrapServers);
   }
 
   private KafkaReceiveRequest(
-      ConsumerRecords<?, ?> records, String consumerGroup, String clientId) {
-    super(consumerGroup, clientId);
+      ConsumerRecords<?, ?> records,
+      String consumerGroup,
+      String clientId,
+      String bootstrapServers) {
+    super(consumerGroup, clientId, bootstrapServers);
     this.records = records;
   }
 

@@ -40,6 +40,7 @@ import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
 import org.apache.kafka.streams.StreamsConfig;
 import org.apache.kafka.streams.kstream.KStream;
+import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -104,6 +105,9 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                             equalTo(MESSAGING_OPERATION, "publish"),
                             equalTo(MESSAGING_CLIENT_ID, "producer-1"),
                             satisfies(
+                                MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+                                AbstractStringAssert::isNotEmpty),
+                            satisfies(
                                 MESSAGING_DESTINATION_PARTITION_ID,
                                 k -> k.isInstanceOf(String.class)),
                             equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
@@ -116,6 +120,9 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                               equalTo(MESSAGING_SYSTEM, KAFKA),
                               equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
                               equalTo(MESSAGING_OPERATION, "process"),
+                              satisfies(
+                                  MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+                                  AbstractStringAssert::isNotEmpty),
                               satisfies(MESSAGING_CLIENT_ID, k -> k.endsWith("consumer")),
                               satisfies(
                                   MESSAGING_MESSAGE_BODY_SIZE, k -> k.isInstanceOf(Long.class)),
@@ -148,6 +155,8 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                           equalTo(MESSAGING_SYSTEM, KAFKA),
                           equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
                           equalTo(MESSAGING_OPERATION, "publish"),
+                          satisfies(
+                              MESSAGING_KAFKA_BOOTSTRAP_SERVERS, AbstractStringAssert::isNotEmpty),
                           satisfies(MESSAGING_CLIENT_ID, k -> k.isInstanceOf(String.class)),
                           satisfies(
                               MESSAGING_DESTINATION_PARTITION_ID,
@@ -162,6 +171,9 @@ class KafkaStreamsSuppressReceiveSpansTest extends KafkaStreamsBaseTest {
                               equalTo(MESSAGING_SYSTEM, KAFKA),
                               equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
                               equalTo(MESSAGING_OPERATION, "process"),
+                              satisfies(
+                                  MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+                                  AbstractStringAssert::isNotEmpty),
                               satisfies(MESSAGING_CLIENT_ID, k -> k.startsWith("consumer")),
                               satisfies(
                                   MESSAGING_MESSAGE_BODY_SIZE, k -> k.isInstanceOf(Long.class)),

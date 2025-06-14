@@ -24,12 +24,14 @@ public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, 
 
   private static final KafkaTelemetry telemetry = KafkaTelemetry.create(GlobalOpenTelemetry.get());
 
+  @Nullable private String bootstrapServers;
+
   @Nullable private String clientId;
 
   @Override
   @CanIgnoreReturnValue
   public ProducerRecord<K, V> onSend(ProducerRecord<K, V> producerRecord) {
-    telemetry.buildAndInjectSpan(producerRecord, clientId);
+    telemetry.buildAndInjectSpan(producerRecord, clientId, bootstrapServers);
     return producerRecord;
   }
 
@@ -42,6 +44,7 @@ public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, 
   @Override
   public void configure(Map<String, ?> map) {
     clientId = Objects.toString(map.get(ProducerConfig.CLIENT_ID_CONFIG), null);
+    bootstrapServers = Objects.toString(map.get(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG), null);
 
     // TODO: support experimental attributes config
   }

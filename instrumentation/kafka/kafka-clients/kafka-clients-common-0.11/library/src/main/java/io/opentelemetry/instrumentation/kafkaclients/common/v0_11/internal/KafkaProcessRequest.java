@@ -17,23 +17,30 @@ public class KafkaProcessRequest extends AbstractKafkaConsumerRequest {
   private final ConsumerRecord<?, ?> record;
 
   public static KafkaProcessRequest create(ConsumerRecord<?, ?> record, Consumer<?, ?> consumer) {
-    return create(record, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer));
+    return create(
+        record,
+        KafkaUtil.getConsumerGroup(consumer),
+        KafkaUtil.getClientId(consumer),
+        KafkaUtil.getBootstrapServers(consumer));
   }
 
   public static KafkaProcessRequest create(
       KafkaConsumerContext consumerContext, ConsumerRecord<?, ?> record) {
     String consumerGroup = consumerContext != null ? consumerContext.getConsumerGroup() : null;
     String clientId = consumerContext != null ? consumerContext.getClientId() : null;
-    return create(record, consumerGroup, clientId);
+    String bootstrapServers =
+        consumerContext != null ? consumerContext.getBootstrapServers() : null;
+    return create(record, consumerGroup, clientId, bootstrapServers);
   }
 
   public static KafkaProcessRequest create(
-      ConsumerRecord<?, ?> record, String consumerGroup, String clientId) {
-    return new KafkaProcessRequest(record, consumerGroup, clientId);
+      ConsumerRecord<?, ?> record, String consumerGroup, String clientId, String bootstrapServers) {
+    return new KafkaProcessRequest(record, consumerGroup, clientId, bootstrapServers);
   }
 
-  public KafkaProcessRequest(ConsumerRecord<?, ?> record, String consumerGroup, String clientId) {
-    super(consumerGroup, clientId);
+  public KafkaProcessRequest(
+      ConsumerRecord<?, ?> record, String consumerGroup, String clientId, String bootstrapServers) {
+    super(consumerGroup, clientId, bootstrapServers);
     this.record = record;
   }
 

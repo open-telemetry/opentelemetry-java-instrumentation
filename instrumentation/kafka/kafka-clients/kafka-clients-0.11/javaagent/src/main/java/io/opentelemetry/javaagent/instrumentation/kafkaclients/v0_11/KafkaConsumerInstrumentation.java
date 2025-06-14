@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11.KafkaSingletons.consumerReceiveInstrumenter;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -16,16 +17,20 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.time.Duration;
+import java.util.Map;
+import java.util.Properties;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
@@ -39,12 +44,48 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
+        isConstructor().and(takesArgument(0, Map.class)),
+        this.getClass().getName() + "$ConstructorAdvice");
+
+    transformer.applyAdviceToMethod(
+        isConstructor().and(takesArgument(0, Properties.class)),
+        this.getClass().getName() + "$ConstructorAdvice");
+
+    transformer.applyAdviceToMethod(
         named("poll")
             .and(isPublic())
             .and(takesArguments(1))
             .and(takesArgument(0, long.class).or(takesArgument(0, Duration.class)))
             .and(returns(named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
         this.getClass().getName() + "$PollAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class ConstructorAdvice {
+
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(
+        @Advice.This Consumer<?, ?> consumer, @Advice.Argument(0) Object configs) {
+
+      String bootstrapServers = null;
+      if (configs instanceof Map) {
+        Object servers = ((Map<?, ?>) configs).get(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG);
+        if (servers != null) {
+          bootstrapServers = servers.toString();
+        }
+      } else if (configs instanceof Properties) {
+        bootstrapServers =
+            ((Properties) configs).getProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG);
+      }
+
+      if (bootstrapServers != null) {
+        VirtualField<Consumer<?, ?>, String> consumerStringVirtualField =
+            VirtualField.find(Consumer.class, String.class);
+        if (consumerStringVirtualField.get(consumer) == null) {
+          consumerStringVirtualField.set(consumer, bootstrapServers);
+        }
+      }
+    }
   }
 
   @SuppressWarnings("unused")

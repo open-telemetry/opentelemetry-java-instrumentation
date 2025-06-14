@@ -212,10 +212,11 @@ public final class KafkaTelemetry {
    *
    * @param record the producer record to inject span info.
    */
-  <K, V> void buildAndInjectSpan(ProducerRecord<K, V> record, String clientId) {
+  <K, V> void buildAndInjectSpan(
+      ProducerRecord<K, V> record, String clientId, String bootstrapServers) {
     Context parentContext = Context.current();
 
-    KafkaProducerRequest request = KafkaProducerRequest.create(record, clientId);
+    KafkaProducerRequest request = KafkaProducerRequest.create(record, clientId, bootstrapServers);
     if (!producerInstrumenter.shouldStart(parentContext, request)) {
       return;
     }
@@ -262,16 +263,25 @@ public final class KafkaTelemetry {
   private <K, V> Context buildAndFinishSpan(
       ConsumerRecords<K, V> records, Consumer<K, V> consumer, Timer timer) {
     return buildAndFinishSpan(
-        records, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer), timer);
+        records,
+        KafkaUtil.getConsumerGroup(consumer),
+        KafkaUtil.getClientId(consumer),
+        KafkaUtil.getBootstrapServers(consumer),
+        timer);
   }
 
   <K, V> Context buildAndFinishSpan(
-      ConsumerRecords<K, V> records, String consumerGroup, String clientId, Timer timer) {
+      ConsumerRecords<K, V> records,
+      String consumerGroup,
+      String clientId,
+      String bootstrapServers,
+      Timer timer) {
     if (records.isEmpty()) {
       return null;
     }
     Context parentContext = Context.current();
-    KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumerGroup, clientId);
+    KafkaReceiveRequest request =
+        KafkaReceiveRequest.create(records, consumerGroup, clientId, bootstrapServers);
     Context context = null;
     if (consumerReceiveInstrumenter.shouldStart(parentContext, request)) {
       context =
