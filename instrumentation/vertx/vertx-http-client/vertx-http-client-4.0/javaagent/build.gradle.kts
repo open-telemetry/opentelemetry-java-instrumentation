@@ -24,3 +24,9 @@ dependencies {
   latestDepTestLibrary("io.vertx:vertx-core:4.+") // see vertx-http-client-5.0 module
   latestDepTestLibrary("io.vertx:vertx-codegen:4.+") // see vertx-http-client-5.0 module
 }
+
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+}

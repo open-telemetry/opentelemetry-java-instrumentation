@@ -89,6 +89,12 @@ class VertxRedisClientTest {
                     span.hasName("SET")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("SET", "SET foo ?"))));
+
+    if (emitStableDatabaseSemconv()) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.vertx-redis-client-4.0",
+          metric -> metric.hasName("db.client.operation.duration"));
+    }
   }
 
   @Test

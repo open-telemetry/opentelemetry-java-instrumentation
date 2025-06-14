@@ -22,3 +22,9 @@ dependencies {
 
   latestDepTestLibrary("com.squareup.okhttp:okhttp:2.+") // see okhttp-3.0 module
 }
+
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+}

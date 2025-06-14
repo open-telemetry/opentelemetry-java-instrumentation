@@ -28,13 +28,18 @@ dependencies {
   latestDepTestLibrary("io.vertx:vertx-codegen:4.+") // see vertx-sql-client-5.0 module
 }
 
+val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("collectMetadata", collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
+
+    systemProperty("metaDataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   check {

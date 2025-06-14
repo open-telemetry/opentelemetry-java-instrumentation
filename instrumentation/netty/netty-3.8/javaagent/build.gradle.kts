@@ -50,3 +50,9 @@ if (!(findProperty("testLatestDeps") as Boolean)) {
     }
   }
 }
+
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+}

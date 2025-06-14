@@ -70,6 +70,7 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
   systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean

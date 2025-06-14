@@ -1,0 +1,9 @@
+configurations:
+  - name: otel.instrumentation.netty.connection-telemetry.enabled
+    description: Enable the creation of Connect and DNS spans
+    default: false
+    type: boolean
+  - name: otel.instrumentation.netty.ssl-telemetry.enabled
+    description: Enable SSL telemetry
+    default: false
+    type: boolean

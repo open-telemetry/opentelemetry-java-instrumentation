@@ -231,6 +231,12 @@ class VertxSqlClientTest {
         .get(30, TimeUnit.SECONDS);
 
     assertPreparedSelect();
+
+    if (emitStableDatabaseSemconv()) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.vertx-sql-client-4.0",
+          metric -> metric.hasName("db.client.operation.duration"));
+    }
   }
 
   private static void assertPreparedSelect() {

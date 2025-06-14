@@ -43,4 +43,8 @@ tasks {
   check {
     dependsOn(testing.suites)
   }
+
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
 }
