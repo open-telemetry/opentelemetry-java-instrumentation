@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.ServiceLoaderUtil;
 import io.opentelemetry.instrumentation.api.internal.cache.weaklockfree.WeakConcurrentMapCleaner;
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.AgentStarter;
@@ -16,6 +17,8 @@ import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.lang.instrument.UnmodifiableClassException;
 import java.security.ProtectionDomain;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ServiceLoader;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
@@ -72,6 +75,7 @@ public class AgentStarterImpl implements AgentStarter {
 
     EarlyInitAgentConfig earlyConfig = EarlyInitAgentConfig.create();
     extensionClassLoader = createExtensionClassLoader(getClass().getClassLoader(), earlyConfig);
+    setLoaderFunction();
 
     String loggerImplementationName = earlyConfig.getString("otel.javaagent.logging");
     // default to the built-in stderr slf4j-simple logger
@@ -245,5 +249,18 @@ public class AgentStarterImpl implements AgentStarter {
 
       return hookInserted ? cw.toByteArray() : null;
     }
+  }
+
+  /** Sets a custom loader function for the ServiceLoaderUtil to use the agentClassLoader. */
+  private void setLoaderFunction() {
+    ServiceLoaderUtil.setLoaderFunction(
+        clazz -> {
+          List<Object> instances = new ArrayList<>();
+          ServiceLoader<?> serviceLoader = ServiceLoader.load(clazz, extensionClassLoader);
+          for (Object instance : serviceLoader) {
+            instances.add(instance);
+          }
+          return instances;
+        });
   }
 }
