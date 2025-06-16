@@ -8,9 +8,9 @@ package io.opentelemetry.instrumentation.testing.junit.code;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.StringAssertConsumer;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.semconv.CodeAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.util.ArrayList;
@@ -38,9 +38,9 @@ public class SemconvCodeStabilityUtil {
       assertions.add(satisfies(CodeAttributes.CODE_LINE_NUMBER, AbstractLongAssert::isPositive));
     }
     if (SemconvStability.isEmitOldCodeSemconv()) {
-      assertions.add(equalTo(CodeIncubatingAttributes.CODE_FILE_PATH, filePath));
+      assertions.add(equalTo(CodeIncubatingAttributes.CODE_FILEPATH, filePath));
       assertions.add(
-          satisfies(CodeIncubatingAttributes.CODE_LINE_NUMBER, AbstractLongAssert::isPositive));
+          satisfies(CodeIncubatingAttributes.CODE_LINENO, AbstractLongAssert::isPositive));
     }
 
     return assertions;
@@ -70,8 +70,8 @@ public class SemconvCodeStabilityUtil {
   @SuppressWarnings("deprecation") // testing deprecated code semconv
   private static List<AttributeAssertion> internalFunctionAssert(
       String methodName,
-      OpenTelemetryAssertions.StringAssertConsumer functionNameAssert,
-      OpenTelemetryAssertions.StringAssertConsumer namespaceAssert) {
+      StringAssertConsumer functionNameAssert,
+      StringAssertConsumer namespaceAssert) {
     List<AttributeAssertion> assertions = new ArrayList<>();
     if (SemconvStability.isEmitStableCodeSemconv()) {
       assertions.add(satisfies(CodeAttributes.CODE_FUNCTION_NAME, functionNameAssert));
@@ -81,6 +81,17 @@ public class SemconvCodeStabilityUtil {
       assertions.add(satisfies(CodeIncubatingAttributes.CODE_NAMESPACE, namespaceAssert));
     }
     return assertions;
+  }
+
+  public static int codeAttributesLogCount() {
+    int count = 0;
+    if (SemconvStability.isEmitOldCodeSemconv()) {
+      count += 4;
+    }
+    if (SemconvStability.isEmitStableCodeSemconv()) {
+      count += 3;
+    }
+    return count;
   }
 
   private SemconvCodeStabilityUtil() {}
