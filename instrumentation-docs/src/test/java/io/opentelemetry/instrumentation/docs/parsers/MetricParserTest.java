@@ -13,11 +13,14 @@ import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedStatic;
 
+@SuppressWarnings("NullAway")
 class MetricParserTest {
 
   @Test
@@ -33,9 +36,15 @@ class MetricParserTest {
             type: gauge
         """;
 
-    EmittedMetrics result = MetricParser.parseMetrics(input);
+    Map<String, StringBuilder> metricMap = new HashMap<>();
+    metricMap.put("default", new StringBuilder(input));
+
+    Map<String, EmittedMetrics> result = MetricParser.parseMetrics(metricMap);
     List<String> metricNames =
-        result.getMetrics().stream().map(EmittedMetrics.Metric::getName).sorted().toList();
+        result.get("default").getMetrics().stream()
+            .map(EmittedMetrics.Metric::getName)
+            .sorted()
+            .toList();
 
     assertThat(metricNames).hasSize(2);
     assertThat(metricNames).containsExactly("metric1", "metric2");
@@ -44,16 +53,19 @@ class MetricParserTest {
   @Test
   void parseMetricsHandlesEmptyInput() {
     String input = "metrics:\n";
-    EmittedMetrics result = MetricParser.parseMetrics(input);
-    assertThat(result.getMetrics()).isEmpty();
+    Map<String, StringBuilder> metricMap = new HashMap<>();
+    metricMap.put("default", new StringBuilder(input));
+
+    Map<String, EmittedMetrics> result = MetricParser.parseMetrics(metricMap);
+    assertThat(result).isEmpty();
   }
 
   @Test
   void getMetricsFromFilesCombinesFilesCorrectly(@TempDir Path tempDir) throws IOException {
     Path telemetryDir = Files.createDirectories(tempDir.resolve(".telemetry"));
 
-    String file1Content = "metrics:\n  - name: metric1\n    type: counter\n";
-    String file2Content = "metrics:\n  - name: metric2\n    type: gauge\n";
+    String file1Content = "when: default\n  metrics:\n  - name: metric1\n    type: counter\n";
+    String file2Content = "when: default\n  metrics:\n  - name: metric2\n    type: gauge\n";
 
     Files.writeString(telemetryDir.resolve("metrics-1.yaml"), file1Content);
     Files.writeString(telemetryDir.resolve("metrics-2.yaml"), file2Content);
@@ -71,18 +83,20 @@ class MetricParserTest {
               () -> FileManager.readFileToString(telemetryDir.resolve("metrics-2.yaml").toString()))
           .thenReturn(file2Content);
 
-      EmittedMetrics result = MetricParser.getMetricsFromFiles(tempDir.toString(), "");
+      Map<String, EmittedMetrics> result = MetricParser.getMetricsFromFiles(tempDir.toString(), "");
 
-      assertThat(result.getMetrics()).hasSize(2);
+      EmittedMetrics metrics = result.get("default");
+
+      assertThat(metrics.getMetrics()).hasSize(2);
       List<String> metricNames =
-          result.getMetrics().stream().map(EmittedMetrics.Metric::getName).sorted().toList();
+          metrics.getMetrics().stream().map(EmittedMetrics.Metric::getName).sorted().toList();
       assertThat(metricNames).containsExactly("metric1", "metric2");
     }
   }
 
   @Test
   void getMetricsFromFilesHandlesNonexistentDirectory() {
-    EmittedMetrics result = MetricParser.getMetricsFromFiles("/nonexistent", "path");
-    assertThat(result.getMetrics()).isEmpty();
+    Map<String, EmittedMetrics> result = MetricParser.getMetricsFromFiles("/nonexistent", "path");
+    assertThat(result).isEmpty();
   }
 }
