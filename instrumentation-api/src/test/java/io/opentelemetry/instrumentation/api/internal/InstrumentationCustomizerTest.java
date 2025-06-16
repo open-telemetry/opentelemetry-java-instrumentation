@@ -6,14 +6,15 @@
 package io.opentelemetry.instrumentation.api.internal;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static org.mockito.Mockito.verify;
 
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Predicate;
+import java.util.Arrays;
+import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,88 +24,84 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class InstrumentationCustomizerTest {
 
+  private static final String TEST_INSTRUMENTATION_NAME = "test.instrumentation";
+
+  @Mock private InstrumenterBuilder<Object, Object> builder;
   @Mock private OperationMetrics operationMetrics;
   @Mock private AttributesExtractor<Object, Object> attributesExtractor;
+  @Mock private AttributesExtractor<Object, Object> secondAttributesExtractor;
   @Mock private ContextCustomizer<Object> contextCustomizer;
   @Mock private SpanNameExtractor<Object> spanNameExtractor;
 
-  private InstrumentationCustomizer customizer;
+  private InstrumenterCustomizer customizer;
 
   @BeforeEach
-  @SuppressWarnings("unchecked")
   void setUp() {
+    builder.spanNameExtractor = spanNameExtractor;
     customizer =
-        new InstrumentationCustomizer() {
-
+        new InstrumenterCustomizerImpl(builder) {
           @Override
-          public Predicate<String> instrumentationNamePredicate() {
-            return name -> name.startsWith("test.instrumentation");
-          }
-
-          @Override
-          public OperationMetrics getOperationMetrics() {
-            return operationMetrics;
-          }
-
-          @Override
-          public <REQUEST, RESPONSE>
-              AttributesExtractor<REQUEST, RESPONSE> getAttributesExtractor() {
-            return (AttributesExtractor<REQUEST, RESPONSE>) attributesExtractor;
-          }
-
-          @Override
-          public <REQUEST, RESPONSE>
-              List<AttributesExtractor<REQUEST, RESPONSE>> getAttributesExtractors() {
-            return Collections.singletonList(
-                (AttributesExtractor<REQUEST, RESPONSE>) attributesExtractor);
-          }
-
-          @Override
-          public <REQUEST> ContextCustomizer<REQUEST> getContextCustomizer() {
-            return (ContextCustomizer<REQUEST>) contextCustomizer;
-          }
-
-          @Override
-          public <REQUEST> SpanNameExtractor<REQUEST> getSpanNameExtractor() {
-            return (SpanNameExtractor<REQUEST>) spanNameExtractor;
+          public String getInstrumentationName() {
+            return TEST_INSTRUMENTATION_NAME;
           }
         };
   }
 
   @Test
-  void testInstrumentationNamePredicate() {
-    assertThat(customizer.instrumentationNamePredicate().test("test.instrumentation.example"))
-        .isTrue();
-    assertThat(customizer.instrumentationNamePredicate().test("other.instrumentation.example"))
-        .isFalse();
+  void testGetInstrumentationName() {
+    assertThat(customizer.getInstrumentationName()).isEqualTo(TEST_INSTRUMENTATION_NAME);
   }
 
   @Test
-  void testGetOperationMetrics() {
-    OperationMetrics metrics = customizer.getOperationMetrics();
-    assertThat(metrics).isSameAs(operationMetrics);
+  void testAddAttributesExtractor() {
+    InstrumenterCustomizer result = customizer.addAttributesExtractor(attributesExtractor);
+
+    verify(builder).addAttributesExtractor(attributesExtractor);
+    assertThat(result).isSameAs(customizer);
   }
 
   @Test
-  void testGetAttributesExtractor() {
-    AttributesExtractor<Object, Object> extractor = customizer.getAttributesExtractor();
-    assertThat(extractor).isSameAs(attributesExtractor);
+  void testAddAttributesExtractors() {
+    Iterable<AttributesExtractor<Object, Object>> extractors =
+        Arrays.asList(attributesExtractor, secondAttributesExtractor);
+
+    InstrumenterCustomizer result = customizer.addAttributesExtractors(extractors);
+
+    verify(builder).addAttributesExtractors(extractors);
+    assertThat(result).isSameAs(customizer);
   }
 
   @Test
-  void testGetAttributesExtractors() {
-    List<AttributesExtractor<Object, Object>> extractors = customizer.getAttributesExtractors();
-    assertThat(extractors).containsExactly(attributesExtractor);
+  void testAddOperationMetrics() {
+    InstrumenterCustomizer result = customizer.addOperationMetrics(operationMetrics);
+
+    verify(builder).addOperationMetrics(operationMetrics);
+    assertThat(result).isSameAs(customizer);
   }
 
   @Test
-  void testGetContextCustomizer() {
-    assertThat(customizer.getContextCustomizer()).isSameAs(contextCustomizer);
+  void testAddContextCustomizer() {
+    InstrumenterCustomizer result = customizer.addContextCustomizer(contextCustomizer);
+
+    verify(builder).addContextCustomizer(contextCustomizer);
+    assertThat(result).isSameAs(customizer);
   }
 
   @Test
-  void testGetSpanNameExtractor() {
-    SpanNameExtractor<Object> extractor = customizer.getSpanNameExtractor();
-    assertThat(extractor).isSameAs(spanNameExtractor);
+  @SuppressWarnings("unchecked")
+  void testSetSpanNameExtractor() {
+    Function<SpanNameExtractor<?>, SpanNameExtractor<?>> transformer =
+        original ->
+            (SpanNameExtractor<Object>)
+                request -> "custom:" + ((SpanNameExtractor<Object>) original).extract(request);
+
+    SpanNameExtractor<Object> originalExtractor = request -> "original";
+    builder.spanNameExtractor = originalExtractor;
+
+    customizer.setSpanNameExtractor(transformer);
+
+    SpanNameExtractor<Object> updatedExtractor = builder.spanNameExtractor;
+    String result = updatedExtractor.extract(new Object());
+    assertThat(result).isEqualTo("custom:original");
   }
 }
