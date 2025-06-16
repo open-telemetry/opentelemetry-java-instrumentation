@@ -57,7 +57,9 @@ public abstract class InstrumentationTestRunner {
    * Stores traces by scope, where each scope contains a map of span kinds to a map of attribute
    * keys to their types. This is used to collect metadata about the spans emitted during tests.
    */
-  protected Map<InstrumentationScopeInfo, Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>>> tracesByScope = new HashMap<>();
+  protected Map<
+          InstrumentationScopeInfo, Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>>>
+      tracesByScope = new HashMap<>();
 
   protected InstrumentationTestRunner(OpenTelemetry openTelemetry) {
     testInstrumenters = new TestInstrumenters(openTelemetry);
@@ -151,9 +153,9 @@ public abstract class InstrumentationTestRunner {
     }
     TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(assertionsList);
 
-//    if (Boolean.getBoolean("collectMetadata")) {
-      collectEmittedSpans(traces);
-//    }
+    //    if (Boolean.getBoolean("collectMetadata")) {
+    collectEmittedSpans(traces);
+    //    }
   }
 
   /**
@@ -215,9 +217,11 @@ public abstract class InstrumentationTestRunner {
         String spanName = span.getName();
         System.out.println(spanName);
         Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>> scopeMap =
-            this.tracesByScope.computeIfAbsent(span.getInstrumentationScopeInfo(), m -> new HashMap<>());
+            this.tracesByScope.computeIfAbsent(
+                span.getInstrumentationScopeInfo(), m -> new HashMap<>());
 
-        Map<InternalAttributeKeyImpl<?>, AttributeType> spanKindMap = scopeMap.computeIfAbsent(span.getKind(), s -> new HashMap<>());
+        Map<InternalAttributeKeyImpl<?>, AttributeType> spanKindMap =
+            scopeMap.computeIfAbsent(span.getKind(), s -> new HashMap<>());
 
         for (Map.Entry<AttributeKey<?>, Object> key : span.getAttributes().asMap().entrySet()) {
           if (!(key.getKey() instanceof InternalAttributeKeyImpl)) {
@@ -229,11 +233,9 @@ public abstract class InstrumentationTestRunner {
             spanKindMap.put(keyImpl, key.getValue() != null ? key.getKey().getType() : null);
           }
         }
-
       }
     }
   }
-
 
   public final List<LogRecordData> waitForLogRecords(int numberOfLogRecords) {
     awaitUntilAsserted(

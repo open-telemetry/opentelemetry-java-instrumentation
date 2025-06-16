@@ -40,7 +40,8 @@ public final class MetaDataCollector {
   public static void writeTelemetryToFiles(
       String path,
       Map<String, MetricData> metrics,
-      Map<InstrumentationScopeInfo, Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>>> spansByScopeAndKind)
+      Map<InstrumentationScopeInfo, Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>>>
+          spansByScopeAndKind)
       throws IOException {
 
     String moduleRoot = extractInstrumentationPath(path);
@@ -70,7 +71,8 @@ public final class MetaDataCollector {
 
   private static void writeSpanData(
       String instrumentationPath,
-      Map<InstrumentationScopeInfo, Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>>> spansByScopeAndKind)
+      Map<InstrumentationScopeInfo, Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>>>
+          spansByScopeAndKind)
       throws IOException {
 
     if (spansByScopeAndKind.isEmpty()) {
@@ -91,10 +93,13 @@ public final class MetaDataCollector {
 
       writer.write("spans_by_scope:\n");
 
-      for (Map.Entry<InstrumentationScopeInfo, Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>>> entry :
-          spansByScopeAndKind.entrySet()) {
+      for (Map.Entry<
+              InstrumentationScopeInfo,
+              Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>>>
+          entry : spansByScopeAndKind.entrySet()) {
         InstrumentationScopeInfo scope = entry.getKey();
-        Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>> spansByKind = entry.getValue();
+        Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>> spansByKind =
+            entry.getValue();
 
         writer.write("  - scope: " + scope.getName() + "\n");
         writer.write("    spans:\n");

@@ -7,12 +7,16 @@ package io.opentelemetry.instrumentation.docs;
 
 import static io.opentelemetry.instrumentation.docs.parsers.GradleParser.parseGradleFile;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 import io.opentelemetry.instrumentation.docs.internal.DependencyInfo;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
+import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
+import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
 import io.opentelemetry.instrumentation.docs.parsers.MetricParser;
+import io.opentelemetry.instrumentation.docs.parsers.SpanParser;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import io.opentelemetry.instrumentation.docs.utils.InstrumentationPath;
 import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
@@ -92,17 +96,78 @@ class InstrumentationAnalyzer {
         }
       }
 
-      Map<String, EmittedMetrics> metrics =
-          MetricParser.getMetricsFromFiles(fileManager.rootDir(), module.getSrcPath());
-
-      for (Map.Entry<String, EmittedMetrics> entry : metrics.entrySet()) {
-        if (entry.getValue() == null || entry.getValue().getMetrics() == null) {
-          continue;
-        }
-        module.getMetrics().put(entry.getKey(), entry.getValue().getMetrics());
-      }
+      processMetrics(module);
+      processSpans(module);
     }
     return modules;
+  }
+
+  private void processMetrics(InstrumentationModule module) {
+    Map<String, EmittedMetrics> metrics =
+        MetricParser.getMetricsFromFiles(fileManager.rootDir(), module.getSrcPath());
+    for (Map.Entry<String, EmittedMetrics> entry : metrics.entrySet()) {
+      if (entry.getValue() == null || entry.getValue().getMetrics() == null) {
+        continue;
+      }
+      module.getMetrics().put(entry.getKey(), entry.getValue().getMetrics());
+    }
+  }
+
+  private void processSpans(InstrumentationModule module) throws JsonProcessingException {
+    Map<String, EmittedSpans> spans =
+        SpanParser.getSpansByScopeFromFiles(fileManager.rootDir(), module.getSrcPath());
+    if (!spans.isEmpty()) {
+      Map<String, List<EmittedSpans.Span>> filtered = filterSpansByScope(spans, module);
+      module.setSpans(filtered);
+    }
+  }
+
+  Map<String, List<EmittedSpans.Span>> filterSpansByScope(
+      Map<String, EmittedSpans> spansByScope, InstrumentationModule module) {
+
+    Map<String, Map<String, Set<TelemetryAttribute>>> raw = new HashMap<>();
+
+    for (Map.Entry<String, EmittedSpans> entry : spansByScope.entrySet()) {
+      if (entry.getValue() == null || entry.getValue().getSpansByScope() == null) {
+        continue;
+      }
+
+      String when = entry.getValue().getWhen();
+      Map<String, Set<TelemetryAttribute>> kind = raw.computeIfAbsent(when, m -> new HashMap<>());
+
+      for (EmittedSpans.SpansByScope theseSpans : entry.getValue().getSpansByScope()) {
+
+        if (theseSpans.getScope().equals(module.getScopeInfo().getName())) {
+          for (EmittedSpans.Span span : theseSpans.getSpans()) {
+            String spanKind = span.getSpanKind();
+            Set<TelemetryAttribute> attributes =
+                kind.computeIfAbsent(spanKind, k -> new HashSet<>());
+
+            if (span.getAttributes() != null) {
+              for (TelemetryAttribute attr : span.getAttributes()) {
+                attributes.add(new TelemetryAttribute(attr.getName(), attr.getType()));
+              }
+            }
+          }
+        }
+      }
+    }
+
+    Map<String, List<EmittedSpans.Span>> newSpans = new HashMap<>();
+    for (Map.Entry<String, Map<String, Set<TelemetryAttribute>>> entry : raw.entrySet()) {
+      String when = entry.getKey();
+      Map<String, Set<TelemetryAttribute>> attributesByKind = entry.getValue();
+
+      for (Map.Entry<String, Set<TelemetryAttribute>> kindEntry : attributesByKind.entrySet()) {
+        String spanKind = kindEntry.getKey();
+        Set<TelemetryAttribute> attributes = kindEntry.getValue();
+
+        List<EmittedSpans.Span> spans = newSpans.computeIfAbsent(when, k -> new ArrayList<>());
+        spans.add(new EmittedSpans.Span(spanKind, new ArrayList<>(attributes)));
+      }
+    }
+
+    return newSpans;
   }
 
   void analyzeVersions(List<String> files, InstrumentationModule module) {

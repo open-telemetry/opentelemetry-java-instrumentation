@@ -56,7 +56,11 @@ public class EmittedMetrics {
     private List<TelemetryAttribute> attributes;
 
     public Metric(
-        String name, String description, String type, String unit, List<TelemetryAttribute> attributes) {
+        String name,
+        String description,
+        String type,
+        String unit,
+        List<TelemetryAttribute> attributes) {
       this.name = name;
       this.description = description;
       this.type = type;

@@ -5,22 +5,23 @@
 
 package io.opentelemetry.instrumentation.docs.internal;
 
+import static java.util.Collections.emptyList;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.util.Collections.emptyList;
-
 /**
- * Representation of spans emitted by an instrumentation. Includes context about whether emitted
- * by default or via a configuration option. This class is internal and is hence not for public use.
+ * Representation of spans emitted by an instrumentation. Includes context about whether emitted by
+ * default or via a configuration option. This class is internal and is hence not for public use.
  * Its APIs are unstable and can change at any time.
  */
 public class EmittedSpans {
   // Condition in which the telemetry is emitted (ex: default, or configuration option names).
   private String when;
 
-  @JsonProperty("spans_by_scope") private List<SpansByScope> spansByScope;
+  @JsonProperty("spans_by_scope")
+  private List<SpansByScope> spansByScope;
 
   public EmittedSpans() {
     this.when = "";
@@ -49,7 +50,6 @@ public class EmittedSpans {
   public void setSpansByScope(List<SpansByScope> spans) {
     this.spansByScope = spans;
   }
-
 
   /**
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -91,11 +91,12 @@ public class EmittedSpans {
    * any time.
    */
   public static class Span {
-    @JsonProperty("span_kind") private String spanKind;
+    @JsonProperty("span_kind")
+    private String spanKind;
+
     private List<TelemetryAttribute> attributes;
 
-    public Span(
-        String spanKind, List<TelemetryAttribute> attributes) {
+    public Span(String spanKind, List<TelemetryAttribute> attributes) {
       this.spanKind = spanKind;
       this.attributes = attributes;
     }
