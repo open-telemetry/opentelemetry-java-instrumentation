@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 
 public class GradleParser {
 
@@ -155,6 +156,7 @@ public class GradleParser {
     return new DependencyInfo(results, minJavaVersion);
   }
 
+  @Nullable
   public static Integer parseMinJavaVersion(String gradleFileContents) {
     List<int[]> excludedRanges = new ArrayList<>();
 
@@ -229,6 +231,7 @@ public class GradleParser {
    * @param regex Regex with a capturing group
    * @return The first captured group, or null if not found
    */
+  @Nullable
   private static String extractValue(String text, String regex) {
     Pattern pattern = Pattern.compile(regex);
     Matcher matcher = pattern.matcher(text);

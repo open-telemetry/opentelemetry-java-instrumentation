@@ -9,7 +9,10 @@ import static java.util.Objects.requireNonNull;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nullable;
 
@@ -25,6 +28,7 @@ public class InstrumentationModule {
   private final String namespace;
   private final String group;
   private final InstrumentationScopeInfo scopeInfo;
+  private Map<String, List<EmittedMetrics.Metric>> metrics;
 
   @Nullable private Map<InstrumentationType, Set<String>> targetVersions;
 
@@ -42,6 +46,7 @@ public class InstrumentationModule {
     requireNonNull(builder.namespace, "namespace required");
     requireNonNull(builder.group, "group required");
 
+    this.metrics = Objects.requireNonNullElseGet(builder.metrics, HashMap::new);
     this.srcPath = builder.srcPath;
     this.instrumentationName = builder.instrumentationName;
     this.namespace = builder.namespace;
@@ -90,6 +95,10 @@ public class InstrumentationModule {
     return minJavaVersion;
   }
 
+  public Map<String, List<EmittedMetrics.Metric>> getMetrics() {
+    return metrics;
+  }
+
   public void setTargetVersions(Map<InstrumentationType, Set<String>> targetVersions) {
     this.targetVersions = targetVersions;
   }
@@ -102,18 +111,23 @@ public class InstrumentationModule {
     this.minJavaVersion = minJavaVersion;
   }
 
+  public void setMetrics(Map<String, List<EmittedMetrics.Metric>> metrics) {
+    this.metrics = metrics;
+  }
+
   /**
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
    * any time.
    */
   public static class Builder {
-    private String srcPath;
-    private String instrumentationName;
-    private String namespace;
-    private String group;
-    private Integer minJavaVersion;
-    private InstrumentationMetaData metadata;
-    private Map<InstrumentationType, Set<String>> targetVersions;
+    @Nullable private String srcPath;
+    @Nullable private String instrumentationName;
+    @Nullable private String namespace;
+    @Nullable private String group;
+    @Nullable private Integer minJavaVersion;
+    @Nullable private InstrumentationMetaData metadata;
+    @Nullable private Map<InstrumentationType, Set<String>> targetVersions;
+    @Nullable private Map<String, List<EmittedMetrics.Metric>> metrics;
 
     @CanIgnoreReturnValue
     public Builder srcPath(String srcPath) {
@@ -154,6 +168,12 @@ public class InstrumentationModule {
     @CanIgnoreReturnValue
     public Builder targetVersions(Map<InstrumentationType, Set<String>> targetVersions) {
       this.targetVersions = targetVersions;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder metrics(Map<String, List<EmittedMetrics.Metric>> metrics) {
+      this.metrics = metrics;
       return this;
     }
 

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.TracerProvider;
+import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelMapConverter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
@@ -28,6 +29,8 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -38,6 +41,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.env.Environment;
 
 /**
@@ -54,20 +58,30 @@ import org.springframework.core.env.Environment;
   OtelSpringProperties.class
 })
 public class OpenTelemetryAutoConfiguration {
+  private static final Logger logger =
+      LoggerFactory.getLogger(OpenTelemetryAutoConfiguration.class);
 
   public OpenTelemetryAutoConfiguration() {}
 
+  @Bean
+  @ConfigurationPropertiesBinding
+  OtelMapConverter otelMapConverter() {
+    // This is needed for otlp exporter headers and OtelResourceProperties.
+
+    // We need this converter, even if the SDK is disabled,
+    // because the properties are parsed before the SDK is disabled.
+
+    // We also need this converter if the OpenTelemetry bean is user supplied,
+    // because the environment variables may still contain a value that needs to be converted,
+    // even if the SDK is disabled (and the value thus ignored).
+    return new OtelMapConverter();
+  }
+
   @Configuration
   @Conditional(SdkEnabled.class)
+  @DependsOn("otelMapConverter")
   @ConditionalOnMissingBean(OpenTelemetry.class)
   static class OpenTelemetrySdkConfig {
-
-    @Bean
-    @ConfigurationPropertiesBinding
-    public OtelMapConverter otelMapConverter() {
-      // needed for otlp exporter headers and OtelResourceProperties
-      return new OtelMapConverter();
-    }
 
     @Bean
     public OpenTelemetrySdkComponentLoader openTelemetrySdkComponentLoader(
@@ -110,6 +124,11 @@ public class OpenTelemetryAutoConfiguration {
     @Bean
     public OpenTelemetry openTelemetry(
         AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
+      logger.info(
+          "OpenTelemetry Spring Boot starter ({}) has been started",
+          EmbeddedInstrumentationProperties.findVersion(
+              "io.opentelemetry.spring-boot-autoconfigure"));
+
       return autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk();
     }
 
@@ -129,23 +148,14 @@ public class OpenTelemetryAutoConfiguration {
   }
 
   @Configuration
+  @DependsOn("otelMapConverter")
   @ConditionalOnMissingBean(OpenTelemetry.class)
   @ConditionalOnProperty(name = "otel.sdk.disabled", havingValue = "true")
   static class DisabledOpenTelemetrySdkConfig {
-
-    @Bean
-    @ConfigurationPropertiesBinding
-    // Duplicated in OpenTelemetrySdkConfig and DisabledOpenTelemetrySdkConfig to not expose the
-    // converter in the public API
-    public OtelMapConverter otelMapConverter() {
-      // needed for otlp exporter headers and OtelResourceProperties
-      // we need this converter, even if the SDK is disabled,
-      // because the properties are parsed before the SDK is disabled
-      return new OtelMapConverter();
-    }
-
     @Bean
     public OpenTelemetry openTelemetry() {
+      logger.info("OpenTelemetry Spring Boot starter has been disabled");
+
       return OpenTelemetry.noop();
     }
 

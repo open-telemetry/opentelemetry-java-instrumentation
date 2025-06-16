@@ -54,6 +54,88 @@ libraries:
       - com.alibaba:druid:(,)
       library:
       - com.alibaba:druid:1.0.0
+    telemetry:
+    - when: default
+      metrics:
+      - name: db.client.connections.idle.max
+        description: The maximum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.idle.min
+        description: The minimum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.pending_requests
+        description: The number of pending requests for an open connection, cumulative
+          for the entire pool.
+        type: LONG_SUM
+        unit: requests
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.usage
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+        - name: state
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.connection.count
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+        - name: db.client.connection.state
+          type: STRING
+      - name: db.client.connection.idle.max
+        description: The maximum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.idle.min
+        description: The minimum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.pending_requests
+        description: The number of current pending requests for an open connection.
+        type: LONG_SUM
+        unit: request
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
   apache:
   - name: apache-shenyu-2.4
     source_path: instrumentation/apache-shenyu-2.4
@@ -127,6 +209,24 @@ libraries:
     target_versions:
       javaagent:
       - org.apache.httpcomponents.client5:httpclient5:[5.0,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: apache-dbcp-2.0
     source_path: instrumentation/apache-dbcp-2.0
     scope:
@@ -136,6 +236,73 @@ libraries:
       - org.apache.commons:commons-dbcp2:[2,)
       library:
       - org.apache.commons:commons-dbcp2:2.0
+    telemetry:
+    - when: default
+      metrics:
+      - name: db.client.connections.idle.max
+        description: The maximum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.idle.min
+        description: The minimum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.usage
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+        - name: state
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.connection.count
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+        - name: db.client.connection.state
+          type: STRING
+      - name: db.client.connection.idle.max
+        description: The maximum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.idle.min
+        description: The minimum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
   armeria:
   - name: armeria-1.3
     source_path: instrumentation/armeria/armeria-1.3
@@ -254,6 +421,35 @@ libraries:
       - software.amazon.awssdk:sqs:2.2.0
       - software.amazon.awssdk:sns:2.2.0
       - software.amazon.awssdk:lambda:2.2.0
+    configurations:
+    - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+      description: Enables experimental receive telemetry for AWS SDK instrumentation.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: Allows configuring headers to capture as span attributes.
+      type: list
+      default: ''
+    - name: otel.instrumentation.aws-sdk.experimental-span-attributes
+      description: Enables experimental span attributes for AWS SDK instrumentation.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging
+      description: Determines whether the configured TextMapPropagator should be used
+        to inject into supported messaging attributes (for SQS).
+      type: boolean
+      default: false
+    - name: otel.instrumentation.genai.capture-message-content
+      description: Determines whether Generative AI events include full content of
+        user and assistant messages. Note that full content can have data privacy
+        and size concerns and care should be taken when enabling this
+      type: boolean
+      default: false
+    - name: otel.instrumentation.aws-sdk.experimental-record-individual-http-error
+      description: Determines whether errors returned by each individual HTTP request
+        should be recorded as events for the SDK span.
+      type: boolean
+      default: false
   azure:
   - name: azure-core-1.36
     source_path: instrumentation/azure-core/azure-core-1.36
@@ -278,6 +474,8 @@ libraries:
       - com.azure:azure-core:[1.14.0,1.19.0)
   c3p0:
   - name: c3p0-0.9
+    description: The c3p0 instrumentation provides connection pool metrics for c3p0
+      data sources.
     source_path: instrumentation/c3p0-0.9
     scope:
       name: io.opentelemetry.c3p0-0.9
@@ -286,14 +484,61 @@ libraries:
       - com.mchange:c3p0:(,)
       library:
       - com.mchange:c3p0:0.9.2
+    telemetry:
+    - when: default
+      metrics:
+      - name: db.client.connections.pending_requests
+        description: The number of pending requests for an open connection, cumulative
+          for the entire pool.
+        type: LONG_SUM
+        unit: requests
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.usage
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+        - name: state
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.connection.count
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+        - name: db.client.connection.state
+          type: STRING
+      - name: db.client.connection.pending_requests
+        description: The number of current pending requests for an open connection.
+        type: LONG_SUM
+        unit: request
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
   camel:
   - name: camel-2.20
+    description: |
+      This instrumentation provides tracing for Apache Camel 2.x applications by generating spans for each route execution. For Camel versions 3.5 and newer, users should instead use the native 'camel-opentelemetry' component provided directly by the Camel project.
     source_path: instrumentation/camel-2.20
     scope:
       name: io.opentelemetry.camel-2.20
     target_versions:
       javaagent:
       - org.apache.camel:camel-core:[2.19,3)
+    configurations:
+    - name: otel.instrumentation.camel.experimental-span-attributes
+      description: Enable the capture of experimental span attributes.
+      type: boolean
+      default: false
   cassandra:
   - name: cassandra-4.0
     description: |
@@ -354,8 +599,28 @@ libraries:
       description: Enables statement sanitization for database queries.
       type: boolean
       default: true
+    telemetry:
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   couchbase:
   - name: couchbase-3.1.6
+    description: |
+      Couchbase instrumentation is owned by the Couchbase project. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
     source_path: instrumentation/couchbase/couchbase-3.1.6
     scope:
       name: io.opentelemetry.couchbase-3.1.6
@@ -369,6 +634,12 @@ libraries:
     target_versions:
       javaagent:
       - com.couchbase.client:java-client:[2.6.0,3)
+    configurations:
+    - name: otel.instrumentation.couchbase.experimental-span-attributes
+      description: Enables experimental span attributes couchbase.operation_id and
+        couchbase.local.address
+      type: boolean
+      default: false
   - name: couchbase-2.0
     source_path: instrumentation/couchbase/couchbase-2.0
     scope:
@@ -376,7 +647,15 @@ libraries:
     target_versions:
       javaagent:
       - com.couchbase.client:java-client:[2,3)
+    configurations:
+    - name: otel.instrumentation.couchbase.experimental-span-attributes
+      description: Enables experimental span attributes couchbase.operation_id and
+        couchbase.local.address
+      type: boolean
+      default: false
   - name: couchbase-3.2
+    description: |
+      Couchbase instrumentation is owned by the Couchbase project. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
     source_path: instrumentation/couchbase/couchbase-3.2
     scope:
       name: io.opentelemetry.couchbase-3.2
@@ -384,6 +663,8 @@ libraries:
       javaagent:
       - com.couchbase.client:java-client:[3.2.0,)
   - name: couchbase-3.1
+    description: |
+      Couchbase instrumentation is owned by the Couchbase project. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
     source_path: instrumentation/couchbase/couchbase-3.1
     scope:
       name: io.opentelemetry.couchbase-3.1
@@ -392,6 +673,9 @@ libraries:
       - com.couchbase.client:java-client:[3.1,3.1.6)
   dropwizard:
   - name: dropwizard-metrics-4.0
+    description: |
+      The dropwizard-metrics instrumentation for the dropwizard/codahale metrics library produces OpenTelemetry compliant versions of the metrics generated by the Dropwizard MetricRegistry.
+      The Dropwizard metrics API does not have a concept of metric labels/tags/attributes, thus the data produced by this integration might be of very low quality, depending on how the API is used in the instrumented application.
     disabled_by_default: true
     source_path: instrumentation/dropwizard/dropwizard-metrics-4.0
     scope:
@@ -399,6 +683,11 @@ libraries:
     target_versions:
       javaagent:
       - io.dropwizard.metrics:metrics-core:[4.0.0,)
+    configurations:
+    - name: otel.instrumentation.dropwizard-metrics.enabled
+      description: Enables the dropwizard metrics instrumentation.
+      type: boolean
+      default: false
   - name: dropwizard-views-0.7
     source_path: instrumentation/dropwizard/dropwizard-views-0.7
     scope:
@@ -406,6 +695,15 @@ libraries:
     target_versions:
       javaagent:
       - io.dropwizard:dropwizard-views:(,3.0.0)
+    configurations:
+    - name: otel.instrumentation.common.experimental.view-telemetry.enabled
+      description: Enables experimental view telemetry.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables experimental controller telemetry.
+      type: boolean
+      default: false
   elasticsearch:
   - name: elasticsearch-rest-6.4
     source_path: instrumentation/elasticsearch/elasticsearch-rest-6.4
@@ -628,6 +926,134 @@ libraries:
       - com.zaxxer:HikariCP:[3.0.0,)
       library:
       - com.zaxxer:HikariCP:3.0.0
+    telemetry:
+    - when: default
+      metrics:
+      - name: db.client.connections.create_time
+        description: The time it took to create a new connection.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.idle.min
+        description: The minimum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.pending_requests
+        description: The number of pending requests for an open connection, cumulative
+          for the entire pool.
+        type: LONG_SUM
+        unit: requests
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.timeouts
+        description: The number of connection timeouts that have occurred trying to
+          obtain a connection from the pool.
+        type: LONG_SUM
+        unit: timeouts
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.usage
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+        - name: state
+          type: STRING
+      - name: db.client.connections.use_time
+        description: The time between borrowing a connection and returning it to the
+          pool.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.wait_time
+        description: The time it took to obtain an open connection from the pool.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: pool.name
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.connection.count
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+        - name: db.client.connection.state
+          type: STRING
+      - name: db.client.connection.create_time
+        description: The time it took to create a new connection.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.idle.min
+        description: The minimum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.pending_requests
+        description: The number of current pending requests for an open connection.
+        type: LONG_SUM
+        unit: request
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.timeouts
+        description: The number of connection timeouts that have occurred trying to
+          obtain a connection from the pool.
+        type: LONG_SUM
+        unit: timeout
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.use_time
+        description: The time between borrowing a connection and returning it to the
+          pool.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.wait_time
+        description: The time it took to obtain an open connection from the pool.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
   http:
   - name: http-url-connection
     source_path: instrumentation/http-url-connection
@@ -831,7 +1257,7 @@ libraries:
         services.
       type: map
       default: ''
-    - name: otel.instrumentation.jdbc.capture-query-parameters
+    - name: otel.instrumentation.jdbc.experimental.capture-query-parameters
       description: |
         Sets whether the query parameters should be captured as span attributes named <code>db.query.parameter.&lt;key&gt;</code>. Enabling this option disables the statement sanitization.<p>WARNING: captured query parameters may contain sensitive information such as passwords, personally identifiable information or protected health info.
       type: boolean
@@ -1276,6 +1702,8 @@ libraries:
       - org.opensearch.client:opensearch-rest-client:[1.0,3.0)
   oracle:
   - name: oracle-ucp-11.2
+    description: The Oracle Universal Connection Pool (UCP) instrumentation generates
+      connection pool metrics.
     source_path: instrumentation/oracle-ucp-11.2
     scope:
       name: io.opentelemetry.oracle-ucp-11.2
@@ -1285,8 +1713,65 @@ libraries:
       library:
       - com.oracle.database.jdbc:ucp:11.2.0.4
       - com.oracle.database.jdbc:ojdbc8:12.2.0.1
+    telemetry:
+    - when: default
+      metrics:
+      - name: db.client.connections.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.pending_requests
+        description: The number of pending requests for an open connection, cumulative
+          for the entire pool.
+        type: LONG_SUM
+        unit: requests
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.usage
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+        - name: state
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.connection.count
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+        - name: db.client.connection.state
+          type: STRING
+      - name: db.client.connection.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.pending_requests
+        description: The number of current pending requests for an open connection.
+        type: LONG_SUM
+        unit: request
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
   oshi:
   - name: oshi
+    description: When the OSHI library is detected on the classpath, this instrumentation
+      will use the system class loader to load classes from the oshi-core jar that
+      are then used to generate system metrics.
     source_path: instrumentation/oshi
     scope:
       name: io.opentelemetry.oshi
@@ -1295,6 +1780,148 @@ libraries:
       - com.github.oshi:oshi-core:[5.3.1,)
       library:
       - com.github.oshi:oshi-core:5.3.1
+    configurations:
+    - name: otel.instrumentation.oshi.experimental-metrics.enabled
+      description: Enable the OSHI process runtime metrics.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      metrics:
+      - name: system.disk.io
+        description: System disk IO
+        type: LONG_SUM
+        unit: By
+        attributes:
+        - name: device
+          type: STRING
+        - name: direction
+          type: STRING
+      - name: system.disk.operations
+        description: System disk operations
+        type: LONG_SUM
+        unit: operations
+        attributes:
+        - name: device
+          type: STRING
+        - name: direction
+          type: STRING
+      - name: system.memory.usage
+        description: System memory usage
+        type: LONG_SUM
+        unit: By
+        attributes:
+        - name: state
+          type: STRING
+      - name: system.memory.utilization
+        description: System memory utilization
+        type: DOUBLE_GAUGE
+        unit: '1'
+        attributes:
+        - name: state
+          type: STRING
+      - name: system.network.errors
+        description: System network errors
+        type: LONG_SUM
+        unit: errors
+        attributes:
+        - name: device
+          type: STRING
+        - name: direction
+          type: STRING
+      - name: system.network.io
+        description: System network IO
+        type: LONG_SUM
+        unit: By
+        attributes:
+        - name: device
+          type: STRING
+        - name: direction
+          type: STRING
+      - name: system.network.packets
+        description: System network packets
+        type: LONG_SUM
+        unit: packets
+        attributes:
+        - name: device
+          type: STRING
+        - name: direction
+          type: STRING
+    - when: otel.instrumentation.oshi.experimental-metrics.enabled=true
+      metrics:
+      - name: runtime.java.cpu_time
+        description: Runtime Java CPU time
+        type: LONG_GAUGE
+        unit: ms
+        attributes:
+        - name: type
+          type: STRING
+      - name: runtime.java.memory
+        description: Runtime Java memory
+        type: LONG_SUM
+        unit: By
+        attributes:
+        - name: type
+          type: STRING
+      - name: system.disk.io
+        description: System disk IO
+        type: LONG_SUM
+        unit: By
+        attributes:
+        - name: device
+          type: STRING
+        - name: direction
+          type: STRING
+      - name: system.disk.operations
+        description: System disk operations
+        type: LONG_SUM
+        unit: operations
+        attributes:
+        - name: device
+          type: STRING
+        - name: direction
+          type: STRING
+      - name: system.memory.usage
+        description: System memory usage
+        type: LONG_SUM
+        unit: By
+        attributes:
+        - name: state
+          type: STRING
+      - name: system.memory.utilization
+        description: System memory utilization
+        type: DOUBLE_GAUGE
+        unit: '1'
+        attributes:
+        - name: state
+          type: STRING
+      - name: system.network.errors
+        description: System network errors
+        type: LONG_SUM
+        unit: errors
+        attributes:
+        - name: device
+          type: STRING
+        - name: direction
+          type: STRING
+      - name: system.network.io
+        description: System network IO
+        type: LONG_SUM
+        unit: By
+        attributes:
+        - name: device
+          type: STRING
+        - name: direction
+          type: STRING
+      - name: system.network.packets
+        description: System network packets
+        type: LONG_SUM
+        unit: packets
+        attributes:
+        - name: device
+          type: STRING
+        - name: direction
+          type: STRING
   payara:
   - name: payara
     source_path: instrumentation/payara
@@ -1870,6 +2497,88 @@ libraries:
     target_versions:
       javaagent:
       - org.apache.tomcat:tomcat-jdbc:[8.5.0,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: db.client.connections.idle.max
+        description: The maximum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.idle.min
+        description: The minimum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.pending_requests
+        description: The number of pending requests for an open connection, cumulative
+          for the entire pool.
+        type: LONG_SUM
+        unit: requests
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.usage
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+        - name: state
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.connection.count
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+        - name: db.client.connection.state
+          type: STRING
+      - name: db.client.connection.idle.max
+        description: The maximum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.idle.min
+        description: The minimum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.pending_requests
+        description: The number of current pending requests for an open connection.
+        type: LONG_SUM
+        unit: request
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
   twilio:
   - name: twilio-6.6
     source_path: instrumentation/twilio-6.6
@@ -1910,6 +2619,22 @@ libraries:
     target_versions:
       javaagent:
       - io.vertx:vertx-redis-client:[4.0.0,)
+  - name: vertx-sql-client-5.0
+    source_path: instrumentation/vertx/vertx-sql-client/vertx-sql-client-5.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.vertx-sql-client-5.0
+    target_versions:
+      javaagent:
+      - io.vertx:vertx-sql-client:[5.0.0,)
+  - name: vertx-http-client-5.0
+    source_path: instrumentation/vertx/vertx-http-client/vertx-http-client-5.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.vertx-http-client-5.0
+    target_versions:
+      javaagent:
+      - io.vertx:vertx-core:[5.0.0,)
   - name: vertx-web-3.0
     source_path: instrumentation/vertx/vertx-web-3.0
     scope:
@@ -1918,19 +2643,19 @@ libraries:
       javaagent:
       - io.vertx:vertx-web:[3.0.0,)
   - name: vertx-sql-client-4.0
-    source_path: instrumentation/vertx/vertx-sql-client-4.0
+    source_path: instrumentation/vertx/vertx-sql-client/vertx-sql-client-4.0
     scope:
       name: io.opentelemetry.vertx-sql-client-4.0
     target_versions:
       javaagent:
-      - io.vertx:vertx-sql-client:[4.0.0,)
+      - io.vertx:vertx-sql-client:[4.0.0,5)
   - name: vertx-http-client-4.0
     source_path: instrumentation/vertx/vertx-http-client/vertx-http-client-4.0
     scope:
       name: io.opentelemetry.vertx-http-client-4.0
     target_versions:
       javaagent:
-      - io.vertx:vertx-core:[4.0.0,)
+      - io.vertx:vertx-core:[4.0.0,5)
   - name: vertx-rx-java-3.5
     source_path: instrumentation/vertx/vertx-rx-java-3.5
     scope:
@@ -1947,6 +2672,8 @@ libraries:
       - io.vertx:vertx-core:[3.0.0,4.0.0)
   vibur:
   - name: vibur-dbcp-11.0
+    description: Instrumentation for the vibur-dbcp library, which provides connection
+      pool metrics.
     source_path: instrumentation/vibur-dbcp-11.0
     scope:
       name: io.opentelemetry.vibur-dbcp-11.0
@@ -1955,6 +2682,45 @@ libraries:
       - org.vibur:vibur-dbcp:[11.0,)
       library:
       - org.vibur:vibur-dbcp:11.0
+    telemetry:
+    - when: default
+      metrics:
+      - name: db.client.connections.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.usage
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+        - name: state
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.connection.count
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+        - name: db.client.connection.state
+          type: STRING
+      - name: db.client.connection.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
   wicket:
   - name: wicket-8.0
     source_path: instrumentation/wicket-8.0
@@ -2051,6 +2817,10 @@ internal:
   source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.32
   scope:
     name: io.opentelemetry.opentelemetry-api-1.32
+- name: opentelemetry-api-1.50
+  source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.50
+  scope:
+    name: io.opentelemetry.opentelemetry-api-1.50
 - name: opentelemetry-api-1.42
   source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.42
   scope:

@@ -11,6 +11,8 @@ import java.lang.invoke.MethodType;
 import javax.annotation.Nullable;
 
 final class RequestAccess {
+  private static final String STEP_FUNCTIONS_REQUEST_CLASS_PREFIX =
+      "com.amazonaws.services.stepfunctions.model.";
 
   private static final ClassValue<RequestAccess> REQUEST_ACCESSORS =
       new ClassValue<RequestAccess>() {
@@ -19,6 +21,24 @@ final class RequestAccess {
           return new RequestAccess(type);
         }
       };
+
+  @Nullable
+  static String getStepFunctionsActivityArn(Object request) {
+    if (request == null) {
+      return null;
+    }
+    RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
+    return invokeOrNull(access.getStepFunctionsActivityArn, request);
+  }
+
+  @Nullable
+  static String getStateMachineArn(Object request) {
+    if (request == null) {
+      return null;
+    }
+    RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
+    return invokeOrNull(access.getStateMachineArn, request);
+  }
 
   @Nullable
   static String getBucketName(Object request) {
@@ -81,6 +101,8 @@ final class RequestAccess {
   @Nullable private final MethodHandle getTableName;
   @Nullable private final MethodHandle getTopicArn;
   @Nullable private final MethodHandle getTargetArn;
+  @Nullable private final MethodHandle getStateMachineArn;
+  @Nullable private final MethodHandle getStepFunctionsActivityArn;
 
   private RequestAccess(Class<?> clz) {
     getBucketName = findAccessorOrNull(clz, "getBucketName");
@@ -90,6 +112,9 @@ final class RequestAccess {
     getTableName = findAccessorOrNull(clz, "getTableName");
     getTopicArn = findAccessorOrNull(clz, "getTopicArn");
     getTargetArn = findAccessorOrNull(clz, "getTargetArn");
+    boolean isStepFunction = clz.getName().startsWith(STEP_FUNCTIONS_REQUEST_CLASS_PREFIX);
+    getStateMachineArn = isStepFunction ? findAccessorOrNull(clz, "getStateMachineArn") : null;
+    getStepFunctionsActivityArn = isStepFunction ? findAccessorOrNull(clz, "getActivityArn") : null;
   }
 
   @Nullable

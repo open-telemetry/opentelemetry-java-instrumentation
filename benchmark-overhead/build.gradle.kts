@@ -1,6 +1,6 @@
 plugins {
   id("java")
-  id("com.diffplug.spotless") version "7.0.3"
+  id("com.diffplug.spotless") version "7.0.4"
 }
 
 spotless {
@@ -16,10 +16,10 @@ repositories {
 }
 
 dependencies {
-  implementation(enforcedPlatform("org.junit:junit-bom:5.12.2"))
+  implementation(enforcedPlatform("org.junit:junit-bom:5.13.1"))
 
-  testImplementation("org.testcontainers:testcontainers:1.21.0")
-  testImplementation("org.testcontainers:postgresql:1.21.0")
+  testImplementation("org.testcontainers:testcontainers:1.21.1")
+  testImplementation("org.testcontainers:postgresql:1.21.1")
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testImplementation("org.junit.jupiter:junit-jupiter-params")
   testImplementation("com.squareup.okhttp3:okhttp:4.12.0")

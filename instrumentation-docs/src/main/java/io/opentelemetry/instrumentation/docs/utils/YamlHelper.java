@@ -10,20 +10,28 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
+import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationClassification;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import java.io.BufferedWriter;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
+/**
+ * Used for reading and writing Yaml files. This class is responsible for the structure and contents
+ * of the instrumentation-list.yaml file.
+ */
 public class YamlHelper {
 
   private static final Logger logger = Logger.getLogger(YamlHelper.class.getName());
@@ -37,16 +45,19 @@ public class YamlHelper {
 
     Yaml yaml = new Yaml(options);
 
+    // Add library modules
     Map<String, Object> libraries = getLibraryInstrumentations(list);
     if (!libraries.isEmpty()) {
       yaml.dump(getLibraryInstrumentations(list), writer);
     }
 
+    // Add internal modules
     Map<String, Object> internal = generateBaseYaml(list, InstrumentationClassification.INTERNAL);
     if (!internal.isEmpty()) {
       yaml.dump(internal, writer);
     }
 
+    // add custom instrumentation modules
     Map<String, Object> custom = generateBaseYaml(list, InstrumentationClassification.CUSTOM);
     if (!custom.isEmpty()) {
       yaml.dump(custom, writer);
@@ -104,29 +115,68 @@ public class YamlHelper {
     return newOutput;
   }
 
+  /** Assembles map of properties that all modules could have */
   private static Map<String, Object> baseProperties(InstrumentationModule module) {
     Map<String, Object> moduleMap = new LinkedHashMap<>();
     moduleMap.put("name", module.getInstrumentationName());
 
-    if (module.getMetadata() != null) {
-      if (module.getMetadata().getDescription() != null) {
-        moduleMap.put("description", module.getMetadata().getDescription());
-      }
-
-      if (module.getMetadata().getDisabledByDefault()) {
-        moduleMap.put("disabled_by_default", module.getMetadata().getDisabledByDefault());
-      }
-    }
-
+    addMetadataProperties(module, moduleMap);
     moduleMap.put("source_path", module.getSrcPath());
 
     if (module.getMinJavaVersion() != null) {
       moduleMap.put("minimum_java_version", module.getMinJavaVersion());
     }
 
-    Map<String, Object> scopeMap = getScopeMap(module);
-    moduleMap.put("scope", scopeMap);
+    moduleMap.put("scope", getScopeMap(module));
+    addTargetVersions(module, moduleMap);
+    addConfigurations(module, moduleMap);
 
+    // Get telemetry grouping list
+    Set<String> telemetryGroups = module.getMetrics().keySet();
+
+    if (!telemetryGroups.isEmpty()) {
+      List<Map<String, Object>> telemetryList = new ArrayList<>();
+      for (String group : telemetryGroups) {
+        Map<String, Object> telemetryEntry = new LinkedHashMap<>();
+        telemetryEntry.put("when", group);
+        List<EmittedMetrics.Metric> metrics =
+            new ArrayList<>(module.getMetrics().getOrDefault(group, Collections.emptyList()));
+        List<Map<String, Object>> metricsList = new ArrayList<>();
+
+        // sort metrics by name for some determinism in the order
+        metrics.sort(Comparator.comparing(EmittedMetrics.Metric::getName));
+
+        for (EmittedMetrics.Metric metric : metrics) {
+          metricsList.add(getMetricsMap(metric));
+        }
+        telemetryEntry.put("metrics", metricsList);
+        telemetryList.add(telemetryEntry);
+      }
+      moduleMap.put("telemetry", telemetryList);
+    }
+    return moduleMap;
+  }
+
+  private static void addMetadataProperties(
+      InstrumentationModule module, Map<String, Object> moduleMap) {
+    if (module.getMetadata() != null) {
+      if (module.getMetadata().getDescription() != null) {
+        moduleMap.put("description", module.getMetadata().getDescription());
+      }
+      if (module.getMetadata().getDisabledByDefault()) {
+        moduleMap.put("disabled_by_default", module.getMetadata().getDisabledByDefault());
+      }
+    }
+  }
+
+  private static Map<String, Object> getScopeMap(InstrumentationModule module) {
+    Map<String, Object> scopeMap = new LinkedHashMap<>();
+    scopeMap.put("name", module.getScopeInfo().getName());
+    return scopeMap;
+  }
+
+  private static void addTargetVersions(
+      InstrumentationModule module, Map<String, Object> moduleMap) {
     Map<String, Object> targetVersions = new TreeMap<>();
     if (module.getTargetVersions() != null && !module.getTargetVersions().isEmpty()) {
       module
@@ -143,39 +193,59 @@ public class YamlHelper {
     } else {
       moduleMap.put("target_versions", targetVersions);
     }
+  }
 
+  private static void addConfigurations(
+      InstrumentationModule module, Map<String, Object> moduleMap) {
     if (module.getMetadata() != null && !module.getMetadata().getConfigurations().isEmpty()) {
       List<Map<String, Object>> configurations = new ArrayList<>();
       for (ConfigurationOption configuration : module.getMetadata().getConfigurations()) {
-        Map<String, Object> conf = new LinkedHashMap<>();
-        conf.put("name", configuration.name());
-        conf.put("description", configuration.description());
-        conf.put("type", configuration.type().toString());
-        if (configuration.type().equals(ConfigurationType.BOOLEAN)) {
-          conf.put("default", Boolean.parseBoolean(configuration.defaultValue()));
-        } else if (configuration.type().equals(ConfigurationType.INT)) {
-          conf.put("default", Integer.parseInt(configuration.defaultValue()));
-        } else {
-          conf.put("default", configuration.defaultValue());
-        }
-
-        configurations.add(conf);
+        configurations.add(configurationToMap(configuration));
       }
       moduleMap.put("configurations", configurations);
     }
-
-    return moduleMap;
   }
 
-  private static Map<String, Object> getScopeMap(InstrumentationModule module) {
-    Map<String, Object> scopeMap = new LinkedHashMap<>();
-    scopeMap.put("name", module.getScopeInfo().getName());
-    return scopeMap;
+  private static Map<String, Object> configurationToMap(ConfigurationOption configuration) {
+    Map<String, Object> conf = new LinkedHashMap<>();
+    conf.put("name", configuration.name());
+    conf.put("description", configuration.description());
+    conf.put("type", configuration.type().toString());
+    if (configuration.type().equals(ConfigurationType.BOOLEAN)) {
+      conf.put("default", Boolean.parseBoolean(configuration.defaultValue()));
+    } else if (configuration.type().equals(ConfigurationType.INT)) {
+      conf.put("default", Integer.parseInt(configuration.defaultValue()));
+    } else {
+      conf.put("default", configuration.defaultValue());
+    }
+    return conf;
+  }
+
+  private static Map<String, Object> getMetricsMap(EmittedMetrics.Metric metric) {
+    Map<String, Object> innerMetricMap = new LinkedHashMap<>();
+    innerMetricMap.put("name", metric.getName());
+    innerMetricMap.put("description", metric.getDescription());
+    innerMetricMap.put("type", metric.getType());
+    innerMetricMap.put("unit", metric.getUnit());
+
+    List<Map<String, Object>> attributes = new ArrayList<>();
+    for (EmittedMetrics.Attribute attribute : metric.getAttributes()) {
+      Map<String, Object> attributeMap = new LinkedHashMap<>();
+      attributeMap.put("name", attribute.getName());
+      attributeMap.put("type", attribute.getType());
+      attributes.add(attributeMap);
+    }
+    innerMetricMap.put("attributes", attributes);
+    return innerMetricMap;
   }
 
   public static InstrumentationMetaData metaDataParser(String input)
       throws JsonProcessingException {
     return mapper.readValue(input, InstrumentationMetaData.class);
+  }
+
+  public static EmittedMetrics emittedMetricsParser(String input) {
+    return new Yaml().loadAs(input, EmittedMetrics.class);
   }
 
   private YamlHelper() {}

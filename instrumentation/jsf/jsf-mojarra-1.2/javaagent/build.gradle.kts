@@ -63,11 +63,8 @@ testing {
         implementation("javax.faces:jsf-api:1.2")
         implementation("com.sun.facelets:jsf-facelets:1.1.14")
 
-        if (latestDepTest) {
-          implementation("javax.faces:jsf-impl:1.+")
-        } else {
-          implementation("javax.faces:jsf-impl:1.2_04")
-        }
+        val version = if (latestDepTest) "1.+" else "1.2_04"
+        implementation("javax.faces:jsf-impl:$version")
       }
     }
 
@@ -75,11 +72,8 @@ testing {
       dependencies {
         implementation(project(":instrumentation:jsf:jsf-javax-common:testing"))
 
-        if (latestDepTest) {
-          implementation("org.glassfish:jakarta.faces:2.+")
-        } else {
-          implementation("org.glassfish:javax.faces:2.2.0")
-        }
+        val version = if (latestDepTest) "2.+" else "2.2.0"
+        implementation("org.glassfish:javax.faces:$version")
       }
     }
   }

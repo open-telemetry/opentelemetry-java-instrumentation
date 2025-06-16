@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("NullAway")
 class InstrumentationAnalyzerTest {
 
   @Test
@@ -40,7 +41,7 @@ class InstrumentationAnalyzerTest {
                 InstrumentationType.LIBRARY));
 
     List<InstrumentationModule> modules =
-        InstrumentationAnalyzer.convertToInstrumentationModules(paths);
+        InstrumentationAnalyzer.convertToInstrumentationModules("test", paths);
 
     assertThat(modules.size()).isEqualTo(2);
 
@@ -50,6 +51,7 @@ class InstrumentationAnalyzerTest {
             .findFirst()
             .orElse(null);
 
+    assertThat(log4jModule).isNotNull();
     assertThat(log4jModule.getNamespace()).isEqualTo("log4j");
     assertThat(log4jModule.getGroup()).isEqualTo("log4j");
     assertThat(log4jModule.getSrcPath()).isEqualTo("instrumentation/log4j/log4j-appender-2.17");

@@ -22,5 +22,6 @@ jobs:
             --exclude "^http://code.google.com/p/concurrentlinkedhashmap$"
             --exclude "^https://softwareengineering.stackexchange.com/questions/29727"
             --max-retries 6
-            --max-concurrency 1
+            --max-concurrency 4
+            --github-token ${{ github.token }}
             .
