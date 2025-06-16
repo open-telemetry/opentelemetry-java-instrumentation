@@ -5,8 +5,7 @@
 
 package io.opentelemetry.instrumentation.jaxrs;
 
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionPrefixAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionInfixAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -143,13 +142,10 @@ public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServer
                       List<AttributeAssertion> assertions;
                       if (abortPrematch) {
                         assertions =
-                            codeFunctionAssertions(
-                                "JaxRsFilterTest$PrematchRequestFilter", "filter");
+                            codeFunctionInfixAssertions(
+                                ".JaxRsFilterTest$PrematchRequestFilter", "filter");
                       } else {
-                        assertions =
-                            codeFunctionPrefixAssertions(
-                                "io.opentelemetry.instrumentation.jaxrs.v2_0.test.Resource$Test",
-                                "hello");
+                        assertions = codeFunctionInfixAssertions(".Resource$Test", "hello");
                       }
                       span.hasAttributesSatisfyingExactly(assertions);
                     }));
@@ -185,8 +181,6 @@ public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServer
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                codeFunctionPrefixAssertions(
-                                    "io.opentelemetry.instrumentation.jaxrs.v2_0.test.Resource$Test",
-                                    "nested"))));
+                                codeFunctionInfixAssertions(".Resource$Test", "nested"))));
   }
 }

@@ -59,6 +59,14 @@ public class SemconvCodeStabilityUtil {
         v -> v.endsWith(namespaceSuffix));
   }
 
+  public static List<AttributeAssertion> codeFunctionInfixAssertions(
+      String namespaceInfix, String methodName) {
+    return internalFunctionAssert(
+        methodName,
+        v -> v.contains(namespaceInfix).endsWith("." + methodName),
+        v -> v.contains(namespaceInfix));
+  }
+
   public static List<AttributeAssertion> codeFunctionPrefixAssertions(
       String namespacePrefix, String methodName) {
     return internalFunctionAssert(
