@@ -1,5 +1,58 @@
 [
   {
+    "name": "org.apache.kafka.clients.consumer.KafkaConsumer",
+    "fields": [
+      {"name": "metadata", "allowWrite": true},
+      {"name": "delegate", "allowWrite": true}
+    ]
+  },
+  {
+    "name": "org.apache.kafka.clients.producer.KafkaProducer",
+    "fields": [
+      {"name": "metadata", "allowWrite": true},
+      {"name": "delegate", "allowWrite": true}
+    ]
+  },
+  {
+    "name": "org.apache.kafka.clients.Metadata",
+    "fields": [
+      {"name": "cluster", "allowWrite": true},
+      {"name": "cache", "allowWrite": true},
+      {"name": "metadataSnapshot", "allowWrite": true}
+    ]
+  },
+  {
+    "name": "org.apache.kafka.common.Cluster",
+    "methods": [
+      {"name": "nodes", "parameterTypes": []}
+    ]
+  },
+  {
+    "name": "org.apache.kafka.common.Node",
+    "methods": [
+      {"name": "host", "parameterTypes": []},
+      {"name": "port", "parameterTypes": []}
+    ]
+  },
+  {
+    "name": "org.apache.kafka.clients.MetadataCache",
+    "condition": {
+      "typeReachable": "org.apache.kafka.clients.Metadata"
+    },
+    "fields": [
+      {"name": "nodes", "allowWrite": true}
+    ]
+  },
+  {
+    "name": "org.apache.kafka.clients.MetadataSnapshot",
+    "condition": {
+      "typeReachable": "org.apache.kafka.clients.Metadata"
+    },
+    "fields": [
+      {"name": "nodes", "allowWrite": true}
+    ]
+  },
+  {
     "condition": {
       "typeReachable": "org.apache.commons.pool2.impl.BaseGenericObjectPool"
     },
