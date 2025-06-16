@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingNetworkAttributesGetter;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -14,9 +13,7 @@ import org.apache.rocketmq.client.apis.consumer.ConsumeResult;
 import org.apache.rocketmq.client.apis.message.MessageView;
 
 enum RocketMqConsumerProcessAttributeGetter
-    implements
-        MessagingAttributesGetter<MessageView, ConsumeResult>,
-        MessagingNetworkAttributesGetter<MessageView, ConsumeResult> {
+    implements MessagingAttributesGetter<MessageView, ConsumeResult> {
   INSTANCE;
 
   @Nullable

@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingNetworkAttributesGetter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,9 +18,7 @@ import org.apache.kafka.clients.producer.RecordMetadata;
  * any time.
  */
 enum KafkaProducerAttributesGetter
-    implements
-        MessagingAttributesGetter<KafkaProducerRequest, RecordMetadata>,
-        MessagingNetworkAttributesGetter<KafkaProducerRequest, RecordMetadata> {
+    implements MessagingAttributesGetter<KafkaProducerRequest, RecordMetadata> {
   INSTANCE;
 
   @Override

@@ -12,7 +12,6 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -57,9 +56,8 @@ public final class JmsInstrumenterFactory {
     return Instrumenter.<MessageWithDestination, Void>builder(
             openTelemetry,
             instrumentationName,
-            MessagingSpanNameExtractor.create(getter, operation, getter))
+            MessagingSpanNameExtractor.create(getter, operation))
         .addAttributesExtractor(createMessagingAttributesExtractor(operation))
-        .addAttributesExtractor(MessagingNetworkAttributesExtractor.create(getter))
         .buildProducerInstrumenter(MessagePropertySetter.INSTANCE);
   }
 
@@ -71,9 +69,8 @@ public final class JmsInstrumenterFactory {
         Instrumenter.<MessageWithDestination, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.create(getter, operation, getter))
-            .addAttributesExtractor(createMessagingAttributesExtractor(operation))
-            .addAttributesExtractor(MessagingNetworkAttributesExtractor.create(getter));
+                MessagingSpanNameExtractor.create(getter, operation))
+            .addAttributesExtractor(createMessagingAttributesExtractor(operation));
     if (messagingReceiveInstrumentationEnabled || emitStableMessagingSemconv()) {
       builder.addSpanLinksExtractor(
           new PropagatorBasedSpanLinksExtractor<>(
@@ -92,9 +89,8 @@ public final class JmsInstrumenterFactory {
         Instrumenter.<MessageWithDestination, Void>builder(
                 openTelemetry,
                 instrumentationName,
-                MessagingSpanNameExtractor.create(getter, operation, getter))
-            .addAttributesExtractor(createMessagingAttributesExtractor(operation))
-            .addAttributesExtractor(MessagingNetworkAttributesExtractor.create(getter));
+                MessagingSpanNameExtractor.create(getter, operation))
+            .addAttributesExtractor(createMessagingAttributesExtractor(operation));
     if (canHaveReceiveInstrumentation
         && (messagingReceiveInstrumentationEnabled || emitStableMessagingSemconv())) {
       builder.addSpanLinksExtractor(

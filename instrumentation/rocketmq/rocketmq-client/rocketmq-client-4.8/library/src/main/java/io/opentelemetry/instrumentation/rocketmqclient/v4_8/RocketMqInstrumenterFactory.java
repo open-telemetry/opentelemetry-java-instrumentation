@@ -13,7 +13,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -49,10 +48,9 @@ class RocketMqInstrumenterFactory {
         Instrumenter.<SendMessageContext, Void>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operation, getter))
+                MessagingSpanNameExtractor.create(getter, operation))
             .addAttributesExtractor(
-                buildMessagingAttributesExtractor(getter, operation, capturedHeaders))
-            .addAttributesExtractor(MessagingNetworkAttributesExtractor.create(getter));
+                buildMessagingAttributesExtractor(getter, operation, capturedHeaders));
     if (captureExperimentalSpanAttributes) {
       instrumenterBuilder.addAttributesExtractor(
           RocketMqProducerExperimentalAttributeExtractor.INSTANCE);
@@ -93,11 +91,10 @@ class RocketMqInstrumenterFactory {
         Instrumenter.builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
-            MessagingSpanNameExtractor.create(getter, operation, getter));
+            MessagingSpanNameExtractor.create(getter, operation));
 
     builder.addAttributesExtractor(
         buildMessagingAttributesExtractor(getter, operation, capturedHeaders));
-    builder.addAttributesExtractor(MessagingNetworkAttributesExtractor.create(getter));
     if (captureExperimentalSpanAttributes) {
       builder.addAttributesExtractor(RocketMqConsumerExperimentalAttributeExtractor.INSTANCE);
     }

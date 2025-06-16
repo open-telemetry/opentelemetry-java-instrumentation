@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingNetworkAttributesGetter;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -15,9 +14,7 @@ import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
 
 enum RocketMqProducerAttributeGetter
-    implements
-        MessagingAttributesGetter<SendMessageContext, Void>,
-        MessagingNetworkAttributesGetter<SendMessageContext, Void> {
+    implements MessagingAttributesGetter<SendMessageContext, Void> {
   INSTANCE;
 
   @Override

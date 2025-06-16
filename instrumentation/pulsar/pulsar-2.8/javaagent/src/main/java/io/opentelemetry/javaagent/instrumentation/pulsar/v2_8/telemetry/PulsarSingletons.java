@@ -16,7 +16,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageO
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingProducerMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -75,11 +74,10 @@ public final class PulsarSingletons {
         Instrumenter.<PulsarRequest, Void>builder(
                 TELEMETRY,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, MessageOperation.RECEIVE, getter))
+                MessagingSpanNameExtractor.create(getter, MessageOperation.RECEIVE))
             .addAttributesExtractor(
                 createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
-            .addOperationMetrics(MessagingConsumerMetrics.get())
-            .addAttributesExtractor(MessagingNetworkAttributesExtractor.create(getter));
+            .addOperationMetrics(MessagingConsumerMetrics.get());
 
     if (receiveInstrumentationEnabled || emitStableMessagingSemconv()) {
       return instrumenterBuilder
@@ -96,10 +94,9 @@ public final class PulsarSingletons {
     return Instrumenter.<PulsarBatchRequest, Void>builder(
             TELEMETRY,
             INSTRUMENTATION_NAME,
-            MessagingSpanNameExtractor.create(getter, MessageOperation.RECEIVE, getter))
+            MessagingSpanNameExtractor.create(getter, MessageOperation.RECEIVE))
         .addAttributesExtractor(
             createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
-        .addAttributesExtractor(MessagingNetworkAttributesExtractor.create(getter))
         .addSpanLinksExtractor(new PulsarBatchRequestSpanLinksExtractor(PROPAGATOR))
         .addOperationMetrics(MessagingConsumerMetrics.get())
         .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
@@ -112,10 +109,9 @@ public final class PulsarSingletons {
         Instrumenter.<PulsarRequest, Void>builder(
                 TELEMETRY,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, MessageOperation.PROCESS, getter))
+                MessagingSpanNameExtractor.create(getter, MessageOperation.PROCESS))
             .addAttributesExtractor(
-                createMessagingAttributesExtractor(getter, MessageOperation.PROCESS))
-            .addAttributesExtractor(MessagingNetworkAttributesExtractor.create(getter));
+                createMessagingAttributesExtractor(getter, MessageOperation.PROCESS));
 
     if (receiveInstrumentationEnabled || emitStableMessagingSemconv()) {
       SpanLinksExtractor<PulsarRequest> spanLinksExtractor =
@@ -136,9 +132,8 @@ public final class PulsarSingletons {
         Instrumenter.<PulsarRequest, Void>builder(
                 TELEMETRY,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operation, getter))
+                MessagingSpanNameExtractor.create(getter, operation))
             .addAttributesExtractor(createMessagingAttributesExtractor(getter, operation))
-            .addAttributesExtractor(MessagingNetworkAttributesExtractor.create(getter))
             .addOperationMetrics(MessagingProducerMetrics.get());
 
     if (AgentInstrumentationConfig.get()

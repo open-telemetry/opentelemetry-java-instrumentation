@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingNetworkAttributesGetter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Set;
@@ -15,10 +14,7 @@ import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import org.apache.kafka.common.TopicPartition;
 
-enum KafkaReceiveAttributesGetter
-    implements
-        MessagingAttributesGetter<KafkaReceiveRequest, Void>,
-        MessagingNetworkAttributesGetter<KafkaReceiveRequest, Void> {
+enum KafkaReceiveAttributesGetter implements MessagingAttributesGetter<KafkaReceiveRequest, Void> {
   INSTANCE;
 
   @Override

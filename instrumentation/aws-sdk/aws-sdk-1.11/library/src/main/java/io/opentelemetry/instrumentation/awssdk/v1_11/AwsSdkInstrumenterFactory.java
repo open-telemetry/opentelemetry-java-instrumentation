@@ -115,7 +115,7 @@ final class AwsSdkInstrumenterFactory {
 
     return createInstrumenter(
         openTelemetry,
-        MessagingSpanNameExtractor.create(getter, operation, getter),
+        MessagingSpanNameExtractor.create(getter, operation),
         SpanKindExtractor.alwaysConsumer(),
         toSqsRequestExtractors(attributesExtractors()),
         singletonList(messagingAttributeExtractor),
@@ -132,7 +132,7 @@ final class AwsSdkInstrumenterFactory {
         Instrumenter.<SqsProcessRequest, Response<?>>builder(
                 openTelemetry,
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(getter, operation, getter))
+                MessagingSpanNameExtractor.create(getter, operation))
             .addAttributesExtractors(toSqsRequestExtractors(attributesExtractors()))
             .addAttributesExtractor(messagingAttributeExtractor);
 
@@ -186,7 +186,7 @@ final class AwsSdkInstrumenterFactory {
 
     return createInstrumenter(
         openTelemetry,
-        MessagingSpanNameExtractor.create(getter, operation, getter),
+        MessagingSpanNameExtractor.create(getter, operation),
         SpanKindExtractor.alwaysProducer(),
         attributesExtractors(),
         singletonList(messagingAttributeExtractor),
