@@ -21,7 +21,6 @@ public final class MessagingSpanNameExtractor<REQUEST> implements SpanNameExtrac
    *     name>}.
    * @see MessageOperation used to extract {@code <operation name>}.
    */
-  @Deprecated
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       MessagingAttributesGetter<REQUEST, ?> getter, MessageOperation operation) {
     return new MessagingSpanNameExtractor<>(getter, operation, null);
