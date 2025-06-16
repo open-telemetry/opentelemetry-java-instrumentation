@@ -26,6 +26,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.internal.Timer;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.VirtualFieldStore;
@@ -77,7 +78,9 @@ public final class PulsarSingletons {
                 MessagingSpanNameExtractor.create(getter, MessageOperation.RECEIVE))
             .addAttributesExtractor(
                 createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
-            .addOperationMetrics(MessagingConsumerMetrics.get());
+            .addOperationMetrics(MessagingConsumerMetrics.get())
+            .addAttributesExtractor(
+                ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()));
 
     if (receiveInstrumentationEnabled || emitStableMessagingSemconv()) {
       return instrumenterBuilder
@@ -97,6 +100,8 @@ public final class PulsarSingletons {
             MessagingSpanNameExtractor.create(getter, MessageOperation.RECEIVE))
         .addAttributesExtractor(
             createMessagingAttributesExtractor(getter, MessageOperation.RECEIVE))
+        .addAttributesExtractor(
+            ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
         .addSpanLinksExtractor(new PulsarBatchRequestSpanLinksExtractor(PROPAGATOR))
         .addOperationMetrics(MessagingConsumerMetrics.get())
         .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
@@ -134,6 +139,8 @@ public final class PulsarSingletons {
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(getter, operation))
             .addAttributesExtractor(createMessagingAttributesExtractor(getter, operation))
+            .addAttributesExtractor(
+                ServerAttributesExtractor.create(new PulsarNetClientAttributesGetter()))
             .addOperationMetrics(MessagingProducerMetrics.get());
 
     if (AgentInstrumentationConfig.get()
