@@ -23,7 +23,8 @@ dependencies {
   latestDepTestLibrary("com.amazonaws:aws-java-sdk-sqs:1.12.583") // documented limitation
 }
 
-if (!(findProperty("testLatestDeps") as Boolean)) {
+val testLatestDeps = findProperty("testLatestDeps") as Boolean
+if (!testLatestDeps) {
   configurations.testRuntimeClasspath {
     resolutionStrategy {
       eachDependency {
@@ -42,7 +43,8 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
-        implementation("com.amazonaws:aws-java-sdk-secretsmanager:1.12.80")
+        version = if (testLatestDeps) "latest.release" else "1.12.80"
+        implementation("com.amazonaws:aws-java-sdk-secretsmanager:$version")
       }
     }
   }
