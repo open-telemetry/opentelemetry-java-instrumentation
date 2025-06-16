@@ -53,7 +53,7 @@ class JwsAnnotationsTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
                             codeFunctionAssertions(
-                                WebServiceClass.class, "partOfPublicInterface"))));
+                                WebServiceFromInterface.class, "partOfPublicInterface"))));
   }
 
   @Test
