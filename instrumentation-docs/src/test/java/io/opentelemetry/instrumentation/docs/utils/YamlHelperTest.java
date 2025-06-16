@@ -23,6 +23,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
 import org.junit.jupiter.api.Test;
 
 class YamlHelperTest {
@@ -297,11 +298,11 @@ class YamlHelperTest {
             "HISTOGRAM",
             "s",
             List.of(
-                new EmittedMetrics.Attribute("db.namespace", "STRING"),
-                new EmittedMetrics.Attribute("db.operation.name", "STRING"),
-                new EmittedMetrics.Attribute("db.system.name", "STRING"),
-                new EmittedMetrics.Attribute("server.address", "STRING"),
-                new EmittedMetrics.Attribute("server.port", "LONG")));
+                new TelemetryAttribute("db.namespace", "STRING"),
+                new TelemetryAttribute("db.operation.name", "STRING"),
+                new TelemetryAttribute("db.system.name", "STRING"),
+                new TelemetryAttribute("server.address", "STRING"),
+                new TelemetryAttribute("server.port", "LONG")));
 
     targetVersions.put(
         InstrumentationType.LIBRARY, new HashSet<>(List.of("org.apache.mylib:mylib-core:2.3.0")));

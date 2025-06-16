@@ -66,15 +66,15 @@ public final class AgentTestRunner extends InstrumentationTestRunner {
 
     // Generates files in a `.telemetry` directory within the instrumentation module with all
     // captured emitted metadata to be used by the instrumentation-docs Doc generator.
-    if (Boolean.getBoolean("collectMetadata")) {
+//    if (Boolean.getBoolean("collectMetadata")) {
       URL resource = this.getClass().getClassLoader().getResource("");
       if (resource == null) {
         return;
       }
       String path = Paths.get(resource.getPath()).toString();
 
-      MetaDataCollector.writeTelemetryToFiles(path, metrics);
-    }
+      MetaDataCollector.writeTelemetryToFiles(path, metrics, tracesByScope);
+//    }
 
     // additional library ignores are ignored during tests, because they can make it really
     // confusing for contributors wondering why their instrumentation is not applied

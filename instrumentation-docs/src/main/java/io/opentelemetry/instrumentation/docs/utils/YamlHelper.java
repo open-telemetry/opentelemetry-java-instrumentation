@@ -11,6 +11,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
+import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationClassification;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
@@ -25,6 +26,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
@@ -229,7 +231,7 @@ public class YamlHelper {
     innerMetricMap.put("unit", metric.getUnit());
 
     List<Map<String, Object>> attributes = new ArrayList<>();
-    for (EmittedMetrics.Attribute attribute : metric.getAttributes()) {
+    for (TelemetryAttribute attribute : metric.getAttributes()) {
       Map<String, Object> attributeMap = new LinkedHashMap<>();
       attributeMap.put("name", attribute.getName());
       attributeMap.put("type", attribute.getType());
@@ -246,6 +248,10 @@ public class YamlHelper {
 
   public static EmittedMetrics emittedMetricsParser(String input) {
     return new Yaml().loadAs(input, EmittedMetrics.class);
+  }
+
+  public static EmittedSpans emittedSpansParser(String input) throws JsonProcessingException {
+    return mapper.readValue(input, EmittedSpans.class);
   }
 
   private YamlHelper() {}

@@ -23,8 +23,8 @@ public class MetricParser {
   private static final Logger logger = Logger.getLogger(MetricParser.class.getName());
 
   /**
-   * Looks for metric files in the .telemetry directory, and combines them into a single list of
-   * metrics.
+   * Looks for metric files in the .telemetry directory, and combines them into a map where the key
+   * represents the "when", and the value is a list of metrics emitted under that condition.
    *
    * @param instrumentationDirectory the directory to traverse
    * @return contents of aggregated files
@@ -67,7 +67,7 @@ public class MetricParser {
   /**
    * Takes in a raw string representation of the aggregated EmittedMetrics yaml map, separated by
    * the `when`, indicating the conditions under which the metrics are emitted. deduplicates the
-   * metrics by name and then returns a new map EmittedMetrics objects.
+   * metrics by name and then returns a new map of EmittedMetrics objects.
    *
    * @param input raw string representation of EmittedMetrics yaml
    * @return {@code Map<String, EmittedMetrics>} where the key is the `when` condition
