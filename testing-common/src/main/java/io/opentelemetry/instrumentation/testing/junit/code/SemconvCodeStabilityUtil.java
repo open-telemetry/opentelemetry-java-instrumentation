@@ -78,11 +78,11 @@ public class SemconvCodeStabilityUtil {
   @SuppressWarnings("deprecation") // testing deprecated code semconv
   private static List<AttributeAssertion> internalFunctionAssert(
       String methodName,
-      //CHECKSTYLE:OFF
+      // CHECKSTYLE:OFF
       OpenTelemetryAssertions.StringAssertConsumer functionNameAssert,
       OpenTelemetryAssertions.StringAssertConsumer namespaceAssert
-      //CHECKSTYLE:ON
-  ) {
+      // CHECKSTYLE:ON
+      ) {
     List<AttributeAssertion> assertions = new ArrayList<>();
     if (SemconvStability.isEmitStableCodeSemconv()) {
       assertions.add(satisfies(CodeAttributes.CODE_FUNCTION_NAME, functionNameAssert));

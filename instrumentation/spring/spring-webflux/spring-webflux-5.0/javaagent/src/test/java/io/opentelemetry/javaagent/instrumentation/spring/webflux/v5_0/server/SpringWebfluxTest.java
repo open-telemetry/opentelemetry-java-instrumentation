@@ -152,7 +152,7 @@ public class SpringWebfluxTest {
             ? INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX
             : TestController.class.getName();
 
-    return codeFunctionAssertions(expectedPrefix, expectedFunctionName);
+    return codeFunctionPrefixAssertions(expectedPrefix, expectedFunctionName);
   }
 
   private static Stream<Arguments> provideParameters() {
@@ -428,7 +428,7 @@ public class SpringWebfluxTest {
                         .hasEventsSatisfyingExactly(SpringWebfluxTest::resource404Exception)
                         .hasAttributesSatisfyingExactly(
                             codeFunctionAssertions(
-                                "org.springframework.web.reactive.resource.ResourceWebHandler.handle",
+                                "org.springframework.web.reactive.resource.ResourceWebHandler",
                                 "handle"))));
   }
 
