@@ -3,19 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.testing.provider;
+package io.opentelemetry.javaagent.testing.provider;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-// todo should be inherited from testing-common - not sure why it is not
 public class TestBridgeSpanExporterComponentProvider implements ComponentProvider<SpanExporter> {
 
   private static final Logger logger =
-      LoggerFactory.getLogger(TestBridgeSpanExporterComponentProvider.class);
+      Logger.getLogger(TestBridgeSpanExporterComponentProvider.class.getName());
 
   private static SpanExporter spanExporter;
 
@@ -35,9 +34,7 @@ public class TestBridgeSpanExporterComponentProvider implements ComponentProvide
   }
 
   public static void setSpanExporter(SpanExporter spanExporter) {
-    logger.info(
-        "Setting TestSpanExporterComponentProvider span exporter to {}",
-        spanExporter.getClass().getName());
+    logger.log(Level.INFO, "Setting span exporter to {0}", spanExporter.getClass().getName());
     TestBridgeSpanExporterComponentProvider.spanExporter = spanExporter;
   }
 }

@@ -3,19 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.testing.provider;
+package io.opentelemetry.javaagent.testing.provider;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class TestBridgeMetricExporterComponentProvider
     implements ComponentProvider<MetricExporter> {
 
   private static final Logger logger =
-      LoggerFactory.getLogger(TestBridgeMetricExporterComponentProvider.class);
+      Logger.getLogger(TestBridgeMetricExporterComponentProvider.class.getName());
 
   private static MetricExporter metricExporter;
 
@@ -35,9 +35,8 @@ public class TestBridgeMetricExporterComponentProvider
   }
 
   public static void setMetricExporter(MetricExporter metricExporter) {
-    logger.info(
-        "Setting TestMetricExporterComponentProvider metric exporter to {}",
-        metricExporter.getClass().getName());
+    logger.log(
+        Level.INFO, "Setting logRecord exporter to {0}", metricExporter.getClass().getName());
     TestBridgeMetricExporterComponentProvider.metricExporter = metricExporter;
   }
 }

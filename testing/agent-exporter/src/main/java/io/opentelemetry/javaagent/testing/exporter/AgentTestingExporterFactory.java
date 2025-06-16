@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.testing.exporter;
 
-import io.opentelemetry.instrumentation.testing.provider.TestBridgeLogRecordExporterComponentProvider;
-import io.opentelemetry.instrumentation.testing.provider.TestBridgeMetricExporterComponentProvider;
-import io.opentelemetry.instrumentation.testing.provider.TestBridgeSpanExporterComponentProvider;
+import io.opentelemetry.javaagent.testing.provider.TestBridgeLogRecordExporterComponentProvider;
+import io.opentelemetry.javaagent.testing.provider.TestBridgeMetricExporterComponentProvider;
+import io.opentelemetry.javaagent.testing.provider.TestBridgeSpanExporterComponentProvider;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 

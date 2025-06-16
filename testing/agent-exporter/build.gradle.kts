@@ -15,8 +15,8 @@ dependencies {
   compileOnly(project(":javaagent-extension-api"))
   compileOnly(project(":javaagent-bootstrap"))
   compileOnly(project(":javaagent-tooling"))
-  implementation(project(":testing-common"))
 
   implementation("io.opentelemetry:opentelemetry-exporter-otlp-common")
+  compileOnly("io.opentelemetry:opentelemetry-api-incubator")
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
 }
