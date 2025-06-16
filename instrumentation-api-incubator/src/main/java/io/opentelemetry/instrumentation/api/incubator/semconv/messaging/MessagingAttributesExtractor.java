@@ -160,6 +160,9 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
         attributes, MESSAGING_DESTINATION_PARTITION_ID, getter.getDestinationPartitionId(request));
 
     internalSet(attributes, MESSAGING_MESSAGE_CONVERSATION_ID, getter.getConversationId(request));
+    internalSet(attributes, MESSAGING_MESSAGE_BODY_SIZE, getter.getMessageBodySize(request));
+    internalSet(
+        attributes, MESSAGING_MESSAGE_ENVELOPE_SIZE, getter.getMessageEnvelopeSize(request));
   }
 
   @Override
@@ -172,10 +175,6 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     internalSet(attributes, MESSAGING_MESSAGE_ID, getter.getMessageId(request, response));
     internalSet(
         attributes, MESSAGING_BATCH_MESSAGE_COUNT, getter.getBatchMessageCount(request, response));
-
-    internalSet(attributes, MESSAGING_MESSAGE_BODY_SIZE, getter.getMessageBodySize(request));
-    internalSet(
-        attributes, MESSAGING_MESSAGE_ENVELOPE_SIZE, getter.getMessageEnvelopeSize(request));
 
     for (String name : capturedHeaders) {
       List<String> values = getter.getMessageHeader(request, name);
