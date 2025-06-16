@@ -10,7 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.StringAssertConsumer;
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.semconv.CodeAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.util.ArrayList;
@@ -78,8 +78,11 @@ public class SemconvCodeStabilityUtil {
   @SuppressWarnings("deprecation") // testing deprecated code semconv
   private static List<AttributeAssertion> internalFunctionAssert(
       String methodName,
-      StringAssertConsumer functionNameAssert,
-      StringAssertConsumer namespaceAssert) {
+      //CHECKSTYLE:OFF
+      OpenTelemetryAssertions.StringAssertConsumer functionNameAssert,
+      OpenTelemetryAssertions.StringAssertConsumer namespaceAssert
+      //CHECKSTYLE:ON
+  ) {
     List<AttributeAssertion> assertions = new ArrayList<>();
     if (SemconvStability.isEmitStableCodeSemconv()) {
       assertions.add(satisfies(CodeAttributes.CODE_FUNCTION_NAME, functionNameAssert));
