@@ -8,9 +8,9 @@ package io.opentelemetry.instrumentation.testing.junit.code;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.StringAssertConsumer;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.StringAssertConsumer;
 import io.opentelemetry.semconv.CodeAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.util.ArrayList;
