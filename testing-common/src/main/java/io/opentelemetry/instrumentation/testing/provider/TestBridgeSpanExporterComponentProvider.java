@@ -8,13 +8,8 @@ package io.opentelemetry.instrumentation.testing.provider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class TestBridgeSpanExporterComponentProvider implements ComponentProvider<SpanExporter> {
-
-  private static final Logger logger =
-      LoggerFactory.getLogger(TestBridgeSpanExporterComponentProvider.class);
 
   private static SpanExporter spanExporter;
 
@@ -34,9 +29,6 @@ public class TestBridgeSpanExporterComponentProvider implements ComponentProvide
   }
 
   public static void setSpanExporter(SpanExporter spanExporter) {
-    logger.info(
-        "Setting TestSpanExporterComponentProvider span exporter to {}",
-        spanExporter.getClass().getName());
     TestBridgeSpanExporterComponentProvider.spanExporter = spanExporter;
   }
 }
