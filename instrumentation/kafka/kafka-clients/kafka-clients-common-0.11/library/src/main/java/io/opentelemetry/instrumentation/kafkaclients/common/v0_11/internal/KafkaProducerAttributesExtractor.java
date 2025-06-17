@@ -40,9 +40,7 @@ final class KafkaProducerAttributesExtractor
     }
 
     String bootstrapServers = request.getBootstrapServers();
-    if (bootstrapServers != null) {
-      attributes.put(MESSAGING_KAFKA_BOOTSTRAP_SERVERS, bootstrapServers);
-    }
+    attributes.put(MESSAGING_KAFKA_BOOTSTRAP_SERVERS, bootstrapServers);
   }
 
   private static boolean canSerialize(Class<?> keyClass) {
