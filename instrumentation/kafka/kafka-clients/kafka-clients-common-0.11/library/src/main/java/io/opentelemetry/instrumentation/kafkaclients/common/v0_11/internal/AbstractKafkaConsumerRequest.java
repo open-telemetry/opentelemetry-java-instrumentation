@@ -5,18 +5,21 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import java.util.List;
 import javax.annotation.Nullable;
 
-abstract class AbstractKafkaConsumerRequest {
+abstract class AbstractKafkaConsumerRequest extends AbstractKafkaRequest {
 
   @Nullable private final String consumerGroup;
   @Nullable private final String clientId;
-  @Nullable private final String bootstrapServers;
 
-  AbstractKafkaConsumerRequest(String consumerGroup, String clientId, String bootstrapServers) {
+  protected AbstractKafkaConsumerRequest(
+      @Nullable String consumerGroup,
+      @Nullable String clientId,
+      @Nullable List<String> bootstrapServers) {
+    super(bootstrapServers);
     this.consumerGroup = consumerGroup;
     this.clientId = clientId;
-    this.bootstrapServers = bootstrapServers;
   }
 
   @Nullable
@@ -27,11 +30,6 @@ abstract class AbstractKafkaConsumerRequest {
   @Nullable
   public String getClientId() {
     return clientId;
-  }
-
-  @Nullable
-  public String getBootstrapServers() {
-    return bootstrapServers;
   }
 
   @Nullable

@@ -71,8 +71,8 @@ public abstract class AbstractReactorKafkaTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
-  protected static final AttributeKey<String> MESSAGING_KAFKA_BOOTSTRAP_SERVERS =
-      AttributeKey.stringKey("messaging.kafka.bootstrap.servers");
+  protected static final AttributeKey<List<String>> MESSAGING_KAFKA_BOOTSTRAP_SERVERS =
+      AttributeKey.stringArrayKey("messaging.kafka.bootstrap.servers");
 
   static KafkaContainer kafka;
   protected static KafkaSender<String, String> sender;
@@ -195,7 +195,6 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(MESSAGING_OPERATION, "publish"),
-                satisfies(MESSAGING_KAFKA_BOOTSTRAP_SERVERS, AbstractStringAssert::isNotEmpty),
                 satisfies(
                     AttributeKey.stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("producer")),
@@ -204,6 +203,17 @@ public abstract class AbstractReactorKafkaTest {
     String messageKey = record.key();
     if (messageKey != null) {
       assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
+    }
+    if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
+      assertions.add(
+          satisfies(
+              MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+              listAssert ->
+                  listAssert
+                      .isNotEmpty()
+                      .allSatisfy(
+                          server ->
+                              org.assertj.core.api.Assertions.assertThat(server).isNotEmpty())));
     }
     return assertions;
   }
@@ -216,13 +226,23 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION, "receive"),
-                satisfies(MESSAGING_KAFKA_BOOTSTRAP_SERVERS, AbstractStringAssert::isNotEmpty),
                 satisfies(
                     AttributeKey.stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("consumer")),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
     if (Boolean.getBoolean("hasConsumerGroup")) {
       assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
+    }
+    if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
+      assertions.add(
+          satisfies(
+              MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+              listAssert ->
+                  listAssert
+                      .isNotEmpty()
+                      .allSatisfy(
+                          server ->
+                              org.assertj.core.api.Assertions.assertThat(server).isNotEmpty())));
     }
     return assertions;
   }
@@ -236,7 +256,6 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(MESSAGING_OPERATION, "process"),
-                satisfies(MESSAGING_KAFKA_BOOTSTRAP_SERVERS, AbstractStringAssert::isNotEmpty),
                 satisfies(
                     AttributeKey.stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("consumer")),
@@ -246,6 +265,15 @@ public abstract class AbstractReactorKafkaTest {
       assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
     }
     if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
+      assertions.add(
+          satisfies(
+              MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+              listAssert ->
+                  listAssert
+                      .isNotEmpty()
+                      .allSatisfy(
+                          server ->
+                              org.assertj.core.api.Assertions.assertThat(server).isNotEmpty())));
       assertions.add(
           satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));
     }

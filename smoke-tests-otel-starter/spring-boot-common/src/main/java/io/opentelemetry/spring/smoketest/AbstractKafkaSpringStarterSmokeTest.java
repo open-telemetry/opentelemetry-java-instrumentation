@@ -12,6 +12,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
+import java.util.List;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.assertj.core.api.AbstractLongAssert;
@@ -31,8 +32,8 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
   private static final AttributeKey<String> MESSAGING_CLIENT_ID =
       AttributeKey.stringKey("messaging.client_id");
 
-  protected static final AttributeKey<String> MESSAGING_KAFKA_BOOTSTRAP_SERVERS =
-      AttributeKey.stringKey("messaging.kafka.bootstrap.servers");
+  protected static final AttributeKey<List<String>> MESSAGING_KAFKA_BOOTSTRAP_SERVERS =
+      AttributeKey.stringArrayKey("messaging.kafka.bootstrap.servers");
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
@@ -70,7 +71,13 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
                             equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "publish"),
                             satisfies(
                                 MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
-                                AbstractStringAssert::isNotEmpty),
+                                listAssert ->
+                                    listAssert
+                                        .isNotEmpty()
+                                        .allSatisfy(
+                                            server ->
+                                                org.assertj.core.api.Assertions.assertThat(server)
+                                                    .isNotEmpty())),
                             satisfies(
                                 MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("producer")),
@@ -93,9 +100,6 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
                                 "testTopic"),
                             equalTo(MessagingIncubatingAttributes.MESSAGING_OPERATION, "process"),
                             satisfies(
-                                MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
-                                AbstractStringAssert::isNotEmpty),
-                            satisfies(
                                 MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE,
                                 AbstractLongAssert::isNotNegative),
                             satisfies(
@@ -109,6 +113,15 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
                             equalTo(
                                 MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP,
                                 "testListener"),
+                            satisfies(
+                                MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+                                listAssert ->
+                                    listAssert
+                                        .isNotEmpty()
+                                        .allSatisfy(
+                                            server ->
+                                                org.assertj.core.api.Assertions.assertThat(server)
+                                                    .isNotEmpty())),
                             satisfies(
                                 AttributeKey.longKey("kafka.record.queue_time_ms"),
                                 AbstractLongAssert::isNotNegative),

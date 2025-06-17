@@ -9,10 +9,15 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.producer.Producer;
@@ -35,10 +40,10 @@ public final class KafkaUtil {
   private static final MethodHandle GET_GROUP_METADATA;
   private static final MethodHandle GET_GROUP_ID;
 
-  private static final VirtualField<Consumer<?, ?>, String> consumerVirtualField =
-      VirtualField.find(Consumer.class, String.class);
-  private static final VirtualField<Producer<?, ?>, String> producerVirtualField =
-      VirtualField.find(Producer.class, String.class);
+  private static final VirtualField<Consumer<?, ?>, List<String>> consumerVirtualField =
+      VirtualField.find(Consumer.class, List.class);
+  private static final VirtualField<Producer<?, ?>, List<String>> producerVirtualField =
+      VirtualField.find(Producer.class, List.class);
 
   static {
     MethodHandle getGroupMetadata;
@@ -74,31 +79,68 @@ public final class KafkaUtil {
   }
 
   @Nullable
-  public static String getBootstrapServers(Consumer<?, ?> consumer) {
-    String bootstrapServers = consumerVirtualField.get(consumer);
+  public static List<String> getBootstrapServers(Consumer<?, ?> consumer) {
+    List<String> bootstrapServers = consumerVirtualField.get(consumer);
     // If bootstrap servers are not available from virtual field (library instrumentation),
     // try to extract them via reflection from Kafka client's metadata
     if (bootstrapServers == null) {
-      bootstrapServers = extractBootstrapServersViaReflection(consumer);
-      if (bootstrapServers != null) {
+      String bootstrapServersString = extractBootstrapServersViaReflection(consumer);
+      if (bootstrapServersString != null) {
+        bootstrapServers = parseBootstrapServers(bootstrapServersString);
         consumerVirtualField.set(consumer, bootstrapServers);
+      } else {
+        bootstrapServers = Collections.emptyList();
       }
     }
     return bootstrapServers;
   }
 
-  @Nullable
-  public static String getBootstrapServers(Producer<?, ?> producer) {
-    String bootstrapServers = producerVirtualField.get(producer);
+  public static List<String> getBootstrapServers(Producer<?, ?> producer) {
+    List<String> bootstrapServers = producerVirtualField.get(producer);
     // If bootstrap servers are not available from virtual field (library instrumentation),
     // try to extract them via reflection from Kafka client's metadata
     if (bootstrapServers == null) {
-      bootstrapServers = extractBootstrapServersViaReflection(producer);
-      if (bootstrapServers != null) {
+      String bootstrapServersString = extractBootstrapServersViaReflection(producer);
+      if (bootstrapServersString != null) {
+        bootstrapServers = parseBootstrapServers(bootstrapServersString);
         producerVirtualField.set(producer, bootstrapServers);
+      } else {
+        bootstrapServers = Collections.emptyList();
       }
     }
     return bootstrapServers;
+  }
+
+  @Nonnull
+  public static List<String> parseBootstrapServers(@Nullable Object bootstrapServersConfig) {
+    if (bootstrapServersConfig == null) {
+      return Collections.emptyList();
+    }
+
+    if (bootstrapServersConfig instanceof Collection) {
+      @SuppressWarnings("unchecked")
+      Collection<String> collection = (Collection<String>) bootstrapServersConfig;
+      return new ArrayList<>(collection);
+    }
+
+    if (bootstrapServersConfig instanceof String) {
+      String serversString = (String) bootstrapServersConfig;
+      return parseBootstrapServers(serversString);
+    }
+
+    return parseBootstrapServers(bootstrapServersConfig.toString());
+  }
+
+  @Nonnull
+  public static List<String> parseBootstrapServers(@Nullable String bootstrapServersString) {
+    if (bootstrapServersString == null || bootstrapServersString.trim().isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    return Arrays.stream(bootstrapServersString.split(","))
+        .map(String::trim)
+        .filter(server -> !server.isEmpty())
+        .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
   }
 
   /**

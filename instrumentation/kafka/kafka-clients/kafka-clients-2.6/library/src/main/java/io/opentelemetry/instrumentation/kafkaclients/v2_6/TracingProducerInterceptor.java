@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaUtil;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -24,7 +26,7 @@ public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, 
 
   private static final KafkaTelemetry telemetry = KafkaTelemetry.create(GlobalOpenTelemetry.get());
 
-  @Nullable private String bootstrapServers;
+  @Nullable private List<String> bootstrapServers;
 
   @Nullable private String clientId;
 
@@ -44,7 +46,8 @@ public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, 
   @Override
   public void configure(Map<String, ?> map) {
     clientId = Objects.toString(map.get(ProducerConfig.CLIENT_ID_CONFIG), null);
-    bootstrapServers = Objects.toString(map.get(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG), null);
+    bootstrapServers =
+        KafkaUtil.parseBootstrapServers(map.get(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG));
 
     // TODO: support experimental attributes config
   }

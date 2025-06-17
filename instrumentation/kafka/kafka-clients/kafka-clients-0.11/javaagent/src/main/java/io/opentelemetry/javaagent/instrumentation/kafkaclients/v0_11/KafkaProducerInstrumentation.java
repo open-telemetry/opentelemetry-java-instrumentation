@@ -14,12 +14,13 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProducerRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaPropagation;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaUtil;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import net.bytebuddy.asm.Advice;
@@ -41,11 +42,7 @@ public class KafkaProducerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArgument(0, Map.class)),
-        this.getClass().getName() + "$ConstructorAdvice");
-
-    transformer.applyAdviceToMethod(
-        isConstructor().and(takesArgument(0, Properties.class)),
+        isConstructor().and(takesArgument(0, Map.class).or(takesArgument(0, Properties.class))),
         this.getClass().getName() + "$ConstructorAdvice");
 
     transformer.applyAdviceToMethod(
@@ -64,23 +61,15 @@ public class KafkaProducerInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.This Producer<?, ?> producer, @Advice.Argument(0) Object configs) {
 
-      String bootstrapServers = null;
+      Object bootstrapServersConfig = null;
       if (configs instanceof Map) {
-        Object servers = ((Map<?, ?>) configs).get(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG);
-        if (servers != null) {
-          bootstrapServers = servers.toString();
-        }
-      } else if (configs instanceof Properties) {
-        bootstrapServers =
-            ((Properties) configs).getProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG);
+        bootstrapServersConfig = ((Map<?, ?>) configs).get(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG);
       }
 
-      if (bootstrapServers != null) {
-        VirtualField<Producer<?, ?>, String> producerStringVirtualField =
-            VirtualField.find(Producer.class, String.class);
-        if (producerStringVirtualField.get(producer) == null) {
-          producerStringVirtualField.set(producer, bootstrapServers);
-        }
+      if (bootstrapServersConfig != null
+          && KafkaSingletons.PRODUCER_BOOTSTRAP_SERVERS_VIRTUAL_FIELD.get(producer) == null) {
+        List<String> bootstrapServers = KafkaUtil.parseBootstrapServers(bootstrapServersConfig);
+        KafkaSingletons.PRODUCER_BOOTSTRAP_SERVERS_VIRTUAL_FIELD.set(producer, bootstrapServers);
       }
     }
   }
@@ -98,7 +87,8 @@ public class KafkaProducerInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
-      String bootstrapServers = VirtualField.find(Producer.class, String.class).get(producer);
+      List<String> bootstrapServers =
+          KafkaSingletons.PRODUCER_BOOTSTRAP_SERVERS_VIRTUAL_FIELD.get(producer);
       KafkaProducerRequest request =
           KafkaProducerRequest.create(record, clientId, bootstrapServers);
       Context parentContext = Java8BytecodeBridge.currentContext();

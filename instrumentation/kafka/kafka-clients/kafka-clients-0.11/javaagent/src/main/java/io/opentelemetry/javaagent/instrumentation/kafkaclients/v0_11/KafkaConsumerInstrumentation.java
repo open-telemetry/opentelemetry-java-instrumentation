@@ -17,13 +17,14 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaUtil;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import net.bytebuddy.asm.Advice;
@@ -44,11 +45,7 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArgument(0, Map.class)),
-        this.getClass().getName() + "$ConstructorAdvice");
-
-    transformer.applyAdviceToMethod(
-        isConstructor().and(takesArgument(0, Properties.class)),
+        isConstructor().and(takesArgument(0, Map.class).or(takesArgument(0, Properties.class))),
         this.getClass().getName() + "$ConstructorAdvice");
 
     transformer.applyAdviceToMethod(
@@ -67,23 +64,15 @@ public class KafkaConsumerInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.This Consumer<?, ?> consumer, @Advice.Argument(0) Object configs) {
 
-      String bootstrapServers = null;
+      Object bootstrapServersConfig = null;
       if (configs instanceof Map) {
-        Object servers = ((Map<?, ?>) configs).get(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG);
-        if (servers != null) {
-          bootstrapServers = servers.toString();
-        }
-      } else if (configs instanceof Properties) {
-        bootstrapServers =
-            ((Properties) configs).getProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG);
+        bootstrapServersConfig = ((Map<?, ?>) configs).get(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG);
       }
 
-      if (bootstrapServers != null) {
-        VirtualField<Consumer<?, ?>, String> consumerStringVirtualField =
-            VirtualField.find(Consumer.class, String.class);
-        if (consumerStringVirtualField.get(consumer) == null) {
-          consumerStringVirtualField.set(consumer, bootstrapServers);
-        }
+      if (bootstrapServersConfig != null
+          && KafkaSingletons.CONSUMER_BOOTSTRAP_SERVERS_VIRTUAL_FIELD.get(consumer) == null) {
+        List<String> bootstrapServers = KafkaUtil.parseBootstrapServers(bootstrapServersConfig);
+        KafkaSingletons.CONSUMER_BOOTSTRAP_SERVERS_VIRTUAL_FIELD.set(consumer, bootstrapServers);
       }
     }
   }

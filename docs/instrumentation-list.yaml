@@ -1428,7 +1428,7 @@ libraries:
       type: boolean
       default: true
     - name: otel.instrumentation.kafka.experimental-span-attributes
-      description: Enables the capture of the experimental consumer attribute "kafka.record.queue_time_ms"
+      description: Enables the capture of the experimental consumer attributes "kafka.record.queue_time_ms" and "messaging.kafka.bootstrap.servers"
       type: boolean
       default: false
   kotlinx:

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import java.util.List;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
@@ -28,18 +29,24 @@ public class KafkaProcessRequest extends AbstractKafkaConsumerRequest {
       KafkaConsumerContext consumerContext, ConsumerRecord<?, ?> record) {
     String consumerGroup = consumerContext != null ? consumerContext.getConsumerGroup() : null;
     String clientId = consumerContext != null ? consumerContext.getClientId() : null;
-    String bootstrapServers =
+    List<String> bootstrapServers =
         consumerContext != null ? consumerContext.getBootstrapServers() : null;
     return create(record, consumerGroup, clientId, bootstrapServers);
   }
 
   public static KafkaProcessRequest create(
-      ConsumerRecord<?, ?> record, String consumerGroup, String clientId, String bootstrapServers) {
+      ConsumerRecord<?, ?> record,
+      String consumerGroup,
+      String clientId,
+      List<String> bootstrapServers) {
     return new KafkaProcessRequest(record, consumerGroup, clientId, bootstrapServers);
   }
 
   public KafkaProcessRequest(
-      ConsumerRecord<?, ?> record, String consumerGroup, String clientId, String bootstrapServers) {
+      ConsumerRecord<?, ?> record,
+      String consumerGroup,
+      String clientId,
+      List<String> bootstrapServers) {
     super(consumerGroup, clientId, bootstrapServers);
     this.record = record;
   }

@@ -24,8 +24,6 @@ final class KafkaProducerAttributesExtractor
       AttributeKey.longKey("messaging.kafka.message.offset");
   private static final AttributeKey<Boolean> MESSAGING_KAFKA_MESSAGE_TOMBSTONE =
       AttributeKey.booleanKey("messaging.kafka.message.tombstone");
-  private static final AttributeKey<String> MESSAGING_KAFKA_BOOTSTRAP_SERVERS =
-      AttributeKey.stringKey("messaging.kafka.bootstrap.servers");
 
   @Override
   public void onStart(
@@ -38,9 +36,6 @@ final class KafkaProducerAttributesExtractor
     if (request.getRecord().value() == null) {
       attributes.put(MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true);
     }
-
-    String bootstrapServers = request.getBootstrapServers();
-    attributes.put(MESSAGING_KAFKA_BOOTSTRAP_SERVERS, bootstrapServers);
   }
 
   private static boolean canSerialize(Class<?> keyClass) {

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -30,7 +31,7 @@ public class KafkaReceiveRequest extends AbstractKafkaConsumerRequest {
       KafkaConsumerContext consumerContext, ConsumerRecords<?, ?> records) {
     String consumerGroup = consumerContext != null ? consumerContext.getConsumerGroup() : null;
     String clientId = consumerContext != null ? consumerContext.getClientId() : null;
-    String bootstrapServers =
+    List<String> bootstrapServers =
         consumerContext != null ? consumerContext.getBootstrapServers() : null;
     return create(records, consumerGroup, clientId, bootstrapServers);
   }
@@ -39,7 +40,7 @@ public class KafkaReceiveRequest extends AbstractKafkaConsumerRequest {
       ConsumerRecords<?, ?> records,
       String consumerGroup,
       String clientId,
-      String bootstrapServers) {
+      List<String> bootstrapServers) {
     return new KafkaReceiveRequest(records, consumerGroup, clientId, bootstrapServers);
   }
 
@@ -47,7 +48,7 @@ public class KafkaReceiveRequest extends AbstractKafkaConsumerRequest {
       ConsumerRecords<?, ?> records,
       String consumerGroup,
       String clientId,
-      String bootstrapServers) {
+      List<String> bootstrapServers) {
     super(consumerGroup, clientId, bootstrapServers);
     this.records = records;
   }

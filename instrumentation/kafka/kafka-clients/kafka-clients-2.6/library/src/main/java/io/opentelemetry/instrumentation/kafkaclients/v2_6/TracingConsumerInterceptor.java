@@ -12,6 +12,8 @@ import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaUtil;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -34,7 +36,7 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
                   "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false))
           .build();
 
-  private String bootstrapServers;
+  private List<String> bootstrapServers;
   private String consumerGroup;
   private String clientId;
 
@@ -61,7 +63,8 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
 
   @Override
   public void configure(Map<String, ?> configs) {
-    bootstrapServers = Objects.toString(configs.get(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG), null);
+    bootstrapServers =
+        KafkaUtil.parseBootstrapServers(configs.get(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG));
     consumerGroup = Objects.toString(configs.get(ConsumerConfig.GROUP_ID_CONFIG), null);
     clientId = Objects.toString(configs.get(ConsumerConfig.CLIENT_ID_CONFIG), null);
 

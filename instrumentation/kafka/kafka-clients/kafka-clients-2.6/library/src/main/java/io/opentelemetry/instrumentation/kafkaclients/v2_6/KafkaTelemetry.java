@@ -213,7 +213,7 @@ public final class KafkaTelemetry {
    * @param record the producer record to inject span info.
    */
   <K, V> void buildAndInjectSpan(
-      ProducerRecord<K, V> record, String clientId, String bootstrapServers) {
+      ProducerRecord<K, V> record, String clientId, List<String> bootstrapServers) {
     Context parentContext = Context.current();
 
     KafkaProducerRequest request = KafkaProducerRequest.create(record, clientId, bootstrapServers);
@@ -274,7 +274,7 @@ public final class KafkaTelemetry {
       ConsumerRecords<K, V> records,
       String consumerGroup,
       String clientId,
-      String bootstrapServers,
+      List<String> bootstrapServers,
       Timer timer) {
     if (records.isEmpty()) {
       return null;

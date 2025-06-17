@@ -10,13 +10,12 @@ import static io.opentelemetry.api.common.AttributeKey.longKey;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.record.TimestampType;
 
 final class KafkaConsumerExperimentalAttributesExtractor
-    implements AttributesExtractor<KafkaProcessRequest, Void> {
+    extends KafkaExperimentalAttributesExtractor<KafkaProcessRequest, Void> {
 
   private static final AttributeKey<Long> KAFKA_RECORD_QUEUE_TIME_MS =
       longKey("kafka.record.queue_time_ms");
@@ -24,6 +23,8 @@ final class KafkaConsumerExperimentalAttributesExtractor
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, KafkaProcessRequest request) {
+
+    super.onStart(attributes, parentContext, request);
 
     ConsumerRecord<?, ?> record = request.getRecord();
     // don't record a duration if the message was sent from an old Kafka client

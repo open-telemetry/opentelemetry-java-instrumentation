@@ -17,8 +17,6 @@ enum KafkaReceiveAttributesExtractor implements AttributesExtractor<KafkaReceive
   // copied from MessagingIncubatingAttributes
   private static final AttributeKey<String> MESSAGING_KAFKA_CONSUMER_GROUP =
       AttributeKey.stringKey("messaging.kafka.consumer.group");
-  private static final AttributeKey<String> MESSAGING_KAFKA_BOOTSTRAP_SERVERS =
-      AttributeKey.stringKey("messaging.kafka.bootstrap.servers");
 
   @Override
   public void onStart(
@@ -27,11 +25,6 @@ enum KafkaReceiveAttributesExtractor implements AttributesExtractor<KafkaReceive
     String consumerGroup = request.getConsumerGroup();
     if (consumerGroup != null) {
       attributes.put(MESSAGING_KAFKA_CONSUMER_GROUP, consumerGroup);
-    }
-
-    String bootstrapServers = request.getBootstrapServers();
-    if (bootstrapServers != null) {
-      attributes.put(MESSAGING_KAFKA_BOOTSTRAP_SERVERS, bootstrapServers);
     }
   }
 

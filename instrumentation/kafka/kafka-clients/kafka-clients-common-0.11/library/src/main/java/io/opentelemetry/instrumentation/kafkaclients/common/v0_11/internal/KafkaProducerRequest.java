@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.Producer;
@@ -17,11 +18,10 @@ import org.apache.kafka.common.MetricName;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class KafkaProducerRequest {
+public final class KafkaProducerRequest extends AbstractKafkaRequest {
 
   private final ProducerRecord<?, ?> record;
   @Nullable private final String clientId;
-  @Nullable private final String bootstrapServers;
 
   public static KafkaProducerRequest create(ProducerRecord<?, ?> record, Producer<?, ?> producer) {
     return new KafkaProducerRequest(
@@ -29,15 +29,15 @@ public final class KafkaProducerRequest {
   }
 
   public static KafkaProducerRequest create(
-      ProducerRecord<?, ?> record, String clientId, String bootstrapServers) {
+      ProducerRecord<?, ?> record, String clientId, List<String> bootstrapServers) {
     return new KafkaProducerRequest(record, clientId, bootstrapServers);
   }
 
   private KafkaProducerRequest(
-      ProducerRecord<?, ?> record, String clientId, String bootstrapServers) {
+      ProducerRecord<?, ?> record, String clientId, List<String> bootstrapServers) {
+    super(bootstrapServers);
     this.record = record;
     this.clientId = clientId;
-    this.bootstrapServers = bootstrapServers;
   }
 
   public ProducerRecord<?, ?> getRecord() {
@@ -46,11 +46,6 @@ public final class KafkaProducerRequest {
 
   public String getClientId() {
     return clientId;
-  }
-
-  @Nullable
-  public String getBootstrapServers() {
-    return bootstrapServers;
   }
 
   private static String extractClientId(Producer<?, ?> producer) {
@@ -64,7 +59,7 @@ public final class KafkaProducerRequest {
     }
   }
 
-  private static String extractBootstrapServers(Producer<?, ?> producer) {
+  private static List<String> extractBootstrapServers(Producer<?, ?> producer) {
     return KafkaUtil.getBootstrapServers(producer);
   }
 }

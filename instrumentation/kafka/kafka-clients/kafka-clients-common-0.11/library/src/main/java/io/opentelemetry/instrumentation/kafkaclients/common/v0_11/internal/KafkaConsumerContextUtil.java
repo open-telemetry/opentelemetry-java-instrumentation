@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import java.util.List;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -31,12 +32,12 @@ public final class KafkaConsumerContextUtil {
     Context receiveContext = recordContextField.get(records);
     String consumerGroup = null;
     String clientId = null;
-    String bootstrapServers = null;
+    List<String> bootstrapServers = null;
     String[] consumerInfo = recordConsumerInfoField.get(records);
     if (consumerInfo != null) {
       consumerGroup = consumerInfo[0];
       clientId = consumerInfo[1];
-      bootstrapServers = consumerInfo[2];
+      bootstrapServers = KafkaUtil.parseBootstrapServers(consumerInfo[2]);
     }
     return create(receiveContext, consumerGroup, clientId, bootstrapServers);
   }
@@ -45,12 +46,12 @@ public final class KafkaConsumerContextUtil {
     Context receiveContext = recordsContextField.get(records);
     String consumerGroup = null;
     String clientId = null;
-    String bootstrapServers = null;
+    List<String> bootstrapServers = null;
     String[] consumerInfo = recordsConsumerInfoField.get(records);
     if (consumerInfo != null) {
       consumerGroup = consumerInfo[0];
       clientId = consumerInfo[1];
-      bootstrapServers = consumerInfo[2];
+      bootstrapServers = KafkaUtil.parseBootstrapServers(consumerInfo[2]);
     }
     return create(receiveContext, consumerGroup, clientId, bootstrapServers);
   }
@@ -64,13 +65,13 @@ public final class KafkaConsumerContextUtil {
   }
 
   public static KafkaConsumerContext create(
-      Context context, String consumerGroup, String clientId, String bootstrapServers) {
+      Context context, String consumerGroup, String clientId, List<String> bootstrapServers) {
     return KafkaConsumerContext.create(context, consumerGroup, clientId, bootstrapServers);
   }
 
   public static void set(ConsumerRecord<?, ?> record, Context context, Consumer<?, ?> consumer) {
     recordContextField.set(record, context);
-    String bootstrapServers = KafkaUtil.getBootstrapServers(consumer);
+    List<String> bootstrapServers = KafkaUtil.getBootstrapServers(consumer);
     String consumerGroup = KafkaUtil.getConsumerGroup(consumer);
     String clientId = KafkaUtil.getClientId(consumer);
     set(record, context, consumerGroup, clientId, bootstrapServers);
@@ -90,13 +91,16 @@ public final class KafkaConsumerContextUtil {
       Context context,
       String consumerGroup,
       String clientId,
-      String bootstrapServers) {
+      List<String> bootstrapServers) {
     recordContextField.set(record, context);
-    recordConsumerInfoField.set(record, new String[] {consumerGroup, clientId, bootstrapServers});
+    String bootstrapServersString =
+        bootstrapServers != null ? String.join(",", bootstrapServers) : null;
+    recordConsumerInfoField.set(
+        record, new String[] {consumerGroup, clientId, bootstrapServersString});
   }
 
   public static void set(ConsumerRecords<?, ?> records, Context context, Consumer<?, ?> consumer) {
-    String bootstrapServers = KafkaUtil.getBootstrapServers(consumer);
+    List<String> bootstrapServers = KafkaUtil.getBootstrapServers(consumer);
     String consumerGroup = KafkaUtil.getConsumerGroup(consumer);
     String clientId = KafkaUtil.getClientId(consumer);
     set(records, context, consumerGroup, clientId, bootstrapServers);
@@ -107,9 +111,12 @@ public final class KafkaConsumerContextUtil {
       Context context,
       String consumerGroup,
       String clientId,
-      String bootstrapServers) {
+      List<String> bootstrapServers) {
     recordsContextField.set(records, context);
-    recordsConsumerInfoField.set(records, new String[] {consumerGroup, clientId, bootstrapServers});
+    String bootstrapServersString =
+        bootstrapServers != null ? String.join(",", bootstrapServers) : null;
+    recordsConsumerInfoField.set(
+        records, new String[] {consumerGroup, clientId, bootstrapServersString});
   }
 
   public static void copy(ConsumerRecord<?, ?> from, ConsumerRecord<?, ?> to) {
