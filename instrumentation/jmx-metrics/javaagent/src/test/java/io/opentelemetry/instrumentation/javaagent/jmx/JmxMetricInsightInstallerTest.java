@@ -36,7 +36,6 @@ class JmxMetricInsightInstallerTest {
               "activemq.yaml",
               "camel.yaml",
               "hadoop.yaml",
-              "jetty.yaml",
               "kafka-broker.yaml",
               "wildfly.yaml"));
 
