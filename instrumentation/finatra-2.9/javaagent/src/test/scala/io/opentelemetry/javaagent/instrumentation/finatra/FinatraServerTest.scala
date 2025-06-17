@@ -7,9 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.finatra
 
 import com.twitter.finatra.http.HttpServer
 import io.opentelemetry.api.trace.SpanKind
-import io.opentelemetry.instrumentation.api.internal.SemconvStability
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
-import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil
 import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionPrefixAssertions
 import io.opentelemetry.instrumentation.testing.junit.http.{
   AbstractHttpServerTest,
@@ -17,19 +15,10 @@ import io.opentelemetry.instrumentation.testing.junit.http.{
   HttpServerTestOptions,
   ServerEndpoint
 }
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.{
-  StringAssertConsumer,
-  equalTo,
-  satisfies
-}
-import io.opentelemetry.sdk.testing.assertj.{AttributeAssertion, SpanDataAssert}
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert
 import io.opentelemetry.sdk.trace.data.StatusData
-import io.opentelemetry.semconv.CodeAttributes
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
-import org.assertj.core.api.AbstractStringAssert
 import org.junit.jupiter.api.extension.RegisterExtension
 
-import java.util
 import java.util.concurrent.Executors
 import java.util.function.Predicate
 import scala.concurrent.{ExecutionContext, Future}
