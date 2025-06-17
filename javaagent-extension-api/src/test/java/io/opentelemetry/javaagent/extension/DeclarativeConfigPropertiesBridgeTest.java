@@ -140,7 +140,7 @@ class DeclarativeConfigPropertiesBridgeTest {
     // as for otel.instrumentation.*)
     assertThat(bridge.getBoolean("acme.full_name.preserved")).isTrue();
     // Example of property name collision:
-    assertThat(bridge.getString("acme.full_name.preserved"))
-        .isEqualTo(bridge.getString("otel.instrumentation.acme.full_name.preserved"));
+    assertThat(bridge.getBoolean("acme.full_name.preserved"))
+        .isEqualTo(bridge.getBoolean("otel.instrumentation.acme.full_name.preserved"));
   }
 }
