@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.ServiceLoader;
 import java.util.function.Function;
 
@@ -16,26 +14,16 @@ import java.util.function.Function;
  */
 public final class ServiceLoaderUtil {
 
-  private static Function<Class<?>, List<?>> loaderFunction =
-      clazz -> {
-        List<Object> instances = new ArrayList<>();
-        ServiceLoader<?> serviceLoader = ServiceLoader.load(clazz);
-        for (Object instance : serviceLoader) {
-          instances.add(instance);
-        }
-        return instances;
-      };
+  private static Function<Class<?>, Iterable<?>> loadFunction = ServiceLoader::load;
 
-  private ServiceLoaderUtil() {
-    // Utility class, no instantiation
-  }
+  private ServiceLoaderUtil() {}
 
   @SuppressWarnings("unchecked")
-  public static <T> List<T> load(Class<T> clazz) {
-    return (List<T>) loaderFunction.apply(clazz);
+  public static <T> Iterable<T> load(Class<T> clazz) {
+    return (Iterable<T>) loadFunction.apply(clazz);
   }
 
-  public static void setLoaderFunction(Function<Class<?>, List<?>> customLoaderFunction) {
-    loaderFunction = customLoaderFunction;
+  public static void setLoadFunction(Function<Class<?>, Iterable<?>> customLoadFunction) {
+    loadFunction = customLoadFunction;
   }
 }

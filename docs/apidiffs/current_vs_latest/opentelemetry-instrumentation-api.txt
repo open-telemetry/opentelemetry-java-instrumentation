@@ -1,5 +1,2 @@
 Comparing source compatibility of opentelemetry-instrumentation-api-2.17.0-SNAPSHOT.jar against opentelemetry-instrumentation-api-2.16.0.jar
-***  MODIFIED CLASS: PUBLIC FINAL io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder  (not serializable)
-	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
-	GENERIC TEMPLATES: === REQUEST:java.lang.Object, === RESPONSE:java.lang.Object
-	***  MODIFIED FIELD: PUBLIC (<- PACKAGE_PROTECTED) NON_FINAL (<- FINAL) io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor<? super REQUEST><? super REQUEST> spanNameExtractor
+No changes.

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.internal;
+package io.opentelemetry.instrumentation.api.incubator.instrumenter;
 
 /**
  * A service provider interface (SPI) for customizing instrumentation behavior.
@@ -12,14 +12,6 @@ package io.opentelemetry.instrumentation.api.internal;
  * at any time.
  */
 public interface InstrumenterCustomizerProvider {
-
-  /**
-   * Returns a predicate that matches the instrumentation name for which this provider is
-   * applicable.
-   *
-   * @return a predicate that matches the instrumentation name for which this provider is applicable
-   */
-  String getInstrumentationName();
 
   /**
    * Customizes the given instrumenter.
