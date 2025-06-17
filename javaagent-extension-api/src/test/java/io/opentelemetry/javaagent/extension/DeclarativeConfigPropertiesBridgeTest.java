@@ -45,10 +45,9 @@ class DeclarativeConfigPropertiesBridgeTest {
           + "        string_key1: value1\n"
           + "        string_key2: value2\n"
           + "        bool_key: true\n"
-          + "    vendor:\n"
-          + "      acme:\n"
-          + "        full_name:\n"
-          + "          preserved: true";
+          + "    acme:\n"
+          + "      full_name:\n"
+          + "        preserved: true";
 
   private ConfigProperties bridge;
   private ConfigProperties emptyBridge;
@@ -140,5 +139,8 @@ class DeclarativeConfigPropertiesBridgeTest {
     // verify vendor specific property names are preserved in unchanged form (prefix is not stripped
     // as for otel.instrumentation.*)
     assertThat(bridge.getBoolean("acme.full_name.preserved")).isTrue();
+    // Example of property name collision:
+    assertThat(bridge.getString("acme.full_name.preserved"))
+        .isEqualTo(bridge.getString("otel.instrumentation.acme.full_name.preserved"));
   }
 }
