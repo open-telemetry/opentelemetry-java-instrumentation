@@ -21,14 +21,14 @@ public final class JmsReceiveSpanUtil {
   private static final boolean receiveInstrumentationEnabled =
       ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
 
-  public static Context createReceiveSpan(
+  public static void createReceiveSpan(
       Instrumenter<MessageWithDestination, Void> receiveInstrumenter,
       MessageWithDestination request,
       Timer timer,
       Throwable throwable) {
     Context parentContext = Context.current();
     // if receive instrumentation is not enabled we'll use the producer as parent
-    // according to the stable conventions the production should only be linked not as parent
+    // according to the stable convertions the production should only be linked not as parent
     if (!receiveInstrumentationEnabled && !emitStableMessagingSemconv()) {
       parentContext =
           propagators
@@ -47,9 +47,7 @@ public final class JmsReceiveSpanUtil {
               timer.startTime(),
               timer.now());
       JmsReceiveContextHolder.set(receiveContext);
-      return receiveContext;
     }
-    return null;
   }
 
   private JmsReceiveSpanUtil() {}

@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.jms.JmsReceiveSpanUtil.createReceiveSpan;
-import static io.opentelemetry.javaagent.instrumentation.jms.v3_0.JmsSingletons.consumerProcessInstrumenter;
 import static io.opentelemetry.javaagent.instrumentation.jms.v3_0.JmsSingletons.consumerReceiveInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -16,17 +15,12 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.internal.Timer;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jms.JmsConfig;
-import io.opentelemetry.javaagent.instrumentation.jms.MessageState;
 import io.opentelemetry.javaagent.instrumentation.jms.MessageWithDestination;
 import jakarta.jms.Message;
-import jakarta.jms.MessageConsumer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -63,24 +57,12 @@ public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
   public static class ConsumerAdvice {
 
     @Advice.OnMethodEnter
-    public static Timer onEnter(@Advice.This MessageConsumer consumer) {
-      if (JmsConfig.EXPERIMENTAL_CONSUMER_PROCESS_TELEMETRY_ENABLED) {
-        VirtualField<MessageConsumer, MessageState> storage =
-            VirtualField.find(MessageConsumer.class, MessageState.class);
-        MessageState messageState = storage.get(consumer);
-        if (messageState != null) {
-          messageState.processScope.close();
-          consumerProcessInstrumenter().end(messageState.context, messageState.message, null, null);
-          storage.set(consumer, null);
-        }
-      }
-
+    public static Timer onEnter() {
       return Timer.start();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.This MessageConsumer consumer,
         @Advice.Enter Timer timer,
         @Advice.Return Message message,
         @Advice.Thrown Throwable throwable) {
@@ -93,17 +75,7 @@ public class JmsMessageConsumerInstrumentation implements TypeInstrumentation {
       MessageWithDestination request =
           MessageWithDestination.create(JakartaMessageAdapter.create(message), null);
 
-      Context receiveContext =
-          createReceiveSpan(consumerReceiveInstrumenter(), request, timer, throwable);
-      if (JmsConfig.EXPERIMENTAL_CONSUMER_PROCESS_TELEMETRY_ENABLED && receiveContext != null) {
-        if (consumerProcessInstrumenter().shouldStart(receiveContext, request)) {
-          Context processContext = consumerProcessInstrumenter().start(receiveContext, request);
-          Scope processScope = processContext.makeCurrent();
-          VirtualField<MessageConsumer, MessageState> storage =
-              VirtualField.find(MessageConsumer.class, MessageState.class);
-          storage.set(consumer, new MessageState(processContext, processScope, request));
-        }
-      }
+      createReceiveSpan(consumerReceiveInstrumenter(), request, timer, throwable);
     }
   }
 }
