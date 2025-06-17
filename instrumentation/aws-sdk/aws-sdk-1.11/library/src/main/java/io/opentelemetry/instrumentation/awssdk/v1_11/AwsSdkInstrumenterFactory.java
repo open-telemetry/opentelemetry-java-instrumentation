@@ -179,7 +179,7 @@ final class AwsSdkInstrumenterFactory {
   Instrumenter<Request<?>, Response<?>> producerInstrumenter() {
     MessageOperation operation =
         emitStableMessagingSemconv() ? MessageOperation.SEND : MessageOperation.PUBLISH;
-    ;
+
     SqsAttributesGetter getter = SqsAttributesGetter.INSTANCE;
     AttributesExtractor<Request<?>, Response<?>> messagingAttributeExtractor =
         messagingAttributesExtractor(getter, operation);
