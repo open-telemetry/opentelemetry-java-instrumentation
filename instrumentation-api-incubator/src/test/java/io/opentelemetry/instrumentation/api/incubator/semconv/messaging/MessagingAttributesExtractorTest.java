@@ -104,6 +104,8 @@ class MessagingAttributesExtractorTest {
 
     expectedEntries.add(
         entry(MessagingIncubatingAttributes.MESSAGING_MESSAGE_CONVERSATION_ID, "42"));
+    expectedEntries.add(entry(MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE, 100L));
+    expectedEntries.add(entry(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ENVELOPE_SIZE, 120L));
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     MapEntry<? extends AttributeKey<?>, ?>[] expectedEntriesArr =
@@ -113,9 +115,7 @@ class MessagingAttributesExtractorTest {
     assertThat(endAttributes.build())
         .containsOnly(
             entry(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, "42"),
-            entry(MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 2L),
-            entry(MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE, 100L),
-            entry(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ENVELOPE_SIZE, 120L));
+            entry(MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 2L));
   }
 
   static Stream<Arguments> destinations() {
