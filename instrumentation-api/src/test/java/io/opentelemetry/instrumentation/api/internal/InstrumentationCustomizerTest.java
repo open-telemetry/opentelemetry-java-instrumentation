@@ -78,7 +78,7 @@ class InstrumentationCustomizerTest {
   private List<InternalInstrumenterCustomizerProvider> originalCustomizerProviders;
 
   @BeforeEach
-  void setUp() {
+  void beforeEach() {
     originalCustomizerProviders =
         InternalInstrumenterCustomizerUtil.getInstrumenterCustomizerProviders();
   }

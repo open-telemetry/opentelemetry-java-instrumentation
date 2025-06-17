@@ -14,7 +14,7 @@ import java.util.function.Function;
  */
 public final class ServiceLoaderUtil {
 
-  private static Function<Class<?>, Iterable<?>> loadFunction = ServiceLoader::load;
+  private static volatile Function<Class<?>, Iterable<?>> loadFunction = ServiceLoader::load;
 
   private ServiceLoaderUtil() {}
 
