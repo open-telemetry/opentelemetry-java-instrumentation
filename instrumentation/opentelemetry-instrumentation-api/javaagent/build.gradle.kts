@@ -80,5 +80,4 @@ tasks {
     dependsOn(testStableSemconv)
     dependsOn(testBothSemconv)
   }
-
 }
