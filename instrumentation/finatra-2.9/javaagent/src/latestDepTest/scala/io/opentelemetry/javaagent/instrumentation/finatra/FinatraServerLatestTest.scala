@@ -57,7 +57,6 @@ class FinatraServerLatestTest extends AbstractHttpServerTest[HttpServer] {
     options.setResponseCodeOnNonStandardHttpMethod(400)
   }
 
-  @SuppressWarnings("deprecation") // testing deprecated code semconv
   override protected def assertHandlerSpan(
       span: SpanDataAssert,
       method: String,
