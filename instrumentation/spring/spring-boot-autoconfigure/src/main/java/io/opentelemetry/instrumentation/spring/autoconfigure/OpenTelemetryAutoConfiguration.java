@@ -26,6 +26,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -44,6 +45,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 
 /**
@@ -147,9 +149,8 @@ public class OpenTelemetryAutoConfiguration {
 
     @Bean
     public OpenTelemetryConfigurationModel openTelemetryConfigurationModel(
-        Environment environment) {
-      // todo declarative configuration
-      return null;
+        ConfigurableEnvironment environment) throws IOException {
+      return EmbeddedConfigFile.extractModel(environment);
     }
 
     @Bean
