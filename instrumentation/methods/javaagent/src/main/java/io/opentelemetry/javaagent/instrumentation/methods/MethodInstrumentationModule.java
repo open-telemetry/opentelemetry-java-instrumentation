@@ -9,12 +9,12 @@ import static java.util.Collections.emptyList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,7 +46,11 @@ public class MethodInstrumentationModule extends InstrumentationModule {
         .map(
             e ->
                 new MethodInstrumentation(
-                    e.getKey(), e.getValue(), Collections.emptySet(), Collections.emptySet()))
+                    e.getKey(),
+                    e.getValue().stream()
+                        .collect(
+                            Collectors.toMap(
+                                methodName -> methodName, ignore -> SpanKind.INTERNAL))))
         .collect(Collectors.toList());
   }
 

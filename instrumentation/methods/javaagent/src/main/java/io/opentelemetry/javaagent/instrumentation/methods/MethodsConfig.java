@@ -8,10 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.methods;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Locale;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -36,36 +38,32 @@ public class MethodsConfig {
       logger.log(Level.WARNING, "Invalid methods configuration - class name missing: {0}", config);
       return Stream.empty();
     }
-    Set<String> internal = new HashSet<>();
-    Set<String> server = new HashSet<>();
-    Set<String> client = new HashSet<>();
 
-    List<DeclarativeConfigProperties> methods = config.getStructuredList("methods", emptyList());
-    for (DeclarativeConfigProperties method : methods) {
+    Map<String, SpanKind> methodNames = new LinkedHashMap<>();
+    for (DeclarativeConfigProperties method : config.getStructuredList("methods", emptyList())) {
       String methodName = method.getString("name");
       if (isNullOrEmpty(methodName)) {
         logger.log(
             Level.WARNING, "Invalid methods configuration - method name missing: {0}", method);
         continue;
       }
-      String spanKind = method.getString("span_kind", "internal");
-      if ("internal".equalsIgnoreCase(spanKind)) {
-        internal.add(methodName);
-      } else if ("server".equalsIgnoreCase(spanKind)) {
-        server.add(methodName);
-      } else if ("client".equalsIgnoreCase(spanKind)) {
-        client.add(methodName);
-      } else {
-        logger.log(Level.WARNING, "Invalid methods configuration - unknown span_kind: {0}", method);
+      String spanKind = method.getString("span_kind", "INTERNAL");
+      try {
+        methodNames.put(methodName, SpanKind.valueOf(spanKind.toUpperCase(Locale.ROOT)));
+      } catch (IllegalArgumentException e) {
+        logger.log(
+            Level.WARNING,
+            "Invalid methods configuration - unknown span_kind: {0} for method: {1}",
+            new Object[] {spanKind, methodName});
       }
     }
 
-    if (internal.isEmpty() && server.isEmpty() && client.isEmpty()) {
+    if (methodNames.isEmpty()) {
       logger.log(Level.WARNING, "Invalid methods configuration - no methods defined: {0}", config);
       return Stream.empty();
     }
 
-    return Stream.of(new MethodInstrumentation(clazz, internal, server, client));
+    return Stream.of(new MethodInstrumentation(clazz, methodNames));
   }
 
   private static boolean isNullOrEmpty(String s) {
