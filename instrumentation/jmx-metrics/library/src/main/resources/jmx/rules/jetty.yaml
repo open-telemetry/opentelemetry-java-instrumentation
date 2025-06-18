@@ -1,6 +1,40 @@
 ---
 rules:
 
+  # Thread metrics for Jetty 12 and later
+  - bean: org.eclipse.jetty.util.thread:context=*,type=queuedthreadpool,id=*
+    prefix: jetty.thread.
+    unit: "{thread}"
+    type: updowncounter
+    metricAttribute:
+      # 'id' is a "technical ID" with a single '0' value by default
+      jetty.thread.pool.id: param(id)
+      # 'context' is a high cardinality value like 'Server@5a411614' but likely stable for the
+      # duration of the jetty process lifecycle
+      jetty.thread.context: param(context)
+    mapping:
+      # jetty.thread.count
+      threads:
+        metric: count
+        desc: The current number of threads
+      # jetty.thread.limit
+      maxThreads:
+        metric: limit
+        desc: The configured maximum number of threads in the pool
+      # jetty.thread.idle.count
+      idleThreads:
+        metric: idle.count
+        desc: The current number of idle threads
+      # jetty.thread.busy.count
+      busyThreads:
+        metric: busy.count
+        desc: The current number of busy threads
+      # jetty.thread.queue.size
+      queueSize:
+        metric: queue.size
+        desc: The current job queue size
+
+  # Thread metrics for Jetty 11 and earlier
   - bean: org.eclipse.jetty.util.thread:type=queuedthreadpool,id=*
     prefix: jetty.thread.
     unit: "{thread}"
@@ -33,9 +67,9 @@ rules:
   - bean: org.eclipse.jetty.io:context=*,type=managedselector,id=*
     metricAttribute:
       # 'id' is a numerical value in [0,9] by default
+      jetty.selector.context: param(context)
       # 'context' is a high cardinality value like 'HTTP_1_1@7674f035' but likely stable for the
       # duration of the jetty process lifecycle
-      jetty.selector.context: param(context)
       jetty.selector.id: param(id)
     mapping:
       # jetty.select.count

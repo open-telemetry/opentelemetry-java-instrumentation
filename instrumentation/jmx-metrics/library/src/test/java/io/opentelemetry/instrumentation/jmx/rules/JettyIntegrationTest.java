@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.jmx.rules;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
 
-import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
+import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,7 +24,7 @@ public class JettyIntegrationTest extends TargetSystemTest {
   private static final int JETTY_PORT = 8080;
 
   @ParameterizedTest
-  @ValueSource(ints = {11}) // TODO: add support for Jetty 12
+  @ValueSource(ints = {9, 10, 11, 12})
   void testCollectedMetrics(int jettyMajorVersion) {
 
     List<String> yamlFiles = Collections.singletonList("jetty.yaml");
@@ -50,11 +50,7 @@ public class JettyIntegrationTest extends TargetSystemTest {
                         builder ->
                             builder
                                 .from("jetty:" + jettyMajorVersion)
-                                .run(
-                                    "java",
-                                    "-jar",
-                                    "/usr/local/jetty/start.jar",
-                                    addModulesArg)
+                                .run("java", "-jar", "/usr/local/jetty/start.jar", addModulesArg)
                                 .run("mkdir -p /var/lib/jetty/webapps/ROOT/")
                                 .run("touch /var/lib/jetty/webapps/ROOT/index.html")
                                 .build()))
@@ -67,12 +63,20 @@ public class JettyIntegrationTest extends TargetSystemTest {
 
     startTarget(container);
 
-    verifyMetrics(createMetricsVerifier());
+    verifyMetrics(createMetricsVerifier(jettyMajorVersion));
   }
 
-  private static MetricsVerifier createMetricsVerifier() {
+  private static MetricsVerifier createMetricsVerifier(int jettyMajorVersion) {
 
-    AttributeMatcher threadPoolId = attributeWithAnyValue("jetty.thread.pool.id");
+    AttributeMatcherGroup threadPoolAttributes;
+    if (jettyMajorVersion >= 12) {
+      threadPoolAttributes =
+          attributeGroup(
+              attributeWithAnyValue("jetty.thread.pool.id"),
+              attributeWithAnyValue("jetty.thread.context"));
+    } else {
+      threadPoolAttributes = attributeGroup(attributeWithAnyValue("jetty.thread.pool.id"));
+    }
 
     return MetricsVerifier.create()
         .add(
@@ -81,7 +85,7 @@ public class JettyIntegrationTest extends TargetSystemTest {
                 metric
                     .hasDescription("The current number of threads")
                     .hasUnit("{thread}")
-                    .hasDataPointsWithOneAttribute(threadPoolId)
+                    .hasDataPointsWithAttributes(threadPoolAttributes)
                     .isUpDownCounter())
         .add(
             "jetty.thread.limit",
@@ -89,7 +93,7 @@ public class JettyIntegrationTest extends TargetSystemTest {
                 metric
                     .hasDescription("The configured maximum number of threads in the pool")
                     .hasUnit("{thread}")
-                    .hasDataPointsWithOneAttribute(threadPoolId)
+                    .hasDataPointsWithAttributes(threadPoolAttributes)
                     .isUpDownCounter())
         .add(
             "jetty.thread.idle.count",
@@ -97,7 +101,7 @@ public class JettyIntegrationTest extends TargetSystemTest {
                 metric
                     .hasDescription("The current number of idle threads")
                     .hasUnit("{thread}")
-                    .hasDataPointsWithOneAttribute(threadPoolId)
+                    .hasDataPointsWithAttributes(threadPoolAttributes)
                     .isUpDownCounter())
         .add(
             "jetty.thread.busy.count",
@@ -105,7 +109,7 @@ public class JettyIntegrationTest extends TargetSystemTest {
                 metric
                     .hasDescription("The current number of busy threads")
                     .hasUnit("{thread}")
-                    .hasDataPointsWithOneAttribute(threadPoolId)
+                    .hasDataPointsWithAttributes(threadPoolAttributes)
                     .isUpDownCounter())
         .add(
             "jetty.thread.queue.size",
@@ -113,7 +117,7 @@ public class JettyIntegrationTest extends TargetSystemTest {
                 metric
                     .hasDescription("The current job queue size")
                     .hasUnit("{thread}")
-                    .hasDataPointsWithOneAttribute(threadPoolId)
+                    .hasDataPointsWithAttributes(threadPoolAttributes)
                     .isUpDownCounter())
         .add(
             "jetty.select.count",
