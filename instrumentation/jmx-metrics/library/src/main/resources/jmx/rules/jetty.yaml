@@ -34,7 +34,7 @@ rules:
         metric: queue.size
         desc: The current job queue size
 
-  # Thread metrics for Jetty 11 and earlier
+  # Thread metrics for Jetty 9 to 11
   - bean: org.eclipse.jetty.util.thread:type=queuedthreadpool,id=*
     prefix: jetty.thread.
     unit: "{thread}"
@@ -79,10 +79,36 @@ rules:
         unit: "{operation}"
         desc: The number of select calls
 
+  # Session metrics for Jetty 12
+  - bean: org.eclipse.jetty.session:context=*,type=defaultsessioncache,id=*
+    # org.eclipse.jetty.session:context=ROOT,type=defaultsessioncache,id=0
+    prefix: jetty.session.
+    unit: "{session}"
+    metricAttribute:
+      # 'context' corresponds to the webapp context path
+      jetty.context: param(context)
+      # 'id' is a "technical ID" with a single '0' value by default
+      jetty.session.cache.id: param(id)
+    mapping:
+      # jetty.session.count
+      sessionsCurrent:
+        metric: count
+        type: updowncounter
+        desc: Current number of active sessions
+      # jetty.session.count.max
+      sessionsMax:
+        metric: count.max
+        # gauge because it can't be aggregated
+        type: gauge
+        desc: Maximum number of active sessions
+
+  # Session metrics for Jetty 9 to 11
   - bean: org.eclipse.jetty.server.session:context=*,type=sessionhandler,id=*
     prefix: jetty.session.
     metricAttribute:
+      # 'context' corresponds to the webapp context path
       jetty.context: param(context)
+      # 'id' is a "technical ID" with a single '0' value by default
       jetty.session.handler.id: param(id)
     mapping:
       # jetty.session.created.count

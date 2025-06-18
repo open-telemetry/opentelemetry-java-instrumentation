@@ -11,8 +11,11 @@ import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAtt
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
@@ -35,13 +38,13 @@ public class JettyIntegrationTest extends TargetSystemTest {
     jvmArgs.add(javaAgentJvmArgument());
     jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));
 
-    String jettyModules = "jmx,http,";
+    Set<String> jettyModules = new HashSet<>(Arrays.asList("jmx", "http"));
     if (jettyMajorVersion >= 12) {
-      jettyModules += "statistics";
+      jettyModules.add("statistics");
     } else {
-      jettyModules += "stats";
+      jettyModules.add("stats");
     }
-    String addModulesArg = "--add-to-startd=" + jettyModules;
+    String addModulesArg = "--add-to-startd=" + String.join(",", jettyModules);
 
     GenericContainer<?> container =
         new GenericContainer<>(
@@ -132,7 +135,31 @@ public class JettyIntegrationTest extends TargetSystemTest {
                                 attributeWithAnyValue("jetty.selector.id"),
                                 attributeWithAnyValue("jetty.selector.context"))));
 
-    if (jettyMajorVersion < 12) {
+    if (jettyMajorVersion >= 12) {
+      verifier
+          .add(
+              "jetty.session.count",
+              metric ->
+                  metric
+                      .isUpDownCounter()
+                      .hasDescription("Current number of active sessions")
+                      .hasUnit("{session}")
+                      .hasDataPointsWithAttributes(
+                          attributeGroup(
+                              attributeWithAnyValue("jetty.context"),
+                              attributeWithAnyValue("jetty.session.cache.id"))))
+          .add(
+              "jetty.session.count.max",
+              metric ->
+                  metric
+                      .isUpDownCounter()
+                      .hasDescription("Maximum number of active sessions")
+                      .hasUnit("{session}")
+                      .hasDataPointsWithAttributes(
+                          attributeGroup(
+                              attributeWithAnyValue("jetty.context"),
+                              attributeWithAnyValue("jetty.session.cache.id"))));
+    } else {
       verifier
           .add(
               "jetty.session.created.count",
@@ -179,7 +206,6 @@ public class JettyIntegrationTest extends TargetSystemTest {
                               attributeWithAnyValue("jetty.context"),
                               attributeWithAnyValue("jetty.session.handler.id"))));
     }
-
     return verifier;
   }
 }
