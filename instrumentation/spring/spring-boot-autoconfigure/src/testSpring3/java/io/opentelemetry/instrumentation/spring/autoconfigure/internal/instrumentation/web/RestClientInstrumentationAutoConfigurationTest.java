@@ -8,7 +8,8 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.ConfigPropertiesBridge;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
@@ -22,8 +23,10 @@ class RestClientInstrumentationAutoConfigurationTest {
       new ApplicationContextRunner()
           .withBean(OpenTelemetry.class, OpenTelemetry::noop)
           .withBean(
-              ConfigProperties.class,
-              () -> DefaultConfigProperties.createFromMap(Collections.emptyMap()))
+              InstrumentationConfig.class,
+              () ->
+                  new ConfigPropertiesBridge(
+                      DefaultConfigProperties.createFromMap(Collections.emptyMap())))
           .withBean(RestClient.class, RestClient::create)
           .withConfiguration(
               AutoConfigurations.of(RestClientInstrumentationAutoConfiguration.class));
