@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
