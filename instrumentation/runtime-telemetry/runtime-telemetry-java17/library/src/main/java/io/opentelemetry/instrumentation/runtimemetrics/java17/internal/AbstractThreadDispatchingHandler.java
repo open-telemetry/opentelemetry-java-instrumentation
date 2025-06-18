@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java17.internal;
 
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 import jdk.jfr.consumer.RecordedEvent;
@@ -15,8 +16,17 @@ import jdk.jfr.consumer.RecordedEvent;
  * any time.
  */
 public abstract class AbstractThreadDispatchingHandler implements RecordedEventHandler {
-  // Will need pruning code for fast-cycling thread frameworks to prevent memory leaks
-  private final Map<String, Consumer<RecordedEvent>> perThread = new HashMap<>();
+  private final Map<String, Consumer<RecordedEvent>> perThread =
+      Collections.synchronizedMap(
+          // Use an access-ordered LinkedHashMap so we get a bounded LRU cache
+          new LinkedHashMap<String, Consumer<RecordedEvent>>(16, 0.75F, true) {
+
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, Consumer<RecordedEvent>> eldest) {
+              // Bound this map to prevent memory leaks with fast-cycling thread frameworks
+              return size() > 1024;
+            }
+          });
   private final ThreadGrouper grouper;
 
   protected AbstractThreadDispatchingHandler(ThreadGrouper grouper) {
