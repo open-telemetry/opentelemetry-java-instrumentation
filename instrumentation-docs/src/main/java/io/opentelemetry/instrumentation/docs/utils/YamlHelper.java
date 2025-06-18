@@ -241,36 +241,34 @@ public class YamlHelper {
     return conf;
   }
 
+  private static List<Map<String, Object>> getSortedAttributeMaps(
+      List<TelemetryAttribute> attributes) {
+    List<TelemetryAttribute> sortedAttributes = new ArrayList<>(attributes);
+    sortedAttributes.sort(Comparator.comparing(TelemetryAttribute::getName));
+    List<Map<String, Object>> attributeMaps = new ArrayList<>();
+    for (TelemetryAttribute attribute : sortedAttributes) {
+      Map<String, Object> attributeMap = new LinkedHashMap<>();
+      attributeMap.put("name", attribute.getName());
+      attributeMap.put("type", attribute.getType());
+      attributeMaps.add(attributeMap);
+    }
+    return attributeMaps;
+  }
+
   private static Map<String, Object> getMetricsMap(EmittedMetrics.Metric metric) {
     Map<String, Object> innerMetricMap = new LinkedHashMap<>();
     innerMetricMap.put("name", metric.getName());
     innerMetricMap.put("description", metric.getDescription());
     innerMetricMap.put("type", metric.getType());
     innerMetricMap.put("unit", metric.getUnit());
-
-    List<Map<String, Object>> attributes = new ArrayList<>();
-    for (TelemetryAttribute attribute : metric.getAttributes()) {
-      Map<String, Object> attributeMap = new LinkedHashMap<>();
-      attributeMap.put("name", attribute.getName());
-      attributeMap.put("type", attribute.getType());
-      attributes.add(attributeMap);
-    }
-    innerMetricMap.put("attributes", attributes);
+    innerMetricMap.put("attributes", getSortedAttributeMaps(metric.getAttributes()));
     return innerMetricMap;
   }
 
   private static Map<String, Object> getSpanMap(EmittedSpans.Span span) {
     Map<String, Object> innerMetricMap = new LinkedHashMap<>();
     innerMetricMap.put("span_kind", span.getSpanKind());
-
-    List<Map<String, Object>> attributes = new ArrayList<>();
-    for (TelemetryAttribute attribute : span.getAttributes()) {
-      Map<String, Object> attributeMap = new LinkedHashMap<>();
-      attributeMap.put("name", attribute.getName());
-      attributeMap.put("type", attribute.getType());
-      attributes.add(attributeMap);
-    }
-    innerMetricMap.put("attributes", attributes);
+    innerMetricMap.put("attributes", getSortedAttributeMaps(span.getAttributes()));
     return innerMetricMap;
   }
 

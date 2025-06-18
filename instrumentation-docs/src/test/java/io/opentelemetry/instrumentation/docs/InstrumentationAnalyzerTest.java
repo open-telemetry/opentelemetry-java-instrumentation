@@ -7,14 +7,12 @@ package io.opentelemetry.instrumentation.docs;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
-import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
+import io.opentelemetry.instrumentation.docs.parsers.ModuleParser;
 import io.opentelemetry.instrumentation.docs.utils.InstrumentationPath;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("NullAway")
@@ -43,8 +41,7 @@ class InstrumentationAnalyzerTest {
                 "spring",
                 InstrumentationType.LIBRARY));
 
-    List<InstrumentationModule> modules =
-        InstrumentationAnalyzer.convertToInstrumentationModules("test", paths);
+    List<InstrumentationModule> modules = ModuleParser.convertToModules("test", paths);
 
     assertThat(modules.size()).isEqualTo(2);
 
@@ -75,43 +72,37 @@ class InstrumentationAnalyzerTest {
   }
 
   @Test
-  void testFilterSpansByScopeFiltersCorrectly() {
-    InstrumentationAnalyzer analyzer = new InstrumentationAnalyzer(null);
-    String scopeName = "my-instrumentation-scope";
-    EmittedSpans.Span span1 =
-        new EmittedSpans.Span("CLIENT", List.of(new TelemetryAttribute("my.operation", "STRING")));
-    EmittedSpans.Span span2 =
-        new EmittedSpans.Span("SERVER", List.of(new TelemetryAttribute("my.operation", "STRING")));
+  void testModuleConverterCreatesUniqueModules() {
+    List<InstrumentationPath> paths =
+        Arrays.asList(
+            new InstrumentationPath(
+                "same-name",
+                "instrumentation/test1/same-name/library",
+                "group1",
+                "namespace1",
+                InstrumentationType.LIBRARY),
+            new InstrumentationPath(
+                "same-name",
+                "instrumentation/test2/same-name/library",
+                "group2",
+                "namespace2",
+                InstrumentationType.LIBRARY));
 
-    EmittedSpans.Span testSpan =
-        new EmittedSpans.Span(
-            "INTERNAL", List.of(new TelemetryAttribute("my.operation", "STRING")));
+    List<InstrumentationModule> modules = ModuleParser.convertToModules("test", paths);
 
-    EmittedSpans.SpansByScope spansByScope =
-        new EmittedSpans.SpansByScope(scopeName, List.of(span1, span2));
-    EmittedSpans.SpansByScope spansByScope2 =
-        new EmittedSpans.SpansByScope("test", List.of(testSpan));
-    Map<String, EmittedSpans> spans =
-        Map.of(
-            scopeName,
-            new EmittedSpans("default", List.of(spansByScope)),
-            "test",
-            new EmittedSpans("default", List.of(spansByScope2)));
+    // Should create 2 separate modules because they have different group/namespace combinations
+    assertThat(modules.size()).isEqualTo(2);
 
-    InstrumentationModule module =
-        new InstrumentationModule.Builder()
-            .instrumentationName(scopeName)
-            .group("test-group")
-            .namespace("test")
-            .srcPath("test/")
-            .build();
-
-    analyzer.filterSpansByScope(spans, module);
-
-    Map<String, List<EmittedSpans.Span>> filtered = module.getSpans();
-    assertThat(filtered.size()).isEqualTo(1);
-
-    // filters out the "test" scope
-    assertThat(filtered.get("default").size()).isEqualTo(2);
+    // Verify both modules exist with correct properties
+    assertThat(
+            modules.stream()
+                .anyMatch(
+                    m -> m.getGroup().equals("group1") && m.getNamespace().equals("namespace1")))
+        .isTrue();
+    assertThat(
+            modules.stream()
+                .anyMatch(
+                    m -> m.getGroup().equals("group2") && m.getNamespace().equals("namespace2")))
+        .isTrue();
   }
 }

@@ -19,8 +19,12 @@ import java.util.Map;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-public class MetricParser {
-  private static final Logger logger = Logger.getLogger(MetricParser.class.getName());
+/**
+ * This class is responsible for parsing metric-* files from the `.telemetry` directory of an
+ * instrumentation module and converting them into the {@link EmittedMetrics} format.
+ */
+public class EmittedMetricsParser {
+  private static final Logger logger = Logger.getLogger(EmittedMetricsParser.class.getName());
 
   /**
    * Looks for metric files in the .telemetry directory, and combines them into a map where the key
@@ -95,5 +99,5 @@ public class MetricParser {
     return metricsMap;
   }
 
-  private MetricParser() {}
+  private EmittedMetricsParser() {}
 }

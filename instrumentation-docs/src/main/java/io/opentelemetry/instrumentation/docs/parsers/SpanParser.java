@@ -7,165 +7,130 @@ package io.opentelemetry.instrumentation.docs.parsers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
-import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
-import java.util.stream.Stream;
 
+/**
+ * This class is responsible for parsing span files from the `.telemetry` directory of an
+ * instrumentation module and filtering them by scope.
+ */
 public class SpanParser {
-  private static final Logger logger = Logger.getLogger(SpanParser.class.getName());
 
   /**
-   * Looks for span files in the .telemetry directory, and combines them into a single map.
+   * Pull spans from the `.telemetry` directory, filter them by scope, and set them in the module.
    *
-   * @param instrumentationDirectory the directory to traverse
-   * @return contents of aggregated files
+   * @param module the instrumentation module to extract spans for
+   * @param fileManager the file manager to access the filesystem
+   * @throws JsonProcessingException if there is an error processing the JSON from the span files
    */
-  public static Map<String, EmittedSpans> getSpansByScopeFromFiles(
-      String rootDir, String instrumentationDirectory) throws JsonProcessingException {
-    Map<String, StringBuilder> spansByScope = new HashMap<>();
-    Path telemetryDir = Paths.get(rootDir + "/" + instrumentationDirectory, ".telemetry");
+  public static Map<String, List<EmittedSpans.Span>> getSpans(
+      InstrumentationModule module, FileManager fileManager) throws JsonProcessingException {
+    Map<String, EmittedSpans> spans =
+        EmittedSpanParser.getSpansByScopeFromFiles(fileManager.rootDir(), module.getSrcPath());
 
-    if (Files.exists(telemetryDir) && Files.isDirectory(telemetryDir)) {
-      try (Stream<Path> files = Files.list(telemetryDir)) {
-        files
-            .filter(path -> path.getFileName().toString().startsWith("spans-"))
-            .forEach(
-                path -> {
-                  String content = FileManager.readFileToString(path.toString());
-                  if (content != null) {
-                    String when = content.substring(0, content.indexOf('\n'));
-                    String whenKey = when.replace("when: ", "");
-
-                    spansByScope.putIfAbsent(whenKey, new StringBuilder("spans_by_scope:\n"));
-
-                    // Skip the metric spans_by_scope ("metrics:") so we can aggregate into one list
-                    int metricsIndex = content.indexOf("spans_by_scope:\n");
-                    if (metricsIndex != -1) {
-                      String contentAfterMetrics =
-                          content.substring(metricsIndex + "spans_by_scope:\n".length());
-                      spansByScope.get(whenKey).append(contentAfterMetrics);
-                    }
-                  }
-                });
-      } catch (IOException e) {
-        logger.severe("Error reading span files: " + e.getMessage());
-      }
+    if (spans.isEmpty()) {
+      return new HashMap<>();
     }
 
-    return parseSpans(spansByScope);
+    String scopeName = module.getScopeInfo().getName();
+    return filterSpansByScope(spans, scopeName);
   }
 
   /**
-   * Takes in a raw string representation of the aggregated EmittedSpan yaml map, separated by the
-   * `when`, indicating the conditions under which the telemetry is emitted. deduplicates by name
-   * and then returns a new map.
+   * Filters spans by scope and aggregates attributes for each span kind.
    *
-   * @param input raw string representation of EmittedMetrics yaml
-   * @return {@code Map<String, EmittedMetrics>} where the key is the `when` condition
+   * @param spansByScope the map of spans by scope
+   * @param scopeName the name of the scope to filter spans for
+   * @return a map of filtered spans by `when`
    */
-  // visible for testing
-  public static Map<String, EmittedSpans> parseSpans(Map<String, StringBuilder> input)
-      throws JsonProcessingException {
-    Map<String, EmittedSpans> result = new HashMap<>();
+  private static Map<String, List<EmittedSpans.Span>> filterSpansByScope(
+      Map<String, EmittedSpans> spansByScope, String scopeName) {
 
-    for (Map.Entry<String, StringBuilder> entry : input.entrySet()) {
-      String when = entry.getKey().strip();
-      StringBuilder content = entry.getValue();
+    Map<String, Map<String, Set<TelemetryAttribute>>> aggregatedAttributes = new HashMap<>();
 
-      EmittedSpans spans = YamlHelper.emittedSpansParser(content.toString());
-      if (spans.getSpansByScope().isEmpty()) {
+    for (Map.Entry<String, EmittedSpans> entry : spansByScope.entrySet()) {
+      if (!hasValidSpans(entry.getValue())) {
         continue;
       }
 
-      Map<String, Map<String, Set<TelemetryAttribute>>> attributesByScopeAndSpanKind =
-          new HashMap<>();
+      String when = entry.getValue().getWhen();
+      Map<String, Map<String, Set<TelemetryAttribute>>> result =
+          SpanAggregator.aggregateSpans(when, entry.getValue(), scopeName);
+      aggregatedAttributes.putAll(result);
+    }
 
-      for (EmittedSpans.SpansByScope spansByScopeEntry : spans.getSpansByScope()) {
-        String scope = spansByScopeEntry.getScope();
+    return SpanAggregator.buildFilteredSpans(aggregatedAttributes);
+  }
 
-        attributesByScopeAndSpanKind.putIfAbsent(scope, new HashMap<>());
-        Map<String, Set<TelemetryAttribute>> attributesBySpanKind =
-            attributesByScopeAndSpanKind.get(scope);
+  private static boolean hasValidSpans(EmittedSpans spans) {
+    return spans != null && spans.getSpansByScope() != null;
+  }
 
-        for (EmittedSpans.Span span : spansByScopeEntry.getSpans()) {
-          String spanKind = span.getSpanKind();
+  /** Helper class to aggregate span attributes by scope and kind. */
+  static class SpanAggregator {
 
-          attributesBySpanKind.putIfAbsent(spanKind, new HashSet<>());
-          Set<TelemetryAttribute> attributeSet = attributesBySpanKind.get(spanKind);
+    public static Map<String, Map<String, Set<TelemetryAttribute>>> aggregateSpans(
+        String when, EmittedSpans spans, String targetScopeName) {
+      Map<String, Map<String, Set<TelemetryAttribute>>> aggregatedAttributes = new HashMap<>();
+      Map<String, Set<TelemetryAttribute>> spanKindMap =
+          aggregatedAttributes.computeIfAbsent(when, k -> new HashMap<>());
 
-          if (span.getAttributes() != null) {
-            for (TelemetryAttribute attr : span.getAttributes()) {
-              attributeSet.add(new TelemetryAttribute(attr.getName(), attr.getType()));
-            }
-          }
+      for (EmittedSpans.SpansByScope spansByScope : spans.getSpansByScope()) {
+        if (spansByScope.getScope().equals(targetScopeName)) {
+          processSpansForScope(spansByScope, spanKindMap);
+        }
+      }
+      return aggregatedAttributes;
+    }
+
+    private static void processSpansForScope(
+        EmittedSpans.SpansByScope spansByScope, Map<String, Set<TelemetryAttribute>> spanKindMap) {
+      for (EmittedSpans.Span span : spansByScope.getSpans()) {
+        Set<TelemetryAttribute> attributes =
+            spanKindMap.computeIfAbsent(span.getSpanKind(), k -> new HashSet<>());
+
+        addSpanAttributes(span, attributes);
+      }
+    }
+
+    private static void addSpanAttributes(
+        EmittedSpans.Span span, Set<TelemetryAttribute> attributes) {
+      if (span.getAttributes() == null) {
+        return;
+      }
+
+      for (TelemetryAttribute attr : span.getAttributes()) {
+        attributes.add(new TelemetryAttribute(attr.getName(), attr.getType()));
+      }
+    }
+
+    public static Map<String, List<EmittedSpans.Span>> buildFilteredSpans(
+        Map<String, Map<String, Set<TelemetryAttribute>>> aggregatedAttributes) {
+      Map<String, List<EmittedSpans.Span>> result = new HashMap<>();
+
+      for (Map.Entry<String, Map<String, Set<TelemetryAttribute>>> entry :
+          aggregatedAttributes.entrySet()) {
+        String when = entry.getKey();
+        List<EmittedSpans.Span> spans = result.computeIfAbsent(when, k -> new ArrayList<>());
+
+        for (Map.Entry<String, Set<TelemetryAttribute>> kindEntry : entry.getValue().entrySet()) {
+          String spanKind = kindEntry.getKey();
+          Set<TelemetryAttribute> attributes = kindEntry.getValue();
+          spans.add(new EmittedSpans.Span(spanKind, new ArrayList<>(attributes)));
         }
       }
 
-      EmittedSpans deduplicatedEmittedSpans = getEmittedSpans(attributesByScopeAndSpanKind, when);
-      result.put(when, deduplicatedEmittedSpans);
+      return result;
     }
 
-    return result;
-  }
-
-  /**
-   * Takes in a map of attributes by scope and span kind, and returns an {@link EmittedSpans} object
-   * with deduplicated spans.
-   *
-   * @param attributesByScopeAndSpanKind the map of attributes by scope and span kind
-   * @param when the condition under which the telemetry is emitted
-   * @return an {@link EmittedSpans} object with deduplicated spans
-   */
-  private static EmittedSpans getEmittedSpans(
-      Map<String, Map<String, Set<TelemetryAttribute>>> attributesByScopeAndSpanKind, String when) {
-    List<EmittedSpans.SpansByScope> deduplicatedSpansByScope = new ArrayList<>();
-
-    for (Map.Entry<String, Map<String, Set<TelemetryAttribute>>> scopeEntry :
-        attributesByScopeAndSpanKind.entrySet()) {
-      String scope = scopeEntry.getKey();
-      EmittedSpans.SpansByScope deduplicatedScope = getSpansByScope(scopeEntry, scope);
-      deduplicatedSpansByScope.add(deduplicatedScope);
-    }
-
-    return new EmittedSpans(when, deduplicatedSpansByScope);
-  }
-
-  /**
-   * Converts a map entry of scope and its attributes into an {@link EmittedSpans.SpansByScope}
-   * object.
-   *
-   * @param scopeEntry the map entry containing scope and its attributes
-   * @param scope the name of the scope
-   * @return an {@link EmittedSpans.SpansByScope} object with deduplicated spans
-   */
-  private static EmittedSpans.SpansByScope getSpansByScope(
-      Map.Entry<String, Map<String, Set<TelemetryAttribute>>> scopeEntry, String scope) {
-    Map<String, Set<TelemetryAttribute>> spanKindMap = scopeEntry.getValue();
-
-    List<EmittedSpans.Span> deduplicatedSpans = new ArrayList<>();
-
-    for (Map.Entry<String, Set<TelemetryAttribute>> spanKindEntry : spanKindMap.entrySet()) {
-      String spanKind = spanKindEntry.getKey();
-      Set<TelemetryAttribute> attributes = spanKindEntry.getValue();
-
-      List<TelemetryAttribute> attributeList = new ArrayList<>(attributes);
-      EmittedSpans.Span deduplicatedSpan = new EmittedSpans.Span(spanKind, attributeList);
-      deduplicatedSpans.add(deduplicatedSpan);
-    }
-
-    return new EmittedSpans.SpansByScope(scope, deduplicatedSpans);
+    private SpanAggregator() {}
   }
 
   private SpanParser() {}

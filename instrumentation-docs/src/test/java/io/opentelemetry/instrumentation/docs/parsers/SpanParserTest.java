@@ -9,12 +9,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mockStatic;
 
 import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
+import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedStatic;
@@ -80,7 +82,7 @@ class SpanParserTest {
           .thenReturn(file2Content);
 
       Map<String, EmittedSpans> result =
-          SpanParser.getSpansByScopeFromFiles(tempDir.toString(), "");
+          EmittedSpanParser.getSpansByScopeFromFiles(tempDir.toString(), "");
 
       EmittedSpans spans = result.get("default");
       assertThat(spans.getSpansByScope()).hasSize(2);
@@ -102,5 +104,44 @@ class SpanParserTest {
       // deduped should have only one span
       assertThat(testSpans).hasSize(1);
     }
+  }
+
+  @Test
+  void testSpanAggregatorFiltersAndAggregatesCorrectly() {
+    String targetScopeName = "my-instrumentation-scope";
+
+    EmittedSpans.Span span1 =
+        new EmittedSpans.Span("CLIENT", List.of(new TelemetryAttribute("my.operation", "STRING")));
+    EmittedSpans.Span span2 =
+        new EmittedSpans.Span("SERVER", List.of(new TelemetryAttribute("my.operation", "STRING")));
+
+    // Create test span for a different scope (should be filtered out)
+    EmittedSpans.Span testSpan =
+        new EmittedSpans.Span(
+            "INTERNAL", List.of(new TelemetryAttribute("my.operation", "STRING")));
+
+    EmittedSpans.SpansByScope targetSpansByScope =
+        new EmittedSpans.SpansByScope(targetScopeName, List.of(span1, span2));
+    EmittedSpans.SpansByScope otherSpansByScope =
+        new EmittedSpans.SpansByScope("other-scope", List.of(testSpan));
+
+    EmittedSpans emittedSpans =
+        new EmittedSpans("default", List.of(targetSpansByScope, otherSpansByScope));
+
+    // Aggregate spans - only target scope should be included
+    Map<String, Map<String, Set<TelemetryAttribute>>> spans =
+        SpanParser.SpanAggregator.aggregateSpans("default", emittedSpans, targetScopeName);
+
+    Map<String, List<EmittedSpans.Span>> result =
+        SpanParser.SpanAggregator.buildFilteredSpans(spans);
+
+    assertThat(result.size()).isEqualTo(1);
+    assertThat(result.get("default")).isNotNull();
+    assertThat(result.get("default").size()).isEqualTo(2); // CLIENT and SERVER spans
+
+    // Verify span kinds are preserved
+    List<String> spanKinds =
+        result.get("default").stream().map(EmittedSpans.Span::getSpanKind).toList();
+    assertThat(spanKinds).containsExactlyInAnyOrder("CLIENT", "SERVER");
   }
 }
