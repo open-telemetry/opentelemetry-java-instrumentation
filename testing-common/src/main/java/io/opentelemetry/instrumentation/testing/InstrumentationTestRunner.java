@@ -153,9 +153,9 @@ public abstract class InstrumentationTestRunner {
     }
     TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(assertionsList);
 
-    //    if (Boolean.getBoolean("collectMetadata")) {
-    collectEmittedSpans(traces);
-    //    }
+    if (Boolean.getBoolean("collectMetadata") && Boolean.getBoolean("collectSpans")) {
+      collectEmittedSpans(traces);
+    }
   }
 
   /**

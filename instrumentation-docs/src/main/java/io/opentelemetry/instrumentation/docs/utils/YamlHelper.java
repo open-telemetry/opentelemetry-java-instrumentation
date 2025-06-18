@@ -77,7 +77,16 @@ public class YamlHelper {
                         .equals(InstrumentationClassification.LIBRARY))
             .collect(
                 Collectors.groupingBy(
-                    InstrumentationModule::getGroup, TreeMap::new, Collectors.toList()));
+                    InstrumentationModule::getGroup,
+                    TreeMap::new,
+                    Collectors.collectingAndThen(
+                        Collectors.toList(),
+                        modules ->
+                            modules.stream()
+                                .sorted(
+                                    Comparator.comparing(
+                                        InstrumentationModule::getInstrumentationName))
+                                .collect(Collectors.toList()))));
 
     Map<String, Object> output = new TreeMap<>();
     libraryInstrumentations.forEach(
@@ -146,7 +155,7 @@ public class YamlHelper {
             new ArrayList<>(module.getMetrics().getOrDefault(group, Collections.emptyList()));
         List<Map<String, Object>> metricsList = new ArrayList<>();
 
-        // sort metrics by name for some determinism in the order
+        // sort by name for determinism in the order
         metrics.sort(Comparator.comparing(EmittedMetrics.Metric::getName));
 
         for (EmittedMetrics.Metric metric : metrics) {
@@ -160,7 +169,7 @@ public class YamlHelper {
             new ArrayList<>(module.getSpans().getOrDefault(group, Collections.emptyList()));
         List<Map<String, Object>> spanList = new ArrayList<>();
 
-        // sort metrics by name for some determinism in the order
+        // sort by name for determinism in the order
         spans.sort(Comparator.comparing(EmittedSpans.Span::getSpanKind));
 
         for (EmittedSpans.Span span : spans) {

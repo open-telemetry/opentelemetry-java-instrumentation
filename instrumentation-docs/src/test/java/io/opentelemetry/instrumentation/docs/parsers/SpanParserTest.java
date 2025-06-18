@@ -72,6 +72,8 @@ class SpanParserTest {
 
     Files.writeString(telemetryDir.resolve("spans-1.yaml"), file1Content);
     Files.writeString(telemetryDir.resolve("spans-2.yaml"), file2Content);
+    // duplicate span contents to test deduplication
+    Files.writeString(telemetryDir.resolve("spans-3.yaml"), file2Content);
 
     try (MockedStatic<FileManager> fileManagerMock = mockStatic(FileManager.class)) {
       fileManagerMock
@@ -79,6 +81,9 @@ class SpanParserTest {
           .thenReturn(file1Content);
       fileManagerMock
           .when(() -> FileManager.readFileToString(telemetryDir.resolve("spans-2.yaml").toString()))
+          .thenReturn(file2Content);
+      fileManagerMock
+          .when(() -> FileManager.readFileToString(telemetryDir.resolve("spans-3.yaml").toString()))
           .thenReturn(file2Content);
 
       Map<String, EmittedSpans> result =
@@ -94,6 +99,20 @@ class SpanParserTest {
               .findFirst()
               .orElse(null);
       assertThat(clickHouseSpans).hasSize(2);
+
+      EmittedSpans.Span serverSpan =
+          clickHouseSpans.stream()
+              .filter(item -> item.getSpanKind().equals("SERVER"))
+              .findFirst()
+              .orElse(null);
+      EmittedSpans.Span clientSpan =
+          clickHouseSpans.stream()
+              .filter(item -> item.getSpanKind().equals("CLIENT"))
+              .findFirst()
+              .orElse(null);
+
+      assertThat(serverSpan.getAttributes()).hasSize(1);
+      assertThat(clientSpan.getAttributes()).hasSize(6);
 
       List<EmittedSpans.Span> testSpans =
           spans.getSpansByScope().stream()
@@ -111,9 +130,19 @@ class SpanParserTest {
     String targetScopeName = "my-instrumentation-scope";
 
     EmittedSpans.Span span1 =
-        new EmittedSpans.Span("CLIENT", List.of(new TelemetryAttribute("my.operation", "STRING")));
+        new EmittedSpans.Span(
+            "CLIENT",
+            List.of(
+                new TelemetryAttribute("my.operation", "STRING"),
+                new TelemetryAttribute("http.request.header.x-test-request", "STRING_ARRAY"),
+                new TelemetryAttribute("http.response.header.x-test-response", "STRING_ARRAY")));
     EmittedSpans.Span span2 =
-        new EmittedSpans.Span("SERVER", List.of(new TelemetryAttribute("my.operation", "STRING")));
+        new EmittedSpans.Span(
+            "SERVER",
+            List.of(
+                new TelemetryAttribute("my.operation", "STRING"),
+                new TelemetryAttribute("test-baggage-key-1", "STRING"),
+                new TelemetryAttribute("test-baggage-key-2", "STRING")));
 
     // Create test span for a different scope (should be filtered out)
     EmittedSpans.Span testSpan =
@@ -143,5 +172,27 @@ class SpanParserTest {
     List<String> spanKinds =
         result.get("default").stream().map(EmittedSpans.Span::getSpanKind).toList();
     assertThat(spanKinds).containsExactlyInAnyOrder("CLIENT", "SERVER");
+
+    // Verify test attributes are filtered out
+    List<TelemetryAttribute> clientAttributes =
+        result.get("default").stream()
+            .filter(span -> span.getSpanKind().equals("CLIENT"))
+            .flatMap(span -> span.getAttributes().stream())
+            .toList();
+    assertThat(clientAttributes)
+        .hasSize(1)
+        .extracting(TelemetryAttribute::getName)
+        .containsExactly("my.operation");
+
+    List<TelemetryAttribute> serverAttributes =
+        result.get("default").stream()
+            .filter(span -> span.getSpanKind().equals("SERVER"))
+            .flatMap(span -> span.getAttributes().stream())
+            .toList();
+
+    assertThat(serverAttributes)
+        .hasSize(1)
+        .extracting(TelemetryAttribute::getName)
+        .containsExactly("my.operation");
   }
 }

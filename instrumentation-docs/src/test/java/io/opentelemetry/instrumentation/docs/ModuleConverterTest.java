@@ -58,18 +58,4 @@ class ModuleConverterTest {
     sanitized = ModuleParser.sanitizePathName("/root", "/root/other");
     assertThat(sanitized).isEqualTo("/other");
   }
-
-  @Test
-  void testCreateModuleKeyIsConsistent() throws Exception {
-    InstrumentationPath path = mock(InstrumentationPath.class);
-    when(path.group()).thenReturn("g");
-    when(path.namespace()).thenReturn("n");
-    when(path.instrumentationName()).thenReturn("i");
-
-    var method = ModuleParser.class.getDeclaredMethod("createModuleKey", InstrumentationPath.class);
-    method.setAccessible(true);
-
-    String key = (String) method.invoke(null, path);
-    assertThat(key).isEqualTo("g:n:i");
-  }
 }

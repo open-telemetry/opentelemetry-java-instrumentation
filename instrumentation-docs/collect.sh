@@ -21,6 +21,7 @@ readonly INSTRUMENTATIONS=(
   "apache-dbcp-2.0:javaagent:test"
   "apache-dbcp-2.0:javaagent:testStableSemconv"
   "apache-httpclient:apache-httpclient-5.0:javaagent:test"
+  "apache-dubbo-2.7:javaagent:testDubbo"
   "c3p0-0.9:javaagent:test"
   "c3p0-0.9:javaagent:testStableSemconv"
   "clickhouse-client-0.5:javaagent:test"

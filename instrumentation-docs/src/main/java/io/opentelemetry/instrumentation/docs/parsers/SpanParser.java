@@ -23,6 +23,9 @@ import java.util.Set;
  */
 public class SpanParser {
 
+  // We want to ignore test related attributes
+  private static final List<String> EXCLUDED_ATTRIBUTES = List.of("x-test-", "test-baggage-");
+
   /**
    * Pull spans from the `.telemetry` directory, filter them by scope, and set them in the module.
    *
@@ -107,7 +110,10 @@ public class SpanParser {
       }
 
       for (TelemetryAttribute attr : span.getAttributes()) {
-        attributes.add(new TelemetryAttribute(attr.getName(), attr.getType()));
+        boolean excluded = EXCLUDED_ATTRIBUTES.stream().anyMatch(ex -> attr.getName().contains(ex));
+        if (!excluded) {
+          attributes.add(new TelemetryAttribute(attr.getName(), attr.getType()));
+        }
       }
     }
 

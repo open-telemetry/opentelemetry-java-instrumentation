@@ -78,14 +78,14 @@ class InstrumentationAnalyzerTest {
             new InstrumentationPath(
                 "same-name",
                 "instrumentation/test1/same-name/library",
-                "group1",
                 "namespace1",
+                "group1",
                 InstrumentationType.LIBRARY),
             new InstrumentationPath(
                 "same-name",
                 "instrumentation/test2/same-name/library",
-                "group2",
                 "namespace2",
+                "group2",
                 InstrumentationType.LIBRARY));
 
     List<InstrumentationModule> modules = ModuleParser.convertToModules("test", paths);
@@ -93,7 +93,6 @@ class InstrumentationAnalyzerTest {
     // Should create 2 separate modules because they have different group/namespace combinations
     assertThat(modules.size()).isEqualTo(2);
 
-    // Verify both modules exist with correct properties
     assertThat(
             modules.stream()
                 .anyMatch(
