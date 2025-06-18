@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.webmvc;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
 import io.opentelemetry.instrumentation.spring.webmvc.v6_0.SpringWebMvcTelemetry;
