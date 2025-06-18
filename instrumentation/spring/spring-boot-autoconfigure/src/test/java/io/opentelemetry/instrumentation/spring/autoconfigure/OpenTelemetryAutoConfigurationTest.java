@@ -112,7 +112,7 @@ class OpenTelemetryAutoConfigurationTest {
         .run(
             context ->
                 assertThat(context)
-                    .getBean("otelProperties", ConfigProperties.class)
+                    .getBean("otelProperties", InstrumentationConfig.class)
                     .satisfies(
                         configProperties ->
                             assertThat(
