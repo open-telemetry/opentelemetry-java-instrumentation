@@ -17,6 +17,13 @@ import org.springframework.core.convert.converter.Converter;
  * <p>This is the expected format for the <code>OTEL_RESOURCE_ATTRIBUTES</code> and <code>
  * OTEL_EXPORTER_OTLP_HEADERS</code> environment variables.
  *
+ * <p>We need this converter, even if the SDK is disabled, because the properties are parsed before
+ * the SDK is disabled.
+ *
+ * <p>We also need this converter if the OpenTelemetry bean is user supplied, because the
+ * environment variables may still contain a value that needs to be converted, even if the SDK is
+ * disabled (and the value thus ignored).
+ *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
