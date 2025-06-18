@@ -54,11 +54,6 @@ import org.springframework.core.env.Environment;
  * <p>Updates the sampler probability for the configured {@link TracerProvider}.
  */
 @Configuration
-@EnableConfigurationProperties({
-  OtlpExporterProperties.class,
-  OtelResourceProperties.class,
-  OtelSpringProperties.class
-})
 public class OpenTelemetryAutoConfiguration {
   private static final Logger logger =
       LoggerFactory.getLogger(OpenTelemetryAutoConfiguration.class);
@@ -87,6 +82,11 @@ public class OpenTelemetryAutoConfiguration {
     }
 
     @Configuration
+    @EnableConfigurationProperties({
+      OtlpExporterProperties.class,
+      OtelResourceProperties.class,
+      OtelSpringProperties.class
+    })
     @ConditionalOnProperty(name = "otel.file_format", matchIfMissing = true, havingValue = "never")
     static class PropertiesConfig {
 
@@ -102,7 +102,7 @@ public class OpenTelemetryAutoConfiguration {
           OtlpExporterProperties otlpExporterProperties,
           OtelResourceProperties resourceProperties,
           OtelSpringProperties otelSpringProperties,
-          OpenTelemetrySdkComponentLoader componentLoader) {
+          ComponentLoader componentLoader) {
 
         return AutoConfigureUtil.setComponentLoader(
                 AutoConfigureUtil.setConfigPropertiesCustomizer(
@@ -143,7 +143,14 @@ public class OpenTelemetryAutoConfiguration {
 
   @Configuration
   @ConditionalOnProperty(name = "otel.file_format")
-  static class OpenTelemetrySdkEmbeddedConfigFileConfig {
+  static class EmbeddedConfigFileConfig {
+
+    @Bean
+    public OpenTelemetryConfigurationModel openTelemetryConfigurationModel(
+        Environment environment) {
+      // todo declarative configuration
+      return null;
+    }
 
     @Bean
     public OpenTelemetry openTelemetry() {
@@ -165,7 +172,6 @@ public class OpenTelemetryAutoConfiguration {
      */
     @Bean
     public ConfigProperties otelProperties(OpenTelemetryConfigurationModel model) {
-      // todo component loader
       return DeclarativeConfigPropertiesBridge.create(
           DeclarativeConfiguration.toConfigProperties(model));
     }
@@ -182,12 +188,6 @@ public class OpenTelemetryAutoConfiguration {
   @ConditionalOnMissingBean(OpenTelemetry.class)
   @ConditionalOnProperty(name = "otel.sdk.disabled", havingValue = "true")
   static class DisabledOpenTelemetrySdkConfig {
-
-    @Bean
-    @ConfigurationPropertiesBinding
-    OtelMapConverter otelMapConverter() {
-      return new OtelMapConverter();
-    }
 
     @Bean
     public OpenTelemetry openTelemetry() {
