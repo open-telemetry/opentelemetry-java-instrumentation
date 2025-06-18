@@ -56,7 +56,7 @@ class DeclarativeConfigPropertiesBridgeTest {
             new ByteArrayInputStream(YAML.getBytes(StandardCharsets.UTF_8)));
     SdkConfigProvider configProvider = SdkConfigProvider.create(model);
     bridge =
-        new DeclarativeConfigPropertiesBridge(
+        DeclarativeConfigPropertiesBridge.create(
             Objects.requireNonNull(configProvider.getInstrumentationConfig()));
 
     OpenTelemetryConfigurationModel emptyModel =
@@ -64,7 +64,7 @@ class DeclarativeConfigPropertiesBridgeTest {
             .withAdditionalProperty("instrumentation/development", new InstrumentationModel());
     SdkConfigProvider emptyConfigProvider = SdkConfigProvider.create(emptyModel);
     emptyBridge =
-        new DeclarativeConfigPropertiesBridge(
+        DeclarativeConfigPropertiesBridge.create(
             Objects.requireNonNull(emptyConfigProvider.getInstrumentationConfig()));
   }
 
