@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 2.17.0 (2025-06-18)
+
 ### Migration notes
 
 - Changes have been made to Tomcat metric definitions provided by JMX Metric Insight component
