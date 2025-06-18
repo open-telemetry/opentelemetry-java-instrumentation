@@ -132,8 +132,7 @@ public class OpenTelemetryAutoConfiguration {
       }
 
       @Bean
-      public InstrumentationConfig instrumentationConfig(
-          ConfigProperties properties) {
+      public InstrumentationConfig instrumentationConfig(ConfigProperties properties) {
         return new ConfigPropertiesBridge(properties);
       }
 
