@@ -5,14 +5,16 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.GlobalConfigProvider;
 import io.opentelemetry.api.trace.TracerProvider;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.sdk.DeclarativeConfigPropertiesBridge;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelMapConverter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.ConfigPropertiesBridge;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
@@ -72,8 +74,7 @@ public class OpenTelemetryAutoConfiguration {
   static class OpenTelemetrySdkConfig {
 
     @Bean
-    public ComponentLoader openTelemetrySdkComponentLoader(
-        ApplicationContext applicationContext) {
+    public ComponentLoader openTelemetrySdkComponentLoader(ApplicationContext applicationContext) {
       return new OpenTelemetrySdkComponentLoader(applicationContext);
     }
 
@@ -157,14 +158,14 @@ public class OpenTelemetryAutoConfiguration {
     }
 
     @Bean
-    public OpenTelemetry openTelemetry(OpenTelemetryConfigurationModel model, ComponentLoader componentLoader) {
-      OpenTelemetrySdk sdk =
-          DeclarativeConfiguration.create(model, componentLoader);
+    public OpenTelemetry openTelemetry(
+        OpenTelemetryConfigurationModel model, ComponentLoader componentLoader) {
+      OpenTelemetrySdk sdk = DeclarativeConfiguration.create(model, componentLoader);
 
       Runtime.getRuntime().addShutdownHook(new Thread(sdk::close));
 
-      GlobalOpenTelemetry.set(sdk);
-      GlobalConfigProvider.set(SdkConfigProvider.create(model));
+      SdkConfigProvider configProvider = SdkConfigProvider.create(model);
+      GlobalConfigProvider.set(configProvider);
 
       System.out.println(
           "OpenTelemetry SDK initialized with configuration from: " + sdk); // todo remove
@@ -176,6 +177,17 @@ public class OpenTelemetryAutoConfiguration {
       logStart();
 
       return null;
+    }
+
+    @Bean
+    public ConfigProvider configProvider(OpenTelemetryConfigurationModel model) {
+      return SdkConfigProvider.create(model);
+    }
+
+    @Bean
+    public InstrumentationConfig instrumentationConfig(
+        ConfigProperties properties, ConfigProvider configProvider) {
+      return new ConfigPropertiesBridge(properties, configProvider);
     }
 
     /**
