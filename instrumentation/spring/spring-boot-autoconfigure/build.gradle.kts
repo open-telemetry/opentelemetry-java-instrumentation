@@ -35,7 +35,9 @@ dependencies {
   annotationProcessor("org.springframework.boot:spring-boot-autoconfigure-processor:$springBootVersion")
   annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:$springBootVersion")
   implementation("javax.validation:validation-api")
-  implementation("com.fasterxml.jackson.core:jackson-core")
+  // snake yaml is already used by "spring-boot-resources"
+  // and less likely to cause problems compared to jackson
+  implementation("org.snakeyaml:snakeyaml-engine")
 
   implementation(project(":instrumentation-annotations-support"))
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))

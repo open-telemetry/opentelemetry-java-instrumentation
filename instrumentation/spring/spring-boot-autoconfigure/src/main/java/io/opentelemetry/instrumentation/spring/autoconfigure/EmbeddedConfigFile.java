@@ -1,89 +1,104 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.incubator.config.GlobalConfigProvider;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.SdkConfigProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
-import org.springframework.boot.env.OriginTrackedMapPropertySource;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.PropertySource;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
+import org.snakeyaml.engine.v2.api.Dump;
+import org.snakeyaml.engine.v2.api.DumpSettings;
+import org.snakeyaml.engine.v2.api.Load;
+import org.snakeyaml.engine.v2.api.LoadSettings;
+import org.springframework.boot.env.OriginTrackedMapPropertySource;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.PropertySource;
 
 class EmbeddedConfigFile {
 
-  private static final Pattern PATTERN = Pattern.compile(
-            "^Config resource 'class path resource \\[(.+)]' via location 'optional:classpath:/'$"
-    );
+  private EmbeddedConfigFile() {
+    // Utility class
+  }
+
+  private static final Pattern PATTERN =
+      Pattern.compile(
+          "^Config resource 'class path resource \\[(.+)]' via location 'optional:classpath:/'$");
 
   static OpenTelemetryConfigurationModel extractModel(ConfigurableEnvironment environment)
       throws IOException {
     for (PropertySource<?> propertySource : environment.getPropertySources()) {
       if (propertySource instanceof OriginTrackedMapPropertySource) {
-        OriginTrackedMapPropertySource source = (OriginTrackedMapPropertySource) propertySource;
-        String name = source.getName();
-        System.out.println("Property Source: " + name); // todo remove
-        Matcher matcher = PATTERN.matcher(name);
-        if (matcher.matches()) {
-          String file = matcher.group(1);
-          System.out.println("Found application.yaml: " + file);
+        return getModel(environment, (OriginTrackedMapPropertySource) propertySource);
+      }
+    }
+    throw new IllegalStateException("No application.yaml file found.");
+  }
 
-          try (InputStream resourceAsStream =
-              environment.getClass().getClassLoader().getResourceAsStream(file)) {
-            // Print the contents of the application.yaml file
-            if (resourceAsStream != null) {
-              String content = new String(resourceAsStream.readAllBytes());
-              System.out.println("Contents of " + file + ":");  // todo remove
-              System.out.println(content);             // todo remove
+  private static OpenTelemetryConfigurationModel getModel(
+      ConfigurableEnvironment environment, OriginTrackedMapPropertySource source)
+      throws IOException {
+    String name = source.getName();
+    System.out.println("Property Source: " + name); // todo remove
+    Matcher matcher = PATTERN.matcher(name);
+    if (matcher.matches()) {
+      String file = matcher.group(1);
+      System.out.println("Found application.yaml: " + file);
 
-              extractOtelConfigFile(content);
-            } else {
-              System.out.println("Could not find the application.yaml file in the classpath.");  // todo remove
-            }
-          }
+      try (InputStream resourceAsStream =
+          environment.getClass().getClassLoader().getResourceAsStream(file)) {
+        // Print the contents of the application.yaml file
+        if (resourceAsStream != null) {
+          //              String content = new String(resourceAsStream.readAllBytes());
+          //              System.out.println("Contents of " + file + ":");  // todo remove
+          //              System.out.println(content);             // todo remove
+
+          return extractOtelConfigFile(resourceAsStream);
+        } else {
+          throw new IllegalStateException("Unable to load " + file + " in the classpath.");
         }
       }
+    } else {
+      throw new IllegalStateException(
+          "No OpenTelemetry configuration found in the application.yaml file.");
     }
   }
 
-  private static void extractOtelConfigFile(String content) throws IOException {
+  @Nullable
+  @SuppressWarnings("unchecked")
+  private static String parseOtelNode(InputStream in) {
+    Load load = new Load(LoadSettings.builder().build());
+    Dump dump = new Dump(DumpSettings.builder().build());
+    for (Object o : load.loadAllFromInputStream(in)) {
+      Map<String, Object> data = (Map<String, Object>) o;
+      Map<String, Map<String, Object>> otel = (Map<String, Map<String, Object>>) data.get("otel");
+      if (otel != null) {
+        return dump.dumpToString(otel);
+      }
+    }
+    throw new IllegalStateException("No 'otel' configuration found in the YAML file.");
+  }
+
+  private static OpenTelemetryConfigurationModel extractOtelConfigFile(InputStream content) {
     //
     //	https://github.com/open-telemetry/opentelemetry-configuration/blob/c205770a956713e512eddb056570a99737e3383a/examples/kitchen-sink.yaml#L11
 
     // 1. read to yaml tree in jackson
-    ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
-    JsonNode rootNode = yamlMapper.readTree(content);
+    //    ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
+    //    JsonNode rootNode = yamlMapper.readTree(content);
 
-    // 2. find the "otel" node
-    JsonNode otelNode = rootNode.get("otel");
-    if (otelNode == null) {
-      System.out.println("No 'otel' configuration found in the YAML file.");  // todo remove
-      return;
+    String node = parseOtelNode(content);
+    if (node == null || node.isEmpty()) {
+      throw new IllegalStateException("otel node is empty or null in the YAML file.");
     }
 
-    String str = yamlMapper.writeValueAsString(otelNode);
+    System.out.println("OpenTelemetry configuration file content:"); // todo remove
+    System.out.println(node); // todo remove
 
-    OpenTelemetryConfigurationModel model =
-        DeclarativeConfiguration.parse(
-            new ByteArrayInputStream(str.getBytes(StandardCharsets.UTF_8)));
-    OpenTelemetrySdk sdk =
-        DeclarativeConfiguration.create(model); // can pass ComponentLoader as second arg
-
-    Runtime.getRuntime().addShutdownHook(new Thread(sdk::close));
-
-    GlobalOpenTelemetry.set(sdk);
-    GlobalConfigProvider.set(SdkConfigProvider.create(model));
-
-    System.out.println("OpenTelemetry SDK initialized with configuration from: " + sdk);  // todo remove
-    System.out.println("OpenTelemetry configuration file content:");                                     // todo remove
-    System.out.println(str);                                                                                            // todo remove
+    return DeclarativeConfiguration.parse(
+        new ByteArrayInputStream(node.getBytes(StandardCharsets.UTF_8)));
   }
 }
