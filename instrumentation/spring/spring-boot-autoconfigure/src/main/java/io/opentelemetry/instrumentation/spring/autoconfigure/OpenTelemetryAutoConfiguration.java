@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.GlobalConfigProvider;
 import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
@@ -132,6 +131,12 @@ public class OpenTelemetryAutoConfiguration {
         return autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk();
       }
 
+      @Bean
+      public InstrumentationConfig instrumentationConfig(
+          ConfigProperties properties) {
+        return new ConfigPropertiesBridge(properties);
+      }
+
       /**
        * Expose the {@link ConfigProperties} bean for use in other auto-configurations.
        *
@@ -180,14 +185,9 @@ public class OpenTelemetryAutoConfiguration {
     }
 
     @Bean
-    public ConfigProvider configProvider(OpenTelemetryConfigurationModel model) {
-      return SdkConfigProvider.create(model);
-    }
-
-    @Bean
     public InstrumentationConfig instrumentationConfig(
-        ConfigProperties properties, ConfigProvider configProvider) {
-      return new ConfigPropertiesBridge(properties, configProvider);
+        ConfigProperties properties, OpenTelemetryConfigurationModel model) {
+      return new ConfigPropertiesBridge(properties, SdkConfigProvider.create(model));
     }
 
     /**
