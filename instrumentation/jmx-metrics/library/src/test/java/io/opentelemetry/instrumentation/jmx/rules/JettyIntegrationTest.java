@@ -23,7 +23,7 @@ public class JettyIntegrationTest extends TargetSystemTest {
 
   private static final int JETTY_PORT = 8080;
 
-  @ParameterizedTest(name="jetty:{arguments}")
+  @ParameterizedTest(name = "jetty:{arguments}")
   @ValueSource(ints = {9, 10, 11, 12})
   void testCollectedMetrics(int jettyMajorVersion) {
 
@@ -78,57 +78,108 @@ public class JettyIntegrationTest extends TargetSystemTest {
       threadPoolAttributes = attributeGroup(attributeWithAnyValue("jetty.thread.pool.id"));
     }
 
-    return MetricsVerifier.create()
-        .add(
-            "jetty.thread.count",
-            metric ->
-                metric
-                    .hasDescription("The current number of threads")
-                    .hasUnit("{thread}")
-                    .hasDataPointsWithAttributes(threadPoolAttributes)
-                    .isUpDownCounter())
-        .add(
-            "jetty.thread.limit",
-            metric ->
-                metric
-                    .hasDescription("The configured maximum number of threads in the pool")
-                    .hasUnit("{thread}")
-                    .hasDataPointsWithAttributes(threadPoolAttributes)
-                    .isUpDownCounter())
-        .add(
-            "jetty.thread.idle.count",
-            metric ->
-                metric
-                    .hasDescription("The current number of idle threads")
-                    .hasUnit("{thread}")
-                    .hasDataPointsWithAttributes(threadPoolAttributes)
-                    .isUpDownCounter())
-        .add(
-            "jetty.thread.busy.count",
-            metric ->
-                metric
-                    .hasDescription("The current number of busy threads")
-                    .hasUnit("{thread}")
-                    .hasDataPointsWithAttributes(threadPoolAttributes)
-                    .isUpDownCounter())
-        .add(
-            "jetty.thread.queue.size",
-            metric ->
-                metric
-                    .hasDescription("The current job queue size")
-                    .hasUnit("{thread}")
-                    .hasDataPointsWithAttributes(threadPoolAttributes)
-                    .isUpDownCounter())
-        .add(
-            "jetty.select.count",
-            metric ->
-                metric
-                    .hasDescription("The number of select calls")
-                    .hasUnit("{operation}")
-                    .hasDataPointsWithAttributes(
-                        attributeGroup(
-                            attributeWithAnyValue("jetty.selector.id"),
-                            attributeWithAnyValue("jetty.selector.context")))
-                    .isCounter());
+    MetricsVerifier verifier =
+        MetricsVerifier.create()
+            .add(
+                "jetty.thread.count",
+                metric ->
+                    metric
+                        .isUpDownCounter()
+                        .hasDescription("The current number of threads")
+                        .hasUnit("{thread}")
+                        .hasDataPointsWithAttributes(threadPoolAttributes))
+            .add(
+                "jetty.thread.limit",
+                metric ->
+                    metric
+                        .isUpDownCounter()
+                        .hasDescription("The configured maximum number of threads in the pool")
+                        .hasUnit("{thread}")
+                        .hasDataPointsWithAttributes(threadPoolAttributes))
+            .add(
+                "jetty.thread.idle.count",
+                metric ->
+                    metric
+                        .isUpDownCounter()
+                        .hasDescription("The current number of idle threads")
+                        .hasUnit("{thread}")
+                        .hasDataPointsWithAttributes(threadPoolAttributes))
+            .add(
+                "jetty.thread.busy.count",
+                metric ->
+                    metric
+                        .isUpDownCounter()
+                        .hasDescription("The current number of busy threads")
+                        .hasUnit("{thread}")
+                        .hasDataPointsWithAttributes(threadPoolAttributes))
+            .add(
+                "jetty.thread.queue.size",
+                metric ->
+                    metric
+                        .isUpDownCounter()
+                        .hasDescription("The current job queue size")
+                        .hasUnit("{thread}")
+                        .hasDataPointsWithAttributes(threadPoolAttributes))
+            .add(
+                "jetty.select.count",
+                metric ->
+                    metric
+                        .isCounter()
+                        .hasDescription("The number of select calls")
+                        .hasUnit("{operation}")
+                        .hasDataPointsWithAttributes(
+                            attributeGroup(
+                                attributeWithAnyValue("jetty.selector.id"),
+                                attributeWithAnyValue("jetty.selector.context"))));
+
+    if (jettyMajorVersion < 12) {
+      verifier
+          .add(
+              "jetty.session.created.count",
+              metric ->
+                  metric
+                      .isCounter()
+                      .hasDescription("The total number of created sessions")
+                      .hasUnit("{session}")
+                      .hasDataPointsWithAttributes(
+                          attributeGroup(
+                              attributeWithAnyValue("jetty.context"),
+                              attributeWithAnyValue("jetty.session.handler.id"))))
+          .add(
+              "jetty.session.duration.sum",
+              metric ->
+                  metric
+                      .isCounter()
+                      .hasDescription("The cumulated session duration")
+                      .hasUnit("s")
+                      .hasDataPointsWithAttributes(
+                          attributeGroup(
+                              attributeWithAnyValue("jetty.context"),
+                              attributeWithAnyValue("jetty.session.handler.id"))))
+          .add(
+              "jetty.session.duration.max",
+              metric ->
+                  metric
+                      .isGauge()
+                      .hasDescription("The maximum session duration")
+                      .hasUnit("s")
+                      .hasDataPointsWithAttributes(
+                          attributeGroup(
+                              attributeWithAnyValue("jetty.context"),
+                              attributeWithAnyValue("jetty.session.handler.id"))))
+          .add(
+              "jetty.session.duration.mean",
+              metric ->
+                  metric
+                      .isGauge()
+                      .hasDescription("The mean session duration")
+                      .hasUnit("s")
+                      .hasDataPointsWithAttributes(
+                          attributeGroup(
+                              attributeWithAnyValue("jetty.context"),
+                              attributeWithAnyValue("jetty.session.handler.id"))));
+    }
+
+    return verifier;
   }
 }

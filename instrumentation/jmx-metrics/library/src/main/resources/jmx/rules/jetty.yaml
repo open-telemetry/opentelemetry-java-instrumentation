@@ -78,3 +78,36 @@ rules:
         type: counter
         unit: "{operation}"
         desc: The number of select calls
+
+  - bean: org.eclipse.jetty.server.session:context=*,type=sessionhandler,id=*
+    prefix: jetty.session.
+    metricAttribute:
+      jetty.context: param(context)
+      jetty.session.handler.id: param(id)
+    mapping:
+      # jetty.session.created.count
+      sessionsCreated:
+        metric: created.count
+        unit: "{session}"
+        type: counter
+        desc: The total number of created sessions
+      # jetty.session.duration.sum
+      sessionTimeTotal:
+        metric: duration.sum
+        unit: s
+        type: counter
+        desc: The cumulated session duration
+      # jetty.session.duration.max
+      sessionTimeMax:
+        metric: duration.max
+        unit: s
+        # gauge because it can't be aggregated
+        type: gauge
+        desc: The maximum session duration
+      # jetty.session.duration.mean
+      sessionTimeMean:
+        metric: duration.mean
+        unit: s
+        # gauge because it can't be aggregated
+        type: gauge
+        desc: The mean session duration
