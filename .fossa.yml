@@ -102,6 +102,9 @@ targets:
       target: ':instrumentation:external-annotations:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:failsafe-3.0:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:finagle-http-23.11:javaagent'
     - type: gradle
       path: ./
