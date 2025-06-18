@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.instrumentation.sdk.DeclarativeConfigPropertiesBridge;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelMapConverter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
@@ -23,14 +24,14 @@ import io.opentelemetry.sdk.autoconfigure.internal.SpiHelper;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -43,7 +44,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.env.Environment;
 
 /**
@@ -65,23 +65,8 @@ public class OpenTelemetryAutoConfiguration {
 
   public OpenTelemetryAutoConfiguration() {}
 
-  @Bean
-  @ConfigurationPropertiesBinding
-  OtelMapConverter otelMapConverter() {
-    // This is needed for otlp exporter headers and OtelResourceProperties.
-
-    // We need this converter, even if the SDK is disabled,
-    // because the properties are parsed before the SDK is disabled.
-
-    // We also need this converter if the OpenTelemetry bean is user supplied,
-    // because the environment variables may still contain a value that needs to be converted,
-    // even if the SDK is disabled (and the value thus ignored).
-    return new OtelMapConverter();
-  }
-
   @Configuration
   @Conditional(SdkEnabled.class)
-  @DependsOn("otelMapConverter")
   @ConditionalOnMissingBean(OpenTelemetry.class)
   static class OpenTelemetrySdkConfig {
 
@@ -101,67 +86,109 @@ public class OpenTelemetryAutoConfiguration {
       return new DistroVersionResourceProvider();
     }
 
-    @Bean
-    public AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk(
-        Environment env,
-        OtlpExporterProperties otlpExporterProperties,
-        OtelResourceProperties resourceProperties,
-        OtelSpringProperties otelSpringProperties,
-        OpenTelemetrySdkComponentLoader componentLoader) {
+    @Configuration
+    @ConditionalOnProperty(name = "otel.file_format", matchIfMissing = true, havingValue = "never")
+    static class PropertiesConfig {
 
-      return AutoConfigureUtil.setComponentLoader(
-              AutoConfigureUtil.setConfigPropertiesCustomizer(
-                  AutoConfiguredOpenTelemetrySdk.builder(),
-                  c ->
-                      SpringConfigProperties.create(
-                          env,
-                          otlpExporterProperties,
-                          resourceProperties,
-                          otelSpringProperties,
-                          c)),
-              componentLoader)
-          .build();
+      @Bean
+      @ConfigurationPropertiesBinding
+      OtelMapConverter otelMapConverter() {
+        return new OtelMapConverter();
+      }
+
+      @Bean
+      public AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk(
+          Environment env,
+          OtlpExporterProperties otlpExporterProperties,
+          OtelResourceProperties resourceProperties,
+          OtelSpringProperties otelSpringProperties,
+          OpenTelemetrySdkComponentLoader componentLoader) {
+
+        return AutoConfigureUtil.setComponentLoader(
+                AutoConfigureUtil.setConfigPropertiesCustomizer(
+                    AutoConfiguredOpenTelemetrySdk.builder(),
+                    c ->
+                        SpringConfigProperties.create(
+                            env,
+                            otlpExporterProperties,
+                            resourceProperties,
+                            otelSpringProperties,
+                            c)),
+                componentLoader)
+            .build();
+      }
+
+      @Bean
+      public OpenTelemetry openTelemetry(
+          AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
+        logStart();
+        return autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk();
+      }
+
+      /**
+       * Expose the {@link ConfigProperties} bean for use in other auto-configurations.
+       *
+       * <p>Not using spring boot properties directly in order to support {@link
+       * io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer#addPropertiesCustomizer(Function)}
+       * and {@link
+       * io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer#addPropertiesSupplier(Supplier)}.
+       */
+      @Bean
+      public ConfigProperties otelProperties(
+          AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
+        return AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk);
+      }
     }
+  }
 
-    // todo is not available with declarative config - unless via file property
+  @Configuration
+  @ConditionalOnProperty(name = "otel.file_format")
+  static class OpenTelemetrySdkEmbeddedConfigFileConfig {
+
     @Bean
-    public OpenTelemetry openTelemetry(
-        AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
-      logger.info(
-          "OpenTelemetry Spring Boot starter ({}) has been started",
-          EmbeddedInstrumentationProperties.findVersion(
-              "io.opentelemetry.spring-boot-autoconfigure"));
+    public OpenTelemetry openTelemetry() {
 
-      return autoConfiguredOpenTelemetrySdk.getOpenTelemetrySdk();
+      // todo declarative configuration
+      // todo map converter not needed here, because the declarative configuration is not using
+      // environment variables
+
+      logStart();
+
+      return null;
     }
 
     /**
      * Expose the {@link ConfigProperties} bean for use in other auto-configurations.
      *
-     * <p>Not using spring boot properties directly in order to support {@link
-     * io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer#addPropertiesCustomizer(Function)}
-     * and {@link
-     * io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer#addPropertiesSupplier(Supplier)}.
+     * <p>Not using spring boot properties directly, because declarative configuration does not
+     * integrate with spring boot properties.
      */
     @Bean
-    public ConfigProperties otelProperties(
-        AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
-      return AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk);
-    }
-
-    @Bean(name = "otelProperties")
-    public ConfigProperties otelBridgeProperties(OpenTelemetryConfigurationModel model) {
-      // todo componet loader
-      // todo bridge properties
-      return DeclarativeConfiguration.toConfigProperties(model);
+    public ConfigProperties otelProperties(OpenTelemetryConfigurationModel model) {
+      // todo component loader
+      return DeclarativeConfigPropertiesBridge.create(
+          DeclarativeConfiguration.toConfigProperties(model));
     }
   }
 
+  private static void logStart() {
+    logger.info(
+        "OpenTelemetry Spring Boot starter ({}) has been started",
+        EmbeddedInstrumentationProperties.findVersion(
+            "io.opentelemetry.spring-boot-autoconfigure"));
+  }
+
   @Configuration
-  @DependsOn("otelMapConverter")
   @ConditionalOnMissingBean(OpenTelemetry.class)
   @ConditionalOnProperty(name = "otel.sdk.disabled", havingValue = "true")
   static class DisabledOpenTelemetrySdkConfig {
+
+    @Bean
+    @ConfigurationPropertiesBinding
+    OtelMapConverter otelMapConverter() {
+      return new OtelMapConverter();
+    }
+
     @Bean
     public OpenTelemetry openTelemetry() {
       logger.info("OpenTelemetry Spring Boot starter has been disabled");
