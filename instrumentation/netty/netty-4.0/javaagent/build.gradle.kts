@@ -48,6 +48,8 @@ tasks {
   }
 
   test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+
     filter {
       excludeTestsMatching("Netty40ConnectionSpanTest")
       excludeTestsMatching("Netty40ClientSslTest")

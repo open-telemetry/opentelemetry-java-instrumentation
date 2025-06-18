@@ -130,6 +130,8 @@ testing {
   }
 }
 
+val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+
 tasks {
   if (!(findProperty("testLatestDeps") as Boolean)) {
     check {
@@ -143,6 +145,9 @@ tasks {
 
   val testStableSemconv by registering(Test::class) {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
+
+    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("metaDataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   check {
@@ -151,6 +156,7 @@ tasks {
 
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("collectMetadata", collectMetadata)
   }
 
   withType<Test>().configureEach {
