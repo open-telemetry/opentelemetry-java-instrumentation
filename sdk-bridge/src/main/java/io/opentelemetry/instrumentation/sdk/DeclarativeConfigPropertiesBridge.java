@@ -3,9 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.extension;
+package io.opentelemetry.instrumentation.sdk;
 
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigException;
@@ -224,7 +223,7 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
     }
     if (segments.length > 1) {
       for (int i = 0; i < segments.length - 1; i++) {
-        target = target.getStructured(segments[i], empty());
+        target = target.getStructured(segments[i], DeclarativeConfigProperties.empty());
       }
     }
     String lastPart = segments[segments.length - 1];
