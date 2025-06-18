@@ -29,6 +29,8 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -115,6 +117,7 @@ public class OpenTelemetryAutoConfiguration {
           .build();
     }
 
+    // todo is not available with declarative config - unless via file property
     @Bean
     public OpenTelemetry openTelemetry(
         AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
@@ -138,6 +141,13 @@ public class OpenTelemetryAutoConfiguration {
     public ConfigProperties otelProperties(
         AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
       return AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk);
+    }
+
+    @Bean(name = "otelProperties")
+    public ConfigProperties otelBridgeProperties(OpenTelemetryConfigurationModel model) {
+      // todo componet loader
+      // todo bridge properties
+      return DeclarativeConfiguration.toConfigProperties(model);
     }
   }
 
