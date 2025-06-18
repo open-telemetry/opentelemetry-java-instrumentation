@@ -214,8 +214,6 @@ public abstract class InstrumentationTestRunner {
   private void collectEmittedSpans(List<List<SpanData>> spans) {
     for (List<SpanData> spanList : spans) {
       for (SpanData span : spanList) {
-        String spanName = span.getName();
-        System.out.println(spanName);
         Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>> scopeMap =
             this.tracesByScope.computeIfAbsent(
                 span.getInstrumentationScopeInfo(), m -> new HashMap<>());

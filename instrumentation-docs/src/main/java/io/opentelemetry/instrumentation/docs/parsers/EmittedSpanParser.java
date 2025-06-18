@@ -54,12 +54,12 @@ public class EmittedSpanParser {
 
                     spansByScope.putIfAbsent(whenKey, new StringBuilder("spans_by_scope:\n"));
 
-                    // Skip the metric spans_by_scope ("metrics:") so we can aggregate into one list
-                    int metricsIndex = content.indexOf("spans_by_scope:\n");
-                    if (metricsIndex != -1) {
-                      String contentAfterMetrics =
-                          content.substring(metricsIndex + "spans_by_scope:\n".length());
-                      spansByScope.get(whenKey).append(contentAfterMetrics);
+                    // Skip the spans_by_scope line so we can aggregate into one list
+                    int spanIndex = content.indexOf("spans_by_scope:\n");
+                    if (spanIndex != -1) {
+                      String contentAfter =
+                          content.substring(spanIndex + "spans_by_scope:\n".length());
+                      spansByScope.get(whenKey).append(contentAfter);
                     }
                   }
                 });
@@ -76,11 +76,10 @@ public class EmittedSpanParser {
    * `when`, indicating the conditions under which the telemetry is emitted. deduplicates by name
    * and then returns a new map.
    *
-   * @param input raw string representation of EmittedMetrics yaml
-   * @return {@code Map<String, EmittedMetrics>} where the key is the `when` condition
+   * @param input raw string representation of EmittedSpans yaml
+   * @return {@code Map<String, EmittedSpans>} where the key is the `when` condition
    */
-  // visible for testing
-  public static Map<String, EmittedSpans> parseSpans(Map<String, StringBuilder> input)
+  private static Map<String, EmittedSpans> parseSpans(Map<String, StringBuilder> input)
       throws JsonProcessingException {
     Map<String, EmittedSpans> result = new HashMap<>();
 
@@ -139,7 +138,8 @@ public class EmittedSpanParser {
     for (Map.Entry<String, Map<String, Set<TelemetryAttribute>>> scopeEntry :
         attributesByScopeAndSpanKind.entrySet()) {
       String scope = scopeEntry.getKey();
-      EmittedSpans.SpansByScope deduplicatedScope = getSpansByScope(scopeEntry, scope);
+      Map<String, Set<TelemetryAttribute>> spanKindMap = scopeEntry.getValue();
+      EmittedSpans.SpansByScope deduplicatedScope = getSpansByScope(scope, spanKindMap);
       deduplicatedSpansByScope.add(deduplicatedScope);
     }
 
@@ -147,16 +147,15 @@ public class EmittedSpanParser {
   }
 
   /**
-   * Converts a map entry of scope and its attributes into an {@link EmittedSpans.SpansByScope}
-   * object.
+   * Converts a map of attributes by spanKind into an {@link EmittedSpans.SpansByScope} object.
+   * Deduplicates spans by their kind and collects their attributes.
    *
-   * @param scopeEntry the map entry containing scope and its attributes
    * @param scope the name of the scope
+   * @param spanKindMap a map where the key is the span kind and the value is set of attributes
    * @return an {@link EmittedSpans.SpansByScope} object with deduplicated spans
    */
   private static EmittedSpans.SpansByScope getSpansByScope(
-      Map.Entry<String, Map<String, Set<TelemetryAttribute>>> scopeEntry, String scope) {
-    Map<String, Set<TelemetryAttribute>> spanKindMap = scopeEntry.getValue();
+      String scope, Map<String, Set<TelemetryAttribute>> spanKindMap) {
 
     List<EmittedSpans.Span> deduplicatedSpans = new ArrayList<>();
 
