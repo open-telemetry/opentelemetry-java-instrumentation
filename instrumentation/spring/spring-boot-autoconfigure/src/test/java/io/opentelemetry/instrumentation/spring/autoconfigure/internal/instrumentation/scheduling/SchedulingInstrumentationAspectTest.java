@@ -16,8 +16,8 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.Collections;
@@ -40,8 +40,8 @@ class SchedulingInstrumentationAspectTest {
   private String unproxiedTesterClassName;
 
   SpringSchedulingInstrumentationAspect newAspect(
-      OpenTelemetry openTelemetry, ConfigProperties configProperties) {
-    return new SpringSchedulingInstrumentationAspect(openTelemetry, configProperties);
+      OpenTelemetry openTelemetry, InstrumentationConfig config) {
+    return new SpringSchedulingInstrumentationAspect(openTelemetry, config);
   }
 
   @BeforeEach

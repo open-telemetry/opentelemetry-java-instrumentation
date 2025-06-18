@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.web;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.web.client.RestTemplate;
@@ -15,13 +15,13 @@ final class RestTemplateBeanPostProcessor implements BeanPostProcessor {
 
   private final ObjectProvider<OpenTelemetry> openTelemetryProvider;
 
-  private final ObjectProvider<ConfigProperties> configPropertiesProvider;
+  private final ObjectProvider<InstrumentationConfig> configProvider;
 
   RestTemplateBeanPostProcessor(
       ObjectProvider<OpenTelemetry> openTelemetryProvider,
-      ObjectProvider<ConfigProperties> configPropertiesProvider) {
+      ObjectProvider<InstrumentationConfig> configProvider) {
     this.openTelemetryProvider = openTelemetryProvider;
-    this.configPropertiesProvider = configPropertiesProvider;
+    this.configProvider = configProvider;
   }
 
   @Override
@@ -31,8 +31,6 @@ final class RestTemplateBeanPostProcessor implements BeanPostProcessor {
     }
 
     return RestTemplateInstrumentation.addIfNotPresent(
-        (RestTemplate) bean,
-        openTelemetryProvider.getObject(),
-        configPropertiesProvider.getObject());
+        (RestTemplate) bean, openTelemetryProvider.getObject(), configProvider.getObject());
   }
 }
