@@ -50,7 +50,7 @@ public final class ObjectAllocationInNewTlabHandler extends AbstractThreadDispat
 
   @Override
   public Consumer<RecordedEvent> createPerThreadSummarizer(String threadName) {
-    return new PerThreadObjectAllocationInNewTlabHandler(histogram, threadName);
+    return new PerThreadObjectAllocationInNewTlabHandler(histogram);
   }
 
   /** This class aggregates all TLAB allocation JFR events for a single thread */
@@ -61,10 +61,9 @@ public final class ObjectAllocationInNewTlabHandler extends AbstractThreadDispat
     private final LongHistogram histogram;
     private final Attributes attributes;
 
-    public PerThreadObjectAllocationInNewTlabHandler(LongHistogram histogram, String threadName) {
+    public PerThreadObjectAllocationInNewTlabHandler(LongHistogram histogram) {
       this.histogram = histogram;
-      this.attributes =
-          Attributes.of(Constants.ATTR_THREAD_NAME, threadName, Constants.ATTR_ARENA_NAME, "TLAB");
+      this.attributes = Attributes.of(Constants.ATTR_ARENA_NAME, "TLAB");
     }
 
     @Override

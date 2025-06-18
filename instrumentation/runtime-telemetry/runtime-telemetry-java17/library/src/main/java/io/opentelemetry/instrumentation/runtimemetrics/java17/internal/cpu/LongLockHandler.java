@@ -51,7 +51,7 @@ public final class LongLockHandler extends AbstractThreadDispatchingHandler {
 
   @Override
   public Consumer<RecordedEvent> createPerThreadSummarizer(String threadName) {
-    return new PerThreadLongLockHandler(histogram, threadName);
+    return new PerThreadLongLockHandler(histogram);
   }
 
   @Override
@@ -65,9 +65,9 @@ public final class LongLockHandler extends AbstractThreadDispatchingHandler {
     private final DoubleHistogram histogram;
     private final Attributes attributes;
 
-    public PerThreadLongLockHandler(DoubleHistogram histogram, String threadName) {
+    public PerThreadLongLockHandler(DoubleHistogram histogram) {
       this.histogram = histogram;
-      this.attributes = Attributes.of(Constants.ATTR_THREAD_NAME, threadName);
+      this.attributes = Attributes.empty();
     }
 
     @Override

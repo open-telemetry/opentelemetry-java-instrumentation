@@ -56,7 +56,7 @@ public final class NetworkReadHandler extends AbstractThreadDispatchingHandler {
 
   @Override
   public Consumer<RecordedEvent> createPerThreadSummarizer(String threadName) {
-    return new PerThreadNetworkReadHandler(bytesHistogram, durationHistogram, threadName);
+    return new PerThreadNetworkReadHandler(bytesHistogram, durationHistogram);
   }
 
   private static class PerThreadNetworkReadHandler implements Consumer<RecordedEvent> {
@@ -67,15 +67,10 @@ public final class NetworkReadHandler extends AbstractThreadDispatchingHandler {
     private final Attributes attributes;
 
     public PerThreadNetworkReadHandler(
-        LongHistogram bytesHistogram, DoubleHistogram durationHistogram, String threadName) {
+        LongHistogram bytesHistogram, DoubleHistogram durationHistogram) {
       this.bytesHistogram = bytesHistogram;
       this.durationHistogram = durationHistogram;
-      this.attributes =
-          Attributes.of(
-              Constants.ATTR_THREAD_NAME,
-              threadName,
-              Constants.ATTR_NETWORK_MODE,
-              Constants.NETWORK_MODE_READ);
+      this.attributes = Attributes.of(Constants.ATTR_NETWORK_MODE, Constants.NETWORK_MODE_READ);
     }
 
     @Override
