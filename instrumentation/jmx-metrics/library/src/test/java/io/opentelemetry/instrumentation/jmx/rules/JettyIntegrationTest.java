@@ -23,7 +23,7 @@ public class JettyIntegrationTest extends TargetSystemTest {
 
   private static final int JETTY_PORT = 8080;
 
-  @ParameterizedTest
+  @ParameterizedTest(name="jetty:{arguments}")
   @ValueSource(ints = {9, 10, 11, 12})
   void testCollectedMetrics(int jettyMajorVersion) {
 
