@@ -17,6 +17,7 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.ConfigPropertiesBridge;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -57,7 +58,8 @@ class SchedulingInstrumentationAspectTest {
     SpringSchedulingInstrumentationAspect aspect =
         newAspect(
             testing.getOpenTelemetry(),
-            DefaultConfigProperties.createFromMap(Collections.emptyMap()));
+            new ConfigPropertiesBridge(
+                DefaultConfigProperties.createFromMap(Collections.emptyMap())));
     factory.addAspect(aspect);
 
     schedulingTester = factory.getProxy();
