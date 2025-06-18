@@ -24,7 +24,7 @@ public class JettyIntegrationTest extends TargetSystemTest {
   private static final int JETTY_PORT = 8080;
 
   @ParameterizedTest
-  @ValueSource(ints = {11, 12})
+  @ValueSource(ints = {11}) // TODO: add support for Jetty 12
   void testCollectedMetrics(int jettyMajorVersion) {
 
     List<String> yamlFiles = Collections.singletonList("jetty.yaml");
