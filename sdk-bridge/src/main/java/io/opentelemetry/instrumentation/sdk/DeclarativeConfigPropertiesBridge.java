@@ -3,9 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.extension;
+package io.opentelemetry.instrumentation.sdk;
 
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -46,15 +45,15 @@ import javax.annotation.Nullable;
  *         string_key: value
  * </pre>
  */
-final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
+public final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
 
   // The node at .instrumentation.java
   private final DeclarativeConfigProperties instrumentationJavaNode;
 
-  DeclarativeConfigPropertiesBridge(DeclarativeConfigProperties instrumentationNode) {
-    instrumentationJavaNode = instrumentationNode.getStructured("java", empty());
+  public DeclarativeConfigPropertiesBridge(DeclarativeConfigProperties instrumentationNode) {
+    instrumentationJavaNode = instrumentationNode.getStructured("java", DeclarativeConfigProperties.empty());
   }
 
   @Nullable
@@ -142,7 +141,7 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
     DeclarativeConfigProperties target = instrumentationJavaNode;
     if (segments.length > 1) {
       for (int i = 0; i < segments.length - 1; i++) {
-        target = target.getStructured(segments[i], empty());
+        target = target.getStructured(segments[i], DeclarativeConfigProperties.empty());
       }
     }
     String lastPart = segments[segments.length - 1];
