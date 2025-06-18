@@ -41,6 +41,10 @@
 - JMX Metric Insights - improved Tomcat metrics alignment to semconv
   and added new Tomcat metrics `tomcat.session.active.limit` and `tomcat.thread.limit`
   ([#13650](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13650))
+- Apply method instrumentation only to methods
+  ([#13949](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13949))
+- Apply external annotation instrumentation only to methods
+  ([#13948](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13948))
 - Log start of spring boot starter
   ([#13882](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13882))
 - Update the OpenTelemetry SDK version to 1.51.0
@@ -53,6 +57,8 @@
   ([#14003](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14003))
 - Add auto-instrumentation support for AWS Step Functions SDK v2
   ([#14028](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14028))
+- Skip propagating context into mysql jdbc cleanup thread
+  ([#14060](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14060))
 
 ### 🛠️ Bug fixes
 
