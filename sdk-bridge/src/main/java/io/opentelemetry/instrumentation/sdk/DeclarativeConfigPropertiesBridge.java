@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.sdk;
 
-
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.time.Duration;
@@ -53,7 +52,8 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
   private final DeclarativeConfigProperties instrumentationJavaNode;
 
   private DeclarativeConfigPropertiesBridge(DeclarativeConfigProperties instrumentationNode) {
-    instrumentationJavaNode = instrumentationNode.getStructured("java", DeclarativeConfigProperties.empty());
+    instrumentationJavaNode =
+        instrumentationNode.getStructured("java", DeclarativeConfigProperties.empty());
   }
 
   public static DeclarativeConfigPropertiesBridge create(
