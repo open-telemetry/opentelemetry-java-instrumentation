@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java17.internal;
 
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import jdk.jfr.consumer.RecordedEvent;
 import jdk.jfr.consumer.RecordedThread;
@@ -14,13 +15,17 @@ import jdk.jfr.consumer.RecordedThread;
  * any time.
  */
 public final class ThreadGrouper {
+  private static final Pattern SIMILAR_THREAD_NAME_PATTERN = Pattern.compile("\\d+");
 
-  // FIXME doesn't actually do any grouping, but should be safe for now
+  // FIXME only handles substrings of contiguous digits -> a single `x`, but should be good
+  // enough for now
   @Nullable
   public String groupedName(RecordedEvent ev) {
     Object thisField = ev.getValue("eventThread");
     if (thisField instanceof RecordedThread) {
-      return ((RecordedThread) thisField).getJavaName();
+      return SIMILAR_THREAD_NAME_PATTERN
+          .matcher(((RecordedThread) thisField).getJavaName())
+          .replaceAll("x");
     }
     return null;
   }
