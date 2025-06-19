@@ -26,8 +26,7 @@ public class TestBridgeSpanExporterComponentProvider implements ComponentProvide
 
   @Override
   public SpanExporter create(DeclarativeConfigProperties config) {
-    return Objects.requireNonNull(
-        spanExporter, "spanExporter must not be null");
+    return Objects.requireNonNull(spanExporter, "spanExporter must not be null");
   }
 
   public static void setSpanExporter(SpanExporter spanExporter) {

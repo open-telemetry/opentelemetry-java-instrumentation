@@ -27,8 +27,7 @@ public class TestBridgeLogRecordExporterComponentProvider
 
   @Override
   public LogRecordExporter create(DeclarativeConfigProperties config) {
-    return Objects.requireNonNull(
-        logRecordExporter, "logRecordExporter must not be null");
+    return Objects.requireNonNull(logRecordExporter, "logRecordExporter must not be null");
   }
 
   public static void setLogRecordExporter(LogRecordExporter logRecordExporter) {

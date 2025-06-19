@@ -27,8 +27,7 @@ public class TestBridgeMetricExporterComponentProvider
 
   @Override
   public MetricExporter create(DeclarativeConfigProperties config) {
-    return Objects.requireNonNull(
-        metricExporter, "metricExporter must not be null");
+    return Objects.requireNonNull(metricExporter, "metricExporter must not be null");
   }
 
   public static void setMetricExporter(MetricExporter metricExporter) {
