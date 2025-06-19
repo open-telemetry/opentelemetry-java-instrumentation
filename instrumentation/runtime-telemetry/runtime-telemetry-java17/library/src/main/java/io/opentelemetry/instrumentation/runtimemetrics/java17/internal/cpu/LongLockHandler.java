@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.runtimemetrics.java17.JfrFeature;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.DurationUtil;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.RecordedEventHandler;
-import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.ThreadGrouper;
 import java.time.Duration;
 import java.util.Optional;
 import jdk.jfr.consumer.RecordedEvent;
@@ -31,7 +30,7 @@ public final class LongLockHandler implements RecordedEventHandler {
   private final DoubleHistogram histogram;
   private final Attributes attributes;
 
-  public LongLockHandler(Meter meter, ThreadGrouper grouper) {
+  public LongLockHandler(Meter meter) {
     super();
     histogram =
         meter

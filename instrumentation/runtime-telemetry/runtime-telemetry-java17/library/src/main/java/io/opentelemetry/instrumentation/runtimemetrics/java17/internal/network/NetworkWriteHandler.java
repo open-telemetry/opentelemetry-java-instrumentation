@@ -13,7 +13,6 @@ import io.opentelemetry.instrumentation.runtimemetrics.java17.JfrFeature;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.DurationUtil;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.RecordedEventHandler;
-import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.ThreadGrouper;
 import jdk.jfr.consumer.RecordedEvent;
 
 // jdk.SocketWrite {
@@ -46,7 +45,7 @@ public final class NetworkWriteHandler implements RecordedEventHandler {
   private final DoubleHistogram durationHistogram;
   private final Attributes attributes;
 
-  public NetworkWriteHandler(Meter meter, ThreadGrouper nameNormalizer) {
+  public NetworkWriteHandler(Meter meter) {
     super();
     bytesHistogram =
         meter

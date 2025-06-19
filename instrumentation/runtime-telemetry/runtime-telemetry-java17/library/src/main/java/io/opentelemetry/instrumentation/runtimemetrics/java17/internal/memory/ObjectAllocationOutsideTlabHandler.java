@@ -11,7 +11,6 @@ import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.JfrFeature;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.RecordedEventHandler;
-import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.ThreadGrouper;
 import jdk.jfr.consumer.RecordedEvent;
 
 /**
@@ -28,7 +27,7 @@ public final class ObjectAllocationOutsideTlabHandler implements RecordedEventHa
   private final LongHistogram histogram;
   private final Attributes attributes;
 
-  public ObjectAllocationOutsideTlabHandler(Meter meter, ThreadGrouper grouper) {
+  public ObjectAllocationOutsideTlabHandler(Meter meter) {
     super();
     histogram =
         meter
