@@ -5,7 +5,13 @@
 
 package io.opentelemetry.spring.smoketest;
 
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.semconv.HttpAttributes;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 
 @SpringBootTest(
     classes = {
@@ -13,9 +19,27 @@ import org.springframework.boot.test.context.SpringBootTest;
       AbstractOtelSpringStarterSmokeTest.TestConfiguration.class,
       SpringSmokeOtelConfiguration.class
     },
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = {
-      // The headers are simply set here to make sure that headers can be parsed
-      "otel.instrumentation.runtime-telemetry.emit-experimental-telemetry=true",  // todo to file config
-    })
-class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {}
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
+
+  @Autowired private RestTemplateBuilder restTemplateBuilder;
+
+  // can't use @LocalServerPort annotation since it moved packages between Spring Boot 2 and 3
+  @Value("${local.server.port}")
+  private int port;
+
+  @Test
+  void restTemplate() {
+    testing.clearAllExportedData();
+
+    org.springframework.web.client.RestTemplate restTemplate = restTemplateBuilder.rootUri("http://localhost:" + port).build();
+    restTemplate.getForObject(OtelSpringStarterSmokeTestController.PING, String.class);
+    testing.waitAndAssertTraces(
+        traceAssert ->
+            traceAssert.hasSpansSatisfyingExactly(
+                span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/ping"),
+                span ->
+                    span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"),
+                AbstractSpringStarterSmokeTest::withSpanAssert));
+  }
+}
