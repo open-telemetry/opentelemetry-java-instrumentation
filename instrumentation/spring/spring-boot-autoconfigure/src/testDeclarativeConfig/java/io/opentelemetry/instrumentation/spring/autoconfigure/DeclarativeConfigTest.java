@@ -7,9 +7,11 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
@@ -33,6 +35,12 @@ class DeclarativeConfigTest {
           .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
           // to load application.yaml
           .withInitializer(new ConfigDataApplicationContextInitializer());
+
+  @BeforeEach
+  void setUp() {
+    // todo remove - see io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration.OpenTelemetrySdkConfig.EmbeddedConfigFileConfig
+    GlobalOpenTelemetry.resetForTest();
+  }
 
   @Test
   @DisplayName(
