@@ -65,8 +65,8 @@ class DeclarativeConfigTest {
                             .isNotNull()
                             .satisfies(
                                 instrumentationConfig ->
-                                    assertThat(instrumentationConfig.getString("foo"))
-                                        .isEqualTo("bar"))));
+                                    assertThat(instrumentationConfig.getString("bar"))
+                                        .isEqualTo("baz"))));
   }
 
   @Test
