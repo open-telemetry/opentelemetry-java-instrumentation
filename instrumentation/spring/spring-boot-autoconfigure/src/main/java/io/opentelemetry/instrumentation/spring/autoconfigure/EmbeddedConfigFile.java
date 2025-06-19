@@ -46,21 +46,13 @@ class EmbeddedConfigFile {
   private static OpenTelemetryConfigurationModel getModel(
       ConfigurableEnvironment environment, OriginTrackedMapPropertySource source)
       throws IOException {
-    String name = source.getName();
-    System.out.println("Property Source: " + name); // todo remove
-    Matcher matcher = PATTERN.matcher(name);
+    Matcher matcher = PATTERN.matcher(source.getName());
     if (matcher.matches()) {
       String file = matcher.group(1);
-      System.out.println("Found application.yaml: " + file);
 
       try (InputStream resourceAsStream =
           environment.getClass().getClassLoader().getResourceAsStream(file)) {
-        // Print the contents of the application.yaml file
         if (resourceAsStream != null) {
-          //              String content = new String(resourceAsStream.readAllBytes());
-          //              System.out.println("Contents of " + file + ":");  // todo remove
-          //              System.out.println(content);             // todo remove
-
           return extractOtelConfigFile(resourceAsStream);
         } else {
           throw new IllegalStateException("Unable to load " + file + " in the classpath.");
@@ -88,20 +80,10 @@ class EmbeddedConfigFile {
   }
 
   private static OpenTelemetryConfigurationModel extractOtelConfigFile(InputStream content) {
-    //
-    //	https://github.com/open-telemetry/opentelemetry-configuration/blob/c205770a956713e512eddb056570a99737e3383a/examples/kitchen-sink.yaml#L11
-
-    // 1. read to yaml tree in jackson
-    //    ObjectMapper yamlMapper = new ObjectMapper(new YAMLFactory());
-    //    JsonNode rootNode = yamlMapper.readTree(content);
-
     String node = parseOtelNode(content);
     if (node == null || node.isEmpty()) {
       throw new IllegalStateException("otel node is empty or null in the YAML file.");
     }
-
-    System.out.println("OpenTelemetry configuration file content:"); // todo remove
-    System.out.println(node); // todo remove
 
     return DeclarativeConfiguration.parse(
         new ByteArrayInputStream(node.getBytes(StandardCharsets.UTF_8)));

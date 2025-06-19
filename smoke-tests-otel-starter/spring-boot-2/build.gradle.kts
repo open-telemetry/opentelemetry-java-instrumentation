@@ -35,6 +35,11 @@ configurations.configureEach {
 testing {
   suites {
     val testDeclarativeConfig by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project())
+        implementation(project(":smoke-tests-otel-starter:spring-boot-common"))
+        implementation("org.springframework.boot:spring-boot-starter-test:2.6.15")
+      }
     }
   }
 }
