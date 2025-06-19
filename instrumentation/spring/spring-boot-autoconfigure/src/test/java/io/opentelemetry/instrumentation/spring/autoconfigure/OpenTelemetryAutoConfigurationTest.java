@@ -152,7 +152,8 @@ class OpenTelemetryAutoConfigurationTest {
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
         .withPropertyValues("otel.sdk.disabled=false")
         .run(
-            context -> assertThat(context).getBean("openTelemetry").isInstanceOf(OpenTelemetrySdk.class));
+            context ->
+                assertThat(context).getBean("openTelemetry").isInstanceOf(OpenTelemetrySdk.class));
   }
 
   @Test
