@@ -23,7 +23,7 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
       SpringSmokeOtelConfiguration.class
     },
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@EnableAutoConfiguration(exclude={MongoAutoConfiguration.class, MongoDataAutoConfiguration.class})
+@EnableAutoConfiguration(exclude = {MongoAutoConfiguration.class, MongoDataAutoConfiguration.class})
 class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
   @Autowired private RestTemplateBuilder restTemplateBuilder;
@@ -36,7 +36,8 @@ class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
   void restTemplate() {
     testing.clearAllExportedData();
 
-    org.springframework.web.client.RestTemplate restTemplate = restTemplateBuilder.rootUri("http://localhost:" + port).build();
+    org.springframework.web.client.RestTemplate restTemplate =
+        restTemplateBuilder.rootUri("http://localhost:" + port).build();
     restTemplate.getForObject(OtelSpringStarterSmokeTestController.PING, String.class);
     testing.waitAndAssertTraces(
         traceAssert ->

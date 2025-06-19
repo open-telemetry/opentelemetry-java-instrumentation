@@ -38,7 +38,8 @@ class DeclarativeConfigTest {
 
   @BeforeEach
   void setUp() {
-    // todo remove - see io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration.OpenTelemetrySdkConfig.EmbeddedConfigFileConfig
+    // todo remove - see
+    // io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration.OpenTelemetrySdkConfig.EmbeddedConfigFileConfig
     GlobalOpenTelemetry.resetForTest();
   }
 
