@@ -25,7 +25,15 @@ otel:
           exporter:
             test_bridge:
 
-  resource:
-    attributes:
-      - name: foo
-        value: bar
+  propagator:
+    composite:
+      - tracecontext:
+      - baggage:
+
+  instrumentation/development:
+    java:
+      runtime-telemetry:
+        emit-experimental-telemetry: true
+      http:
+        client:
+          emit-experimental-telemetry: true
