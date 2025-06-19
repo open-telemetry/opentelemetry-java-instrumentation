@@ -31,3 +31,16 @@ configurations.configureEach {
     force("org.slf4j:slf4j-api:1.7.36")
   }
 }
+
+testing {
+  suites {
+    val testDeclarativeConfig by registering(JvmTestSuite::class) {
+    }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
+}
