@@ -71,12 +71,6 @@ public class OpenTelemetryAutoConfiguration {
   @Conditional(SdkEnabled.class)
   @ConditionalOnMissingBean(OpenTelemetry.class)
   static class OpenTelemetrySdkConfig {
-
-    @Bean
-    public ComponentLoader openTelemetrySdkComponentLoader(ApplicationContext applicationContext) {
-      return new OpenTelemetrySdkComponentLoader(applicationContext);
-    }
-
     @Bean
     public ResourceProvider otelSpringResourceProvider(Optional<BuildProperties> buildProperties) {
       return new SpringResourceProvider(buildProperties);
@@ -108,7 +102,7 @@ public class OpenTelemetryAutoConfiguration {
           OtlpExporterProperties otlpExporterProperties,
           OtelResourceProperties resourceProperties,
           OtelSpringProperties otelSpringProperties,
-          ComponentLoader componentLoader) {
+          ApplicationContext applicationContext) {
 
         return AutoConfigureUtil.setComponentLoader(
                 AutoConfigureUtil.setConfigPropertiesCustomizer(
@@ -120,7 +114,7 @@ public class OpenTelemetryAutoConfiguration {
                             resourceProperties,
                             otelSpringProperties,
                             c)),
-                componentLoader)
+                new OpenTelemetrySdkComponentLoader(applicationContext))
             .build();
       }
 
@@ -163,8 +157,8 @@ public class OpenTelemetryAutoConfiguration {
 
     @Bean
     public OpenTelemetry openTelemetry(
-        OpenTelemetryConfigurationModel model, ComponentLoader componentLoader) {
-      OpenTelemetrySdk sdk = DeclarativeConfiguration.create(model, componentLoader);
+        OpenTelemetryConfigurationModel model, ApplicationContext applicationContext) {
+      OpenTelemetrySdk sdk = DeclarativeConfiguration.create(model, new OpenTelemetrySdkComponentLoader(applicationContext));
 
       Runtime.getRuntime().addShutdownHook(new Thread(sdk::close));
 
