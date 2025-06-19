@@ -5,5 +5,5 @@ plugins {
 dependencies {
   api(project(":testing-common"))
 
-  implementation("dev.failsafe:failsafe:3.0.1")
+  api("dev.failsafe:failsafe:3.0.1")
 }
