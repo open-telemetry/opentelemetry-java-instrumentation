@@ -7,6 +7,9 @@ package io.opentelemetry.spring.smoketest;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
+import io.opentelemetry.instrumentation.testing.provider.TestBridgeLogRecordExporterComponentProvider;
+import io.opentelemetry.instrumentation.testing.provider.TestBridgeMetricExporterComponentProvider;
+import io.opentelemetry.instrumentation.testing.provider.TestBridgeSpanExporterComponentProvider;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.MetricData;
@@ -36,6 +39,11 @@ public final class SpringSmokeTestRunner extends InstrumentationTestRunner {
     testSpanExporter = InMemorySpanExporter.create();
     testMetricExporter = InMemoryMetricExporter.create(AggregationTemporality.DELTA);
     testLogRecordExporter = InMemoryLogRecordExporter.create();
+
+    // for declarative config
+    TestBridgeLogRecordExporterComponentProvider.setLogRecordExporter(testLogRecordExporter);
+    TestBridgeMetricExporterComponentProvider.setMetricExporter(testMetricExporter);
+    TestBridgeSpanExporterComponentProvider.setSpanExporter(testSpanExporter);
   }
 
   @Override
