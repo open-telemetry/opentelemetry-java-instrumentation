@@ -19,12 +19,16 @@ import java.util.Map;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
 
-public class MetricParser {
-  private static final Logger logger = Logger.getLogger(MetricParser.class.getName());
+/**
+ * This class is responsible for parsing metric-* files from the `.telemetry` directory of an
+ * instrumentation module and converting them into the {@link EmittedMetrics} format.
+ */
+public class EmittedMetricsParser {
+  private static final Logger logger = Logger.getLogger(EmittedMetricsParser.class.getName());
 
   /**
-   * Looks for metric files in the .telemetry directory, and combines them into a single list of
-   * metrics.
+   * Looks for metric files in the .telemetry directory, and combines them into a map where the key
+   * represents the "when", and the value is a list of metrics emitted under that condition.
    *
    * @param instrumentationDirectory the directory to traverse
    * @return contents of aggregated files
@@ -67,7 +71,7 @@ public class MetricParser {
   /**
    * Takes in a raw string representation of the aggregated EmittedMetrics yaml map, separated by
    * the `when`, indicating the conditions under which the metrics are emitted. deduplicates the
-   * metrics by name and then returns a new map EmittedMetrics objects.
+   * metrics by name and then returns a new map of EmittedMetrics objects.
    *
    * @param input raw string representation of EmittedMetrics yaml
    * @return {@code Map<String, EmittedMetrics>} where the key is the `when` condition
@@ -95,5 +99,5 @@ public class MetricParser {
     return metricsMap;
   }
 
-  private MetricParser() {}
+  private EmittedMetricsParser() {}
 }
