@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.testing.provider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
+import java.util.Objects;
 
 public class TestBridgeMetricExporterComponentProvider
     implements ComponentProvider<MetricExporter> {
@@ -26,7 +27,8 @@ public class TestBridgeMetricExporterComponentProvider
 
   @Override
   public MetricExporter create(DeclarativeConfigProperties config) {
-    return metricExporter;
+    return Objects.requireNonNull(
+        metricExporter, "metricExporter must not be null");
   }
 
   public static void setMetricExporter(MetricExporter metricExporter) {
