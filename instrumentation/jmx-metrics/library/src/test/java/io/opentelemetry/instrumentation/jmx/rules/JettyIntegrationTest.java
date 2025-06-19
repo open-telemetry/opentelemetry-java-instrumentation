@@ -41,7 +41,12 @@ public class JettyIntegrationTest extends TargetSystemTest {
     Set<String> jettyModules = new HashSet<>(Arrays.asList("jmx", "http"));
     if (jettyMajorVersion >= 12) {
       jettyModules.add("statistics");
+      // required for session management
+      jettyModules.add("sessions");
+      // required for deployment support in 'webapps' folder
+      jettyModules.add("ee10-deploy");
     } else {
+      // with older versions deployment and session management are available by default
       jettyModules.add("stats");
     }
     String addModulesArg = "--add-to-startd=" + String.join(",", jettyModules);
@@ -152,7 +157,7 @@ public class JettyIntegrationTest extends TargetSystemTest {
               "jetty.session.count.max",
               metric ->
                   metric
-                      .isUpDownCounter()
+                      .isGauge()
                       .hasDescription("Maximum number of active sessions")
                       .hasUnit("{session}")
                       .hasDataPointsWithAttributes(
