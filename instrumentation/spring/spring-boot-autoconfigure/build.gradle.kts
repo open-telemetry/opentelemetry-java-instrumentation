@@ -174,6 +174,27 @@ testing {
         }
       }
     }
+
+    val testDeclarativeConfig by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project())
+        implementation("org.springframework.boot:spring-boot-starter-web:3.2.4")
+        implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+        implementation("org.springframework.boot:spring-boot-starter-test:3.2.4") {
+          exclude("org.junit.vintage", "junit-vintage-engine")
+        }
+      }
+    }
+
+    val testStableSemconv by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=database")
+          }
+        }
+      }
+    }
   }
 }
 
@@ -228,5 +249,6 @@ tasks {
 
   check {
     dependsOn(testing.suites, testStableSemconv)
+    dependsOn(testStableSemconv)
   }
 }
