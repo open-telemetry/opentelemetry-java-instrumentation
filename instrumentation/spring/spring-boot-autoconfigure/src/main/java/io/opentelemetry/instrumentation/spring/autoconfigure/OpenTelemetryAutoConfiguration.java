@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
@@ -163,7 +163,8 @@ public class OpenTelemetryAutoConfiguration {
             DeclarativeConfiguration.create(
                 model, new OpenTelemetrySdkComponentLoader(applicationContext));
         Runtime.getRuntime().addShutdownHook(new Thread(sdk::close));
-        // todo there is no equivalent to https://github.com/open-telemetry/opentelemetry-java/blob/7655192df504d28da2d2013f2fc49ec44ef6202e/sdk-extensions/autoconfigure/src/main/java/io/opentelemetry/sdk/autoconfigure/LoggerProviderConfiguration.java#L96
+        // todo there is no equivalent to
+        // https://github.com/open-telemetry/opentelemetry-java/blob/7655192df504d28da2d2013f2fc49ec44ef6202e/sdk-extensions/autoconfigure/src/main/java/io/opentelemetry/sdk/autoconfigure/LoggerProviderConfiguration.java#L96
         // so we get a NPE when there is no global OpenTelemetry instance set
         GlobalOpenTelemetry.set(sdk);
         logStart();
@@ -172,8 +173,13 @@ public class OpenTelemetryAutoConfiguration {
 
       @Bean
       public InstrumentationConfig instrumentationConfig(
-          ConfigProperties properties, OpenTelemetryConfigurationModel model) {
-        return new ConfigPropertiesBridge(properties, SdkConfigProvider.create(model));
+          ConfigProperties properties, ConfigProvider configProvider) {
+        return new ConfigPropertiesBridge(properties, configProvider);
+      }
+
+      @Bean
+      public ConfigProvider configProvider(OpenTelemetryConfigurationModel model) {
+        return SdkConfigProvider.create(model);
       }
 
       /**
@@ -183,12 +189,8 @@ public class OpenTelemetryAutoConfiguration {
        * integrate with spring boot properties.
        */
       @Bean
-      public ConfigProperties otelProperties(OpenTelemetryConfigurationModel model) {
-        SdkConfigProvider provider = SdkConfigProvider.create(model);
-        DeclarativeConfigProperties instrumentationConfig = provider.getInstrumentationConfig();
-
-        return DeclarativeConfigPropertiesBridge.create(
-            instrumentationConfig);
+      public ConfigProperties otelProperties(ConfigProvider configProvider) {
+        return DeclarativeConfigPropertiesBridge.create(configProvider.getInstrumentationConfig());
       }
     }
   }
