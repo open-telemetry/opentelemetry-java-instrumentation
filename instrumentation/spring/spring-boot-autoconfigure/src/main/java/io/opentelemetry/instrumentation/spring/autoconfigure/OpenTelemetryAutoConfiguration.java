@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.incubator.config.GlobalConfigProvider;
 import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
@@ -158,23 +157,12 @@ public class OpenTelemetryAutoConfiguration {
     @Bean
     public OpenTelemetry openTelemetry(
         OpenTelemetryConfigurationModel model, ApplicationContext applicationContext) {
-      OpenTelemetrySdk sdk = DeclarativeConfiguration.create(model, new OpenTelemetrySdkComponentLoader(applicationContext));
-
+      OpenTelemetrySdk sdk =
+          DeclarativeConfiguration.create(
+              model, new OpenTelemetrySdkComponentLoader(applicationContext));
       Runtime.getRuntime().addShutdownHook(new Thread(sdk::close));
-
-      SdkConfigProvider configProvider = SdkConfigProvider.create(model);
-      GlobalConfigProvider.set(configProvider);
-
-      System.out.println(
-          "OpenTelemetry SDK initialized with configuration from: " + sdk); // todo remove
-
-      // todo declarative configuration
-      // todo map converter not needed here, because the declarative configuration is not using
-      // environment variables
-
       logStart();
-
-      return null;
+      return sdk;
     }
 
     @Bean
@@ -219,6 +207,26 @@ public class OpenTelemetryAutoConfiguration {
     public ConfigProperties otelProperties() {
       return DefaultConfigProperties.createFromMap(Collections.emptyMap());
     }
+
+    @Bean
+    public InstrumentationConfig instrumentationConfig(ConfigProperties properties) {
+      return new ConfigPropertiesBridge(properties, null);
+    }
+
+    @Configuration
+    @ConditionalOnProperty(name = "otel.file_format", matchIfMissing = true, havingValue = "never")
+    static class PropertiesConfig {
+      /**
+       * Is only added so that we have the same converters as with active OpenTelemetry SDK
+       *
+       * <p>In other words, don't break applications that (accidentally) use the {@link
+       * OtelMapConverter}.
+       */
+      @Bean
+      OtelMapConverter otelMapConverter() {
+        return new OtelMapConverter();
+      }
+    }
   }
 
   @Configuration
@@ -228,6 +236,16 @@ public class OpenTelemetryAutoConfiguration {
     @Bean
     public ConfigProperties otelProperties() {
       return DefaultConfigProperties.create(Collections.emptyMap());
+    }
+  }
+
+  @Configuration
+  @ConditionalOnBean(OpenTelemetry.class)
+  @ConditionalOnMissingBean({InstrumentationConfig.class})
+  static class FallbackInstrumentationConfig {
+    @Bean
+    public InstrumentationConfig instrumentationConfig(ConfigProperties properties) {
+      return new ConfigPropertiesBridge(properties, null);
     }
   }
 
