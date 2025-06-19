@@ -129,6 +129,7 @@ dependencies {
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
+val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
 
 testing {
   suites {
@@ -162,6 +163,7 @@ testing {
           testTask.configure {
             // TODO run tests both with and without genai message capture
             systemProperty("otel.instrumentation.genai.capture-message-content", "true")
+            systemProperty("collectMetadata", collectMetadata)
           }
         }
       }
@@ -190,6 +192,7 @@ tasks {
       excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
     systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+    systemProperty("collectMetadata", collectMetadata)
   }
 
   check {
@@ -203,6 +206,7 @@ tasks {
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
     systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", "true")
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("collectMetadata", collectMetadata)
   }
 
   withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>().configureEach {
@@ -217,6 +221,8 @@ tasks {
     }
     systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
+
+    systemProperty("metaDataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   check {
