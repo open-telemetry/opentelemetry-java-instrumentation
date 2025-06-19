@@ -144,43 +144,44 @@ public class OpenTelemetryAutoConfiguration {
       }
   }
 
-  @Configuration
-  @ConditionalOnProperty(name = "otel.file_format")
-  static class EmbeddedConfigFileConfig {
+    @Configuration
+    @ConditionalOnProperty(name = "otel.file_format")
+    static class EmbeddedConfigFileConfig {
 
-    @Bean
-    public OpenTelemetryConfigurationModel openTelemetryConfigurationModel(
-        ConfigurableEnvironment environment) throws IOException {
-      return EmbeddedConfigFile.extractModel(environment);
-    }
+      @Bean
+      public OpenTelemetryConfigurationModel openTelemetryConfigurationModel(
+          ConfigurableEnvironment environment) throws IOException {
+        return EmbeddedConfigFile.extractModel(environment);
+      }
 
-    @Bean
-    public OpenTelemetry openTelemetry(
-        OpenTelemetryConfigurationModel model, ApplicationContext applicationContext) {
-      OpenTelemetrySdk sdk =
-          DeclarativeConfiguration.create(
-              model, new OpenTelemetrySdkComponentLoader(applicationContext));
-      Runtime.getRuntime().addShutdownHook(new Thread(sdk::close));
-      logStart();
-      return sdk;
-    }
+      @Bean
+      public OpenTelemetry openTelemetry(
+          OpenTelemetryConfigurationModel model, ApplicationContext applicationContext) {
+        OpenTelemetrySdk sdk =
+            DeclarativeConfiguration.create(
+                model, new OpenTelemetrySdkComponentLoader(applicationContext));
+        Runtime.getRuntime().addShutdownHook(new Thread(sdk::close));
+        logStart();
+        return sdk;
+      }
 
-    @Bean
-    public InstrumentationConfig instrumentationConfig(
-        ConfigProperties properties, OpenTelemetryConfigurationModel model) {
-      return new ConfigPropertiesBridge(properties, SdkConfigProvider.create(model));
-    }
+      @Bean
+      public InstrumentationConfig instrumentationConfig(
+          ConfigProperties properties, OpenTelemetryConfigurationModel model) {
+        return new ConfigPropertiesBridge(properties, SdkConfigProvider.create(model));
+      }
 
-    /**
-     * Expose the {@link ConfigProperties} bean for use in other auto-configurations.
-     *
-     * <p>Not using spring boot properties directly, because declarative configuration does not
-     * integrate with spring boot properties.
-     */
-    @Bean
-    public ConfigProperties otelProperties(OpenTelemetryConfigurationModel model) {
-      return DeclarativeConfigPropertiesBridge.create(
-          DeclarativeConfiguration.toConfigProperties(model));
+      /**
+       * Expose the {@link ConfigProperties} bean for use in other auto-configurations.
+       *
+       * <p>Not using spring boot properties directly, because declarative configuration does not
+       * integrate with spring boot properties.
+       */
+      @Bean
+      public ConfigProperties otelProperties(OpenTelemetryConfigurationModel model) {
+        return DeclarativeConfigPropertiesBridge.create(
+            DeclarativeConfiguration.toConfigProperties(model));
+      }
     }
   }
 
