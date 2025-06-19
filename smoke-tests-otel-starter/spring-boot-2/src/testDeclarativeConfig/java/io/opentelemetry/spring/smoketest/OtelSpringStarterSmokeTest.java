@@ -10,6 +10,9 @@ import io.opentelemetry.semconv.HttpAttributes;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 
@@ -20,6 +23,7 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
       SpringSmokeOtelConfiguration.class
     },
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@EnableAutoConfiguration(exclude={MongoAutoConfiguration.class, MongoDataAutoConfiguration.class})
 class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
   @Autowired private RestTemplateBuilder restTemplateBuilder;
