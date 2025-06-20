@@ -4,7 +4,7 @@
 
 ## Apache License, Version 2.0
 
-**1** **Group:** `codes.rafael.asmjdkbridge` **Name:** `asm-jdk-bridge` **Version:** `0.0.9`
+**1** **Group:** `codes.rafael.asmjdkbridge` **Name:** `asm-jdk-bridge` **Version:** `0.0.10`
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
 **2** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18`
@@ -12,33 +12,33 @@
 > - **POM Project URL**: [https://github.com/raphw/weak-lock-free](https://github.com/raphw/weak-lock-free)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**3** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-annotations` **Version:** `2.19.0`
+**3** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-annotations` **Version:** `2.19.1`
 > - **Project URL**: [https://github.com/FasterXML/jackson](https://github.com/FasterXML/jackson)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-annotations-2.19.0.jar/META-INF/LICENSE](jackson-annotations-2.19.0.jar/META-INF/LICENSE)
-    - [jackson-annotations-2.19.0.jar/META-INF/NOTICE](jackson-annotations-2.19.0.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-annotations-2.19.1.jar/META-INF/LICENSE](jackson-annotations-2.19.1.jar/META-INF/LICENSE)
+    - [jackson-annotations-2.19.1.jar/META-INF/NOTICE](jackson-annotations-2.19.1.jar/META-INF/NOTICE)
 
-**4** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.19.0`
+**4** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.19.1`
 > - **Project URL**: [https://github.com/FasterXML/jackson-core](https://github.com/FasterXML/jackson-core)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-core-2.19.0.jar/META-INF/LICENSE](jackson-core-2.19.0.jar/META-INF/LICENSE)
-    - [jackson-core-2.19.0.jar/META-INF/NOTICE](jackson-core-2.19.0.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-core-2.19.1.jar/META-INF/LICENSE](jackson-core-2.19.1.jar/META-INF/LICENSE)
+    - [jackson-core-2.19.1.jar/META-INF/NOTICE](jackson-core-2.19.1.jar/META-INF/NOTICE)
 
-**5** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-databind` **Version:** `2.19.0`
+**5** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-databind` **Version:** `2.19.1`
 > - **Project URL**: [https://github.com/FasterXML/jackson](https://github.com/FasterXML/jackson)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-databind-2.19.0.jar/META-INF/LICENSE](jackson-databind-2.19.0.jar/META-INF/LICENSE)
-    - [jackson-databind-2.19.0.jar/META-INF/NOTICE](jackson-databind-2.19.0.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-databind-2.19.1.jar/META-INF/LICENSE](jackson-databind-2.19.1.jar/META-INF/LICENSE)
+    - [jackson-databind-2.19.1.jar/META-INF/NOTICE](jackson-databind-2.19.1.jar/META-INF/NOTICE)
 
-**6** **Group:** `com.fasterxml.jackson.dataformat` **Name:** `jackson-dataformat-yaml` **Version:** `2.19.0`
+**6** **Group:** `com.fasterxml.jackson.dataformat` **Name:** `jackson-dataformat-yaml` **Version:** `2.19.1`
 > - **Project URL**: [https://github.com/FasterXML/jackson-dataformats-text](https://github.com/FasterXML/jackson-dataformats-text)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-dataformat-yaml-2.19.0.jar/META-INF/LICENSE](jackson-dataformat-yaml-2.19.0.jar/META-INF/LICENSE)
-    - [jackson-dataformat-yaml-2.19.0.jar/META-INF/NOTICE](jackson-dataformat-yaml-2.19.0.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-dataformat-yaml-2.19.1.jar/META-INF/LICENSE](jackson-dataformat-yaml-2.19.1.jar/META-INF/LICENSE)
+    - [jackson-dataformat-yaml-2.19.1.jar/META-INF/NOTICE](jackson-dataformat-yaml-2.19.1.jar/META-INF/NOTICE)
 
 **7** **Group:** `com.google.cloud.opentelemetry` **Name:** `detector-resources-support` **Version:** `0.34.0`
 > - **POM Project URL**: [https://github.com/GoogleCloudPlatform/opentelemetry-operations-java](https://github.com/GoogleCloudPlatform/opentelemetry-operations-java)
@@ -54,11 +54,11 @@
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [okhttp-4.12.0.jar/okhttp3/internal/publicsuffix/NOTICE](okhttp-4.12.0.jar/okhttp3/internal/publicsuffix/NOTICE)
 
-**10** **Group:** `com.squareup.okio` **Name:** `okio` **Version:** `3.12.0`
+**10** **Group:** `com.squareup.okio` **Name:** `okio` **Version:** `3.13.0`
 > - **POM Project URL**: [https://github.com/square/okio/](https://github.com/square/okio/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**11** **Group:** `com.squareup.okio` **Name:** `okio-jvm` **Version:** `3.12.0`
+**11** **Group:** `com.squareup.okio` **Name:** `okio-jvm` **Version:** `3.13.0`
 > - **POM Project URL**: [https://github.com/square/okio/](https://github.com/square/okio/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
@@ -174,11 +174,11 @@
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java-contrib](https://github.com/open-telemetry/opentelemetry-java-contrib)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**40** **Group:** `io.opentelemetry.semconv` **Name:** `opentelemetry-semconv` **Version:** `1.32.0`
+**40** **Group:** `io.opentelemetry.semconv` **Name:** `opentelemetry-semconv` **Version:** `1.34.0`
 > - **POM Project URL**: [https://github.com/open-telemetry/semantic-conventions-java](https://github.com/open-telemetry/semantic-conventions-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**41** **Group:** `io.opentelemetry.semconv` **Name:** `opentelemetry-semconv-incubating` **Version:** `1.32.0-alpha`
+**41** **Group:** `io.opentelemetry.semconv` **Name:** `opentelemetry-semconv-incubating` **Version:** `1.34.0-alpha`
 > - **POM Project URL**: [https://github.com/open-telemetry/semantic-conventions-java](https://github.com/open-telemetry/semantic-conventions-java)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
@@ -220,10 +220,10 @@
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [zipkin-2.27.1.jar/META-INF/LICENSE](zipkin-2.27.1.jar/META-INF/LICENSE)
 
-**50** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.17.5`
+**50** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.17.6`
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [byte-buddy-dep-1.17.5.jar/META-INF/LICENSE](byte-buddy-dep-1.17.5.jar/META-INF/LICENSE)
-    - [byte-buddy-dep-1.17.5.jar/META-INF/NOTICE](byte-buddy-dep-1.17.5.jar/META-INF/NOTICE)
+> - **Embedded license files**: [byte-buddy-dep-1.17.6.jar/META-INF/LICENSE](byte-buddy-dep-1.17.6.jar/META-INF/LICENSE)
+    - [byte-buddy-dep-1.17.6.jar/META-INF/NOTICE](byte-buddy-dep-1.17.6.jar/META-INF/NOTICE)
 
 **51** **Group:** `org.jetbrains` **Name:** `annotations` **Version:** `13.0`
 > - **POM Project URL**: [http://www.jetbrains.org](http://www.jetbrains.org)

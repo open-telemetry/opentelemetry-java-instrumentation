@@ -58,6 +58,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -124,6 +125,11 @@ public class AgentInstaller {
     EmbeddedInstrumentationProperties.setPropertiesLoader(extensionClassLoader);
     setDefineClassHandler();
     FieldBackedImplementationConfiguration.configure(earlyConfig);
+    // preload ThreadLocalRandom to avoid occasional
+    // java.lang.ClassCircularityError: java/util/concurrent/ThreadLocalRandom
+    // see https://github.com/raphw/byte-buddy/issues/1666 and
+    // https://bugs.openjdk.org/browse/JDK-8164165
+    ThreadLocalRandom.current();
 
     AgentBuilder agentBuilder =
         new AgentBuilder.Default(
