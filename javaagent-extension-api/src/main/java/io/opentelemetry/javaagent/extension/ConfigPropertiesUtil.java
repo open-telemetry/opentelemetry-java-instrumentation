@@ -11,7 +11,6 @@ import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 
-// TODO: Add unit test
 public class ConfigPropertiesUtil {
   private ConfigPropertiesUtil() {}
 
@@ -28,9 +27,11 @@ public class ConfigPropertiesUtil {
     if (configProvider != null) {
       DeclarativeConfigProperties instrumentationConfig = configProvider.getInstrumentationConfig();
 
-      if (instrumentationConfig != null) {
-        return new DeclarativeConfigPropertiesBridge(instrumentationConfig);
+      if (instrumentationConfig == null) {
+        instrumentationConfig = DeclarativeConfigProperties.empty();
       }
+
+      return new DeclarativeConfigPropertiesBridge(instrumentationConfig);
     }
     // Should never happen
     throw new IllegalStateException(
