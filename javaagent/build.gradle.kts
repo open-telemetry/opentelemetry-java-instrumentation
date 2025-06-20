@@ -53,6 +53,8 @@ val licenseReportDependencies by configurations.creating {
 
 dependencies {
   bootstrapLibs(project(":instrumentation-api"))
+  // opentelemetry-api is an api dependency of :instrumentation-api, but opentelemetry-api-incubator is not
+  bootstrapLibs("io.opentelemetry:opentelemetry-api-incubator")
   bootstrapLibs(project(":instrumentation-api-incubator"))
   bootstrapLibs(project(":instrumentation-annotations-support"))
   bootstrapLibs(project(":javaagent-bootstrap"))
