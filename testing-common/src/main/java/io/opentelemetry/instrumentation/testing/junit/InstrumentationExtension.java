@@ -95,6 +95,7 @@ public abstract class InstrumentationExtension
   }
 
   @SafeVarargs
+  @SuppressWarnings("varargs")
   public final void waitAndAssertMetrics(
       String instrumentationName, Consumer<MetricAssert>... assertions) {
     testRunner.waitAndAssertMetrics(instrumentationName, assertions);
