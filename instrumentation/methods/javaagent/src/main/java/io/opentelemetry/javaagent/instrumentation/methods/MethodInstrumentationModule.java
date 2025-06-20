@@ -5,6 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.methods;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
+
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.trace.SpanKind;
@@ -12,7 +16,6 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,8 +38,11 @@ public class MethodInstrumentationModule extends InstrumentationModule {
         AgentInstrumentationConfig.get().getDeclarativeConfig("methods");
     List<TypeInstrumentation> list =
         methods != null ? MethodsConfig.parseDeclarativeConfig(methods) : parseConfigProperties();
+    // ensure that there is at least one instrumentation so that muzzle reference collection could
+    // work
     if (list.isEmpty()) {
-      return Collections.singletonList(new MethodInstrumentation(null, Collections.emptyMap()));
+      return singletonList(
+          new MethodInstrumentation(null, singletonMap(SpanKind.INTERNAL, emptyList())));
     }
     return list;
   }
@@ -51,11 +57,7 @@ public class MethodInstrumentationModule extends InstrumentationModule {
         .map(
             e ->
                 new MethodInstrumentation(
-                    e.getKey(),
-                    e.getValue().stream()
-                        .collect(
-                            Collectors.toMap(
-                                methodName -> methodName, ignore -> SpanKind.INTERNAL))))
+                    e.getKey(), singletonMap(SpanKind.INTERNAL, e.getValue())))
         .collect(Collectors.toList());
   }
 

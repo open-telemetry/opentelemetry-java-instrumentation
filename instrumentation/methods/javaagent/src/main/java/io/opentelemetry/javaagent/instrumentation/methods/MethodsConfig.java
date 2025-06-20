@@ -10,7 +10,9 @@ import static java.util.Collections.emptyList;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import java.util.LinkedHashMap;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -39,7 +41,7 @@ public class MethodsConfig {
       return Stream.empty();
     }
 
-    Map<String, SpanKind> methodNames = new LinkedHashMap<>();
+    Map<SpanKind, Collection<String>> methodNames = new EnumMap<>(SpanKind.class);
     for (DeclarativeConfigProperties method : config.getStructuredList("methods", emptyList())) {
       String methodName = method.getString("name");
       if (isNullOrEmpty(methodName)) {
@@ -49,7 +51,10 @@ public class MethodsConfig {
       }
       String spanKind = method.getString("span_kind", "INTERNAL");
       try {
-        methodNames.put(methodName, SpanKind.valueOf(spanKind.toUpperCase(Locale.ROOT)));
+        methodNames
+            .computeIfAbsent(
+                SpanKind.valueOf(spanKind.toUpperCase(Locale.ROOT)), unused -> new ArrayList<>())
+            .add(methodName);
       } catch (IllegalArgumentException e) {
         logger.log(
             Level.WARNING,
