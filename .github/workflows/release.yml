@@ -21,7 +21,7 @@ jobs:
   release:
     permissions:
       contents: write # for creating the release
-    runs-on: oracle-8cpu-32gb-x86-64
+    runs-on: ubuntu-latest
     needs:
       - common
     outputs:
