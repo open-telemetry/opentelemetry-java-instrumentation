@@ -30,11 +30,4 @@ instrumentation/development:
         - class: io.opentelemetry.javaagent.instrumentation.methods.MethodTest$ConfigTracedCallable
           methods:
             - name: call
-        - class: io.opentelemetry.javaagent.instrumentation.methods.MethodTest$ConfigTracedCompletableFuture
-          methods:
-            - name: getResult
               span_kind: SERVER
-        - class: javax.naming.directory.InitialDirContext
-          methods:
-            - name: search
-              span_kind: CLIENT
