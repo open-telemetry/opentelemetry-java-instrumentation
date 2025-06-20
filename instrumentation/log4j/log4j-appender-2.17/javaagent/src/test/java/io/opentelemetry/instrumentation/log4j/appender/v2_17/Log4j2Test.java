@@ -189,8 +189,8 @@ class Log4j2Test {
                 .hasSeverity(Severity.INFO)
                 .hasSeverityText("INFO")
                 .hasAttributesSatisfyingExactly(
-                    equalTo(AttributeKey.stringKey("log4j.map_message.key1"), "val1"),
-                    equalTo(AttributeKey.stringKey("log4j.map_message.key2"), "val2"),
+                    equalTo(AttributeKey.stringKey("key1"), "val1"),
+                    equalTo(AttributeKey.stringKey("key2"), "val2"),
                     equalTo(THREAD_NAME, Thread.currentThread().getName()),
                     equalTo(THREAD_ID, Thread.currentThread().getId()),
                     equalTo(CODE_NAMESPACE, Log4j2Test.class.getName()),
@@ -214,7 +214,7 @@ class Log4j2Test {
                 .hasSeverity(Severity.INFO)
                 .hasSeverityText("INFO")
                 .hasAttributesSatisfyingExactly(
-                    equalTo(AttributeKey.stringKey("log4j.map_message.key1"), "val1"),
+                    equalTo(AttributeKey.stringKey("key1"), "val1"),
                     equalTo(THREAD_NAME, Thread.currentThread().getName()),
                     equalTo(THREAD_ID, Thread.currentThread().getId()),
                     equalTo(CODE_NAMESPACE, Log4j2Test.class.getName()),
@@ -238,8 +238,8 @@ class Log4j2Test {
                 .hasSeverity(Severity.INFO)
                 .hasSeverityText("INFO")
                 .hasAttributesSatisfyingExactly(
-                    equalTo(AttributeKey.stringKey("log4j.map_message.key1"), "val1"),
-                    equalTo(AttributeKey.stringKey("log4j.map_message.key2"), "val2"),
+                    equalTo(AttributeKey.stringKey("key1"), "val1"),
+                    equalTo(AttributeKey.stringKey("key2"), "val2"),
                     equalTo(THREAD_NAME, Thread.currentThread().getName()),
                     equalTo(THREAD_ID, Thread.currentThread().getId()),
                     equalTo(CODE_NAMESPACE, Log4j2Test.class.getName()),
