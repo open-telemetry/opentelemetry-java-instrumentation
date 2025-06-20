@@ -22,6 +22,7 @@ public final class JdbcTelemetryBuilder {
   private boolean statementSanitizationEnabled = true;
   private boolean transactionInstrumenterEnabled = false;
   private boolean captureQueryParameters = false;
+  private boolean sqlCommenterEnabled = false;
 
   JdbcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -68,6 +69,19 @@ public final class JdbcTelemetryBuilder {
     return this;
   }
 
+  /**
+   * Sets whether to augment sql query with comment containing the tracing information. See <a
+   * href="https://google.github.io/sqlcommenter/">sqlcommenter</a> for more info.
+   *
+   * <p>WARNING: augmenting queries with tracing context will make query texts unique, which may
+   * have adverse impact on database performance. Consult with database experts before enabling.
+   */
+  @CanIgnoreReturnValue
+  public JdbcTelemetryBuilder setEnableSqlCommenter(boolean sqlCommenterEnabled) {
+    this.sqlCommenterEnabled = sqlCommenterEnabled;
+    return this;
+  }
+
   /** Returns a new {@link JdbcTelemetry} with the settings of this {@link JdbcTelemetryBuilder}. */
   public JdbcTelemetry build() {
     Instrumenter<DataSource, DbInfo> dataSourceInstrumenter =
@@ -87,6 +101,7 @@ public final class JdbcTelemetryBuilder {
         dataSourceInstrumenter,
         statementInstrumenter,
         transactionInstrumenter,
-        captureQueryParameters);
+        captureQueryParameters,
+        sqlCommenterEnabled);
   }
 }
