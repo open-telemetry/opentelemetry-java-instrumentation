@@ -102,7 +102,8 @@ public class MetricAggregationTest {
     ObjectName bean = getObjectName(null, null);
     theServer.registerMBean(new Hello(42), bean);
 
-    testMetric(bean.toString(), 42);
+    Collection<MetricData> data = testMetric(bean.toString());
+    checkSingleValue(data, 42);
   }
 
   @Test
@@ -111,7 +112,8 @@ public class MetricAggregationTest {
     theServer.registerMBean(new Hello(37), getObjectName("value2", null));
 
     String bean = getObjectName("*", null).toString();
-    testMetric(bean, 79);
+    Collection<MetricData> data = testMetric(bean);
+    checkSingleValue(data, 79);
   }
 
   @Test
@@ -122,10 +124,11 @@ public class MetricAggregationTest {
     theServer.registerMBean(new Hello(5), getObjectName("4", "b"));
 
     String bean = getObjectName("*", "*").toString();
-    testMetric(bean, 11);
+    Collection<MetricData> data = testMetric(bean);
+    checkSingleValue(data, 11);
   }
 
-  void testMetric(String mbean, int expectedValue) throws MalformedObjectNameException {
+  private Collection<MetricData> testMetric(String mbean) throws MalformedObjectNameException {
     JmxMetricInsight metricInsight = JmxMetricInsight.createService(sdk, 0);
     MetricConfiguration metricConfiguration = new MetricConfiguration();
     List<MetricExtractor> extractors = new ArrayList<>();
@@ -142,8 +145,10 @@ public class MetricAggregationTest {
     metricConfiguration.addMetricDef(metricDef);
     metricInsight.startLocal(metricConfiguration);
 
-    Collection<MetricData> data = waitMetricsReceived();
+    return waitMetricsReceived();
+  }
 
+  private static void checkSingleValue(Collection<MetricData> data, int expectedValue) {
     assertThat(data)
         .isNotEmpty()
         .satisfiesExactlyInAnyOrder(
