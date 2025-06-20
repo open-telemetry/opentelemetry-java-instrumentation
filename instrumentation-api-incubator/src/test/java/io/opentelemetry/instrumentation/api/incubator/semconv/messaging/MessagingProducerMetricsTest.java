@@ -77,7 +77,7 @@ class MessagingProducerMetricsTest {
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
-                    .hasName("messaging.publish.duration")
+                    .hasName("messaging.client.operation.duration")
                     .hasUnit("s")
                     .hasDescription("Measures the duration of publish operation.")
                     .hasHistogramSatisfying(
@@ -113,7 +113,7 @@ class MessagingProducerMetricsTest {
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
-                    .hasName("messaging.publish.duration")
+                    .hasName("messaging.client.operation.duration")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(

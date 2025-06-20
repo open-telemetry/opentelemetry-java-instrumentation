@@ -12,6 +12,8 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -65,7 +67,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  span.hasName(topic + " publish")
+                  span.hasName(topic + " send")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -117,7 +119,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  span.hasName(topic + " publish")
+                  span.hasName(topic + " send")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -139,9 +141,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
-                    .hasName("messaging.receive.duration")
+                    .hasName("messaging.client.operation.duration")
                     .hasUnit("s")
-                    .hasDescription("Measures the duration of receive operation.")
+                    .hasDescription(
+                        "Duration of messaging operation initiated by a producer or consumer client.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -150,15 +153,28 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfying(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                                            equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(SERVER_PORT, brokerPort),
+                                            equalTo(SERVER_ADDRESS, brokerHost))
+                                        .hasBucketBoundaries(DURATION_BUCKETS),
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfying(
+                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
             metric ->
                 assertThat(metric)
-                    .hasName("messaging.receive.messages")
+                    .hasName("messaging.client.consumed.messages")
                     .hasUnit("{message}")
-                    .hasDescription("Measures the number of received messages.")
+                    .hasDescription("Number of messages that were delivered to the application.")
                     .hasLongSumSatisfying(
                         sum -> {
                           sum.hasPointsSatisfying(
@@ -167,28 +183,13 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                     .hasValue(1)
                                     .hasAttributesSatisfying(
                                         equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                        equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                        equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                                         equalTo(MESSAGING_DESTINATION_NAME, topic),
                                         equalTo(SERVER_PORT, brokerPort),
                                         equalTo(SERVER_ADDRESS, brokerHost));
                               });
-                        }),
-            metric ->
-                assertThat(metric)
-                    .hasName("messaging.publish.duration")
-                    .hasUnit("s")
-                    .hasDescription("Measures the duration of publish operation.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
-                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                            equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                            equalTo(SERVER_PORT, brokerPort),
-                                            equalTo(SERVER_ADDRESS, brokerHost))
-                                        .hasBucketBoundaries(DURATION_BUCKETS))));
+                        }));
   }
 
   @Test
@@ -227,7 +228,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  span.hasName(topic + " publish")
+                  span.hasName(topic + " send")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -253,9 +254,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
-                    .hasName("messaging.receive.duration")
+                    .hasName("messaging.client.operation.duration")
                     .hasUnit("s")
-                    .hasDescription("Measures the duration of receive operation.")
+                    .hasDescription(
+                        "Duration of messaging operation initiated by a producer or consumer client.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -264,15 +266,28 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfying(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                                            equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(SERVER_PORT, brokerPort),
+                                            equalTo(SERVER_ADDRESS, brokerHost))
+                                        .hasBucketBoundaries(DURATION_BUCKETS),
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfying(
+                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
             metric ->
                 assertThat(metric)
-                    .hasName("messaging.receive.messages")
+                    .hasName("messaging.client.consumed.messages")
                     .hasUnit("{message}")
-                    .hasDescription("Measures the number of received messages.")
+                    .hasDescription("Number of messages that were delivered to the application.")
                     .hasLongSumSatisfying(
                         sum -> {
                           sum.hasPointsSatisfying(
@@ -281,28 +296,13 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                     .hasValue(1)
                                     .hasAttributesSatisfying(
                                         equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                        equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                        equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                                         equalTo(MESSAGING_DESTINATION_NAME, topic),
                                         equalTo(SERVER_PORT, brokerPort),
                                         equalTo(SERVER_ADDRESS, brokerHost));
                               });
-                        }),
-            metric ->
-                assertThat(metric)
-                    .hasName("messaging.publish.duration")
-                    .hasUnit("s")
-                    .hasDescription("Measures the duration of publish operation.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
-                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                            equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                            equalTo(SERVER_PORT, brokerPort),
-                                            equalTo(SERVER_ADDRESS, brokerHost))
-                                        .hasBucketBoundaries(DURATION_BUCKETS))));
+                        }));
   }
 
   @Test
@@ -332,7 +332,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  span.hasName(topic + " publish")
+                  span.hasName(topic + " send")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -354,9 +354,10 @@ class PulsarClientTest extends AbstractPulsarClientTest {
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
-                    .hasName("messaging.receive.duration")
+                    .hasName("messaging.client.operation.duration")
                     .hasUnit("s")
-                    .hasDescription("Measures the duration of receive operation.")
+                    .hasDescription(
+                        "Duration of messaging operation initiated by a producer or consumer client.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -365,15 +366,28 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfying(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                                            equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                            equalTo(SERVER_PORT, brokerPort),
+                                            equalTo(SERVER_ADDRESS, brokerHost))
+                                        .hasBucketBoundaries(DURATION_BUCKETS),
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfying(
+                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
             metric ->
                 assertThat(metric)
-                    .hasName("messaging.receive.messages")
+                    .hasName("messaging.client.consumed.messages")
                     .hasUnit("{message}")
-                    .hasDescription("Measures the number of received messages.")
+                    .hasDescription("Number of messages that were delivered to the application.")
                     .hasLongSumSatisfying(
                         sum -> {
                           sum.hasPointsSatisfying(
@@ -382,28 +396,13 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                     .hasValue(1)
                                     .hasAttributesSatisfying(
                                         equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                        equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                        equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                                         equalTo(MESSAGING_DESTINATION_NAME, topic),
                                         equalTo(SERVER_PORT, brokerPort),
                                         equalTo(SERVER_ADDRESS, brokerHost));
                               });
-                        }),
-            metric ->
-                assertThat(metric)
-                    .hasName("messaging.publish.duration")
-                    .hasUnit("s")
-                    .hasDescription("Measures the duration of publish operation.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfying(
-                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                            equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                            equalTo(SERVER_PORT, brokerPort),
-                                            equalTo(SERVER_ADDRESS, brokerHost))
-                                        .hasBucketBoundaries(DURATION_BUCKETS))));
+                        }));
   }
 
   @Test
@@ -442,7 +441,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  span.hasName(topic + " publish")
+                  span.hasName(topic + " send")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -502,7 +501,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  span.hasName(topic + "-partition-0 publish")
+                  span.hasName(topic + "-partition-0 send")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -564,7 +563,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent1").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  span.hasName(topic1 + " publish")
+                  span.hasName(topic1 + " send")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -592,7 +591,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent2").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  span.hasName(topic2 + " publish")
+                  span.hasName(topic2 + " send")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -644,9 +643,9 @@ class PulsarClientTest extends AbstractPulsarClientTest {
         .satisfiesOnlyOnce(
             metric ->
                 assertThat(metric)
-                    .hasName("messaging.receive.messages")
+                    .hasName("messaging.client.consumed.messages")
                     .hasUnit("{message}")
-                    .hasDescription("Measures the number of received messages.")
+                    .hasDescription("Number of messages that were delivered to the application.")
                     .hasLongSumSatisfying(
                         sum -> {
                           sum.satisfies(
@@ -694,7 +693,7 @@ class PulsarClientTest extends AbstractPulsarClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent1").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName(topic + " publish")
+                    span.hasName(topic + " send")
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))));
   }
