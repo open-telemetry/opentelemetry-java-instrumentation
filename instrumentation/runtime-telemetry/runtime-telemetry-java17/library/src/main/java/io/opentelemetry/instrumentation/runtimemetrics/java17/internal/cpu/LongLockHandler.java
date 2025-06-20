@@ -55,9 +55,9 @@ public final class LongLockHandler implements RecordedEventHandler {
     histogram.record(DurationUtil.toSeconds(recordedEvent.getDuration()), attributes);
     // What about the class name in MONITOR_CLASS ?
     // We can get a stack trace from the thread on the event
-    //if (recordedEvent.hasField("eventThread")) {
+    // if (recordedEvent.hasField("eventThread")) {
     //  var eventThread = recordedEvent.getThread("eventThread");
-    //}
+    // }
   }
 
   @Override
