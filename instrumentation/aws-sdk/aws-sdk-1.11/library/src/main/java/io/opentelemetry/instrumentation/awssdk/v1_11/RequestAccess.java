@@ -24,18 +24,12 @@ final class RequestAccess {
 
   @Nullable
   static String getStepFunctionsActivityArn(Object request) {
-    if (request == null) {
-      return null;
-    }
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
     return invokeOrNull(access.getStepFunctionsActivityArn, request);
   }
 
   @Nullable
   static String getStateMachineArn(Object request) {
-    if (request == null) {
-      return null;
-    }
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
     return invokeOrNull(access.getStateMachineArn, request);
   }
@@ -71,7 +65,7 @@ final class RequestAccess {
   }
 
   @Nullable
-  static String getTopicArn(Object request) {
+  static String getSnsTopicArn(Object request) {
     RequestAccess access = REQUEST_ACCESSORS.get(request.getClass());
     return invokeOrNull(access.getTopicArn, request);
   }

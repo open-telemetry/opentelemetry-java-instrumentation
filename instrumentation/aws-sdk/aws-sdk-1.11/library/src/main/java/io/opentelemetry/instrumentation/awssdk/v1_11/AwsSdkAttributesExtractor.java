@@ -24,6 +24,7 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
   private static final AttributeKey<String> AWS_REQUEST_ID = stringKey("aws.request_id");
 
   // Copied from AwsIncubatingAttributes
+  private static final AttributeKey<String> AWS_SNS_TOPIC_ARN = stringKey("aws.sns.topic.arn");
   private static final AttributeKey<String> AWS_STEP_FUNCTIONS_ACTIVITY_ARN =
       stringKey("aws.step_functions.activity.arn");
   private static final AttributeKey<String> AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN =
@@ -43,6 +44,7 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, Request<?> request) {
     Object originalRequest = request.getOriginalRequest();
+    setAttribute(attributes, AWS_SNS_TOPIC_ARN, originalRequest, RequestAccess::getSnsTopicArn);
     setAttribute(
         attributes,
         AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN,
@@ -62,8 +64,9 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
       Request<?> request,
       @Nullable Response<?> response,
       @Nullable Throwable error) {
-    if (response != null) {
-      Object awsResp = response.getAwsResponse();
+    Object awsResp = getAwsResponse(response);
+    if (awsResp != null) {
+      setAttribute(attributes, AWS_SNS_TOPIC_ARN, awsResp, RequestAccess::getSnsTopicArn);
       setAttribute(
           attributes,
           AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN,
@@ -105,5 +108,12 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
     if (value != null) {
       attributes.put(key, value);
     }
+  }
+
+  private static Object getAwsResponse(Response<?> response) {
+    if (response == null) {
+      return null;
+    }
+    return response.getAwsResponse();
   }
 }
