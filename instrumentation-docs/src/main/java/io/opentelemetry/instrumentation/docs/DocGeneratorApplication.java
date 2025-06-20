@@ -107,5 +107,15 @@ public class DocGeneratorApplication {
         + "%)";
   }
 
+  @SuppressWarnings("unused") // helper method used for project tracking
+  private static String listModules(List<InstrumentationModule> modules) {
+    // Create a checklist of all modules sorted by name
+    return modules.stream()
+        .map(InstrumentationModule::getInstrumentationName)
+        .sorted()
+        .map(name -> "- [ ] " + name)
+        .collect(Collectors.joining("\n"));
+  }
+
   private DocGeneratorApplication() {}
 }
