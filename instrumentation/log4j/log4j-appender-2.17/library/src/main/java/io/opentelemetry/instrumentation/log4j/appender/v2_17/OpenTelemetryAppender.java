@@ -300,11 +300,13 @@ public class OpenTelemetryAppender extends AbstractAppender {
     // when using async logger we'll be executing on a different thread than what started logging
     // reconstruct the context from context data
     if (context == Context.root()) {
-      ContextDataAccessor<ReadOnlyStringMap> contextDataAccessor = ContextDataAccessorImpl.INSTANCE;
-      String traceId = contextDataAccessor.getValue(contextData, ContextDataKeys.TRACE_ID_KEY);
-      String spanId = contextDataAccessor.getValue(contextData, ContextDataKeys.SPAN_ID_KEY);
+      ContextDataAccessor<ReadOnlyStringMap, Object> contextDataAccessor =
+          ContextDataAccessorImpl.INSTANCE;
+      String traceId =
+          contextDataAccessor.getStringValue(contextData, ContextDataKeys.TRACE_ID_KEY);
+      String spanId = contextDataAccessor.getStringValue(contextData, ContextDataKeys.SPAN_ID_KEY);
       String traceFlags =
-          contextDataAccessor.getValue(contextData, ContextDataKeys.TRACE_FLAGS_KEY);
+          contextDataAccessor.getStringValue(contextData, ContextDataKeys.TRACE_FLAGS_KEY);
       if (traceId != null && spanId != null && traceFlags != null) {
         context =
             Context.root()
@@ -340,17 +342,17 @@ public class OpenTelemetryAppender extends AbstractAppender {
     builder.emit();
   }
 
-  private enum ContextDataAccessorImpl implements ContextDataAccessor<ReadOnlyStringMap> {
+  private enum ContextDataAccessorImpl implements ContextDataAccessor<ReadOnlyStringMap, Object> {
     INSTANCE;
 
     @Override
     @Nullable
-    public String getValue(ReadOnlyStringMap contextData, String key) {
+    public Object getValue(ReadOnlyStringMap contextData, String key) {
       return contextData.getValue(key);
     }
 
     @Override
-    public void forEach(ReadOnlyStringMap contextData, BiConsumer<String, String> action) {
+    public void forEach(ReadOnlyStringMap contextData, BiConsumer<String, Object> action) {
       contextData.forEach(action::accept);
     }
   }
