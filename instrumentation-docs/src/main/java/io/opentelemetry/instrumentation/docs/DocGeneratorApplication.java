@@ -14,6 +14,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.TreeMap;
@@ -82,6 +83,8 @@ public class DocGeneratorApplication {
             getPercentage("configurations", withConfigurations, modules.size()));
 
     logger.info(stats);
+
+    logger.info(modulesWithDescriptions(modules));
   }
 
   private static String getClassificationStats(List<InstrumentationModule> modules) {
@@ -108,12 +111,29 @@ public class DocGeneratorApplication {
   }
 
   @SuppressWarnings("unused") // helper method used for project tracking
-  private static String listModules(List<InstrumentationModule> modules) {
+  private static String listAllModules(List<InstrumentationModule> modules) {
     // Create a checklist of all modules sorted by name
     return modules.stream()
         .map(InstrumentationModule::getInstrumentationName)
         .sorted()
         .map(name -> "- [ ] " + name)
+        .collect(Collectors.joining("\n"));
+  }
+
+  @SuppressWarnings("unused") // helper method used for project tracking
+  private static String modulesWithDescriptions(List<InstrumentationModule> modules) {
+    // Create a checklist of all modules sorted by name, checked if description is set
+    return modules.stream()
+        .sorted(Comparator.comparing(InstrumentationModule::getInstrumentationName))
+        .map(
+            module -> {
+              boolean hasDescription =
+                  module.getMetadata() != null
+                      && module.getMetadata().getDescription() != null
+                      && !module.getMetadata().getDescription().isEmpty();
+              String checkbox = hasDescription ? "- [x] " : "- [ ] ";
+              return checkbox + module.getInstrumentationName();
+            })
         .collect(Collectors.joining("\n"));
   }
 

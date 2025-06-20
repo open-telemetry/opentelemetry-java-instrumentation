@@ -470,8 +470,8 @@ libraries:
         - name: url.full
           type: STRING
   - name: apache-httpclient-4.0
-    description: This instrumentation provides CLIENT spans and metrics for versions
-      2 and 3 of the Apache HttpClient.
+    description: This instrumentation provides CLIENT spans and metrics for version
+      4 of the Apache HttpClient.
     source_path: instrumentation/apache-httpclient/apache-httpclient-4.0
     scope:
       name: io.opentelemetry.apache-httpclient-4.0
@@ -517,12 +517,53 @@ libraries:
         - name: url.full
           type: STRING
   - name: apache-httpclient-4.3
+    description: This instrumentation provides a library integration that enables
+      CLIENT spans and metrics for the Apache HttpClient.
     source_path: instrumentation/apache-httpclient/apache-httpclient-4.3
     scope:
       name: io.opentelemetry.apache-httpclient-4.3
     target_versions:
       library:
       - org.apache.httpcomponents:httpclient:[4.3,4.+)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.request.resend_count
+          type: LONG
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: apache-httpclient-5.0
     source_path: instrumentation/apache-httpclient/apache-httpclient-5.0
     scope:
@@ -3000,6 +3041,8 @@ libraries:
       - jakarta.servlet:jakarta.servlet-api:[5.0.0,)
   spark:
   - name: spark-2.3
+    description: |
+      This instrumentation does not emit telemetry on its own. Instead, it extracts the HTTP route and attaches it to SERVER spans and HTTP server metrics.
     source_path: instrumentation/spark-2.3
     scope:
       name: io.opentelemetry.spark-2.3
