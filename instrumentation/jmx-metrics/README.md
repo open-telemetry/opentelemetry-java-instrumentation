@@ -371,6 +371,26 @@ rules:
         desc: Recent CPU utilization for the process as reported by the JVM.
 ```
 
+### Aggregation over multiple MBean instances
+
+Sometimes, multiple MBean instances are registered with distinct names and we need to capture the aggregate value of all the instances.
+
+For example, the JVM exposes the number of GC executions in the `CollectionCount` attribute of the MBean instances returned by `java.lang:name=*,type=GarbageCollector` query,
+there are multiple instances each with a distinct value for the `name` key.
+
+In order to capture the total number of GC executions across all those instances in a single metric, we can use the following configuration
+where the `name` key in the MBean name is NOT mapped to a metric attribute.
+
+```yaml
+  - bean: java.lang:name=*,type=GarbageCollector
+    mapping:
+      CollectionCount:
+        metric: custom.jvm.gc.count
+        unit: '{collection}'
+        type: counter
+        desc: JVM GC execution count
+```
+
 ### General Syntax
 
 Here is the general description of the accepted configuration file syntax. The whole contents of the file is case-sensitive, with exception for `type` as described in the table below.
