@@ -23,10 +23,10 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.enumeration.EnumerationDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.utility.JavaConstant;
 
 @SuppressWarnings("EnumOrdinal")
 public class MethodInstrumentation implements TypeInstrumentation {
@@ -71,8 +71,8 @@ public class MethodInstrumentation implements TypeInstrumentation {
                     SpanKindOrdinal.class,
                     (instrumentedType, instrumentedMethod, assigner, argumentHandler, sort) ->
                         Advice.OffsetMapping.Target.ForStackManipulation.of(
-                            JavaConstant.Simple.ofLoaded(
-                                methodNames.get(instrumentedMethod.getName()).ordinal()))),
+                            new EnumerationDescription.ForLoadedEnumeration(
+                                methodNames.get(instrumentedMethod.getName())))),
         MethodInstrumentation.class.getName() + "$MethodAdvice");
   }
 
@@ -87,7 +87,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @SpanKindOrdinal int spanKindOrdinal,
+        @SpanKindOrdinal SpanKind spanKind,
         @Advice.Origin("#t") Class<?> declaringClass,
         @Advice.Origin("#m") String methodName,
         @Advice.Local("otelMethod") MethodAndType classAndMethod,
@@ -97,7 +97,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
       classAndMethod =
           MethodAndType.create(
               ClassAndMethod.create(declaringClass, methodName),
-              SpanKind.values()[spanKindOrdinal]);
+              spanKind);
 
       if (!instrumenter().shouldStart(parentContext, classAndMethod)) {
         return;
