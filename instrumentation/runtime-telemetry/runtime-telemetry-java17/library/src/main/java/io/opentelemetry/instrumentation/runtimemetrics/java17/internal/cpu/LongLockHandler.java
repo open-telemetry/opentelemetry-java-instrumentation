@@ -25,8 +25,6 @@ public final class LongLockHandler implements RecordedEventHandler {
   private static final String METRIC_DESCRIPTION = "Long lock times";
   private static final String EVENT_NAME = "jdk.JavaMonitorWait";
 
-  private static final String EVENT_THREAD = "eventThread";
-
   private final DoubleHistogram histogram;
   private final Attributes attributes;
 
@@ -54,12 +52,12 @@ public final class LongLockHandler implements RecordedEventHandler {
 
   @Override
   public void accept(RecordedEvent recordedEvent) {
-    if (recordedEvent.hasField(EVENT_THREAD)) {
-      histogram.record(DurationUtil.toSeconds(recordedEvent.getDuration()), attributes);
-    }
+    histogram.record(DurationUtil.toSeconds(recordedEvent.getDuration()), attributes);
     // What about the class name in MONITOR_CLASS ?
     // We can get a stack trace from the thread on the event
-    // var eventThread = recordedEvent.getThread(EVENT_THREAD);
+    //if (recordedEvent.hasField("eventThread")) {
+    //  var eventThread = recordedEvent.getThread("eventThread");
+    //}
   }
 
   @Override
