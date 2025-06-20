@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.methods;
 
-import static java.util.Collections.emptyList;
-
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.trace.SpanKind;
@@ -14,7 +12,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,11 +27,18 @@ public class MethodInstrumentationModule extends InstrumentationModule {
 
   public MethodInstrumentationModule() {
     super("methods");
+    typeInstrumentations = createInstrumentations();
+  }
 
+  private static List<TypeInstrumentation> createInstrumentations() {
     DeclarativeConfigProperties methods =
         AgentInstrumentationConfig.get().getDeclarativeConfig("methods");
-    typeInstrumentations =
+    List<TypeInstrumentation> list =
         methods != null ? MethodsConfig.parseDeclarativeConfig(methods) : parseConfigProperties();
+    if (list.isEmpty()) {
+      return Collections.singletonList(new MethodInstrumentation(null, Collections.emptyMap()));
+    }
+    return list;
   }
 
   private static List<TypeInstrumentation> parseConfigProperties() {
@@ -52,19 +57,6 @@ public class MethodInstrumentationModule extends InstrumentationModule {
                             Collectors.toMap(
                                 methodName -> methodName, ignore -> SpanKind.INTERNAL))))
         .collect(Collectors.toList());
-  }
-
-  // the default configuration has empty "otel.instrumentation.methods.include", and so doesn't
-  // generate any TypeInstrumentation for muzzle to analyze
-  @Override
-  public List<String> getAdditionalHelperClassNames() {
-    return typeInstrumentations.isEmpty()
-        ? emptyList()
-        : Arrays.asList(
-            "io.opentelemetry.javaagent.instrumentation.methods.MethodAndType",
-            "io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons",
-            "io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons$1",
-            "io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons$BootstrapLoader");
   }
 
   @Override

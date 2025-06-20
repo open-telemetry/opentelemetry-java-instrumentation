@@ -10,9 +10,11 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons.getBootstrapLoader;
 import static io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons.instrumenter;
+import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
@@ -40,6 +42,9 @@ public class MethodInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    if (className == null) {
+      return any();
+    }
     ElementMatcher<ClassLoader> delegate = hasClassesNamed(className);
     return target -> {
       // hasClassesNamed does not support null class loader, so we provide a custom loader that
@@ -53,7 +58,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return hasSuperType(named(className));
+    return className == null ? none() : hasSuperType(named(className));
   }
 
   @Override
@@ -95,9 +100,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
       Context parentContext = currentContext();
       classAndMethod =
-          MethodAndType.create(
-              ClassAndMethod.create(declaringClass, methodName),
-              spanKind);
+          MethodAndType.create(ClassAndMethod.create(declaringClass, methodName), spanKind);
 
       if (!instrumenter().shouldStart(parentContext, classAndMethod)) {
         return;

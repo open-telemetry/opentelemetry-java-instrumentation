@@ -37,6 +37,7 @@ class MethodTest {
                             equalTo(CODE_NAMESPACE, ConfigTracedCallable.class.getName()),
                             equalTo(CODE_FUNCTION, "call"))));
   }
+
   static class ConfigTracedCallable implements Callable<String> {
 
     @Override
