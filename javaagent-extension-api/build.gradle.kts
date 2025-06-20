@@ -16,6 +16,7 @@ dependencies {
   implementation(project(":sdk-bridge")) {
     // is part of bootstrap classpath
     exclude(group = "io.opentelemetry", module = "opentelemetry-api-incubator")
+    exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-extension-autoconfigure-spi")
   }
 
   // autoconfigure is unstable, do not expose as api
