@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeAttributesLogCount;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -61,7 +62,7 @@ public class Slf4j2Test {
                 .hasResource(resource)
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("log message 1")
-                .hasTotalAttributeCount(12) // 4 code attributes + 8 key value pairs
+                .hasTotalAttributeCount(codeAttributesLogCount() + 8) // 8 key value pairs
                 .hasAttributesSatisfying(
                     equalTo(AttributeKey.stringKey("string key"), "string value"),
                     equalTo(AttributeKey.booleanKey("boolean key"), true),
@@ -90,7 +91,7 @@ public class Slf4j2Test {
                 .hasResource(resource)
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("log message 1")
-                .hasTotalAttributeCount(5) // 4 code attributes + 1 marker
+                .hasTotalAttributeCount(codeAttributesLogCount() + 1) // 1 marker
                 .hasAttributesSatisfying(
                     equalTo(
                         AttributeKey.stringArrayKey("logback.marker"),
@@ -115,7 +116,7 @@ public class Slf4j2Test {
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody(
                     "log message 'world' and 3.141592653589793, bool true, long 9223372036854775807")
-                .hasTotalAttributeCount(6)
+                .hasTotalAttributeCount(codeAttributesLogCount() + 2)
                 .hasAttributesSatisfying(
                     equalTo(
                         AttributeKey.stringArrayKey("log.body.parameters"),
@@ -148,7 +149,7 @@ public class Slf4j2Test {
                 .hasResource(resource)
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("log message 1")
-                .hasTotalAttributeCount(7) // 4 code attributes + 3 markers
+                .hasTotalAttributeCount(codeAttributesLogCount() + 3) // 3 markers
                 .hasAttributesSatisfying(
                     equalTo(AttributeKey.stringKey("field1"), "value1"),
                     equalTo(AttributeKey.longKey("field2"), 2L),
@@ -186,7 +187,8 @@ public class Slf4j2Test {
                 .hasResource(resource)
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("log message 1")
-                .hasTotalAttributeCount(18) // 4 code attributes + 14 fields (including map keys)
+                // 14 fields (including map keys)
+                .hasTotalAttributeCount(codeAttributesLogCount() + 14)
                 .hasAttributesSatisfying(
                     equalTo(AttributeKey.longKey("field1"), 1L),
                     equalTo(AttributeKey.doubleKey("field2"), 2.0),
@@ -231,7 +233,6 @@ public class Slf4j2Test {
                 .hasResource(resource)
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("log message 1")
-                .hasTotalAttributeCount(4) // 4 code attributes
-        );
+                .hasTotalAttributeCount(codeAttributesLogCount()));
   }
 }

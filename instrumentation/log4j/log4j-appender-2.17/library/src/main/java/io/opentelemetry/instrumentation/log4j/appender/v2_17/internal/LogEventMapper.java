@@ -11,7 +11,9 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
+import io.opentelemetry.semconv.CodeAttributes;
 import io.opentelemetry.semconv.ExceptionAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -33,9 +35,9 @@ public final class LogEventMapper<T> {
   // copied from CodeIncubatingAttributes
   private static final AttributeKey<String> CODE_FILEPATH = AttributeKey.stringKey("code.filepath");
   private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function");
-  private static final AttributeKey<Long> CODE_LINENO = AttributeKey.longKey("code.lineno");
   private static final AttributeKey<String> CODE_NAMESPACE =
       AttributeKey.stringKey("code.namespace");
+  private static final AttributeKey<Long> CODE_LINENO = AttributeKey.longKey("code.lineno");
   // copied from ThreadIncubatingAttributes
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
   private static final AttributeKey<String> THREAD_NAME = AttributeKey.stringKey("thread.name");
@@ -130,13 +132,31 @@ public final class LogEventMapper<T> {
       if (source != null) {
         String fileName = source.getFileName();
         if (fileName != null) {
-          attributes.put(CODE_FILEPATH, fileName);
+          if (SemconvStability.isEmitStableCodeSemconv()) {
+            attributes.put(CodeAttributes.CODE_FILE_PATH, fileName);
+          }
+          if (SemconvStability.isEmitOldCodeSemconv()) {
+            attributes.put(CODE_FILEPATH, fileName);
+          }
         }
-        attributes.put(CODE_NAMESPACE, source.getClassName());
-        attributes.put(CODE_FUNCTION, source.getMethodName());
+        if (SemconvStability.isEmitStableCodeSemconv()) {
+          attributes.put(
+              CodeAttributes.CODE_FUNCTION_NAME,
+              source.getClassName() + "." + source.getMethodName());
+        }
+        if (SemconvStability.isEmitOldCodeSemconv()) {
+          attributes.put(CODE_NAMESPACE, source.getClassName());
+          attributes.put(CODE_FUNCTION, source.getMethodName());
+        }
+
         int lineNumber = source.getLineNumber();
         if (lineNumber > 0) {
-          attributes.put(CODE_LINENO, lineNumber);
+          if (SemconvStability.isEmitStableCodeSemconv()) {
+            attributes.put(CodeAttributes.CODE_LINE_NUMBER, lineNumber);
+          }
+          if (SemconvStability.isEmitOldCodeSemconv()) {
+            attributes.put(CODE_LINENO, lineNumber);
+          }
         }
       }
     }

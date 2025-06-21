@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0.internal;
 
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 import static java.util.Collections.emptyList;
 
 import ch.qos.logback.classic.Level;
@@ -18,6 +21,7 @@ import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import io.opentelemetry.semconv.ExceptionAttributes;
@@ -48,11 +52,11 @@ import org.slf4j.event.KeyValuePair;
 public final class LoggingEventMapper {
   // copied from CodeIncubatingAttributes
   private static final AttributeKey<String> CODE_FILEPATH = AttributeKey.stringKey("code.filepath");
-  private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function");
-  private static final AttributeKey<Long> CODE_LINENO = AttributeKey.longKey("code.lineno");
   private static final AttributeKey<String> CODE_NAMESPACE =
       AttributeKey.stringKey("code.namespace");
-  // copied from
+  private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function");
+  private static final AttributeKey<Long> CODE_LINENO = AttributeKey.longKey("code.lineno");
+  // copied from ThreadIncubatingAttributes
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
   private static final AttributeKey<String> THREAD_NAME = AttributeKey.stringKey("thread.name");
 
@@ -160,14 +164,28 @@ public final class LoggingEventMapper {
       if (callerData != null && callerData.length > 0) {
         StackTraceElement firstStackElement = callerData[0];
         String fileName = firstStackElement.getFileName();
-        if (fileName != null) {
-          attributes.put(CODE_FILEPATH, fileName);
-        }
-        attributes.put(CODE_NAMESPACE, firstStackElement.getClassName());
-        attributes.put(CODE_FUNCTION, firstStackElement.getMethodName());
         int lineNumber = firstStackElement.getLineNumber();
-        if (lineNumber > 0) {
-          attributes.put(CODE_LINENO, lineNumber);
+
+        if (SemconvStability.isEmitOldCodeSemconv()) {
+          if (fileName != null) {
+            attributes.put(CODE_FILEPATH, fileName);
+          }
+          attributes.put(CODE_NAMESPACE, firstStackElement.getClassName());
+          attributes.put(CODE_FUNCTION, firstStackElement.getMethodName());
+          if (lineNumber > 0) {
+            attributes.put(CODE_LINENO, lineNumber);
+          }
+        }
+        if (SemconvStability.isEmitStableCodeSemconv()) {
+          if (fileName != null) {
+            attributes.put(CODE_FILE_PATH, fileName);
+          }
+          attributes.put(
+              CODE_FUNCTION_NAME,
+              firstStackElement.getClassName() + "." + firstStackElement.getMethodName());
+          if (lineNumber > 0) {
+            attributes.put(CODE_LINE_NUMBER, lineNumber);
+          }
         }
       }
     }

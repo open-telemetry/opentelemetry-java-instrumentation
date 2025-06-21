@@ -7,8 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.flow
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -46,8 +45,7 @@ class FlowWithSpanTest {
             it.hasName("FlowWithSpanTest.simple")
               .hasNoParent()
               .hasAttributesSatisfyingExactly(
-                equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, this.javaClass.name),
-                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "simple")
+                SemconvCodeStabilityUtil.codeFunctionAssertions(this.javaClass, "simple")
               )
               .has(Condition({ spanData -> spanData.endEpochNanos > flowStartTime }, "end time after $flowStartTime"))
           }

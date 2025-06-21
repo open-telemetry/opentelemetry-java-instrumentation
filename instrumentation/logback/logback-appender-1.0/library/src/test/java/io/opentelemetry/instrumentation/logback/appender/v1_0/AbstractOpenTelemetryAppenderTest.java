@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeAttributesLogCount;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFileAndLineAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -20,11 +23,12 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.assertj.core.api.AssertAccess;
@@ -89,10 +93,9 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasResource(resource)
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("log message 1")
-                    .hasTotalAttributeCount(4));
+                    .hasTotalAttributeCount(codeAttributesLogCount()));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void logWithExtras() {
     Instant start = Instant.now();
@@ -101,6 +104,19 @@ abstract class AbstractOpenTelemetryAppenderTest {
     logger.info(marker, "log message 1", new IllegalStateException("Error!"));
 
     executeAfterLogsExecution();
+
+    List<AttributeAssertion> assertions =
+        codeFunctionAssertions(AbstractOpenTelemetryAppenderTest.class, "logWithExtras");
+    assertions.addAll(
+        codeFileAndLineAssertions(
+            AbstractOpenTelemetryAppenderTest.class.getSimpleName() + ".java"));
+    assertions.add(equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()));
+    assertions.add(equalTo(EXCEPTION_MESSAGE, "Error!"));
+    assertions.add(
+        satisfies(EXCEPTION_STACKTRACE, stackTrace -> stackTrace.contains("logWithExtras")));
+    assertions.add(
+        equalTo(
+            AttributeKey.stringArrayKey("logback.marker"), Collections.singletonList(markerName)));
 
     Instant now = Instant.now();
     getTesting()
@@ -112,23 +128,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
                   .hasBody("log message 1")
                   .hasSeverity(Severity.INFO)
                   .hasSeverityText("INFO")
-                  .hasAttributesSatisfyingExactly(
-                      equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
-                      equalTo(EXCEPTION_MESSAGE, "Error!"),
-                      satisfies(
-                          EXCEPTION_STACKTRACE, stackTrace -> stackTrace.contains("logWithExtras")),
-                      equalTo(
-                          CodeIncubatingAttributes.CODE_FILEPATH,
-                          AbstractOpenTelemetryAppenderTest.class.getSimpleName() + ".java"),
-                      equalTo(
-                          CodeIncubatingAttributes.CODE_NAMESPACE,
-                          AbstractOpenTelemetryAppenderTest.class.getName()),
-                      equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "logWithExtras"),
-                      satisfies(
-                          CodeIncubatingAttributes.CODE_LINENO, lineNo -> lineNo.isGreaterThan(1)),
-                      equalTo(
-                          AttributeKey.stringArrayKey("logback.marker"),
-                          Collections.singletonList(markerName)));
+                  .hasAttributesSatisfyingExactly(assertions);
 
               LogRecordData logRecordData = AssertAccess.getActual(logRecord);
               assertThat(logRecordData.getTimestampEpochNanos())
@@ -157,7 +157,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasResource(resource)
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("log message 1")
-                    .hasTotalAttributeCount(2 + 4) // 4 code attributes
+                    .hasTotalAttributeCount(2 + codeAttributesLogCount()) // code attributes
                     .hasAttributesSatisfying(
                         equalTo(AttributeKey.stringKey("key1"), "val1"),
                         equalTo(AttributeKey.stringKey("key2"), "val2")));
@@ -181,7 +181,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasResource(resource)
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("log message 1")
-                    .hasTotalAttributeCount(1 + 4) // 4 code attributes
+                    .hasTotalAttributeCount(codeAttributesLogCount() + 1)
                     .hasAttributesSatisfying(
                         equalTo(AttributeKey.stringKey("test-property"), "test-value")));
   }

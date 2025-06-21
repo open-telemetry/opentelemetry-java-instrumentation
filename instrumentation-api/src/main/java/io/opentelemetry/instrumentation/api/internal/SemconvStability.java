@@ -21,27 +21,47 @@ public final class SemconvStability {
   private static final boolean emitOldDatabaseSemconv;
   private static final boolean emitStableDatabaseSemconv;
 
+  private static final boolean emitOldCodeSemconv;
+  private static final boolean emitStableCodeSemconv;
+
   static {
     boolean oldDatabase = true;
     boolean stableDatabase = false;
 
+    boolean oldCode = true;
+    boolean stableCode = false;
+
     String value = ConfigPropertiesUtil.getString("otel.semconv-stability.opt-in");
     if (value != null) {
       Set<String> values = new HashSet<>(asList(value.split(",")));
+
+      // no else -- technically it's possible to set "XXX,XXX/dup", in which case we
+      // should emit both sets of attributes for XXX
+
       if (values.contains("database")) {
         oldDatabase = false;
         stableDatabase = true;
       }
-      // no else -- technically it's possible to set "database,database/dup", in which case we
-      // should emit both sets of attributes
       if (values.contains("database/dup")) {
         oldDatabase = true;
         stableDatabase = true;
+      }
+
+      if (values.contains("code")) {
+        oldCode = false;
+        stableCode = true;
+      }
+      if (values.contains("code/dup")) {
+        oldCode = true;
+        stableCode = true;
       }
     }
 
     emitOldDatabaseSemconv = oldDatabase;
     emitStableDatabaseSemconv = stableDatabase;
+
+    emitOldCodeSemconv = oldCode;
+    emitStableCodeSemconv = stableCode;
   }
 
   public static boolean emitOldDatabaseSemconv() {
@@ -75,6 +95,14 @@ public final class SemconvStability {
   public static String stableDbSystemName(String oldDbSystem) {
     String dbSystemName = dbSystemNameMap.get(oldDbSystem);
     return dbSystemName != null ? dbSystemName : oldDbSystem;
+  }
+
+  public static boolean isEmitOldCodeSemconv() {
+    return emitOldCodeSemconv;
+  }
+
+  public static boolean isEmitStableCodeSemconv() {
+    return emitStableCodeSemconv;
   }
 
   private SemconvStability() {}

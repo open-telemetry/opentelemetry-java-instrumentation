@@ -6,12 +6,14 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.code;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
+import io.opentelemetry.semconv.CodeAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.util.Collections;
 import java.util.HashMap;
@@ -58,11 +60,19 @@ class CodeAttributesExtractorTest {
     underTest.onEnd(endAttributes, context, request, null, null);
 
     // then
-    assertThat(startAttributes.build())
-        .containsOnly(
-            entry(CodeIncubatingAttributes.CODE_NAMESPACE, TestClass.class.getName()),
-            entry(CodeIncubatingAttributes.CODE_FUNCTION, "doSomething"));
+    Attributes attributes = startAttributes.build();
+    SemconvCodeStabilityUtil.codeFunctionAssertions(TestClass.class, "doSomething");
 
+    if (SemconvStability.isEmitStableCodeSemconv()) {
+      assertThat(attributes)
+          .containsEntry(
+              CodeAttributes.CODE_FUNCTION_NAME, TestClass.class.getName() + ".doSomething");
+    }
+    if (SemconvStability.isEmitOldCodeSemconv()) {
+      assertThat(attributes)
+          .containsEntry(CodeIncubatingAttributes.CODE_NAMESPACE, TestClass.class.getName())
+          .containsEntry(CodeIncubatingAttributes.CODE_FUNCTION, "doSomething");
+    }
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
 
