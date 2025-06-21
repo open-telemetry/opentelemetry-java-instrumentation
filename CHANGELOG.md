@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Version 2.17.1 (2025-06-21)
 
 This is just a re-release of 2.17.0 due to issues with Maven Central publishing during the 2.17.0 release.
 It contains no changes over the 2.17.0 release.
