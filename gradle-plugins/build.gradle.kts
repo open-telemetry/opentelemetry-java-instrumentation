@@ -107,7 +107,7 @@ nexusPublishing {
   }
 
   connectTimeout.set(Duration.ofMinutes(5))
-  clientTimeout.set(Duration.ofMinutes(5))
+  clientTimeout.set(Duration.ofMinutes(30))
 }
 
 tasks {
