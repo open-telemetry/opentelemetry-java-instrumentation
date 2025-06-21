@@ -1,7 +1,7 @@
 disabled_by_default: true
-description: >
-  TODO
+description: This instrumentation provides messaging spans for NATS
 configurations:
-  - name: TODO
-    description: TODO
+  - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+    description: Enables experimental receive telemetry for NATS instrumentation.
+    type: boolean
     default: false

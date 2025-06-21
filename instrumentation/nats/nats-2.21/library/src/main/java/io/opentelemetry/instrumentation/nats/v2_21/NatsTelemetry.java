@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.nats.v2_21;
 
 import io.nats.client.Connection;
+import io.nats.client.Options;
+import io.nats.client.impl.DispatcherFactory;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.nats.v2_21.internal.NatsRequest;
@@ -20,28 +22,39 @@ public final class NatsTelemetry {
     return new NatsTelemetryBuilder(openTelemetry);
   }
 
-  private final Instrumenter<NatsRequest, Void> producerInstrumenter;
+  private final Instrumenter<NatsRequest, NatsRequest> producerInstrumenter;
   private final Instrumenter<NatsRequest, Void> consumerReceiveInstrumenter;
   private final Instrumenter<NatsRequest, Void> consumerProcessInstrumenter;
-  private final Instrumenter<NatsRequest, NatsRequest> clientInstrumenter;
 
   public NatsTelemetry(
-      Instrumenter<NatsRequest, Void> producerInstrumenter,
+      Instrumenter<NatsRequest, NatsRequest> producerInstrumenter,
       Instrumenter<NatsRequest, Void> consumerReceiveInstrumenter,
-      Instrumenter<NatsRequest, Void> consumerProcessInstrumenter,
-      Instrumenter<NatsRequest, NatsRequest> clientInstrumenter) {
+      Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
     this.producerInstrumenter = producerInstrumenter;
     this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
-    this.clientInstrumenter = clientInstrumenter;
   }
 
-  public OpenTelemetryConnection wrap(Connection connection) {
-    return new OpenTelemetryConnection(
-        connection,
-        producerInstrumenter,
-        consumerReceiveInstrumenter,
-        consumerProcessInstrumenter,
-        clientInstrumenter);
+  /**
+   * Returns a decorated {@link Connection} with messaging spans instrumentation. This will *not*
+   * instrument the connection's main inbox by default. Use {@link #wrap(Options.Builder)}
+   * beforehand to build an Options doing so.
+   */
+  public Connection wrap(Connection connection) {
+    return OpenTelemetryConnection.wrap(
+        connection, producerInstrumenter, consumerReceiveInstrumenter, consumerProcessInstrumenter);
+  }
+
+  /** Returns a {@link Options.Builder} with instrumented {@link DispatcherFactory}. */
+  public Options.Builder wrap(Options.Builder options) {
+    DispatcherFactory factory = options.build().getDispatcherFactory();
+
+    if (factory == null) {
+      factory = new DispatcherFactory();
+    }
+
+    return options.dispatcherFactory(
+        OpenTelemetryDispatcherFactory.wrap(
+            factory, consumerReceiveInstrumenter, consumerProcessInstrumenter));
   }
 }

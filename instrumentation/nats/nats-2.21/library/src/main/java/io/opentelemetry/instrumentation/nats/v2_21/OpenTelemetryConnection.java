@@ -6,452 +6,260 @@
 package io.opentelemetry.instrumentation.nats.v2_21;
 
 import io.nats.client.Connection;
-import io.nats.client.ConnectionListener;
-import io.nats.client.ConsumerContext;
 import io.nats.client.Dispatcher;
-import io.nats.client.ForceReconnectOptions;
-import io.nats.client.JetStream;
-import io.nats.client.JetStreamApiException;
-import io.nats.client.JetStreamManagement;
-import io.nats.client.JetStreamOptions;
-import io.nats.client.KeyValue;
-import io.nats.client.KeyValueManagement;
-import io.nats.client.KeyValueOptions;
 import io.nats.client.Message;
 import io.nats.client.MessageHandler;
-import io.nats.client.ObjectStore;
-import io.nats.client.ObjectStoreManagement;
-import io.nats.client.ObjectStoreOptions;
-import io.nats.client.Options;
-import io.nats.client.Statistics;
-import io.nats.client.StreamContext;
-import io.nats.client.Subscription;
-import io.nats.client.api.ServerInfo;
 import io.nats.client.impl.Headers;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.nats.v2_21.internal.NatsRequest;
-import io.opentelemetry.instrumentation.nats.v2_21.internal.ThrowingSupplier;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.time.Duration;
-import java.util.Collection;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Supplier;
 
-public class OpenTelemetryConnection implements Connection {
+final class OpenTelemetryConnection implements InvocationHandler {
 
   private final Connection delegate;
-  private final Instrumenter<NatsRequest, Void> producerInstrumenter;
+  private final Instrumenter<NatsRequest, NatsRequest> producerInstrumenter;
   private final Instrumenter<NatsRequest, Void> consumerReceiveInstrumenter;
   private final Instrumenter<NatsRequest, Void> consumerProcessInstrumenter;
-  private final Instrumenter<NatsRequest, NatsRequest> clientInstrumenter;
 
   public OpenTelemetryConnection(
       Connection connection,
-      Instrumenter<NatsRequest, Void> producerInstrumenter,
+      Instrumenter<NatsRequest, NatsRequest> producerInstrumenter,
       Instrumenter<NatsRequest, Void> consumerReceiveInstrumenter,
-      Instrumenter<NatsRequest, Void> consumerProcessInstrumenter,
-      Instrumenter<NatsRequest, NatsRequest> clientInstrumenter) {
+      Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
     this.delegate = connection;
     this.producerInstrumenter = producerInstrumenter;
     this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
-    this.clientInstrumenter = clientInstrumenter;
+  }
+
+  public static Connection wrap(
+      Connection connection,
+      Instrumenter<NatsRequest, NatsRequest> producerInstrumenter,
+      Instrumenter<NatsRequest, Void> consumerReceiveInstrumenter,
+      Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
+    return (Connection)
+        Proxy.newProxyInstance(
+            OpenTelemetryConnection.class.getClassLoader(),
+            new Class<?>[] {Connection.class},
+            new OpenTelemetryConnection(
+                connection,
+                producerInstrumenter,
+                consumerReceiveInstrumenter,
+                consumerProcessInstrumenter));
   }
 
   @Override
-  public void publish(String subject, byte[] body) {
-    wrapPublish(
-        NatsRequest.create(this, null, subject, null, body), () -> delegate.publish(subject, body));
-  }
-
-  @Override
-  public void publish(String subject, Headers headers, byte[] body) {
-    wrapPublish(
-        NatsRequest.create(this, null, subject, headers, body),
-        () -> delegate.publish(subject, headers, body));
-  }
-
-  @Override
-  public void publish(String subject, String replyTo, byte[] body) {
-    wrapPublish(
-        NatsRequest.create(this, replyTo, subject, null, body),
-        () -> delegate.publish(subject, replyTo, body));
-  }
-
-  @Override
-  public void publish(String subject, String replyTo, Headers headers, byte[] body) {
-    wrapPublish(
-        NatsRequest.create(this, replyTo, subject, headers, body),
-        () -> delegate.publish(subject, replyTo, headers, body));
-  }
-
-  @Override
-  public void publish(Message message) {
-    wrapPublish(NatsRequest.create(this, message), () -> delegate.publish(message));
-  }
-
-  @Override
-  public Message request(String subject, byte[] body, Duration timeout)
-      throws InterruptedException {
-    return wrapRequest(
-        NatsRequest.create(this, null, subject, null, body),
-        () -> delegate.request(subject, body, timeout));
-  }
-
-  @Override
-  public Message request(String subject, Headers headers, byte[] body, Duration timeout)
-      throws InterruptedException {
-    return wrapRequest(
-        NatsRequest.create(this, null, subject, headers, body),
-        () -> delegate.request(subject, headers, body, timeout));
-  }
-
-  @Override
-  public Message request(Message message, Duration timeout) throws InterruptedException {
-    return wrapRequest(NatsRequest.create(this, message), () -> delegate.request(message, timeout));
-  }
-
-  @Override
-  public CompletableFuture<Message> request(String subject, byte[] body) {
-    return wrapRequest(
-        NatsRequest.create(this, null, subject, null, body), () -> delegate.request(subject, body));
-  }
-
-  @Override
-  public CompletableFuture<Message> request(String subject, Headers headers, byte[] body) {
-    return wrapRequest(
-        NatsRequest.create(this, null, subject, headers, body),
-        () -> delegate.request(subject, headers, body));
-  }
-
-  @Override
-  public CompletableFuture<Message> request(Message message) {
-    return wrapRequest(NatsRequest.create(this, message), () -> delegate.request(message));
-  }
-
-  @Override
-  public CompletableFuture<Message> requestWithTimeout(
-      String subject, byte[] body, Duration timeout) {
-    return wrapRequest(
-        NatsRequest.create(this, null, subject, null, body),
-        () -> delegate.requestWithTimeout(subject, body, timeout));
-  }
-
-  @Override
-  public CompletableFuture<Message> requestWithTimeout(
-      String subject, Headers headers, byte[] body, Duration timeout) {
-    return wrapRequest(
-        NatsRequest.create(this, null, subject, headers, body),
-        () -> delegate.requestWithTimeout(subject, headers, body, timeout));
-  }
-
-  @Override
-  public CompletableFuture<Message> requestWithTimeout(Message message, Duration timeout) {
-    return wrapRequest(
-        NatsRequest.create(this, message), () -> delegate.requestWithTimeout(message, timeout));
-  }
-
-  @Override
-  public Subscription subscribe(String subject) {
-    return new OpenTelemetrySubscription(
-        this, delegate.subscribe(subject), consumerReceiveInstrumenter);
-  }
-
-  @Override
-  public Subscription subscribe(String subject, String queueName) {
-    return new OpenTelemetrySubscription(
-        this, delegate.subscribe(subject, queueName), consumerReceiveInstrumenter);
-  }
-
-  @Override
-  public Dispatcher createDispatcher(MessageHandler messageHandler) {
-    OpenTelemetryMessageHandler otelHandler =
-        new OpenTelemetryMessageHandler(
-            this, messageHandler, consumerReceiveInstrumenter, consumerProcessInstrumenter);
-    return new OpenTelemetryDispatcher(
-        this,
-        delegate.createDispatcher(otelHandler),
-        consumerReceiveInstrumenter,
-        consumerProcessInstrumenter);
-  }
-
-  @Override
-  public Dispatcher createDispatcher() {
-    return new OpenTelemetryDispatcher(
-        this,
-        delegate.createDispatcher(),
-        consumerReceiveInstrumenter,
-        consumerProcessInstrumenter);
-  }
-
-  @Override
-  public void closeDispatcher(Dispatcher dispatcher) {
-    if (dispatcher instanceof OpenTelemetryDispatcher) {
-      delegate.closeDispatcher(((OpenTelemetryDispatcher) dispatcher).getDelegate());
-      return;
+  public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    if ("publish".equals(method.getName()) && method.getReturnType().equals(Void.TYPE)) {
+      return publish(method, args);
     }
 
-    delegate.closeDispatcher(dispatcher);
+    if ("request".equals(method.getName()) && method.getReturnType().equals(Message.class)) {
+      return request(method, args);
+    }
+
+    if (("request".equals(method.getName()) || "requestWithTimeout".equals(method.getName()))
+        && method.getReturnType().equals(CompletableFuture.class)) {
+      return requestAsync(method, args);
+    }
+
+    if ("createDispatcher".equals(method.getName())
+        && method.getReturnType().equals(Dispatcher.class)) {
+      return createDispatcher(method, args);
+    }
+
+    if ("closeDispatcher".equals(method.getName())) {
+      return closeDispatcher(method, args);
+    }
+
+    try {
+      return method.invoke(delegate, args);
+    } catch (InvocationTargetException e) {
+      throw e.getCause();
+    }
   }
 
-  @Override
-  public void addConnectionListener(ConnectionListener connectionListener) {
-    delegate.addConnectionListener(connectionListener);
+  private static Object invokeProxyMethod(Method method, Object target, Object[] args)
+      throws Throwable {
+    try {
+      return method.invoke(target, args);
+    } catch (InvocationTargetException exception) {
+      throw exception.getCause();
+    }
   }
 
-  @Override
-  public void removeConnectionListener(ConnectionListener connectionListener) {
-    delegate.removeConnectionListener(connectionListener);
-  }
+  // void publish(String subject, byte[] body)
+  // void publish(String subject, Headers headers, byte[] body)
+  // void publish(String subject, String replyTo, byte[] body)
+  // void publish(String subject, String replyTo, Headers headers, byte[] body)
+  // void publish(Message message)
+  private Object publish(Method method, Object[] args) throws Throwable {
+    NatsRequest natsRequest = null;
 
-  @Override
-  public void flush(Duration timeout) throws TimeoutException, InterruptedException {
-    delegate.flush(timeout);
-  }
+    if (method.getParameterCount() == 2
+        && method.getParameterTypes()[0] == String.class
+        && method.getParameterTypes()[1] == byte[].class) {
+      natsRequest = NatsRequest.create(delegate, null, (String) args[0], null, (byte[]) args[1]);
+    } else if (method.getParameterCount() == 3
+        && method.getParameterTypes()[0] == String.class
+        && method.getParameterTypes()[1] == Headers.class
+        && method.getParameterTypes()[2] == byte[].class) {
+      natsRequest =
+          NatsRequest.create(delegate, null, (String) args[0], (Headers) args[1], (byte[]) args[2]);
+    } else if (method.getParameterCount() == 3
+        && method.getParameterTypes()[0] == String.class
+        && method.getParameterTypes()[1] == String.class
+        && method.getParameterTypes()[2] == byte[].class) {
+      natsRequest =
+          NatsRequest.create(delegate, (String) args[1], (String) args[0], null, (byte[]) args[2]);
+    } else if (method.getParameterCount() == 4
+        && method.getParameterTypes()[0] == String.class
+        && method.getParameterTypes()[1] == String.class
+        && method.getParameterTypes()[2] == Headers.class
+        && method.getParameterTypes()[3] == byte[].class) {
+      natsRequest =
+          NatsRequest.create(
+              delegate, (String) args[1], (String) args[0], (Headers) args[2], (byte[]) args[3]);
+    } else if (method.getParameterCount() == 1 && method.getParameterTypes()[0] == Message.class) {
+      natsRequest = NatsRequest.create(delegate, (Message) args[0]);
+    }
 
-  @Override
-  public CompletableFuture<Boolean> drain(Duration timeout)
-      throws TimeoutException, InterruptedException {
-    return delegate.drain(timeout);
-  }
-
-  @Override
-  public void close() throws InterruptedException {
-    delegate.close();
-  }
-
-  @Override
-  public Status getStatus() {
-    return delegate.getStatus();
-  }
-
-  @Override
-  public long getMaxPayload() {
-    return delegate.getMaxPayload();
-  }
-
-  @Override
-  public Collection<String> getServers() {
-    return delegate.getServers();
-  }
-
-  @Override
-  public Statistics getStatistics() {
-    return delegate.getStatistics();
-  }
-
-  @Override
-  public Options getOptions() {
-    return delegate.getOptions();
-  }
-
-  @Override
-  public ServerInfo getServerInfo() {
-    return delegate.getServerInfo();
-  }
-
-  @Override
-  public String getConnectedUrl() {
-    return delegate.getConnectedUrl();
-  }
-
-  @Override
-  public InetAddress getClientInetAddress() {
-    return delegate.getClientInetAddress();
-  }
-
-  @Override
-  public String getLastError() {
-    return delegate.getLastError();
-  }
-
-  @Override
-  public void clearLastError() {
-    delegate.clearLastError();
-  }
-
-  @Override
-  public String createInbox() {
-    return delegate.createInbox();
-  }
-
-  @Override
-  public void flushBuffer() throws IOException {
-    delegate.flushBuffer();
-  }
-
-  @Override
-  public void forceReconnect() throws IOException, InterruptedException {
-    delegate.forceReconnect();
-  }
-
-  @Override
-  public void forceReconnect(ForceReconnectOptions forceReconnectOptions)
-      throws IOException, InterruptedException {
-    delegate.forceReconnect(forceReconnectOptions);
-  }
-
-  @Override
-  public Duration RTT() throws IOException {
-    return delegate.RTT();
-  }
-
-  @Override
-  public StreamContext getStreamContext(String streamName)
-      throws IOException, JetStreamApiException {
-    return delegate.getStreamContext(streamName);
-  }
-
-  @Override
-  public StreamContext getStreamContext(String streamName, JetStreamOptions jetStreamOptions)
-      throws IOException, JetStreamApiException {
-    return delegate.getStreamContext(streamName, jetStreamOptions);
-  }
-
-  @Override
-  public ConsumerContext getConsumerContext(String streamName, String consumerName)
-      throws IOException, JetStreamApiException {
-    return delegate.getConsumerContext(streamName, consumerName);
-  }
-
-  @Override
-  public ConsumerContext getConsumerContext(
-      String streamName, String consumerName, JetStreamOptions jetStreamOptions)
-      throws IOException, JetStreamApiException {
-    return delegate.getConsumerContext(streamName, consumerName, jetStreamOptions);
-  }
-
-  @Override
-  public JetStream jetStream() throws IOException {
-    return delegate.jetStream();
-  }
-
-  @Override
-  public JetStream jetStream(JetStreamOptions jetStreamOptions) throws IOException {
-    return delegate.jetStream(jetStreamOptions);
-  }
-
-  @Override
-  public JetStreamManagement jetStreamManagement() throws IOException {
-    return delegate.jetStreamManagement();
-  }
-
-  @Override
-  public JetStreamManagement jetStreamManagement(JetStreamOptions jetStreamOptions)
-      throws IOException {
-    return delegate.jetStreamManagement(jetStreamOptions);
-  }
-
-  @Override
-  public KeyValue keyValue(String bucketName) throws IOException {
-    return delegate.keyValue(bucketName);
-  }
-
-  @Override
-  public KeyValue keyValue(String s, KeyValueOptions keyValueOptions) throws IOException {
-    return delegate.keyValue(s, keyValueOptions);
-  }
-
-  @Override
-  public KeyValueManagement keyValueManagement() throws IOException {
-    return delegate.keyValueManagement();
-  }
-
-  @Override
-  public KeyValueManagement keyValueManagement(KeyValueOptions keyValueOptions) throws IOException {
-    return delegate.keyValueManagement(keyValueOptions);
-  }
-
-  @Override
-  public ObjectStore objectStore(String bucketName) throws IOException {
-    return delegate.objectStore(bucketName);
-  }
-
-  @Override
-  public ObjectStore objectStore(String bucketName, ObjectStoreOptions objectStoreOptions)
-      throws IOException {
-    return delegate.objectStore(bucketName, objectStoreOptions);
-  }
-
-  @Override
-  public ObjectStoreManagement objectStoreManagement() throws IOException {
-    return delegate.objectStoreManagement();
-  }
-
-  @Override
-  public ObjectStoreManagement objectStoreManagement(ObjectStoreOptions objectStoreOptions)
-      throws IOException {
-    return delegate.objectStoreManagement(objectStoreOptions);
-  }
-
-  private void wrapPublish(NatsRequest natsRequest, Runnable publish) {
     Context parentContext = Context.current();
 
-    if (!producerInstrumenter.shouldStart(parentContext, natsRequest)) {
-      publish.run();
-      return;
+    if (natsRequest == null || !producerInstrumenter.shouldStart(parentContext, natsRequest)) {
+      return invokeProxyMethod(method, delegate, args);
     }
 
     Context context = producerInstrumenter.start(parentContext, natsRequest);
     try (Scope ignored = context.makeCurrent()) {
-      publish.run();
+      return invokeProxyMethod(method, delegate, args);
     } finally {
       producerInstrumenter.end(context, natsRequest, null, null);
     }
   }
 
-  private Message wrapRequest(
-      NatsRequest natsRequest, ThrowingSupplier<Message, InterruptedException> request)
-      throws InterruptedException {
-    Context parentContext = Context.current();
+  // Message request(String subject, byte[] body, Duration timeout) throws InterruptedException;
+  // Message request(String subject, Headers headers, byte[] body, Duration timeout) throws
+  // InterruptedException;
+  // Message request(Message message, Duration timeout) throws InterruptedException;
+  private Message request(Method method, Object[] args) throws Throwable {
+    NatsRequest natsRequest = null;
 
-    if (!clientInstrumenter.shouldStart(parentContext, natsRequest)) {
-      return request.call();
+    if (method.getParameterCount() == 3
+        && method.getParameterTypes()[0] == String.class
+        && method.getParameterTypes()[1] == byte[].class) {
+      natsRequest = NatsRequest.create(delegate, null, (String) args[0], null, (byte[]) args[1]);
+    } else if (method.getParameterCount() == 4
+        && method.getParameterTypes()[0] == String.class
+        && method.getParameterTypes()[1] == Headers.class
+        && method.getParameterTypes()[2] == byte[].class) {
+      natsRequest =
+          NatsRequest.create(delegate, null, (String) args[0], (Headers) args[1], (byte[]) args[2]);
+    } else if (method.getParameterCount() == 2 && method.getParameterTypes()[0] == Message.class) {
+      natsRequest = NatsRequest.create(delegate, (Message) args[0]);
     }
 
-    Context context = clientInstrumenter.start(parentContext, natsRequest);
+    Context parentContext = Context.current();
+
+    if (natsRequest == null || !producerInstrumenter.shouldStart(parentContext, natsRequest)) {
+      return (Message) invokeProxyMethod(method, delegate, args);
+    }
+
+    Context context = producerInstrumenter.start(parentContext, natsRequest);
     TimeoutException timeout = null;
     NatsRequest response = null;
 
     try (Scope ignored = context.makeCurrent()) {
-      Message message = request.call();
+      Message message = (Message) invokeProxyMethod(method, delegate, args);
 
       if (message == null) {
         timeout = new TimeoutException("Timed out waiting for message");
       } else {
-        response = NatsRequest.create(this, message);
+        response = NatsRequest.create(delegate, message);
       }
 
       return message;
     } finally {
-      clientInstrumenter.end(context, natsRequest, response, timeout);
+      producerInstrumenter.end(context, natsRequest, response, timeout);
     }
   }
 
-  private CompletableFuture<Message> wrapRequest(
-      NatsRequest natsRequest, Supplier<CompletableFuture<Message>> request) {
-    Context parentContext = Context.current();
+  // CompletableFuture<Message> request(String subject, byte[] body);
+  // CompletableFuture<Message> requestWithTimeout(String subject, byte[] body, Duration timeout);
+  // CompletableFuture<Message> request(String subject, Headers headers, byte[] body);
+  // CompletableFuture<Message> requestWithTimeout(String subject, Headers headers, byte[] body,
+  // Duration timeout);
+  // CompletableFuture<Message> request(Message message);
+  // CompletableFuture<Message> requestWithTimeout(Message message, Duration timeout);
+  @SuppressWarnings("unchecked")
+  private CompletableFuture<Message> requestAsync(Method method, Object[] args) throws Throwable {
+    NatsRequest natsRequest = null;
 
-    if (!clientInstrumenter.shouldStart(parentContext, natsRequest)) {
-      return request.get();
+    if ((method.getParameterCount() == 2 || method.getParameterCount() == 3)
+        && method.getParameterTypes()[0] == String.class
+        && method.getParameterTypes()[1] == byte[].class) {
+      natsRequest = NatsRequest.create(delegate, null, (String) args[0], null, (byte[]) args[1]);
+    } else if ((method.getParameterCount() == 3 || method.getParameterCount() == 4)
+        && method.getParameterTypes()[0] == String.class
+        && method.getParameterTypes()[1] == Headers.class
+        && method.getParameterTypes()[2] == byte[].class) {
+      natsRequest =
+          NatsRequest.create(delegate, null, (String) args[0], (Headers) args[1], (byte[]) args[2]);
+    } else if ((method.getParameterCount() == 1 || method.getParameterCount() == 2)
+        && method.getParameterTypes()[0] == Message.class) {
+      natsRequest = NatsRequest.create(delegate, (Message) args[0]);
     }
 
-    Context context = clientInstrumenter.start(parentContext, natsRequest);
+    Context parentContext = Context.current();
 
-    return request
-        .get()
+    if (natsRequest == null || !producerInstrumenter.shouldStart(parentContext, natsRequest)) {
+      return (CompletableFuture<Message>) invokeProxyMethod(method, delegate, args);
+    }
+
+    NatsRequest notNullNatsRequest = natsRequest;
+    Context context = producerInstrumenter.start(parentContext, notNullNatsRequest);
+
+    return ((CompletableFuture<Message>) invokeProxyMethod(method, delegate, args))
         .whenComplete(
             (message, exception) -> {
               if (message != null) {
-                NatsRequest response = NatsRequest.create(this, message);
-                clientInstrumenter.end(context, natsRequest, response, exception);
+                NatsRequest response = NatsRequest.create(delegate, message);
+                producerInstrumenter.end(context, notNullNatsRequest, response, exception);
               } else {
-                clientInstrumenter.end(context, natsRequest, null, exception);
+                producerInstrumenter.end(context, notNullNatsRequest, null, exception);
               }
             });
+  }
+
+  // public Dispatcher createDispatcher()
+  // public Dispatcher createDispatcher(MessageHandler messageHandler)
+  private Dispatcher createDispatcher(Method method, Object[] args) throws Throwable {
+    if (method.getParameterCount() == 1 && method.getParameterTypes()[0] == MessageHandler.class) {
+      args[0] =
+          new OpenTelemetryMessageHandler(
+              (MessageHandler) args[0], consumerReceiveInstrumenter, consumerProcessInstrumenter);
+    }
+
+    Dispatcher wrapped = (Dispatcher) invokeProxyMethod(method, delegate, args);
+    return OpenTelemetryDispatcher.wrap(
+        wrapped, consumerReceiveInstrumenter, consumerProcessInstrumenter);
+  }
+
+  // public void closeDispatcher(Dispatcher dispatcher)
+  private Object closeDispatcher(Method method, Object[] args) throws Throwable {
+    if (method.getParameterCount() == 1
+        && args[0] instanceof Proxy
+        && Proxy.getInvocationHandler(args[0]) instanceof OpenTelemetryDispatcher) {
+      args[0] = ((OpenTelemetryDispatcher) Proxy.getInvocationHandler(args[0])).getDelegate();
+    }
+
+    return invokeProxyMethod(method, delegate, args);
   }
 }

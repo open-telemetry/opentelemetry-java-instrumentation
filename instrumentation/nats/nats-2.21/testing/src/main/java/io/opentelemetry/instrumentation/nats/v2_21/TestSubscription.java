@@ -39,8 +39,8 @@ public class TestSubscription implements Subscription {
     this.dispatcher = dispatcher;
   }
 
-  @SuppressWarnings("EmptyCatch")
-  public void deliver(Message message, MessageHandler handler) {
+  @SuppressWarnings({"EmptyCatchBlock", "EmptyCatch"})
+  public void deliver(TestMessage message, MessageHandler handler) {
     if (message.getSubject().equalsIgnoreCase(getSubject())) {
       messages.add(message);
       if (handler != null) {

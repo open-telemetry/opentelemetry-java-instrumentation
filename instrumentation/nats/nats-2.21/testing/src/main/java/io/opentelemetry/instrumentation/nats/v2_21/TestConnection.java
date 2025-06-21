@@ -19,6 +19,7 @@ import io.nats.client.KeyValueManagement;
 import io.nats.client.KeyValueOptions;
 import io.nats.client.Message;
 import io.nats.client.MessageHandler;
+import io.nats.client.NUID;
 import io.nats.client.ObjectStore;
 import io.nats.client.ObjectStoreManagement;
 import io.nats.client.ObjectStoreOptions;
@@ -29,6 +30,7 @@ import io.nats.client.Subscription;
 import io.nats.client.api.ServerInfo;
 import io.nats.client.impl.Headers;
 import io.nats.client.impl.NatsMessage;
+import io.nats.client.support.NatsRequestCompletableFuture;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.time.Duration;
@@ -36,45 +38,60 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
+import java.util.Map;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class TestConnection implements Connection {
+
+  public static final String INBOX_PREFIX = "_INBOX.";
+
+  private final NUID nuid = new NUID();
+  private final ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(1);
 
   private final List<TestSubscription> subscriptions =
       Collections.synchronizedList(new LinkedList<>());
 
   private final List<TestDispatcher> dispatchers = Collections.synchronizedList(new LinkedList<>());
 
-  public final Queue<Message> publishedMessages = new ConcurrentLinkedQueue<>();
-  public final Queue<Message> requestedMessages = new ConcurrentLinkedQueue<>();
-  public final Queue<Message> requestResponseMessages = new ConcurrentLinkedQueue<>();
+  private final Map<String, NatsRequestCompletableFuture> pending = new ConcurrentHashMap<>();
 
-  public void deliver(Message message) {
-    subscriptions.forEach(subscription -> subscription.deliver(message, null));
-    dispatchers.forEach(dispatcher -> dispatcher.deliver(message));
+  public TestConnection() {
+    TestDispatcher inboxDispatcher =
+        new TestDispatcher(
+            msg -> {
+              NatsRequestCompletableFuture res = pending.remove(msg.getSubject());
+              if (res != null) {
+                res.complete(msg);
+              }
+            });
+    inboxDispatcher.subscribe(INBOX_PREFIX);
+    dispatchers.add(inboxDispatcher);
   }
 
   @Override
   public void publish(String subject, byte[] body) {
-    this.publish(NatsMessage.builder().subject(subject).data(body).build());
+    publish(NatsMessage.builder().subject(subject).data(body).build());
   }
 
   @Override
   public void publish(String subject, Headers headers, byte[] body) {
-    this.publish(NatsMessage.builder().subject(subject).headers(headers).data(body).build());
+    publish(NatsMessage.builder().subject(subject).headers(headers).data(body).build());
   }
 
   @Override
   public void publish(String subject, String replyTo, byte[] body) {
-    this.publish(NatsMessage.builder().subject(subject).replyTo(replyTo).data(body).build());
+    publish(NatsMessage.builder().subject(subject).replyTo(replyTo).data(body).build());
   }
 
   @Override
   public void publish(String subject, String replyTo, Headers headers, byte[] body) {
-    this.publish(
+    publish(
         NatsMessage.builder()
             .subject(subject)
             .replyTo(replyTo)
@@ -85,77 +102,98 @@ public class TestConnection implements Connection {
 
   @Override
   public void publish(Message message) {
-    publishedMessages.add(message);
+    internalPublish(message);
+  }
+
+  private void internalPublish(Message message) {
+    // simulate async boundary, avoids passing Context between publish/dispatcher in testing
+    new Thread(
+            () -> {
+              TestMessage msg = new TestMessage(this, null, message);
+              subscriptions.forEach(sub -> sub.deliver(msg.setSubscription(sub), null));
+              dispatchers.forEach(dispatcher -> dispatcher.deliver(msg));
+            })
+        .start();
   }
 
   @Override
   public Message request(String subject, byte[] body, Duration timeout)
       throws InterruptedException {
-    return this.request(NatsMessage.builder().subject(subject).data(body).build(), timeout);
+    return request(NatsMessage.builder().subject(subject).data(body).build(), timeout);
   }
 
   @Override
   public Message request(String subject, Headers headers, byte[] body, Duration timeout)
       throws InterruptedException {
-    return this.request(
+    return request(
         NatsMessage.builder().subject(subject).headers(headers).data(body).build(), timeout);
   }
 
   @Override
   public Message request(Message message, Duration timeout) throws InterruptedException {
-    this.requestedMessages.add(message);
-    return requestResponseMessages.peek();
+    try {
+      return request(message).get(timeout.toMillis(), TimeUnit.MILLISECONDS);
+    } catch (ExecutionException | TimeoutException | CancellationException e) {
+      return null;
+    }
   }
 
   @Override
   public CompletableFuture<Message> request(String subject, byte[] body) {
-    return this.request(NatsMessage.builder().subject(subject).data(body).build());
+    return request(NatsMessage.builder().subject(subject).data(body).build());
   }
 
   @Override
   public CompletableFuture<Message> request(String subject, Headers headers, byte[] body) {
-    return this.request(NatsMessage.builder().subject(subject).headers(headers).data(body).build());
+    return request(NatsMessage.builder().subject(subject).headers(headers).data(body).build());
   }
 
   @Override
   public CompletableFuture<Message> request(Message message) {
-    this.requestedMessages.add(message);
-    Message response = requestResponseMessages.peek();
-
-    if (response != null) {
-      return CompletableFuture.completedFuture(message);
-    }
-
-    CompletableFuture<Message> future = new CompletableFuture<>();
-    future.completeExceptionally(new TimeoutException("Timed out waiting for message"));
-    return future;
+    return requestWithTimeout(message, null);
   }
 
   @Override
   public CompletableFuture<Message> requestWithTimeout(
       String subject, byte[] body, Duration timeout) {
-    return this.requestWithTimeout(
-        NatsMessage.builder().subject(subject).data(body).build(), timeout);
+    return requestWithTimeout(NatsMessage.builder().subject(subject).data(body).build(), timeout);
   }
 
   @Override
   public CompletableFuture<Message> requestWithTimeout(
       String subject, Headers headers, byte[] body, Duration timeout) {
-    return this.requestWithTimeout(
+    return requestWithTimeout(
         NatsMessage.builder().subject(subject).headers(headers).data(body).build(), timeout);
   }
 
   @Override
   public CompletableFuture<Message> requestWithTimeout(Message message, Duration timeout) {
-    this.requestedMessages.add(message);
-    Message response = requestResponseMessages.peek();
+    NatsRequestCompletableFuture future =
+        new NatsRequestCompletableFuture(
+            NatsRequestCompletableFuture.CancelAction.CANCEL, timeout, false);
 
-    if (response != null) {
-      return CompletableFuture.completedFuture(message);
+    String inbox = createInbox();
+    pending.put(inbox, future);
+
+    internalPublish(
+        NatsMessage.builder()
+            .subject(message.getSubject())
+            .replyTo(inbox)
+            .headers(message.getHeaders())
+            .data(message.getData())
+            .build());
+
+    if (timeout != null) {
+      scheduler.schedule(
+          () -> {
+            if (!future.isDone()) {
+              pending.remove(inbox).cancelTimedOut();
+            }
+          },
+          timeout.toMillis(),
+          TimeUnit.MILLISECONDS);
     }
 
-    CompletableFuture<Message> future = new CompletableFuture<>();
-    future.completeExceptionally(new TimeoutException("Timed out waiting for message"));
     return future;
   }
 
@@ -189,7 +227,12 @@ public class TestConnection implements Connection {
 
   @Override
   public void closeDispatcher(Dispatcher dispatcher) {
-    dispatchers.remove(dispatcher);
+    if (dispatcher instanceof TestDispatcher && dispatchers.contains((TestDispatcher) dispatcher)) {
+      dispatchers.remove(dispatcher);
+      return;
+    }
+
+    throw new IllegalArgumentException("Unexpected dispatcher: " + dispatcher);
   }
 
   @Override
@@ -281,7 +324,7 @@ public class TestConnection implements Connection {
 
   @Override
   public String createInbox() {
-    return "";
+    return INBOX_PREFIX + nuid.next();
   }
 
   @Override

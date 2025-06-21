@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.nats.v2_21;
 
+import static io.opentelemetry.instrumentation.nats.v2_21.TestConnection.INBOX_PREFIX;
+
 import io.nats.client.Dispatcher;
-import io.nats.client.Message;
 import io.nats.client.MessageHandler;
 import io.nats.client.Subscription;
 import java.time.Duration;
@@ -25,7 +26,7 @@ public class TestDispatcher implements Dispatcher {
       Collections.synchronizedMap(new HashMap<>());
 
   public TestDispatcher() {
-    this.defaultHandler = msg -> {};
+    defaultHandler = msg -> {};
   }
 
   public TestDispatcher(MessageHandler defaultHandler) {
@@ -33,17 +34,18 @@ public class TestDispatcher implements Dispatcher {
   }
 
   @SuppressWarnings("EmptyCatch")
-  public void deliver(Message message) {
+  public void deliver(TestMessage message) {
     subjects.forEach(
         subject -> {
-          if (message.getSubject().equalsIgnoreCase(subject)) {
+          if (message.getSubject().equalsIgnoreCase(subject)
+              || (subject.equals(INBOX_PREFIX) && message.getSubject().startsWith(INBOX_PREFIX))) {
             try {
               defaultHandler.onMessage(message);
             } catch (InterruptedException ignored) {
             }
           }
         });
-    subscriptions.forEach((subscription, handler) -> subscription.deliver(message, handler));
+    subscriptions.forEach((sub, handler) -> sub.deliver(message.setSubscription(sub), handler));
   }
 
   @Override
@@ -86,7 +88,8 @@ public class TestDispatcher implements Dispatcher {
 
   @Override
   public Dispatcher unsubscribe(Subscription subscription) {
-    if (subscription instanceof TestSubscription) {
+    if (subscription instanceof TestSubscription
+        && subscriptions.containsKey((TestSubscription) subscription)) {
       subscriptions.remove(subscription);
       return this;
     }
@@ -104,7 +107,8 @@ public class TestDispatcher implements Dispatcher {
 
   @Override
   public Dispatcher unsubscribe(Subscription subscription, int after) {
-    if (subscription instanceof TestSubscription) {
+    if (subscription instanceof TestSubscription
+        && subscriptions.containsKey((TestSubscription) subscription)) {
       subscriptions.remove(subscription);
       return this;
     }

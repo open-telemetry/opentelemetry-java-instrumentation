@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.nats.v2_21;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.nats.v2_21.NatsSingletons.CLIENT_INSTRUMENTER;
+import static io.opentelemetry.javaagent.instrumentation.nats.v2_21.NatsSingletons.PRODUCER_INSTRUMENTER;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -21,7 +21,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.nats.v2_21.internal.NatsRequest;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.nats.v2_21.internal.MessageConsumer;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
@@ -133,11 +132,11 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
       natsRequest = NatsRequest.create(connection, null, subject, null, body);
       Context parentContext = Context.current();
 
-      if (!CLIENT_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
+      if (!PRODUCER_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
         return;
       }
 
-      otelContext = CLIENT_INSTRUMENTER.start(parentContext, natsRequest);
+      otelContext = PRODUCER_INSTRUMENTER.start(parentContext, natsRequest);
       otelScope = otelContext.makeCurrent();
     }
 
@@ -155,14 +154,14 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
 
       Throwable error = throwable;
       NatsRequest natsResponse = null;
-      if (message == null) {
+      if (error == null && message == null) {
         error = new TimeoutException("Timed out waiting for message");
       } else {
         natsResponse = NatsRequest.create(connection, message);
       }
 
       otelScope.close();
-      CLIENT_INSTRUMENTER.end(otelContext, natsRequest, natsResponse, error);
+      PRODUCER_INSTRUMENTER.end(otelContext, natsRequest, natsResponse, error);
     }
   }
 
@@ -181,11 +180,11 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
       natsRequest = NatsRequest.create(connection, null, subject, headers, body);
       Context parentContext = Context.current();
 
-      if (!CLIENT_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
+      if (!PRODUCER_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
         return;
       }
 
-      otelContext = CLIENT_INSTRUMENTER.start(parentContext, natsRequest);
+      otelContext = PRODUCER_INSTRUMENTER.start(parentContext, natsRequest);
       otelScope = otelContext.makeCurrent();
     }
 
@@ -203,14 +202,14 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
 
       Throwable error = throwable;
       NatsRequest natsResponse = null;
-      if (message == null) {
+      if (error == null && message == null) {
         error = new TimeoutException("Timed out waiting for message");
       } else {
         natsResponse = NatsRequest.create(connection, message);
       }
 
       otelScope.close();
-      CLIENT_INSTRUMENTER.end(otelContext, natsRequest, natsResponse, error);
+      PRODUCER_INSTRUMENTER.end(otelContext, natsRequest, natsResponse, error);
     }
   }
 
@@ -227,11 +226,11 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
       natsRequest = NatsRequest.create(connection, message);
       Context parentContext = Context.current();
 
-      if (!CLIENT_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
+      if (!PRODUCER_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
         return;
       }
 
-      otelContext = CLIENT_INSTRUMENTER.start(parentContext, natsRequest);
+      otelContext = PRODUCER_INSTRUMENTER.start(parentContext, natsRequest);
       otelScope = otelContext.makeCurrent();
     }
 
@@ -249,14 +248,14 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
 
       Throwable error = throwable;
       NatsRequest natsResponse = null;
-      if (message == null) {
+      if (error == null && message == null) {
         error = new TimeoutException("Timed out waiting for message");
       } else {
         natsResponse = NatsRequest.create(connection, message);
       }
 
       otelScope.close();
-      CLIENT_INSTRUMENTER.end(otelContext, natsRequest, natsResponse, error);
+      PRODUCER_INSTRUMENTER.end(otelContext, natsRequest, natsResponse, error);
     }
   }
 
@@ -275,11 +274,11 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
       natsRequest = NatsRequest.create(connection, null, subject, null, body);
       otelParentContext = Context.current();
 
-      if (!CLIENT_INSTRUMENTER.shouldStart(otelParentContext, natsRequest)) {
+      if (!PRODUCER_INSTRUMENTER.shouldStart(otelParentContext, natsRequest)) {
         return;
       }
 
-      otelContext = CLIENT_INSTRUMENTER.start(otelParentContext, natsRequest);
+      otelContext = PRODUCER_INSTRUMENTER.start(otelParentContext, natsRequest);
       otelScope = otelContext.makeCurrent();
     }
 
@@ -298,10 +297,11 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
 
       otelScope.close();
       if (throwable != null) {
-        CLIENT_INSTRUMENTER.end(otelContext, natsRequest, null, throwable);
+        PRODUCER_INSTRUMENTER.end(otelContext, natsRequest, null, throwable);
       } else {
-        messageFuture.whenComplete(
-            new MessageConsumer(CLIENT_INSTRUMENTER, otelContext, connection, natsRequest));
+        messageFuture =
+            messageFuture.whenComplete(
+                new SpanFinisher(PRODUCER_INSTRUMENTER, otelContext, connection, natsRequest));
         messageFuture = CompletableFutureWrapper.wrap(messageFuture, otelParentContext);
       }
     }
@@ -323,11 +323,11 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
       natsRequest = NatsRequest.create(connection, null, subject, headers, body);
       otelParentContext = Context.current();
 
-      if (!CLIENT_INSTRUMENTER.shouldStart(otelParentContext, natsRequest)) {
+      if (!PRODUCER_INSTRUMENTER.shouldStart(otelParentContext, natsRequest)) {
         return;
       }
 
-      otelContext = CLIENT_INSTRUMENTER.start(otelParentContext, natsRequest);
+      otelContext = PRODUCER_INSTRUMENTER.start(otelParentContext, natsRequest);
       otelScope = otelContext.makeCurrent();
     }
 
@@ -346,10 +346,11 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
 
       otelScope.close();
       if (throwable != null) {
-        CLIENT_INSTRUMENTER.end(otelContext, natsRequest, null, throwable);
+        PRODUCER_INSTRUMENTER.end(otelContext, natsRequest, null, throwable);
       } else {
-        messageFuture.whenComplete(
-            new MessageConsumer(CLIENT_INSTRUMENTER, otelContext, connection, natsRequest));
+        messageFuture =
+            messageFuture.whenComplete(
+                new SpanFinisher(PRODUCER_INSTRUMENTER, otelContext, connection, natsRequest));
         messageFuture = CompletableFutureWrapper.wrap(messageFuture, otelParentContext);
       }
     }
@@ -369,11 +370,11 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
       natsRequest = NatsRequest.create(connection, message);
       otelParentContext = Context.current();
 
-      if (!CLIENT_INSTRUMENTER.shouldStart(otelParentContext, natsRequest)) {
+      if (!PRODUCER_INSTRUMENTER.shouldStart(otelParentContext, natsRequest)) {
         return;
       }
 
-      otelContext = CLIENT_INSTRUMENTER.start(otelParentContext, natsRequest);
+      otelContext = PRODUCER_INSTRUMENTER.start(otelParentContext, natsRequest);
       otelScope = otelContext.makeCurrent();
     }
 
@@ -392,10 +393,11 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
 
       otelScope.close();
       if (throwable != null) {
-        CLIENT_INSTRUMENTER.end(otelContext, natsRequest, null, throwable);
+        PRODUCER_INSTRUMENTER.end(otelContext, natsRequest, null, throwable);
       } else {
-        messageFuture.whenComplete(
-            new MessageConsumer(CLIENT_INSTRUMENTER, otelContext, connection, natsRequest));
+        messageFuture =
+            messageFuture.whenComplete(
+                new SpanFinisher(PRODUCER_INSTRUMENTER, otelContext, connection, natsRequest));
         messageFuture = CompletableFutureWrapper.wrap(messageFuture, otelParentContext);
       }
     }
@@ -416,11 +418,11 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
       natsRequest = NatsRequest.create(connection, null, subject, null, body);
       otelParentContext = Context.current();
 
-      if (!CLIENT_INSTRUMENTER.shouldStart(otelParentContext, natsRequest)) {
+      if (!PRODUCER_INSTRUMENTER.shouldStart(otelParentContext, natsRequest)) {
         return;
       }
 
-      otelContext = CLIENT_INSTRUMENTER.start(otelParentContext, natsRequest);
+      otelContext = PRODUCER_INSTRUMENTER.start(otelParentContext, natsRequest);
       otelScope = otelContext.makeCurrent();
     }
 
@@ -439,10 +441,11 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
 
       otelScope.close();
       if (throwable != null) {
-        CLIENT_INSTRUMENTER.end(otelContext, natsRequest, null, throwable);
+        PRODUCER_INSTRUMENTER.end(otelContext, natsRequest, null, throwable);
       } else {
-        messageFuture.whenComplete(
-            new MessageConsumer(CLIENT_INSTRUMENTER, otelContext, connection, natsRequest));
+        messageFuture =
+            messageFuture.whenComplete(
+                new SpanFinisher(PRODUCER_INSTRUMENTER, otelContext, connection, natsRequest));
         messageFuture = CompletableFutureWrapper.wrap(messageFuture, otelParentContext);
       }
     }
@@ -464,11 +467,11 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
       natsRequest = NatsRequest.create(connection, null, subject, headers, body);
       otelParentContext = Context.current();
 
-      if (!CLIENT_INSTRUMENTER.shouldStart(otelParentContext, natsRequest)) {
+      if (!PRODUCER_INSTRUMENTER.shouldStart(otelParentContext, natsRequest)) {
         return;
       }
 
-      otelContext = CLIENT_INSTRUMENTER.start(otelParentContext, natsRequest);
+      otelContext = PRODUCER_INSTRUMENTER.start(otelParentContext, natsRequest);
       otelScope = otelContext.makeCurrent();
     }
 
@@ -487,10 +490,11 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
 
       otelScope.close();
       if (throwable != null) {
-        CLIENT_INSTRUMENTER.end(otelContext, natsRequest, null, throwable);
+        PRODUCER_INSTRUMENTER.end(otelContext, natsRequest, null, throwable);
       } else {
-        messageFuture.whenComplete(
-            new MessageConsumer(CLIENT_INSTRUMENTER, otelContext, connection, natsRequest));
+        messageFuture =
+            messageFuture.whenComplete(
+                new SpanFinisher(PRODUCER_INSTRUMENTER, otelContext, connection, natsRequest));
         messageFuture = CompletableFutureWrapper.wrap(messageFuture, otelParentContext);
       }
     }
@@ -510,11 +514,11 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
       natsRequest = NatsRequest.create(connection, message);
       otelParentContext = Context.current();
 
-      if (!CLIENT_INSTRUMENTER.shouldStart(otelParentContext, natsRequest)) {
+      if (!PRODUCER_INSTRUMENTER.shouldStart(otelParentContext, natsRequest)) {
         return;
       }
 
-      otelContext = CLIENT_INSTRUMENTER.start(otelParentContext, natsRequest);
+      otelContext = PRODUCER_INSTRUMENTER.start(otelParentContext, natsRequest);
       otelScope = otelContext.makeCurrent();
     }
 
@@ -533,10 +537,11 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
 
       otelScope.close();
       if (throwable != null) {
-        CLIENT_INSTRUMENTER.end(otelContext, natsRequest, null, throwable);
+        PRODUCER_INSTRUMENTER.end(otelContext, natsRequest, null, throwable);
       } else {
-        messageFuture.whenComplete(
-            new MessageConsumer(CLIENT_INSTRUMENTER, otelContext, connection, natsRequest));
+        messageFuture =
+            messageFuture.whenComplete(
+                new SpanFinisher(PRODUCER_INSTRUMENTER, otelContext, connection, natsRequest));
         messageFuture = CompletableFutureWrapper.wrap(messageFuture, otelParentContext);
       }
     }

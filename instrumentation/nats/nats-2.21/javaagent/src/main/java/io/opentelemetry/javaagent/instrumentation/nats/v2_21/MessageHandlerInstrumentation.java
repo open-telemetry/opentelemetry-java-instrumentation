@@ -56,25 +56,23 @@ public class MessageHandlerInstrumentation implements TypeInstrumentation {
       Context parentContext = Context.current();
       natsRequest = NatsRequest.create(message.getConnection(), message);
 
-      if (!CONSUMER_RECEIVE_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
+      if (CONSUMER_RECEIVE_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
+        parentContext =
+            InstrumenterUtil.startAndEnd(
+                CONSUMER_RECEIVE_INSTRUMENTER,
+                parentContext,
+                natsRequest,
+                null,
+                null,
+                timer.startTime(),
+                timer.now());
+      }
+
+      if (!CONSUMER_PROCESS_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
         return;
       }
 
-      Context receiveContext =
-          InstrumenterUtil.startAndEnd(
-              CONSUMER_RECEIVE_INSTRUMENTER,
-              parentContext,
-              natsRequest,
-              null,
-              null,
-              timer.startTime(),
-              timer.now());
-
-      if (!CONSUMER_PROCESS_INSTRUMENTER.shouldStart(receiveContext, natsRequest)) {
-        return;
-      }
-
-      otelContext = CONSUMER_PROCESS_INSTRUMENTER.start(receiveContext, natsRequest);
+      otelContext = CONSUMER_PROCESS_INSTRUMENTER.start(parentContext, natsRequest);
       otelScope = otelContext.makeCurrent();
     }
 

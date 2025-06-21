@@ -18,7 +18,7 @@ import java.util.concurrent.TimeoutException;
 public class TestMessage implements Message {
 
   private final Connection connection;
-  private final Subscription subscription;
+  private Subscription subscription;
   private final Message message;
 
   public TestMessage(Connection connection, Subscription subscription, Message message) {
@@ -131,5 +131,10 @@ public class TestMessage implements Message {
   @Override
   public boolean isJetStream() {
     return message.isJetStream();
+  }
+
+  public TestMessage setSubscription(Subscription subscription) {
+    this.subscription = subscription;
+    return this;
   }
 }
