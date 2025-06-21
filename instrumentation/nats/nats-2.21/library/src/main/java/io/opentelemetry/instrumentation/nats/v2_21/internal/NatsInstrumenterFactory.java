@@ -30,7 +30,7 @@ public final class NatsInstrumenterFactory {
             INSTRUMENTATION_NAME,
             MessagingSpanNameExtractor.create(
                 NatsRequestMessagingAttributesGetter.VOID_INSTANCE, MessageOperation.PUBLISH))
-        .addAttributesExtractor( // TODO capture headers
+        .addAttributesExtractor(
             MessagingAttributesExtractor.create(
                 NatsRequestMessagingAttributesGetter.NATS_REQUEST_INSTANCE,
                 MessageOperation.PUBLISH))
@@ -44,7 +44,7 @@ public final class NatsInstrumenterFactory {
             INSTRUMENTATION_NAME,
             MessagingSpanNameExtractor.create(
                 NatsRequestMessagingAttributesGetter.VOID_INSTANCE, MessageOperation.RECEIVE))
-        .addAttributesExtractor( // TODO capture headers
+        .addAttributesExtractor(
             MessagingAttributesExtractor.create(
                 NatsRequestMessagingAttributesGetter.VOID_INSTANCE, MessageOperation.RECEIVE))
         .setEnabled(enabled)
@@ -60,7 +60,6 @@ public final class NatsInstrumenterFactory {
                 MessagingSpanNameExtractor.create(
                     NatsRequestMessagingAttributesGetter.VOID_INSTANCE, MessageOperation.PROCESS))
             .addAttributesExtractor(
-                // TODO capture headers
                 MessagingAttributesExtractor.create(
                     NatsRequestMessagingAttributesGetter.VOID_INSTANCE, MessageOperation.PROCESS));
 
