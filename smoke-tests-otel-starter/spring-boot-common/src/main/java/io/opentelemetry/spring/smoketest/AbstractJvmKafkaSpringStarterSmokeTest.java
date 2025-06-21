@@ -61,6 +61,8 @@ public class AbstractJvmKafkaSpringStarterSmokeTest extends AbstractKafkaSpringS
                 "spring.kafka.consumer.linger-ms=10",
                 "spring.kafka.listener.idle-between-polls=1000",
                 "spring.kafka.producer.transaction-id-prefix=test-");
+    System.setProperty(
+        "otel.instrumentation.kafka.experimental-span-attributes", String.valueOf(true));
   }
 
   @SuppressWarnings("unchecked")
