@@ -68,6 +68,7 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                             equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                             equalTo(MESSAGING_OPERATION, "receive"),
                             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
+                            bootstrapServersAssertion(),
                             satisfies(
                                 MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("consumer")),
@@ -81,6 +82,7 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                             equalTo(MESSAGING_SYSTEM, "kafka"),
                             equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                             equalTo(MESSAGING_OPERATION, "process"),
+                            bootstrapServersAssertion(),
                             equalTo(
                                 MESSAGING_MESSAGE_BODY_SIZE,
                                 greeting.getBytes(StandardCharsets.UTF_8).length),

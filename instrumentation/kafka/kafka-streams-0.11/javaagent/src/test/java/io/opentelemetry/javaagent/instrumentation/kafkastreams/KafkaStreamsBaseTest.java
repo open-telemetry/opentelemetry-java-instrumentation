@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 
@@ -15,6 +16,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Collection;
@@ -56,6 +58,21 @@ abstract class KafkaStreamsBaseTest {
 
   protected static final AttributeKey<List<String>> MESSAGING_KAFKA_BOOTSTRAP_SERVERS =
       AttributeKey.stringArrayKey("messaging.kafka.bootstrap.servers");
+
+  protected static AttributeAssertion bootstrapServersAssertion() {
+    return satisfies(
+        MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+        listAssert -> {
+          if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
+            listAssert
+                .isNotEmpty()
+                .allSatisfy(
+                    server -> org.assertj.core.api.Assertions.assertThat(server).isNotEmpty());
+          } else {
+            listAssert.isNullOrEmpty();
+          }
+        });
+  }
 
   protected static final String STREAM_PENDING = "test.pending";
   protected static final String STREAM_PROCESSED = "test.processed";

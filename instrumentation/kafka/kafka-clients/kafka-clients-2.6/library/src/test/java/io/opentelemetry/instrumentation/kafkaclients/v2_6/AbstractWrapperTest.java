@@ -37,6 +37,8 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
             .setCapturedHeaders(singletonList("test-message-header"))
             // TODO run tests both with and without experimental span attributes
             .setCaptureExperimentalSpanAttributes(true);
+    System.setProperty(
+        "otel.instrumentation.kafka.experimental-span-attributes", String.valueOf(true));
     configure(telemetryBuilder);
     KafkaTelemetry telemetry = telemetryBuilder.build();
 

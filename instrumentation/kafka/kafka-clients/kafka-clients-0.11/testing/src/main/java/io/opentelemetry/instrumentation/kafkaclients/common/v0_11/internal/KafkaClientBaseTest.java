@@ -69,6 +69,21 @@ public abstract class KafkaClientBaseTest {
   protected static final AttributeKey<List<String>> MESSAGING_KAFKA_BOOTSTRAP_SERVERS =
       AttributeKey.stringArrayKey("messaging.kafka.bootstrap.servers");
 
+  protected static AttributeAssertion bootstrapServersAssertion() {
+    return satisfies(
+        MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+        listAssert -> {
+          if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
+            listAssert
+                .isNotEmpty()
+                .allSatisfy(
+                    server -> org.assertj.core.api.Assertions.assertThat(server).isNotEmpty());
+          } else {
+            listAssert.isNullOrEmpty();
+          }
+        });
+  }
+
   private KafkaContainer kafka;
   protected Producer<Integer, String> producer;
   protected Consumer<Integer, String> consumer;
@@ -179,6 +194,7 @@ public abstract class KafkaClientBaseTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION, "publish"),
+                bootstrapServersAssertion(),
                 satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("producer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
@@ -187,17 +203,6 @@ public abstract class KafkaClientBaseTest {
     }
     if (messageValue == null) {
       assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true));
-    }
-    if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
-      assertions.add(
-          satisfies(
-              MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
-              listAssert ->
-                  listAssert
-                      .isNotEmpty()
-                      .allSatisfy(
-                          server ->
-                              org.assertj.core.api.Assertions.assertThat(server).isNotEmpty())));
     }
     if (testHeaders) {
       assertions.add(
@@ -216,22 +221,12 @@ public abstract class KafkaClientBaseTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION, "receive"),
+                bootstrapServersAssertion(),
                 satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")),
                 satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive)));
     // consumer group is not available in version 0.11
     if (Boolean.getBoolean("testLatestDeps")) {
       assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
-    }
-    if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
-      assertions.add(
-          satisfies(
-              MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
-              listAssert ->
-                  listAssert
-                      .isNotEmpty()
-                      .allSatisfy(
-                          server ->
-                              org.assertj.core.api.Assertions.assertThat(server).isNotEmpty())));
     }
     if (testHeaders) {
       assertions.add(
@@ -251,6 +246,7 @@ public abstract class KafkaClientBaseTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION, "process"),
+                bootstrapServersAssertion(),
                 satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
@@ -260,17 +256,6 @@ public abstract class KafkaClientBaseTest {
     // consumer group is not available in version 0.11
     if (Boolean.getBoolean("testLatestDeps")) {
       assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
-    }
-    if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
-      assertions.add(
-          satisfies(
-              MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
-              listAssert ->
-                  listAssert
-                      .isNotEmpty()
-                      .allSatisfy(
-                          server ->
-                              org.assertj.core.api.Assertions.assertThat(server).isNotEmpty())));
     }
     if (messageKey != null) {
       assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
