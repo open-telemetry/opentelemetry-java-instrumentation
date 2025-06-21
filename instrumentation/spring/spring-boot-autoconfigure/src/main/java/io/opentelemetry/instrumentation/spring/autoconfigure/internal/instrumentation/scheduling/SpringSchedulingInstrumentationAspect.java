@@ -9,6 +9,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
@@ -16,7 +17,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMetho
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -43,7 +43,7 @@ final class SpringSchedulingInstrumentationAspect {
   private final Instrumenter<ClassAndMethod, Object> instrumenter;
 
   public SpringSchedulingInstrumentationAspect(
-      OpenTelemetry openTelemetry, ConfigProperties configProperties) {
+      OpenTelemetry openTelemetry, InstrumentationConfig config) {
     CodeAttributesGetter<ClassAndMethod> codedAttributesGetter =
         ClassAndMethod.codeAttributesGetter();
     InstrumenterBuilder<ClassAndMethod, Object> builder =
@@ -52,7 +52,7 @@ final class SpringSchedulingInstrumentationAspect {
                 INSTRUMENTATION_NAME,
                 CodeSpanNameExtractor.create(codedAttributesGetter))
             .addAttributesExtractor(CodeAttributesExtractor.create(codedAttributesGetter));
-    if (configProperties.getBoolean(
+    if (config.getBoolean(
         "otel.instrumentation.spring-scheduling.experimental-span-attributes", false)) {
       builder.addAttributesExtractor(
           AttributesExtractor.constant(AttributeKey.stringKey("job.system"), "spring_scheduling"));

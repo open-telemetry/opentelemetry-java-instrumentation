@@ -11,9 +11,13 @@ dependencies {
   api("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   api("net.bytebuddy:byte-buddy-dep")
 
-  implementation("io.opentelemetry:opentelemetry-api-incubator")
   implementation(project(":instrumentation-api"))
   implementation(project(":instrumentation-api-incubator"))
+  implementation(project(":sdk-bridge")) {
+    // is part of bootstrap classpath
+    exclude(group = "io.opentelemetry", module = "opentelemetry-api-incubator")
+    exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-extension-autoconfigure-spi")
+  }
 
   // autoconfigure is unstable, do not expose as api
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")

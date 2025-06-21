@@ -43,7 +43,6 @@ dependencies {
   api("org.junit.jupiter:junit-jupiter-params")
 
   api("io.opentelemetry:opentelemetry-api")
-  compileOnly("io.opentelemetry:opentelemetry-api-incubator")
   api("io.opentelemetry:opentelemetry-sdk")
   api("io.opentelemetry:opentelemetry-sdk-testing")
   api("io.opentelemetry.semconv:opentelemetry-semconv-incubating")
@@ -69,6 +68,7 @@ dependencies {
   implementation("org.slf4j:jul-to-slf4j")
   implementation("io.opentelemetry:opentelemetry-exporter-logging")
   implementation("io.opentelemetry.contrib:opentelemetry-baggage-processor")
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   api(project(":instrumentation-api-incubator"))
 
   annotationProcessor("com.google.auto.service:auto-service")

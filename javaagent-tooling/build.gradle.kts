@@ -19,7 +19,6 @@ dependencies {
   implementation(project(":sdk-autoconfigure-support"))
 
   implementation("io.opentelemetry:opentelemetry-api")
-  testImplementation("io.opentelemetry:opentelemetry-api-incubator")
   implementation("io.opentelemetry:opentelemetry-sdk")
   implementation("io.opentelemetry:opentelemetry-extension-kotlin")
   implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")

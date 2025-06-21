@@ -1,0 +1,4 @@
+io.opentelemetry.instrumentation.testing.provider.TestBridgeSpanExporterComponentProvider
+io.opentelemetry.instrumentation.testing.provider.TestBridgeMetricExporterComponentProvider
+io.opentelemetry.instrumentation.testing.provider.TestBridgeLogRecordExporterComponentProvider
+
