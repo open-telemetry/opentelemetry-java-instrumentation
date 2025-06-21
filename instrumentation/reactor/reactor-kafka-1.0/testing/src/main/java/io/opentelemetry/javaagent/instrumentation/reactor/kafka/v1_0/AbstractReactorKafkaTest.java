@@ -71,6 +71,24 @@ public abstract class AbstractReactorKafkaTest {
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
+  protected static final AttributeKey<List<String>> MESSAGING_KAFKA_BOOTSTRAP_SERVERS =
+      AttributeKey.stringArrayKey("messaging.kafka.bootstrap.servers");
+
+  protected static AttributeAssertion bootstrapServersAssertion() {
+    return satisfies(
+        MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+        listAssert -> {
+          if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
+            listAssert
+                .isNotEmpty()
+                .allSatisfy(
+                    server -> org.assertj.core.api.Assertions.assertThat(server).isNotEmpty());
+          } else {
+            listAssert.isNullOrEmpty();
+          }
+        });
+  }
+
   static KafkaContainer kafka;
   protected static KafkaSender<String, String> sender;
   protected static KafkaReceiver<String, String> receiver;
@@ -192,6 +210,7 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(MESSAGING_OPERATION, "publish"),
+                bootstrapServersAssertion(),
                 satisfies(
                     AttributeKey.stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("producer")),
@@ -212,6 +231,7 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION, "receive"),
+                bootstrapServersAssertion(),
                 satisfies(
                     AttributeKey.stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("consumer")),
@@ -231,6 +251,7 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(MESSAGING_OPERATION, "process"),
+                bootstrapServersAssertion(),
                 satisfies(
                     AttributeKey.stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("consumer")),

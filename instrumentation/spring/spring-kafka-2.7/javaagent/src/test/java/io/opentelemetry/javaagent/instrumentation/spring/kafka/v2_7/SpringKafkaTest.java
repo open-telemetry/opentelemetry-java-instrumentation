@@ -85,6 +85,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           equalTo(MESSAGING_SYSTEM, "kafka"),
                           equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                           equalTo(MESSAGING_OPERATION, "publish"),
+                          bootstrapServersAssertion(),
                           satisfies(
                               MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                           satisfies(
@@ -106,6 +107,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             equalTo(MESSAGING_SYSTEM, "kafka"),
                             equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                             equalTo(MESSAGING_OPERATION, "receive"),
+                            bootstrapServersAssertion(),
                             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testSingleListener"),
                             satisfies(
                                 MESSAGING_CLIENT_ID,
@@ -120,6 +122,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             equalTo(MESSAGING_SYSTEM, "kafka"),
                             equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                             equalTo(MESSAGING_OPERATION, "process"),
+                            bootstrapServersAssertion(),
                             satisfies(
                                 MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
                             satisfies(
@@ -160,6 +163,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                     equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                     equalTo(MESSAGING_OPERATION, "receive"),
                     equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testSingleListener"),
+                    bootstrapServersAssertion(),
                     satisfies(
                         MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")),
                     equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
@@ -168,6 +172,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
             equalTo(MESSAGING_SYSTEM, "kafka"),
             equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
             equalTo(MESSAGING_OPERATION, "process"),
+            bootstrapServersAssertion(),
             satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
             satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
             satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
@@ -190,6 +195,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           equalTo(MESSAGING_SYSTEM, "kafka"),
                           equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
                           equalTo(MESSAGING_OPERATION, "publish"),
+                          bootstrapServersAssertion(),
                           satisfies(
                               MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                           satisfies(
@@ -260,6 +266,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           equalTo(MESSAGING_SYSTEM, "kafka"),
                           equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                           equalTo(MESSAGING_OPERATION, "publish"),
+                          bootstrapServersAssertion(),
                           satisfies(
                               MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                           satisfies(
@@ -276,6 +283,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           equalTo(MESSAGING_SYSTEM, "kafka"),
                           equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                           equalTo(MESSAGING_OPERATION, "publish"),
+                          bootstrapServersAssertion(),
                           satisfies(
                               MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                           satisfies(
@@ -299,6 +307,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                             equalTo(MESSAGING_OPERATION, "receive"),
                             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testBatchListener"),
+                            bootstrapServersAssertion(),
                             satisfies(
                                 MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("consumer")),
@@ -315,6 +324,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                             equalTo(MESSAGING_OPERATION, "process"),
                             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testBatchListener"),
+                            bootstrapServersAssertion(),
                             satisfies(
                                 MESSAGING_CLIENT_ID,
                                 stringAssert -> stringAssert.startsWith("consumer")),
@@ -349,6 +359,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                           equalTo(MESSAGING_SYSTEM, "kafka"),
                           equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
                           equalTo(MESSAGING_OPERATION, "publish"),
+                          bootstrapServersAssertion(),
                           satisfies(
                               MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                           satisfies(
@@ -406,6 +417,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
             equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
             equalTo(MESSAGING_OPERATION, "receive"),
             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testBatchListener"),
+            bootstrapServersAssertion(),
             satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")),
             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
   }
@@ -421,6 +433,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
             equalTo(MESSAGING_DESTINATION_NAME, "testBatchTopic"),
             equalTo(MESSAGING_OPERATION, "process"),
             equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "testBatchListener"),
+            bootstrapServersAssertion(),
             satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")),
             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1));
     if (failed) {
