@@ -83,8 +83,6 @@ public class DocGeneratorApplication {
             getPercentage("configurations", withConfigurations, modules.size()));
 
     logger.info(stats);
-
-    logger.info(modulesWithDescriptions(modules));
   }
 
   private static String getClassificationStats(List<InstrumentationModule> modules) {
@@ -110,9 +108,8 @@ public class DocGeneratorApplication {
         + "%)";
   }
 
-  @SuppressWarnings("unused") // helper method used for project tracking
+  @SuppressWarnings("unused") // temporary helper method used for project tracking
   private static String listAllModules(List<InstrumentationModule> modules) {
-    // Create a checklist of all modules sorted by name
     return modules.stream()
         .map(InstrumentationModule::getInstrumentationName)
         .sorted()
@@ -120,9 +117,9 @@ public class DocGeneratorApplication {
         .collect(Collectors.joining("\n"));
   }
 
-  @SuppressWarnings("unused") // helper method used for project tracking
+  @SuppressWarnings("unused") // temporary helper method used for project tracking
   private static String modulesWithDescriptions(List<InstrumentationModule> modules) {
-    // Create a checklist of all modules sorted by name, checked if description is set
+    // checklist of all modules sorted by name, with a check if description is set
     return modules.stream()
         .sorted(Comparator.comparing(InstrumentationModule::getInstrumentationName))
         .map(
@@ -131,6 +128,23 @@ public class DocGeneratorApplication {
                   module.getMetadata() != null
                       && module.getMetadata().getDescription() != null
                       && !module.getMetadata().getDescription().isEmpty();
+              String checkbox = hasDescription ? "- [x] " : "- [ ] ";
+              return checkbox + module.getInstrumentationName();
+            })
+        .collect(Collectors.joining("\n"));
+  }
+
+  @SuppressWarnings("unused") // temporary helper method used for project tracking
+  private static String modulesWithConfigs(List<InstrumentationModule> modules) {
+    // checklist of all modules sorted by name, with a check if config is set
+    return modules.stream()
+        .sorted(Comparator.comparing(InstrumentationModule::getInstrumentationName))
+        .map(
+            module -> {
+              boolean hasDescription =
+                  module.getMetadata() != null
+                      && module.getMetadata().getConfigurations() != null
+                      && !module.getMetadata().getConfigurations().isEmpty();
               String checkbox = hasDescription ? "- [x] " : "- [ ] ";
               return checkbox + module.getInstrumentationName();
             })

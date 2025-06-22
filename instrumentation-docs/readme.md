@@ -23,7 +23,6 @@ tasks {
 }
 ```
 
-
 In order to collect spans, add the `collectSpans` property (along with `collectMetadata`):
 
 ```kotlin
