@@ -82,7 +82,9 @@ class NatsRequestMessagingAttributesGetterFactory {
       @Override
       public List<String> getMessageHeader(NatsRequest request, String name) {
         Headers headers = request.getHeaders();
-        return headers == null ? Collections.emptyList() : headers.get(name);
+        return headers == null || headers.get(name) == null
+            ? Collections.emptyList()
+            : headers.get(name);
       }
     };
   }

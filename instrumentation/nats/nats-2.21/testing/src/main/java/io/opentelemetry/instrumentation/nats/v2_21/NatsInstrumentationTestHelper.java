@@ -23,6 +23,15 @@ import java.time.Duration;
 public class NatsInstrumentationTestHelper {
 
   public static AttributeAssertion[] messagingAttributes(
+      String operation, String subject, int clientId, AttributeAssertion[] other) {
+    AttributeAssertion[] standard = messagingAttributes(operation, subject, clientId);
+    AttributeAssertion[] result = new AttributeAssertion[standard.length + other.length];
+    System.arraycopy(standard, 0, result, 0, standard.length);
+    System.arraycopy(other, 0, result, standard.length, other.length);
+    return result;
+  }
+
+  public static AttributeAssertion[] messagingAttributes(
       String operation, String subject, int clientId) {
     AttributeAssertion destinationName = equalTo(MESSAGING_DESTINATION_NAME, subject);
     if (subject.startsWith("_INBOX.")) {

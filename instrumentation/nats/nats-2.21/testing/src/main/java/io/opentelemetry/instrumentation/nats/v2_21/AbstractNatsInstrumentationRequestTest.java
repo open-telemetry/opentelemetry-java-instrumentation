@@ -291,12 +291,9 @@ public abstract class AbstractNatsInstrumentationRequestTest {
                                 .hasParent(trace.getSpan(0))
                                 .hasAttributesSatisfyingExactly(
                                     messagingAttributes("publish", "sub", clientId))),
-                // subscriber: receive + process + publish(response) (another trace because no
-                // propagation)
+                // subscriber: process + publish(response) (another trace because no propagation)
                 trace ->
                     trace.hasSpansSatisfyingExactly(
-                        // span -> span.hasName("sub
-                        // receive").hasKind(SpanKind.CONSUMER).hasNoParent(),
                         span ->
                             span.hasName("sub process").hasKind(SpanKind.CONSUMER).hasNoParent(),
                         span ->
@@ -308,7 +305,7 @@ public abstract class AbstractNatsInstrumentationRequestTest {
                                         "Name condition"))
                                 .hasKind(SpanKind.PRODUCER)
                                 .hasParent(trace.getSpan(0))),
-                // publisher: receive + process (another trace because no propagation)
+                // publisher: process (another trace because no propagation)
                 trace ->
                     trace.hasSpansSatisfyingExactly(
                         span ->
@@ -322,18 +319,8 @@ public abstract class AbstractNatsInstrumentationRequestTest {
                                 .hasNoParent()
                                 .hasAttributesSatisfyingExactly(
                                     messagingAttributes("process", "_INBOX.", clientId)))));
+
     if (!isInboxMonitored()) {
-      /*asserts.add(span ->
-      span.has(
-              new Condition<>(
-                  data ->
-                      data.getName().startsWith("_INBOX.")
-                          && data.getName().endsWith(" receive"),
-                  "Name condition"))
-          .hasKind(SpanKind.CONSUMER)
-          .hasParent(trace.getSpan(1))
-          .hasAttributesSatisfyingExactly(
-              messagingAttributes("receive", "_INBOX.", clientId)));*/
       asserts.remove(asserts.size() - 1);
     }
     testing().waitAndAssertTraces(asserts);
@@ -354,7 +341,7 @@ public abstract class AbstractNatsInstrumentationRequestTest {
                                   .hasParent(trace.getSpan(0))
                                   .hasAttributesSatisfyingExactly(
                                       messagingAttributes("publish", "sub", clientId)),
-                          // dispatcher receive, process, publish, not retesting all properties
+                          // subscriber: process + publish(response)
                           span ->
                               span.hasName("sub process")
                                   .hasKind(SpanKind.CONSUMER)
@@ -368,7 +355,7 @@ public abstract class AbstractNatsInstrumentationRequestTest {
                                           "Name condition"))
                                   .hasKind(SpanKind.PRODUCER)
                                   .hasParent(trace.getSpan(2)),
-                          // publisher: receive + process
+                          // publisher: process
                           span ->
                               span.has(
                                       new Condition<>(
@@ -381,24 +368,7 @@ public abstract class AbstractNatsInstrumentationRequestTest {
                                   .hasAttributesSatisfyingExactly(
                                       messagingAttributes("process", "_INBOX.", clientId))));
 
-              /*asserts.add(span ->
-              span.hasName("sub receive")
-                  .hasKind(SpanKind.CONSUMER)
-                  .hasParent(trace.getSpan(1)));*/
-              // end dispatcher
-
               if (!isInboxMonitored()) {
-                /*asserts.add(span ->
-                span.has(
-                        new Condition<>(
-                            data ->
-                                data.getName().startsWith("_INBOX.")
-                                    && data.getName().endsWith(" receive"),
-                            "Name condition"))
-                    .hasKind(SpanKind.CONSUMER)
-                    .hasParent(trace.getSpan(1))
-                    .hasAttributesSatisfyingExactly(
-                        messagingAttributes("receive", "_INBOX.", clientId)));*/
                 asserts.remove(asserts.size() - 1);
               }
 

@@ -19,21 +19,22 @@ dependencies {
 }
 
 tasks {
-  val testMessagingReceive by registering(Test::class) {
+  val testExperimental by registering(Test::class) {
     filter {
-      includeTestsMatching("NatsInstrumentationMessagingReceiveTest")
+      includeTestsMatching("NatsInstrumentationExperimentalTest")
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.capture-headers=captured-header")
   }
 
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     filter {
-      excludeTestsMatching("NatsInstrumentationMessagingReceiveTest")
+      excludeTestsMatching("NatsInstrumentationExperimentalTest")
     }
   }
 
   check {
-    dependsOn(testMessagingReceive)
+    dependsOn(testExperimental)
   }
 }

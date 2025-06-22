@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.nats.v2_21;
 
 import io.nats.client.Connection;
 import io.nats.client.Nats;
-import io.opentelemetry.instrumentation.nats.v2_21.AbstractNatsInstrumentationMessagingReceiveTest;
+import io.opentelemetry.instrumentation.nats.v2_21.AbstractNatsInstrumentationExperimentalTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.IOException;
@@ -18,8 +18,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
-class NatsInstrumentationMessagingReceiveTest
-    extends AbstractNatsInstrumentationMessagingReceiveTest {
+class NatsInstrumentationExperimentalTest extends AbstractNatsInstrumentationExperimentalTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

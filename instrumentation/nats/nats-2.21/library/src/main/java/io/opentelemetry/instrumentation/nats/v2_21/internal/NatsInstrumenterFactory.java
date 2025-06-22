@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
+import java.util.List;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -24,35 +25,41 @@ public final class NatsInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.nats-2.21";
 
   public static Instrumenter<NatsRequest, NatsRequest> createProducerInstrumenter(
-      OpenTelemetry openTelemetry) {
+      OpenTelemetry openTelemetry, List<String> capturedHeaders) {
     return Instrumenter.<NatsRequest, NatsRequest>builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
             MessagingSpanNameExtractor.create(
                 NatsRequestMessagingAttributesGetter.VOID_INSTANCE, MessageOperation.PUBLISH))
         .addAttributesExtractor(
-            MessagingAttributesExtractor.create(
-                NatsRequestMessagingAttributesGetter.NATS_REQUEST_INSTANCE,
-                MessageOperation.PUBLISH))
+            MessagingAttributesExtractor.builder(
+                    NatsRequestMessagingAttributesGetter.NATS_REQUEST_INSTANCE,
+                    MessageOperation.PUBLISH)
+                .setCapturedHeaders(capturedHeaders)
+                .build())
         .buildProducerInstrumenter(NatsRequestTextMapSetter.INSTANCE);
   }
 
   public static Instrumenter<NatsRequest, Void> createConsumerReceiveInstrumenter(
-      OpenTelemetry openTelemetry, boolean enabled) {
+      OpenTelemetry openTelemetry, boolean enabled, List<String> capturedHeaders) {
     return Instrumenter.<NatsRequest, Void>builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
             MessagingSpanNameExtractor.create(
                 NatsRequestMessagingAttributesGetter.VOID_INSTANCE, MessageOperation.RECEIVE))
         .addAttributesExtractor(
-            MessagingAttributesExtractor.create(
-                NatsRequestMessagingAttributesGetter.VOID_INSTANCE, MessageOperation.RECEIVE))
+            MessagingAttributesExtractor.builder(
+                    NatsRequestMessagingAttributesGetter.VOID_INSTANCE, MessageOperation.RECEIVE)
+                .setCapturedHeaders(capturedHeaders)
+                .build())
         .setEnabled(enabled)
         .buildConsumerInstrumenter(NatsRequestTextMapGetter.INSTANCE);
   }
 
   public static Instrumenter<NatsRequest, Void> createConsumerProcessInstrumenter(
-      OpenTelemetry openTelemetry, boolean messagingReceiveInstrumentationEnabled) {
+      OpenTelemetry openTelemetry,
+      boolean messagingReceiveInstrumentationEnabled,
+      List<String> capturedHeaders) {
     InstrumenterBuilder<NatsRequest, Void> builder =
         Instrumenter.<NatsRequest, Void>builder(
                 openTelemetry,
@@ -60,8 +67,11 @@ public final class NatsInstrumenterFactory {
                 MessagingSpanNameExtractor.create(
                     NatsRequestMessagingAttributesGetter.VOID_INSTANCE, MessageOperation.PROCESS))
             .addAttributesExtractor(
-                MessagingAttributesExtractor.create(
-                    NatsRequestMessagingAttributesGetter.VOID_INSTANCE, MessageOperation.PROCESS));
+                MessagingAttributesExtractor.builder(
+                        NatsRequestMessagingAttributesGetter.VOID_INSTANCE,
+                        MessageOperation.PROCESS)
+                    .setCapturedHeaders(capturedHeaders)
+                    .build());
 
     if (messagingReceiveInstrumentationEnabled) {
       builder.addSpanLinksExtractor(

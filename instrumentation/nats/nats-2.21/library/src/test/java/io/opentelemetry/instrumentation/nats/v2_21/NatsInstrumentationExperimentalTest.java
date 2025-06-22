@@ -5,13 +5,14 @@
 
 package io.opentelemetry.instrumentation.nats.v2_21;
 
+import static java.util.Collections.singletonList;
+
 import io.nats.client.Connection;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class NatsInstrumentationMessaingReceiveTest
-    extends AbstractNatsInstrumentationMessagingReceiveTest {
+class NatsInstrumentationExperimentalTest extends AbstractNatsInstrumentationExperimentalTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -23,6 +24,7 @@ class NatsInstrumentationMessaingReceiveTest
     telemetry =
         NatsTelemetry.builder(testing.getOpenTelemetry())
             .setMessagingReceiveInstrumentationEnabled(true)
+            .setCapturedHeaders(singletonList("captured-header"))
             .build();
     natsConnection = telemetry.wrap(new TestConnection());
   }

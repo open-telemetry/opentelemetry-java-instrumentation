@@ -11,25 +11,28 @@ import static io.opentelemetry.instrumentation.nats.v2_21.internal.NatsInstrumen
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.nats.v2_21.internal.NatsRequest;
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import java.util.List;
 
 public final class NatsSingletons {
 
   private static final boolean messagingReceiveInstrumentationEnabled =
-      ConfigPropertiesUtil.getBoolean(
-          "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false);
+      ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
+
+  private static final List<String> capturedHeaders =
+      ExperimentalConfig.get().getMessagingHeaders();
 
   public static final Instrumenter<NatsRequest, NatsRequest> PRODUCER_INSTRUMENTER =
-      createProducerInstrumenter(GlobalOpenTelemetry.get());
+      createProducerInstrumenter(GlobalOpenTelemetry.get(), capturedHeaders);
 
   public static final Instrumenter<NatsRequest, Void> CONSUMER_RECEIVE_INSTRUMENTER =
       createConsumerReceiveInstrumenter(
-          GlobalOpenTelemetry.get(), messagingReceiveInstrumentationEnabled);
+          GlobalOpenTelemetry.get(), messagingReceiveInstrumentationEnabled, capturedHeaders);
 
   public static final Instrumenter<NatsRequest, Void> CONSUMER_PROCESS_INSTRUMENTER =
       createConsumerProcessInstrumenter(
-          GlobalOpenTelemetry.get(), messagingReceiveInstrumentationEnabled);
+          GlobalOpenTelemetry.get(), messagingReceiveInstrumentationEnabled, capturedHeaders);
 
   private NatsSingletons() {}
 }
