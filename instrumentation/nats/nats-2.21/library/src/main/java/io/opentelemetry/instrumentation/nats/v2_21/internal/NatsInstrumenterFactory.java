@@ -17,9 +17,7 @@ import java.util.List;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.", or "This class is internal and experimental. Its APIs are unstable and can change at
- * any time. Its APIs (or a version of them) may be promoted to the public stable API in the future,
- * but no guarantees are made.
+ * any time.
  */
 public final class NatsInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.nats-2.21";

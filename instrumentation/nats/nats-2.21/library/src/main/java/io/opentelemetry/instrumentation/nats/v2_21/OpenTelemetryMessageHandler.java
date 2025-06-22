@@ -14,7 +14,11 @@ import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.nats.v2_21.internal.NatsRequest;
 
-final class OpenTelemetryMessageHandler implements MessageHandler {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time. Exposed for {@link io.nats.client.impl.OpenTelemetryDispatcherFactory}.
+ */
+public final class OpenTelemetryMessageHandler implements MessageHandler {
 
   private final MessageHandler delegate;
   private final Instrumenter<NatsRequest, Void> consumerReceiveInstrumenter;

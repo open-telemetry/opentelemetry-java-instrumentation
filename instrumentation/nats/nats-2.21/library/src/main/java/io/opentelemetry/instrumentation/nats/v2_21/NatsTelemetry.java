@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.nats.v2_21;
 import io.nats.client.Connection;
 import io.nats.client.Options;
 import io.nats.client.impl.DispatcherFactory;
+import io.nats.client.impl.OpenTelemetryDispatcherFactory;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.nats.v2_21.internal.NatsRequest;
@@ -54,7 +55,7 @@ public final class NatsTelemetry {
     }
 
     return options.dispatcherFactory(
-        OpenTelemetryDispatcherFactory.wrap(
+        new OpenTelemetryDispatcherFactory(
             factory, consumerReceiveInstrumenter, consumerProcessInstrumenter));
   }
 }
