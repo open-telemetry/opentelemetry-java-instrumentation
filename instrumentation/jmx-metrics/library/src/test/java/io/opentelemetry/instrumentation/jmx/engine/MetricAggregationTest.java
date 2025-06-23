@@ -35,7 +35,7 @@ import org.junit.jupiter.api.Test;
 
 public class MetricAggregationTest {
 
-  @SuppressWarnings("unused")
+  @SuppressWarnings({"unused", "checkstyle:AbbreviationAsWordInName"})
   public interface HelloMBean {
 
     int getValue();
