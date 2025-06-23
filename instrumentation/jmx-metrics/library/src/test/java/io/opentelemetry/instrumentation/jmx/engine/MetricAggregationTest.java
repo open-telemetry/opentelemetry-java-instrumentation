@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jmx.engine;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.assertj.core.groups.Tuple.tuple;
+import static org.junit.jupiter.params.ParameterizedInvocationConstants.ARGUMENTS_PLACEHOLDER;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -17,6 +18,7 @@ import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.data.PointData;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -31,7 +33,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 public class MetricAggregationTest {
 
@@ -116,39 +119,61 @@ public class MetricAggregationTest {
     }
   }
 
-  @Test
-  void singleInstance() throws Exception {
+  static List<MetricInfo.Type> metricTypes() {
+    return Arrays.asList(
+        MetricInfo.Type.COUNTER, MetricInfo.Type.UPDOWNCOUNTER, MetricInfo.Type.GAUGE);
+  }
+
+  @ParameterizedTest(name = ARGUMENTS_PLACEHOLDER)
+  @MethodSource("metricTypes")
+  void singleInstance(MetricInfo.Type metricType) throws Exception {
     ObjectName bean = getObjectName(null, null);
     theServer.registerMBean(new Hello(42), bean);
 
-    Collection<MetricData> data = testMetric(bean.toString(), Collections.emptyList());
-    checkSingleValue(data, 42);
+    Collection<MetricData> data = testMetric(bean.toString(), Collections.emptyList(), metricType);
+    checkSingleValue(data, 42, metricType);
   }
 
-  @Test
-  void aggregateOneParam() throws Exception {
+  @ParameterizedTest(name = ARGUMENTS_PLACEHOLDER)
+  @MethodSource("metricTypes")
+  void aggregateOneParam(MetricInfo.Type metricType) throws Exception {
     theServer.registerMBean(new Hello(42), getObjectName("value1", null));
     theServer.registerMBean(new Hello(37), getObjectName("value2", null));
 
     String bean = getObjectName("*", null).toString();
-    Collection<MetricData> data = testMetric(bean, Collections.emptyList());
-    checkSingleValue(data, 79);
+    Collection<MetricData> data = testMetric(bean, Collections.emptyList(), metricType);
+    int expected = 79;
+    if (metricType == MetricInfo.Type.GAUGE) {
+      // last-value aggregation produces unpredictable result unless a single mbean instance is used
+      // test here is only used as a way to document behavior and should not be considered a feature
+      expected = 37;
+    }
+    checkSingleValue(data, expected, metricType);
   }
 
-  @Test
-  void aggregateMultipleParams() throws Exception {
+  @ParameterizedTest(name = ARGUMENTS_PLACEHOLDER)
+  @MethodSource("metricTypes")
+  void aggregateMultipleParams(MetricInfo.Type metricType) throws Exception {
     theServer.registerMBean(new Hello(1), getObjectName("1", "x"));
     theServer.registerMBean(new Hello(2), getObjectName("2", "y"));
     theServer.registerMBean(new Hello(3), getObjectName("3", "x"));
     theServer.registerMBean(new Hello(4), getObjectName("4", "y"));
 
     String bean = getObjectName("*", "*").toString();
-    Collection<MetricData> data = testMetric(bean, Collections.emptyList());
-    checkSingleValue(data, 10);
+    Collection<MetricData> data = testMetric(bean, Collections.emptyList(), metricType);
+
+    int expected = 10;
+    if (metricType == MetricInfo.Type.GAUGE) {
+      // last-value aggregation produces unpredictable result unless a single mbean instance is used
+      // test here is only used as a way to document behavior and should not be considered a feature
+      expected = 1;
+    }
+    checkSingleValue(data, expected, metricType);
   }
 
-  @Test
-  void partialAggregateMultipleParams() throws Exception {
+  @ParameterizedTest(name = ARGUMENTS_PLACEHOLDER)
+  @MethodSource("metricTypes")
+  void partialAggregateMultipleParams(MetricInfo.Type metricType) throws Exception {
     theServer.registerMBean(new Hello(1), getObjectName("1", "x"));
     theServer.registerMBean(new Hello(2), getObjectName("2", "y"));
     theServer.registerMBean(new Hello(3), getObjectName("3", "x"));
@@ -160,7 +185,7 @@ public class MetricAggregationTest {
         Collections.singletonList(
             new MetricAttribute(
                 "test.metric.param", MetricAttributeExtractor.fromObjectNameParameter("b")));
-    Collection<MetricData> data = testMetric(bean, attributes);
+    Collection<MetricData> data = testMetric(bean, attributes, metricType);
 
     assertThat(data)
         .isNotEmpty()
@@ -168,22 +193,36 @@ public class MetricAggregationTest {
             metric -> {
               assertThat(metric.getName()).isEqualTo("test.metric");
               AttributeKey<String> metricAttribute = AttributeKey.stringKey("test.metric.param");
-              assertThat(metric.getLongSumData().getPoints())
-                  .extracting(LongPointData::getValue, PointData::getAttributes)
-                  .containsExactlyInAnyOrder(
-                      tuple(6L, Attributes.of(metricAttribute, "y")),
-                      tuple(4L, Attributes.of(metricAttribute, "x")));
+
+              if (metricType == MetricInfo.Type.GAUGE) {
+                // last-value aggregation produces unpredictable result unless a single mbean
+                // instance is used
+                // test here is only used as a way to document behavior and should not be considered
+                // a feature
+                assertThat(metric.getLongGaugeData().getPoints())
+                    .extracting(LongPointData::getValue, PointData::getAttributes)
+                    .containsExactlyInAnyOrder(
+                        tuple(4L, Attributes.of(metricAttribute, "y")),
+                        tuple(1L, Attributes.of(metricAttribute, "x")));
+              } else {
+                // sum aggregation
+                assertThat(metric.getLongSumData().getPoints())
+                    .extracting(LongPointData::getValue, PointData::getAttributes)
+                    .containsExactlyInAnyOrder(
+                        tuple(6L, Attributes.of(metricAttribute, "y")),
+                        tuple(4L, Attributes.of(metricAttribute, "x")));
+              }
             });
   }
 
-  private Collection<MetricData> testMetric(String mbean, List<MetricAttribute> attributes)
+  private Collection<MetricData> testMetric(
+      String mbean, List<MetricAttribute> attributes, MetricInfo.Type metricType)
       throws MalformedObjectNameException {
     JmxMetricInsight metricInsight = JmxMetricInsight.createService(sdk, 0);
     MetricConfiguration metricConfiguration = new MetricConfiguration();
     List<MetricExtractor> extractors = new ArrayList<>();
 
-    MetricInfo metricInfo =
-        new MetricInfo("test.metric", "description", null, "1", MetricInfo.Type.COUNTER);
+    MetricInfo metricInfo = new MetricInfo("test.metric", "description", null, "1", metricType);
     BeanAttributeExtractor beanExtractor = BeanAttributeExtractor.fromName("Value");
     MetricExtractor extractor = new MetricExtractor(beanExtractor, metricInfo, attributes);
     extractors.add(extractor);
@@ -196,13 +235,21 @@ public class MetricAggregationTest {
     return waitMetricsReceived();
   }
 
-  private static void checkSingleValue(Collection<MetricData> data, long expectedValue) {
+  private static void checkSingleValue(
+      Collection<MetricData> data, long expectedValue, MetricInfo.Type metricType) {
     assertThat(data)
         .isNotEmpty()
         .satisfiesExactlyInAnyOrder(
             metric -> {
               assertThat(metric.getName()).isEqualTo("test.metric");
-              assertThat(metric.getLongSumData().getPoints())
+
+              Collection<LongPointData> points;
+              if (metricType == MetricInfo.Type.GAUGE) {
+                points = metric.getLongGaugeData().getPoints();
+              } else {
+                points = metric.getLongSumData().getPoints();
+              }
+              assertThat(points)
                   .extracting(LongPointData::getValue, PointData::getAttributes)
                   .containsExactlyInAnyOrder(tuple(expectedValue, Attributes.empty()));
             });

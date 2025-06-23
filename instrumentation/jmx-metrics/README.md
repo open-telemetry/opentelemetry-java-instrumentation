@@ -396,6 +396,15 @@ When two or more MBean parameters are used, it is also possible to perform a par
 - parameters mapped as metric attributes with `param(<mbeanParam>)` are preserved
 - values are aggregated with mapped metric attributes
 
+The applied aggregation depends on the metric type:
+- `counter` or `updowncounter`: sum aggregation
+- `gauge`: last-value aggregation
+
+As a consequence, it is not recommended to use it for `gauge` metrics when querying more than one MBean instance as it would produce unpredictable results.
+
+When there is only a single MBean instance, using a `gauge` metric produces the expected value, hence allowing to avoid mapping all the MBean parameters
+to metric attributes.
+
 ### General Syntax
 
 Here is the general description of the accepted configuration file syntax. The whole contents of the file is case-sensitive, with exception for `type` as described in the table below.
