@@ -373,13 +373,13 @@ rules:
 
 ### Aggregation over multiple MBean instances
 
-Sometimes, multiple MBean instances are registered with distinct names and we need to capture the aggregate value of all the instances.
+Sometimes, multiple MBean instances are registered with distinct names and we need to capture the aggregate value over all the instances.
 
 For example, the JVM exposes the number of GC executions in the `CollectionCount` attribute of the MBean instances returned by `java.lang:name=*,type=GarbageCollector` query,
-there are multiple instances each with a distinct value for the `name` key.
+there are multiple instances each with a distinct value for the `name` parameter.
 
-In order to capture the total number of GC executions across all those instances in a single metric, we can use the following configuration
-where the `name` key in the MBean name is NOT mapped to a metric attribute.
+To capture the total number of GC executions across all those instances in a single metric, we can use the following configuration
+where the `name` parameter in the MBean name is NOT mapped to a metric attribute.
 
 ```yaml
   - bean: java.lang:name=*,type=GarbageCollector
@@ -390,6 +390,11 @@ where the `name` key in the MBean name is NOT mapped to a metric attribute.
         type: counter
         desc: JVM GC execution count
 ```
+
+When two or more MBean parameters are used, it is also possible to perform a partial aggregation:
+- parameters not mapped as metric attributes are discarded
+- parameters mapped as metric attributes with `param(<mbeanParam>)` are preserved
+- values are aggregated with mapped metric attributes
 
 ### General Syntax
 
