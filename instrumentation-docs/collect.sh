@@ -25,6 +25,10 @@ readonly INSTRUMENTATIONS=(
   "apache-httpclient:apache-httpclient-4.0:javaagent:test"
   "apache-httpclient:apache-httpclient-4.3:library:test"
   "apache-httpclient:apache-httpclient-5.0:javaagent:test"
+  "apache-httpclient:apache-httpclient-5.2:library:test"
+  "armeria:armeria-1.3:javaagent:test"
+  "async-http-client:async-http-client-1.9:javaagent:test"
+  "async-http-client:async-http-client-2.0:javaagent:test"
   "apache-dubbo-2.7:javaagent:testDubbo"
   "c3p0-0.9:javaagent:test"
   "c3p0-0.9:javaagent:testStableSemconv"
@@ -174,7 +178,7 @@ echo
 
 ./gradlew "${gradle_tasks[@]}" \
   -PcollectMetadata=true \
-  --rerun-tasks
+  --rerun-tasks --continue
 
 # uncomment the next line to remove all .telemetry directories
 #find_and_remove_all_telemetry

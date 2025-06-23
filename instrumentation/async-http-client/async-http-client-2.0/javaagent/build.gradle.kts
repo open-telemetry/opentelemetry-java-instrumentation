@@ -31,6 +31,7 @@ if (!latestDepTest) {
 }
 
 tasks.withType<Test>().configureEach {
+  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   systemProperty("testLatestDeps", latestDepTest)
   // async-http-client 3.0 requires java 11
   // We are not using minJavaVersionSupported for latestDepTest because that way the instrumentation
