@@ -27,6 +27,5 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 }
