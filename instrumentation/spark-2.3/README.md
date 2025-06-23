@@ -7,4 +7,4 @@ a tiny web framework for Java. It is also sometimes referred to as
 
 This instrumentation is NOT for Apache Spark.
 
-The instrumentation here facilitates tracing by generating HTTP SERVER spans.
+This instrumentation does not emit telemetry on its own. Instead, it extracts the HTTP route and attaches it to SERVER spans and HTTP server metrics.
