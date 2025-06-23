@@ -29,6 +29,7 @@ public class InstrumentationModule {
   private final String group;
   private final InstrumentationScopeInfo scopeInfo;
   private Map<String, List<EmittedMetrics.Metric>> metrics;
+  private Map<String, List<EmittedSpans.Span>> spans;
 
   @Nullable private Map<InstrumentationType, Set<String>> targetVersions;
 
@@ -47,6 +48,7 @@ public class InstrumentationModule {
     requireNonNull(builder.group, "group required");
 
     this.metrics = Objects.requireNonNullElseGet(builder.metrics, HashMap::new);
+    this.spans = Objects.requireNonNullElseGet(builder.spans, HashMap::new);
     this.srcPath = builder.srcPath;
     this.instrumentationName = builder.instrumentationName;
     this.namespace = builder.namespace;
@@ -99,6 +101,10 @@ public class InstrumentationModule {
     return metrics;
   }
 
+  public Map<String, List<EmittedSpans.Span>> getSpans() {
+    return spans;
+  }
+
   public void setTargetVersions(Map<InstrumentationType, Set<String>> targetVersions) {
     this.targetVersions = targetVersions;
   }
@@ -115,6 +121,10 @@ public class InstrumentationModule {
     this.metrics = metrics;
   }
 
+  public void setSpans(Map<String, List<EmittedSpans.Span>> spans) {
+    this.spans = spans;
+  }
+
   /**
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
    * any time.
@@ -128,6 +138,7 @@ public class InstrumentationModule {
     @Nullable private InstrumentationMetaData metadata;
     @Nullable private Map<InstrumentationType, Set<String>> targetVersions;
     @Nullable private Map<String, List<EmittedMetrics.Metric>> metrics;
+    @Nullable private Map<String, List<EmittedSpans.Span>> spans;
 
     @CanIgnoreReturnValue
     public Builder srcPath(String srcPath) {
@@ -174,6 +185,12 @@ public class InstrumentationModule {
     @CanIgnoreReturnValue
     public Builder metrics(Map<String, List<EmittedMetrics.Metric>> metrics) {
       this.metrics = metrics;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder spans(Map<String, List<EmittedSpans.Span>> spans) {
+      this.spans = spans;
       return this;
     }
 

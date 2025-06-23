@@ -7,6 +7,10 @@ package io.opentelemetry.instrumentation.testing.internal;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
+import io.opentelemetry.api.common.AttributeType;
+import io.opentelemetry.api.internal.InternalAttributeKeyImpl;
+import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -33,11 +37,16 @@ public final class MetaDataCollector {
   private static final Pattern MODULE_PATTERN =
       Pattern.compile("(.*?/instrumentation/.*?)(/javaagent/|/library/)");
 
-  public static void writeTelemetryToFiles(String path, Map<String, MetricData> metrics)
+  public static void writeTelemetryToFiles(
+      String path,
+      Map<String, MetricData> metrics,
+      Map<InstrumentationScopeInfo, Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>>>
+          spansByScopeAndKind)
       throws IOException {
 
     String moduleRoot = extractInstrumentationPath(path);
     writeMetricData(moduleRoot, metrics);
+    writeSpanData(moduleRoot, spansByScopeAndKind);
   }
 
   private static String extractInstrumentationPath(String path) {
@@ -58,6 +67,62 @@ public final class MetaDataCollector {
     }
 
     return instrumentationPath;
+  }
+
+  private static void writeSpanData(
+      String instrumentationPath,
+      Map<InstrumentationScopeInfo, Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>>>
+          spansByScopeAndKind)
+      throws IOException {
+
+    if (spansByScopeAndKind.isEmpty()) {
+      return;
+    }
+
+    Path spansPath =
+        Paths.get(instrumentationPath, TMP_DIR, "spans-" + UUID.randomUUID() + ".yaml");
+
+    try (BufferedWriter writer = Files.newBufferedWriter(spansPath.toFile().toPath(), UTF_8)) {
+      String config = System.getProperty("metaDataConfig");
+      String when = "default";
+      if (config != null && !config.isEmpty()) {
+        when = config;
+      }
+
+      writer.write("when: " + when + "\n");
+
+      writer.write("spans_by_scope:\n");
+
+      for (Map.Entry<
+              InstrumentationScopeInfo,
+              Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>>>
+          entry : spansByScopeAndKind.entrySet()) {
+        InstrumentationScopeInfo scope = entry.getKey();
+        Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>> spansByKind =
+            entry.getValue();
+
+        writer.write("  - scope: " + scope.getName() + "\n");
+        writer.write("    spans:\n");
+
+        for (Map.Entry<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>> kindEntry :
+            spansByKind.entrySet()) {
+          SpanKind spanKind = kindEntry.getKey();
+          Map<InternalAttributeKeyImpl<?>, AttributeType> attributes = kindEntry.getValue();
+
+          writer.write("      - span_kind: " + spanKind.toString() + "\n");
+          writer.write("        attributes:\n");
+          attributes.forEach(
+              (key, value) -> {
+                try {
+                  writer.write("          - name: " + key.getKey() + "\n");
+                  writer.write("            type: " + key.getType().toString() + "\n");
+                } catch (IOException e) {
+                  throw new IllegalStateException(e);
+                }
+              });
+        }
+      }
+    }
   }
 
   private static void writeMetricData(String instrumentationPath, Map<String, MetricData> metrics)
