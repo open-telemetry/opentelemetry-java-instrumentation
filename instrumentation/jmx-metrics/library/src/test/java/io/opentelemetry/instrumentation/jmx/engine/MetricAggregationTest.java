@@ -204,8 +204,7 @@ public class MetricAggregationTest {
               assertThat(metric.getName()).isEqualTo("test.metric");
               assertThat(metric.getLongSumData().getPoints())
                   .extracting(LongPointData::getValue, PointData::getAttributes)
-                  .containsExactlyInAnyOrder(
-                      tuple(expectedValue, Attributes.empty()));
+                  .containsExactlyInAnyOrder(tuple(expectedValue, Attributes.empty()));
             });
   }
 
