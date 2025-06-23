@@ -39,16 +39,11 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
   protected static AttributeAssertion bootstrapServersAssertion() {
     return satisfies(
         MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
-        listAssert -> {
-          if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
+        listAssert ->
             listAssert
                 .isNotEmpty()
                 .allSatisfy(
-                    server -> org.assertj.core.api.Assertions.assertThat(server).isNotEmpty());
-          } else {
-            listAssert.isNullOrEmpty();
-          }
-        });
+                    server -> org.assertj.core.api.Assertions.assertThat(server).isNotEmpty()));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
