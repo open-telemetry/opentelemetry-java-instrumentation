@@ -6,11 +6,15 @@
 package io.opentelemetry.instrumentation.jmx.engine;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static org.assertj.core.groups.Tuple.tuple;
 
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.data.LongPointData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.metrics.data.PointData;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,7 +27,6 @@ import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -76,17 +79,18 @@ public class MetricAggregationTest {
 
   @AfterEach
   void after() throws Exception {
-    ObjectName objectName = new ObjectName(
-        "otel.jmx.test:type=" + Hello.class.getSimpleName() + ",*");
-    theServer.queryMBeans(objectName, null).forEach(
-        instance -> {
-          try {
-            theServer.unregisterMBean(instance.getObjectName());
-          } catch (InstanceNotFoundException | MBeanRegistrationException e) {
-            throw new RuntimeException(e);
-          }
-        }
-    );
+    ObjectName objectName =
+        new ObjectName("otel.jmx.test:type=" + Hello.class.getSimpleName() + ",*");
+    theServer
+        .queryMBeans(objectName, null)
+        .forEach(
+            instance -> {
+              try {
+                theServer.unregisterMBean(instance.getObjectName());
+              } catch (InstanceNotFoundException | MBeanRegistrationException e) {
+                throw new RuntimeException(e);
+              }
+            });
 
     if (sdk != null) {
       sdk.getSdkMeterProvider().close();
@@ -152,28 +156,23 @@ public class MetricAggregationTest {
 
     String bean = getObjectName("*", "*").toString();
 
-    List<MetricAttribute> attributes = Collections.singletonList(
-        new MetricAttribute("test.metric.param",
-            MetricAttributeExtractor.fromObjectNameParameter("b")));
+    List<MetricAttribute> attributes =
+        Collections.singletonList(
+            new MetricAttribute(
+                "test.metric.param", MetricAttributeExtractor.fromObjectNameParameter("b")));
     Collection<MetricData> data = testMetric(bean, attributes);
 
     assertThat(data)
         .isNotEmpty()
-        .satisfiesExactlyInAnyOrder(
+        .satisfiesExactly(
             metric -> {
               assertThat(metric.getName()).isEqualTo("test.metric");
-              Collection<LongPointData> points = metric.getLongSumData().getPoints();
-              assertThat(points).hasSize(1);
-              LongPointData pointData = points.stream().findFirst().get();
-              assertThat(pointData.getAttributes()).containsEntry("b", "y");
-              assertThat(pointData.getValue()).isEqualTo(6);
-            }, metric -> {
-              Assertions.assertThat(metric.getName()).isEqualTo("test.metric");
-              Collection<LongPointData> points = metric.getLongSumData().getPoints();
-              assertThat(points).hasSize(1);
-              LongPointData pointData = points.stream().findFirst().get();
-              assertThat(pointData.getAttributes()).containsEntry("b", "x");
-              assertThat(pointData.getValue()).isEqualTo(4);
+              AttributeKey<String> metricAttribute = AttributeKey.stringKey("test.metric.param");
+              assertThat(metric.getLongSumData().getPoints())
+                  .extracting(LongPointData::getValue, PointData::getAttributes)
+                  .containsExactlyInAnyOrder(
+                      tuple(6L, Attributes.of(metricAttribute, "y")),
+                      tuple(4L, Attributes.of(metricAttribute, "x")));
             });
   }
 
@@ -197,17 +196,16 @@ public class MetricAggregationTest {
     return waitMetricsReceived();
   }
 
-  private static void checkSingleValue(Collection<MetricData> data, int expectedValue) {
+  private static void checkSingleValue(Collection<MetricData> data, long expectedValue) {
     assertThat(data)
         .isNotEmpty()
         .satisfiesExactlyInAnyOrder(
             metric -> {
               assertThat(metric.getName()).isEqualTo("test.metric");
-              Collection<LongPointData> points = metric.getLongSumData().getPoints();
-              assertThat(points).hasSize(1);
-              LongPointData pointData = points.stream().findFirst().get();
-              assertThat(pointData.getValue()).isEqualTo(expectedValue);
-              assertThat(pointData.getAttributes()).isEmpty();
+              assertThat(metric.getLongSumData().getPoints())
+                  .extracting(LongPointData::getValue, PointData::getAttributes)
+                  .containsExactlyInAnyOrder(
+                      tuple(expectedValue, Attributes.empty()));
             });
   }
 
