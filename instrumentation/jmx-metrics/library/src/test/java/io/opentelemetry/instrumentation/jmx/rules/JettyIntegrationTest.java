@@ -5,10 +5,9 @@
 
 package io.opentelemetry.instrumentation.jmx.rules;
 
-import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
 
-import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
+import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -76,16 +75,6 @@ public class JettyIntegrationTest extends TargetSystemTest {
 
   private static MetricsVerifier createMetricsVerifier(int jettyMajorVersion) {
 
-    AttributeMatcherGroup threadPoolAttributes;
-    if (jettyMajorVersion >= 12) {
-      threadPoolAttributes =
-          attributeGroup(
-              attributeWithAnyValue("jetty.thread.pool.id"),
-              attributeWithAnyValue("jetty.thread.context"));
-    } else {
-      threadPoolAttributes = attributeGroup(attributeWithAnyValue("jetty.thread.pool.id"));
-    }
-
     MetricsVerifier verifier =
         MetricsVerifier.create()
             .add(
@@ -95,7 +84,7 @@ public class JettyIntegrationTest extends TargetSystemTest {
                         .isUpDownCounter()
                         .hasDescription("The current number of threads")
                         .hasUnit("{thread}")
-                        .hasDataPointsWithAttributes(threadPoolAttributes))
+                        .hasDataPointsWithoutAttributes())
             .add(
                 "jetty.thread.limit",
                 metric ->
@@ -103,7 +92,7 @@ public class JettyIntegrationTest extends TargetSystemTest {
                         .isUpDownCounter()
                         .hasDescription("The configured maximum number of threads in the pool")
                         .hasUnit("{thread}")
-                        .hasDataPointsWithAttributes(threadPoolAttributes))
+                        .hasDataPointsWithoutAttributes())
             .add(
                 "jetty.thread.idle.count",
                 metric ->
@@ -111,7 +100,7 @@ public class JettyIntegrationTest extends TargetSystemTest {
                         .isUpDownCounter()
                         .hasDescription("The current number of idle threads")
                         .hasUnit("{thread}")
-                        .hasDataPointsWithAttributes(threadPoolAttributes))
+                        .hasDataPointsWithoutAttributes())
             .add(
                 "jetty.thread.busy.count",
                 metric ->
@@ -119,7 +108,7 @@ public class JettyIntegrationTest extends TargetSystemTest {
                         .isUpDownCounter()
                         .hasDescription("The current number of busy threads")
                         .hasUnit("{thread}")
-                        .hasDataPointsWithAttributes(threadPoolAttributes))
+                        .hasDataPointsWithoutAttributes())
             .add(
                 "jetty.thread.queue.size",
                 metric ->
@@ -127,7 +116,7 @@ public class JettyIntegrationTest extends TargetSystemTest {
                         .isUpDownCounter()
                         .hasDescription("The current job queue size")
                         .hasUnit("{thread}")
-                        .hasDataPointsWithAttributes(threadPoolAttributes))
+                        .hasDataPointsWithoutAttributes())
             .add(
                 "jetty.select.count",
                 metric ->
@@ -135,11 +124,9 @@ public class JettyIntegrationTest extends TargetSystemTest {
                         .isCounter()
                         .hasDescription("The number of select calls")
                         .hasUnit("{operation}")
-                        .hasDataPointsWithAttributes(
-                            attributeGroup(
-                                attributeWithAnyValue("jetty.selector.id"),
-                                attributeWithAnyValue("jetty.selector.context"))));
+                        .hasDataPointsWithoutAttributes());
 
+    AttributeMatcher contextAttribute = attributeWithAnyValue("jetty.context");
     if (jettyMajorVersion >= 12) {
       verifier
           .add(
@@ -149,10 +136,7 @@ public class JettyIntegrationTest extends TargetSystemTest {
                       .isUpDownCounter()
                       .hasDescription("Current number of active sessions")
                       .hasUnit("{session}")
-                      .hasDataPointsWithAttributes(
-                          attributeGroup(
-                              attributeWithAnyValue("jetty.context"),
-                              attributeWithAnyValue("jetty.session.cache.id"))))
+                      .hasDataPointsWithOneAttribute(contextAttribute))
           .add(
               "jetty.session.count.max",
               metric ->
@@ -160,10 +144,7 @@ public class JettyIntegrationTest extends TargetSystemTest {
                       .isGauge()
                       .hasDescription("Maximum number of active sessions")
                       .hasUnit("{session}")
-                      .hasDataPointsWithAttributes(
-                          attributeGroup(
-                              attributeWithAnyValue("jetty.context"),
-                              attributeWithAnyValue("jetty.session.cache.id"))));
+                      .hasDataPointsWithOneAttribute(contextAttribute));
     } else {
       verifier
           .add(
@@ -173,10 +154,7 @@ public class JettyIntegrationTest extends TargetSystemTest {
                       .isCounter()
                       .hasDescription("The total number of created sessions")
                       .hasUnit("{session}")
-                      .hasDataPointsWithAttributes(
-                          attributeGroup(
-                              attributeWithAnyValue("jetty.context"),
-                              attributeWithAnyValue("jetty.session.handler.id"))))
+                      .hasDataPointsWithOneAttribute(contextAttribute))
           .add(
               "jetty.session.duration.sum",
               metric ->
@@ -184,10 +162,7 @@ public class JettyIntegrationTest extends TargetSystemTest {
                       .isCounter()
                       .hasDescription("The cumulated session duration")
                       .hasUnit("s")
-                      .hasDataPointsWithAttributes(
-                          attributeGroup(
-                              attributeWithAnyValue("jetty.context"),
-                              attributeWithAnyValue("jetty.session.handler.id"))))
+                      .hasDataPointsWithOneAttribute(contextAttribute))
           .add(
               "jetty.session.duration.max",
               metric ->
@@ -195,10 +170,7 @@ public class JettyIntegrationTest extends TargetSystemTest {
                       .isGauge()
                       .hasDescription("The maximum session duration")
                       .hasUnit("s")
-                      .hasDataPointsWithAttributes(
-                          attributeGroup(
-                              attributeWithAnyValue("jetty.context"),
-                              attributeWithAnyValue("jetty.session.handler.id"))))
+                      .hasDataPointsWithOneAttribute(contextAttribute))
           .add(
               "jetty.session.duration.mean",
               metric ->
@@ -206,10 +178,7 @@ public class JettyIntegrationTest extends TargetSystemTest {
                       .isGauge()
                       .hasDescription("The mean session duration")
                       .hasUnit("s")
-                      .hasDataPointsWithAttributes(
-                          attributeGroup(
-                              attributeWithAnyValue("jetty.context"),
-                              attributeWithAnyValue("jetty.session.handler.id"))));
+                      .hasDataPointsWithOneAttribute(contextAttribute));
     }
     return verifier;
   }
