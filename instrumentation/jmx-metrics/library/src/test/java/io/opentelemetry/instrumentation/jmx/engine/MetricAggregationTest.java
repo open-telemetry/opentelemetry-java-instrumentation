@@ -17,10 +17,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanRegistrationException;
 import javax.management.MBeanServer;
 import javax.management.MBeanServerFactory;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -72,7 +75,19 @@ public class MetricAggregationTest {
   }
 
   @AfterEach
-  void after() {
+  void after() throws Exception {
+    ObjectName objectName = new ObjectName(
+        "otel.jmx.test:type=" + Hello.class.getSimpleName() + ",*");
+    theServer.queryMBeans(objectName, null).forEach(
+        instance -> {
+          try {
+            theServer.unregisterMBean(instance.getObjectName());
+          } catch (InstanceNotFoundException | MBeanRegistrationException e) {
+            throw new RuntimeException(e);
+          }
+        }
+    );
+
     if (sdk != null) {
       sdk.getSdkMeterProvider().close();
     }
@@ -102,33 +117,68 @@ public class MetricAggregationTest {
     ObjectName bean = getObjectName(null, null);
     theServer.registerMBean(new Hello(42), bean);
 
-    Collection<MetricData> data = testMetric(bean.toString());
+    Collection<MetricData> data = testMetric(bean.toString(), Collections.emptyList());
     checkSingleValue(data, 42);
   }
 
   @Test
-  void multipleInstancesAggregated_twoInstances() throws Exception {
+  void aggregateOneParam() throws Exception {
     theServer.registerMBean(new Hello(42), getObjectName("value1", null));
     theServer.registerMBean(new Hello(37), getObjectName("value2", null));
 
     String bean = getObjectName("*", null).toString();
-    Collection<MetricData> data = testMetric(bean);
+    Collection<MetricData> data = testMetric(bean, Collections.emptyList());
     checkSingleValue(data, 79);
   }
 
   @Test
-  void multipleInstancesAggregated_fourInstances() throws Exception {
-    theServer.registerMBean(new Hello(1), getObjectName("1", "a"));
-    theServer.registerMBean(new Hello(2), getObjectName("2", "b"));
-    theServer.registerMBean(new Hello(3), getObjectName("3", "a"));
-    theServer.registerMBean(new Hello(5), getObjectName("4", "b"));
+  void aggregateMultipleParams() throws Exception {
+    theServer.registerMBean(new Hello(1), getObjectName("1", "x"));
+    theServer.registerMBean(new Hello(2), getObjectName("2", "y"));
+    theServer.registerMBean(new Hello(3), getObjectName("3", "x"));
+    theServer.registerMBean(new Hello(4), getObjectName("4", "y"));
 
     String bean = getObjectName("*", "*").toString();
-    Collection<MetricData> data = testMetric(bean);
-    checkSingleValue(data, 11);
+    Collection<MetricData> data = testMetric(bean, Collections.emptyList());
+    checkSingleValue(data, 10);
   }
 
-  private Collection<MetricData> testMetric(String mbean) throws MalformedObjectNameException {
+  @Test
+  void partialAggregateMultipleParams() throws Exception {
+    theServer.registerMBean(new Hello(1), getObjectName("1", "x"));
+    theServer.registerMBean(new Hello(2), getObjectName("2", "y"));
+    theServer.registerMBean(new Hello(3), getObjectName("3", "x"));
+    theServer.registerMBean(new Hello(4), getObjectName("4", "y"));
+
+    String bean = getObjectName("*", "*").toString();
+
+    List<MetricAttribute> attributes = Collections.singletonList(
+        new MetricAttribute("test.metric.param",
+            MetricAttributeExtractor.fromObjectNameParameter("b")));
+    Collection<MetricData> data = testMetric(bean, attributes);
+
+    assertThat(data)
+        .isNotEmpty()
+        .satisfiesExactlyInAnyOrder(
+            metric -> {
+              assertThat(metric.getName()).isEqualTo("test.metric");
+              Collection<LongPointData> points = metric.getLongSumData().getPoints();
+              assertThat(points).hasSize(1);
+              LongPointData pointData = points.stream().findFirst().get();
+              assertThat(pointData.getAttributes()).containsEntry("b", "y");
+              assertThat(pointData.getValue()).isEqualTo(6);
+            }, metric -> {
+              Assertions.assertThat(metric.getName()).isEqualTo("test.metric");
+              Collection<LongPointData> points = metric.getLongSumData().getPoints();
+              assertThat(points).hasSize(1);
+              LongPointData pointData = points.stream().findFirst().get();
+              assertThat(pointData.getAttributes()).containsEntry("b", "x");
+              assertThat(pointData.getValue()).isEqualTo(4);
+            });
+  }
+
+  private Collection<MetricData> testMetric(String mbean, List<MetricAttribute> attributes)
+      throws MalformedObjectNameException {
     JmxMetricInsight metricInsight = JmxMetricInsight.createService(sdk, 0);
     MetricConfiguration metricConfiguration = new MetricConfiguration();
     List<MetricExtractor> extractors = new ArrayList<>();
@@ -136,8 +186,7 @@ public class MetricAggregationTest {
     MetricInfo metricInfo =
         new MetricInfo("test.metric", "description", null, "1", MetricInfo.Type.COUNTER);
     BeanAttributeExtractor beanExtractor = BeanAttributeExtractor.fromName("Value");
-    MetricExtractor extractor =
-        new MetricExtractor(beanExtractor, metricInfo, Collections.emptyList());
+    MetricExtractor extractor = new MetricExtractor(beanExtractor, metricInfo, attributes);
     extractors.add(extractor);
     MetricDef metricDef =
         new MetricDef(BeanGroup.forBeans(Collections.singletonList(mbean)), extractors);
