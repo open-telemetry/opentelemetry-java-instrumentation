@@ -3,15 +3,10 @@ rules:
 
   # Thread metrics for Jetty 12 and later
   - bean: org.eclipse.jetty.util.thread:context=*,type=queuedthreadpool,id=*
+    # usually a single mbean instance exists, thus the metric is aggregated (sum for updowncounter)
     prefix: jetty.thread.
     unit: "{thread}"
     type: updowncounter
-    metricAttribute:
-      # 'id' is a "technical ID" with a single '0' value by default
-      jetty.thread.pool.id: param(id)
-      # 'context' is a high cardinality value like 'Server@5a411614' but likely stable for the
-      # duration of the jetty process lifecycle
-      jetty.thread.context: param(context)
     mapping:
       # jetty.thread.count
       threads:
@@ -36,12 +31,10 @@ rules:
 
   # Thread metrics for Jetty 9 to 11
   - bean: org.eclipse.jetty.util.thread:type=queuedthreadpool,id=*
+    # usually a single mbean instance exists, thus the metric is aggregated (sum for updowncounter)
     prefix: jetty.thread.
     unit: "{thread}"
     type: updowncounter
-    metricAttribute:
-      # 'id' is a "technical ID" with a single '0' value by default
-      jetty.thread.pool.id: param(id)
     mapping:
       # jetty.thread.count
       threads:
@@ -65,12 +58,6 @@ rules:
         desc: The current job queue size
 
   - bean: org.eclipse.jetty.io:context=*,type=managedselector,id=*
-    metricAttribute:
-      # 'context' is a high cardinality value like 'HTTP_1_1@7674f035' but likely stable for the
-      # duration of the jetty process lifecycle
-      jetty.selector.context: param(context)
-      # 'id' is a numerical value in [0,9] by default
-      jetty.selector.id: param(id)
     mapping:
       # jetty.select.count
       selectCount:
@@ -81,13 +68,13 @@ rules:
 
   # Session metrics for Jetty 12
   - bean: org.eclipse.jetty.session:context=*,type=defaultsessioncache,id=*
+    # usually a single mbean instance exists per context, thus the metric is aggregated: sum for counter,
+    # gauge metrics will return invalid (last-value) if more than one mbean instance exists.
     prefix: jetty.session.
     unit: "{session}"
     metricAttribute:
       # 'context' corresponds to the webapp context path
       jetty.context: param(context)
-      # 'id' is a "technical ID" with a single '0' value by default
-      jetty.session.cache.id: param(id)
     mapping:
       # jetty.session.count
       sessionsCurrent:
@@ -103,12 +90,12 @@ rules:
 
   # Session metrics for Jetty 9 to 11
   - bean: org.eclipse.jetty.server.session:context=*,type=sessionhandler,id=*
+    # usually a single mbean instance exists per context, thus the metric is aggregated: sum for counter,
+    # gauge metrics will return invalid (last-value) if more than one mbean instance exists.
     prefix: jetty.session.
     metricAttribute:
       # 'context' corresponds to the webapp context path
       jetty.context: param(context)
-      # 'id' is a "technical ID" with a single '0' value by default
-      jetty.session.handler.id: param(id)
     mapping:
       # jetty.session.created.count
       sessionsCreated:

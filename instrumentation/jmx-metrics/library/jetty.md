@@ -10,44 +10,36 @@ The metrics captured and their respective attributes depend on the Jetty version
 
 Those metrics require the following Jetty modules to be enabled : `jmx`, `http`, `statistics`, `sessions` and at least one of `ee8-deploy`, `ee9-deploy` or `ee10-deploy`.
 
-| Metric Name             | Type          | Attributes                                 | Description                               |
-|-------------------------|---------------|--------------------------------------------|-------------------------------------------|
-| jetty.thread.count      | UpDownCounter | jetty.thread.pool.id, jetty.thread.context | The current number of threads             |
-| jetty.thread.limit      | UpDownCounter | jetty.thread.pool.id, jetty.thread.context | The maximum number of threads in the pool |
-| jetty.thread.busy.count | UpDownCounter | jetty.thread.pool.id, jetty.thread.context | The current number of busy threads        |
-| jetty.thread.idle.count | UpDownCounter | jetty.thread.pool.id, jetty.thread.context | The current number of idle threads        |
-| jetty.thread.queue.size | UpDownCounter | jetty.thread.pool.id, jetty.thread.context | The current job queue size                |
-| jetty.io.select.count   | Counter       | jetty.selector.context, jetty.selector.id  | The number of select calls                |
-| jetty.session.count     | UpDownCounter | jetty.context, jetty.session.cache.id      | Current number of active sessions         |
-| jetty.session.count.max | Gauge         | jetty.context, jetty.session.cache.id      | Maximum number of active sessions         |
+| Metric Name             | Type          | Attributes    | Description                               |
+|-------------------------|---------------|---------------|-------------------------------------------|
+| jetty.thread.count      | UpDownCounter |               | The current number of threads             |
+| jetty.thread.limit      | UpDownCounter |               | The maximum number of threads in the pool |
+| jetty.thread.busy.count | UpDownCounter |               | The current number of busy threads        |
+| jetty.thread.idle.count | UpDownCounter |               | The current number of idle threads        |
+| jetty.thread.queue.size | UpDownCounter |               | The current job queue size                |
+| jetty.io.select.count   | Counter       |               | The number of select calls                |
+| jetty.session.count     | UpDownCounter | jetty.context | Current number of active sessions         |
+| jetty.session.count.max | Gauge         | jetty.context | Maximum number of active sessions (*)     |
 
 - `jetty.context` corresponds to the deployed application subfolder in `webapps` folder.
-- `jetty.selector.context` is a technical string identifier, high cardinality with values like `HTTP_1_1@7674f035` but stable per Jetty process instance
-- `jetty.selector.id` is a technical numeric identifier, usually with low cardinality between `0` and `9`.
-- `jetty.session.cache.id` is a technical numeric identifier, usually single `0` value is used
-- `jetty.thread.context` is a technical string identifier, high cardinality with values like `Server@5a411614` but stable per Jetty process instance
-- `jetty.thread.pool.id` is a technical numeric identifier, usually single `0` value is used
+- `jetty.session.count.max` metric produces unpredictable values when more than one `org.eclipse.jetty.session:context=*,type=defaultsessioncache,id=*` MBean is present, the default Jetty deployment includes a single one.
 
 ## Jetty 9 to 11
 
 Those metrics require the following Jetty modules to be enabled : `jmx`, `http` and `stats`.
 
-| Metric Name                 | Type          | Attributes                                | Description                               |
-|-----------------------------|---------------|-------------------------------------------|-------------------------------------------|
-| jetty.thread.count          | UpDownCounter | jetty.thread.pool.id                      | The current number of threads             |
-| jetty.thread.limit          | UpDownCounter | jetty.thread.pool.id                      | The maximum number of threads in the pool |
-| jetty.thread.busy.count     | UpDownCounter | jetty.thread.pool.id                      | The current number of busy threads        |
-| jetty.thread.idle.count     | UpDownCounter | jetty.thread.pool.id                      | The current number of idle threads        |
-| jetty.thread.queue.size     | UpDownCounter | jetty.thread.pool.id                      | The current job queue size                |
-| jetty.io.select.count       | Counter       | jetty.selector.context, jetty.selector.id | The number of select calls                |
-| jetty.session.created.count | Counter       | jetty.context, jetty.session.handler.id   | The total number of created sessions      |
-| jetty.session.duration.sum  | Gauge         | jetty.context, jetty.session.handler.id   | The cumulated session duration            |
-| jetty.session.duration.max  | Gauge         | jetty.context, jetty.session.handler.id   | The maximum session duration              |
-| jetty.session.duration.mean | Gauge         | jetty.context, jetty.session.handler.id   | The mean session duration                 |
+| Metric Name                 | Type          | Attributes    | Description                               |
+|-----------------------------|---------------|---------------|-------------------------------------------|
+| jetty.thread.count          | UpDownCounter |               | The current number of threads             |
+| jetty.thread.limit          | UpDownCounter |               | The maximum number of threads in the pool |
+| jetty.thread.busy.count     | UpDownCounter |               | The current number of busy threads        |
+| jetty.thread.idle.count     | UpDownCounter |               | The current number of idle threads        |
+| jetty.thread.queue.size     | UpDownCounter |               | The current job queue size                |
+| jetty.io.select.count       | Counter       |               | The number of select calls                |
+| jetty.session.created.count | Counter       | jetty.context | The total number of created sessions      |
+| jetty.session.duration.sum  | Gauge         | jetty.context | The cumulated session duration            |
+| jetty.session.duration.max  | Gauge         | jetty.context | The maximum session duration              |
+| jetty.session.duration.mean | Gauge         | jetty.context | The mean session duration                 |
 
 - `jetty.context` corresponds to the deployed application subfolder in `webapps` folder.
-- `jetty.selector.context` is a technical string identifier, high cardinality with values like `HTTP_1_1@7674f035` but stable per Jetty process instance
-- `jetty.selector.id` is a technical numeric identifier, usually with low cardinality between `0` and `9`.
-- `jetty.session.cache.id` is a technical numeric identifier, usually single `0` value is used
-- `jetty.thread.pool.id` is a technical numeric identifier, usually single `0` value is used
-- `jetty.session.handler.id` is a technical numeric identifier, usually single `0` value is used
+- `jetty.session.duration.sum`, `jetty.session.duration.max`, `jetty.session.duration.mean` metrics will produce unpredictable results when more than one `org.eclipse.jetty.server.session:context=*,type=sessionhandler,id=*` MBean is present, the default Jetty deployment includes a single one.
