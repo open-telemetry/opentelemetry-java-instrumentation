@@ -17,6 +17,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -74,10 +75,7 @@ public abstract class KafkaClientBaseTest {
         MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
         listAssert -> {
           if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
-            listAssert
-                .isNotEmpty()
-                .allSatisfy(
-                    server -> org.assertj.core.api.Assertions.assertThat(server).isNotEmpty());
+            listAssert.isNotEmpty().allSatisfy(server -> assertThat(server).isNotEmpty());
           } else {
             listAssert.isNullOrEmpty();
           }

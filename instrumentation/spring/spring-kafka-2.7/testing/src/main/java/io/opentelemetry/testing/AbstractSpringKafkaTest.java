@@ -52,10 +52,7 @@ public abstract class AbstractSpringKafkaTest {
         MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
         listAssert -> {
           if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
-            listAssert
-                .isNotEmpty()
-                .allSatisfy(
-                    server -> org.assertj.core.api.Assertions.assertThat(server).isNotEmpty());
+            listAssert.isNotEmpty().allSatisfy(server -> assertThat(server).isNotEmpty());
           } else {
             listAssert.isNullOrEmpty();
           }

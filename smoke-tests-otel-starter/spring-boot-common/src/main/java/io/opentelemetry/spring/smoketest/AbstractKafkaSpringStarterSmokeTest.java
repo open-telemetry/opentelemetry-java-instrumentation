@@ -7,6 +7,7 @@ package io.opentelemetry.spring.smoketest;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -40,10 +41,7 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
     return satisfies(
         MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
         listAssert ->
-            listAssert
-                .isNotEmpty()
-                .allSatisfy(
-                    server -> org.assertj.core.api.Assertions.assertThat(server).isNotEmpty()));
+            listAssert.isNotEmpty().allSatisfy(server -> assertThat(server).isNotEmpty()));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv

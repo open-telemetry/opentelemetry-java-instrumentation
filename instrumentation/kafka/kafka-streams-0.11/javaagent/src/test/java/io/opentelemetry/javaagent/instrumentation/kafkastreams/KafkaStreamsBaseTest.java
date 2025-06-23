@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.common.AttributeKey;
@@ -64,10 +65,7 @@ abstract class KafkaStreamsBaseTest {
         MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
         listAssert -> {
           if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
-            listAssert
-                .isNotEmpty()
-                .allSatisfy(
-                    server -> org.assertj.core.api.Assertions.assertThat(server).isNotEmpty());
+            listAssert.isNotEmpty().allSatisfy(server -> assertThat(server).isNotEmpty());
           } else {
             listAssert.isNullOrEmpty();
           }
