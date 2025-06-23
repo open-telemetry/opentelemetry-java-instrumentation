@@ -1,36 +1,12 @@
 ---
 rules:
 
-  # Thread metrics for Jetty 12 and later
-  - bean: org.eclipse.jetty.util.thread:context=*,type=queuedthreadpool,id=*
-    # usually a single mbean instance exists, thus the metric is aggregated (sum for updowncounter)
-    prefix: jetty.thread.
-    unit: "{thread}"
-    type: updowncounter
-    mapping:
-      # jetty.thread.count
-      threads:
-        metric: count
-        desc: The current number of threads
-      # jetty.thread.limit
-      maxThreads:
-        metric: limit
-        desc: The configured maximum number of threads in the pool
-      # jetty.thread.idle.count
-      idleThreads:
-        metric: idle.count
-        desc: The current number of idle threads
-      # jetty.thread.busy.count
-      busyThreads:
-        metric: busy.count
-        desc: The current number of busy threads
-      # jetty.thread.queue.size
-      queueSize:
-        metric: queue.size
-        desc: The current job queue size
-
-  # Thread metrics for Jetty 9 to 11
-  - bean: org.eclipse.jetty.util.thread:type=queuedthreadpool,id=*
+  # Thread metrics
+  - beans:
+      # Jetty 12 and later
+      - org.eclipse.jetty.util.thread:context=*,type=queuedthreadpool,id=*
+      # Jetty 9 to 11
+      - org.eclipse.jetty.util.thread:type=queuedthreadpool,id=*
     # usually a single mbean instance exists, thus the metric is aggregated (sum for updowncounter)
     prefix: jetty.thread.
     unit: "{thread}"
