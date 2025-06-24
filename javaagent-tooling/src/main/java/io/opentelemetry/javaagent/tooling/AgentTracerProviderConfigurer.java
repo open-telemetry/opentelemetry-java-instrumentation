@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.tracer;
+package io.opentelemetry.javaagent.tooling;
 
 import static io.opentelemetry.javaagent.tooling.AgentInstaller.JAVAAGENT_ENABLED_CONFIG;
 import static java.util.Collections.emptyList;
@@ -11,6 +11,7 @@ import static java.util.Collections.emptyList;
 import com.google.auto.service.AutoService;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
+import io.opentelemetry.instrumentation.tracer.AddThreadDetailsSpanProcessor;
 import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
@@ -18,6 +19,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 
+@AutoService(AutoConfigurationCustomizerProvider.class)
 public class AgentTracerProviderConfigurer implements AutoConfigurationCustomizerProvider {
   private static final String ADD_THREAD_DETAILS = "otel.javaagent.add-thread-details";
 
@@ -30,9 +32,7 @@ public class AgentTracerProviderConfigurer implements AutoConfigurationCustomize
   @CanIgnoreReturnValue
   private static SdkTracerProviderBuilder configure(
       SdkTracerProviderBuilder sdkTracerProviderBuilder, ConfigProperties config) {
-    // Spring starter uses "otel.sdk.disabled" to disable the SDK, but this check is enabled
-    // by default - so it shouldn't impact the Spring starter.
-    if (!config.getBoolean("otel.javaagent.enabled", true)) {
+    if (!config.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
       return sdkTracerProviderBuilder;
     }
 
