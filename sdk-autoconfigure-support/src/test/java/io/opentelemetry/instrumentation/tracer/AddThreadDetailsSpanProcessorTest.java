@@ -3,33 +3,37 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.tracer
+package io.opentelemetry.instrumentation.tracer;
 
-import io.opentelemetry.context.Context
-import io.opentelemetry.sdk.trace.ReadWriteSpan
-import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes
-import spock.lang.Specification
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
-class AddThreadDetailsSpanProcessorTest extends Specification {
-  def span = Mock(ReadWriteSpan)
+import io.opentelemetry.context.Context;
+import io.opentelemetry.sdk.trace.ReadWriteSpan;
+import io.opentelemetry.sdk.trace.SpanProcessor;
+import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
+import org.junit.jupiter.api.Test;
 
-  def processor = new AddThreadDetailsSpanProcessor()
+class AddThreadDetailsSpanProcessorTest {
 
-  def "should require onStart call"() {
-    expect:
-    processor.isStartRequired()
+  private ReadWriteSpan span = mock(ReadWriteSpan.class);
+
+  private SpanProcessor spanProcessor = new AddThreadDetailsSpanProcessor();
+
+  @Test
+  void onStart() {
+    assertThat(spanProcessor.isStartRequired()).isTrue();
   }
 
-  def "should set thread attributes on span start"() {
-    given:
-    def currentThreadName = Thread.currentThread().name
-    def currentThreadId = Thread.currentThread().id
+  @Test
+  void setThreadAttributes() {
+    Thread thread = Thread.currentThread();
+    spanProcessor.onStart(Context.root(), span);
 
-    when:
-    processor.onStart(Context.root(), span)
-
-    then:
-    1 * span.setAttribute(ThreadIncubatingAttributes.THREAD_ID, currentThreadId)
-    1 * span.setAttribute(ThreadIncubatingAttributes.THREAD_NAME, currentThreadName)
+    verify(span).setAttribute(ThreadIncubatingAttributes.THREAD_ID, thread.getId());
+    verify(span).setAttribute(ThreadIncubatingAttributes.THREAD_NAME, thread.getName());
+    verifyNoMoreInteractions(span);
   }
 }
