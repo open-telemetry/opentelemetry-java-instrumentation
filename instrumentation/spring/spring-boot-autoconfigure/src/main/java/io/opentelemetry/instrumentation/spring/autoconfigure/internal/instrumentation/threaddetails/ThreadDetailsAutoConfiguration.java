@@ -18,10 +18,10 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnEnabledInstrumentation(module = "thread-details")
 @Configuration
 @SuppressWarnings("OtelPrivateConstructorForUtilityClass")
-public class AgentTracerProviderConfigurer {
+public class ThreadDetailsAutoConfiguration {
 
   @Bean
-  public AutoConfigurationCustomizerProvider otelCustomizer() {
+  public AutoConfigurationCustomizerProvider threadDetailOtelCustomizer() {
     return p ->
         p.addTracerProviderCustomizer(
             (builder, config) -> {
