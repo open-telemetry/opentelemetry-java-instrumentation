@@ -1,1 +1,2 @@
 io.opentelemetry.instrumentation.resources.ResourceProviderPropertiesCustomizer
+io.opentelemetry.instrumentation.tracer.AgentTracerProviderConfigurer
