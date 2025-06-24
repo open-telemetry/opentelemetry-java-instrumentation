@@ -6,9 +6,8 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.runtimemetrics;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.ConfigPropertiesBridge;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.Comparator;
 import java.util.Optional;
 import javax.annotation.PreDestroy;
@@ -45,8 +44,7 @@ public class RuntimeMetricsAutoConfiguration {
   public void handleApplicationReadyEvent(ApplicationReadyEvent event) {
     ConfigurableApplicationContext applicationContext = event.getApplicationContext();
     OpenTelemetry openTelemetry = applicationContext.getBean(OpenTelemetry.class);
-    ConfigPropertiesBridge config =
-        new ConfigPropertiesBridge(applicationContext.getBean(ConfigProperties.class));
+    InstrumentationConfig config = applicationContext.getBean(InstrumentationConfig.class);
 
     double version =
         Math.max(8, Double.parseDouble(System.getProperty("java.specification.version")));

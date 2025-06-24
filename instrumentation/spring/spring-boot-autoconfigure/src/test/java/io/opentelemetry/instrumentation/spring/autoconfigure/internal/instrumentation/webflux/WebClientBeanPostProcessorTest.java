@@ -8,7 +8,8 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.ConfigPropertiesBridge;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.util.Collections;
 import org.junit.jupiter.api.DisplayName;
@@ -24,7 +25,8 @@ class WebClientBeanPostProcessorTest {
   static {
     beanFactory.registerSingleton("openTelemetry", OpenTelemetry.noop());
     beanFactory.registerSingleton(
-        "configProperties", DefaultConfigProperties.createFromMap(Collections.emptyMap()));
+        "configProperties",
+        new ConfigPropertiesBridge(DefaultConfigProperties.createFromMap(Collections.emptyMap())));
   }
 
   @Test
@@ -34,7 +36,7 @@ class WebClientBeanPostProcessorTest {
     BeanPostProcessor underTest =
         new WebClientBeanPostProcessor(
             beanFactory.getBeanProvider(OpenTelemetry.class),
-            beanFactory.getBeanProvider(ConfigProperties.class));
+            beanFactory.getBeanProvider(InstrumentationConfig.class));
 
     assertThat(underTest.postProcessAfterInitialization(new Object(), "testObject"))
         .isExactlyInstanceOf(Object.class);
@@ -46,7 +48,7 @@ class WebClientBeanPostProcessorTest {
     BeanPostProcessor underTest =
         new WebClientBeanPostProcessor(
             beanFactory.getBeanProvider(OpenTelemetry.class),
-            beanFactory.getBeanProvider(ConfigProperties.class));
+            beanFactory.getBeanProvider(InstrumentationConfig.class));
 
     assertThat(underTest.postProcessAfterInitialization(WebClient.create(), "testWebClient"))
         .isInstanceOf(WebClient.class);
@@ -58,7 +60,7 @@ class WebClientBeanPostProcessorTest {
     BeanPostProcessor underTest =
         new WebClientBeanPostProcessor(
             beanFactory.getBeanProvider(OpenTelemetry.class),
-            beanFactory.getBeanProvider(ConfigProperties.class));
+            beanFactory.getBeanProvider(InstrumentationConfig.class));
 
     assertThat(
             underTest.postProcessAfterInitialization(WebClient.builder(), "testWebClientBuilder"))
@@ -71,7 +73,7 @@ class WebClientBeanPostProcessorTest {
     BeanPostProcessor underTest =
         new WebClientBeanPostProcessor(
             beanFactory.getBeanProvider(OpenTelemetry.class),
-            beanFactory.getBeanProvider(ConfigProperties.class));
+            beanFactory.getBeanProvider(InstrumentationConfig.class));
 
     WebClient webClient = WebClient.create();
     Object processedWebClient =
@@ -96,7 +98,7 @@ class WebClientBeanPostProcessorTest {
     BeanPostProcessor underTest =
         new WebClientBeanPostProcessor(
             beanFactory.getBeanProvider(OpenTelemetry.class),
-            beanFactory.getBeanProvider(ConfigProperties.class));
+            beanFactory.getBeanProvider(InstrumentationConfig.class));
 
     WebClient.Builder webClientBuilder = WebClient.builder();
     underTest.postProcessAfterInitialization(webClientBuilder, "testWebClientBuilder");
