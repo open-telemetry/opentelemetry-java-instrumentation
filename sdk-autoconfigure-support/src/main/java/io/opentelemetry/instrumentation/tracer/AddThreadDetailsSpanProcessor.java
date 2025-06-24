@@ -21,7 +21,6 @@ public class AddThreadDetailsSpanProcessor implements SpanProcessor {
   public static final AttributeKey<Long> THREAD_ID = longKey("thread.id");
   public static final AttributeKey<String> THREAD_NAME = stringKey("thread.name");
 
-
   @Override
   public void onStart(Context context, ReadWriteSpan span) {
     Thread currentThread = Thread.currentThread();
