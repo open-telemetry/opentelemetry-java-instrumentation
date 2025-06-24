@@ -73,12 +73,11 @@ public final class AgentTestRunner extends InstrumentationTestRunner {
       }
       String path = Paths.get(resource.getPath()).toString();
 
-      MetaDataCollector.writeTelemetryToFiles(path, metrics);
+      MetaDataCollector.writeTelemetryToFiles(path, metrics, tracesByScope);
     }
 
     // additional library ignores are ignored during tests, because they can make it really
-    // confusing for contributors wondering why their instrumentation is not applied
-    //
+    // confusing for contributors wondering why their instrumentation is not applied,
     // but we then need to make sure that the additional library ignores won't then silently prevent
     // the instrumentation from being applied in real life outside of these tests
     assert TestAgentListenerAccess.getIgnoredButTransformedClassNames().isEmpty()
