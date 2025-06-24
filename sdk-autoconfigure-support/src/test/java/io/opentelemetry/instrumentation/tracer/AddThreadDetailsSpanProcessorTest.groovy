@@ -3,10 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling
+package io.opentelemetry.instrumentation.tracer
 
 import io.opentelemetry.context.Context
-import io.opentelemetry.instrumentation.tracer.AddThreadDetailsSpanProcessor
 import io.opentelemetry.sdk.trace.ReadWriteSpan
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes
 import spock.lang.Specification
