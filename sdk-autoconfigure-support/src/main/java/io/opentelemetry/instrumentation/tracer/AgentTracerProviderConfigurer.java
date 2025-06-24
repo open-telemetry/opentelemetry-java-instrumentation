@@ -30,7 +30,9 @@ public class AgentTracerProviderConfigurer implements AutoConfigurationCustomize
   @CanIgnoreReturnValue
   private static SdkTracerProviderBuilder configure(
       SdkTracerProviderBuilder sdkTracerProviderBuilder, ConfigProperties config) {
-    if (!config.getBoolean(AgentInstaller.JAVAAGENT_ENABLED_CONFIG, true)) {
+    // Spring starter uses "otel.sdk.disabled" to disable the SDK, but this check is enabled
+    // by default - so it shouldn't impact the Spring starter.
+    if (!config.getBoolean("otel.javaagent.enabled", true)) {
       return sdkTracerProviderBuilder;
     }
 
