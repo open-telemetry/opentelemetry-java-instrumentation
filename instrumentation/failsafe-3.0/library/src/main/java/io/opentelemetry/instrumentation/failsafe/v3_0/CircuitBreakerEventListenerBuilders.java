@@ -14,16 +14,14 @@ import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
 
 final class CircuitBreakerEventListenerBuilders {
-  private CircuitBreakerEventListenerBuilders() {
-    throw new AssertionError();
-  }
+  private CircuitBreakerEventListenerBuilders() {}
 
   static <R> EventListener<ExecutionCompletedEvent<R>> buildInstrumentedFailureListener(
       CircuitBreakerConfig<R> userConfig, Meter meter, Attributes attributes) {
     LongCounter failureCounter =
         meter
             .counterBuilder("failsafe.circuitbreaker.failure.count")
-            .setDescription("Count of failed circuit breaker executions")
+            .setDescription("Count of failed circuit breaker executions.")
             .build();
     EventListener<ExecutionCompletedEvent<R>> failureListener = userConfig.getFailureListener();
     return e -> {
@@ -39,7 +37,7 @@ final class CircuitBreakerEventListenerBuilders {
     LongCounter successCounter =
         meter
             .counterBuilder("failsafe.circuitbreaker.success.count")
-            .setDescription("Count of successful circuit breaker executions")
+            .setDescription("Count of successful circuit breaker executions.")
             .build();
     EventListener<ExecutionCompletedEvent<R>> successListener = userConfig.getSuccessListener();
     return e -> {
@@ -55,7 +53,7 @@ final class CircuitBreakerEventListenerBuilders {
     LongCounter openCircuitBreakerCounter =
         meter
             .counterBuilder("failsafe.circuitbreaker.open.count")
-            .setDescription("Count of times that circuit breaker was opened")
+            .setDescription("Count of times that circuit breaker was opened.")
             .build();
     EventListener<CircuitBreakerStateChangedEvent> openListener = userConfig.getOpenListener();
     return e -> {
@@ -69,7 +67,7 @@ final class CircuitBreakerEventListenerBuilders {
     LongCounter halfOpenCircuitBreakerCounter =
         meter
             .counterBuilder("failsafe.circuitbreaker.halfopen.count")
-            .setDescription("Count of times that circuit breaker was half-opened")
+            .setDescription("Count of times that circuit breaker was half-opened.")
             .build();
     EventListener<CircuitBreakerStateChangedEvent> halfOpenListener =
         userConfig.getHalfOpenListener();
@@ -84,7 +82,7 @@ final class CircuitBreakerEventListenerBuilders {
     LongCounter closedCircuitBreakerCounter =
         meter
             .counterBuilder("failsafe.circuitbreaker.closed.count")
-            .setDescription("Count of times that circuit breaker was closed")
+            .setDescription("Count of times that circuit breaker was closed.")
             .build();
     EventListener<CircuitBreakerStateChangedEvent> closeListener = userConfig.getCloseListener();
     return e -> {
