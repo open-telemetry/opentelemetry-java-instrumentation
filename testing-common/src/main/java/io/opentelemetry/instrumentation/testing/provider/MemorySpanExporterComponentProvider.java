@@ -8,8 +8,9 @@ package io.opentelemetry.instrumentation.testing.provider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
+import java.util.Objects;
 
-public class TestBridgeSpanExporterComponentProvider implements ComponentProvider<SpanExporter> {
+public class MemorySpanExporterComponentProvider implements ComponentProvider<SpanExporter> {
 
   private static SpanExporter spanExporter;
 
@@ -20,15 +21,15 @@ public class TestBridgeSpanExporterComponentProvider implements ComponentProvide
 
   @Override
   public String getName() {
-    return "test_bridge";
+    return "memory";
   }
 
   @Override
   public SpanExporter create(DeclarativeConfigProperties config) {
-    return spanExporter;
+    return Objects.requireNonNull(spanExporter, "spanExporter must not be null");
   }
 
   public static void setSpanExporter(SpanExporter spanExporter) {
-    TestBridgeSpanExporterComponentProvider.spanExporter = spanExporter;
+    MemorySpanExporterComponentProvider.spanExporter = spanExporter;
   }
 }

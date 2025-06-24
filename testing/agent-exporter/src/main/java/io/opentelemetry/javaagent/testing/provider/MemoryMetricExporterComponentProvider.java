@@ -8,8 +8,9 @@ package io.opentelemetry.javaagent.testing.provider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
+import java.util.Objects;
 
-public class TestBridgeMetricExporterComponentProvider
+public class MemoryMetricExporterComponentProvider
     implements ComponentProvider<MetricExporter> {
 
   private static MetricExporter metricExporter;
@@ -21,15 +22,15 @@ public class TestBridgeMetricExporterComponentProvider
 
   @Override
   public String getName() {
-    return "test_bridge";
+    return "memory";
   }
 
   @Override
   public MetricExporter create(DeclarativeConfigProperties config) {
-    return metricExporter;
+    return Objects.requireNonNull(metricExporter, "metricExporter must not be null");
   }
 
   public static void setMetricExporter(MetricExporter metricExporter) {
-    TestBridgeMetricExporterComponentProvider.metricExporter = metricExporter;
+    MemoryMetricExporterComponentProvider.metricExporter = metricExporter;
   }
 }

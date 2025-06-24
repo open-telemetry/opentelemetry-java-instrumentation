@@ -3,7 +3,7 @@ tracer_provider:
   processors:
     - simple:
         exporter:
-          test_bridge:
+          memory:
     - simple:
         exporter:
           console:
@@ -12,7 +12,7 @@ logger_provider:
   processors:
     - simple:
         exporter:
-          test_bridge:
+          memory:
 
 meter_provider:
   readers:
@@ -21,7 +21,7 @@ meter_provider:
         # instead of collecting them periodically.
         interval: 1000000
         exporter:
-          test_bridge:
+          memory:
 
 instrumentation/development:
   java:

@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.testing.exporter;
 
-import io.opentelemetry.javaagent.testing.provider.TestBridgeLogRecordExporterComponentProvider;
-import io.opentelemetry.javaagent.testing.provider.TestBridgeMetricExporterComponentProvider;
-import io.opentelemetry.javaagent.testing.provider.TestBridgeSpanExporterComponentProvider;
+import io.opentelemetry.javaagent.testing.provider.MemoryLogRecordExporterComponentProvider;
+import io.opentelemetry.javaagent.testing.provider.MemoryMetricExporterComponentProvider;
+import io.opentelemetry.javaagent.testing.provider.MemorySpanExporterComponentProvider;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -18,9 +18,9 @@ public final class AgentTestingExporterFactory {
   static final OtlpInMemoryLogRecordExporter logExporter = new OtlpInMemoryLogRecordExporter();
 
   static {
-    TestBridgeSpanExporterComponentProvider.setSpanExporter(spanExporter);
-    TestBridgeMetricExporterComponentProvider.setMetricExporter(metricExporter);
-    TestBridgeLogRecordExporterComponentProvider.setLogRecordExporter(logExporter);
+    MemorySpanExporterComponentProvider.setSpanExporter(spanExporter);
+    MemoryMetricExporterComponentProvider.setMetricExporter(metricExporter);
+    MemoryLogRecordExporterComponentProvider.setLogRecordExporter(logExporter);
   }
 
   public static List<byte[]> getSpanExportRequests() {
