@@ -18,9 +18,9 @@ import org.junit.jupiter.api.Test;
 
 class AddThreadDetailsSpanProcessorTest {
 
-  private ReadWriteSpan span = mock(ReadWriteSpan.class);
+  private final ReadWriteSpan span = mock(ReadWriteSpan.class);
 
-  private SpanProcessor spanProcessor = new AddThreadDetailsSpanProcessor();
+  private final SpanProcessor spanProcessor = new AddThreadDetailsSpanProcessor();
 
   @Test
   void onStart() {
