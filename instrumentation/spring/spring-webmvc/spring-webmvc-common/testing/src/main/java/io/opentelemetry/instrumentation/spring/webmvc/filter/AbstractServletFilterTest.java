@@ -100,7 +100,7 @@ public abstract class AbstractServletFilterTest
                 .hasKind(SpanKind.INTERNAL)
                 .hasAttributesSatisfyingExactly(
                     SemconvCodeStabilityUtil.codeFunctionSuffixAssertions(
-                        "BasicErrorController", "error")));
+                        ".BasicErrorController", "error")));
     return spanAssertions;
   }
 

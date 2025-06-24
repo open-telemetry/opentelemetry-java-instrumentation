@@ -61,7 +61,7 @@ public abstract class BaseRxJava2WithSpanTest {
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
-                                codeFunctionSuffixAssertions("TracedWithSpan", "completable"))));
+                                codeFunctionSuffixAssertions(".TracedWithSpan", "completable"))));
   }
 
   @Test

@@ -155,6 +155,7 @@ tasks {
   }
 
   check {
+    dependsOn(testing.suites)
     dependsOn(testStableSemconv)
     dependsOn(testBothSemconv)
   }
