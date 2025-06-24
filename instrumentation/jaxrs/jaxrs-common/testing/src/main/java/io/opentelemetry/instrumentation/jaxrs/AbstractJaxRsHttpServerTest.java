@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.jaxrs;
 
-import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionInfixAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionSuffixAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -190,7 +190,7 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
     testKind.assertBody(response.contentUtf8());
 
     List<AttributeAssertion> attributeAssertions =
-        codeFunctionInfixAssertions("test.JaxRsTestResource", "asyncOp");
+        codeFunctionSuffixAssertions("test.JaxRsTestResource", "asyncOp");
 
     if (testKind == AsyncResponseTestKind.CANCELED) {
       attributeAssertions.add(equalTo(AttributeKey.booleanKey("jaxrs.canceled"), true));
@@ -300,7 +300,7 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
                           .hasKind(SpanKind.INTERNAL)
                           .hasParent(trace.getSpan(0))
                           .hasAttributesSatisfyingExactly(
-                              codeFunctionInfixAssertions(".JaxRsTestResource", "jaxRs21Async"));
+                              codeFunctionSuffixAssertions(".JaxRsTestResource", "jaxRs21Async"));
                       if (testKind == CompletionStageTestKind.FAILING) {
                         span.hasStatus(StatusData.error())
                             .hasException(new IllegalStateException("failure"));
@@ -315,6 +315,6 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
     return span.hasName("JaxRsTestResource." + methodName)
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
-            codeFunctionInfixAssertions(".JaxRsTestResource", methodName));
+            codeFunctionSuffixAssertions(".JaxRsTestResource", methodName));
   }
 }

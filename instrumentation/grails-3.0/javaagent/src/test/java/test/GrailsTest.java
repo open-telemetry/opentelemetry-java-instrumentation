@@ -197,6 +197,4 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
     }
     return spanAssertions;
   }
-
-  // using deprecated semconv
 }
