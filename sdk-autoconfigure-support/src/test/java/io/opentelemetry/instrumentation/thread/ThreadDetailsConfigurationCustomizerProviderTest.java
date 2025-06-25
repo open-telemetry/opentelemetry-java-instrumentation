@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.thread;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,10 +19,11 @@ class ThreadDetailsConfigurationCustomizerProviderTest {
   @Test
   void addSpanProcessor() {
     OpenTelemetryConfigurationModel model =
-        new DeclarativeConfigurationBuilder().customizeModel(
-            new OpenTelemetryConfigurationModel()
-                .withFileFormat("0.4")
-                .withTracerProvider(new TracerProviderModel()));
+        new DeclarativeConfigurationBuilder()
+            .customizeModel(
+                new OpenTelemetryConfigurationModel()
+                    .withFileFormat("0.4")
+                    .withTracerProvider(new TracerProviderModel()));
 
     try (OpenTelemetrySdk sdk = DeclarativeConfiguration.create(model)) {
       assertThat(sdk.toString()).containsOnlyOnce("AddThreadDetailsSpanProcessor");

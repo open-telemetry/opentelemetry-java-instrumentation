@@ -12,7 +12,8 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.SdkConfigProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.SpanProcessorModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.TracerProviderModel;
 
-public class LoggingSpanExporterCustomizerProvider implements DeclarativeConfigurationCustomizerProvider {
+public class LoggingSpanExporterCustomizerProvider
+    implements DeclarativeConfigurationCustomizerProvider {
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {
     customizer.addModelCustomizer(
@@ -39,7 +40,6 @@ public class LoggingSpanExporterCustomizerProvider implements DeclarativeConfigu
                   .add(new SpanProcessorModel().withAdditionalProperty("thread_details", null));
             }
           }
-
 
           // todo also add logging like in AgentTracerProviderConfigurer
 

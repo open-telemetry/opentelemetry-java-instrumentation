@@ -40,7 +40,6 @@ public class ThreadDetailsCustomizerProvider implements DeclarativeConfiguration
             }
           }
 
-
           // todo also add logging like in AgentTracerProviderConfigurer
 
           return model;
