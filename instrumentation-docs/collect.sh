@@ -73,7 +73,7 @@ readonly INSTRUMENTATIONS=(
 #  "oracle-ucp-11.2:javaagent:test"
 #  "oracle-ucp-11.2:javaagent:testStableSemconv"
 #  "finagle-http-23.11:javaagent:test"
-  "finatra-2.9:javaagent:test"
+#  "finatra-2.9:javaagent:test"
 #  "oshi:javaagent:test"
 #  "oshi:javaagent:testExperimental"
 #  "vibur-dbcp-11.0:javaagent:test"
