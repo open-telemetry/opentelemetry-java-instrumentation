@@ -1,16 +1,18 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.tooling;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizer;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizerProvider;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ExperimentalLanguageSpecificInstrumentationModel;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.InstrumentationModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.SpanProcessorModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.TracerProviderModel;
 
 @AutoService(DeclarativeConfigurationCustomizerProvider.class)
-public class AgentTracerCustomizerProvider
-    implements DeclarativeConfigurationCustomizerProvider {
+public class AgentTracerCustomizerProvider implements DeclarativeConfigurationCustomizerProvider {
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {
     customizer.addModelCustomizer(
@@ -19,8 +21,10 @@ public class AgentTracerCustomizerProvider
           if (tracerProvider == null) {
             return model;
           }
-          InstrumentationModel instrumentationModel = model.getInstrumentationDevelopment();
-          ExperimentalLanguageSpecificInstrumentationModel java = instrumentationModel.getJava();
+          //          InstrumentationModel instrumentationModel =
+          // model.getInstrumentationDevelopment();
+          //          ExperimentalLanguageSpecificInstrumentationModel java =
+          // instrumentationModel.getJava();
           // todo how to get the "add_thread_details" from the config?
           // do we need a ConfigProvider?
 
