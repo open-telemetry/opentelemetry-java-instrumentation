@@ -13,7 +13,7 @@ import io.opentelemetry.sdk.trace.SpanProcessor;
 
 @SuppressWarnings("rawtypes")
 @AutoService(ComponentProvider.class)
-public class AgentTracerComponentProvider implements ComponentProvider<SpanProcessor> {
+public class ThreadDetailsComponentProvider implements ComponentProvider<SpanProcessor> {
   @Override
   public String getName() {
     return "thread_details";
