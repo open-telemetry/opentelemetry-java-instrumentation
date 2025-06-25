@@ -129,7 +129,14 @@ Debug logging negatively impacts the performance of your application.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-approvers)):
+### Maintainers
+
+- [Lauri Tulmin](https://github.com/laurit), Splunk
+- [Trask Stalnaker](https://github.com/trask), Microsoft
+
+For more information about the maintainer role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#maintainer).
+
+### Approvers
 
 - [Gregor Zeitlinger](https://github.com/zeitlinger), Grafana
 - [Jack Berg](https://github.com/jack-berg), New Relic
@@ -141,24 +148,20 @@ Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/o
 - [Steve Rao](https://github.com/steverao), Alibaba
 - [Sylvain Juge](https://github.com/SylvainJuge), Elastic
 
-Maintainers ([@open-telemetry/java-instrumentation-maintainers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-maintainers)):
+For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver).
 
-- [Lauri Tulmin](https://github.com/laurit), Splunk
-- [Trask Stalnaker](https://github.com/trask), Microsoft
-
-Emeritus maintainers:
+### Emeritus maintainers
 
 - [Mateusz Rzeszutek](https://github.com/mateuszrzeszutek)
 - [Nikita Salnikov-Tarnovski](https://github.com/iNikem)
 - [Tyler Benson](https://github.com/tylerbenson)
 
-Learn more about roles in
-the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md).
+For more information about the emeritus role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#emeritus-maintainerapprovertriager).
 
-Thanks to all the people who have already contributed!
+### Thanks to all of our contributors!
 
 <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/graphs/contributors">
-  <img src="https://contributors-img.web.app/image?repo=open-telemetry/opentelemetry-java-instrumentation" />
+  <img alt="Repo contributors" src="https://contrib.rocks/image?repo=open-telemetry/opentelemetry-java-instrumentation" />
 </a>
 
 [config-agent]: https://opentelemetry.io/docs/zero-code/java/agent/configuration/
