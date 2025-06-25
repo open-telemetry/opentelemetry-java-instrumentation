@@ -12,8 +12,10 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.Test;
@@ -75,7 +77,13 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
                                 MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
                                 AbstractLongAssert::isNotNegative),
                             equalTo(
-                                MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY, "10")),
+                                MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY, "10"),
+                            satisfies(
+                                ThreadIncubatingAttributes.THREAD_ID,
+                                AbstractLongAssert::isNotZero),
+                            satisfies(
+                                ThreadIncubatingAttributes.THREAD_NAME,
+                                AbstractCharSequenceAssert::isNotBlank)),
                 span ->
                     span.hasName("testTopic process")
                         .hasKind(SpanKind.CONSUMER)
