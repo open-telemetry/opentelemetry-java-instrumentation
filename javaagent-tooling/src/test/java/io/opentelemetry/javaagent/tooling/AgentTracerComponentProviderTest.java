@@ -1,0 +1,25 @@
+package io.opentelemetry.javaagent.tooling;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationBuilder;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.TracerProviderModel;
+import org.junit.jupiter.api.Test;
+
+class AgentTracerComponentProviderTest {
+  @Test
+   void addSpanProcessor() {
+     OpenTelemetryConfigurationModel model =
+         new DeclarativeConfigurationBuilder().customizeModel(
+             new OpenTelemetryConfigurationModel()
+                 .withFileFormat("0.4")
+                 .withTracerProvider(new TracerProviderModel()));
+
+     try (OpenTelemetrySdk sdk = DeclarativeConfiguration.create(model)) {
+       assertThat(sdk.toString()).containsOnlyOnce("AddThreadDetailsSpanProcessor");
+     }
+   }
+}

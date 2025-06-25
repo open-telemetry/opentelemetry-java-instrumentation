@@ -1,10 +1,13 @@
-package io.opentelemetry.instrumentation.thread;
+package io.opentelemetry.javaagent.tooling;
 
+import com.google.auto.service.AutoService;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.thread.AddThreadDetailsSpanProcessor;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 
-public class ThreadDetailsComponentProvider implements ComponentProvider<SpanProcessor> {
+@AutoService(ComponentProvider.class)
+public class AgentTracerComponentProvider implements ComponentProvider<SpanProcessor> {
   @Override
   public String getName() {
     return "thread_details";
