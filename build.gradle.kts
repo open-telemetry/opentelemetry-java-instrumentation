@@ -32,7 +32,7 @@ nexusPublishing {
   }
 
   connectTimeout.set(Duration.ofMinutes(5))
-  clientTimeout.set(Duration.ofMinutes(5))
+  clientTimeout.set(Duration.ofMinutes(30))
 
   transitionCheckOptions {
     // We have many artifacts so Maven Central takes a long time on its compliance checks. This sets

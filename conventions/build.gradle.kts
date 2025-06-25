@@ -57,7 +57,7 @@ dependencies {
   implementation("com.diffplug.spotless:spotless-plugin-gradle:7.0.4")
   implementation("com.google.guava:guava:33.4.8-jre")
   implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.18")
-  implementation("com.gradleup.shadow:shadow-gradle-plugin:8.3.6")
+  implementation("com.gradleup.shadow:shadow-gradle-plugin:8.3.7")
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
   implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:4.0.2")
   implementation("org.owasp:dependency-check-gradle:12.1.3")
@@ -71,7 +71,7 @@ dependencies {
   implementation("net.ltgt.gradle:gradle-nullaway-plugin:2.2.0")
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.6")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.13.1"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.13.2"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testImplementation("org.assertj:assertj-core:3.27.3")
