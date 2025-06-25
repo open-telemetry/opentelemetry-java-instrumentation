@@ -8,16 +8,28 @@ Run the analysis to update the instrumentation-list.yaml:
 
 `./gradlew :instrumentation-docs:runAnalysis`
 
-### Metric collection
+### Telemetry collection
 
 Until this process is ready for all instrumentations, each module will be modified to include a
-system property feature flag configured for when the tests run:
+system property feature flag configured for when the tests run. By enabling the following flag you
+will enable metric collection:
 
 ```kotlin
 tasks {
   test {
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
     ...
+  }
+}
+```
+
+In order to collect spans, add the `collectSpans` property (along with `collectMetadata`):
+
+```kotlin
+tasks {
+  test {
+    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("collectSpans", true)
   }
 }
 ```
@@ -130,6 +142,9 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 * metrics
   * List of metrics that the instrumentation module collects, including the metric name, description, type, and attributes.
   * Separate lists for the metrics emitted by default vs via configuration options.
+* spans
+  * List of spans kinds the instrumentation module generates, including the attributes and their types.
+  * Separate lists for the spans emitted by default vs via configuration options.
 
 ## Methodology
 
@@ -168,16 +183,16 @@ name is determined by the instrumentation module name:  `io.opentelemetry.{instr
 We will implement gatherers for the schemaUrl and scope attributes when instrumentations start
 implementing them.
 
-### Metrics
+### Spans and Metrics
 
-In order to identify what metrics are emitted from instrumentations, we can hook into the
-`InstrumentationTestRunner` class and collect the metrics generated during runs. We can then
+In order to identify what telemetry is emitted from instrumentations, we can hook into the
+`InstrumentationTestRunner` class and collect the metrics and spans generated during runs. We can then
 leverage the `afterTestClass()` in the Agent and library test runners to then write this information
 into temporary files. When we analyze the instrumentation modules, we can read these files and
-generate the metrics section of the instrumentation-list.yaml file.
+generate the telemetry section of the instrumentation-list.yaml file.
 
 The data is written into a `.telemetry` directory in the root of each instrumentation module. This
 data will be excluded from git and just generated on demand.
 
-Each file has a `when` value along with the list of metrics that indicates whether the telemetry is emitted by default or via a
-configuration option.
+Each file has a `when` value along with the list of metrics that indicates whether the telemetry is
+emitted by default or via a configuration option.

@@ -39,7 +39,7 @@ class MetricParserTest {
     Map<String, StringBuilder> metricMap = new HashMap<>();
     metricMap.put("default", new StringBuilder(input));
 
-    Map<String, EmittedMetrics> result = MetricParser.parseMetrics(metricMap);
+    Map<String, EmittedMetrics> result = EmittedMetricsParser.parseMetrics(metricMap);
     List<String> metricNames =
         result.get("default").getMetrics().stream()
             .map(EmittedMetrics.Metric::getName)
@@ -56,7 +56,7 @@ class MetricParserTest {
     Map<String, StringBuilder> metricMap = new HashMap<>();
     metricMap.put("default", new StringBuilder(input));
 
-    Map<String, EmittedMetrics> result = MetricParser.parseMetrics(metricMap);
+    Map<String, EmittedMetrics> result = EmittedMetricsParser.parseMetrics(metricMap);
     assertThat(result).isEmpty();
   }
 
@@ -83,7 +83,8 @@ class MetricParserTest {
               () -> FileManager.readFileToString(telemetryDir.resolve("metrics-2.yaml").toString()))
           .thenReturn(file2Content);
 
-      Map<String, EmittedMetrics> result = MetricParser.getMetricsFromFiles(tempDir.toString(), "");
+      Map<String, EmittedMetrics> result =
+          EmittedMetricsParser.getMetricsFromFiles(tempDir.toString(), "");
 
       EmittedMetrics metrics = result.get("default");
 
@@ -96,7 +97,8 @@ class MetricParserTest {
 
   @Test
   void getMetricsFromFilesHandlesNonexistentDirectory() {
-    Map<String, EmittedMetrics> result = MetricParser.getMetricsFromFiles("/nonexistent", "path");
+    Map<String, EmittedMetrics> result =
+        EmittedMetricsParser.getMetricsFromFiles("/nonexistent", "path");
     assertThat(result).isEmpty();
   }
 }
