@@ -20,6 +20,7 @@ import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.baggage.processor.BaggageSpanProcessor;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
+import io.opentelemetry.instrumentation.testing.internal.MetaDataCollector;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.logs.SdkLoggerProvider;
@@ -39,6 +40,9 @@ import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -116,7 +120,19 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
   }
 
   @Override
-  public void afterTestClass() {}
+  public void afterTestClass() throws IOException {
+    // Generates files in a `.telemetry` directory within the instrumentation module with all
+    // captured emitted metadata to be used by the instrumentation-docs Doc generator.
+    if (Boolean.getBoolean("collectMetadata")) {
+      URL resource = this.getClass().getClassLoader().getResource("");
+      if (resource == null) {
+        return;
+      }
+      String path = Paths.get(resource.getPath()).toString();
+
+      MetaDataCollector.writeTelemetryToFiles(path, metrics, tracesByScope);
+    }
+  }
 
   @Override
   public void clearAllExportedData() {
