@@ -3,9 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling;
+package io.opentelemetry.instrumentation.thread;
 
-import com.google.auto.service.AutoService;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizer;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizerProvider;
@@ -13,8 +12,7 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.SdkConfigProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.SpanProcessorModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.TracerProviderModel;
 
-@AutoService(DeclarativeConfigurationCustomizerProvider.class)
-public class AgentTracerCustomizerProvider implements DeclarativeConfigurationCustomizerProvider {
+public class ThreadDetailsCustomizerProvider implements DeclarativeConfigurationCustomizerProvider {
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {
     customizer.addModelCustomizer(
