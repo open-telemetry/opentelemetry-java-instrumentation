@@ -10,7 +10,7 @@ plugins {
   into a single jar.
   See https://imperceptiblethoughts.com/shadow/ for more details about Shadow plugin.
    */
-  id "com.gradleup.shadow" version "8.3.6"
+  id "com.gradleup.shadow" version "8.3.7"
   id "com.diffplug.spotless" version "7.0.4"
 
   id "io.opentelemetry.instrumentation.muzzle-generation" version "2.18.0-alpha-SNAPSHOT"
@@ -104,7 +104,7 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-api")
   testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.7.0-alpha")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.13.1"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.13.2"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")

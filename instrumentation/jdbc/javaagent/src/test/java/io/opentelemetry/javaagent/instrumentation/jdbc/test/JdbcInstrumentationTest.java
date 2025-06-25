@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jdbc.test;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
@@ -38,9 +39,9 @@ import io.opentelemetry.instrumentation.jdbc.TestDriver;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.beans.PropertyVetoException;
 import java.io.Closeable;
 import java.io.IOException;
@@ -1050,6 +1051,15 @@ class JdbcInstrumentationTest {
 
     testing.clearData();
 
+    List<AttributeAssertion> attributesAssertions =
+        codeFunctionAssertions(datasource.getClass(), "getConnection");
+    attributesAssertions.add(equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)));
+    attributesAssertions.add(equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)));
+    attributesAssertions.add(equalTo(DB_USER, emitStableDatabaseSemconv() ? null : user));
+    attributesAssertions.add(equalTo(maybeStable(DB_NAME), "jdbcunittest"));
+    attributesAssertions.add(
+        equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : connectionString));
+
     testing.runWithSpan("parent", () -> datasource.getConnection().close());
     testing.waitAndAssertTraces(
         trace -> {
@@ -1062,34 +1072,14 @@ class JdbcInstrumentationTest {
                               .hasName(datasource.getClass().getSimpleName() + ".getConnection")
                               .hasKind(SpanKind.INTERNAL)
                               .hasParent(trace.getSpan(0))
-                              .hasAttributesSatisfyingExactly(
-                                  equalTo(
-                                      CodeIncubatingAttributes.CODE_NAMESPACE,
-                                      datasource.getClass().getName()),
-                                  equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "getConnection"),
-                                  equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                  equalTo(DB_USER, emitStableDatabaseSemconv() ? null : user),
-                                  equalTo(maybeStable(DB_NAME), "jdbcunittest"),
-                                  equalTo(
-                                      DB_CONNECTION_STRING,
-                                      emitStableDatabaseSemconv() ? null : connectionString))));
+                              .hasAttributesSatisfyingExactly(attributesAssertions)));
           if (recursive) {
             assertions.add(
                 span ->
                     span.hasName(datasource.getClass().getSimpleName() + ".getConnection")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                datasource.getClass().getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "getConnection"),
-                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : user),
-                            equalTo(maybeStable(DB_NAME), "jdbcunittest"),
-                            equalTo(
-                                DB_CONNECTION_STRING,
-                                emitStableDatabaseSemconv() ? null : connectionString)));
+                        .hasAttributesSatisfyingExactly(attributesAssertions));
           }
           trace.hasSpansSatisfyingExactly(assertions);
         });

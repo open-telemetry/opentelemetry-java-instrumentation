@@ -179,9 +179,14 @@ public class YamlHelper {
           telemetryEntry.put("spans", spanList);
         }
 
-        telemetryList.add(telemetryEntry);
+        if (!spanList.isEmpty() || !metricsList.isEmpty()) {
+          telemetryList.add(telemetryEntry);
+        }
       }
-      moduleMap.put("telemetry", telemetryList);
+
+      if (!telemetryList.isEmpty()) {
+        moduleMap.put("telemetry", telemetryList);
+      }
     }
     return moduleMap;
   }
