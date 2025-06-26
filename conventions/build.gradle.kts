@@ -67,7 +67,7 @@ dependencies {
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.17.6")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.3")
-  implementation("net.ltgt.gradle:gradle-errorprone-plugin:4.2.0")
+  implementation("net.ltgt.gradle:gradle-errorprone-plugin:4.3.0")
   implementation("net.ltgt.gradle:gradle-nullaway-plugin:2.2.0")
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.6")
 
