@@ -134,7 +134,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 - [Lauri Tulmin](https://github.com/laurit), Splunk
 - [Trask Stalnaker](https://github.com/trask), Microsoft
 
-For more information about the maintainer role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#maintainer).
+For more information about the maintainer role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#maintainer).
 
 ### Approvers
 
@@ -148,7 +148,7 @@ For more information about the maintainer role, see the [community repository](h
 - [Steve Rao](https://github.com/steverao), Alibaba
 - [Sylvain Juge](https://github.com/SylvainJuge), Elastic
 
-For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver).
+For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#approver).
 
 ### Emeritus maintainers
 
