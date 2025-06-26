@@ -14,8 +14,10 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.semconv.CodeAttributes;
 import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.io.PrintWriter;
@@ -120,10 +122,24 @@ public final class LogEventMapper {
       LocationInfo locationInfo = new LocationInfo(new Throwable(), fqcn);
       String fileName = locationInfo.getFileName();
       if (fileName != null) {
-        attributes.put(CODE_FILEPATH, fileName);
+        if (SemconvStability.isEmitStableCodeSemconv()) {
+          attributes.put(CodeAttributes.CODE_FILE_PATH, fileName);
+        }
+        if (SemconvStability.isEmitOldCodeSemconv()) {
+          attributes.put(CODE_FILEPATH, fileName);
+        }
       }
-      attributes.put(CODE_NAMESPACE, locationInfo.getClassName());
-      attributes.put(CODE_FUNCTION, locationInfo.getMethodName());
+
+      if (SemconvStability.isEmitStableCodeSemconv()) {
+        attributes.put(
+            CodeAttributes.CODE_FUNCTION_NAME,
+            locationInfo.getClassName() + "." + locationInfo.getMethodName());
+      }
+      if (SemconvStability.isEmitOldCodeSemconv()) {
+        attributes.put(CODE_NAMESPACE, locationInfo.getClassName());
+        attributes.put(CODE_FUNCTION, locationInfo.getMethodName());
+      }
+
       String lineNumber = locationInfo.getLineNumber();
       int codeLineNo = 0;
       if (!lineNumber.equals("?")) {
@@ -133,7 +149,14 @@ public final class LogEventMapper {
           // ignore
         }
       }
-      attributes.put(CODE_LINENO, codeLineNo);
+      if (codeLineNo > 0) {
+        if (SemconvStability.isEmitStableCodeSemconv()) {
+          attributes.put(CodeAttributes.CODE_LINE_NUMBER, codeLineNo);
+        }
+        if (SemconvStability.isEmitOldCodeSemconv()) {
+          attributes.put(CODE_LINENO, codeLineNo);
+        }
+      }
     }
 
     builder.setAllAttributes(attributes.build());
