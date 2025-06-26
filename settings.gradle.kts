@@ -12,7 +12,7 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.2.1"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.3"
   id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
@@ -608,7 +608,9 @@ include(":instrumentation:vertx:vertx-kafka-client-3.6:vertx-kafka-client-4-test
 include(":instrumentation:vertx:vertx-kafka-client-3.6:vertx-kafka-client-5-testing")
 include(":instrumentation:vertx:vertx-redis-client-4.0:javaagent")
 include(":instrumentation:vertx:vertx-rx-java-3.5:javaagent")
-include(":instrumentation:vertx:vertx-sql-client-4.0:javaagent")
+include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent")
+include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-5.0:javaagent")
+include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-common:javaagent")
 include(":instrumentation:vertx:vertx-web-3.0:javaagent")
 include(":instrumentation:vertx:vertx-web-3.0:testing")
 include(":instrumentation:vibur-dbcp-11.0:javaagent")

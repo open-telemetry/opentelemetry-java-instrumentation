@@ -27,13 +27,15 @@ public class InstrumentationMetaData {
 
   private List<ConfigurationOption> configurations = Collections.emptyList();
 
-  public InstrumentationMetaData() {}
+  public InstrumentationMetaData() {
+    this.classification = InstrumentationClassification.LIBRARY.toString();
+  }
 
   public InstrumentationMetaData(
-      String description,
+      @Nullable String description,
       String classification,
-      Boolean disabledByDefault,
-      List<ConfigurationOption> configurations) {
+      @Nullable Boolean disabledByDefault,
+      @Nullable List<ConfigurationOption> configurations) {
     this.classification = classification;
     this.disabledByDefault = disabledByDefault;
     this.description = description;
@@ -60,7 +62,7 @@ public class InstrumentationMetaData {
     this.description = description;
   }
 
-  public void setClassification(@Nullable String classification) {
+  public void setClassification(String classification) {
     this.classification = classification;
   }
 
