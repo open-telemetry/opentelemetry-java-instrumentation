@@ -14,7 +14,7 @@ dependencies {
   compileOnly("net.bytebuddy:byte-buddy-dep")
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   jvmArgs(
     "-Dotel.instrumentation.methods.include=io.opentelemetry.javaagent.instrumentation.methods.MethodTest\$ConfigTracedCallable[call];io.opentelemetry.javaagent.instrumentation.methods.MethodTest\$ConfigTracedCompletableFuture[getResult];javax.naming.directory.InitialDirContext[search]"
   )
