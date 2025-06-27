@@ -11,9 +11,11 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
+import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationClassification;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
+import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
 import java.io.BufferedWriter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -75,7 +77,16 @@ public class YamlHelper {
                         .equals(InstrumentationClassification.LIBRARY))
             .collect(
                 Collectors.groupingBy(
-                    InstrumentationModule::getGroup, TreeMap::new, Collectors.toList()));
+                    InstrumentationModule::getGroup,
+                    TreeMap::new,
+                    Collectors.collectingAndThen(
+                        Collectors.toList(),
+                        modules ->
+                            modules.stream()
+                                .sorted(
+                                    Comparator.comparing(
+                                        InstrumentationModule::getInstrumentationName))
+                                .collect(Collectors.toList()))));
 
     Map<String, Object> output = new TreeMap<>();
     libraryInstrumentations.forEach(
@@ -131,8 +142,9 @@ public class YamlHelper {
     addTargetVersions(module, moduleMap);
     addConfigurations(module, moduleMap);
 
-    // Get telemetry grouping list
-    Set<String> telemetryGroups = module.getMetrics().keySet();
+    // Get telemetry grouping lists
+    Set<String> telemetryGroups = new java.util.HashSet<>(module.getMetrics().keySet());
+    telemetryGroups.addAll(module.getSpans().keySet());
 
     if (!telemetryGroups.isEmpty()) {
       List<Map<String, Object>> telemetryList = new ArrayList<>();
@@ -143,16 +155,38 @@ public class YamlHelper {
             new ArrayList<>(module.getMetrics().getOrDefault(group, Collections.emptyList()));
         List<Map<String, Object>> metricsList = new ArrayList<>();
 
-        // sort metrics by name for some determinism in the order
+        // sort by name for determinism in the order
         metrics.sort(Comparator.comparing(EmittedMetrics.Metric::getName));
 
         for (EmittedMetrics.Metric metric : metrics) {
           metricsList.add(getMetricsMap(metric));
         }
-        telemetryEntry.put("metrics", metricsList);
-        telemetryList.add(telemetryEntry);
+        if (!metricsList.isEmpty()) {
+          telemetryEntry.put("metrics", metricsList);
+        }
+
+        List<EmittedSpans.Span> spans =
+            new ArrayList<>(module.getSpans().getOrDefault(group, Collections.emptyList()));
+        List<Map<String, Object>> spanList = new ArrayList<>();
+
+        // sort by name for determinism in the order
+        spans.sort(Comparator.comparing(EmittedSpans.Span::getSpanKind));
+
+        for (EmittedSpans.Span span : spans) {
+          spanList.add(getSpanMap(span));
+        }
+        if (!spanList.isEmpty()) {
+          telemetryEntry.put("spans", spanList);
+        }
+
+        if (!spanList.isEmpty() || !metricsList.isEmpty()) {
+          telemetryList.add(telemetryEntry);
+        }
       }
-      moduleMap.put("telemetry", telemetryList);
+
+      if (!telemetryList.isEmpty()) {
+        moduleMap.put("telemetry", telemetryList);
+      }
     }
     return moduleMap;
   }
@@ -221,21 +255,34 @@ public class YamlHelper {
     return conf;
   }
 
+  private static List<Map<String, Object>> getSortedAttributeMaps(
+      List<TelemetryAttribute> attributes) {
+    List<TelemetryAttribute> sortedAttributes = new ArrayList<>(attributes);
+    sortedAttributes.sort(Comparator.comparing(TelemetryAttribute::getName));
+    List<Map<String, Object>> attributeMaps = new ArrayList<>();
+    for (TelemetryAttribute attribute : sortedAttributes) {
+      Map<String, Object> attributeMap = new LinkedHashMap<>();
+      attributeMap.put("name", attribute.getName());
+      attributeMap.put("type", attribute.getType());
+      attributeMaps.add(attributeMap);
+    }
+    return attributeMaps;
+  }
+
   private static Map<String, Object> getMetricsMap(EmittedMetrics.Metric metric) {
     Map<String, Object> innerMetricMap = new LinkedHashMap<>();
     innerMetricMap.put("name", metric.getName());
     innerMetricMap.put("description", metric.getDescription());
     innerMetricMap.put("type", metric.getType());
     innerMetricMap.put("unit", metric.getUnit());
+    innerMetricMap.put("attributes", getSortedAttributeMaps(metric.getAttributes()));
+    return innerMetricMap;
+  }
 
-    List<Map<String, Object>> attributes = new ArrayList<>();
-    for (EmittedMetrics.Attribute attribute : metric.getAttributes()) {
-      Map<String, Object> attributeMap = new LinkedHashMap<>();
-      attributeMap.put("name", attribute.getName());
-      attributeMap.put("type", attribute.getType());
-      attributes.add(attributeMap);
-    }
-    innerMetricMap.put("attributes", attributes);
+  private static Map<String, Object> getSpanMap(EmittedSpans.Span span) {
+    Map<String, Object> innerMetricMap = new LinkedHashMap<>();
+    innerMetricMap.put("span_kind", span.getSpanKind());
+    innerMetricMap.put("attributes", getSortedAttributeMaps(span.getAttributes()));
     return innerMetricMap;
   }
 
@@ -246,6 +293,10 @@ public class YamlHelper {
 
   public static EmittedMetrics emittedMetricsParser(String input) {
     return new Yaml().loadAs(input, EmittedMetrics.class);
+  }
+
+  public static EmittedSpans emittedSpansParser(String input) throws JsonProcessingException {
+    return mapper.readValue(input, EmittedSpans.class);
   }
 
   private YamlHelper() {}

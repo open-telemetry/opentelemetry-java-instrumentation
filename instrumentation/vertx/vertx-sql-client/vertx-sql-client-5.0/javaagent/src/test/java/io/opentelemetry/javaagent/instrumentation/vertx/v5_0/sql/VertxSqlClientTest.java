@@ -156,6 +156,12 @@ class VertxSqlClientTest {
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))));
+
+    if (emitStableDatabaseSemconv()) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.vertx-sql-client-5.0",
+          metric -> metric.hasName("db.client.operation.duration"));
+    }
   }
 
   @Test
