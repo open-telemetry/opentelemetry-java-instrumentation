@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.mybatis.v3_2;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import org.apache.ibatis.mapping.Environment;
 import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSession;
@@ -46,7 +45,6 @@ class MyBatisTest {
     }
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testSelect() {
     TestMapper testMapper = sqlSession.getMapper(TestMapper.class);
@@ -59,9 +57,6 @@ class MyBatisTest {
                     span.hasKind(SpanKind.INTERNAL)
                         .hasName("TestMapper.select")
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                TestMapper.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "select"))));
+                            codeFunctionAssertions(TestMapper.class, "select"))));
   }
 }

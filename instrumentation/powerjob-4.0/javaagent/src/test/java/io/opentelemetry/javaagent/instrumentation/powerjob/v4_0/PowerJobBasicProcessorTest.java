@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.powerjob.v4_0;
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Arrays.asList;
 
@@ -18,7 +19,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import javax.sql.DataSource;
@@ -338,17 +338,17 @@ class PowerJobBasicProcessorTest {
     return taskContext;
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> attributeAssertions(
       String codeNamespace, long jobId, String jobParam, String jobType) {
     List<AttributeAssertion> attributeAssertions =
         new ArrayList<>(
             asList(
-                equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, codeNamespace),
-                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "process"),
                 equalTo(AttributeKey.stringKey("job.system"), "powerjob"),
                 equalTo(AttributeKey.longKey("scheduling.powerjob.job.id"), jobId),
                 equalTo(AttributeKey.stringKey("scheduling.powerjob.job.type"), jobType)));
+
+    attributeAssertions.addAll(codeFunctionAssertions(codeNamespace, "process"));
+
     if (!StringUtils.isNullOrEmpty(jobParam)) {
       attributeAssertions.add(
           equalTo(AttributeKey.stringKey("scheduling.powerjob.job.param"), jobParam));
