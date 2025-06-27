@@ -1,0 +1,61 @@
+# This file serves as a specification how to map properties from the existing config properties
+# to the declarative configuration format.
+# This list does not contain all properties, but those that
+# are different from what the config bridge already does.
+
+# Based on https://github.com/open-telemetry/opentelemetry-configuration/blob/main/examples/kitchen-sink.yaml
+
+# Re-use this flag to disable the Agent/Spring starter as well as the SDK.
+disabled: false # was: "otel.javaagent.enabled"
+# Re-use this flag from the SDK: if value is "debug", we trigger the behavior of "otel.javaagent.debug"
+log_level: info # was: "otel.javaagent.debug"
+instrumentation/development:
+  # nothing changes here - just for reference
+  general:
+    peer:
+      service_mapping: # was "otel.instrumentation.common.peer-service-mapping"
+        - peer: 1.2.3.4
+          service: FooService
+        - peer: 2.3.4.5
+          service: BarService
+    http:
+      # should be added to https://github.com/open-telemetry/opentelemetry-configuration/blob/c205770a956713e512eddb056570a99737e3383a/examples/kitchen-sink.yaml#L872
+      known-methods: # was "otel.instrumentation.http.known-methods"
+        - GET
+        - POST
+        - PUT
+        - DELETE
+        - PATCH
+        - HEAD
+        - OPTIONS
+      client:
+        request_captured_headers: # was otel.instrumentation.http.client.capture-request-headers
+          - Content-Type
+          - Accept
+        response_captured_headers: # was otel.instrumentation.http.client.capture-response-headers
+          - Content-Type
+          - Content-Encoding
+      server:
+        request_captured_headers: # was otel.instrumentation.http.server.capture-request-headers
+          - Content-Type
+          - Accept
+        response_captured_headers: # was otel.instrumentation.http.server.capture-response-headers
+          - Content-Type
+          - Content-Encoding
+  java:
+    agent:
+      # Also map all other properties with the "otel.javaagent." prefix the same way,
+      # unless specified otherwise.
+      # See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/14132
+      exclude-class-loaders: # was "otel.javaagent.exclude-class-loaders"
+        - a
+        - b
+    common:
+      db-statement-sanitizer:
+        enabled: true # already exists - just for reference
+      thread_details:
+        enabled: true # was "otel.javaagent.add-thread-details" = "true"
+    logging:
+      application:
+        logs-buffer-max-records: 1000 # can only be used with "type: application"
+      type: application or simple # was "otel.javaagent.logging"
