@@ -44,8 +44,9 @@ rules:
 
   # Session metrics for Jetty 12
   - bean: org.eclipse.jetty.session:context=*,type=defaultsessioncache,id=*
-    # usually a single mbean instance exists per context, thus the metric is aggregated: sum for counter,
-    # gauge metrics will return invalid (last-value) if more than one mbean instance exists.
+    # Usually a single mbean instance exists per context, thus the metric is aggregated: sum for counter,
+    # gauge metrics will return invalid (last-value) with more than 1 mbean instance, thus none
+    # is included in this provided configuration.
     prefix: jetty.session.
     unit: "{session}"
     metricAttribute:
@@ -57,17 +58,12 @@ rules:
         metric: count
         type: updowncounter
         desc: Current number of active sessions
-      # jetty.session.count.max
-      sessionsMax:
-        metric: count.max
-        # gauge because it can't be aggregated
-        type: gauge
-        desc: Maximum number of active sessions
 
   # Session metrics for Jetty 9 to 11
   - bean: org.eclipse.jetty.server.session:context=*,type=sessionhandler,id=*
-    # usually a single mbean instance exists per context, thus the metric is aggregated: sum for counter,
-    # gauge metrics will return invalid (last-value) if more than one mbean instance exists.
+    # Usually a single mbean instance exists per context, thus the metric is aggregated: sum for counter,
+    # gauge metrics will return invalid (last-value) with more than 1 mbean instance, thus none
+    # is included in this provided configuration.
     prefix: jetty.session.
     metricAttribute:
       # 'context' corresponds to the webapp context path
@@ -85,17 +81,3 @@ rules:
         unit: s
         type: counter
         desc: The cumulated session duration
-      # jetty.session.duration.max
-      sessionTimeMax:
-        metric: duration.max
-        unit: s
-        # gauge because it can't be aggregated
-        type: gauge
-        desc: The maximum session duration
-      # jetty.session.duration.mean
-      sessionTimeMean:
-        metric: duration.mean
-        unit: s
-        # gauge because it can't be aggregated
-        type: gauge
-        desc: The mean session duration

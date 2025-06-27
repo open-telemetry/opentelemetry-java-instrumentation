@@ -128,23 +128,14 @@ public class JettyIntegrationTest extends TargetSystemTest {
 
     AttributeMatcher contextAttribute = attributeWithAnyValue("jetty.context");
     if (jettyMajorVersion >= 12) {
-      verifier
-          .add(
-              "jetty.session.count",
-              metric ->
-                  metric
-                      .isUpDownCounter()
-                      .hasDescription("Current number of active sessions")
-                      .hasUnit("{session}")
-                      .hasDataPointsWithOneAttribute(contextAttribute))
-          .add(
-              "jetty.session.count.max",
-              metric ->
-                  metric
-                      .isGauge()
-                      .hasDescription("Maximum number of active sessions")
-                      .hasUnit("{session}")
-                      .hasDataPointsWithOneAttribute(contextAttribute));
+      verifier.add(
+          "jetty.session.count",
+          metric ->
+              metric
+                  .isUpDownCounter()
+                  .hasDescription("Current number of active sessions")
+                  .hasUnit("{session}")
+                  .hasDataPointsWithOneAttribute(contextAttribute));
     } else {
       verifier
           .add(
@@ -161,22 +152,6 @@ public class JettyIntegrationTest extends TargetSystemTest {
                   metric
                       .isCounter()
                       .hasDescription("The cumulated session duration")
-                      .hasUnit("s")
-                      .hasDataPointsWithOneAttribute(contextAttribute))
-          .add(
-              "jetty.session.duration.max",
-              metric ->
-                  metric
-                      .isGauge()
-                      .hasDescription("The maximum session duration")
-                      .hasUnit("s")
-                      .hasDataPointsWithOneAttribute(contextAttribute))
-          .add(
-              "jetty.session.duration.mean",
-              metric ->
-                  metric
-                      .isGauge()
-                      .hasDescription("The mean session duration")
                       .hasUnit("s")
                       .hasDataPointsWithOneAttribute(contextAttribute));
     }

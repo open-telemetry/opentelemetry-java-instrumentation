@@ -19,10 +19,8 @@ Those metrics require the following Jetty modules to be enabled : `jmx`, `http`,
 | jetty.thread.queue.size | UpDownCounter |               | The current job queue size                |
 | jetty.io.select.count   | Counter       |               | The number of select calls                |
 | jetty.session.count     | UpDownCounter | jetty.context | Current number of active sessions         |
-| jetty.session.count.max | Gauge         | jetty.context | Maximum number of active sessions (*)     |
 
 - `jetty.context` corresponds to the deployed application subfolder in `webapps` folder.
-- `jetty.session.count.max` metric produces unpredictable values when more than one `org.eclipse.jetty.session:context=*,type=defaultsessioncache,id=*` MBean is present, the default Jetty deployment includes a single one.
 
 ## Jetty 9 to 11
 
@@ -37,9 +35,6 @@ Those metrics require the following Jetty modules to be enabled : `jmx`, `http` 
 | jetty.thread.queue.size     | UpDownCounter |               | The current job queue size                |
 | jetty.io.select.count       | Counter       |               | The number of select calls                |
 | jetty.session.created.count | Counter       | jetty.context | The total number of created sessions      |
-| jetty.session.duration.sum  | Gauge         | jetty.context | The cumulated session duration            |
-| jetty.session.duration.max  | Gauge         | jetty.context | The maximum session duration              |
-| jetty.session.duration.mean | Gauge         | jetty.context | The mean session duration                 |
+| jetty.session.duration.sum  | Counter       | jetty.context | The cumulated session duration            |
 
 - `jetty.context` corresponds to the deployed application subfolder in `webapps` folder.
-- `jetty.session.duration.sum`, `jetty.session.duration.max`, `jetty.session.duration.mean` metrics will produce unpredictable results when more than one `org.eclipse.jetty.server.session:context=*,type=sessionhandler,id=*` MBean is present, the default Jetty deployment includes a single one.
