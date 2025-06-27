@@ -10,7 +10,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.util.Objects;
 
-public class MemorySpanExporterComponentProvider implements ComponentProvider<SpanExporter> {
+public class TestSpanExporterComponentProvider implements ComponentProvider<SpanExporter> {
 
   private static SpanExporter spanExporter;
 
@@ -21,7 +21,7 @@ public class MemorySpanExporterComponentProvider implements ComponentProvider<Sp
 
   @Override
   public String getName() {
-    return "memory";
+    return "test";
   }
 
   @Override
@@ -30,6 +30,6 @@ public class MemorySpanExporterComponentProvider implements ComponentProvider<Sp
   }
 
   public static void setSpanExporter(SpanExporter spanExporter) {
-    MemorySpanExporterComponentProvider.spanExporter = spanExporter;
+    TestSpanExporterComponentProvider.spanExporter = spanExporter;
   }
 }

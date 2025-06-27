@@ -11,7 +11,6 @@ muzzle {
 dependencies {
   compileOnly(project(":javaagent-tooling"))
   compileOnly(project(":instrumentation-annotations-support"))
-  compileOnly("net.bytebuddy:byte-buddy-dep")
 }
 
 tasks.test {

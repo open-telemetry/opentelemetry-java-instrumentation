@@ -22,9 +22,9 @@ import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.contrib.baggage.processor.BaggageSpanProcessor;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.instrumentation.testing.internal.MetaDataCollector;
-import io.opentelemetry.instrumentation.testing.provider.MemoryLogRecordExporterComponentProvider;
-import io.opentelemetry.instrumentation.testing.provider.MemoryMetricExporterComponentProvider;
-import io.opentelemetry.instrumentation.testing.provider.MemorySpanExporterComponentProvider;
+import io.opentelemetry.instrumentation.testing.provider.TestLogRecordExporterComponentProvider;
+import io.opentelemetry.instrumentation.testing.provider.TestMetricExporterComponentProvider;
+import io.opentelemetry.instrumentation.testing.provider.TestSpanExporterComponentProvider;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.logs.SdkLoggerProvider;
@@ -72,9 +72,9 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
     testSpanExporter = InMemorySpanExporter.create();
     testMetricExporter = InMemoryMetricExporter.create(AggregationTemporality.DELTA);
     testLogRecordExporter = InMemoryLogRecordExporter.create();
-    MemorySpanExporterComponentProvider.setSpanExporter(testSpanExporter);
-    MemoryMetricExporterComponentProvider.setMetricExporter(testMetricExporter);
-    MemoryLogRecordExporterComponentProvider.setLogRecordExporter(testLogRecordExporter);
+    TestSpanExporterComponentProvider.setSpanExporter(testSpanExporter);
+    TestMetricExporterComponentProvider.setMetricExporter(testMetricExporter);
+    TestLogRecordExporterComponentProvider.setLogRecordExporter(testLogRecordExporter);
 
     metricReader =
         PeriodicMetricReader.builder(testMetricExporter)

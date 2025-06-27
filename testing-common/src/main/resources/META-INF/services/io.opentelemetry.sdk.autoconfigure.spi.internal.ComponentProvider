@@ -1,4 +1,4 @@
-io.opentelemetry.instrumentation.testing.provider.MemorySpanExporterComponentProvider
-io.opentelemetry.instrumentation.testing.provider.MemoryMetricExporterComponentProvider
-io.opentelemetry.instrumentation.testing.provider.MemoryLogRecordExporterComponentProvider
+io.opentelemetry.instrumentation.testing.provider.TestSpanExporterComponentProvider
+io.opentelemetry.instrumentation.testing.provider.TestMetricExporterComponentProvider
+io.opentelemetry.instrumentation.testing.provider.TestLogRecordExporterComponentProvider
 

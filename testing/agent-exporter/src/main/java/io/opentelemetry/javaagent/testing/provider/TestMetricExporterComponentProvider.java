@@ -10,7 +10,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import java.util.Objects;
 
-public class MemoryMetricExporterComponentProvider implements ComponentProvider<MetricExporter> {
+public class TestMetricExporterComponentProvider implements ComponentProvider<MetricExporter> {
 
   private static MetricExporter metricExporter;
 
@@ -21,7 +21,7 @@ public class MemoryMetricExporterComponentProvider implements ComponentProvider<
 
   @Override
   public String getName() {
-    return "memory";
+    return "test";
   }
 
   @Override
@@ -30,6 +30,6 @@ public class MemoryMetricExporterComponentProvider implements ComponentProvider<
   }
 
   public static void setMetricExporter(MetricExporter metricExporter) {
-    MemoryMetricExporterComponentProvider.metricExporter = metricExporter;
+    TestMetricExporterComponentProvider.metricExporter = metricExporter;
   }
 }

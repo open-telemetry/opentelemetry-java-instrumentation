@@ -1,4 +1,4 @@
-io.opentelemetry.javaagent.testing.provider.MemorySpanExporterComponentProvider
-io.opentelemetry.javaagent.testing.provider.MemoryMetricExporterComponentProvider
-io.opentelemetry.javaagent.testing.provider.MemoryLogRecordExporterComponentProvider
+io.opentelemetry.javaagent.testing.provider.TestSpanExporterComponentProvider
+io.opentelemetry.javaagent.testing.provider.TestMetricExporterComponentProvider
+io.opentelemetry.javaagent.testing.provider.TestLogRecordExporterComponentProvider
 

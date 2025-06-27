@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.testing.provider;
+package io.opentelemetry.instrumentation.testing.provider;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 import java.util.Objects;
 
-public class MemoryLogRecordExporterComponentProvider
+public class TestLogRecordExporterComponentProvider
     implements ComponentProvider<LogRecordExporter> {
 
   private static LogRecordExporter logRecordExporter;
@@ -22,7 +22,7 @@ public class MemoryLogRecordExporterComponentProvider
 
   @Override
   public String getName() {
-    return "memory";
+    return "test";
   }
 
   @Override
@@ -31,6 +31,6 @@ public class MemoryLogRecordExporterComponentProvider
   }
 
   public static void setLogRecordExporter(LogRecordExporter logRecordExporter) {
-    MemoryLogRecordExporterComponentProvider.logRecordExporter = logRecordExporter;
+    TestLogRecordExporterComponentProvider.logRecordExporter = logRecordExporter;
   }
 }
