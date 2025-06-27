@@ -14,6 +14,49 @@ libraries:
     target_versions:
       javaagent:
       - io.activej:activej-http:[6.0,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+      spans:
+      - span_kind: SERVER
+        attributes:
+        - name: client.address
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.path
+          type: STRING
+        - name: url.query
+          type: STRING
+        - name: url.scheme
+          type: STRING
+        - name: user_agent.original
+          type: STRING
   akka:
   - name: akka-actor-2.3
     source_path: instrumentation/akka/akka-actor-2.3
@@ -214,6 +257,9 @@ libraries:
           type: STRING
   apache:
   - name: apache-dbcp-2.0
+    description: |
+      This instrumentation provides database connection pools metrics for Apache DBCP.
+      The instrumentation uses `MBeanRegistration` methods for lifecycle detection, therefore it only activates if the `BasicDataSource` is registered to an `MBeanServer`. If using Spring Boot, this happens automatically as all Spring beans that support JMX registration are automatically registered by default.
     source_path: instrumentation/apache-dbcp-2.0
     scope:
       name: io.opentelemetry.apache-dbcp-2.0
@@ -334,6 +380,8 @@ libraries:
         - name: rpc.system
           type: STRING
   - name: apache-httpasyncclient-4.1
+    description: This instrumentation provides CLIENT spans and metrics for the Apache
+      HttpAsyncClient.
     source_path: instrumentation/apache-httpasyncclient-4.1
     scope:
       name: io.opentelemetry.apache-httpasyncclient-4.1
@@ -358,14 +406,72 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: apache-httpclient-2.0
+    description: This instrumentation provides CLIENT spans and metrics for versions
+      2 and 3 of the Apache HttpClient.
     source_path: instrumentation/apache-httpclient/apache-httpclient-2.0
     scope:
       name: io.opentelemetry.apache-httpclient-2.0
     target_versions:
       javaagent:
       - commons-httpclient:commons-httpclient:[2.0,4.0)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: apache-httpclient-4.0
+    description: This instrumentation provides CLIENT spans and metrics for version
+      4 of the Apache HttpClient.
     source_path: instrumentation/apache-httpclient/apache-httpclient-4.0
     scope:
       name: io.opentelemetry.apache-httpclient-4.0
@@ -373,13 +479,91 @@ libraries:
       javaagent:
       - io.dropwizard:dropwizard-client:(,3.0.0)
       - org.apache.httpcomponents:httpclient:[4.0,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: apache-httpclient-4.3
+    description: This instrumentation provides a library integration that enables
+      CLIENT spans and metrics for the Apache HttpClient.
     source_path: instrumentation/apache-httpclient/apache-httpclient-4.3
     scope:
       name: io.opentelemetry.apache-httpclient-4.3
     target_versions:
       library:
       - org.apache.httpcomponents:httpclient:[4.3,4.+)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.request.resend_count
+          type: LONG
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: apache-httpclient-5.0
     source_path: instrumentation/apache-httpclient/apache-httpclient-5.0
     scope:
@@ -2857,6 +3041,8 @@ libraries:
       - jakarta.servlet:jakarta.servlet-api:[5.0.0,)
   spark:
   - name: spark-2.3
+    description: |
+      This instrumentation does not emit telemetry on its own. Instead, it extracts the HTTP route and attaches it to SERVER spans and HTTP server metrics.
     source_path: instrumentation/spark-2.3
     scope:
       name: io.opentelemetry.spark-2.3

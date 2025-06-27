@@ -14,12 +14,16 @@ fi
 
 readonly INSTRUMENTATIONS=(
   # <module path (colon-separated)> : <javaagent|library> : [ gradle-task-suffix ]
+  "activej-http-6.0:javaagent:test"
   "akka:akka-http-10.0:javaagent:test"
   "apache-httpasyncclient-4.1:javaagent:test"
   "alibaba-druid-1.0:javaagent:test"
   "alibaba-druid-1.0:javaagent:testStableSemconv"
   "apache-dbcp-2.0:javaagent:test"
   "apache-dbcp-2.0:javaagent:testStableSemconv"
+  "apache-httpclient:apache-httpclient-2.0:javaagent:test"
+  "apache-httpclient:apache-httpclient-4.0:javaagent:test"
+  "apache-httpclient:apache-httpclient-4.3:library:test"
   "apache-httpclient:apache-httpclient-5.0:javaagent:test"
   "apache-dubbo-2.7:javaagent:testDubbo"
   "c3p0-0.9:javaagent:test"
@@ -170,7 +174,7 @@ echo
 
 ./gradlew "${gradle_tasks[@]}" \
   -PcollectMetadata=true \
-  --rerun-tasks
+  --rerun-tasks --continue
 
 # uncomment the next line to remove all .telemetry directories
 #find_and_remove_all_telemetry

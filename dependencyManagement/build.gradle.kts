@@ -81,7 +81,7 @@ val CORE_DEPENDENCIES = listOf(
 // There are dependencies included here that appear to have no usages, but are maintained at
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
-  "org.junit.jupiter:junit-jupiter-api:5.13.1",
+  "org.junit.jupiter:junit-jupiter-api:5.13.2",
   "org.spockframework:spock-core:2.4-M6-groovy-4.0",
   "org.spockframework:spock-junit4:2.4-M6-groovy-4.0",
 
