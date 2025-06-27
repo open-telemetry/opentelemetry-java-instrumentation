@@ -141,7 +141,7 @@ public final class LogEventMapper {
       }
 
       String lineNumber = locationInfo.getLineNumber();
-      int codeLineNo = 0;
+      int codeLineNo = -1;
       if (!lineNumber.equals("?")) {
         try {
           codeLineNo = Integer.parseInt(lineNumber);
@@ -149,7 +149,7 @@ public final class LogEventMapper {
           // ignore
         }
       }
-      if (codeLineNo > 0) {
+      if (codeLineNo >= 0) {
         if (SemconvStability.isEmitStableCodeSemconv()) {
           attributes.put(CodeAttributes.CODE_LINE_NUMBER, codeLineNo);
         }
