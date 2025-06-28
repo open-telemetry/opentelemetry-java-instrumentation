@@ -5,8 +5,11 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import static io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser.MYSQL;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser.parse;
+import static io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo.DEFAULT;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
@@ -40,12 +43,12 @@ class JdbcConnectionUrlParserTest {
   @ParameterizedTest
   @ValueSource(strings = {"", "jdbc:", "jdbc::", "bogus:string"})
   void testInvalidUrlReturnsDefault(String url) {
-    assertThat(JdbcConnectionUrlParser.parse(url, null)).isEqualTo(DbInfo.DEFAULT);
+    assertThat(JdbcConnectionUrlParser.parse(url, null)).isEqualTo(DEFAULT);
   }
 
   @Test
   void testNullUrlReturnsDefault() {
-    assertThat(JdbcConnectionUrlParser.parse(null, null)).isEqualTo(DbInfo.DEFAULT);
+    assertThat(JdbcConnectionUrlParser.parse(null, null)).isEqualTo(DEFAULT);
   }
 
   private static Stream<Arguments> mySqlArguments() {
@@ -1373,5 +1376,17 @@ class JdbcConnectionUrlParserTest {
       list.add(arguments(arg));
     }
     return list.stream();
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "mysql:loadbalance://string_without_slash",
+        "mysql:loadbalance://host:3306", // with port but no slash
+        "mariadb:failover://[::1]:3306" // IPv6 without slash
+      })
+  void testMySQLUrlsWithoutSlashDoNotThrowException(String url) {
+    assertThatCode(() -> MYSQL.doParse(url, DEFAULT.toBuilder().system("mysql")))
+        .doesNotThrowAnyException();
   }
 }
