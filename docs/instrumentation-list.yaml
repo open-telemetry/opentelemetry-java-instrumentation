@@ -1151,6 +1151,8 @@ libraries:
       type: boolean
       default: false
   - name: elasticsearch-transport-5.0
+    description: |
+      This instrumentation provides client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
     source_path: instrumentation/elasticsearch/elasticsearch-transport-5.0
     scope:
       name: io.opentelemetry.elasticsearch-transport-5.0
@@ -1158,7 +1160,75 @@ libraries:
       javaagent:
       - org.elasticsearch.client:transport:[5.0.0,5.3.0)
       - org.elasticsearch:elasticsearch:[5.0.0,5.3.0)
+    configurations:
+    - name: otel.instrumentation.elasticsearch.experimental-span-attributes
+      description: Enable the capture of experimental span attributes.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+    - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: elasticsearch.action
+          type: STRING
+        - name: elasticsearch.id
+          type: STRING
+        - name: elasticsearch.request
+          type: STRING
+        - name: elasticsearch.request.indices
+          type: STRING
+        - name: elasticsearch.request.write.type
+          type: STRING
+        - name: elasticsearch.response.status
+          type: LONG
+        - name: elasticsearch.shard.replication.failed
+          type: LONG
+        - name: elasticsearch.shard.replication.successful
+          type: LONG
+        - name: elasticsearch.shard.replication.total
+          type: LONG
+        - name: elasticsearch.type
+          type: STRING
+        - name: elasticsearch.version
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
   - name: elasticsearch-transport-5.3
+    description: |
+      This instrumentation provides client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
     source_path: instrumentation/elasticsearch/elasticsearch-transport-5.3
     scope:
       name: io.opentelemetry.elasticsearch-transport-5.3
@@ -1166,7 +1236,85 @@ libraries:
       javaagent:
       - org.elasticsearch.client:transport:[5.3.0,6.0.0)
       - org.elasticsearch:elasticsearch:[5.3.0,6.0.0)
+    configurations:
+    - name: otel.instrumentation.elasticsearch.experimental-span-attributes
+      description: Enable the capture of experimental span attributes.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+    - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: elasticsearch.action
+          type: STRING
+        - name: elasticsearch.id
+          type: STRING
+        - name: elasticsearch.request
+          type: STRING
+        - name: elasticsearch.request.indices
+          type: STRING
+        - name: elasticsearch.request.search.types
+          type: STRING
+        - name: elasticsearch.request.write.type
+          type: STRING
+        - name: elasticsearch.request.write.version
+          type: LONG
+        - name: elasticsearch.response.status
+          type: LONG
+        - name: elasticsearch.shard.broadcast.failed
+          type: LONG
+        - name: elasticsearch.shard.broadcast.successful
+          type: LONG
+        - name: elasticsearch.shard.broadcast.total
+          type: LONG
+        - name: elasticsearch.shard.replication.failed
+          type: LONG
+        - name: elasticsearch.shard.replication.successful
+          type: LONG
+        - name: elasticsearch.shard.replication.total
+          type: LONG
+        - name: elasticsearch.type
+          type: STRING
+        - name: elasticsearch.version
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
   - name: elasticsearch-transport-6.0
+    description: |
+      This instrumentation provides client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
     source_path: instrumentation/elasticsearch/elasticsearch-transport-6.0
     scope:
       name: io.opentelemetry.elasticsearch-transport-6.0
@@ -1174,6 +1322,80 @@ libraries:
       javaagent:
       - org.elasticsearch:elasticsearch:[6.0.0,8.0.0)
       - org.elasticsearch.client:transport:[6.0.0,)
+    configurations:
+    - name: otel.instrumentation.elasticsearch.experimental-span-attributes
+      description: Enable the capture of experimental span attributes.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+    - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: elasticsearch.action
+          type: STRING
+        - name: elasticsearch.id
+          type: STRING
+        - name: elasticsearch.request
+          type: STRING
+        - name: elasticsearch.request.indices
+          type: STRING
+        - name: elasticsearch.request.write.type
+          type: STRING
+        - name: elasticsearch.request.write.version
+          type: LONG
+        - name: elasticsearch.response.status
+          type: LONG
+        - name: elasticsearch.shard.replication.failed
+          type: LONG
+        - name: elasticsearch.shard.replication.successful
+          type: LONG
+        - name: elasticsearch.shard.replication.total
+          type: LONG
+        - name: elasticsearch.type
+          type: STRING
+        - name: elasticsearch.version
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
   executors:
   - name: executors
     description: |

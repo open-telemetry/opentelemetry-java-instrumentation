@@ -13,6 +13,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static java.util.Arrays.asList;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -21,6 +22,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
@@ -48,7 +50,9 @@ class Elasticsearch53SpringRepositoryTest {
   private static DocRepository repository() {
     // when running on jdk 21 this test occasionally fails with timeout
     Assumptions.assumeTrue(
-        Boolean.getBoolean("testLatestDeps") || !Jvm.getCurrent().isJava21Compatible());
+        Boolean.getBoolean("testLatestDeps")
+            || !Jvm.getCurrent().isJava21Compatible()
+            || Boolean.getBoolean("collectMetadata"));
 
     DocRepository result =
         testing.runWithSpan(
@@ -74,6 +78,23 @@ class Elasticsearch53SpringRepositoryTest {
 
     assertThat(result.iterator().hasNext()).isFalse();
 
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            asList(
+                equalTo(
+                    maybeStable(DB_SYSTEM),
+                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                equalTo(maybeStable(DB_OPERATION), "SearchAction")));
+
+    if (Boolean.getBoolean("testExperimental")) {
+      assertions.addAll(
+          asList(
+              equalTo(stringKey("elasticsearch.action"), "SearchAction"),
+              equalTo(stringKey("elasticsearch.request"), "SearchRequest"),
+              equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
+              equalTo(stringKey("elasticsearch.request.search.types"), "doc")));
+    }
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -86,15 +107,7 @@ class Elasticsearch53SpringRepositoryTest {
                     span.hasName("SearchAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "SearchAction"),
-                            equalTo(stringKey("elasticsearch.action"), "SearchAction"),
-                            equalTo(stringKey("elasticsearch.request"), "SearchRequest"),
-                            equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
-                            equalTo(stringKey("elasticsearch.request.search.types"), "doc"))));
+                        .hasAttributesSatisfyingExactly(assertions)));
   }
 
   @Test
@@ -116,35 +129,12 @@ class Elasticsearch53SpringRepositoryTest {
                     span.hasName("IndexAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "IndexAction"),
-                            equalTo(stringKey("elasticsearch.action"), "IndexAction"),
-                            equalTo(stringKey("elasticsearch.request"), "IndexRequest"),
-                            equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
-                            equalTo(stringKey("elasticsearch.request.write.type"), "doc"),
-                            equalTo(longKey("elasticsearch.request.write.version"), -3),
-                            equalTo(longKey("elasticsearch.response.status"), 201),
-                            equalTo(longKey("elasticsearch.shard.replication.failed"), 0),
-                            equalTo(longKey("elasticsearch.shard.replication.successful"), 1),
-                            equalTo(longKey("elasticsearch.shard.replication.total"), 2)),
+                        .hasAttributesSatisfyingExactly(indexActionAssertions(201)),
                 span ->
                     span.hasName("RefreshAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "RefreshAction"),
-                            equalTo(stringKey("elasticsearch.action"), "RefreshAction"),
-                            equalTo(stringKey("elasticsearch.request"), "RefreshRequest"),
-                            equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
-                            equalTo(longKey("elasticsearch.shard.broadcast.failed"), 0),
-                            equalTo(longKey("elasticsearch.shard.broadcast.successful"), 5),
-                            equalTo(longKey("elasticsearch.shard.broadcast.total"), 10))));
+                        .hasAttributesSatisfyingExactly(refreshActionAssertions())));
     testing.clearData();
 
     assertThat(repository.findById("1").get()).isEqualTo(doc);
@@ -161,17 +151,7 @@ class Elasticsearch53SpringRepositoryTest {
                     span.hasName("GetAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "GetAction"),
-                            equalTo(stringKey("elasticsearch.action"), "GetAction"),
-                            equalTo(stringKey("elasticsearch.request"), "GetRequest"),
-                            equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
-                            equalTo(stringKey("elasticsearch.type"), "doc"),
-                            equalTo(stringKey("elasticsearch.id"), "1"),
-                            equalTo(longKey("elasticsearch.version"), 1))));
+                        .hasAttributesSatisfyingExactly(getActionAssertions(1))));
     testing.clearData();
 
     doc.setData("other data");
@@ -191,35 +171,12 @@ class Elasticsearch53SpringRepositoryTest {
                     span.hasName("IndexAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "IndexAction"),
-                            equalTo(stringKey("elasticsearch.action"), "IndexAction"),
-                            equalTo(stringKey("elasticsearch.request"), "IndexRequest"),
-                            equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
-                            equalTo(stringKey("elasticsearch.request.write.type"), "doc"),
-                            equalTo(longKey("elasticsearch.request.write.version"), -3),
-                            equalTo(longKey("elasticsearch.response.status"), 200),
-                            equalTo(longKey("elasticsearch.shard.replication.failed"), 0),
-                            equalTo(longKey("elasticsearch.shard.replication.successful"), 1),
-                            equalTo(longKey("elasticsearch.shard.replication.total"), 2)),
+                        .hasAttributesSatisfyingExactly(indexActionAssertions(200)),
                 span ->
                     span.hasName("RefreshAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "RefreshAction"),
-                            equalTo(stringKey("elasticsearch.action"), "RefreshAction"),
-                            equalTo(stringKey("elasticsearch.request"), "RefreshRequest"),
-                            equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
-                            equalTo(longKey("elasticsearch.shard.broadcast.failed"), 0),
-                            equalTo(longKey("elasticsearch.shard.broadcast.successful"), 5),
-                            equalTo(longKey("elasticsearch.shard.broadcast.total"), 10))),
+                        .hasAttributesSatisfyingExactly(refreshActionAssertions())),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -231,17 +188,7 @@ class Elasticsearch53SpringRepositoryTest {
                     span.hasName("GetAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "GetAction"),
-                            equalTo(stringKey("elasticsearch.action"), "GetAction"),
-                            equalTo(stringKey("elasticsearch.request"), "GetRequest"),
-                            equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
-                            equalTo(stringKey("elasticsearch.type"), "doc"),
-                            equalTo(stringKey("elasticsearch.id"), "1"),
-                            equalTo(longKey("elasticsearch.version"), 2))));
+                        .hasAttributesSatisfyingExactly(getActionAssertions(2))));
     testing.clearData();
 
     repository.deleteById("1");
@@ -259,34 +206,12 @@ class Elasticsearch53SpringRepositoryTest {
                     span.hasName("DeleteAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "DeleteAction"),
-                            equalTo(stringKey("elasticsearch.action"), "DeleteAction"),
-                            equalTo(stringKey("elasticsearch.request"), "DeleteRequest"),
-                            equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
-                            equalTo(stringKey("elasticsearch.request.write.type"), "doc"),
-                            equalTo(longKey("elasticsearch.request.write.version"), -3),
-                            equalTo(longKey("elasticsearch.shard.replication.failed"), 0),
-                            equalTo(longKey("elasticsearch.shard.replication.successful"), 1),
-                            equalTo(longKey("elasticsearch.shard.replication.total"), 2)),
+                        .hasAttributesSatisfyingExactly(deleteActionAssertions()),
                 span ->
                     span.hasName("RefreshAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "RefreshAction"),
-                            equalTo(stringKey("elasticsearch.action"), "RefreshAction"),
-                            equalTo(stringKey("elasticsearch.request"), "RefreshRequest"),
-                            equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
-                            equalTo(longKey("elasticsearch.shard.broadcast.failed"), 0),
-                            equalTo(longKey("elasticsearch.shard.broadcast.successful"), 5),
-                            equalTo(longKey("elasticsearch.shard.broadcast.total"), 10))),
+                        .hasAttributesSatisfyingExactly(refreshActionAssertions())),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -298,15 +223,115 @@ class Elasticsearch53SpringRepositoryTest {
                     span.hasName("SearchAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "SearchAction"),
-                            equalTo(stringKey("elasticsearch.action"), "SearchAction"),
-                            equalTo(stringKey("elasticsearch.request"), "SearchRequest"),
-                            equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
-                            equalTo(stringKey("elasticsearch.request.search.types"), "doc"))));
+                        .hasAttributesSatisfyingExactly(searchActionAssertions())));
+  }
+
+  private static List<AttributeAssertion> indexActionAssertions(long status) {
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            asList(
+                equalTo(
+                    maybeStable(DB_SYSTEM),
+                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                equalTo(maybeStable(DB_OPERATION), "IndexAction")));
+    if (Boolean.getBoolean("testExperimental")) {
+      assertions.addAll(
+          asList(
+              equalTo(stringKey("elasticsearch.action"), "IndexAction"),
+              equalTo(stringKey("elasticsearch.request"), "IndexRequest"),
+              equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
+              equalTo(stringKey("elasticsearch.request.write.type"), "doc"),
+              equalTo(longKey("elasticsearch.request.write.version"), -3),
+              equalTo(longKey("elasticsearch.response.status"), status),
+              equalTo(longKey("elasticsearch.shard.replication.failed"), 0),
+              equalTo(longKey("elasticsearch.shard.replication.successful"), 1),
+              equalTo(longKey("elasticsearch.shard.replication.total"), 2)));
+    }
+    return assertions;
+  }
+
+  private static List<AttributeAssertion> refreshActionAssertions() {
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            asList(
+                equalTo(
+                    maybeStable(DB_SYSTEM),
+                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                equalTo(maybeStable(DB_OPERATION), "RefreshAction")));
+    if (Boolean.getBoolean("testExperimental")) {
+      assertions.addAll(
+          asList(
+              equalTo(stringKey("elasticsearch.action"), "RefreshAction"),
+              equalTo(stringKey("elasticsearch.request"), "RefreshRequest"),
+              equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
+              equalTo(longKey("elasticsearch.shard.broadcast.failed"), 0),
+              equalTo(longKey("elasticsearch.shard.broadcast.successful"), 5),
+              equalTo(longKey("elasticsearch.shard.broadcast.total"), 10)));
+    }
+    return assertions;
+  }
+
+  private static List<AttributeAssertion> getActionAssertions(long version) {
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            asList(
+                equalTo(
+                    maybeStable(DB_SYSTEM),
+                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                equalTo(maybeStable(DB_OPERATION), "GetAction")));
+    if (Boolean.getBoolean("testExperimental")) {
+      assertions.addAll(
+          asList(
+              equalTo(stringKey("elasticsearch.action"), "GetAction"),
+              equalTo(stringKey("elasticsearch.request"), "GetRequest"),
+              equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
+              equalTo(stringKey("elasticsearch.type"), "doc"),
+              equalTo(stringKey("elasticsearch.id"), "1"),
+              equalTo(longKey("elasticsearch.version"), version)));
+    }
+    return assertions;
+  }
+
+  private static List<AttributeAssertion> deleteActionAssertions() {
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            asList(
+                equalTo(
+                    maybeStable(DB_SYSTEM),
+                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                equalTo(maybeStable(DB_OPERATION), "DeleteAction")));
+    if (Boolean.getBoolean("testExperimental")) {
+      assertions.addAll(
+          asList(
+              equalTo(stringKey("elasticsearch.action"), "DeleteAction"),
+              equalTo(stringKey("elasticsearch.request"), "DeleteRequest"),
+              equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
+              equalTo(stringKey("elasticsearch.request.write.type"), "doc"),
+              equalTo(longKey("elasticsearch.request.write.version"), -3),
+              equalTo(longKey("elasticsearch.shard.replication.failed"), 0),
+              equalTo(longKey("elasticsearch.shard.replication.successful"), 1),
+              equalTo(longKey("elasticsearch.shard.replication.total"), 2)));
+    }
+    return assertions;
+  }
+
+  private static List<AttributeAssertion> searchActionAssertions() {
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            asList(
+                equalTo(
+                    maybeStable(DB_SYSTEM),
+                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                equalTo(maybeStable(DB_OPERATION), "SearchAction")));
+    if (Boolean.getBoolean("testExperimental")) {
+      assertions.addAll(
+          asList(
+              equalTo(stringKey("elasticsearch.action"), "SearchAction"),
+              equalTo(stringKey("elasticsearch.request"), "SearchRequest"),
+              equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
+              equalTo(stringKey("elasticsearch.request.search.types"), "doc")));
+    }
+    return assertions;
   }
 
   private static List<AttributeAssertion> assertFunctionName(String methodName) {

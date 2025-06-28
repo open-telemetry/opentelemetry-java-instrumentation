@@ -1,0 +1,8 @@
+description: >
+  This instrumentation provides client spans for Elasticsearch transport client requests. Each call
+  produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+configurations:
+  - name: otel.instrumentation.elasticsearch.experimental-span-attributes
+    description: Enable the capture of experimental span attributes.
+    type: boolean
+    default: false
