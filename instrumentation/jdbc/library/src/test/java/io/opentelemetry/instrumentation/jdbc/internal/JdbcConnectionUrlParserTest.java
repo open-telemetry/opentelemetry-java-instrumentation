@@ -1385,7 +1385,7 @@ class JdbcConnectionUrlParserTest {
         "mysql:loadbalance://host:3306", // with port but no slash
         "mariadb:failover://[::1]:3306" // IPv6 without slash
       })
-  void testMySQLUrlsWithoutSlashDoNotThrowException(String url) {
+  void testMysqlUrlsWithoutSlashDoNotThrowException(String url) {
     assertThatCode(() -> MYSQL.doParse(url, DEFAULT.toBuilder().system("mysql")))
         .doesNotThrowAnyException();
   }
