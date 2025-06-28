@@ -1,0 +1,4 @@
+io.opentelemetry.javaagent.testing.provider.TestSpanExporterComponentProvider
+io.opentelemetry.javaagent.testing.provider.TestMetricExporterComponentProvider
+io.opentelemetry.javaagent.testing.provider.TestLogRecordExporterComponentProvider
+
