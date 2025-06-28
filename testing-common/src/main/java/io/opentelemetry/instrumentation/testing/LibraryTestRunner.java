@@ -130,7 +130,7 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
       }
       String path = Paths.get(resource.getPath()).toString();
 
-      MetaDataCollector.writeTelemetryToFiles(path, metrics, tracesByScope);
+      MetaDataCollector.writeTelemetryToFiles(path, metricsByScope, tracesByScope);
     }
   }
 
