@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
+import java.util.List;
 import javax.annotation.Nullable;
 
 /**
@@ -17,8 +18,11 @@ import javax.annotation.Nullable;
 public abstract class KafkaConsumerContext {
 
   static KafkaConsumerContext create(
-      @Nullable Context context, @Nullable String consumerGroup, @Nullable String clientId) {
-    return new AutoValue_KafkaConsumerContext(context, consumerGroup, clientId);
+      @Nullable Context context,
+      @Nullable String consumerGroup,
+      @Nullable String clientId,
+      @Nullable List<String> bootstrapServers) {
+    return new AutoValue_KafkaConsumerContext(context, consumerGroup, clientId, bootstrapServers);
   }
 
   @Nullable
@@ -29,4 +33,7 @@ public abstract class KafkaConsumerContext {
 
   @Nullable
   abstract String getClientId();
+
+  @Nullable
+  abstract List<String> getBootstrapServers();
 }

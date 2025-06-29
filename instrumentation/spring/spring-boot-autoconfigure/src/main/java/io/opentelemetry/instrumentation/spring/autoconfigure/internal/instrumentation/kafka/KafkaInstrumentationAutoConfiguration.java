@@ -30,8 +30,14 @@ public class KafkaInstrumentationAutoConfiguration {
 
   @Bean
   DefaultKafkaProducerFactoryCustomizer otelKafkaProducerFactoryCustomizer(
-      OpenTelemetry openTelemetry) {
-    KafkaTelemetry kafkaTelemetry = KafkaTelemetry.create(openTelemetry);
+      OpenTelemetry openTelemetry, ObjectProvider<ConfigProperties> configPropertiesProvider) {
+    KafkaTelemetry kafkaTelemetry =
+        KafkaTelemetry.builder(openTelemetry)
+            .setCaptureExperimentalSpanAttributes(
+                configPropertiesProvider
+                    .getObject()
+                    .getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
+            .build();
     return producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::wrap);
   }
 
