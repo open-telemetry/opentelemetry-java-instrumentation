@@ -20,7 +20,7 @@ instrumentation/development:
           service: BarService
     http:
       # should be added to https://github.com/open-telemetry/opentelemetry-configuration/blob/c205770a956713e512eddb056570a99737e3383a/examples/kitchen-sink.yaml#L872
-      known-methods: # was "otel.instrumentation.http.known-methods"
+      known_methods: # was "otel.instrumentation.http.known-methods"
         - GET
         - POST
         - PUT
@@ -47,15 +47,15 @@ instrumentation/development:
       # Also map all other properties with the "otel.javaagent." prefix the same way,
       # unless specified otherwise.
       # See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/14132
-      exclude-class-loaders: # was "otel.javaagent.exclude-class-loaders"
+      exclude_class_loaders: # was "otel.javaagent.exclude-class-loaders"
         - a
         - b
     common:
-      db-statement-sanitizer:
+      db_statement_sanitizer:
         enabled: true # already exists - just for reference
       thread_details:
         enabled: true # was "otel.javaagent.add-thread-details" = "true"
     logging:
       application:
-        logs-buffer-max-records: 1000 # can only be used with "type: application"
+        logs_buffer_max_records: 1000 # can only be used with "type: application"
       type: application or simple # was "otel.javaagent.logging"
