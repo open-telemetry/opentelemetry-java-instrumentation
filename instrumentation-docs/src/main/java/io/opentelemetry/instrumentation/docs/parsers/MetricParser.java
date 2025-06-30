@@ -6,81 +6,174 @@
 package io.opentelemetry.instrumentation.docs.parsers;
 
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
+import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
-import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
-import java.util.stream.Stream;
+import java.util.Set;
 
+/**
+ * This class is responsible for parsing metric files from the `.telemetry` directory of an
+ * instrumentation module and filtering them by scope.
+ */
 public class MetricParser {
-  private static final Logger logger = Logger.getLogger(MetricParser.class.getName());
 
   /**
-   * Looks for metric files in the .telemetry directory, and combines them into a single list of
-   * metrics.
+   * Retrieves metrics for a given instrumentation module, filtered by scope.
    *
-   * @param instrumentationDirectory the directory to traverse
-   * @return contents of aggregated files
+   * @param module the instrumentation module
+   * @param fileManager the file manager to use for file operations
+   * @return a map where the key is the 'when' condition and the value is a list of metrics
    */
-  public static EmittedMetrics getMetricsFromFiles(
-      String rootDir, String instrumentationDirectory) {
-    StringBuilder metricsContent = new StringBuilder("metrics:\n");
-    Path telemetryDir = Paths.get(rootDir + "/" + instrumentationDirectory, ".telemetry");
+  public static Map<String, List<EmittedMetrics.Metric>> getMetrics(
+      InstrumentationModule module, FileManager fileManager) {
+    Map<String, EmittedMetrics> metrics =
+        EmittedMetricsParser.getMetricsFromFiles(fileManager.rootDir(), module.getSrcPath());
 
-    if (Files.exists(telemetryDir) && Files.isDirectory(telemetryDir)) {
-      try (Stream<Path> files = Files.list(telemetryDir)) {
-        files
-            .filter(path -> path.getFileName().toString().startsWith("metrics-"))
-            .forEach(
-                path -> {
-                  String content = FileManager.readFileToString(path.toString());
-                  if (content != null) {
-                    // Skip the first line of yaml ("metrics:") so we can aggregate into one list
-                    int firstNewline = content.indexOf('\n');
-                    if (firstNewline != -1) {
-                      String contentWithoutFirstLine = content.substring(firstNewline + 1);
-                      metricsContent.append(contentWithoutFirstLine);
-                    }
-                  }
-                });
-      } catch (IOException e) {
-        logger.severe("Error reading metrics files: " + e.getMessage());
-      }
+    if (metrics.isEmpty()) {
+      return new HashMap<>();
     }
 
-    return parseMetrics(metricsContent.toString());
+    String scopeName = module.getScopeInfo().getName();
+    return filterMetricsByScope(metrics, scopeName);
   }
 
   /**
-   * Takes in a raw string representation of the aggregated EmittedMetrics yaml, deduplicates the
-   * metrics by name and then returns a new EmittedMetrics object.
+   * Filters metrics by scope and aggregates attributes for each metric kind.
    *
-   * @param input raw string representation of EmittedMetrics yaml
-   * @return EmittedMetrics
+   * @param metricsByScope the map of metrics by scope
+   * @param scopeName the name of the scope to filter metrics for
+   * @return a map of filtered metrics by 'when'
    */
-  // visible for testing
-  public static EmittedMetrics parseMetrics(String input) {
-    EmittedMetrics metrics = YamlHelper.emittedMetricsParser(input);
-    if (metrics.getMetrics() == null) {
-      return new EmittedMetrics(Collections.emptyList());
+  private static Map<String, List<EmittedMetrics.Metric>> filterMetricsByScope(
+      Map<String, EmittedMetrics> metricsByScope, String scopeName) {
+
+    Map<String, Map<String, MetricAggregator.AggregatedMetricInfo>> aggregatedMetrics =
+        new HashMap<>();
+
+    for (Map.Entry<String, EmittedMetrics> entry : metricsByScope.entrySet()) {
+      if (!hasValidMetrics(entry.getValue())) {
+        continue;
+      }
+
+      String when = entry.getValue().getWhen();
+      Map<String, Map<String, MetricAggregator.AggregatedMetricInfo>> result =
+          MetricAggregator.aggregateMetrics(when, entry.getValue(), scopeName);
+
+      // Merge result into aggregatedMetrics
+      for (Map.Entry<String, Map<String, MetricAggregator.AggregatedMetricInfo>> e :
+          result.entrySet()) {
+        String whenKey = e.getKey();
+        Map<String, MetricAggregator.AggregatedMetricInfo> metricMap =
+            aggregatedMetrics.computeIfAbsent(whenKey, k -> new HashMap<>());
+
+        for (Map.Entry<String, MetricAggregator.AggregatedMetricInfo> metricEntry :
+            e.getValue().entrySet()) {
+          String metricName = metricEntry.getKey();
+          MetricAggregator.AggregatedMetricInfo newInfo = metricEntry.getValue();
+          MetricAggregator.AggregatedMetricInfo existingInfo = metricMap.get(metricName);
+          if (existingInfo == null) {
+            metricMap.put(metricName, newInfo);
+          } else {
+            existingInfo.attributes.addAll(newInfo.attributes);
+          }
+        }
+      }
     }
 
-    // deduplicate metrics by name
-    Map<String, EmittedMetrics.Metric> deduplicatedMetrics = new HashMap<>();
-    for (EmittedMetrics.Metric metric : metrics.getMetrics()) {
-      deduplicatedMetrics.put(metric.getName(), metric);
+    return MetricAggregator.buildFilteredMetrics(aggregatedMetrics);
+  }
+
+  private static boolean hasValidMetrics(EmittedMetrics metrics) {
+    return metrics != null && metrics.getMetricsByScope() != null;
+  }
+
+  /** Helper class to aggregate metrics by scope and name. */
+  static class MetricAggregator {
+    /**
+     * Aggregates metrics for a given 'when' condition, metrics object, and target scope name.
+     *
+     * @param when the 'when' condition
+     * @param metrics the EmittedMetrics object
+     * @param targetScopeName the scope name to filter by
+     * @return a map of aggregated metrics by 'when' and metric name
+     */
+    public static Map<String, Map<String, AggregatedMetricInfo>> aggregateMetrics(
+        String when, EmittedMetrics metrics, String targetScopeName) {
+      Map<String, Map<String, AggregatedMetricInfo>> aggregatedMetrics = new HashMap<>();
+      Map<String, AggregatedMetricInfo> metricKindMap =
+          aggregatedMetrics.computeIfAbsent(when, k -> new HashMap<>());
+
+      for (EmittedMetrics.MetricsByScope metricsByScope : metrics.getMetricsByScope()) {
+        if (metricsByScope.getScope().equals(targetScopeName)) {
+          for (EmittedMetrics.Metric metric : metricsByScope.getMetrics()) {
+            AggregatedMetricInfo aggInfo =
+                metricKindMap.computeIfAbsent(
+                    metric.getName(),
+                    k ->
+                        new AggregatedMetricInfo(
+                            metric.getName(),
+                            metric.getDescription(),
+                            metric.getType(),
+                            metric.getUnit()));
+            if (metric.getAttributes() != null) {
+              for (TelemetryAttribute attr : metric.getAttributes()) {
+                aggInfo.attributes.add(new TelemetryAttribute(attr.getName(), attr.getType()));
+              }
+            }
+          }
+        }
+      }
+      return aggregatedMetrics;
     }
 
-    List<EmittedMetrics.Metric> uniqueMetrics = new ArrayList<>(deduplicatedMetrics.values());
-    return new EmittedMetrics(uniqueMetrics);
+    /**
+     * Builds a filtered metrics map from aggregated metrics.
+     *
+     * @param aggregatedMetrics the aggregated metrics map
+     * @return a map where the key is the 'when' condition and the value is a list of metrics
+     */
+    public static Map<String, List<EmittedMetrics.Metric>> buildFilteredMetrics(
+        Map<String, Map<String, AggregatedMetricInfo>> aggregatedMetrics) {
+      Map<String, List<EmittedMetrics.Metric>> result = new HashMap<>();
+      for (Map.Entry<String, Map<String, AggregatedMetricInfo>> entry :
+          aggregatedMetrics.entrySet()) {
+        String when = entry.getKey();
+        List<EmittedMetrics.Metric> metrics = result.computeIfAbsent(when, k -> new ArrayList<>());
+        for (AggregatedMetricInfo aggInfo : entry.getValue().values()) {
+          metrics.add(
+              new EmittedMetrics.Metric(
+                  aggInfo.name,
+                  aggInfo.description,
+                  aggInfo.type,
+                  aggInfo.unit,
+                  new ArrayList<>(aggInfo.attributes)));
+        }
+      }
+      return result;
+    }
+
+    /** Data class to hold aggregated metric information. */
+    static class AggregatedMetricInfo {
+      final String name;
+      final String description;
+      final String type;
+      final String unit;
+      final Set<TelemetryAttribute> attributes = new HashSet<>();
+
+      AggregatedMetricInfo(String name, String description, String type, String unit) {
+        this.name = name;
+        this.description = description;
+        this.type = type;
+        this.unit = unit;
+      }
+    }
+
+    private MetricAggregator() {}
   }
 
   private MetricParser() {}

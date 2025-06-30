@@ -55,11 +55,22 @@ jobs:
           git config user.name otelbot
           git config user.email 197425009+otelbot@users.noreply.github.com
 
+      - id: gradle-task
+        if: steps.unzip-patch.outputs.exists == 'true'
+        run: |
+          if [[ "${{ github.event.workflow_run.name }}" == "Auto spotless" ]]; then
+            echo "name=spotlessApply" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.workflow_run.name }}" == "Auto license report" ]]; then
+            echo "name=generateLicenseReport" >> $GITHUB_OUTPUT
+          else
+            echo "name=unknown" >> $GITHUB_OUTPUT
+          fi
+
       - name: Apply patch and push
         if: steps.unzip-patch.outputs.exists == 'true'
         run: |
           git apply "${{ runner.temp }}/patch"
-          git commit -a -m "./gradlew spotlessApply"
+          git commit -a -m "./gradlew ${{ steps.gradle-task.outputs.name }}"
           git push
 
       - id: get-pr
@@ -84,7 +95,7 @@ jobs:
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
           PR_NUMBER: ${{ steps.get-pr.outputs.number }}
         run: |
-          gh pr comment $PR_NUMBER --body "🔧 The result from spotlessApply was committed to the PR branch."
+          gh pr comment $PR_NUMBER --body "🔧 The result from ${{ steps.gradle-task.outputs.name }} was committed to the PR branch."
 
       - if: steps.unzip-patch.outputs.exists == 'true' && failure()
         env:
@@ -92,4 +103,4 @@ jobs:
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
           PR_NUMBER: ${{ steps.get-pr.outputs.number }}
         run: |
-          gh pr comment $PR_NUMBER --body "❌ The result from spotlessApply could not be committed to the PR branch, see logs: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID."
+          gh pr comment $PR_NUMBER --body "❌ The result from ${{ steps.gradle-task.outputs.name }} could not be committed to the PR branch, see logs: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID."

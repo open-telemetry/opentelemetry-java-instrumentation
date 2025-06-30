@@ -15,10 +15,10 @@ import io.opentelemetry.extension.kotlin.getOpenTelemetryContext
 import io.opentelemetry.instrumentation.annotations.SpanAttribute
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.testing.assertj.TraceAssert
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes
 import io.vertx.core.Vertx
 import io.vertx.kotlin.coroutines.dispatcher
 import kotlinx.coroutines.CompletableDeferred
@@ -377,6 +377,17 @@ class KotlinCoroutinesInstrumentationTest {
       annotated1()
     }
 
+    val assertions = codeFunctionAssertions(this.javaClass, "annotated2")
+    assertions.add(equalTo(AttributeKey.longKey("byteValue"), 1))
+    assertions.add(equalTo(AttributeKey.longKey("intValue"), 4))
+    assertions.add(equalTo(AttributeKey.longKey("longValue"), 5))
+    assertions.add(equalTo(AttributeKey.longKey("shortValue"), 6))
+    assertions.add(equalTo(AttributeKey.doubleKey("doubleValue"), 2.0))
+    assertions.add(equalTo(AttributeKey.doubleKey("floatValue"), 3.0))
+    assertions.add(equalTo(AttributeKey.booleanKey("booleanValue"), true))
+    assertions.add(equalTo(AttributeKey.stringKey("charValue"), "a"))
+    assertions.add(equalTo(AttributeKey.stringKey("stringValue"), "test"))
+
     testing.waitAndAssertTraces(
       { trace ->
         trace.hasSpansSatisfyingExactly(
@@ -384,26 +395,13 @@ class KotlinCoroutinesInstrumentationTest {
             it.hasName("a1")
               .hasNoParent()
               .hasAttributesSatisfyingExactly(
-                equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, this.javaClass.name),
-                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "annotated1")
+                codeFunctionAssertions(this.javaClass, "annotated1")
               )
           },
           {
             it.hasName("KotlinCoroutinesInstrumentationTest.annotated2")
               .hasParent(trace.getSpan(0))
-              .hasAttributesSatisfyingExactly(
-                equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, this.javaClass.name),
-                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "annotated2"),
-                equalTo(AttributeKey.longKey("byteValue"), 1),
-                equalTo(AttributeKey.longKey("intValue"), 4),
-                equalTo(AttributeKey.longKey("longValue"), 5),
-                equalTo(AttributeKey.longKey("shortValue"), 6),
-                equalTo(AttributeKey.doubleKey("doubleValue"), 2.0),
-                equalTo(AttributeKey.doubleKey("floatValue"), 3.0),
-                equalTo(AttributeKey.booleanKey("booleanValue"), true),
-                equalTo(AttributeKey.stringKey("charValue"), "a"),
-                equalTo(AttributeKey.stringKey("stringValue"), "test")
-              )
+              .hasAttributesSatisfyingExactly(assertions)
           }
         )
       }
@@ -446,8 +444,7 @@ class KotlinCoroutinesInstrumentationTest {
             it.hasName("ClazzWithDefaultConstructorArguments.sayHello")
               .hasNoParent()
               .hasAttributesSatisfyingExactly(
-                equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, ClazzWithDefaultConstructorArguments::class.qualifiedName),
-                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "sayHello")
+                codeFunctionAssertions(ClazzWithDefaultConstructorArguments::class.qualifiedName, "sayHello")
               )
           }
         )

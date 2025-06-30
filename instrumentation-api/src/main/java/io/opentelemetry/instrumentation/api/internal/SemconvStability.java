@@ -23,21 +23,30 @@ public final class SemconvStability {
   private static final boolean emitOldMessagingSemconv;
   private static final boolean emitStableMessagingSemconv;
 
+  private static final boolean emitOldCodeSemconv;
+  private static final boolean emitStableCodeSemconv;
+
   static {
     boolean oldDatabase = true;
     boolean stableDatabase = false;
+
     boolean oldMessaging = true;
     boolean stableMessaging = false;
+
+    boolean oldCode = true;
+    boolean stableCode = false;
 
     String value = ConfigPropertiesUtil.getString("otel.semconv-stability.opt-in");
     if (value != null) {
       Set<String> values = new HashSet<>(asList(value.split(",")));
+
+      // no else -- technically it's possible to set "XXX,XXX/dup", in which case we
+      // should emit both sets of attributes for XXX
+
       if (values.contains("database")) {
         oldDatabase = false;
         stableDatabase = true;
       }
-      // no else -- technically it's possible to set "database,database/dup", in which case we
-      // should emit both sets of attributes
       if (values.contains("database/dup")) {
         oldDatabase = true;
         stableDatabase = true;
@@ -46,19 +55,28 @@ public final class SemconvStability {
         oldMessaging = false;
         stableMessaging = true;
       }
-      // no else -- technically it's possible to set "messaging,messaging/dup", in which case we
-      // should emit both sets of attributes
-      // and messaging/dup has higher precedence than messaging in case both values are present
       if (values.contains("messaging/dup")) {
         oldMessaging = true;
         stableMessaging = true;
+      }
+      if (values.contains("code")) {
+        oldCode = false;
+        stableCode = true;
+      }
+      if (values.contains("code/dup")) {
+        oldCode = true;
+        stableCode = true;
       }
     }
 
     emitOldDatabaseSemconv = oldDatabase;
     emitStableDatabaseSemconv = stableDatabase;
+
     emitOldMessagingSemconv = oldMessaging;
     emitStableMessagingSemconv = stableMessaging;
+
+    emitOldCodeSemconv = oldCode;
+    emitStableCodeSemconv = stableCode;
   }
 
   public static boolean emitOldDatabaseSemconv() {
@@ -100,6 +118,14 @@ public final class SemconvStability {
   public static String stableDbSystemName(String oldDbSystem) {
     String dbSystemName = dbSystemNameMap.get(oldDbSystem);
     return dbSystemName != null ? dbSystemName : oldDbSystem;
+  }
+
+  public static boolean isEmitOldCodeSemconv() {
+    return emitOldCodeSemconv;
+  }
+
+  public static boolean isEmitStableCodeSemconv() {
+    return emitStableCodeSemconv;
   }
 
   private SemconvStability() {}

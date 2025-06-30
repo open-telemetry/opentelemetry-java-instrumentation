@@ -9,9 +9,14 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.AttributeType;
+import io.opentelemetry.api.internal.InternalAttributeKeyImpl;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
+import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
@@ -46,7 +51,15 @@ import org.awaitility.core.ConditionTimeoutException;
 public abstract class InstrumentationTestRunner {
 
   private final TestInstrumenters testInstrumenters;
-  protected Map<String, MetricData> metrics = new HashMap<>();
+  protected Map<InstrumentationScopeInfo, Map<String, MetricData>> metricsByScope = new HashMap<>();
+
+  /**
+   * Stores traces by scope, where each scope contains a map of span kinds to a map of attribute
+   * keys to their types. This is used to collect metadata about the spans emitted during tests.
+   */
+  protected Map<
+          InstrumentationScopeInfo, Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>>>
+      tracesByScope = new HashMap<>();
 
   protected InstrumentationTestRunner(OpenTelemetry openTelemetry) {
     testInstrumenters = new TestInstrumenters(openTelemetry);
@@ -139,6 +152,10 @@ public abstract class InstrumentationTestRunner {
       traces.sort(traceComparator);
     }
     TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(assertionsList);
+
+    if (Boolean.getBoolean("collectMetadata") && Boolean.getBoolean("collectSpans")) {
+      collectEmittedSpans(traces);
+    }
   }
 
   /**
@@ -188,8 +205,36 @@ public abstract class InstrumentationTestRunner {
 
   private void collectEmittedMetrics(List<MetricData> metrics) {
     for (MetricData metric : metrics) {
-      if (!this.metrics.containsKey(metric.getName())) {
-        this.metrics.put(metric.getName(), metric);
+      Map<String, MetricData> scopeMap =
+          this.metricsByScope.computeIfAbsent(
+              metric.getInstrumentationScopeInfo(), m -> new HashMap<>());
+
+      if (!scopeMap.containsKey(metric.getName())) {
+        scopeMap.put(metric.getName(), metric);
+      }
+    }
+  }
+
+  private void collectEmittedSpans(List<List<SpanData>> spans) {
+    for (List<SpanData> spanList : spans) {
+      for (SpanData span : spanList) {
+        Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>> scopeMap =
+            this.tracesByScope.computeIfAbsent(
+                span.getInstrumentationScopeInfo(), m -> new HashMap<>());
+
+        Map<InternalAttributeKeyImpl<?>, AttributeType> spanKindMap =
+            scopeMap.computeIfAbsent(span.getKind(), s -> new HashMap<>());
+
+        for (Map.Entry<AttributeKey<?>, Object> key : span.getAttributes().asMap().entrySet()) {
+          if (!(key.getKey() instanceof InternalAttributeKeyImpl)) {
+            // We only collect internal attributes, so skip any non-internal attributes.
+            continue;
+          }
+          InternalAttributeKeyImpl<?> keyImpl = (InternalAttributeKeyImpl<?>) key.getKey();
+          if (!spanKindMap.containsKey(keyImpl)) {
+            spanKindMap.put(keyImpl, key.getValue() != null ? key.getKey().getType() : null);
+          }
+        }
       }
     }
   }

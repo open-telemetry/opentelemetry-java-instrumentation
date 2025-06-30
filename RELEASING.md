@@ -8,7 +8,7 @@ The version is specified in [version.gradle.kts](version.gradle.kts).
 
 Every successful CI build of the main branch automatically executes `./gradlew publishToSonatype`
 as the last step, which publishes a snapshot build to
-[Sonatype OSS snapshots repository](https://oss.sonatype.org/content/repositories/snapshots/io/opentelemetry/).
+[Sonatype snapshot repository](https://central.sonatype.com/service/rest/repository/browse/maven-snapshots/io/opentelemetry/).
 
 ## Release cadence
 

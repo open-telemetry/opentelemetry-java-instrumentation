@@ -5,7 +5,7 @@ plugins {
 data class DependencySet(val group: String, val version: String, val modules: List<String>)
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.50.0"
+val otelSdkVersion = "1.51.0"
 val otelContribVersion = "1.46.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
@@ -27,24 +27,24 @@ val DEPENDENCY_BOMS = listOf(
   // for some reason boms show up as runtime dependencies in license and vulnerability scans
   // even if they are only used by test dependencies, so not using junit bom since it is LGPL
 
-  "com.fasterxml.jackson:jackson-bom:2.19.0",
-  "com.squareup.okio:okio-bom:3.12.0", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
+  "com.fasterxml.jackson:jackson-bom:2.19.1",
+  "com.squareup.okio:okio-bom:3.14.0", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
   "com.google.guava:guava-bom:33.4.8-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
-  "org.testcontainers:testcontainers-bom:1.21.1"
+  "org.testcontainers:testcontainers-bom:1.21.3"
 )
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
-val errorProneVersion = "2.38.0"
-val byteBuddyVersion = "1.17.5"
+val errorProneVersion = "2.39.0"
+val byteBuddyVersion = "1.17.6"
 val asmVersion = "9.8"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.17"
-val semConvVersion = "1.32.0"
+val semConvVersion = "1.34.0"
 val semConvAlphaVersion =  semConvVersion.replaceFirst("(-rc.*)?$".toRegex(), "-alpha$1")
 
 val CORE_DEPENDENCIES = listOf(
@@ -81,7 +81,7 @@ val CORE_DEPENDENCIES = listOf(
 // There are dependencies included here that appear to have no usages, but are maintained at
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
-  "org.junit.jupiter:junit-jupiter-api:5.13.0",
+  "org.junit.jupiter:junit-jupiter-api:5.13.2",
   "org.spockframework:spock-core:2.4-M6-groovy-4.0",
   "org.spockframework:spock-junit4:2.4-M6-groovy-4.0",
 
@@ -96,7 +96,7 @@ val DEPENDENCIES = listOf(
   "commons-codec:commons-codec:1.18.0",
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
-  "commons-fileupload:commons-fileupload:1.5",
+  "commons-fileupload:commons-fileupload:1.6.0",
   "commons-io:commons-io:2.19.0",
   "commons-lang:commons-lang:2.6",
   "commons-logging:commons-logging:1.3.5",

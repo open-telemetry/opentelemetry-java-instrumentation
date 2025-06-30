@@ -1,0 +1,9 @@
+configurations:
+  - name: otel.instrumentation.common.experimental.view-telemetry.enabled
+    description: Enables experimental view telemetry.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    description: Enables experimental controller telemetry.
+    type: boolean
+    default: false
