@@ -54,6 +54,8 @@ instrumentation/development:
       db_statement_sanitizer:
         enabled: true # already exists - just for reference
       thread_details:
+        # disabled by default
+        # enabled applies to both spans and logs (but not metrics due to high cardinality)
         enabled: true # was "otel.javaagent.add-thread-details" = "true"
     logging:
       application:
