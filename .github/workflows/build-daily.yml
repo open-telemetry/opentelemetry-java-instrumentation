@@ -26,8 +26,8 @@ jobs:
   shell-script-check:
     uses: ./.github/workflows/reusable-shell-script-check.yml
 
-  markdown-link-check:
-    uses: ./.github/workflows/reusable-markdown-link-check.yml
+  link-check:
+    uses: ./.github/workflows/reusable-link-check.yml
 
   markdown-lint-check:
     uses: ./.github/workflows/reusable-markdown-lint-check.yml
@@ -43,7 +43,7 @@ jobs:
       - common
       - test-latest-deps
       - muzzle
-      - markdown-link-check
+      - link-check
       - misspell-check
     if: always()
     uses: ./.github/workflows/reusable-workflow-notification.yml
@@ -53,6 +53,6 @@ jobs:
           needs.common.result == 'success' &&
           needs.test-latest-deps.result == 'success' &&
           needs.muzzle.result == 'success' &&
-          needs.markdown-link-check.result == 'success' &&
+          needs.link-check.result == 'success' &&
           needs.misspell-check.result == 'success'
         }}
