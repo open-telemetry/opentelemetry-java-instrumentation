@@ -1100,6 +1100,9 @@ libraries:
       default: false
   elasticsearch:
   - name: elasticsearch-api-client-7.16
+    description: This instrumentation provides client spans for Elasticsearch API
+      client requests for version 7 of the client. Versions 8.10 and later have native
+      support for OpenTelemetry.
     source_path: instrumentation/elasticsearch/elasticsearch-api-client-7.16
     scope:
       name: io.opentelemetry.elasticsearch-api-client-7.16
@@ -1122,6 +1125,21 @@ libraries:
         may contain personal or sensitive information.
       type: boolean
       default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.system
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: elasticsearch-rest-6.4
     source_path: instrumentation/elasticsearch/elasticsearch-rest-6.4
     scope:
@@ -1135,6 +1153,21 @@ libraries:
         Enable the capture of search query bodies. It is important to note that Elasticsearch queries may contain personal or sensitive information.
       type: boolean
       default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.system
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: elasticsearch-rest-7.0
     source_path: instrumentation/elasticsearch/elasticsearch-rest-7.0
     scope:
@@ -1150,6 +1183,21 @@ libraries:
         Enable the capture of search query bodies. It is important to note that Elasticsearch queries may contain personal or sensitive information.
       type: boolean
       default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.system
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: elasticsearch-transport-5.0
     description: |
       This instrumentation provides client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
