@@ -14,9 +14,7 @@ jobs:
 
       - name: Install misspell
         run: |
-          curl -L -o install-misspell.sh \
-               https://raw.githubusercontent.com/client9/misspell/master/install-misspell.sh
-          sh ./install-misspell.sh
+          curl -sfL https://raw.githubusercontent.com/golangci/misspell/master/install-misspell.sh | sh -s -- -b bin
 
       - name: Run misspell
         run: |
