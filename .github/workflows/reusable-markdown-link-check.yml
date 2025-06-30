@@ -16,5 +16,4 @@ jobs:
         with:
           args: >
             --config ./lychee.toml
-            --github-token ${{ github.token }}
             .
