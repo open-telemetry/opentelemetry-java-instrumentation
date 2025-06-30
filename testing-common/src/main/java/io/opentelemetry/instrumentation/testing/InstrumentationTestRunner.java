@@ -51,7 +51,7 @@ import org.awaitility.core.ConditionTimeoutException;
 public abstract class InstrumentationTestRunner {
 
   private final TestInstrumenters testInstrumenters;
-  protected Map<String, MetricData> metrics = new HashMap<>();
+  protected Map<InstrumentationScopeInfo, Map<String, MetricData>> metricsByScope = new HashMap<>();
 
   /**
    * Stores traces by scope, where each scope contains a map of span kinds to a map of attribute
@@ -205,8 +205,12 @@ public abstract class InstrumentationTestRunner {
 
   private void collectEmittedMetrics(List<MetricData> metrics) {
     for (MetricData metric : metrics) {
-      if (!this.metrics.containsKey(metric.getName())) {
-        this.metrics.put(metric.getName(), metric);
+      Map<String, MetricData> scopeMap =
+          this.metricsByScope.computeIfAbsent(
+              metric.getInstrumentationScopeInfo(), m -> new HashMap<>());
+
+      if (!scopeMap.containsKey(metric.getName())) {
+        scopeMap.put(metric.getName(), metric);
       }
     }
   }

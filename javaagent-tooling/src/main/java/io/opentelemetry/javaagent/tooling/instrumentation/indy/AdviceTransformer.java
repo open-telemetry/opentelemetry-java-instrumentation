@@ -848,7 +848,7 @@ class AdviceTransformer {
           @Override
           public void visit(String name, Object value) {
             if ("inline".equals(name)) {
-              value = Boolean.FALSE;
+              value = false;
               hasInline = true;
             } else if ("skipOn".equals(name) && value != void.class) {
               hasSkipOn = true;
@@ -859,7 +859,7 @@ class AdviceTransformer {
           @Override
           public void visitEnd() {
             if (!hasInline) {
-              visit("inline", Boolean.FALSE);
+              visit("inline", false);
             }
             if (context.canChangeReturnType() && hasSkipOn) {
               visit("skipOnIndex", 0);
@@ -887,7 +887,7 @@ class AdviceTransformer {
           @Override
           public void visit(String name, Object value) {
             if ("readOnly".equals(name)) {
-              value = Boolean.TRUE;
+              value = true;
             }
             super.visit(name, value);
           }
