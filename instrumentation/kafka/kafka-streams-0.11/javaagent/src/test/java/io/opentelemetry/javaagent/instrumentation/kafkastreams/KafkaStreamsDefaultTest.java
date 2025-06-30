@@ -113,6 +113,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                           equalTo(MESSAGING_SYSTEM, KAFKA),
                           equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
                           equalTo(MESSAGING_OPERATION, "publish"),
+                          bootstrapServersAssertion(),
                           satisfies(MESSAGING_CLIENT_ID, k -> k.startsWith("producer")),
                           satisfies(
                               MESSAGING_DESTINATION_PARTITION_ID,
@@ -131,6 +132,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                             equalTo(MESSAGING_SYSTEM, KAFKA),
                             equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
                             equalTo(MESSAGING_OPERATION, "receive"),
+                            bootstrapServersAssertion(),
                             satisfies(MESSAGING_CLIENT_ID, k -> k.endsWith("consumer")),
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
                 if (Boolean.getBoolean("testLatestDeps")) {
@@ -149,6 +151,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                             equalTo(MESSAGING_SYSTEM, KAFKA),
                             equalTo(MESSAGING_DESTINATION_NAME, STREAM_PENDING),
                             equalTo(MESSAGING_OPERATION, "process"),
+                            bootstrapServersAssertion(),
                             satisfies(MESSAGING_CLIENT_ID, k -> k.endsWith("consumer")),
                             satisfies(MESSAGING_MESSAGE_BODY_SIZE, k -> k.isInstanceOf(Long.class)),
                             satisfies(
@@ -180,6 +183,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                           equalTo(MESSAGING_SYSTEM, KAFKA),
                           equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
                           equalTo(MESSAGING_OPERATION, "publish"),
+                          bootstrapServersAssertion(),
                           satisfies(MESSAGING_CLIENT_ID, k -> k.endsWith("producer")),
                           satisfies(
                               MESSAGING_DESTINATION_PARTITION_ID,
@@ -198,6 +202,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                               equalTo(MESSAGING_SYSTEM, KAFKA),
                               equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
                               equalTo(MESSAGING_OPERATION, "receive"),
+                              bootstrapServersAssertion(),
                               satisfies(MESSAGING_CLIENT_ID, k -> k.startsWith("consumer")),
                               equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
                   if (Boolean.getBoolean("testLatestDeps")) {
@@ -216,6 +221,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                               equalTo(MESSAGING_SYSTEM, KAFKA),
                               equalTo(MESSAGING_DESTINATION_NAME, STREAM_PROCESSED),
                               equalTo(MESSAGING_OPERATION, "process"),
+                              bootstrapServersAssertion(),
                               satisfies(MESSAGING_CLIENT_ID, k -> k.startsWith("consumer")),
                               satisfies(
                                   MESSAGING_MESSAGE_BODY_SIZE, k -> k.isInstanceOf(Long.class)),

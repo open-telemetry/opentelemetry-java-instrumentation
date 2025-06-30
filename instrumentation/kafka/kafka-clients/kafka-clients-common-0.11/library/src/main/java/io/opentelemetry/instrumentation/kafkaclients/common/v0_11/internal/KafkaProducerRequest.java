@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.Producer;
@@ -17,20 +18,24 @@ import org.apache.kafka.common.MetricName;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class KafkaProducerRequest {
+public final class KafkaProducerRequest extends AbstractKafkaRequest {
 
   private final ProducerRecord<?, ?> record;
   @Nullable private final String clientId;
 
   public static KafkaProducerRequest create(ProducerRecord<?, ?> record, Producer<?, ?> producer) {
-    return create(record, extractClientId(producer));
+    return new KafkaProducerRequest(
+        record, extractClientId(producer), extractBootstrapServers(producer));
   }
 
-  public static KafkaProducerRequest create(ProducerRecord<?, ?> record, String clientId) {
-    return new KafkaProducerRequest(record, clientId);
+  public static KafkaProducerRequest create(
+      ProducerRecord<?, ?> record, String clientId, List<String> bootstrapServers) {
+    return new KafkaProducerRequest(record, clientId, bootstrapServers);
   }
 
-  private KafkaProducerRequest(ProducerRecord<?, ?> record, String clientId) {
+  private KafkaProducerRequest(
+      ProducerRecord<?, ?> record, String clientId, List<String> bootstrapServers) {
+    super(bootstrapServers);
     this.record = record;
     this.clientId = clientId;
   }
@@ -52,5 +57,9 @@ public final class KafkaProducerRequest {
       // ExceptionHandlingTest uses a Producer that throws exception on every method call
       return null;
     }
+  }
+
+  private static List<String> extractBootstrapServers(Producer<?, ?> producer) {
+    return KafkaUtil.getBootstrapServers(producer);
   }
 }
