@@ -5,7 +5,7 @@ otel:
     processors:
       - simple:
           exporter:
-            test_bridge:
+            test:
       - simple:
           exporter:
             console:
@@ -14,7 +14,7 @@ otel:
     processors:
       - simple:
           exporter:
-            test_bridge:
+            test:
 
   meter_provider:
     readers:
@@ -23,7 +23,7 @@ otel:
           # instead of collecting them periodically.
           interval: 1000000
           exporter:
-            test_bridge:
+            test:
 
   propagator:
     composite:
