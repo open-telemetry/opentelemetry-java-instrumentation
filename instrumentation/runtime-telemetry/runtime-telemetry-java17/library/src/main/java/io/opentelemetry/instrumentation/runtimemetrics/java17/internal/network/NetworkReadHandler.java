@@ -28,7 +28,6 @@ public final class NetworkReadHandler implements RecordedEventHandler {
   private final Attributes attributes;
 
   public NetworkReadHandler(Meter meter) {
-    super();
     bytesHistogram =
         meter
             .histogramBuilder(Constants.METRIC_NAME_NETWORK_BYTES)

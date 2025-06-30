@@ -29,7 +29,6 @@ public final class LongLockHandler implements RecordedEventHandler {
   private final Attributes attributes;
 
   public LongLockHandler(Meter meter) {
-    super();
     histogram =
         meter
             .histogramBuilder(METRIC_NAME)

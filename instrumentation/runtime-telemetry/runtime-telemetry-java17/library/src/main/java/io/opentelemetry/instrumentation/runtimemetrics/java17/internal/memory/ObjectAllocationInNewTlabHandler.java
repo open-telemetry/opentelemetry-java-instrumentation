@@ -28,7 +28,6 @@ public final class ObjectAllocationInNewTlabHandler implements RecordedEventHand
   private final Attributes attributes;
 
   public ObjectAllocationInNewTlabHandler(Meter meter) {
-    super();
     histogram =
         meter
             .histogramBuilder(Constants.METRIC_NAME_MEMORY_ALLOCATION)

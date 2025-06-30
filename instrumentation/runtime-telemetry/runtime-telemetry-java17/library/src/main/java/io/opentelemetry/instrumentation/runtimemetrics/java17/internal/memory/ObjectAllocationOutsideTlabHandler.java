@@ -28,7 +28,6 @@ public final class ObjectAllocationOutsideTlabHandler implements RecordedEventHa
   private final Attributes attributes;
 
   public ObjectAllocationOutsideTlabHandler(Meter meter) {
-    super();
     histogram =
         meter
             .histogramBuilder(Constants.METRIC_NAME_MEMORY_ALLOCATION)
