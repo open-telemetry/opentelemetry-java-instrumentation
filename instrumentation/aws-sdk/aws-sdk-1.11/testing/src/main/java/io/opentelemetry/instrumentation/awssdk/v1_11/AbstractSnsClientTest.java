@@ -20,7 +20,11 @@ import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import java.util.List;
-import org.junit.jupiter.api.Test;
+import java.util.function.Function;
+import java.util.stream.Stream;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 public abstract class AbstractSnsClientTest extends AbstractBaseAwsClientTest {
   private static final String publishResponseBody =
@@ -50,8 +54,14 @@ public abstract class AbstractSnsClientTest extends AbstractBaseAwsClientTest {
     return true;
   }
 
-  @Test
-  public void testPublishRequestWithTargetArnAndMockedResponse() throws Exception {
+  @ParameterizedTest
+  @MethodSource("provideArguments")
+  void testSendRequestWithMockedResponse(
+      Function<AmazonSNS, Object> call,
+      String operation,
+      String responseBody,
+      List<AttributeAssertion> additionalAttributes)
+      throws Exception {
     AmazonSNSClientBuilder clientBuilder = AmazonSNSClientBuilder.standard();
     AmazonSNS client =
         configureClient(clientBuilder)
@@ -59,57 +69,38 @@ public abstract class AbstractSnsClientTest extends AbstractBaseAwsClientTest {
             .withCredentials(credentialsProvider)
             .build();
 
-    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, publishResponseBody));
-    List<AttributeAssertion> additionalAttributes =
-        singletonList(equalTo(MESSAGING_DESTINATION_NAME, "target-arn-foo"));
-
-    Object response =
-        client.publish(
-            new PublishRequest().withMessage("somemessage").withTargetArn("target-arn-foo"));
+    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, responseBody));
+    Object response = call.apply(client);
     assertRequestWithMockedResponse(
-        response, client, "SNS", "Publish", "POST", additionalAttributes);
+        response, client, "SNS", operation, "POST", additionalAttributes);
   }
 
-  @Test
-  public void testPublishRequestWithTopicArnAndMockedResponse() throws Exception {
-    AmazonSNSClientBuilder clientBuilder = AmazonSNSClientBuilder.standard();
-    AmazonSNS client =
-        configureClient(clientBuilder)
-            .withEndpointConfiguration(endpoint)
-            .withCredentials(credentialsProvider)
-            .build();
-
-    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, publishResponseBody));
-    List<AttributeAssertion> additionalAttributes =
-        asList(
-            equalTo(MESSAGING_DESTINATION_NAME, "topic-arn-foo"),
-            equalTo(AWS_SNS_TOPIC_ARN, "topic-arn-foo"));
-
-    Object response =
-        client.publish(
-            new PublishRequest().withMessage("somemessage").withTopicArn("topic-arn-foo"));
-
-    assertRequestWithMockedResponse(
-        response, client, "SNS", "Publish", "POST", additionalAttributes);
-  }
-
-  @Test
-  public void testCreateTopicRequestWithMockedResponse() throws Exception {
-    AmazonSNSClientBuilder clientBuilder = AmazonSNSClientBuilder.standard();
-    AmazonSNS client =
-        configureClient(clientBuilder)
-            .withEndpointConfiguration(endpoint)
-            .withCredentials(credentialsProvider)
-            .build();
-
-    server.enqueue(
-        HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, createTopicResponseBody));
-    List<AttributeAssertion> additionalAttributes =
-        asList(equalTo(AWS_SNS_TOPIC_ARN, "arn:aws:sns:us-east-1:123456789012:sns-topic-foo"));
-
-    Object response = client.createTopic(new CreateTopicRequest().withName("sns-topic-foo"));
-
-    assertRequestWithMockedResponse(
-        response, client, "SNS", "CreateTopic", "POST", additionalAttributes);
+  private static Stream<Arguments> provideArguments() {
+    return Stream.of(
+        Arguments.of(
+            (Function<AmazonSNS, Object>)
+                c ->
+                    c.publish(
+                        new PublishRequest().withMessage("somemessage").withTopicArn("somearn")),
+            "Publish",
+            publishResponseBody,
+            asList(
+                equalTo(MESSAGING_DESTINATION_NAME, "somearn"),
+                equalTo(AWS_SNS_TOPIC_ARN, "somearn"))),
+        Arguments.of(
+            (Function<AmazonSNS, Object>)
+                c ->
+                    c.publish(
+                        new PublishRequest().withMessage("somemessage").withTargetArn("somearn")),
+            "Publish",
+            publishResponseBody,
+            singletonList(equalTo(MESSAGING_DESTINATION_NAME, "somearn"))),
+        Arguments.of(
+            (Function<AmazonSNS, Object>)
+                c -> c.createTopic(new CreateTopicRequest().withName("sns-topic-foo")),
+            "CreateTopic",
+            createTopicResponseBody,
+            singletonList(
+                equalTo(AWS_SNS_TOPIC_ARN, "arn:aws:sns:us-east-1:123456789012:sns-topic-foo"))));
   }
 }
