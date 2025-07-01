@@ -17,6 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
@@ -78,6 +79,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
         this.callDepth = callDepth;
       }
 
+      @CanIgnoreReturnValue
       public AdviceScope enter(Class<?> type, Method method) {
         if (callDepth.getAndIncrement() > 0) {
           return this;
