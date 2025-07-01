@@ -1111,6 +1111,7 @@ libraries:
       - co.elastic.clients:elasticsearch-java:[7.16,7.17.20)
       - co.elastic.clients:elasticsearch-java:[8.0.0,8.10)
   - name: elasticsearch-rest-5.0
+    description: This instrumentation provides tracing for Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-5.0
     scope:
       name: io.opentelemetry.elasticsearch-rest-5.0
@@ -1141,6 +1142,7 @@ libraries:
         - name: url.full
           type: STRING
   - name: elasticsearch-rest-6.4
+    description: This instrumentation provides tracing for Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-6.4
     scope:
       name: io.opentelemetry.elasticsearch-rest-6.4
@@ -1169,6 +1171,7 @@ libraries:
         - name: url.full
           type: STRING
   - name: elasticsearch-rest-7.0
+    description: This instrumentation provides tracing for Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-7.0
     scope:
       name: io.opentelemetry.elasticsearch-rest-7.0

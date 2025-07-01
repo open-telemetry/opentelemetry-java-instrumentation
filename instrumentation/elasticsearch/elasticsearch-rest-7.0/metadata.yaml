@@ -1,3 +1,4 @@
+description: This instrumentation provides tracing for Elasticsearch REST clients.
 configurations:
   - name: otel.instrumentation.elasticsearch.capture-search-query
     description: >

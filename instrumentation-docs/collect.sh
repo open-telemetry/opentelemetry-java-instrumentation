@@ -93,6 +93,16 @@ readonly COLIMA_INSTRUMENTATIONS=(
 
 readonly TELEMETRY_DIR_NAME=".telemetry"
 
+# Sets up colima for x86_64 architecture if on ARM
+setup_colima() {
+  if [[ "$(uname -m)" == "arm64" || "$(uname -m)" == "aarch64" ]]; then
+    echo "Setting up colima for x86_64 architecture..."
+    colima start --arch x86_64 --memory 4
+    export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+    export DOCKER_HOST="unix://${HOME}/.colima/docker.sock"
+  fi
+}
+
 # Splits a single descriptor into its three logical parts.
 #   argument $1: descriptor string (ex: "foo:bar:baz:test")
 # Outputs three variables via echo:
