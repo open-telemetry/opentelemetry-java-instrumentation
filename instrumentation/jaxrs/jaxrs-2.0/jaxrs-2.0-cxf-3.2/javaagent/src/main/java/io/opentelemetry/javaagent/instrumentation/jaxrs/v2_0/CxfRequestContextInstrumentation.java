@@ -58,21 +58,17 @@ public class CxfRequestContextInstrumentation implements TypeInstrumentation {
   public static class ContainerRequestContextAdvice {
 
     public static class AdviceScope {
-      private Jaxrs2HandlerData handlerData;
-      private Context context;
-      private Scope scope;
+      private final Jaxrs2HandlerData handlerData;
+      private final Context context;
+      private final Scope scope;
 
-      public AdviceScope enter(
+      public AdviceScope(
           Class<?> resourceClass, Method method, AbstractRequestContextImpl requestContext) {
         handlerData = new Jaxrs2HandlerData(resourceClass, method);
         context =
             Jaxrs2RequestContextHelper.createOrUpdateAbortSpan(
                 instrumenter(), (ContainerRequestContext) requestContext, handlerData);
-        if (context != null) {
-          scope = context.makeCurrent();
-        }
-
-        return this;
+        scope = context != null ? context.makeCurrent() : null;
       }
 
       public void exit(@Nullable Throwable throwable) {
@@ -105,9 +101,7 @@ public class CxfRequestContextInstrumentation implements TypeInstrumentation {
       MethodInvocationInfo invocationInfo = resourceInfoStack.peek();
       Method method = invocationInfo.getMethodInfo().getMethodToInvoke();
       Class<?> resourceClass = invocationInfo.getRealClass();
-
-      AdviceScope adviceScope = new AdviceScope();
-      return adviceScope.enter(resourceClass, method, requestContext);
+      return new AdviceScope(resourceClass, method, requestContext);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
