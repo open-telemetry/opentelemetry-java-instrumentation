@@ -95,11 +95,6 @@ public class SlingTest extends AbstractHttpServerUsingTest<Void> {
 
     List<List<SpanData>> traces = testing.waitForTraces(1);
 
-    traces.forEach(
-        trace -> {
-          System.out.println("!!!Trace: " + trace);
-        });
-
     List<SpanData> mainTrace = traces.get(0);
     assertThat(mainTrace).hasSize(3);
     // top-level trace
@@ -141,8 +136,7 @@ public class SlingTest extends AbstractHttpServerUsingTest<Void> {
             Bootstrap b = new Bootstrap(cfg, log);
             b.runWithException();
           } catch (Exception e) {
-            e.printStackTrace(System.err);
-            //        throw new RuntimeException(e);
+            log.error("Failed to start Sling server, test will time out and fail.", e);
           }
         });
 
@@ -159,8 +153,6 @@ public class SlingTest extends AbstractHttpServerUsingTest<Void> {
               }
             });
 
-    System.err.println("Sling server bound to " + address);
-
     Awaitility.await()
         .atMost(Duration.ofMinutes(4))
         .pollInterval(Duration.ofMillis(500))
@@ -176,14 +168,12 @@ public class SlingTest extends AbstractHttpServerUsingTest<Void> {
               }
             });
 
-    System.err.println("Sling server serving requests at " + address);
-
     return null;
   }
 
   @Override
   protected void stopServer(Void unused) throws Exception {
-    System.err.println("Stopping server is not implemented.");
+    log.warn("Stopping Sling server is not implemented");
   }
 
   @Override
