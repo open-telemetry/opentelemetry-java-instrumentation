@@ -22,14 +22,17 @@ nexusPublishing {
   packageGroup.set("io.opentelemetry")
 
   repositories {
+    // see https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#configuration
     sonatype {
+      nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
+      snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
       username.set(System.getenv("SONATYPE_USER"))
       password.set(System.getenv("SONATYPE_KEY"))
     }
   }
 
   connectTimeout.set(Duration.ofMinutes(5))
-  clientTimeout.set(Duration.ofMinutes(5))
+  clientTimeout.set(Duration.ofMinutes(30))
 
   transitionCheckOptions {
     // We have many artifacts so Maven Central takes a long time on its compliance checks. This sets
@@ -103,6 +106,39 @@ if (gradle.startParameter.taskNames.contains("listTestsInPartition")) {
   project.tasks.configureEach {
     if (this.name != "listTestsInPartition") {
       enabled = false
+    }
+  }
+}
+
+tasks {
+  val generateFossaConfiguration by registering {
+    group = "Help"
+    description = "Generate .fossa.yml configuration file"
+
+    doLast {
+      File(".fossa.yml").printWriter().use { writer ->
+        writer.println("version: 3")
+        writer.println()
+        writer.println("targets:")
+        writer.println("  only:")
+        writer.println("    # only scanning the modules which are published")
+        writer.println("    # (as opposed to internal testing modules")
+        rootProject.subprojects
+          .sortedBy { it.findProperty("archivesName") as String? }
+          .filter { !it.name.startsWith("bom") }
+          .filter { it.plugins.hasPlugin("maven-publish") }
+          .forEach {
+            writer.println("    - type: gradle")
+            writer.println("      path: ./")
+            writer.println("      target: '${it.path}'")
+          }
+        writer.println()
+        writer.println("experimental:")
+        writer.println("  gradle:")
+        writer.println("    configurations-only:")
+        writer.println("      # consumer will only be exposed to these dependencies")
+        writer.println("      - runtimeClasspath")
+      }
     }
   }
 }

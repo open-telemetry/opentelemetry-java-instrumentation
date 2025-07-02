@@ -106,7 +106,9 @@ class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
                                                 HttpResponseStatus.valueOf(endpoint.getStatus()),
                                                 content);
                                       } else if (endpoint.equals(INDEXED_CHILD)) {
-                                        content = Unpooled.EMPTY_BUFFER;
+                                        content =
+                                            Unpooled.copiedBuffer(
+                                                endpoint.getBody(), CharsetUtil.UTF_8);
                                         endpoint.collectSpanAttributes(
                                             it ->
                                                 new QueryStringDecoder(uri)

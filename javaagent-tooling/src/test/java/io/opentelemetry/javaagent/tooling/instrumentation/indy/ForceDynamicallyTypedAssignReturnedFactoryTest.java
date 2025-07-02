@@ -18,7 +18,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import org.junit.jupiter.api.Test;
 
-public class ForceDynamicallyTypedAssignReturnedFactoryTest {
+class ForceDynamicallyTypedAssignReturnedFactoryTest {
 
   @AssignReturned.ToFields(@ToField(value = "foo", index = 42))
   @AssignReturned.ToArguments(@ToArgument(value = 3, index = 7))
@@ -30,7 +30,7 @@ public class ForceDynamicallyTypedAssignReturnedFactoryTest {
   static void testMethod() {}
 
   @Test
-  public void checkTypingMadeDynamic() {
+  void checkTypingMadeDynamic() {
     MethodDescription.InDefinedShape original =
         TypeDescription.ForLoadedType.of(ForceDynamicallyTypedAssignReturnedFactoryTest.class)
             .getDeclaredMethods()

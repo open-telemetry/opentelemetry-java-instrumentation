@@ -29,7 +29,7 @@ jobs:
           rsync -avv gh-pages/benchmark-overhead/results/ benchmark-overhead/results/
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@94baf225fe0a508e581a564467443d0e2379123b # v4.3.0
+        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
 
       - name: Run tests
         working-directory: benchmark-overhead
@@ -49,10 +49,10 @@ jobs:
           cwd: "./gh-pages"
           branch: "gh-pages"
           message: "update test result data"
-          author_name: opentelemetrybot
-          author_email: 107717825+opentelemetrybot@users.noreply.github.com
-          committer_name: opentelemetrybot
-          committer_email: 107717825+opentelemetrybot@users.noreply.github.com
+          author_name: otelbot
+          author_email: 197425009+otelbot@users.noreply.github.com
+          committer_name: otelbot
+          committer_email: 197425009+otelbot@users.noreply.github.com
 
   workflow-notification:
     permissions:

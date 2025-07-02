@@ -96,7 +96,7 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
                                               context
                                                   .getResponse()
                                                   .status(endpoint.getStatus())
-                                                  .send();
+                                                  .send(endpoint.getBody());
                                             }))));
 
                 handlerChain.prefix(

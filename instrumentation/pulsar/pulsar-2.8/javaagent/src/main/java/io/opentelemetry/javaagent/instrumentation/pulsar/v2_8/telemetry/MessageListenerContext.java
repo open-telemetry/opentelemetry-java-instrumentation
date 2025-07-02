@@ -17,7 +17,7 @@ public final class MessageListenerContext {
 
   /** Call on entry to a method that will pass the received message to a message listener. */
   public static void startProcessing() {
-    processing.set(Boolean.TRUE);
+    processing.set(true);
   }
 
   public static void endProcessing() {

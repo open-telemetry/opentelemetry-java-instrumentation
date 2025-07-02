@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.jmx.engine;
 import java.util.List;
 
 /**
- * A class providing a complete definition on how to create an Open Telemetry metric out of the JMX
+ * A class providing a complete definition on how to create an OpenTelemetry metric out of the JMX
  * system: how to extract values from MBeans and how to model, name and decorate them with
  * attributes using OpenTelemetry Metric API. Objects of this class are immutable.
  */
@@ -42,12 +42,14 @@ import java.util.List;
 //      new MetricInfo(
 //          "my.own.jvm.memory.pool.used",
 //          "Pool memory currently used",
+//          null,
 //          "By",
 //          MetricInfo.Type.UPDOWNCOUNTER);
 //  MetricInfo poolLimitInfo =
 //      new MetricInfo(
 //          "my.own.jvm.memory.pool.limit",
 //          "Maximum obtainable memory pool size",
+//          null,
 //          "By",
 //          MetricInfo.Type.UPDOWNCOUNTER);
 //

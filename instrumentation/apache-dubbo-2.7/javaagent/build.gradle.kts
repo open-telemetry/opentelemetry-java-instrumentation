@@ -28,8 +28,8 @@ testing {
       dependencies {
         implementation(project(":instrumentation:apache-dubbo-2.7:testing"))
         if (latestDepTest) {
-          implementation("org.apache.dubbo:dubbo:+")
-          implementation("org.apache.dubbo:dubbo-config-api:+")
+          implementation("org.apache.dubbo:dubbo:latest.release")
+          implementation("org.apache.dubbo:dubbo-config-api:latest.release")
         } else {
           implementation("org.apache.dubbo:dubbo:2.7.0")
           implementation("org.apache.dubbo:dubbo-config-api:2.7.0")
@@ -45,6 +45,9 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-opens=java.base/java.math=ALL-UNNAMED")
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+
+  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectSpans", true)
 }
 
 tasks {

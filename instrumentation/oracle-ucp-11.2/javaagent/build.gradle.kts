@@ -20,8 +20,22 @@ dependencies {
   testImplementation(project(":instrumentation:oracle-ucp-11.2:testing"))
 }
 
+val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+
 tasks {
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("collectMetadata", collectMetadata)
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+
+    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("metaDataConfig", "otel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
   }
 }

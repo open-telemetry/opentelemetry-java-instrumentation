@@ -9,7 +9,7 @@ import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
 import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
-import static io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES;
+import static io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES_WITHOUT_ROUTE;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -18,9 +18,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
-import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 
-import com.google.common.collect.Sets;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -46,7 +44,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.net.URI;
-import java.util.Collections;
 
 public abstract class AbstractNetty41ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
 
@@ -58,8 +55,7 @@ public abstract class AbstractNetty41ServerTest extends AbstractHttpServerTest<E
   @Override
   protected void configure(HttpServerTestOptions options) {
     options.setTestException(false);
-    options.setHttpAttributes(
-        unused -> Sets.difference(DEFAULT_HTTP_ATTRIBUTES, Collections.singleton(HTTP_ROUTE)));
+    options.setHttpAttributes(unused -> DEFAULT_HTTP_ATTRIBUTES_WITHOUT_ROUTE);
   }
 
   @Override
@@ -117,7 +113,7 @@ public abstract class AbstractNetty41ServerTest extends AbstractHttpServerTest<E
             new DefaultFullHttpResponse(
                 HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()), content);
       } else if (INDEXED_CHILD.equals(endpoint)) {
-        content = Unpooled.EMPTY_BUFFER;
+        content = Unpooled.copiedBuffer(endpoint.getBody(), CharsetUtil.UTF_8);
         endpoint.collectSpanAttributes(
             name ->
                 new QueryStringDecoder(uri).parameters().get(name).stream().findFirst().orElse(""));

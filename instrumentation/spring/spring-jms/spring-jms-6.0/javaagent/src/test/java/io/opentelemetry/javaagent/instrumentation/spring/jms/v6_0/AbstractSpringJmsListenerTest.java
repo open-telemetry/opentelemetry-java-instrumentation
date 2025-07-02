@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v6_0;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -19,15 +18,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -68,8 +63,8 @@ abstract class AbstractSpringJmsListenerTest {
     }
   }
 
-  @ArgumentsSource(SpringJmsListenerTest.ConfigClasses.class)
   @ParameterizedTest
+  @ValueSource(classes = {AnnotatedListenerConfig.class, ManualListenerConfig.class})
   @SuppressWarnings("unchecked")
   void testSpringJmsListener(Class<?> configClass)
       throws ExecutionException, InterruptedException, TimeoutException {
@@ -101,14 +96,5 @@ abstract class AbstractSpringJmsListenerTest {
     props.put("spring.main.web-application-type", "none");
     props.put("test.broker-url", "tcp://" + broker.getHost() + ":" + broker.getMappedPort(61616));
     return props;
-  }
-
-  static final class ConfigClasses implements ArgumentsProvider {
-
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(
-          arguments(AnnotatedListenerConfig.class), arguments(ManualListenerConfig.class));
-    }
   }
 }

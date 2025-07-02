@@ -11,6 +11,7 @@ import static io.opentelemetry.javaagent.instrumentation.instrumentationannotati
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.hasParameters;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.whereAny;
@@ -19,7 +20,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Method;
@@ -67,13 +67,13 @@ class WithSpanInstrumentation implements TypeInstrumentation {
         tracedMethods.and(not(annotatedParametersMatcher));
 
     transformer.applyAdviceToMethod(
-        tracedMethodsWithoutParameters,
+        tracedMethodsWithoutParameters.and(isMethod()),
         WithSpanInstrumentation.class.getName() + "$WithSpanAdvice");
 
     // Only apply advice for tracing parameters as attributes if any of the parameters are annotated
     // with @SpanAttribute to avoid unnecessarily copying the arguments into an array.
     transformer.applyAdviceToMethod(
-        tracedMethodsWithParameters,
+        tracedMethodsWithParameters.and(isMethod()),
         WithSpanInstrumentation.class.getName() + "$WithSpanAttributesAdvice");
   }
 
@@ -91,7 +91,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
       method = originMethod;
 
       Instrumenter<Method, Object> instrumenter = instrumenter();
-      Context current = Java8BytecodeBridge.currentContext();
+      Context current = AnnotationSingletons.getContextForMethod(method);
 
       if (instrumenter.shouldStart(current, method)) {
         context = instrumenter.start(current, method);
@@ -134,7 +134,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
       method = originMethod;
 
       Instrumenter<MethodRequest, Object> instrumenter = instrumenterWithAttributes();
-      Context current = Java8BytecodeBridge.currentContext();
+      Context current = AnnotationSingletons.getContextForMethod(method);
       request = new MethodRequest(method, args);
 
       if (instrumenter.shouldStart(current, request)) {

@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.{
   ServerEndpoint
 }
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint._
+import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.AbstractHttpServerInstrumentationTest.TIMEOUT
 
 import java.util.function.Supplier
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
@@ -40,11 +41,12 @@ object PekkoHttpTestAsyncWebServer {
                   override def getParameter(name: String): String =
                     uri.query().get(name).orNull
                 })
-                resp.withEntity("")
+                resp.withEntity(endpoint.getBody)
               case QUERY_PARAM => resp.withEntity(uri.queryString().orNull)
               case REDIRECT =>
                 resp.withHeaders(headers.Location(endpoint.getBody))
-              case ERROR => resp.withEntity(endpoint.getBody)
+              case ERROR   => resp.withEntity(endpoint.getBody)
+              case TIMEOUT => resp.withEntity(endpoint.getBody)
               case EXCEPTION =>
                 throw new IllegalStateException(endpoint.getBody)
               case _ =>

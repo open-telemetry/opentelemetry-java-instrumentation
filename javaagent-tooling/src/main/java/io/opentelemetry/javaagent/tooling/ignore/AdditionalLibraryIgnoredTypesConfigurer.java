@@ -107,6 +107,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("org.springframework.boot.web.embedded.netty.GracefulShutdown$$Lambda")
         .allowClass("org.springframework.boot.web.embedded.tomcat.GracefulShutdown$$Lambda")
         .allowClass(
+            "org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory$$Lambda")
+        .allowClass(
             "org.springframework.boot.actuate.metrics.web.reactive.server.MetricsWebFilter$$Lambda")
         .allowClass("org.springframework.boot.autoconfigure.BackgroundPreinitializer$")
         .allowClass(
@@ -134,7 +136,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader")
         .allowClass("org.springframework.boot.web.servlet.DelegatingFilterProxyRegistrationBean$")
         .allowClass("org.springframework.boot.StartupInfoLogger$")
-        .allowClass("org.springframework.boot.SpringApplicationShutdownHook");
+        .allowClass("org.springframework.boot.SpringApplicationShutdownHook")
+        .allowClass("org.springframework.boot.convert.ApplicationConversionService$$Lambda");
 
     builder
         .ignoreClass("org.springframework.cglib.")
@@ -266,7 +269,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("org.h2.util.Task")
         .allowClass("org.h2.store.FileLock")
         .allowClass("org.h2.engine.DatabaseCloser")
-        .allowClass("org.h2.engine.OnExitDatabaseCloser");
+        .allowClass("org.h2.engine.OnExitDatabaseCloser")
+        .allowClass("org.h2.server.web.WebServlet");
 
     builder
         .ignoreClass("com.carrotsearch.hppc.")

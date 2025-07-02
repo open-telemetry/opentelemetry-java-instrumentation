@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.elasticsearch.rest.internal.ElasticsearchEndpointDefinition;
+import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchEndpointDefinition;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.apiclient.ElasticsearchEndpointMap;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
-public class ElasticsearchEndpointMapTest {
+class ElasticsearchEndpointMapTest {
 
   private static final Set<String> SEARCH_ENDPOINTS =
       new HashSet<>(
@@ -57,16 +57,17 @@ public class ElasticsearchEndpointMapTest {
   }
 
   @Test
-  public void testIsSearchEndpoint() {
+  void testIsSearchEndpoint() {
     for (ElasticsearchEndpointDefinition esEndpointDefinition :
         ElasticsearchEndpointMap.getAllEndpoints()) {
       String endpointId = esEndpointDefinition.getEndpointName();
-      assertEquals(SEARCH_ENDPOINTS.contains(endpointId), esEndpointDefinition.isSearchEndpoint());
+      assertThat(SEARCH_ENDPOINTS.contains(endpointId))
+          .isEqualTo(esEndpointDefinition.isSearchEndpoint());
     }
   }
 
   @Test
-  public void testProcessPathParts() {
+  void testProcessPathParts() {
     for (ElasticsearchEndpointDefinition esEndpointDefinition :
         ElasticsearchEndpointMap.getAllEndpoints()) {
       for (String route :
@@ -81,44 +82,45 @@ public class ElasticsearchEndpointMapTest {
         Map<String, String> expectedMap = new HashMap<>();
         pathParts.forEach(part -> expectedMap.put(part, part));
 
-        assertEquals(expectedMap, observedParams);
+        assertThat(expectedMap).isEqualTo(observedParams);
       }
     }
   }
 
   @Test
-  public void testSearchEndpoint() {
+  void testSearchEndpoint() {
     ElasticsearchEndpointDefinition esEndpoint = ElasticsearchEndpointMap.get("search");
     Map<String, String> observedParams = new HashMap<>();
     esEndpoint.processPathParts(
         "/test-index-1,test-index-2/_search", (k, v) -> observedParams.put(k, v));
 
-    assertEquals("test-index-1,test-index-2", observedParams.get("index"));
+    assertThat(observedParams.get("index")).isEqualTo("test-index-1,test-index-2");
   }
 
   @Test
-  public void testBuildRegexPattern() {
+  void testBuildRegexPattern() {
     Pattern pattern =
         ElasticsearchEndpointDefinition.EndpointPattern.buildRegexPattern(
             "/_nodes/{node_id}/shutdown");
-    assertEquals("^/_nodes/(?<node0id>[^/]+)/shutdown$", pattern.pattern());
+    assertThat(pattern.pattern()).isEqualTo("^/_nodes/(?<node0id>[^/]+)/shutdown$");
 
     pattern =
         ElasticsearchEndpointDefinition.EndpointPattern.buildRegexPattern(
             "/_snapshot/{repository}/{snapshot}/_mount");
-    assertEquals("^/_snapshot/(?<repository>[^/]+)/(?<snapshot>[^/]+)/_mount$", pattern.pattern());
+    assertThat(pattern.pattern())
+        .isEqualTo("^/_snapshot/(?<repository>[^/]+)/(?<snapshot>[^/]+)/_mount$");
 
     pattern =
         ElasticsearchEndpointDefinition.EndpointPattern.buildRegexPattern(
             "/_security/profile/_suggest");
-    assertEquals("^/_security/profile/_suggest$", pattern.pattern());
+    assertThat(pattern.pattern()).isEqualTo("^/_security/profile/_suggest$");
 
     pattern =
         ElasticsearchEndpointDefinition.EndpointPattern.buildRegexPattern(
             "/_application/search_application/{name}");
-    assertEquals("^/_application/search_application/(?<name>[^/]+)$", pattern.pattern());
+    assertThat(pattern.pattern()).isEqualTo("^/_application/search_application/(?<name>[^/]+)$");
 
     pattern = ElasticsearchEndpointDefinition.EndpointPattern.buildRegexPattern("/");
-    assertEquals("^/$", pattern.pattern());
+    assertThat(pattern.pattern()).isEqualTo("^/$");
   }
 }

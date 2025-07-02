@@ -18,3 +18,22 @@ dependencies {
 
   testImplementation(project(":instrumentation:vibur-dbcp-11.0:testing"))
 }
+
+val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+
+    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("metaDataConfig", "otel.semconv-stability.opt-in=database")
+  }
+
+  test {
+    systemProperty("collectMetadata", collectMetadata)
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
+}

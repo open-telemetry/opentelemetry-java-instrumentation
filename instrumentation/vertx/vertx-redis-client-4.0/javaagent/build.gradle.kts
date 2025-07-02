@@ -20,13 +20,19 @@ dependencies {
   testLibrary("io.vertx:vertx-codegen:4.0.0")
 }
 
+val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("collectMetadata", collectMetadata)
   }
 
   val testStableSemconv by registering(Test::class) {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
+
+    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("metaDataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   check {

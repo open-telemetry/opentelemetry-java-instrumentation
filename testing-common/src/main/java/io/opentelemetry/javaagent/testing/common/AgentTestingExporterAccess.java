@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.testing.common;
 
-import static com.google.common.base.Strings.emptyToNull;
 import static io.opentelemetry.api.common.AttributeKey.booleanArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.doubleArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.longArrayKey;
@@ -15,6 +14,8 @@ import static java.util.stream.Collectors.toList;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.common.Value;
+import io.opentelemetry.api.incubator.common.ExtendedAttributes;
+import io.opentelemetry.api.incubator.common.ExtendedAttributesBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
@@ -42,6 +43,7 @@ import io.opentelemetry.sdk.metrics.internal.data.ImmutableSummaryData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableSummaryPointData;
 import io.opentelemetry.sdk.metrics.internal.data.ImmutableValueAtQuantile;
 import io.opentelemetry.sdk.testing.logs.TestLogRecordData;
+import io.opentelemetry.sdk.testing.logs.internal.TestExtendedLogRecordData;
 import io.opentelemetry.sdk.testing.trace.TestSpanData;
 import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -96,6 +98,10 @@ public final class AgentTestingExporterAccess {
   // opentelemetry-api-1.27:javaagent tests use an older version of opentelemetry-api where Value
   // class is missing
   private static final boolean canUseValue = classAvailable("io.opentelemetry.api.common.Value");
+  private static final boolean hasExtendedLogRecordData =
+      classAvailable("io.opentelemetry.sdk.logs.data.internal.ExtendedLogRecordData");
+  private static final boolean hasExtendedAttributes =
+      classAvailable("io.opentelemetry.api.incubator.common.ExtendedAttributes");
 
   static {
     try {
@@ -416,6 +422,9 @@ public final class AgentTestingExporterAccess {
       LogRecord logRecord,
       io.opentelemetry.sdk.resources.Resource resource,
       InstrumentationScopeInfo instrumentationScopeInfo) {
+    if (hasExtendedLogRecordData) {
+      return createExtendedLogData(logRecord, resource, instrumentationScopeInfo);
+    }
     TestLogRecordData.Builder builder =
         TestLogRecordData.builder()
             .setResource(resource)
@@ -435,6 +444,34 @@ public final class AgentTestingExporterAccess {
     } else {
       builder.setBody(logRecord.getBody().getStringValue());
     }
+    return builder.build();
+  }
+
+  private static LogRecordData createExtendedLogData(
+      LogRecord logRecord,
+      io.opentelemetry.sdk.resources.Resource resource,
+      InstrumentationScopeInfo instrumentationScopeInfo) {
+    TestExtendedLogRecordData.Builder builder =
+        TestExtendedLogRecordData.builder()
+            .setResource(resource)
+            .setInstrumentationScopeInfo(instrumentationScopeInfo)
+            .setTimestamp(logRecord.getTimeUnixNano(), TimeUnit.NANOSECONDS)
+            .setSpanContext(
+                SpanContext.create(
+                    bytesToHex(logRecord.getTraceId().toByteArray()),
+                    bytesToHex(logRecord.getSpanId().toByteArray()),
+                    TraceFlags.getDefault(),
+                    TraceState.getDefault()))
+            .setSeverity(fromProto(logRecord.getSeverityNumber()))
+            .setSeverityText(logRecord.getSeverityText())
+            .setEventName(logRecord.getEventName())
+            .setBodyValue(getBodyValue(logRecord.getBody()));
+    if (hasExtendedAttributes) {
+      builder.setExtendedAttributes(fromProtoExtended(logRecord.getAttributesList()));
+    } else {
+      builder.setAttributes(fromProto(logRecord.getAttributesList()));
+    }
+
     return builder.build();
   }
 
@@ -579,6 +616,68 @@ public final class AgentTestingExporterAccess {
         throw new IllegalStateException(
             "Unexpected aggregation temporality: " + aggregationTemporality);
     }
+  }
+
+  private static ExtendedAttributes fromProtoExtended(List<KeyValue> attributes) {
+    ExtendedAttributesBuilder converted = ExtendedAttributes.builder();
+    for (KeyValue attribute : attributes) {
+      String key = attribute.getKey();
+      AnyValue value = attribute.getValue();
+      switch (value.getValueCase()) {
+        case STRING_VALUE:
+          converted.put(key, value.getStringValue());
+          break;
+        case BOOL_VALUE:
+          converted.put(key, value.getBoolValue());
+          break;
+        case INT_VALUE:
+          converted.put(key, value.getIntValue());
+          break;
+        case DOUBLE_VALUE:
+          converted.put(key, value.getDoubleValue());
+          break;
+        case ARRAY_VALUE:
+          ArrayValue array = value.getArrayValue();
+          if (array.getValuesCount() != 0) {
+            switch (array.getValues(0).getValueCase()) {
+              case STRING_VALUE:
+                converted.put(
+                    stringArrayKey(key),
+                    array.getValuesList().stream().map(AnyValue::getStringValue).collect(toList()));
+                break;
+              case BOOL_VALUE:
+                converted.put(
+                    booleanArrayKey(key),
+                    array.getValuesList().stream().map(AnyValue::getBoolValue).collect(toList()));
+                break;
+              case INT_VALUE:
+                converted.put(
+                    longArrayKey(key),
+                    array.getValuesList().stream().map(AnyValue::getIntValue).collect(toList()));
+                break;
+              case DOUBLE_VALUE:
+                converted.put(
+                    doubleArrayKey(key),
+                    array.getValuesList().stream().map(AnyValue::getDoubleValue).collect(toList()));
+                break;
+              case VALUE_NOT_SET:
+                break;
+              default:
+                throw new IllegalStateException(
+                    "Unexpected attribute: " + array.getValues(0).getValueCase());
+            }
+          }
+          break;
+        case KVLIST_VALUE:
+          converted.put(key, fromProtoExtended(value.getKvlistValue().getValuesList()));
+          break;
+        case VALUE_NOT_SET:
+          break;
+        default:
+          throw new IllegalStateException("Unexpected attribute: " + value.getValueCase());
+      }
+    }
+    return converted.build();
   }
 
   private static Attributes fromProto(List<KeyValue> attributes) {
@@ -726,6 +825,10 @@ public final class AgentTestingExporterAccess {
       encoding[i | 0x100] = ALPHABET.charAt(i & 0xF);
     }
     return encoding;
+  }
+
+  private static String emptyToNull(String string) {
+    return string == null || string.isEmpty() ? null : string;
   }
 
   private AgentTestingExporterAccess() {}

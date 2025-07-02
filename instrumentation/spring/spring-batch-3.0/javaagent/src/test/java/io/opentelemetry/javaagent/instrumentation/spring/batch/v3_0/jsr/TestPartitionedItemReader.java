@@ -45,36 +45,4 @@ class TestPartitionedItemReader implements ItemReader {
   public Serializable checkpointInfo() {
     return null;
   }
-
-  public String getStartStr() {
-    return startStr;
-  }
-
-  public void setStartStr(String startStr) {
-    this.startStr = startStr;
-  }
-
-  public String getEndStr() {
-    return endStr;
-  }
-
-  public void setEndStr(String endStr) {
-    this.endStr = endStr;
-  }
-
-  public int getStart() {
-    return start;
-  }
-
-  public void setStart(int start) {
-    this.start = start;
-  }
-
-  public int getEnd() {
-    return end;
-  }
-
-  public void setEnd(int end) {
-    this.end = end;
-  }
 }

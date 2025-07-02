@@ -18,7 +18,7 @@ testing {
       dependencies {
         implementation(project())
         if (testLatestDeps) {
-          implementation("com.squareup.okhttp3:okhttp:+")
+          implementation("com.squareup.okhttp3:okhttp:latest.release")
           compileOnly("com.google.android:annotations:4.1.1.4")
         } else {
           implementation("com.squareup.okhttp3:okhttp:3.11.0")

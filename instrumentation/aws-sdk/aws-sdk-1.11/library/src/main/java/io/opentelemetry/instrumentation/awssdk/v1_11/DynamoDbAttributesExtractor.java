@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+
 import com.amazonaws.Request;
 import com.amazonaws.Response;
 import io.opentelemetry.api.common.AttributeKey;
@@ -17,12 +20,11 @@ import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
-public class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Response<?>> {
+class DynamoDbAttributesExtractor implements AttributesExtractor<Request<?>, Response<?>> {
 
   // copied from DbIncubatingAttributes
+  private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
   private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
-  private static final AttributeKey<String> DB_SYSTEM_NAME =
-      AttributeKey.stringKey("db.system.name");
   // copied from AwsIncubatingAttributes
   private static final AttributeKey<List<String>> AWS_DYNAMODB_TABLE_NAMES =
       AttributeKey.stringArrayKey("aws.dynamodb.table_names");
@@ -36,12 +38,33 @@ public class DynamoDbAttributesExtractor implements AttributesExtractor<Request<
   public void onStart(AttributesBuilder attributes, Context parentContext, Request<?> request) {
     if (SemconvStability.emitStableDatabaseSemconv()) {
       AttributesExtractorUtil.internalSet(attributes, DB_SYSTEM_NAME, AWS_DYNAMODB);
-    } else {
+    }
+    if (SemconvStability.emitOldDatabaseSemconv()) {
       AttributesExtractorUtil.internalSet(attributes, DB_SYSTEM, DYNAMODB);
     }
+
+    String operation = getOperationName(request.getOriginalRequest());
+    if (operation != null) {
+      if (SemconvStability.emitStableDatabaseSemconv()) {
+        AttributesExtractorUtil.internalSet(attributes, DB_OPERATION_NAME, operation);
+      }
+      if (SemconvStability.emitOldDatabaseSemconv()) {
+        AttributesExtractorUtil.internalSet(attributes, DB_OPERATION, operation);
+      }
+    }
+
     String tableName = RequestAccess.getTableName(request.getOriginalRequest());
     AttributesExtractorUtil.internalSet(
         attributes, AWS_DYNAMODB_TABLE_NAMES, Collections.singletonList(tableName));
+  }
+
+  private static String getOperationName(Object request) {
+    String name = request.getClass().getSimpleName();
+    if (!name.endsWith("Request")) {
+      return null;
+    }
+
+    return name.substring(0, name.length() - "Request".length());
   }
 
   @Override

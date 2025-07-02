@@ -10,6 +10,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
@@ -20,6 +21,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
@@ -50,9 +52,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
 
   private final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> additionalExtractors =
       new ArrayList<>();
-  private Function<
-          SpanStatusExtractor<? super REQUEST, ? super RESPONSE>,
-          ? extends SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
+  private Function<SpanStatusExtractor<REQUEST, RESPONSE>, SpanStatusExtractor<REQUEST, RESPONSE>>
       statusExtractorTransformer = Function.identity();
   private final HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE>
       httpAttributesExtractorBuilder;
@@ -60,9 +60,9 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   private final HttpSpanNameExtractorBuilder<REQUEST> httpSpanNameExtractorBuilder;
 
   @Nullable private final TextMapSetter<REQUEST> headerSetter;
-  private Function<SpanNameExtractor<? super REQUEST>, ? extends SpanNameExtractor<? super REQUEST>>
+  private Function<SpanNameExtractor<REQUEST>, ? extends SpanNameExtractor<REQUEST>>
       spanNameExtractorTransformer = Function.identity();
-  private boolean emitExperimentalHttpClientMetrics = false;
+  private boolean emitExperimentalHttpClientTelemetry = false;
   private Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer = b -> {};
 
   private DefaultHttpClientInstrumenterBuilder(
@@ -111,9 +111,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
 
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setStatusExtractor(
-      Function<
-              SpanStatusExtractor<? super REQUEST, ? super RESPONSE>,
-              ? extends SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
+      Function<SpanStatusExtractor<REQUEST, RESPONSE>, SpanStatusExtractor<REQUEST, RESPONSE>>
           statusExtractor) {
     this.statusExtractorTransformer = statusExtractor;
     return this;
@@ -165,22 +163,34 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Configures the instrumentation to emit experimental HTTP client metrics.
+   * Configures the instrumentation to emit experimental HTTP client telemetry.
    *
-   * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
-   *     are to be emitted.
+   * @param emitExperimentalHttpClientTelemetry {@code true} if the experimental HTTP client
+   *     telemetry is to be emitted.
    */
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>
-      setEmitExperimentalHttpClientMetrics(boolean emitExperimentalHttpClientMetrics) {
-    this.emitExperimentalHttpClientMetrics = emitExperimentalHttpClientMetrics;
+      setEmitExperimentalHttpClientTelemetry(boolean emitExperimentalHttpClientTelemetry) {
+    this.emitExperimentalHttpClientTelemetry = emitExperimentalHttpClientTelemetry;
+    return this;
+  }
+
+  /**
+   * Configures the instrumentation to redact sensitive URL parameters.
+   *
+   * @param redactQueryParameters {@code true} if the sensitive URL parameters have to be redacted.
+   */
+  @CanIgnoreReturnValue
+  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setRedactQueryParameters(
+      boolean redactQueryParameters) {
+    Experimental.setRedactQueryParameters(httpAttributesExtractorBuilder, redactQueryParameters);
     return this;
   }
 
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setSpanNameExtractor(
-      Function<SpanNameExtractor<? super REQUEST>, ? extends SpanNameExtractor<? super REQUEST>>
+      Function<SpanNameExtractor<REQUEST>, SpanNameExtractor<REQUEST>>
           spanNameExtractorTransformer) {
     this.spanNameExtractorTransformer = spanNameExtractorTransformer;
     return this;
@@ -209,6 +219,13 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   public Instrumenter<REQUEST, RESPONSE> build() {
+    if (emitExperimentalHttpClientTelemetry
+        && attributesGetter instanceof HttpClientExperimentalAttributesGetter) {
+      HttpClientExperimentalAttributesGetter<REQUEST, RESPONSE> experimentalAttributesGetter =
+          (HttpClientExperimentalAttributesGetter<REQUEST, RESPONSE>) attributesGetter;
+      Experimental.setUrlTemplateExtractor(
+          httpSpanNameExtractorBuilder, experimentalAttributesGetter::getUrlTemplate);
+    }
     SpanNameExtractor<? super REQUEST> spanNameExtractor =
         spanNameExtractorTransformer.apply(httpSpanNameExtractorBuilder.build());
 
@@ -220,11 +237,12 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get());
-    if (emitExperimentalHttpClientMetrics) {
+    if (emitExperimentalHttpClientTelemetry) {
       builder
           .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(attributesGetter))
           .addOperationMetrics(HttpClientExperimentalMetrics.get());
     }
+
     builderCustomizer.accept(builder);
 
     if (headerSetter != null) {
@@ -247,7 +265,8 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     set(config::getPeerServiceResolver, this::setPeerServiceResolver);
     set(
         config::shouldEmitExperimentalHttpClientTelemetry,
-        this::setEmitExperimentalHttpClientMetrics);
+        this::setEmitExperimentalHttpClientTelemetry);
+    set(config::redactQueryParameters, this::setRedactQueryParameters);
     return this;
   }
 
