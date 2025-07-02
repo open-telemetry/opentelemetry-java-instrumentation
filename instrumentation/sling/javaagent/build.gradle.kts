@@ -9,4 +9,5 @@ dependencies {
   api(project(":instrumentation:servlet:servlet-common:javaagent"))
   compileOnly("javax.servlet:javax.servlet-api:3.1.0")
   library("org.apache.sling:org.apache.sling.api:2.0.6") // first non-incubator release
+  testLibrary("org.apache.sling:org.apache.sling.feature.launcher:1.3.2")
 }
