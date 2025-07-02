@@ -99,33 +99,39 @@ class AwsConnector {
   }
 
   void setTopicPublishingPolicy(String topicArn) {
-    String snsPolicy =
-        "{"
-            + "  \"Statement\": ["
-            + "    {"
-            + "      \"Effect\": \"Allow\","
-            + "      \"Principal\": \"*\","
-            + "      \"Action\": \"sns:Publish\","
-            + "      \"Resource\": \"%s\""
-            + "    }]"
-            + "}";
     snsClient.setTopicAttributes(
-        new SetTopicAttributesRequest(topicArn, "Policy", String.format(snsPolicy, topicArn)));
+        new SetTopicAttributesRequest(
+            topicArn,
+            "Policy",
+            String.format(
+                "{"
+                    + "  \"Statement\": ["
+                    + "    {"
+                    + "      \"Effect\": \"Allow\","
+                    + "      \"Principal\": \"*\","
+                    + "      \"Action\": \"sns:Publish\","
+                    + "      \"Resource\": \"%s\""
+                    + "    }]"
+                    + "}",
+                topicArn)));
   }
 
   void setQueuePublishingPolicy(String queueUrl, String queueArn) {
-    String sqsPolicy =
-        "{"
-            + "  \"Statement\": ["
-            + "    {"
-            + "      \"Effect\": \"Allow\","
-            + "      \"Principal\": \"*\","
-            + "      \"Action\": \"sqs:SendMessage\","
-            + "      \"Resource\": \"%s\""
-            + "    }]"
-            + "}";
     sqsClient.setQueueAttributes(
-        queueUrl, Collections.singletonMap("Policy", String.format(sqsPolicy, queueArn)));
+        queueUrl,
+        Collections.singletonMap(
+            "Policy",
+            String.format(
+                "{"
+                    + "  \"Statement\": ["
+                    + "    {"
+                    + "      \"Effect\": \"Allow\","
+                    + "      \"Principal\": \"*\","
+                    + "      \"Action\": \"sqs:SendMessage\","
+                    + "      \"Resource\": \"%s\""
+                    + "    }]"
+                    + "}",
+                queueArn)));
   }
 
   void createBucket(String bucketName) {

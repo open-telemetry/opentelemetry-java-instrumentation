@@ -2836,24 +2836,6 @@ libraries:
     target_versions:
       javaagent:
       - io.projectreactor.netty:reactor-netty:[0.8.2.RELEASE,1.0.0)
-    telemetry:
-    - when: default
-      metrics:
-      - name: http.client.request.duration
-        description: Duration of HTTP client requests.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: http.request.method
-          type: STRING
-        - name: http.response.status_code
-          type: LONG
-        - name: network.protocol.version
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
   - name: reactor-netty-1.0
     source_path: instrumentation/reactor/reactor-netty/reactor-netty-1.0
     scope:
@@ -3214,21 +3196,6 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
-      - name: http.server.request.duration
-        description: Duration of HTTP server requests.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: http.request.method
-          type: STRING
-        - name: http.response.status_code
-          type: LONG
-        - name: http.route
-          type: STRING
-        - name: network.protocol.version
-          type: STRING
-        - name: url.scheme
-          type: STRING
   - name: spring-webflux-5.3
     source_path: instrumentation/spring/spring-webflux/spring-webflux-5.3
     scope:
