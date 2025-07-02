@@ -43,7 +43,7 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
-        version = if (testLatestDeps) "latest.release" else "1.12.80"
+        val version = if (testLatestDeps) "latest.release" else "1.12.80"
         implementation("com.amazonaws:aws-java-sdk-secretsmanager:$version")
       }
     }

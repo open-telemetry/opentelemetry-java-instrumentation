@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.docs.internal;
 
+import static java.util.Collections.emptyList;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,16 +19,18 @@ import java.util.List;
 public class EmittedMetrics {
   // Condition in which the metrics are emitted (ex: default, or configuration option names).
   private String when;
-  private List<Metric> metrics;
+
+  @JsonProperty("metrics_by_scope")
+  private List<MetricsByScope> metricsByScope;
 
   public EmittedMetrics() {
     this.when = "";
-    this.metrics = new ArrayList<>();
+    this.metricsByScope = emptyList();
   }
 
-  public EmittedMetrics(String when, List<Metric> metrics) {
-    this.when = "";
-    this.metrics = metrics;
+  public EmittedMetrics(String when, List<MetricsByScope> metricsByScope) {
+    this.when = when;
+    this.metricsByScope = metricsByScope;
   }
 
   public String getWhen() {
@@ -36,12 +41,49 @@ public class EmittedMetrics {
     this.when = when;
   }
 
-  public List<Metric> getMetrics() {
-    return metrics;
+  @JsonProperty("metrics_by_scope")
+  public List<MetricsByScope> getMetricsByScope() {
+    return metricsByScope;
   }
 
-  public void setMetrics(List<Metric> metrics) {
-    this.metrics = metrics;
+  @JsonProperty("metrics_by_scope")
+  public void setMetricsByScope(List<MetricsByScope> metricsByScope) {
+    this.metricsByScope = metricsByScope;
+  }
+
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
+  public static class MetricsByScope {
+    private String scope;
+    private List<Metric> metrics;
+
+    public MetricsByScope(String scope, List<Metric> metrics) {
+      this.scope = scope;
+      this.metrics = metrics;
+    }
+
+    public MetricsByScope() {
+      this.scope = "";
+      this.metrics = new ArrayList<>();
+    }
+
+    public String getScope() {
+      return scope;
+    }
+
+    public void setScope(String scope) {
+      this.scope = scope;
+    }
+
+    public List<Metric> getMetrics() {
+      return metrics;
+    }
+
+    public void setMetrics(List<Metric> metrics) {
+      this.metrics = metrics;
+    }
   }
 
   /**

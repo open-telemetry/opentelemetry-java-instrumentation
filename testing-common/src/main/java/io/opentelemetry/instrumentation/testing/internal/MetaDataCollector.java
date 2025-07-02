@@ -39,13 +39,13 @@ public final class MetaDataCollector {
 
   public static void writeTelemetryToFiles(
       String path,
-      Map<String, MetricData> metrics,
+      Map<InstrumentationScopeInfo, Map<String, MetricData>> metricsByScope,
       Map<InstrumentationScopeInfo, Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>>>
           spansByScopeAndKind)
       throws IOException {
 
     String moduleRoot = extractInstrumentationPath(path);
-    writeMetricData(moduleRoot, metrics);
+    writeMetricData(moduleRoot, metricsByScope);
     writeSpanData(moduleRoot, spansByScopeAndKind);
   }
 
@@ -125,10 +125,12 @@ public final class MetaDataCollector {
     }
   }
 
-  private static void writeMetricData(String instrumentationPath, Map<String, MetricData> metrics)
+  private static void writeMetricData(
+      String instrumentationPath,
+      Map<InstrumentationScopeInfo, Map<String, MetricData>> metricsByScope)
       throws IOException {
 
-    if (metrics.isEmpty()) {
+    if (metricsByScope.isEmpty()) {
       return;
     }
 
@@ -144,26 +146,36 @@ public final class MetaDataCollector {
 
       writer.write("when: " + when + "\n");
 
-      writer.write("metrics:\n");
-      for (MetricData metric : metrics.values()) {
-        writer.write("  - name: " + metric.getName() + "\n");
-        writer.write("    description: " + metric.getDescription() + "\n");
-        writer.write("    type: " + metric.getType().toString() + "\n");
-        writer.write("    unit: " + sanitizeUnit(metric.getUnit()) + "\n");
-        writer.write("    attributes: \n");
-        metric.getData().getPoints().stream()
-            .findFirst()
-            .get()
-            .getAttributes()
-            .forEach(
-                (key, value) -> {
-                  try {
-                    writer.write("      - name: " + key.getKey() + "\n");
-                    writer.write("        type: " + key.getType().toString() + "\n");
-                  } catch (IOException e) {
-                    throw new IllegalStateException(e);
-                  }
-                });
+      writer.write("metrics_by_scope:\n");
+
+      for (Map.Entry<InstrumentationScopeInfo, Map<String, MetricData>> entry :
+          metricsByScope.entrySet()) {
+        InstrumentationScopeInfo scope = entry.getKey();
+        Map<String, MetricData> metrics = entry.getValue();
+
+        writer.write("  - scope: " + scope.getName() + "\n");
+        writer.write("    metrics:\n");
+
+        for (MetricData metric : metrics.values()) {
+          writer.write("      - name: " + metric.getName() + "\n");
+          writer.write("        description: " + metric.getDescription() + "\n");
+          writer.write("        type: " + metric.getType().toString() + "\n");
+          writer.write("        unit: " + sanitizeUnit(metric.getUnit()) + "\n");
+          writer.write("        attributes: \n");
+          metric.getData().getPoints().stream()
+              .findFirst()
+              .get()
+              .getAttributes()
+              .forEach(
+                  (key, value) -> {
+                    try {
+                      writer.write("          - name: " + key.getKey() + "\n");
+                      writer.write("            type: " + key.getType().toString() + "\n");
+                    } catch (IOException e) {
+                      throw new IllegalStateException(e);
+                    }
+                  });
+        }
       }
     }
   }
