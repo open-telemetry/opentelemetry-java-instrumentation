@@ -1,38 +1,34 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-
 plugins {
+  id("otel.java-conventions")
   id("com.gradleup.shadow")
+  id("otel.shadow-conventions")
 }
-
-apply from: "$rootDir/gradle/shadow.gradle"
-
-def relocatePackages = ext.relocatePackages
 
 configurations {
   // this configuration collects libs that will be placed in the bootstrap classloader
-  bootstrapLibs {
-    canBeResolved = true
-    canBeConsumed = false
+  create("bootstrapLibs") {
+    isCanBeResolved = true
+    isCanBeConsumed = false
   }
   // this configuration collects libs that will be placed in the agent classloader, isolated from the instrumented application code
-  javaagentLibs {
-    canBeResolved = true
-    canBeConsumed = false
+  create("javaagentLibs") {
+    isCanBeResolved = true
+    isCanBeConsumed = false
   }
   // this configuration stores the upstream agent dep that's extended by this project
-  upstreamAgent {
-    canBeResolved = true
-    canBeConsumed = false
+  create("upstreamAgent") {
+    isCanBeResolved = true
+    isCanBeConsumed = false
   }
 }
 
 dependencies {
-  bootstrapLibs(project(":bootstrap"))
+  "bootstrapLibs"(project(":bootstrap"))
   // and finally include everything from otel agent for testing
-  upstreamAgent("io.opentelemetry.javaagent:opentelemetry-agent-for-testing:${versions.opentelemetryJavaagentAlpha}")
+  "upstreamAgent"("io.opentelemetry.javaagent:opentelemetry-agent-for-testing:${rootProject.extra["otelInstrumentationAlphaVersion"]}")
 }
 
-CopySpec isolateClasses(Iterable<File> jars) {
+fun CopySpec.isolateClasses(jars: Iterable<File>): CopySpec {
   return copySpec {
     jars.forEach {
       from(zipTree(it)) {
@@ -56,8 +52,8 @@ tasks {
   // building the final javaagent jar is done in 3 steps:
 
   // 1. all distro specific javaagent libs are relocated
-  task relocateJavaagentLibs(type: ShadowJar) {
-    configurations = [project.configurations.javaagentLibs]
+  val relocateJavaagentLibs by registering(com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar::class) {
+    configurations = listOf(project.configurations["javaagentLibs"])
 
     duplicatesStrategy = DuplicatesStrategy.FAIL
 
@@ -65,7 +61,6 @@ tasks {
 
     mergeServiceFiles()
     exclude("**/module-info.class")
-    relocatePackages(it)
 
     // exclude known bootstrap dependencies - they can't appear in the inst/ directory
     dependencies {
@@ -80,9 +75,9 @@ tasks {
   // having a separate task for isolating javaagent libs is required to avoid duplicates with the upstream javaagent
   // duplicatesStrategy in shadowJar won't be applied when adding files with with(CopySpec) because each CopySpec has
   // its own duplicatesStrategy
-  task isolateJavaagentLibs(type: Copy) {
-    dependsOn(tasks.relocateJavaagentLibs)
-    with isolateClasses(tasks.relocateJavaagentLibs.outputs.files)
+  val isolateJavaagentLibs by registering(Copy::class) {
+    dependsOn(relocateJavaagentLibs)
+    with(isolateClasses(relocateJavaagentLibs.get().outputs.files))
 
     into(layout.buildDirectory.dir("isolated/javaagentLibs"))
   }
@@ -90,10 +85,10 @@ tasks {
   // 3. the relocated and isolated javaagent libs are merged together with the bootstrap libs (which undergo relocation
   // in this task) and the upstream javaagent jar; duplicates are removed
   shadowJar {
-    configurations = [project.configurations.bootstrapLibs, project.configurations.upstreamAgent]
+    configurations = listOf(project.configurations["bootstrapLibs"], project.configurations["upstreamAgent"])
 
-    dependsOn(tasks.isolateJavaagentLibs)
-    from(tasks.isolateJavaagentLibs.outputs)
+    dependsOn(isolateJavaagentLibs)
+    from(isolateJavaagentLibs.get().outputs)
 
     archiveClassifier.set("")
 
@@ -103,20 +98,19 @@ tasks {
       include("inst/META-INF/services/*")
     }
     exclude("**/module-info.class")
-    relocatePackages(it)
 
     manifest {
-      attributes.put("Main-Class", "io.opentelemetry.javaagent.OpenTelemetryAgent")
-      attributes.put("Agent-Class", "io.opentelemetry.javaagent.OpenTelemetryAgent")
-      attributes.put("Premain-Class", "io.opentelemetry.javaagent.OpenTelemetryAgent")
-      attributes.put("Can-Redefine-Classes", "true")
-      attributes.put("Can-Retransform-Classes", "true")
-      attributes.put("Implementation-Vendor", "Demo")
-      attributes.put("Implementation-Version", "demo-${project.version}-otel-${versions.opentelemetryJavaagent}")
+      attributes["Main-Class"] = "io.opentelemetry.javaagent.OpenTelemetryAgent"
+      attributes["Agent-Class"] = "io.opentelemetry.javaagent.OpenTelemetryAgent"
+      attributes["Premain-Class"] = "io.opentelemetry.javaagent.OpenTelemetryAgent"
+      attributes["Can-Redefine-Classes"] = "true"
+      attributes["Can-Retransform-Classes"] = "true"
+      attributes["Implementation-Vendor"] = "Demo"
+      attributes["Implementation-Version"] = "demo-${project.version}-otel-${rootProject.extra["otelInstrumentationVersion"]}"
     }
   }
 
   assemble {
     dependsOn(shadowJar)
   }
-}
+} 

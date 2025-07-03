@@ -1,5 +1,7 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
-  id "java"
+  id("otel.java-conventions")
 }
 
 dependencies {
@@ -18,11 +20,11 @@ tasks.test {
 
   testLogging.showStandardStreams = true
 
-  def shadowTask = project(":agent").tasks.shadowJar
+  val shadowTask = project(":agent").tasks.named<ShadowJar>("shadowJar").get()
   dependsOn(shadowTask)
   inputs.files(layout.files(shadowTask))
 
   doFirst {
-    jvmArgs("-Dio.opentelemetry.smoketest.agent.shadowJar.path=${shadowTask.archiveFile.get()}")
+    jvmArgs("-Dio.opentelemetry.smoketest.agent.shadowJar.path=${shadowTask.archiveFile.get().asFile.absolutePath}")
   }
-}
+} 
