@@ -141,7 +141,7 @@ For more information about the maintainer role, see the [community repository](h
 - [Gregor Zeitlinger](https://github.com/zeitlinger), Grafana
 - [Jack Berg](https://github.com/jack-berg), New Relic
 - [Jason Plumb](https://github.com/breedx-splk), Splunk
-- [Jay DeLuca](https://github.com/jaydeluca)
+- [Jay DeLuca](https://github.com/jaydeluca), Grafana
 - [Jean Bisutti](https://github.com/jeanbisutti), Microsoft
 - [John Watson](https://github.com/jkwatson), Cloudera
 - [Jonas Kunz](https://github.com/JonasKunz), Elastic
