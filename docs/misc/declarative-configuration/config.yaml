@@ -3,9 +3,13 @@
 # This list does not contain all properties, but those that
 # are different from what the config bridge already does.
 
-# Based on https://github.com/open-telemetry/opentelemetry-configuration/blob/main/examples/kitchen-sink.yaml
+# Also see
+# - https://github.com/open-telemetry/opentelemetry-configuration/blob/main/examples/sdk-migration-config.yaml
+# - https://github.com/open-telemetry/opentelemetry-configuration/blob/main/examples/sdk-config.yaml
 
 # Re-use this flag to disable the Agent/Spring starter as well as the SDK.
+# Note that the Agent/Spring starter still keeps the convention to use "enabled" -
+# this is just an exception to the rule.
 disabled: false # was: "otel.javaagent.enabled"
 # Re-use this flag from the SDK: if value is "debug", we trigger the behavior of "otel.javaagent.debug"
 log_level: info # was: "otel.javaagent.debug"
@@ -50,14 +54,18 @@ instrumentation/development:
       exclude_class_loaders: # was "otel.javaagent.exclude-class-loaders"
         - a
         - b
+      logging:
+        # was "otel.javaagent.logging"
+        output:
+          application:
+            logs_buffer_max_records: 1000 # can only be used with "type: application"
+          simple: # mutually exclusive with "application"
     common:
+      default:
+        enabled: true # was "otel.instrumentation.common.default-enabled"
       db_statement_sanitizer:
         enabled: true # already exists - just for reference
       thread_details:
         # disabled by default
         # enabled applies to both spans and logs (but not metrics due to high cardinality)
         enabled: true # was "otel.javaagent.add-thread-details" = "true"
-    logging:
-      application:
-        logs_buffer_max_records: 1000 # can only be used with "type: application"
-      type: application or simple # was "otel.javaagent.logging"
