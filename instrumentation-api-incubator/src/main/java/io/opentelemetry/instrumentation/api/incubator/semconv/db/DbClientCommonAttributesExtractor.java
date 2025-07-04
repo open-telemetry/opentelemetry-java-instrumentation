@@ -6,6 +6,10 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -17,15 +21,12 @@ import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import javax.annotation.Nullable;
 
 abstract class DbClientCommonAttributesExtractor<
-        REQUEST, RESPONSE, GETTER extends DbClientCommonAttributesGetter<REQUEST>>
+        REQUEST, RESPONSE, GETTER extends DbClientCommonAttributesGetter<REQUEST, RESPONSE>>
     implements AttributesExtractor<REQUEST, RESPONSE>, SpanKeyProvider {
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_NAME = AttributeKey.stringKey("db.name");
-  static final AttributeKey<String> DB_NAMESPACE = AttributeKey.stringKey("db.namespace");
   static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
-  public static final AttributeKey<String> DB_SYSTEM_NAME =
-      AttributeKey.stringKey("db.system.name");
   private static final AttributeKey<String> DB_USER = AttributeKey.stringKey("db.user");
   private static final AttributeKey<String> DB_CONNECTION_STRING =
       AttributeKey.stringKey("db.connection_string");
@@ -60,7 +61,16 @@ abstract class DbClientCommonAttributesExtractor<
       Context context,
       REQUEST request,
       @Nullable RESPONSE response,
-      @Nullable Throwable error) {}
+      @Nullable Throwable error) {
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      if (error != null) {
+        internalSet(attributes, ERROR_TYPE, error.getClass().getName());
+      }
+      if (error != null || response != null) {
+        internalSet(attributes, DB_RESPONSE_STATUS_CODE, getter.getResponseStatus(response, error));
+      }
+    }
+  }
 
   /**
    * This method is internal and is hence not for public use. Its API is unstable and can change at

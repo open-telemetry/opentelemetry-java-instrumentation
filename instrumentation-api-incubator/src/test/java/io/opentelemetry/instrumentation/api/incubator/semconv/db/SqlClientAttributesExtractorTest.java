@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_PARAMETER;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.entry;
@@ -15,6 +17,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.semconv.DbAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Arrays;
 import java.util.Collection;
@@ -26,7 +29,8 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings("deprecation") // using deprecated semconv
 class SqlClientAttributesExtractorTest {
 
-  static class TestAttributesGetter implements SqlClientAttributesGetter<Map<String, Object>> {
+  static class TestAttributesGetter
+      implements SqlClientAttributesGetter<Map<String, Object>, Void> {
 
     @Override
     public Collection<String> getRawQueryTexts(Map<String, Object> map) {
@@ -58,7 +62,15 @@ class SqlClientAttributesExtractorTest {
 
     @Override
     public Long getBatchSize(Map<String, Object> map) {
-      return read(map, "db.operation.batch.size", Long.class);
+      return read(map, DB_OPERATION_BATCH_SIZE.getKey(), Long.class);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Map<String, String> getQueryParameters(Map<String, Object> map) {
+      Map<String, String> parameters =
+          (Map<String, String>) read(map, "db.query.parameter", Map.class);
+      return parameters != null ? parameters : Collections.emptyMap();
     }
 
     protected String read(Map<String, Object> map, String key) {
@@ -71,7 +83,7 @@ class SqlClientAttributesExtractorTest {
   }
 
   static class TestMultiAttributesGetter extends TestAttributesGetter
-      implements SqlClientAttributesGetter<Map<String, Object>> {
+      implements SqlClientAttributesGetter<Map<String, Object>, Void> {
 
     @SuppressWarnings("unchecked")
     @Override
@@ -108,17 +120,17 @@ class SqlClientAttributesExtractorTest {
       assertThat(startAttributes.build())
           .containsOnly(
               entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
-              entry(DbIncubatingAttributes.DB_SYSTEM_NAME, "myDb"),
+              entry(DbAttributes.DB_SYSTEM_NAME, "myDb"),
               entry(DbIncubatingAttributes.DB_USER, "username"),
               entry(DbIncubatingAttributes.DB_NAME, "potatoes"),
               entry(DbIncubatingAttributes.DB_CONNECTION_STRING, "mydb:///potatoes"),
               entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM potato WHERE id=?"),
               entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
               entry(DbIncubatingAttributes.DB_SQL_TABLE, "potato"),
-              entry(DbIncubatingAttributes.DB_NAMESPACE, "potatoes"),
-              entry(DbIncubatingAttributes.DB_QUERY_TEXT, "SELECT * FROM potato WHERE id=?"),
-              entry(DbIncubatingAttributes.DB_OPERATION_NAME, "SELECT"),
-              entry(DbIncubatingAttributes.DB_COLLECTION_NAME, "potato"));
+              entry(DbAttributes.DB_NAMESPACE, "potatoes"),
+              entry(DbAttributes.DB_QUERY_TEXT, "SELECT * FROM potato WHERE id=?"),
+              entry(DbAttributes.DB_OPERATION_NAME, "SELECT"),
+              entry(DbAttributes.DB_COLLECTION_NAME, "potato"));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
@@ -132,11 +144,11 @@ class SqlClientAttributesExtractorTest {
     } else if (SemconvStability.emitStableDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
-              entry(DbIncubatingAttributes.DB_SYSTEM_NAME, "myDb"),
-              entry(DbIncubatingAttributes.DB_NAMESPACE, "potatoes"),
-              entry(DbIncubatingAttributes.DB_QUERY_TEXT, "SELECT * FROM potato WHERE id=?"),
-              entry(DbIncubatingAttributes.DB_OPERATION_NAME, "SELECT"),
-              entry(DbIncubatingAttributes.DB_COLLECTION_NAME, "potato"));
+              entry(DbAttributes.DB_SYSTEM_NAME, "myDb"),
+              entry(DbAttributes.DB_NAMESPACE, "potatoes"),
+              entry(DbAttributes.DB_QUERY_TEXT, "SELECT * FROM potato WHERE id=?"),
+              entry(DbAttributes.DB_OPERATION_NAME, "SELECT"),
+              entry(DbAttributes.DB_COLLECTION_NAME, "potato"));
     }
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
@@ -163,8 +175,8 @@ class SqlClientAttributesExtractorTest {
           .containsOnly(
               entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT *"),
               entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-              entry(DbIncubatingAttributes.DB_QUERY_TEXT, "SELECT *"),
-              entry(DbIncubatingAttributes.DB_OPERATION_NAME, "SELECT"));
+              entry(DbAttributes.DB_QUERY_TEXT, "SELECT *"),
+              entry(DbAttributes.DB_OPERATION_NAME, "SELECT"));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(attributes.build())
           .containsOnly(
@@ -173,8 +185,8 @@ class SqlClientAttributesExtractorTest {
     } else if (SemconvStability.emitStableDatabaseSemconv()) {
       assertThat(attributes.build())
           .containsOnly(
-              entry(DbIncubatingAttributes.DB_QUERY_TEXT, "SELECT *"),
-              entry(DbIncubatingAttributes.DB_OPERATION_NAME, "SELECT"));
+              entry(DbAttributes.DB_QUERY_TEXT, "SELECT *"),
+              entry(DbAttributes.DB_OPERATION_NAME, "SELECT"));
     }
   }
 
@@ -203,9 +215,9 @@ class SqlClientAttributesExtractorTest {
               entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM table"),
               entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
               entry(DbIncubatingAttributes.DB_CASSANDRA_TABLE, "table"),
-              entry(DbIncubatingAttributes.DB_QUERY_TEXT, "SELECT * FROM table"),
-              entry(DbIncubatingAttributes.DB_OPERATION_NAME, "SELECT"),
-              entry(DbIncubatingAttributes.DB_COLLECTION_NAME, "table"));
+              entry(DbAttributes.DB_QUERY_TEXT, "SELECT * FROM table"),
+              entry(DbAttributes.DB_OPERATION_NAME, "SELECT"),
+              entry(DbAttributes.DB_COLLECTION_NAME, "table"));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(attributes.build())
           .containsOnly(
@@ -215,9 +227,9 @@ class SqlClientAttributesExtractorTest {
     } else if (SemconvStability.emitStableDatabaseSemconv()) {
       assertThat(attributes.build())
           .containsOnly(
-              entry(DbIncubatingAttributes.DB_QUERY_TEXT, "SELECT * FROM table"),
-              entry(DbIncubatingAttributes.DB_OPERATION_NAME, "SELECT"),
-              entry(DbIncubatingAttributes.DB_COLLECTION_NAME, "table"));
+              entry(DbAttributes.DB_QUERY_TEXT, "SELECT * FROM table"),
+              entry(DbAttributes.DB_OPERATION_NAME, "SELECT"),
+              entry(DbAttributes.DB_COLLECTION_NAME, "table"));
     }
   }
 
@@ -241,7 +253,7 @@ class SqlClientAttributesExtractorTest {
     Map<String, Object> request = new HashMap<>();
     request.put("db.name", "potatoes");
     request.put("db.statements", singleton("INSERT INTO potato VALUES(?)"));
-    request.put("db.operation.batch.size", 2L);
+    request.put(DB_OPERATION_BATCH_SIZE.getKey(), 2L);
 
     Context context = Context.root();
 
@@ -263,11 +275,11 @@ class SqlClientAttributesExtractorTest {
               entry(DbIncubatingAttributes.DB_STATEMENT, "INSERT INTO potato VALUES(?)"),
               entry(DbIncubatingAttributes.DB_OPERATION, "INSERT"),
               entry(DbIncubatingAttributes.DB_SQL_TABLE, "potato"),
-              entry(DbIncubatingAttributes.DB_NAMESPACE, "potatoes"),
-              entry(DbIncubatingAttributes.DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
-              entry(DbIncubatingAttributes.DB_OPERATION_NAME, "BATCH INSERT"),
-              entry(DbIncubatingAttributes.DB_COLLECTION_NAME, "potato"),
-              entry(DbIncubatingAttributes.DB_OPERATION_BATCH_SIZE, 2L));
+              entry(DbAttributes.DB_NAMESPACE, "potatoes"),
+              entry(DbAttributes.DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
+              entry(DbAttributes.DB_OPERATION_NAME, "BATCH INSERT"),
+              entry(DbAttributes.DB_COLLECTION_NAME, "potato"),
+              entry(DB_OPERATION_BATCH_SIZE, 2L));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
@@ -278,11 +290,11 @@ class SqlClientAttributesExtractorTest {
     } else if (SemconvStability.emitStableDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
-              entry(DbIncubatingAttributes.DB_NAMESPACE, "potatoes"),
-              entry(DbIncubatingAttributes.DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
-              entry(DbIncubatingAttributes.DB_OPERATION_NAME, "BATCH INSERT"),
-              entry(DbIncubatingAttributes.DB_COLLECTION_NAME, "potato"),
-              entry(DbIncubatingAttributes.DB_OPERATION_BATCH_SIZE, 2L));
+              entry(DbAttributes.DB_NAMESPACE, "potatoes"),
+              entry(DbAttributes.DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
+              entry(DbAttributes.DB_OPERATION_NAME, "BATCH INSERT"),
+              entry(DbAttributes.DB_COLLECTION_NAME, "potato"),
+              entry(DB_OPERATION_BATCH_SIZE, 2L));
     }
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
@@ -296,7 +308,7 @@ class SqlClientAttributesExtractorTest {
     request.put(
         "db.statements",
         Arrays.asList("INSERT INTO potato VALUES(1)", "INSERT INTO potato VALUES(2)"));
-    request.put("db.operation.batch.size", 2L);
+    request.put(DB_OPERATION_BATCH_SIZE.getKey(), 2L);
 
     Context context = Context.root();
 
@@ -315,22 +327,22 @@ class SqlClientAttributesExtractorTest {
       assertThat(startAttributes.build())
           .containsOnly(
               entry(DbIncubatingAttributes.DB_NAME, "potatoes"),
-              entry(DbIncubatingAttributes.DB_NAMESPACE, "potatoes"),
-              entry(DbIncubatingAttributes.DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
-              entry(DbIncubatingAttributes.DB_OPERATION_NAME, "BATCH INSERT"),
-              entry(DbIncubatingAttributes.DB_COLLECTION_NAME, "potato"),
-              entry(DbIncubatingAttributes.DB_OPERATION_BATCH_SIZE, 2L));
+              entry(DbAttributes.DB_NAMESPACE, "potatoes"),
+              entry(DbAttributes.DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
+              entry(DbAttributes.DB_OPERATION_NAME, "BATCH INSERT"),
+              entry(DbAttributes.DB_COLLECTION_NAME, "potato"),
+              entry(DB_OPERATION_BATCH_SIZE, 2L));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(entry(DbIncubatingAttributes.DB_NAME, "potatoes"));
     } else if (SemconvStability.emitStableDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
-              entry(DbIncubatingAttributes.DB_NAMESPACE, "potatoes"),
-              entry(DbIncubatingAttributes.DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
-              entry(DbIncubatingAttributes.DB_OPERATION_NAME, "BATCH INSERT"),
-              entry(DbIncubatingAttributes.DB_COLLECTION_NAME, "potato"),
-              entry(DbIncubatingAttributes.DB_OPERATION_BATCH_SIZE, 2L));
+              entry(DbAttributes.DB_NAMESPACE, "potatoes"),
+              entry(DbAttributes.DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
+              entry(DbAttributes.DB_OPERATION_NAME, "BATCH INSERT"),
+              entry(DbAttributes.DB_COLLECTION_NAME, "potato"),
+              entry(DB_OPERATION_BATCH_SIZE, 2L));
     }
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
@@ -342,7 +354,7 @@ class SqlClientAttributesExtractorTest {
     Map<String, Object> request = new HashMap<>();
     request.put("db.name", "potatoes");
     request.put("db.statements", singleton("INSERT INTO potato VALUES(?)"));
-    request.put("db.operation.batch.size", 1L);
+    request.put(DB_OPERATION_BATCH_SIZE.getKey(), 1L);
 
     Context context = Context.root();
 
@@ -364,10 +376,10 @@ class SqlClientAttributesExtractorTest {
               entry(DbIncubatingAttributes.DB_STATEMENT, "INSERT INTO potato VALUES(?)"),
               entry(DbIncubatingAttributes.DB_OPERATION, "INSERT"),
               entry(DbIncubatingAttributes.DB_SQL_TABLE, "potato"),
-              entry(DbIncubatingAttributes.DB_NAMESPACE, "potatoes"),
-              entry(DbIncubatingAttributes.DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
-              entry(DbIncubatingAttributes.DB_OPERATION_NAME, "INSERT"),
-              entry(DbIncubatingAttributes.DB_COLLECTION_NAME, "potato"));
+              entry(DbAttributes.DB_NAMESPACE, "potatoes"),
+              entry(DbAttributes.DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
+              entry(DbAttributes.DB_OPERATION_NAME, "INSERT"),
+              entry(DbAttributes.DB_COLLECTION_NAME, "potato"));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
@@ -378,12 +390,82 @@ class SqlClientAttributesExtractorTest {
     } else if (SemconvStability.emitStableDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
-              entry(DbIncubatingAttributes.DB_NAMESPACE, "potatoes"),
-              entry(DbIncubatingAttributes.DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
-              entry(DbIncubatingAttributes.DB_OPERATION_NAME, "INSERT"),
-              entry(DbIncubatingAttributes.DB_COLLECTION_NAME, "potato"));
+              entry(DbAttributes.DB_NAMESPACE, "potatoes"),
+              entry(DbAttributes.DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
+              entry(DbAttributes.DB_OPERATION_NAME, "INSERT"),
+              entry(DbAttributes.DB_COLLECTION_NAME, "potato"));
     }
 
+    assertThat(endAttributes.build().isEmpty()).isTrue();
+  }
+
+  @Test
+  void shouldExtractQueryParameters() {
+    // given
+    Map<String, Object> request = new HashMap<>();
+    request.put("db.name", "potatoes");
+    // a query with prepared parameters and parameters to sanitize
+    request.put(
+        "db.statement",
+        "SELECT col FROM table WHERE field1=? AND field2='A' AND field3=? AND field4=2");
+    // a prepared parameters map
+    Map<String, String> parameterMap = new HashMap<>();
+    parameterMap.put("0", "'a'");
+    parameterMap.put("1", "1");
+    request.put("db.query.parameter", parameterMap);
+
+    Context context = Context.root();
+
+    AttributesExtractor<Map<String, Object>, Void> underTest =
+        SqlClientAttributesExtractor.builder(new TestAttributesGetter())
+            .setCaptureQueryParameters(true)
+            .build();
+
+    // when
+    AttributesBuilder startAttributes = Attributes.builder();
+    underTest.onStart(startAttributes, context, request);
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    underTest.onEnd(endAttributes, context, request, null, null);
+
+    String prefix = DB_QUERY_PARAMETER.getAttributeKey("").getKey();
+    Attributes queryParameterAttributes =
+        startAttributes.removeIf(attribute -> !attribute.getKey().startsWith(prefix)).build();
+
+    // then
+    assertThat(queryParameterAttributes)
+        .containsOnly(
+            entry(DB_QUERY_PARAMETER.getAttributeKey("0"), "'a'"),
+            entry(DB_QUERY_PARAMETER.getAttributeKey("1"), "1"));
+
+    assertThat(endAttributes.build().isEmpty()).isTrue();
+  }
+
+  @Test
+  void shouldNotExtractQueryParametersForBatch() {
+    // given
+    Map<String, Object> request = new HashMap<>();
+    request.put("db.name", "potatoes");
+    request.put("db.statements", singleton("INSERT INTO potato VALUES(?)"));
+    request.put(DB_OPERATION_BATCH_SIZE.getKey(), 2L);
+    request.put("db.query.parameter", Collections.singletonMap("0", "1"));
+
+    Context context = Context.root();
+
+    AttributesExtractor<Map<String, Object>, Void> underTest =
+        SqlClientAttributesExtractor.builder(new TestMultiAttributesGetter())
+            .setCaptureQueryParameters(true)
+            .build();
+
+    // when
+    AttributesBuilder startAttributes = Attributes.builder();
+    underTest.onStart(startAttributes, context, request);
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    underTest.onEnd(endAttributes, context, request, null, null);
+
+    // then
+    assertThat(startAttributes.build()).doesNotContainKey(DB_QUERY_PARAMETER.getAttributeKey("0"));
     assertThat(endAttributes.build().isEmpty()).isTrue();
   }
 }

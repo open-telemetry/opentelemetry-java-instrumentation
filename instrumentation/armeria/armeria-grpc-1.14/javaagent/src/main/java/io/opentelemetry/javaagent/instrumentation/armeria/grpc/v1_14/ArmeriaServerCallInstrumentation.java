@@ -10,7 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import com.linecorp.armeria.server.ServiceRequestContext;
 import io.grpc.ServerCall;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.grpc.v1_6.GrpcAuthorityStorage;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -43,7 +43,7 @@ public class ArmeriaServerCallInstrumentation implements TypeInstrumentation {
         // ArmeriaServerCall does not implement getAuthority. We will store the value for authority
         // header as virtual field, this field is read in grpc instrumentation in
         // TracingServerInterceptor
-        VirtualField.find(ServerCall.class, String.class).set(serverCall, authority);
+        GrpcAuthorityStorage.setAuthority(serverCall, authority);
       }
     }
   }

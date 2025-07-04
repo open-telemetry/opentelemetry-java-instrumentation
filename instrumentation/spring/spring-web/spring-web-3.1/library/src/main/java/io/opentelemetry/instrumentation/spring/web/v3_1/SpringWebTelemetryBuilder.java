@@ -26,7 +26,7 @@ public final class SpringWebTelemetryBuilder {
   static {
     WebTelemetryUtil.setBuilderExtractor(SpringWebTelemetryBuilder::getBuilder);
     Experimental.internalSetEmitExperimentalTelemetry(
-        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientTelemetry(emit));
   }
 
   SpringWebTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -40,20 +40,6 @@ public final class SpringWebTelemetryBuilder {
 
   private DefaultHttpClientInstrumenterBuilder<HttpRequest, ClientHttpResponse> getBuilder() {
     return builder;
-  }
-
-  /**
-   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
-   * items.
-   *
-   * @deprecated Use {@link #addAttributesExtractor(AttributesExtractor)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public SpringWebTelemetryBuilder addAttributeExtractor(
-      AttributesExtractor<? super HttpRequest, ? super ClientHttpResponse> attributesExtractor) {
-    builder.addAttributesExtractor(attributesExtractor);
-    return this;
   }
 
   /**
@@ -114,22 +100,6 @@ public final class SpringWebTelemetryBuilder {
   @CanIgnoreReturnValue
   public SpringWebTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
-    return this;
-  }
-
-  /**
-   * Configures the instrumentation to emit experimental HTTP client metrics.
-   *
-   * @param emitExperimentalHttpClientMetrics {@code true} if the experimental HTTP client metrics
-   *     are to be emitted.
-   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(SpringWebTelemetryBuilder,
-   *     boolean)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public SpringWebTelemetryBuilder setEmitExperimentalHttpClientMetrics(
-      boolean emitExperimentalHttpClientMetrics) {
-    builder.setEmitExperimentalHttpClientMetrics(emitExperimentalHttpClientMetrics);
     return this;
   }
 

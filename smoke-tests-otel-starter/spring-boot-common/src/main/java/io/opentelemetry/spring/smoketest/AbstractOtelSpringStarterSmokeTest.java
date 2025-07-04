@@ -12,6 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
@@ -22,6 +23,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.ClientAttributes;
+import io.opentelemetry.semconv.CodeAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
@@ -35,6 +37,7 @@ import java.util.Collections;
 import java.util.List;
 import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.assertj.core.api.AbstractIterableAssert;
+import org.assertj.core.api.MapAssert;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
@@ -147,6 +150,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
 
   @Test
   @org.junit.jupiter.api.Order(1)
+  @SuppressWarnings("deprecation") // testing deprecated code semconv
   void shouldSendTelemetry() {
     HttpHeaders headers = new HttpHeaders();
     headers.add("key", "value");
@@ -222,8 +226,8 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
       jmxMetrics.add("jvm.system.cpu.load_1m");
     }
 
-    boolean noNative = System.getProperty("org.graalvm.nativeimage.imagecode") == null;
-    if (noNative) {
+    boolean nativeImage = System.getProperty("org.graalvm.nativeimage.imagecode") != null;
+    if (!nativeImage) {
       // GraalVM native image does not support buffer pools - have to investigate why
       jmxMetrics.add("jvm.buffer.memory.used");
     }
@@ -239,18 +243,29 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
     // Log
     List<LogRecordData> exportedLogRecords = testing.getExportedLogRecords();
     assertThat(exportedLogRecords).as("No log record exported.").isNotEmpty();
-    if (noNative) {
+    if (!nativeImage) {
       // log records differ in native image mode due to different startup timing
       LogRecordData firstLog = exportedLogRecords.get(0);
       assertThat(firstLog.getBodyValue().asString())
           .as("Should instrument logs")
           .startsWith("Starting ")
           .contains(this.getClass().getSimpleName());
-      assertThat(firstLog.getAttributes().asMap())
-          .as("Should capture code attributes")
-          .containsEntry(
-              CodeIncubatingAttributes.CODE_NAMESPACE,
-              "org.springframework.boot.StartupInfoLogger");
+
+      MapAssert<AttributeKey<?>, Object> attributesAssert =
+          assertThat(firstLog.getAttributes().asMap()).as("Should capture code attributes");
+
+      if (SemconvStability.emitStableDatabaseSemconv()) {
+        attributesAssert.containsEntry(
+            CodeAttributes.CODE_FUNCTION_NAME,
+            "org.springframework.boot.StartupInfoLogger.logStarting");
+      }
+      if (SemconvStability.isEmitOldCodeSemconv()) {
+        attributesAssert
+            .containsEntry(
+                CodeIncubatingAttributes.CODE_NAMESPACE,
+                "org.springframework.boot.StartupInfoLogger")
+            .containsEntry(CodeIncubatingAttributes.CODE_FUNCTION, "logStarting");
+      }
     }
   }
 

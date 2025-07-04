@@ -14,6 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.internal.HttpRouteState;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterAccess;
+import io.opentelemetry.instrumentation.api.internal.InstrumenterContext;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import java.time.Instant;
@@ -164,6 +165,14 @@ public class Instrumenter<REQUEST, RESPONSE> {
   }
 
   private Context doStart(Context parentContext, REQUEST request, @Nullable Instant startTime) {
+    try {
+      return doStartImpl(parentContext, request, startTime);
+    } finally {
+      InstrumenterContext.reset();
+    }
+  }
+
+  private Context doStartImpl(Context parentContext, REQUEST request, @Nullable Instant startTime) {
     SpanKind spanKind = spanKindExtractor.extract(request);
     SpanBuilder spanBuilder =
         tracer.spanBuilder(spanNameExtractor.extract(request)).setSpanKind(spanKind);
@@ -190,7 +199,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
       context = contextCustomizer.onStart(context, request, attributes);
     }
 
-    boolean localRoot = LocalRootSpan.isLocalRoot(context);
+    boolean localRoot = LocalRootSpan.isLocalRoot(parentContext);
+    boolean hasLocalRoot = LocalRootSpan.fromContextOrNull(context) != null;
 
     spanBuilder.setAllAttributes(attributes);
     Span span = spanBuilder.setParent(context).startSpan();
@@ -216,9 +226,9 @@ public class Instrumenter<REQUEST, RESPONSE> {
 
     if (localRoot) {
       context = LocalRootSpan.store(context, span);
-      if (spanKind == SpanKind.SERVER) {
-        HttpRouteState.updateSpan(context, span);
-      }
+    }
+    if (!hasLocalRoot && spanKind == SpanKind.SERVER) {
+      HttpRouteState.updateSpan(context, span);
     }
 
     return spanSuppressor.storeInContext(context, spanKind, span);

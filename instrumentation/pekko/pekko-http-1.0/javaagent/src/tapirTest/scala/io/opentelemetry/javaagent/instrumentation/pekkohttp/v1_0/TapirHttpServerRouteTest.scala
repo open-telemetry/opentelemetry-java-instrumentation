@@ -15,15 +15,7 @@ import io.opentelemetry.testing.internal.armeria.common.{
 }
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.Http
-import org.apache.pekko.http.scaladsl.server.Directives.{
-  IntNumber,
-  complete,
-  concat,
-  path,
-  pathEndOrSingleSlash,
-  pathPrefix,
-  pathSingleSlash
-}
+import org.apache.pekko.http.scaladsl.server.Directives.{concat, pathPrefix}
 import org.apache.pekko.http.scaladsl.server.Route
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.extension.RegisterExtension
@@ -52,6 +44,7 @@ class TapirHttpServerRouteTest {
   }
 
   @Test def testSimple(): Unit = {
+    import org.apache.pekko.http.scaladsl.server.Directives._
     val route = path("test") {
       complete("ok")
     }
@@ -60,6 +53,7 @@ class TapirHttpServerRouteTest {
   }
 
   @Test def testRoute(): Unit = {
+    import org.apache.pekko.http.scaladsl.server.Directives._
     val route = concat(
       pathEndOrSingleSlash {
         complete("root")
@@ -97,6 +91,21 @@ class TapirHttpServerRouteTest {
     )
 
     test(routes, "/test/4", "GET /test/4")
+  }
+
+  @Test def testTapirWithPathPrefix(): Unit = {
+    val interpreter = PekkoHttpServerInterpreter()(system.dispatcher)
+    val tapirRoute = interpreter.toRoute(
+      endpoint.get
+        .in(path[Int]("i") / "bar")
+        .errorOut(stringBody)
+        .out(stringBody)
+        .serverLogicPure[Future](_ => Right("ok"))
+    )
+
+    val prefixedRoute = pathPrefix("foo") { tapirRoute }
+    test(prefixedRoute, "/foo/123/bar", "GET /foo/{i}/bar")
+
   }
 
   def test(route: Route, path: String, spanName: String): Unit = {

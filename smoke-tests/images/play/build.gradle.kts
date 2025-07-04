@@ -8,7 +8,7 @@ plugins {
   id("com.google.cloud.tools.jib")
   // TODO (trask) this plugin doesn't support Play 2.9+, see https://github.com/gradle/playframework/issues/185
   //  once play 3.1 is released, we can update to https://github.com/orgs/playframework/discussions/12338
-  id("org.gradle.playframework") version "0.14"
+  id("org.gradle.playframework") version "0.16.0"
 }
 
 val playVer = "2.8.22"

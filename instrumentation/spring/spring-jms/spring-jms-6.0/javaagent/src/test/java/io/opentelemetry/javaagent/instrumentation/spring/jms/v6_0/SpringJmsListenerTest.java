@@ -29,7 +29,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.jms.core.JmsTemplate;
@@ -82,8 +82,8 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
 
-  @ArgumentsSource(ConfigClasses.class)
   @ParameterizedTest
+  @ValueSource(classes = {AnnotatedListenerConfig.class, ManualListenerConfig.class})
   @SuppressWarnings("unchecked")
   void shouldCaptureHeaders(Class<?> configClass)
       throws ExecutionException, InterruptedException, TimeoutException {

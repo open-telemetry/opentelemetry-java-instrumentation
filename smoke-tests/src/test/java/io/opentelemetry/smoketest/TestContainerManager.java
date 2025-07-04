@@ -19,6 +19,7 @@ public interface TestContainerManager {
 
   int getTargetMappedPort(int originalPort);
 
+  @SuppressWarnings("TooManyParameters")
   Consumer<OutputFrame> startTarget(
       String targetImageName,
       String agentPath,

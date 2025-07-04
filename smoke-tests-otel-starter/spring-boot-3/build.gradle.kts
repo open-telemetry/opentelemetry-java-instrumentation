@@ -25,6 +25,13 @@ dependencies {
   testImplementation("org.testcontainers:kafka")
   testImplementation("org.testcontainers:mongodb")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+  val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
+  if (testLatestDeps) {
+    // with spring boot 3.5.0 versions of org.mongodb:mongodb-driver-sync and org.mongodb:mongodb-driver-core
+    // are not in sync
+    testImplementation("org.mongodb:mongodb-driver-sync:latest.release")
+  }
 }
 
 springBoot {
@@ -70,5 +77,29 @@ graalvmNative {
   tasks.test {
     useJUnitPlatform()
     setForkEvery(1)
+  }
+
+  // see https://github.com/junit-team/junit5/wiki/Upgrading-to-JUnit-5.13
+  // should not be needed after updating native build tools to 0.11.0
+  val initializeAtBuildTime = listOf(
+    "org.junit.jupiter.api.DisplayNameGenerator\$IndicativeSentences",
+    "org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor\$ClassInfo",
+    "org.junit.jupiter.engine.descriptor.ClassBasedTestDescriptor\$LifecycleMethods",
+    "org.junit.jupiter.engine.descriptor.ClassTemplateInvocationTestDescriptor",
+    "org.junit.jupiter.engine.descriptor.ClassTemplateTestDescriptor",
+    "org.junit.jupiter.engine.descriptor.DynamicDescendantFilter\$Mode",
+    "org.junit.jupiter.engine.descriptor.ExclusiveResourceCollector\$1",
+    "org.junit.jupiter.engine.descriptor.MethodBasedTestDescriptor\$MethodInfo",
+    "org.junit.jupiter.engine.discovery.ClassSelectorResolver\$DummyClassTemplateInvocationContext",
+    "org.junit.platform.engine.support.store.NamespacedHierarchicalStore\$EvaluatedValue",
+    "org.junit.platform.launcher.core.DiscoveryIssueNotifier",
+    "org.junit.platform.launcher.core.HierarchicalOutputDirectoryProvider",
+    "org.junit.platform.launcher.core.LauncherDiscoveryResult\$EngineResultInfo",
+    "org.junit.platform.suite.engine.SuiteTestDescriptor\$LifecycleMethods",
+  )
+  binaries {
+    named("test") {
+      buildArgs.add("--initialize-at-build-time=${initializeAtBuildTime.joinToString(",")}")
+    }
   }
 }

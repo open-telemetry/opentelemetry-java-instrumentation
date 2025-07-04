@@ -355,7 +355,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     }
 
     void enterLoadAnnotations() {
-      loadingAnnotations.set(Boolean.TRUE);
+      loadingAnnotations.set(true);
     }
 
     void exitLoadAnnotations() {
@@ -381,7 +381,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
         // Like jdk, byte-buddy getDeclaredAnnotations does not report annotations whose class is
         // missing. To do this it needs to locate the bytes for annotation types used in class.
         // Which means that if we have a matcher that matches methods annotated with @Foo byte-buddy
-        // will end up location bytes for all annotations used on any method in the classes that
+        // will end up locating bytes for all annotations used on any method in the classes that
         // this matcher is applied to. From our perspective this is unreasonable, we just want to
         // match based on annotation name with as little overhead as possible. As we match only
         // based on annotation name we never need to locate the bytes for the annotation type.

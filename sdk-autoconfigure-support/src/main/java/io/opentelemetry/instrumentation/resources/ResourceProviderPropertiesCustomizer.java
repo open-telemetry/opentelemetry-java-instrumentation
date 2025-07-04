@@ -23,6 +23,16 @@ public class ResourceProviderPropertiesCustomizer implements AutoConfigurationCu
 
   static {
     DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
+        "io.opentelemetry.contrib.azure.resource.AzureAksResourceProvider", "azure");
+    DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
+        "io.opentelemetry.contrib.azure.resource.AzureAppServiceResourceProvider", "azure");
+    DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
+        "io.opentelemetry.contrib.azure.resource.AzureContainersResourceProvider", "azure");
+    DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
+        "io.opentelemetry.contrib.azure.resource.AzureFunctionsResourceProvider", "azure");
+    DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
+        "io.opentelemetry.contrib.azure.resource.AzureVmResourceProvider", "azure");
+    DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
         "io.opentelemetry.contrib.aws.resource.BeanstalkResourceProvider", "aws");
     DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
         "io.opentelemetry.contrib.aws.resource.Ec2ResourceProvider", "aws");
@@ -34,6 +44,9 @@ public class ResourceProviderPropertiesCustomizer implements AutoConfigurationCu
         "io.opentelemetry.contrib.aws.resource.LambdaResourceProvider", "aws");
     DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
         "io.opentelemetry.contrib.gcp.resource.GCPResourceProvider", "gcp");
+    DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
+        "io.opentelemetry.contrib.cloudfoundry.resources.CloudFoundryResourceProvider",
+        "cloudfoundry");
     // for testing
     DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
         "io.opentelemetry.instrumentation.resources.ResourceProviderPropertiesCustomizerTest$Provider",
@@ -58,10 +71,10 @@ public class ResourceProviderPropertiesCustomizer implements AutoConfigurationCu
         DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.entrySet()) {
       String providerName = providerEntry.getKey();
       String providerGroup = providerEntry.getValue();
-      Boolean explictEnabled =
+      Boolean explicitEnabled =
           config.getBoolean(String.format("otel.resource.providers.%s.enabled", providerGroup));
 
-      if (isEnabled(providerName, enabledProviders, explictEnabled)) {
+      if (isEnabled(providerName, enabledProviders, explicitEnabled)) {
         enabled.add(providerName);
       } else {
         disabled.add(providerName);

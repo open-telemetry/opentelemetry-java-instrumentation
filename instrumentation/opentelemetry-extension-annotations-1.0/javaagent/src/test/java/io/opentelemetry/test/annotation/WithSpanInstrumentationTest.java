@@ -5,16 +5,20 @@
 
 package io.opentelemetry.test.annotation;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static org.assertj.core.api.Assertions.entry;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
-import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.ClassFileVersion;
@@ -27,139 +31,79 @@ import net.bytebuddy.matcher.ElementMatchers;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@SuppressWarnings("deprecation") // testing instrumentation of deprecated class
 class WithSpanInstrumentationTest {
 
   @RegisterExtension
   public static final AgentInstrumentationExtension testing =
       AgentInstrumentationExtension.create();
 
-  @Test
-  void deriveAutomaticName() throws Exception {
+  private static List<AttributeAssertion> codeAttributeAssertions(String methodName) {
+    return SemconvCodeStabilityUtil.codeFunctionAssertions(TracedWithSpan.class, methodName);
+  }
 
+  @Test
+  void deriveAutomaticName() {
     new TracedWithSpan().otel();
 
-    assertThat(testing.waitForTraces(1))
-        .satisfiesExactly(
-            trace ->
-                assertThat(trace)
-                    .satisfiesExactly(
-                        span ->
-                            assertThat(span)
-                                .hasName("TracedWithSpan.otel")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(SpanId.getInvalid())
-                                .hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes)
-                                            .containsOnly(
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                                    TracedWithSpan.class.getName()),
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_FUNCTION,
-                                                    "otel")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TracedWithSpan.otel")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(codeAttributeAssertions("otel"))));
   }
 
   @Test
-  void manualName() throws Exception {
-
+  void manualName() {
     new TracedWithSpan().namedOtel();
 
-    assertThat(testing.waitForTraces(1))
-        .satisfiesExactly(
-            trace ->
-                assertThat(trace)
-                    .satisfiesExactly(
-                        span ->
-                            assertThat(span)
-                                .hasName("manualName")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(SpanId.getInvalid())
-                                .hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes)
-                                            .containsOnly(
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                                    TracedWithSpan.class.getName()),
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_FUNCTION,
-                                                    "namedOtel")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("manualName")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(codeAttributeAssertions("namedOtel"))));
   }
 
   @Test
-  void manualKind() throws Exception {
-
+  void manualKind() {
     new TracedWithSpan().someKind();
 
-    assertThat(testing.waitForTraces(1))
-        .satisfiesExactly(
-            trace ->
-                assertThat(trace)
-                    .satisfiesExactly(
-                        span ->
-                            assertThat(span)
-                                .hasName("TracedWithSpan.someKind")
-                                .hasKind(SpanKind.PRODUCER)
-                                .hasParentSpanId(SpanId.getInvalid())
-                                .hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes)
-                                            .containsOnly(
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                                    TracedWithSpan.class.getName()),
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_FUNCTION,
-                                                    "someKind")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TracedWithSpan.someKind")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(codeAttributeAssertions("someKind"))));
   }
 
   @Test
-  void multipleSpans() throws Exception {
-
+  void multipleSpans() {
     new TracedWithSpan().server();
 
-    assertThat(testing.waitForTraces(1))
-        .satisfiesExactly(
-            trace ->
-                assertThat(trace)
-                    .satisfiesExactly(
-                        span ->
-                            assertThat(span)
-                                .hasName("TracedWithSpan.server")
-                                .hasKind(SpanKind.SERVER)
-                                .hasNoParent()
-                                .hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes)
-                                            .containsOnly(
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                                    TracedWithSpan.class.getName()),
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_FUNCTION,
-                                                    "server"))),
-                        span ->
-                            assertThat(span)
-                                .hasName("TracedWithSpan.otel")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParent(trace.get(0))
-                                .hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes)
-                                            .containsOnly(
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                                    TracedWithSpan.class.getName()),
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_FUNCTION,
-                                                    "otel")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TracedWithSpan.server")
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(codeAttributeAssertions("server")),
+                span ->
+                    span.hasName("TracedWithSpan.otel")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(codeAttributeAssertions("otel"))));
   }
 
   @Test
   void excludedMethod() throws Exception {
-
     new TracedWithSpan().ignored();
 
     Thread.sleep(500); // sleep a bit just to make sure no span is captured
@@ -167,93 +111,58 @@ class WithSpanInstrumentationTest {
   }
 
   @Test
-  void completedCompletionStage() throws Exception {
-
+  void completedCompletionStage() {
     CompletableFuture<String> future = CompletableFuture.completedFuture("Done");
     new TracedWithSpan().completionStage(future);
 
-    assertThat(testing.waitForTraces(1))
-        .satisfiesExactly(
-            trace ->
-                assertThat(trace)
-                    .satisfiesExactly(
-                        span ->
-                            assertThat(span)
-                                .hasName("TracedWithSpan.completionStage")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(SpanId.getInvalid())
-                                .hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes)
-                                            .containsOnly(
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                                    TracedWithSpan.class.getName()),
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_FUNCTION,
-                                                    "completionStage")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TracedWithSpan.completionStage")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            codeAttributeAssertions("completionStage"))));
   }
 
   @Test
-  void exceptionallyCompletedCompletionStage() throws Exception {
-
+  void exceptionallyCompletedCompletionStage() {
     CompletableFuture<String> future = new CompletableFuture<>();
-    future.completeExceptionally(new IllegalArgumentException("Boom"));
+    Exception exception = new IllegalArgumentException("Boom");
+    future.completeExceptionally(exception);
     new TracedWithSpan().completionStage(future);
 
-    assertThat(testing.waitForTraces(1))
-        .satisfiesExactly(
-            trace ->
-                assertThat(trace)
-                    .satisfiesExactly(
-                        span ->
-                            assertThat(span)
-                                .hasName("TracedWithSpan.completionStage")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(SpanId.getInvalid())
-                                .hasStatus(StatusData.error())
-                                .hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes)
-                                            .containsOnly(
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                                    TracedWithSpan.class.getName()),
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_FUNCTION,
-                                                    "completionStage")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TracedWithSpan.completionStage")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasException(exception)
+                        .hasAttributesSatisfyingExactly(
+                            codeAttributeAssertions("completionStage"))));
   }
 
   @Test
-  void nullCompletionStage() throws Exception {
-
+  void nullCompletionStage() {
     new TracedWithSpan().completionStage(null);
 
-    assertThat(testing.waitForTraces(1))
-        .satisfiesExactly(
-            trace ->
-                assertThat(trace)
-                    .satisfiesExactly(
-                        span ->
-                            assertThat(span)
-                                .hasName("TracedWithSpan.completionStage")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(SpanId.getInvalid())
-                                .hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes)
-                                            .containsOnly(
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                                    TracedWithSpan.class.getName()),
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_FUNCTION,
-                                                    "completionStage")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TracedWithSpan.completionStage")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            codeAttributeAssertions("completionStage"))));
   }
 
   @Test
   void completingCompletionStage() throws Exception {
-
     CompletableFuture<String> future = new CompletableFuture<>();
     new TracedWithSpan().completionStage(future);
 
@@ -262,150 +171,94 @@ class WithSpanInstrumentationTest {
 
     future.complete("Done");
 
-    assertThat(testing.waitForTraces(1))
-        .satisfiesExactly(
-            trace ->
-                assertThat(trace)
-                    .satisfiesExactly(
-                        span ->
-                            assertThat(span)
-                                .hasName("TracedWithSpan.completionStage")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(SpanId.getInvalid())
-                                .hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes)
-                                            .containsOnly(
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                                    TracedWithSpan.class.getName()),
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_FUNCTION,
-                                                    "completionStage")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TracedWithSpan.completionStage")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            codeAttributeAssertions("completionStage"))));
   }
 
   @Test
   void exceptionallyCompletingCompletionStage() throws Exception {
-
     CompletableFuture<String> future = new CompletableFuture<>();
     new TracedWithSpan().completionStage(future);
 
     Thread.sleep(500); // sleep a bit just to make sure no span is captured
     assertThat(testing.waitForTraces(0)).isEmpty();
 
-    future.completeExceptionally(new IllegalArgumentException("Boom"));
+    Exception exception = new IllegalArgumentException("Boom");
+    future.completeExceptionally(exception);
 
-    assertThat(testing.waitForTraces(1))
-        .satisfiesExactly(
-            trace ->
-                assertThat(trace)
-                    .satisfiesExactly(
-                        span ->
-                            assertThat(span)
-                                .hasName("TracedWithSpan.completionStage")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(SpanId.getInvalid())
-                                .hasStatus(StatusData.error())
-                                .hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes)
-                                            .containsOnly(
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                                    TracedWithSpan.class.getName()),
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_FUNCTION,
-                                                    "completionStage")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TracedWithSpan.completionStage")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasException(exception)
+                        .hasAttributesSatisfyingExactly(
+                            codeAttributeAssertions("completionStage"))));
   }
 
   @Test
-  void completedCompletableFuture() throws Exception {
-
+  void completedCompletableFuture() {
     CompletableFuture<String> future = CompletableFuture.completedFuture("Done");
     new TracedWithSpan().completableFuture(future);
 
-    assertThat(testing.waitForTraces(1))
-        .satisfiesExactly(
-            trace ->
-                assertThat(trace)
-                    .satisfiesExactly(
-                        span ->
-                            assertThat(span)
-                                .hasName("TracedWithSpan.completableFuture")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(SpanId.getInvalid())
-                                .hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes)
-                                            .containsOnly(
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                                    TracedWithSpan.class.getName()),
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_FUNCTION,
-                                                    "completableFuture")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TracedWithSpan.completableFuture")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            codeAttributeAssertions("completableFuture"))));
   }
 
   @Test
-  void exceptionallyCompletedCompletableFuture() throws Exception {
-
+  void exceptionallyCompletedCompletableFuture() {
     CompletableFuture<String> future = new CompletableFuture<>();
-    future.completeExceptionally(new IllegalArgumentException("Boom"));
+    Exception exception = new IllegalArgumentException("Boom");
+    future.completeExceptionally(exception);
     new TracedWithSpan().completableFuture(future);
 
-    assertThat(testing.waitForTraces(1))
-        .satisfiesExactly(
-            trace ->
-                assertThat(trace)
-                    .satisfiesExactly(
-                        span ->
-                            assertThat(span)
-                                .hasName("TracedWithSpan.completableFuture")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(SpanId.getInvalid())
-                                .hasStatus(StatusData.error())
-                                .hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes)
-                                            .containsOnly(
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                                    TracedWithSpan.class.getName()),
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_FUNCTION,
-                                                    "completableFuture")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TracedWithSpan.completableFuture")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasException(exception)
+                        .hasAttributesSatisfyingExactly(
+                            codeAttributeAssertions("completableFuture"))));
   }
 
   @Test
-  void nullCompletableFuture() throws Exception {
-
+  void nullCompletableFuture() {
     new TracedWithSpan().completableFuture(null);
 
-    assertThat(testing.waitForTraces(1))
-        .satisfiesExactly(
-            trace ->
-                assertThat(trace)
-                    .satisfiesExactly(
-                        span ->
-                            assertThat(span)
-                                .hasName("TracedWithSpan.completableFuture")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(SpanId.getInvalid())
-                                .hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes)
-                                            .containsOnly(
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                                    TracedWithSpan.class.getName()),
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_FUNCTION,
-                                                    "completableFuture")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TracedWithSpan.completableFuture")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            codeAttributeAssertions("completableFuture"))));
   }
 
   @Test
   void completingCompletableFuture() throws Exception {
-
     CompletableFuture<String> future = new CompletableFuture<>();
     new TracedWithSpan().completableFuture(future);
 
@@ -414,92 +267,57 @@ class WithSpanInstrumentationTest {
 
     future.complete("Done");
 
-    assertThat(testing.waitForTraces(1))
-        .satisfiesExactly(
-            trace ->
-                assertThat(trace)
-                    .satisfiesExactly(
-                        span ->
-                            assertThat(span)
-                                .hasName("TracedWithSpan.completableFuture")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(SpanId.getInvalid())
-                                .hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes)
-                                            .containsOnly(
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                                    TracedWithSpan.class.getName()),
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_FUNCTION,
-                                                    "completableFuture")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TracedWithSpan.completableFuture")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            codeAttributeAssertions("completableFuture"))));
   }
 
   @Test
   void exceptionallyCompletingCompletableFuture() throws Exception {
-
     CompletableFuture<String> future = new CompletableFuture<>();
     new TracedWithSpan().completableFuture(future);
 
     Thread.sleep(500); // sleep a bit just to make sure no span is captured
     assertThat(testing.waitForTraces(0)).isEmpty();
 
-    future.completeExceptionally(new IllegalArgumentException("Boom"));
+    Exception exception = new IllegalArgumentException("Boom");
+    future.completeExceptionally(exception);
 
-    assertThat(testing.waitForTraces(1))
-        .satisfiesExactly(
-            trace ->
-                assertThat(trace)
-                    .satisfiesExactly(
-                        span ->
-                            assertThat(span)
-                                .hasName("TracedWithSpan.completableFuture")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(SpanId.getInvalid())
-                                .hasStatus(StatusData.error())
-                                .hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes)
-                                            .containsOnly(
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                                    TracedWithSpan.class.getName()),
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_FUNCTION,
-                                                    "completableFuture")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TracedWithSpan.completableFuture")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasException(exception)
+                        .hasAttributesSatisfyingExactly(
+                            codeAttributeAssertions("completableFuture"))));
   }
 
   @Test
-  void captureAttributes() throws Exception {
-
+  void captureAttributes() {
     new TracedWithSpan().withSpanAttributes("foo", "bar", null, "baz");
 
-    assertThat(testing.waitForTraces(1))
-        .satisfiesExactly(
-            trace ->
-                assertThat(trace)
-                    .satisfiesExactly(
-                        span ->
-                            assertThat(span)
-                                .hasName("TracedWithSpan.withSpanAttributes")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(SpanId.getInvalid())
-                                .hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes)
-                                            .containsOnly(
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                                    TracedWithSpan.class.getName()),
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_FUNCTION,
-                                                    "withSpanAttributes"),
-                                                entry(
-                                                    AttributeKey.stringKey("implicitName"), "foo"),
-                                                entry(
-                                                    AttributeKey.stringKey("explicitName"),
-                                                    "bar")))));
+    List<AttributeAssertion> attributesAssertions =
+        new ArrayList<>(codeAttributeAssertions("withSpanAttributes"));
+    attributesAssertions.add(equalTo(stringKey("implicitName"), "foo"));
+    attributesAssertions.add(equalTo(stringKey("explicitName"), "bar"));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TracedWithSpan.withSpanAttributes")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(attributesAssertions)));
   }
 
   // Needs to be public for ByteBuddy
@@ -511,6 +329,7 @@ class WithSpanInstrumentationTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation") // testing deprecated WithSpan annotation
   void java6Class() throws Exception {
     /*
     class GeneratedJava6TestClass implements Runnable {
@@ -541,32 +360,20 @@ class WithSpanInstrumentationTest {
     Runnable runnable = (Runnable) generatedClass.getConstructor().newInstance();
     runnable.run();
 
-    assertThat(testing.waitForTraces(1))
-        .satisfiesExactly(
-            trace ->
-                assertThat(trace)
-                    .satisfiesExactly(
-                        span ->
-                            assertThat(span)
-                                .hasName("GeneratedJava6TestClass.run")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(SpanId.getInvalid())
-                                .hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes)
-                                            .containsOnly(
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_NAMESPACE,
-                                                    "GeneratedJava6TestClass"),
-                                                entry(
-                                                    CodeIncubatingAttributes.CODE_FUNCTION,
-                                                    "run"))),
-                        span ->
-                            assertThat(span)
-                                .hasName("intercept")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParentSpanId(trace.get(0).getSpanId())
-                                .hasAttributesSatisfying(
-                                    attributes -> assertThat(attributes).isEmpty())));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GeneratedJava6TestClass.run")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParentSpanId(SpanId.getInvalid())
+                        .hasAttributesSatisfyingExactly(
+                            SemconvCodeStabilityUtil.codeFunctionAssertions(
+                                "GeneratedJava6TestClass", "run")),
+                span ->
+                    span.hasName("intercept")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParentSpanId(trace.getSpan(0).getSpanId())
+                        .hasAttributes(Attributes.empty())));
   }
 }

@@ -100,10 +100,10 @@ public class FlakyTestReporter {
     Instant reportModified = Instant.ofEpochMilli(testReport.toFile().lastModified());
     reportModified = reportModified.minus(20, ChronoUnit.MINUTES);
     Instant testExecuted = null;
-    if (ta instanceof ZonedDateTime) {
-      testExecuted = ((ZonedDateTime) ta).toInstant();
-    } else if (ta instanceof LocalDateTime) {
-      testExecuted = ((LocalDateTime) ta).toInstant(OffsetDateTime.now().getOffset());
+    if (ta instanceof ZonedDateTime zonedDateTime) {
+      testExecuted = zonedDateTime.toInstant();
+    } else if (ta instanceof LocalDateTime localDateTime) {
+      testExecuted = localDateTime.toInstant(OffsetDateTime.now().getOffset());
     }
     if (testExecuted != null && reportModified.isAfter(testExecuted)) {
       System.err.println(
@@ -277,7 +277,8 @@ public class FlakyTestReporter {
       row.add(flakyTest.testName);
       row.add(buildScanUrl);
       row.add(jobUrl);
-      row.add(flakyTest.message);
+      // there is a limit of 50000 characters in a single cell
+      row.add(abbreviate(flakyTest.message, 10000));
       data.add(row);
     }
 
@@ -289,6 +290,14 @@ public class FlakyTestReporter {
         .append(SPREADSHEET_ID, "Sheet1!A:F", valueRange)
         .setValueInputOption("USER_ENTERED")
         .execute();
+  }
+
+  private static String abbreviate(String text, int maxLength) {
+    if (text.length() > maxLength) {
+      return text.substring(0, maxLength - 3) + "...";
+    }
+
+    return text;
   }
 
   public static void main(String... args) throws Exception {

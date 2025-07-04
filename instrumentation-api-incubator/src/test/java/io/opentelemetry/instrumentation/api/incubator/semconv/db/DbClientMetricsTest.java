@@ -19,6 +19,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
+import io.opentelemetry.semconv.DbAttributes;
 import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
@@ -42,17 +43,17 @@ class DbClientMetricsTest {
 
     Attributes operationAttributes =
         Attributes.builder()
-            .put(DbClientCommonAttributesExtractor.DB_SYSTEM_NAME, "myDb")
-            .put(SqlClientAttributesExtractor.DB_COLLECTION_NAME, "table")
-            .put(DbClientCommonAttributesExtractor.DB_NAMESPACE, "potatoes")
-            .put(DbClientAttributesExtractor.DB_OPERATION_NAME, "SELECT")
+            .put(DbAttributes.DB_SYSTEM_NAME, "myDb")
+            .put(DbAttributes.DB_COLLECTION_NAME, "table")
+            .put(DbAttributes.DB_NAMESPACE, "potatoes")
+            .put(DbAttributes.DB_OPERATION_NAME, "SELECT")
             .put(ServerAttributes.SERVER_ADDRESS, "localhost")
             .put(ServerAttributes.SERVER_PORT, 1234)
             .build();
 
     Attributes responseAttributes =
         Attributes.builder()
-            .put(DbClientAttributesExtractor.DB_RESPONSE_STATUS_CODE, 200)
+            .put(DbAttributes.DB_RESPONSE_STATUS_CODE, "200")
             .put(ErrorAttributes.ERROR_TYPE, "400")
             .put(NetworkAttributes.NETWORK_PEER_ADDRESS, "1.2.3.4")
             .put(NetworkAttributes.NETWORK_PEER_PORT, 8080)
@@ -88,23 +89,13 @@ class DbClientMetricsTest {
                                     point
                                         .hasSum(0.15 /* seconds */)
                                         .hasAttributesSatisfying(
-                                            equalTo(
-                                                DbClientCommonAttributesExtractor.DB_SYSTEM_NAME,
-                                                "myDb"),
-                                            equalTo(
-                                                DbClientCommonAttributesExtractor.DB_NAMESPACE,
-                                                "potatoes"),
-                                            equalTo(
-                                                DbClientAttributesExtractor.DB_OPERATION_NAME,
-                                                "SELECT"),
-                                            equalTo(
-                                                SqlClientAttributesExtractor.DB_COLLECTION_NAME,
-                                                "table"),
+                                            equalTo(DbAttributes.DB_SYSTEM_NAME, "myDb"),
+                                            equalTo(DbAttributes.DB_NAMESPACE, "potatoes"),
+                                            equalTo(DbAttributes.DB_OPERATION_NAME, "SELECT"),
+                                            equalTo(DbAttributes.DB_COLLECTION_NAME, "table"),
                                             equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
                                             equalTo(ServerAttributes.SERVER_PORT, 1234),
-                                            equalTo(
-                                                DbClientAttributesExtractor.DB_RESPONSE_STATUS_CODE,
-                                                200),
+                                            equalTo(DbAttributes.DB_RESPONSE_STATUS_CODE, "200"),
                                             equalTo(ErrorAttributes.ERROR_TYPE, "400"),
                                             equalTo(
                                                 NetworkAttributes.NETWORK_PEER_ADDRESS, "1.2.3.4"),

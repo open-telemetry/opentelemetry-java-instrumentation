@@ -26,17 +26,16 @@ import org.apache.camel.component.http.HttpEndpoint;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-public class CamelPropagationUtilTest {
+class CamelPropagationUtilTest {
 
   @BeforeAll
-  public static void setUp() {
+  static void setUp() {
     GlobalOpenTelemetry.set(
         OpenTelemetry.propagating(ContextPropagators.create(JaegerPropagator.getInstance())));
   }
 
   @Test
-  public void shouldExtractHttpParentForHttpEndpoint() throws Exception {
-
+  void shouldExtractHttpParentForHttpEndpoint() throws Exception {
     // given
     Endpoint endpoint = new HttpEndpoint("", new HttpComponent(), URI.create(""));
     Map<String, Object> exchangeHeaders =
@@ -54,8 +53,7 @@ public class CamelPropagationUtilTest {
   }
 
   @Test
-  public void shouldNotFailExtractingNullHttpParentForHttpEndpoint() throws Exception {
-
+  void shouldNotFailExtractingNullHttpParentForHttpEndpoint() throws Exception {
     // given
     Endpoint endpoint = new HttpEndpoint("", new HttpComponent(), URI.create(""));
     Map<String, Object> exchangeHeaders = Collections.singletonMap("uber-trace-id", null);
@@ -70,8 +68,7 @@ public class CamelPropagationUtilTest {
   }
 
   @Test
-  public void shouldNotFailExtractingNullAwsParentForSqsEndpoint() {
-
+  void shouldNotFailExtractingNullAwsParentForSqsEndpoint() {
     // given
     Endpoint endpoint = new SqsEndpoint("", new SqsComponent(), new SqsConfiguration());
     Map<String, Object> exchangeHeaders = Collections.singletonMap("AWSTraceHeader", null);
@@ -86,8 +83,7 @@ public class CamelPropagationUtilTest {
   }
 
   @Test
-  public void shouldExtractAwsParentForSqsEndpoint() {
-
+  void shouldExtractAwsParentForSqsEndpoint() {
     // given
     Endpoint endpoint = new SqsEndpoint("", new SqsComponent(), new SqsConfiguration());
     Map<String, Object> exchangeHeaders =

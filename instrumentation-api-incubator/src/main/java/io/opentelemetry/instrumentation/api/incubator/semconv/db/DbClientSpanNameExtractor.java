@@ -20,7 +20,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
    * @see DbClientAttributesGetter#getDbNamespace(Object) used to extract {@code <db.namespace>}.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      DbClientAttributesGetter<REQUEST> getter) {
+      DbClientAttributesGetter<REQUEST, ?> getter) {
     return new GenericDbClientSpanNameExtractor<>(getter);
   }
 
@@ -34,7 +34,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
    *     procedure name.
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
-      SqlClientAttributesGetter<REQUEST> getter) {
+      SqlClientAttributesGetter<REQUEST, ?> getter) {
     return new SqlClientSpanNameExtractor<>(getter);
   }
 
@@ -67,9 +67,9 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
   private static final class GenericDbClientSpanNameExtractor<REQUEST>
       extends DbClientSpanNameExtractor<REQUEST> {
 
-    private final DbClientAttributesGetter<REQUEST> getter;
+    private final DbClientAttributesGetter<REQUEST, ?> getter;
 
-    private GenericDbClientSpanNameExtractor(DbClientAttributesGetter<REQUEST> getter) {
+    private GenericDbClientSpanNameExtractor(DbClientAttributesGetter<REQUEST, ?> getter) {
       this.getter = getter;
     }
 
@@ -84,12 +84,9 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
   private static final class SqlClientSpanNameExtractor<REQUEST>
       extends DbClientSpanNameExtractor<REQUEST> {
 
-    // a dedicated sanitizer just for extracting the operation and identifier name
-    private static final SqlStatementSanitizer sanitizer = SqlStatementSanitizer.create(true);
+    private final SqlClientAttributesGetter<REQUEST, ?> getter;
 
-    private final SqlClientAttributesGetter<REQUEST> getter;
-
-    private SqlClientSpanNameExtractor(SqlClientAttributesGetter<REQUEST> getter) {
+    private SqlClientSpanNameExtractor(SqlClientAttributesGetter<REQUEST, ?> getter) {
       this.getter = getter;
     }
 
@@ -106,13 +103,15 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
         if (rawQueryTexts.size() > 1) { // for backcompat(?)
           return computeSpanName(namespace, null, null);
         }
-        SqlStatementInfo sanitizedStatement = sanitizer.sanitize(rawQueryTexts.iterator().next());
+        SqlStatementInfo sanitizedStatement =
+            SqlStatementSanitizerUtil.sanitize(rawQueryTexts.iterator().next());
         return computeSpanName(
             namespace, sanitizedStatement.getOperation(), sanitizedStatement.getMainIdentifier());
       }
 
       if (rawQueryTexts.size() == 1) {
-        SqlStatementInfo sanitizedStatement = sanitizer.sanitize(rawQueryTexts.iterator().next());
+        SqlStatementInfo sanitizedStatement =
+            SqlStatementSanitizerUtil.sanitize(rawQueryTexts.iterator().next());
         String operation = sanitizedStatement.getOperation();
         if (isBatch(request)) {
           operation = "BATCH " + operation;

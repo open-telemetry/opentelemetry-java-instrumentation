@@ -25,8 +25,8 @@ import org.junit.jupiter.api.Test;
 class DeclarativeConfigPropertiesBridgeTest {
 
   private static final String YAML =
-      "file_format: 0.3\n"
-          + "instrumentation:\n"
+      "file_format: 0.4\n"
+          + "instrumentation/development:\n"
           + "  java:\n"
           + "    common:\n"
           + "      default-enabled: true\n"
@@ -60,7 +60,8 @@ class DeclarativeConfigPropertiesBridgeTest {
             Objects.requireNonNull(configProvider.getInstrumentationConfig()));
 
     OpenTelemetryConfigurationModel emptyModel =
-        new OpenTelemetryConfigurationModel().withInstrumentation(new InstrumentationModel());
+        new OpenTelemetryConfigurationModel()
+            .withAdditionalProperty("instrumentation/development", new InstrumentationModel());
     SdkConfigProvider emptyConfigProvider = SdkConfigProvider.create(emptyModel);
     emptyBridge =
         new DeclarativeConfigPropertiesBridge(

@@ -27,7 +27,7 @@ public final class ArmeriaClientTelemetryBuilder {
   static {
     ArmeriaInstrumenterBuilderUtil.setClientBuilderExtractor(builder -> builder.builder);
     Experimental.internalSetEmitExperimentalClientTelemetry(
-        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientMetrics(emit));
+        (builder, emit) -> builder.builder.setEmitExperimentalHttpClientTelemetry(emit));
     Experimental.internalSetClientPeerService(
         (builder, peerService) -> builder.builder.setPeerService(peerService));
   }

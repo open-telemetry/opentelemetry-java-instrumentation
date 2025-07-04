@@ -11,7 +11,9 @@ import org.apache.dubbo.rpc.Invocation;
 import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.Result;
 
-@Activate(group = {"consumer"})
+@Activate(
+    group = {"consumer"},
+    order = -1)
 public final class OpenTelemetryClientFilter implements Filter {
 
   private final Filter delegate;

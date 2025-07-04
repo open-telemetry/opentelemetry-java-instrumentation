@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * An abstract class containing skeletal info about Metrics:
@@ -23,7 +24,7 @@ import java.util.Map;
  *
  *     <p>Known subclasses are {@link JmxRule} and {@link Metric}.
  */
-abstract class MetricStructure {
+public abstract class MetricStructure {
 
   // Used by the YAML parser
   //
@@ -46,8 +47,10 @@ abstract class MetricStructure {
   private Map<String, Object> metricAttribute;
   private StateMapping stateMapping = StateMapping.empty();
   private static final String STATE_MAPPING_DEFAULT = "*";
-  private String sourceUnit;
-  private String unit;
+
+  @Nullable private String sourceUnit;
+  @Nullable private String unit;
+  @Nullable private Boolean dropNegativeValues;
 
   private MetricInfo.Type metricType;
   private List<MetricAttribute> metricAttributes;
@@ -57,9 +60,14 @@ abstract class MetricStructure {
   void setType(String t) {
     // Do not complain about case variations
     t = t.trim().toUpperCase(Locale.ROOT);
-    this.metricType = MetricInfo.Type.valueOf(t);
+    try {
+      this.metricType = MetricInfo.Type.valueOf(t);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException("Invalid metric type: " + t, e);
+    }
   }
 
+  @Nullable
   public String getSourceUnit() {
     return sourceUnit;
   }
@@ -68,12 +76,22 @@ abstract class MetricStructure {
     this.sourceUnit = validateUnit(unit.trim());
   }
 
+  @Nullable
   public String getUnit() {
     return unit;
   }
 
   public void setUnit(String unit) {
-    this.unit = validateUnit(unit.trim());
+    this.unit = unit.trim();
+  }
+
+  public void setDropNegativeValues(Boolean dropNegativeValues) {
+    this.dropNegativeValues = dropNegativeValues;
+  }
+
+  @Nullable
+  public Boolean getDropNegativeValues() {
+    return dropNegativeValues;
   }
 
   private static void addMappedValue(
@@ -156,7 +174,7 @@ abstract class MetricStructure {
     // an optional modifier may wrap the target
     // - lowercase(param(STRING))
     boolean lowercase = false;
-    String lowerCaseExpr = tryParseFunction("lowercase", targetExpr, target);
+    String lowerCaseExpr = tryParseFunction("lowercase", targetExpr, errorMsg);
     if (lowerCaseExpr != null) {
       lowercase = true;
       targetExpr = lowerCaseExpr;
@@ -172,20 +190,20 @@ abstract class MetricStructure {
 
     MetricAttributeExtractor extractor = null;
 
-    String paramName = tryParseFunction("param", targetExpr, target);
+    String paramName = tryParseFunction("param", targetExpr, errorMsg);
     if (paramName != null) {
       extractor = MetricAttributeExtractor.fromObjectNameParameter(paramName);
     }
 
     if (extractor == null) {
-      String attributeName = tryParseFunction("beanattr", targetExpr, target);
+      String attributeName = tryParseFunction("beanattr", targetExpr, errorMsg);
       if (attributeName != null) {
         extractor = MetricAttributeExtractor.fromBeanAttribute(attributeName);
       }
     }
 
     if (extractor == null) {
-      String constantValue = tryParseFunction("const", targetExpr, target);
+      String constantValue = tryParseFunction("const", targetExpr, errorMsg);
       if (constantValue != null) {
         extractor = MetricAttributeExtractor.fromConstant(constantValue);
       }
