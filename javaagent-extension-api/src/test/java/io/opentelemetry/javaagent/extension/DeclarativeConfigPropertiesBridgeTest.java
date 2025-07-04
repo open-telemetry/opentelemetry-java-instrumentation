@@ -33,17 +33,14 @@ class DeclarativeConfigPropertiesBridgeTest {
                 .getClassLoader()
                 .getResourceAsStream("config.yaml"));
     SdkConfigProvider configProvider = SdkConfigProvider.create(model);
-    bridge =
-        new DeclarativeConfigPropertiesBridge(
-            Objects.requireNonNull(configProvider.getInstrumentationConfig()));
+    bridge = new DeclarativeConfigPropertiesBridge(Objects.requireNonNull(configProvider));
 
     OpenTelemetryConfigurationModel emptyModel =
         new OpenTelemetryConfigurationModel()
             .withAdditionalProperty("instrumentation/development", new InstrumentationModel());
     SdkConfigProvider emptyConfigProvider = SdkConfigProvider.create(emptyModel);
     emptyBridge =
-        new DeclarativeConfigPropertiesBridge(
-            Objects.requireNonNull(emptyConfigProvider.getInstrumentationConfig()));
+        new DeclarativeConfigPropertiesBridge(Objects.requireNonNull(emptyConfigProvider));
   }
 
   @Test
@@ -110,5 +107,8 @@ class DeclarativeConfigPropertiesBridgeTest {
         .isEqualTo(Arrays.asList("value1", "value2"));
     assertThat(bridge.getMap("otel.instrumentation.other-instrumentation.map_key", expectedMap))
         .isEqualTo(expectedMap);
+
+    // todo agent properties
+    //    assertThat(bridge.getBoolean("otel.javaagent.enabled")).isFalse();
   }
 }
