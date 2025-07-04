@@ -1,12 +1,12 @@
 instrumentation:
   java:
     common:
-      default-enabled: true
-    runtime-telemetry:
+      default_enabled: true
+    runtime_telemetry:
       enabled: false
-    external-annotations:
+    external_annotations:
       enabled: true
-    example-instrumentation:
+    example_instrumentation:
       string_key: value
       bool_key: true
       int_key: 1

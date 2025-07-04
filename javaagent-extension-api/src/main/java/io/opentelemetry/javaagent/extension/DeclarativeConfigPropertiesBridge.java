@@ -133,7 +133,7 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
     if (!property.startsWith(OTEL_INSTRUMENTATION_PREFIX)) {
       return null;
     }
-    String suffix = property.substring(OTEL_INSTRUMENTATION_PREFIX.length());
+    String suffix = property.substring(OTEL_INSTRUMENTATION_PREFIX.length()).replace('-', '_');
     // Split the remainder of the property on ".", and walk to the N-1 entry
     String[] segments = suffix.split("\\.");
     if (segments.length == 0) {
