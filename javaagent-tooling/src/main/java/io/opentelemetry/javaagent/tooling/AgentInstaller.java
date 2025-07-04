@@ -80,8 +80,6 @@ public class AgentInstaller {
 
   private static final Logger logger = Logger.getLogger(AgentInstaller.class.getName());
 
-  static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
-
   // This property may be set to force synchronous AgentListener#afterAgent() execution: the
   // condition for delaying the AgentListener initialization is pretty broad and in case it covers
   // too much javaagent users can file a bug, force sync execution by setting this property to true
@@ -107,7 +105,7 @@ public class AgentInstaller {
     }
 
     logVersionInfo();
-    if (earlyConfig.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
+    if (earlyConfig.isAgentEnabled()) {
       setupUnsafe(inst);
       List<AgentListener> agentListeners = loadOrdered(AgentListener.class, extensionClassLoader);
       installBytebuddyAgent(inst, extensionClassLoader, agentListeners, earlyConfig);
