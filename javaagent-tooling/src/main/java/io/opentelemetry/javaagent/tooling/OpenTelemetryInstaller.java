@@ -9,6 +9,8 @@ import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.common.CompletableResultCode;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
+import javax.annotation.Nullable;
 import java.util.Arrays;
 
 public final class OpenTelemetryInstaller {
@@ -20,7 +22,11 @@ public final class OpenTelemetryInstaller {
    * @return the {@link AutoConfiguredOpenTelemetrySdk}
    */
   public static AutoConfiguredOpenTelemetrySdk installOpenTelemetrySdk(
-      ClassLoader extensionClassLoader) {
+      ClassLoader extensionClassLoader,
+      @Nullable OpenTelemetryConfigurationModel configurationModel) {
+
+    // todo load from configurationModel if not null
+
 
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
         AutoConfiguredOpenTelemetrySdk.builder()
