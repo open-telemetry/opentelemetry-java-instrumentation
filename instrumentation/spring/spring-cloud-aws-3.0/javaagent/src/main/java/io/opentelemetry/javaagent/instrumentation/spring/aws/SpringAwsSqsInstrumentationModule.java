@@ -39,4 +39,9 @@ public class SpringAwsSqsInstrumentationModule extends InstrumentationModule
         new SqsTemplateInstrumentation(),
         new AcknowledgementExecutionContextInstrumentation());
   }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
+  }
 }
