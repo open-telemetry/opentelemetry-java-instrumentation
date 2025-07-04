@@ -12,6 +12,7 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.SdkConfigProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
@@ -30,7 +31,7 @@ public final class DeclarativeConfigEarlyInitAgentConfig implements EarlyInitAge
 
   @Override
   public boolean isAgentEnabled() {
-    return configurationModel.getDisabled() != Boolean.TRUE;
+    return !Objects.equals(configurationModel.getDisabled(), Boolean.TRUE);
   }
 
   @Nullable
