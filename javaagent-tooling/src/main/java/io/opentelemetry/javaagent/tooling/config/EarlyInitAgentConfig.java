@@ -5,6 +5,8 @@ import javax.annotation.Nullable;
 import java.util.Collections;
 
 public interface EarlyInitAgentConfig {
+  boolean isAgentEnabled();
+
   @Nullable
   String getString(String propertyName);
 
