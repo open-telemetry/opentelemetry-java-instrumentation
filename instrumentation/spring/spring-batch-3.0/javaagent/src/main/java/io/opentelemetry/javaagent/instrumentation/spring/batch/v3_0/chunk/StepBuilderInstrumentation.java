@@ -5,19 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.chunk;
 
+import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.chunk.ChunkSingletons.CONTEXT_AND_SCOPE;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.ContextAndScope;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.builder.AbstractTaskletStepBuilder;
 
 public class StepBuilderInstrumentation implements TypeInstrumentation {
@@ -43,10 +41,8 @@ public class StepBuilderInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.This AbstractTaskletStepBuilder<?> stepBuilder) {
-      VirtualField<ChunkContext, ContextAndScope> chunkExecutionVirtualField =
-          VirtualField.find(ChunkContext.class, ContextAndScope.class);
       stepBuilder.listener(
-          new TracingChunkExecutionListener(chunkExecutionVirtualField, stepBuilder.getClass()));
+          new TracingChunkExecutionListener(CONTEXT_AND_SCOPE, stepBuilder.getClass()));
     }
   }
 }

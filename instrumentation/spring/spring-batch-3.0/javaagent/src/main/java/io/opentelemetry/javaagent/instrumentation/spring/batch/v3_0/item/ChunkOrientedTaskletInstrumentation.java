@@ -17,6 +17,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -44,17 +45,18 @@ public class ChunkOrientedTaskletInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(1) ChunkContext chunkContext, @Advice.Local("otelScope") Scope scope) {
-      if (shouldTraceItems()) {
-        Context context = startChunk(currentContext(), chunkContext);
-        scope = context.makeCurrent();
+    public static Scope onEnter(@Advice.Argument(1) ChunkContext chunkContext) {
+      if (!shouldTraceItems()) {
+        return null;
       }
+      Context context = startChunk(currentContext(), chunkContext);
+      return context.makeCurrent();
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
-    public static void onExit(@Advice.Local("otelScope") Scope scope) {
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }
