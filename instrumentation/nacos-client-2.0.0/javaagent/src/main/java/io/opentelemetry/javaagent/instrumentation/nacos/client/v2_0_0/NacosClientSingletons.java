@@ -21,7 +21,7 @@ import io.opentelemetry.javaagent.instrumentation.nacos.client.v2_0_0.extractors
 import io.opentelemetry.javaagent.instrumentation.nacos.client.v2_0_0.extractors.NacosClientSpanStatusExtractor;
 
 public final class NacosClientSingletons {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.nacos-client-2.0.0";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.nacos-client-2.0";
   private static final Instrumenter<NacosClientRequest, Response> INSTRUMENTER = create();
 
   public static Instrumenter<NacosClientRequest, Response> instrumenter() {
