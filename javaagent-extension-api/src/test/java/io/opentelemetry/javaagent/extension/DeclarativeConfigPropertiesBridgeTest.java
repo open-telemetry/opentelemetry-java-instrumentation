@@ -113,6 +113,6 @@ class DeclarativeConfigPropertiesBridgeTest {
     assertThat(bridge.getBoolean("acme.full_name.preserved")).isTrue();
 
     // todo agent properties
-    //    assertThat(bridge.getBoolean("otel.javaagent.enabled")).isFalse();
+    assertThat(bridge.getBoolean("otel.javaagent.experimental.indy")).isTrue();
   }
 }

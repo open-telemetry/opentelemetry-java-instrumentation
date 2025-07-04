@@ -56,8 +56,9 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
 
   // The node at .instrumentation.java
   private final DeclarativeConfigProperties instrumentationJavaNode;
+
   // todo
-//  private final DeclarativeConfigProperties instrumentationGeneralNode;
+  //  private final DeclarativeConfigProperties instrumentationGeneralNode;
 
   static {
     MAPPING_RULES.put("otel.instrumentation.common.default-enabled", "common.default.enabled");
@@ -69,7 +70,7 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
       inst = DeclarativeConfigProperties.empty();
     }
     instrumentationJavaNode = inst.getStructured("java", empty());
-//    instrumentationGeneralNode = inst.getStructured("general", empty());
+    //    instrumentationGeneralNode = inst.getStructured("general", empty());
   }
 
   @Nullable
@@ -145,12 +146,13 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
   @Nullable
   private <T> T getPropertyValue(
       String property, BiFunction<DeclarativeConfigProperties, String, T> extractor) {
-    if (!property.startsWith(OTEL_INSTRUMENTATION_PREFIX)
-        && !property.startsWith(OTEL_JAVA_AGENT_PREFIX)) {
+    String suffix = getSuffix(property);
+    if (suffix == null) {
       return null;
     }
+
     // Split the remainder of the property on ".", and walk to the N-1 entry
-    String[] segments = getSuffix(property).split("\\.");
+    String[] segments = suffix.split("\\.");
     if (segments.length == 0) {
       return null;
     }
@@ -170,6 +172,11 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
       return special;
     }
 
-    return property.substring(OTEL_INSTRUMENTATION_PREFIX.length()).replace('-', '_');
+    if (property.startsWith(OTEL_INSTRUMENTATION_PREFIX)) {
+      return property.substring(OTEL_INSTRUMENTATION_PREFIX.length()).replace('-', '_');
+    } else if (property.startsWith(OTEL_JAVA_AGENT_PREFIX)) {
+      return "agent." + property.substring(OTEL_JAVA_AGENT_PREFIX.length()).replace('-', '_');
+    }
+    return null;
   }
 }
