@@ -33,17 +33,14 @@ class DeclarativeConfigPropertiesBridgeTest {
                 .getClassLoader()
                 .getResourceAsStream("config.yaml"));
     SdkConfigProvider configProvider = SdkConfigProvider.create(model);
-    bridge =
-        new DeclarativeConfigPropertiesBridge(
-            Objects.requireNonNull(configProvider.getInstrumentationConfig()));
+    bridge = new DeclarativeConfigPropertiesBridge(Objects.requireNonNull(configProvider));
 
     OpenTelemetryConfigurationModel emptyModel =
         new OpenTelemetryConfigurationModel()
             .withAdditionalProperty("instrumentation/development", new InstrumentationModel());
     SdkConfigProvider emptyConfigProvider = SdkConfigProvider.create(emptyModel);
     emptyBridge =
-        new DeclarativeConfigPropertiesBridge(
-            Objects.requireNonNull(emptyConfigProvider.getInstrumentationConfig()));
+        new DeclarativeConfigPropertiesBridge(Objects.requireNonNull(emptyConfigProvider));
   }
 
   @Test
@@ -114,5 +111,8 @@ class DeclarativeConfigPropertiesBridgeTest {
     // verify vendor specific property names are preserved in unchanged form (prefix is not stripped
     // as for otel.instrumentation.*)
     assertThat(bridge.getBoolean("acme.full_name.preserved")).isTrue();
+
+    // todo agent properties
+    //    assertThat(bridge.getBoolean("otel.javaagent.enabled")).isFalse();
   }
 }
