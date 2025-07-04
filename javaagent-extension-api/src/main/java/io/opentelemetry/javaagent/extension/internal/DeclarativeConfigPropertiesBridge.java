@@ -130,20 +130,15 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
   @Nullable
   private <T> T getPropertyValue(
       String property, BiFunction<DeclarativeConfigProperties, String, T> extractor) {
-    if (instrumentationJavaNode == null) {
+    if (!property.startsWith(OTEL_INSTRUMENTATION_PREFIX)) {
       return null;
     }
-
-    if (property.startsWith(OTEL_INSTRUMENTATION_PREFIX)) {
-      property = property.substring(OTEL_INSTRUMENTATION_PREFIX.length());
-    }
-    // Split the remainder of the property on "."
-    String[] segments = property.split("\\.");
+    String suffix = property.substring(OTEL_INSTRUMENTATION_PREFIX.length()).replace('-', '_');
+    // Split the remainder of the property on ".", and walk to the N-1 entry
+    String[] segments = suffix.split("\\.");
     if (segments.length == 0) {
       return null;
     }
-
-    // Extract the value by walking to the N-1 entry
     DeclarativeConfigProperties target = instrumentationJavaNode;
     if (segments.length > 1) {
       for (int i = 0; i < segments.length - 1; i++) {
@@ -151,7 +146,6 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
       }
     }
     String lastPart = segments[segments.length - 1];
-
     return extractor.apply(target, lastPart);
   }
 }
