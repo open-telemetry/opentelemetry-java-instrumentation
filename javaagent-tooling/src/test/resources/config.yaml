@@ -1,7 +1,8 @@
 instrumentation:
   java:
     common:
-      default_enabled: true
+      default:
+        enabled: true
     runtime_telemetry:
       enabled: false
     external_annotations:
