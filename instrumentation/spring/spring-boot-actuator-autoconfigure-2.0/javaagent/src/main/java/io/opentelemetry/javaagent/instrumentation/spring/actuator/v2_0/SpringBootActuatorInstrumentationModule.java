@@ -69,4 +69,9 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
     // produces a lot of metrics that are already captured - e.g. JVM memory usage
     return false;
   }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
+  }
 }
