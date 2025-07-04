@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.extension.internal;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.time.Duration;
@@ -49,18 +50,27 @@ import javax.annotation.Nullable;
 final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
+  private static final String OTEL_JAVA_AGENT_PREFIX = "otel.javaagent.";
+  private static final String OTEL_JAVA_AGENT_ENABLED = "otel.javaagent.enabled";
 
   private static final Map<String, String> MAPPING_RULES = new HashMap<>();
 
   // The node at .instrumentation.java
   private final DeclarativeConfigProperties instrumentationJavaNode;
+  // todo
+//  private final DeclarativeConfigProperties instrumentationGeneralNode;
 
   static {
     MAPPING_RULES.put("otel.instrumentation.common.default-enabled", "common.default.enabled");
   }
 
-  DeclarativeConfigPropertiesBridge(DeclarativeConfigProperties instrumentationNode) {
-    instrumentationJavaNode = instrumentationNode.getStructured("java", empty());
+  DeclarativeConfigPropertiesBridge(ConfigProvider configProvider) {
+    DeclarativeConfigProperties inst = configProvider.getInstrumentationConfig();
+    if (inst == null) {
+      inst = DeclarativeConfigProperties.empty();
+    }
+    instrumentationJavaNode = inst.getStructured("java", empty());
+//    instrumentationGeneralNode = inst.getStructured("general", empty());
   }
 
   @Nullable
@@ -72,6 +82,10 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
   @Nullable
   @Override
   public Boolean getBoolean(String propertyName) {
+    if (OTEL_JAVA_AGENT_ENABLED.equals(propertyName)) {
+      // todo
+    }
+
     return getPropertyValue(propertyName, DeclarativeConfigProperties::getBoolean);
   }
 
@@ -136,7 +150,8 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
   @Nullable
   private <T> T getPropertyValue(
       String property, BiFunction<DeclarativeConfigProperties, String, T> extractor) {
-    if (!property.startsWith(OTEL_INSTRUMENTATION_PREFIX)) {
+    if (!property.startsWith(OTEL_INSTRUMENTATION_PREFIX)
+        && !property.startsWith(OTEL_JAVA_AGENT_PREFIX)) {
       return null;
     }
     // Split the remainder of the property on ".", and walk to the N-1 entry
