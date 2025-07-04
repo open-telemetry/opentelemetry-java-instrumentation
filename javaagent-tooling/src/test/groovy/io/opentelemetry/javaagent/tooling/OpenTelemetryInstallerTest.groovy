@@ -21,7 +21,7 @@ class OpenTelemetryInstallerTest extends Specification {
 
   def "should initialize GlobalOpenTelemetry"() {
     when:
-    def autoConfiguredSdk = OpenTelemetryInstaller.installOpenTelemetrySdk(OpenTelemetryInstaller.classLoader, null)
+    def autoConfiguredSdk = OpenTelemetryInstaller.installOpenTelemetrySdk(OpenTelemetryInstaller.classLoader)
 
     then:
     autoConfiguredSdk != null
