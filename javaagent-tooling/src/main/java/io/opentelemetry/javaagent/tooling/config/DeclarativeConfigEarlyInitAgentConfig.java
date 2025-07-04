@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
-import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.javaagent.extension.DeclarativeConfigPropertiesBridge;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
@@ -21,25 +20,17 @@ import javax.annotation.Nullable;
  */
 public final class DeclarativeConfigEarlyInitAgentConfig implements EarlyInitAgentConfig {
   private final OpenTelemetryConfigurationModel configurationModel;
-  private final ConfigProvider configProvider;
   private final ConfigProperties declarativeConfigProperties;
 
   DeclarativeConfigEarlyInitAgentConfig(String configurationFile) {
     this.configurationModel = loadConfigurationModel(configurationFile);
-    this.configProvider = SdkConfigProvider.create(configurationModel);
-    this.declarativeConfigProperties = new DeclarativeConfigPropertiesBridge(this.configProvider);
+    this.declarativeConfigProperties =
+        new DeclarativeConfigPropertiesBridge(SdkConfigProvider.create(configurationModel));
   }
 
-  public OpenTelemetryConfigurationModel getConfigurationModel() {
-    return configurationModel;
-  }
-
-  public ConfigProvider getConfigProvider() {
-    return configProvider;
-  }
-
-  public ConfigProperties getDeclarativeConfigProperties() {
-    return declarativeConfigProperties;
+  @Override
+  public boolean isAgentEnabled() {
+    return configurationModel.getDisabled() != Boolean.TRUE;
   }
 
   @Nullable
@@ -55,8 +46,8 @@ public final class DeclarativeConfigEarlyInitAgentConfig implements EarlyInitAge
 
   @Override
   public int getInt(String propertyName, int defaultValue) {
-      return declarativeConfigProperties.getInt(propertyName, defaultValue);
-   }
+    return declarativeConfigProperties.getInt(propertyName, defaultValue);
+  }
 
   @Override
   public void logEarlyConfigErrorsIfAny() {
