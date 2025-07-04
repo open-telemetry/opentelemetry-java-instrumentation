@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0;
 
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.ResteasySingletons.LOCATOR_NAME;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.jaxrs.JaxrsContextPath;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -47,8 +47,7 @@ public class ResteasyResourceLocatorInvokerInstrumentation implements TypeInstru
 
       Context currentContext = Java8BytecodeBridge.currentContext();
 
-      String name =
-          VirtualField.find(ResourceLocatorInvoker.class, String.class).get(resourceInvoker);
+      String name = LOCATOR_NAME.get(resourceInvoker);
       ResteasySpanName.INSTANCE.updateServerSpanName(currentContext, name);
 
       // subresource locator returns a resources class that may have @Path annotations
