@@ -50,8 +50,14 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
 
+  private static final Map<String, String> MAPPING_RULES = new HashMap<>();
+
   // The node at .instrumentation.java
   private final DeclarativeConfigProperties instrumentationJavaNode;
+
+  static {
+    MAPPING_RULES.put("otel.instrumentation.common.default-enabled", "common.default.enabled");
+  }
 
   DeclarativeConfigPropertiesBridge(DeclarativeConfigProperties instrumentationNode) {
     instrumentationJavaNode = instrumentationNode.getStructured("java", empty());
@@ -133,9 +139,8 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
     if (!property.startsWith(OTEL_INSTRUMENTATION_PREFIX)) {
       return null;
     }
-    String suffix = property.substring(OTEL_INSTRUMENTATION_PREFIX.length()).replace('-', '_');
     // Split the remainder of the property on ".", and walk to the N-1 entry
-    String[] segments = suffix.split("\\.");
+    String[] segments = getSuffix(property).split("\\.");
     if (segments.length == 0) {
       return null;
     }
@@ -147,5 +152,14 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
     }
     String lastPart = segments[segments.length - 1];
     return extractor.apply(target, lastPart);
+  }
+
+  private static String getSuffix(String property) {
+    String special = MAPPING_RULES.get(property);
+    if (special != null) {
+      return special;
+    }
+
+    return property.substring(OTEL_INSTRUMENTATION_PREFIX.length()).replace('-', '_');
   }
 }
