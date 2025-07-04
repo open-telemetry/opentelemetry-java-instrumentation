@@ -55,6 +55,7 @@ public class JobFactoryBeanInstrumentation implements TypeInstrumentation {
   public static class SetListenersAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
+    @Advice.AssignReturned.AsScalar
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Object[] onEnter(@Advice.Argument(0) Object[] originalListeners) {
       Object[] listeners = originalListeners;

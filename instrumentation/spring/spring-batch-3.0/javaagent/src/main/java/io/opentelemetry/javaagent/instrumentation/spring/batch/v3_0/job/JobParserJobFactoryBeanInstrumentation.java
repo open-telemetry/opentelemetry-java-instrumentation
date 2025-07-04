@@ -56,6 +56,7 @@ public class JobParserJobFactoryBeanInstrumentation implements TypeInstrumentati
   public static class SetListenersAdvice {
 
     @AssignReturned.ToArguments(@ToArgument(0))
+    @Advice.AssignReturned.AsScalar
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static JobExecutionListener[] onEnter(
         @Advice.Argument(0) JobExecutionListener[] originalListeners) {
