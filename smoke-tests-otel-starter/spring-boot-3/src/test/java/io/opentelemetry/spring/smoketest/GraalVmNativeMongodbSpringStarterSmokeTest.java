@@ -23,7 +23,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest(
     classes = {OtelSpringStarterSmokeTestApplication.class, SpringSmokeOtelConfiguration.class},
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@EnabledInNativeImage // see JvmMongodbSpringStarterSmokeTest for the JVM test
+@EnabledInNativeImage // see AbstractJvmMongodbSpringStarterSmokeTest for the JVM test
 @RequiresDockerCompose
 public class GraalVmNativeMongodbSpringStarterSmokeTest
     extends AbstractMongodbSpringStarterSmokeTest {}
