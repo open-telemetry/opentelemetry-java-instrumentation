@@ -89,7 +89,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
       }
       Class<?> filterClass =
           (Class<?>) requestContext.getProperty(JaxrsConstants.ABORT_FILTER_CLASS);
-      if (filterClass != null) {
+      if (filterClass == null) {
         return null;
       }
       Method method = null;
