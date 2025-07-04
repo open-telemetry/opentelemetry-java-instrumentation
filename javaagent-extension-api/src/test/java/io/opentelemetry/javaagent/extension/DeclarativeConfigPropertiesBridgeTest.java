@@ -108,7 +108,6 @@ class DeclarativeConfigPropertiesBridgeTest {
     assertThat(bridge.getMap("otel.instrumentation.other-instrumentation.map_key", expectedMap))
         .isEqualTo(expectedMap);
 
-    // todo agent properties
-    //    assertThat(bridge.getBoolean("otel.javaagent.enabled")).isFalse();
+    assertThat(bridge.getBoolean("otel.javaagent.experimental.indy")).isTrue();
   }
 }
