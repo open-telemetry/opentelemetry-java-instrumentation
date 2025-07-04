@@ -31,7 +31,7 @@ public final class DeclarativeConfigEarlyInitAgentConfig implements EarlyInitAge
 
   @Override
   public boolean isAgentEnabled() {
-    return !Objects.equals(configurationModel.getDisabled(), Boolean.TRUE);
+    return !Objects.equals(configurationModel.getDisabled(), true);
   }
 
   @Nullable
