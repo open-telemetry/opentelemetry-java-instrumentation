@@ -15,10 +15,17 @@ import javax.annotation.Nullable;
  */
 public final class LegacyConfigFileEarlyInitAgentConfig implements EarlyInitAgentConfig {
 
+  static final String JAVAAGENT_ENABLED_CONFIG = "otel.javaagent.enabled";
+
   private final Map<String, String> configFileContents;
 
   LegacyConfigFileEarlyInitAgentConfig() {
     this.configFileContents = ConfigurationFile.getProperties();
+  }
+
+  @Override
+  public boolean isAgentEnabled() {
+    return getBoolean(JAVAAGENT_ENABLED_CONFIG, true);
   }
 
   @Nullable

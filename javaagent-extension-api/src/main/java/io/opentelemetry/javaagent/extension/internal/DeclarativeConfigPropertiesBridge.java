@@ -51,7 +51,6 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
 
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
   private static final String OTEL_JAVA_AGENT_PREFIX = "otel.javaagent.";
-  private static final String OTEL_JAVA_AGENT_ENABLED = "otel.javaagent.enabled";
 
   private static final Map<String, String> MAPPING_RULES = new HashMap<>();
 
@@ -82,10 +81,6 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
   @Nullable
   @Override
   public Boolean getBoolean(String propertyName) {
-    if (OTEL_JAVA_AGENT_ENABLED.equals(propertyName)) {
-      // todo
-    }
-
     return getPropertyValue(propertyName, DeclarativeConfigProperties::getBoolean);
   }
 
