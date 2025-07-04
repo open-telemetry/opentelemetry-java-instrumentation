@@ -12,8 +12,6 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurat
 import io.opentelemetry.sdk.extension.incubator.fileconfig.SdkConfigProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.InstrumentationModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -24,32 +22,6 @@ import org.junit.jupiter.api.Test;
 
 class DeclarativeConfigPropertiesBridgeTest {
 
-  private static final String YAML =
-      "file_format: 0.4\n"
-          + "instrumentation/development:\n"
-          + "  java:\n"
-          + "    common:\n"
-          + "      default:\n"
-          + "        enabled: true\n"
-          + "    runtime_telemetry:\n"
-          + "      enabled: false\n"
-          + "    example_instrumentation:\n"
-          + "      string_key: value\n"
-          + "      bool_key: true\n"
-          + "      int_key: 1\n"
-          + "      double_key: 1.1\n"
-          + "      list_key:\n"
-          + "        - value1\n"
-          + "        - value2\n"
-          + "        - true\n"
-          + "      map_key:\n"
-          + "        string_key1: value1\n"
-          + "        string_key2: value2\n"
-          + "        bool_key: true\n"
-          + "    acme:\n"
-          + "      full_name:\n"
-          + "        preserved: true";
-
   private ConfigProperties bridge;
   private ConfigProperties emptyBridge;
 
@@ -57,7 +29,9 @@ class DeclarativeConfigPropertiesBridgeTest {
   void setup() {
     OpenTelemetryConfigurationModel model =
         DeclarativeConfiguration.parse(
-            new ByteArrayInputStream(YAML.getBytes(StandardCharsets.UTF_8)));
+            DeclarativeConfigPropertiesBridgeTest.class
+                .getClassLoader()
+                .getResourceAsStream("config.yaml"));
     SdkConfigProvider configProvider = SdkConfigProvider.create(model);
     bridge =
         new DeclarativeConfigPropertiesBridge(
