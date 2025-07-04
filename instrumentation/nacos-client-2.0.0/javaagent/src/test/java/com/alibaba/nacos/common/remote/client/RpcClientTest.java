@@ -39,7 +39,7 @@ class RpcClientTest {
   @Mock private ServerRequestHandler serverRequestHandler;
 
   @BeforeEach
- void setUp() {
+  void setUp() {
     rpcClient =
         new RpcClient("testRpcClient") {
           @Override
