@@ -47,7 +47,7 @@ import javax.annotation.Nullable;
  *         string_key: value
  * </pre>
  */
-final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
+public final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
   private static final String OTEL_JAVA_AGENT_PREFIX = "otel.javaagent.";
@@ -64,7 +64,7 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
     MAPPING_RULES.put("otel.instrumentation.common.default-enabled", "common.default.enabled");
   }
 
-  DeclarativeConfigPropertiesBridge(ConfigProvider configProvider) {
+  public DeclarativeConfigPropertiesBridge(ConfigProvider configProvider) {
     DeclarativeConfigProperties inst = configProvider.getInstrumentationConfig();
     if (inst == null) {
       inst = DeclarativeConfigProperties.empty();

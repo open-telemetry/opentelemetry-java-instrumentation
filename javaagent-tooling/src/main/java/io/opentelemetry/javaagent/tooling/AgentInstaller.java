@@ -165,7 +165,7 @@ public class AgentInstaller {
     // If noop OpenTelemetry is enabled, autoConfiguredSdk will be null and AgentListeners are not
     // called
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
-        installOpenTelemetrySdk(extensionClassLoader);
+        installOpenTelemetrySdk(extensionClassLoader, earlyConfig.getConfigurationModel());
 
     ConfigProperties sdkConfig = ConfigPropertiesUtil.resolveConfigProperties(autoConfiguredSdk);
     AgentInstrumentationConfig.internalInitializeConfig(
