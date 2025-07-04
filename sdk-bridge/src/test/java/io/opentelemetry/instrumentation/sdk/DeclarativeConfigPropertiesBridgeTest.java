@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.extension;
+package io.opentelemetry.instrumentation.sdk;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -56,7 +56,7 @@ class DeclarativeConfigPropertiesBridgeTest {
             new ByteArrayInputStream(YAML.getBytes(StandardCharsets.UTF_8)));
     SdkConfigProvider configProvider = SdkConfigProvider.create(model);
     bridge =
-        new DeclarativeConfigPropertiesBridge(
+        DeclarativeConfigPropertiesBridge.create(
             Objects.requireNonNull(configProvider.getInstrumentationConfig()));
 
     OpenTelemetryConfigurationModel emptyModel =
@@ -64,7 +64,7 @@ class DeclarativeConfigPropertiesBridgeTest {
             .withAdditionalProperty("instrumentation/development", new InstrumentationModel());
     SdkConfigProvider emptyConfigProvider = SdkConfigProvider.create(emptyModel);
     emptyBridge =
-        new DeclarativeConfigPropertiesBridge(
+        DeclarativeConfigPropertiesBridge.create(
             Objects.requireNonNull(emptyConfigProvider.getInstrumentationConfig()));
   }
 

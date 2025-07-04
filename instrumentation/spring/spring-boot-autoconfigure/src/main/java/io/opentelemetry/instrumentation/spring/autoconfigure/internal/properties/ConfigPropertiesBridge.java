@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties;
 
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
@@ -23,9 +25,16 @@ import javax.annotation.Nullable;
 public final class ConfigPropertiesBridge implements InstrumentationConfig {
 
   private final ConfigProperties configProperties;
+  @Nullable private final ConfigProvider configProvider;
 
   public ConfigPropertiesBridge(ConfigProperties configProperties) {
+    this(configProperties, null);
+  }
+
+  public ConfigPropertiesBridge(
+      ConfigProperties configProperties, @Nullable ConfigProvider configProvider) {
     this.configProperties = configProperties;
+    this.configProvider = configProvider;
   }
 
   @Nullable
@@ -113,7 +122,8 @@ public final class ConfigPropertiesBridge implements InstrumentationConfig {
   @Nullable
   @Override
   public DeclarativeConfigProperties getDeclarativeConfig(String instrumentationName) {
-    // create a spring boot bridge for DeclarativeConfigProperties
-    return null;
+    return configProvider != null
+        ? InstrumentationConfigUtil.javaInstrumentationConfig(configProvider, instrumentationName)
+        : null;
   }
 }
