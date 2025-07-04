@@ -1,8 +1,13 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.tooling.config;
 
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
-import javax.annotation.Nullable;
 import java.util.Collections;
+import javax.annotation.Nullable;
 
 public interface EarlyInitAgentConfig {
   boolean isAgentEnabled();
