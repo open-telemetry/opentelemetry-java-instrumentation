@@ -3,6 +3,8 @@ file_format: 0.4
 instrumentation/development:
   java:
     agent:
+      experimental:
+        indy: true
     common:
       default:
         enabled: true
