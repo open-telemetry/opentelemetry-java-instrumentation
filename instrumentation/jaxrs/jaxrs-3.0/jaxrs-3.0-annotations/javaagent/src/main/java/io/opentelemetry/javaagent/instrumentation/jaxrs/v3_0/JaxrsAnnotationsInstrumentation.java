@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.JaxrsAnnotationsSingletons.RESPONSE_DATA;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.JaxrsAnnotationsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
@@ -21,7 +22,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -89,12 +89,10 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
           return this;
         }
 
-        VirtualField<AsyncResponse, AsyncResponseData> virtualField = null;
         for (Object arg : args) {
           if (arg instanceof AsyncResponse) {
             asyncResponse = (AsyncResponse) arg;
-            virtualField = VirtualField.find(AsyncResponse.class, AsyncResponseData.class);
-            if (virtualField.get(asyncResponse) != null) {
+            if (RESPONSE_DATA.get(asyncResponse) != null) {
               /*
                * We are probably in a recursive call and don't want to start a new span because it
                * would replace the existing span in the asyncResponse and cause it to never finish. We
@@ -123,8 +121,8 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
         context = instrumenter().start(parentContext, handlerData);
         scope = context.makeCurrent();
 
-        if (virtualField != null && asyncResponse != null) {
-          virtualField.set(asyncResponse, AsyncResponseData.create(context, handlerData));
+        if (asyncResponse != null) {
+          RESPONSE_DATA.set(asyncResponse, AsyncResponseData.create(context, handlerData));
         }
         return this;
       }
