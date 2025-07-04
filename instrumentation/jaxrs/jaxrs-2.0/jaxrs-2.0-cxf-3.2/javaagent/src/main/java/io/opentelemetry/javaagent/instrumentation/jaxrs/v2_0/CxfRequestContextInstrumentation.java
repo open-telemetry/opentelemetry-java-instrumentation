@@ -17,9 +17,9 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsConstants;
 import java.lang.reflect.Method;
+import javax.annotation.Nullable;
 import javax.ws.rs.container.ContainerRequestContext;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.asm.Advice.Local;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.cxf.jaxrs.impl.AbstractRequestContextImpl;
@@ -57,16 +57,37 @@ public class CxfRequestContextInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ContainerRequestContextAdvice {
 
+    public static class AdviceScope {
+      private final Jaxrs2HandlerData handlerData;
+      private final Context context;
+      private final Scope scope;
+
+      public AdviceScope(
+          Class<?> resourceClass, Method method, AbstractRequestContextImpl requestContext) {
+        handlerData = new Jaxrs2HandlerData(resourceClass, method);
+        context =
+            Jaxrs2RequestContextHelper.createOrUpdateAbortSpan(
+                instrumenter(), (ContainerRequestContext) requestContext, handlerData);
+        scope = context != null ? context.makeCurrent() : null;
+      }
+
+      public void exit(@Nullable Throwable throwable) {
+        if (scope == null) {
+          return;
+        }
+        scope.close();
+        instrumenter().end(context, handlerData, null, throwable);
+      }
+    }
+
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void decorateAbortSpan(
-        @Advice.This AbstractRequestContextImpl requestContext,
-        @Local("otelHandlerData") Jaxrs2HandlerData handlerData,
-        @Local("otelContext") Context context,
-        @Local("otelScope") Scope scope) {
+    public static AdviceScope decorateAbortSpan(
+        @Advice.This AbstractRequestContextImpl requestContext) {
 
       if (requestContext.getProperty(JaxrsConstants.ABORT_HANDLED) != null
           || !(requestContext instanceof ContainerRequestContext)) {
-        return;
+        return null;
       }
 
       Message message = requestContext.getMessage();
@@ -74,33 +95,21 @@ public class CxfRequestContextInstrumentation implements TypeInstrumentation {
           (OperationResourceInfoStack)
               message.get("org.apache.cxf.jaxrs.model.OperationResourceInfoStack");
       if (resourceInfoStack == null || resourceInfoStack.isEmpty()) {
-        return;
+        return null;
       }
 
       MethodInvocationInfo invocationInfo = resourceInfoStack.peek();
       Method method = invocationInfo.getMethodInfo().getMethodToInvoke();
       Class<?> resourceClass = invocationInfo.getRealClass();
-
-      handlerData = new Jaxrs2HandlerData(resourceClass, method);
-      context =
-          Jaxrs2RequestContextHelper.createOrUpdateAbortSpan(
-              instrumenter(), (ContainerRequestContext) requestContext, handlerData);
-      if (context != null) {
-        scope = context.makeCurrent();
-      }
+      return new AdviceScope(resourceClass, method, requestContext);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Local("otelHandlerData") Jaxrs2HandlerData handlerData,
-        @Local("otelContext") Context context,
-        @Local("otelScope") Scope scope,
-        @Advice.Thrown Throwable throwable) {
-      if (scope == null) {
-        return;
+        @Advice.Thrown Throwable throwable, @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.exit(throwable);
       }
-      scope.close();
-      instrumenter().end(context, handlerData, null, throwable);
     }
   }
 }

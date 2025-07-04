@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.jaxrs.JaxrsContextPath;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -40,20 +41,17 @@ public class JerseyServletContainerInstrumentation implements TypeInstrumentatio
   @SuppressWarnings("unused")
   public static class ServiceAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) HttpServletRequest httpServletRequest,
-        @Advice.Local("otelScope") Scope scope) {
+    public static Scope onEnter(@Advice.Argument(0) HttpServletRequest httpServletRequest) {
       Context context =
           JaxrsContextPath.init(
               Java8BytecodeBridge.currentContext(), httpServletRequest.getServletPath());
-      if (context != null) {
-        scope = context.makeCurrent();
-      }
+      return context != null ? context.makeCurrent() : null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Local("otelScope") Scope scope) {
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }
