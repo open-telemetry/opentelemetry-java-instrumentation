@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor.constant;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -33,13 +34,15 @@ class RocketMqInstrumenterFactory {
   private static final AttributeKey<String> MESSAGING_SYSTEM =
       AttributeKey.stringKey("messaging.system");
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   static Instrumenter<SendMessageContext, Void> createProducerInstrumenter(
       OpenTelemetry openTelemetry,
       List<String> capturedHeaders,
       boolean captureExperimentalSpanAttributes) {
 
     RocketMqProducerAttributeGetter getter = RocketMqProducerAttributeGetter.INSTANCE;
-    MessageOperation operation = MessageOperation.PUBLISH;
+    MessageOperation operation =
+        emitStableMessagingSemconv() ? MessageOperation.CREATE : MessageOperation.PUBLISH;
 
     InstrumenterBuilder<SendMessageContext, Void> instrumenterBuilder =
         Instrumenter.<SendMessageContext, Void>builder(
