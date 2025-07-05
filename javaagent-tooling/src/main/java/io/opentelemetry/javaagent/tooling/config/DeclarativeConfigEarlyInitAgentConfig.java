@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
+import io.opentelemetry.api.incubator.config.DeclarativeConfigException;
 import io.opentelemetry.javaagent.extension.DeclarativeConfigPropertiesBridge;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
@@ -59,7 +60,7 @@ public final class DeclarativeConfigEarlyInitAgentConfig implements EarlyInitAge
     try (FileInputStream fis = new FileInputStream(configurationFile)) {
       return DeclarativeConfiguration.parse(fis);
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      throw new DeclarativeConfigException("unable to read " + configurationFile, e);
     }
   }
 }
