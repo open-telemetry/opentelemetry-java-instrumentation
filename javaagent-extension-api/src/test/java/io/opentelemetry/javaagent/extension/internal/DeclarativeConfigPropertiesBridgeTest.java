@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.extension.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.MapEntry.entry;
 
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
@@ -54,7 +55,6 @@ class DeclarativeConfigPropertiesBridgeTest {
         .isTrue();
 
     // common cases
-    assertThat(bridge.getBoolean("otel.instrumentation.common.default-enabled")).isTrue();
     assertThat(bridge.getBoolean("otel.instrumentation.runtime-telemetry.enabled")).isFalse();
 
     // check all the types
@@ -108,11 +108,21 @@ class DeclarativeConfigPropertiesBridgeTest {
     assertThat(bridge.getMap("otel.instrumentation.other-instrumentation.map_key", expectedMap))
         .isEqualTo(expectedMap);
 
-    // verify vendor specific property names are preserved in unchanged form (prefix is not stripped
-    // as for otel.instrumentation.*)
-    assertThat(bridge.getBoolean("acme.full_name.preserved")).isTrue();
-
-    // todo agent properties
+    // specific property mappings
     assertThat(bridge.getBoolean("otel.javaagent.experimental.indy")).isTrue();
+    assertThat(bridge.getBoolean("otel.instrumentation.common.default-enabled")).isFalse();
+    assertThat(bridge.getMap("otel.instrumentation.common.peer-service-mapping"))
+        .containsOnly(entry("1.2.3.4", "FooService"), entry("2.3.4.5", "BarService"));
+    // not supported in SDK yet (this is strictly typed)
+//    assertThat(bridge.getList("otel.instrumentation.http.known-methods"))
+//        .containsExactly("GET", "POST", "PUT");
+    assertThat(bridge.getList("otel.instrumentation.http.client.capture-request-headers"))
+        .containsExactly("Content-Type", "Accept");
+    assertThat(bridge.getList("otel.instrumentation.http.client.capture-response-headers"))
+        .containsExactly("Content-Type", "Content-Encoding");
+    assertThat(bridge.getList("otel.instrumentation.http.server.capture-request-headers"))
+        .containsExactly("Content-Type", "Accept");
+    assertThat(bridge.getList("otel.instrumentation.http.server.capture-response-headers"))
+        .containsExactly("Content-Type", "Content-Encoding");
   }
 }

@@ -1,13 +1,39 @@
 disabled: true
 file_format: 0.4
 instrumentation/development:
+  general:
+    peer:
+      service_mapping:
+        - peer: 1.2.3.4
+          service: FooService
+        - peer: 2.3.4.5
+          service: BarService
+    http:
+#      known_methods:
+#        - GET
+#        - POST
+#        - PUT
+      client:
+        request_captured_headers:
+          - Content-Type
+          - Accept
+        response_captured_headers:
+          - Content-Type
+          - Content-Encoding
+      server:
+        request_captured_headers:
+          - Content-Type
+          - Accept
+        response_captured_headers:
+          - Content-Type
+          - Content-Encoding
   java:
     agent:
       experimental:
         indy: true
     common:
       default:
-        enabled: true
+        enabled: false
     runtime_telemetry:
       enabled: false
     example_instrumentation:
