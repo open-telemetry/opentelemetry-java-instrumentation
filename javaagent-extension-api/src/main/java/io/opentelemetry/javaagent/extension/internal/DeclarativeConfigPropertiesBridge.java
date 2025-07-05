@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.extension.internal;
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
 import io.opentelemetry.api.incubator.config.ConfigProvider;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigException;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.time.Duration;
@@ -64,13 +65,23 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
 
   static {
     JAVA_MAPPING_RULES.put("otel.instrumentation.common.default-enabled", "common.default.enabled");
+    JAVA_MAPPING_RULES.put("otel.javaagent.logging.application.logs-buffer-max-records", "agent.logging.output.application.logs_buffer_max_records");
 
     // not supported in SDK yet (this is strictly typed)
-//    GENERAL_MAPPING_RULES.put("otel.instrumentation.http.known-methods", "http.known_methods");
-    GENERAL_MAPPING_RULES.put("otel.instrumentation.http.client.capture-request-headers", "http.client.request_captured_headers");
-    GENERAL_MAPPING_RULES.put("otel.instrumentation.http.client.capture-response-headers", "http.client.response_captured_headers");
-    GENERAL_MAPPING_RULES.put("otel.instrumentation.http.server.capture-request-headers", "http.server.request_captured_headers");
-    GENERAL_MAPPING_RULES.put("otel.instrumentation.http.server.capture-response-headers", "http.server.response_captured_headers");
+    //    GENERAL_MAPPING_RULES.put("otel.instrumentation.http.known-methods",
+    // "http.known_methods");
+    GENERAL_MAPPING_RULES.put(
+        "otel.instrumentation.http.client.capture-request-headers",
+        "http.client.request_captured_headers");
+    GENERAL_MAPPING_RULES.put(
+        "otel.instrumentation.http.client.capture-response-headers",
+        "http.client.response_captured_headers");
+    GENERAL_MAPPING_RULES.put(
+        "otel.instrumentation.http.server.capture-request-headers",
+        "http.server.request_captured_headers");
+    GENERAL_MAPPING_RULES.put(
+        "otel.instrumentation.http.server.capture-response-headers",
+        "http.server.response_captured_headers");
   }
 
   private static Map<String, String> getPeerServiceMapping(
@@ -99,6 +110,10 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
   @Nullable
   @Override
   public String getString(String propertyName) {
+    if ("otel.javaagent.logging".equals(propertyName)) {
+      return agentLoggerName();
+    }
+
     return getPropertyValue(propertyName, DeclarativeConfigProperties::getString);
   }
 
@@ -214,5 +229,29 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
       return "agent." + property.substring(OTEL_JAVA_AGENT_PREFIX.length()).replace('-', '_');
     }
     return null;
+  }
+
+  private String agentLoggerName() {
+    DeclarativeConfigProperties logOutput = getLogOutput();
+    DeclarativeConfigProperties application = logOutput.getStructured("application");
+    DeclarativeConfigProperties simple = logOutput.getStructured("simple");
+    if (application != null) {
+      if (simple != null) {
+        throw new DeclarativeConfigException(
+            "Both 'application' and 'simple' log output are configured. "
+                + "Please choose one of them.");
+      }
+      return "application";
+    }
+    // simple is the default
+    return "simple";
+  }
+
+  private DeclarativeConfigProperties getLogOutput() {
+    return getAgent().getStructured("logging", empty()).getStructured("output", empty());
+  }
+
+  private DeclarativeConfigProperties getAgent() {
+    return instrumentationJavaNode.getStructured("agent", empty());
   }
 }

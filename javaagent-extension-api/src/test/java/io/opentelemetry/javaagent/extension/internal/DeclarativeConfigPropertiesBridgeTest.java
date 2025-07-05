@@ -19,6 +19,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class DeclarativeConfigPropertiesBridgeTest {
@@ -107,15 +108,18 @@ class DeclarativeConfigPropertiesBridgeTest {
         .isEqualTo(Arrays.asList("value1", "value2"));
     assertThat(bridge.getMap("otel.instrumentation.other-instrumentation.map_key", expectedMap))
         .isEqualTo(expectedMap);
+  }
 
-    // specific property mappings
-    assertThat(bridge.getBoolean("otel.javaagent.experimental.indy")).isTrue();
-    assertThat(bridge.getBoolean("otel.instrumentation.common.default-enabled")).isFalse();
+  // tests for specific properties
+
+  @DisplayName("properties from the general instrumentation section in config.yaml")
+  @Test
+  void general() {
     assertThat(bridge.getMap("otel.instrumentation.common.peer-service-mapping"))
         .containsOnly(entry("1.2.3.4", "FooService"), entry("2.3.4.5", "BarService"));
     // not supported in SDK yet (this is strictly typed)
-//    assertThat(bridge.getList("otel.instrumentation.http.known-methods"))
-//        .containsExactly("GET", "POST", "PUT");
+    //    assertThat(bridge.getList("otel.instrumentation.http.known-methods"))
+    //        .containsExactly("GET", "POST", "PUT");
     assertThat(bridge.getList("otel.instrumentation.http.client.capture-request-headers"))
         .containsExactly("Content-Type", "Accept");
     assertThat(bridge.getList("otel.instrumentation.http.client.capture-response-headers"))
@@ -124,5 +128,18 @@ class DeclarativeConfigPropertiesBridgeTest {
         .containsExactly("Content-Type", "Accept");
     assertThat(bridge.getList("otel.instrumentation.http.server.capture-response-headers"))
         .containsExactly("Content-Type", "Content-Encoding");
+  }
+
+  @Test
+  void common() {
+    assertThat(bridge.getBoolean("otel.instrumentation.common.default-enabled")).isFalse();
+  }
+
+  @Test
+  void agent() {
+    assertThat(bridge.getBoolean("otel.javaagent.experimental.indy")).isTrue();
+    assertThat(bridge.getString("otel.javaagent.logging")).isEqualTo("application");
+    assertThat(bridge.getInt("otel.javaagent.logging.application.logs-buffer-max-records"))
+        .isEqualTo(1000);
   }
 }
