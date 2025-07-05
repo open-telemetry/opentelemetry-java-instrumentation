@@ -31,6 +31,10 @@ instrumentation/development:
     agent:
       experimental:
         indy: true
+      logging:
+        output:
+          application:
+            logs_buffer_max_records: 1000
     common:
       default:
         enabled: false
