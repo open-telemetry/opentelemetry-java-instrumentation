@@ -22,6 +22,8 @@ public final class OpenTelemetryInstaller {
   public static AutoConfiguredOpenTelemetrySdk installOpenTelemetrySdk(
       ClassLoader extensionClassLoader) {
 
+    // todo load from configurationModel if not null
+
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
         AutoConfiguredOpenTelemetrySdk.builder()
             .setResultAsGlobal()

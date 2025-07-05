@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.extension;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.time.Duration;
@@ -46,15 +47,30 @@ import javax.annotation.Nullable;
  *         string_key: value
  * </pre>
  */
-final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
+public final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
+  private static final String OTEL_JAVA_AGENT_PREFIX = "otel.javaagent.";
+
+  private static final Map<String, String> MAPPING_RULES = new HashMap<>();
 
   // The node at .instrumentation.java
   private final DeclarativeConfigProperties instrumentationJavaNode;
 
-  DeclarativeConfigPropertiesBridge(DeclarativeConfigProperties instrumentationNode) {
-    instrumentationJavaNode = instrumentationNode.getStructured("java", empty());
+  // todo
+  //  private final DeclarativeConfigProperties instrumentationGeneralNode;
+
+  static {
+    MAPPING_RULES.put("otel.instrumentation.common.default-enabled", "common.default.enabled");
+  }
+
+  public DeclarativeConfigPropertiesBridge(ConfigProvider configProvider) {
+    DeclarativeConfigProperties inst = configProvider.getInstrumentationConfig();
+    if (inst == null) {
+      inst = DeclarativeConfigProperties.empty();
+    }
+    instrumentationJavaNode = inst.getStructured("java", empty());
+    //    instrumentationGeneralNode = inst.getStructured("general", empty());
   }
 
   @Nullable
@@ -130,10 +146,11 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
   @Nullable
   private <T> T getPropertyValue(
       String property, BiFunction<DeclarativeConfigProperties, String, T> extractor) {
-    if (!property.startsWith(OTEL_INSTRUMENTATION_PREFIX)) {
+    String suffix = getSuffix(property);
+    if (suffix == null) {
       return null;
     }
-    String suffix = property.substring(OTEL_INSTRUMENTATION_PREFIX.length());
+
     // Split the remainder of the property on ".", and walk to the N-1 entry
     String[] segments = suffix.split("\\.");
     if (segments.length == 0) {
@@ -147,5 +164,19 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
     }
     String lastPart = segments[segments.length - 1];
     return extractor.apply(target, lastPart);
+  }
+
+  private static String getSuffix(String property) {
+    String special = MAPPING_RULES.get(property);
+    if (special != null) {
+      return special;
+    }
+
+    if (property.startsWith(OTEL_INSTRUMENTATION_PREFIX)) {
+      return property.substring(OTEL_INSTRUMENTATION_PREFIX.length()).replace('-', '_');
+    } else if (property.startsWith(OTEL_JAVA_AGENT_PREFIX)) {
+      return "agent." + property.substring(OTEL_JAVA_AGENT_PREFIX.length()).replace('-', '_');
+    }
+    return null;
   }
 }

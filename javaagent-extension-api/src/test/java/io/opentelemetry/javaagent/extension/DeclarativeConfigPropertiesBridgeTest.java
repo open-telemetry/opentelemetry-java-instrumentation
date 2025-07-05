@@ -12,8 +12,6 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurat
 import io.opentelemetry.sdk.extension.incubator.fileconfig.SdkConfigProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.InstrumentationModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -24,28 +22,6 @@ import org.junit.jupiter.api.Test;
 
 class DeclarativeConfigPropertiesBridgeTest {
 
-  private static final String YAML =
-      "file_format: 0.4\n"
-          + "instrumentation/development:\n"
-          + "  java:\n"
-          + "    common:\n"
-          + "      default-enabled: true\n"
-          + "    runtime-telemetry:\n"
-          + "      enabled: false\n"
-          + "    example-instrumentation:\n"
-          + "      string_key: value\n"
-          + "      bool_key: true\n"
-          + "      int_key: 1\n"
-          + "      double_key: 1.1\n"
-          + "      list_key:\n"
-          + "        - value1\n"
-          + "        - value2\n"
-          + "        - true\n"
-          + "      map_key:\n"
-          + "        string_key1: value1\n"
-          + "        string_key2: value2\n"
-          + "        bool_key: true\n";
-
   private ConfigProperties bridge;
   private ConfigProperties emptyBridge;
 
@@ -53,19 +29,18 @@ class DeclarativeConfigPropertiesBridgeTest {
   void setup() {
     OpenTelemetryConfigurationModel model =
         DeclarativeConfiguration.parse(
-            new ByteArrayInputStream(YAML.getBytes(StandardCharsets.UTF_8)));
+            DeclarativeConfigPropertiesBridgeTest.class
+                .getClassLoader()
+                .getResourceAsStream("config.yaml"));
     SdkConfigProvider configProvider = SdkConfigProvider.create(model);
-    bridge =
-        new DeclarativeConfigPropertiesBridge(
-            Objects.requireNonNull(configProvider.getInstrumentationConfig()));
+    bridge = new DeclarativeConfigPropertiesBridge(Objects.requireNonNull(configProvider));
 
     OpenTelemetryConfigurationModel emptyModel =
         new OpenTelemetryConfigurationModel()
             .withAdditionalProperty("instrumentation/development", new InstrumentationModel());
     SdkConfigProvider emptyConfigProvider = SdkConfigProvider.create(emptyModel);
     emptyBridge =
-        new DeclarativeConfigPropertiesBridge(
-            Objects.requireNonNull(emptyConfigProvider.getInstrumentationConfig()));
+        new DeclarativeConfigPropertiesBridge(Objects.requireNonNull(emptyConfigProvider));
   }
 
   @Test
@@ -132,5 +107,7 @@ class DeclarativeConfigPropertiesBridgeTest {
         .isEqualTo(Arrays.asList("value1", "value2"));
     assertThat(bridge.getMap("otel.instrumentation.other-instrumentation.map_key", expectedMap))
         .isEqualTo(expectedMap);
+
+    assertThat(bridge.getBoolean("otel.javaagent.experimental.indy")).isTrue();
   }
 }
