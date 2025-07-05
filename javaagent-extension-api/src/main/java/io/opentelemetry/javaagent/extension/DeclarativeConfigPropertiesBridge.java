@@ -15,7 +15,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -52,16 +54,37 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
   private static final String OTEL_JAVA_AGENT_PREFIX = "otel.javaagent.";
 
-  private static final Map<String, String> MAPPING_RULES = new HashMap<>();
+  private static final Map<String, String> JAVA_MAPPING_RULES = new HashMap<>();
+  private static final Map<String, String> GENERAL_MAPPING_RULES = new HashMap<>();
 
   // The node at .instrumentation.java
   private final DeclarativeConfigProperties instrumentationJavaNode;
 
-  // todo
-  //  private final DeclarativeConfigProperties instrumentationGeneralNode;
+  private final DeclarativeConfigProperties instrumentationGeneralNode;
 
   static {
-    MAPPING_RULES.put("otel.instrumentation.common.default-enabled", "common.default.enabled");
+    JAVA_MAPPING_RULES.put("otel.instrumentation.common.default-enabled", "common.default.enabled");
+
+    // not supported in SDK yet (this is strictly typed)
+//    GENERAL_MAPPING_RULES.put("otel.instrumentation.http.known-methods", "http.known_methods");
+    GENERAL_MAPPING_RULES.put("otel.instrumentation.http.client.capture-request-headers", "http.client.request_captured_headers");
+    GENERAL_MAPPING_RULES.put("otel.instrumentation.http.client.capture-response-headers", "http.client.response_captured_headers");
+    GENERAL_MAPPING_RULES.put("otel.instrumentation.http.server.capture-request-headers", "http.server.request_captured_headers");
+    GENERAL_MAPPING_RULES.put("otel.instrumentation.http.server.capture-response-headers", "http.server.response_captured_headers");
+  }
+
+  private static Map<String, String> getPeerServiceMapping(
+      DeclarativeConfigPropertiesBridge bridge) {
+    List<DeclarativeConfigProperties> configProperties =
+        bridge
+            .instrumentationGeneralNode
+            .getStructured("peer", empty())
+            .getStructuredList("service_mapping", Collections.emptyList());
+    return configProperties.stream()
+        .collect(
+            Collectors.toMap(
+                e -> Objects.requireNonNull(e.getString("peer"), "peer must not be null"),
+                e -> Objects.requireNonNull(e.getString("service"), "service must not be null")));
   }
 
   public DeclarativeConfigPropertiesBridge(ConfigProvider configProvider) {
@@ -70,7 +93,7 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
       inst = DeclarativeConfigProperties.empty();
     }
     instrumentationJavaNode = inst.getStructured("java", empty());
-    //    instrumentationGeneralNode = inst.getStructured("general", empty());
+    instrumentationGeneralNode = inst.getStructured("general", empty());
   }
 
   @Nullable
@@ -124,6 +147,10 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
 
   @Override
   public Map<String, String> getMap(String propertyName) {
+    if ("otel.instrumentation.common.peer-service-mapping".equals(propertyName)) {
+      return getPeerServiceMapping(this);
+    }
+
     DeclarativeConfigProperties propertyValue =
         getPropertyValue(propertyName, DeclarativeConfigProperties::getStructured);
     if (propertyValue == null) {
@@ -146,17 +173,26 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
   @Nullable
   private <T> T getPropertyValue(
       String property, BiFunction<DeclarativeConfigProperties, String, T> extractor) {
-    String suffix = getSuffix(property);
-    if (suffix == null) {
-      return null;
+    String generalPath = GENERAL_MAPPING_RULES.get(property);
+    if (generalPath != null) {
+      return splitOnDot(generalPath, instrumentationGeneralNode, extractor);
     }
+    String javaPath = getJavaPath(property);
+    if (javaPath != null) {
+      return splitOnDot(javaPath, instrumentationJavaNode, extractor);
+    }
+    return null;
+  }
 
+  private static <T> T splitOnDot(
+      String path,
+      DeclarativeConfigProperties target,
+      BiFunction<DeclarativeConfigProperties, String, T> extractor) {
     // Split the remainder of the property on ".", and walk to the N-1 entry
-    String[] segments = suffix.split("\\.");
+    String[] segments = path.split("\\.");
     if (segments.length == 0) {
       return null;
     }
-    DeclarativeConfigProperties target = instrumentationJavaNode;
     if (segments.length > 1) {
       for (int i = 0; i < segments.length - 1; i++) {
         target = target.getStructured(segments[i], empty());
@@ -166,8 +202,8 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
     return extractor.apply(target, lastPart);
   }
 
-  private static String getSuffix(String property) {
-    String special = MAPPING_RULES.get(property);
+  private static String getJavaPath(String property) {
+    String special = JAVA_MAPPING_RULES.get(property);
     if (special != null) {
       return special;
     }
