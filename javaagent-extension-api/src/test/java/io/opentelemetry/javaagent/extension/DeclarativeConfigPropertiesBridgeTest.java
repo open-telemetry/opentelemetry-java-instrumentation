@@ -145,6 +145,5 @@ class DeclarativeConfigPropertiesBridgeTest {
     assertThat(bridge.getString("otel.javaagent.logging")).isEqualTo("application");
     assertThat(bridge.getInt("otel.javaagent.logging.application.logs-buffer-max-records"))
         .isEqualTo(1000);
-
   }
 }
