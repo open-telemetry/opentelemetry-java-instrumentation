@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.util.Collections;
 import javax.annotation.Nullable;
@@ -20,6 +22,14 @@ public interface EarlyInitAgentConfig {
   int getInt(String propertyName, int defaultValue);
 
   void logEarlyConfigErrorsIfAny();
+
+  /**
+   * Install the {@link OpenTelemetrySdk} using autoconfigure, and return the {@link
+   * AutoConfiguredOpenTelemetrySdk}.
+   *
+   * @return the {@link AutoConfiguredOpenTelemetrySdk}
+   */
+  AutoConfiguredOpenTelemetrySdk installOpenTelemetrySdk(ClassLoader extensionClassLoader);
 
   static EarlyInitAgentConfig create() {
     String configurationFile =

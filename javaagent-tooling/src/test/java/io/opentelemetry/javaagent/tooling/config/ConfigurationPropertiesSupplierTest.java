@@ -10,7 +10,6 @@ import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
@@ -46,7 +45,7 @@ class ConfigurationPropertiesSupplierTest {
 
     // when
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
-        OpenTelemetryInstaller.installOpenTelemetrySdk(this.getClass().getClassLoader());
+        EarlyInitAgentConfig.create().installOpenTelemetrySdk(this.getClass().getClassLoader());
 
     // then
     assertThat(AutoConfigureUtil.getConfig(autoConfiguredSdk).getString("custom.key"))
