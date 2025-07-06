@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller.installOpenTelemetrySdk;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.load;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
@@ -160,10 +159,8 @@ public class AgentInstaller {
 
     installEarlyInstrumentation(agentBuilder, inst);
 
-    // If noop OpenTelemetry is enabled, autoConfiguredSdk will be null and AgentListeners are not
-    // called
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
-        installOpenTelemetrySdk(extensionClassLoader);
+        earlyConfig.installOpenTelemetrySdk(extensionClassLoader);
 
     ConfigProperties sdkConfig = ConfigPropertiesUtil.resolveConfigProperties(autoConfiguredSdk);
     AgentInstrumentationConfig.internalInitializeConfig(
