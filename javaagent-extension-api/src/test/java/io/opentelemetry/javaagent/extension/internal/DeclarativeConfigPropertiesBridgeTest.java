@@ -35,14 +35,17 @@ class DeclarativeConfigPropertiesBridgeTest {
                 .getClassLoader()
                 .getResourceAsStream("config.yaml"));
     SdkConfigProvider configProvider = SdkConfigProvider.create(model);
-    bridge = new DeclarativeConfigPropertiesBridge(Objects.requireNonNull(configProvider));
+    String logLevel = "DEBUG";
+    bridge =
+        new DeclarativeConfigPropertiesBridge(Objects.requireNonNull(configProvider), logLevel);
 
     OpenTelemetryConfigurationModel emptyModel =
         new OpenTelemetryConfigurationModel()
             .withAdditionalProperty("instrumentation/development", new InstrumentationModel());
     SdkConfigProvider emptyConfigProvider = SdkConfigProvider.create(emptyModel);
     emptyBridge =
-        new DeclarativeConfigPropertiesBridge(Objects.requireNonNull(emptyConfigProvider));
+        new DeclarativeConfigPropertiesBridge(
+            Objects.requireNonNull(emptyConfigProvider), logLevel);
   }
 
   @Test
@@ -137,9 +140,11 @@ class DeclarativeConfigPropertiesBridgeTest {
 
   @Test
   void agent() {
+    assertThat(bridge.getBoolean("otel.javaagent.debug")).isTrue();
     assertThat(bridge.getBoolean("otel.javaagent.experimental.indy")).isTrue();
     assertThat(bridge.getString("otel.javaagent.logging")).isEqualTo("application");
     assertThat(bridge.getInt("otel.javaagent.logging.application.logs-buffer-max-records"))
         .isEqualTo(1000);
+
   }
 }

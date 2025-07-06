@@ -1,5 +1,6 @@
-disabled: true
 file_format: 0.4
+disabled: true
+log_level: DEBUG
 instrumentation/development:
   general:
     peer:
