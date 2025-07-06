@@ -65,10 +65,13 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
 
   static {
     JAVA_MAPPING_RULES.put("otel.instrumentation.common.default-enabled", "common.default.enabled");
-    JAVA_MAPPING_RULES.put("otel.javaagent.logging.application.logs-buffer-max-records", "agent.logging.output.application.logs_buffer_max_records");
+    JAVA_MAPPING_RULES.put(
+        "otel.javaagent.logging.application.logs-buffer-max-records",
+        "agent.logging.output.application.logs_buffer_max_records");
 
     // todo not supported in SDK yet (this is strictly typed)
-    //    GENERAL_MAPPING_RULES.put("otel.instrumentation.http.known-methods", "http.known_methods");
+    //    GENERAL_MAPPING_RULES.put("otel.instrumentation.http.known-methods",
+    // "http.known_methods");
     GENERAL_MAPPING_RULES.put(
         "otel.instrumentation.http.client.capture-request-headers",
         "http.client.request_captured_headers");
