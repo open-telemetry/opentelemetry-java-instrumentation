@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.extension;
 
-import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
@@ -32,15 +31,11 @@ public interface AgentListener extends Ordered {
   /** Resolve {@link ConfigProperties} from the {@code autoConfiguredOpenTelemetrySdk}. */
   static ConfigProperties resolveConfigProperties(
       AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
+    // todo inline this method and remove the if statement?
     ConfigProperties sdkConfigProperties =
         AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk);
     if (sdkConfigProperties != null) {
       return sdkConfigProperties;
-    }
-    ConfigProvider configProvider =
-        AutoConfigureUtil.getConfigProvider(autoConfiguredOpenTelemetrySdk);
-    if (configProvider != null) {
-      return new DeclarativeConfigPropertiesBridge(configProvider);
     }
     // Should never happen
     throw new IllegalStateException(
