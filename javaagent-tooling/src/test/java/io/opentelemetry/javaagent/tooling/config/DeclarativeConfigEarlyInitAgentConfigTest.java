@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.tooling.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
@@ -24,7 +23,7 @@ class DeclarativeConfigEarlyInitAgentConfigTest {
   @Test
   void globalOpenTelemetry() {
     EarlyInitAgentConfig config = EarlyInitAgentConfig.create(); // no declarative config file
-    assertTrue(config.isAgentEnabled(), "Agent should be enabled by default");
+    assertThat(config.isAgentEnabled()).isTrue();
     AutoConfiguredOpenTelemetrySdk sdk =
         config.installOpenTelemetrySdk(
             DeclarativeConfigEarlyInitAgentConfig.class.getClassLoader());
