@@ -14,7 +14,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.api.annotation.support.MethodBinder;
 import io.opentelemetry.instrumentation.api.annotation.support.ParameterAttributeNamesExtractor;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.semconv.CodeAttributes;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.function.BiConsumer;
@@ -35,7 +35,7 @@ public abstract class MetricsAnnotationHelper {
 
   static void addStaticAttributes(Method method, AttributesBuilder attributesBuilder) {
     attributesBuilder.put(
-        CodeIncubatingAttributes.CODE_FUNCTION_NAME,
+        CodeAttributes.CODE_FUNCTION_NAME,
         method.getDeclaringClass().getName() + "." + method.getName());
 
     StaticAttribute[] staticAttributes = method.getDeclaredAnnotationsByType(StaticAttribute.class);
