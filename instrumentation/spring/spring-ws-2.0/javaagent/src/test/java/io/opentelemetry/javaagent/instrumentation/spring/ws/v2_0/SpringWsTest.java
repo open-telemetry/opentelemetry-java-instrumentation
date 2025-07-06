@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0;
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -19,7 +20,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.test.hello_web_service.HelloRequest;
 import io.opentelemetry.test.hello_web_service.HelloRequestSoapAction;
 import io.opentelemetry.test.hello_web_service.HelloRequestWsAction;
@@ -132,10 +132,9 @@ class SpringWsTest extends AbstractHttpServerUsingTest<ConfigurableApplicationCo
                         .hasName("HelloEndpoint." + methodName)
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                "io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.HelloEndpoint"),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, methodName))));
+                            codeFunctionAssertions(
+                                "io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.HelloEndpoint",
+                                methodName))));
   }
 
   @ParameterizedTest
@@ -172,9 +171,8 @@ class SpringWsTest extends AbstractHttpServerUsingTest<ConfigurableApplicationCo
                                             EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class))))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                "io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.HelloEndpoint"),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, methodName))));
+                            codeFunctionAssertions(
+                                "io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.HelloEndpoint",
+                                methodName))));
   }
 }
