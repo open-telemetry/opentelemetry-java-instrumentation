@@ -97,7 +97,7 @@ public final class DeclarativeConfigEarlyInitAgentConfig implements EarlyInitAge
               Object.class);
       method.setAccessible(true);
       return (AutoConfiguredOpenTelemetrySdk)
-          method.invoke(null, sdk, Resource.getDefault(), null, this.configProvider);
+          method.invoke(null, sdk, Resource.getDefault(), this.declarativeConfigProperties, this.configProvider);
     } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
       throw new IllegalStateException("Error calling create on AutoConfiguredOpenTelemetrySdk", e);
     }
