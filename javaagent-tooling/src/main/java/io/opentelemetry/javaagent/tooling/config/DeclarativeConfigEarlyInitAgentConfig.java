@@ -5,14 +5,24 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigException;
+import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.extension.DeclarativeConfigPropertiesBridge;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.internal.SpiHelper;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.SdkConfigProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.resources.Resource;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
@@ -23,11 +33,12 @@ import javax.annotation.Nullable;
 public final class DeclarativeConfigEarlyInitAgentConfig implements EarlyInitAgentConfig {
   private final OpenTelemetryConfigurationModel configurationModel;
   private final ConfigProperties declarativeConfigProperties;
+  private final SdkConfigProvider configProvider;
 
   DeclarativeConfigEarlyInitAgentConfig(String configurationFile) {
     this.configurationModel = loadConfigurationModel(configurationFile);
-    this.declarativeConfigProperties =
-        new DeclarativeConfigPropertiesBridge(SdkConfigProvider.create(configurationModel));
+    configProvider = SdkConfigProvider.create(configurationModel);
+    this.declarativeConfigProperties = new DeclarativeConfigPropertiesBridge(configProvider);
   }
 
   @Override
@@ -62,5 +73,44 @@ public final class DeclarativeConfigEarlyInitAgentConfig implements EarlyInitAge
     } catch (IOException e) {
       throw new DeclarativeConfigException("unable to read " + configurationFile, e);
     }
+  }
+
+  @Override
+  public AutoConfiguredOpenTelemetrySdk installOpenTelemetrySdk(ClassLoader extensionClassLoader) {
+    OpenTelemetrySdk sdk =
+        DeclarativeConfiguration.create(
+            this.configurationModel,
+            SpiHelper.serviceComponentLoader(
+                AutoConfiguredOpenTelemetrySdk.class.getClassLoader()));
+    Runtime.getRuntime().addShutdownHook(new Thread(sdk::close));
+    GlobalOpenTelemetry.set(sdk);
+
+    setForceFlush(sdk);
+
+    try {
+      Method method =
+          AutoConfiguredOpenTelemetrySdk.class.getDeclaredMethod(
+              "create",
+              OpenTelemetrySdk.class,
+              Resource.class,
+              ConfigProperties.class,
+              Object.class);
+      method.setAccessible(true);
+      return (AutoConfiguredOpenTelemetrySdk)
+          method.invoke(null, sdk, Resource.getDefault(), null, this.configProvider);
+    } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+      throw new IllegalStateException("Error calling create on AutoConfiguredOpenTelemetrySdk", e);
+    }
+  }
+
+  static void setForceFlush(OpenTelemetrySdk sdk) {
+    OpenTelemetrySdkAccess.internalSetForceFlush(
+        (timeout, unit) -> {
+          CompletableResultCode traceResult = sdk.getSdkTracerProvider().forceFlush();
+          CompletableResultCode metricsResult = sdk.getSdkMeterProvider().forceFlush();
+          CompletableResultCode logsResult = sdk.getSdkLoggerProvider().forceFlush();
+          CompletableResultCode.ofAll(Arrays.asList(traceResult, metricsResult, logsResult))
+              .join(timeout, unit);
+        });
   }
 }
