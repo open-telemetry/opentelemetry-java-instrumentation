@@ -38,7 +38,7 @@ public final class DeclarativeConfigEarlyInitAgentConfig implements EarlyInitAge
   DeclarativeConfigEarlyInitAgentConfig(String configurationFile) {
     this.configurationModel = loadConfigurationModel(configurationFile);
     configProvider = SdkConfigProvider.create(configurationModel);
-    this.declarativeConfigProperties = new DeclarativeConfigPropertiesBridge(configProvider);
+    this.declarativeConfigProperties = new DeclarativeConfigPropertiesBridge(configProvider, this.configurationModel.getLogLevel());
   }
 
   @Override

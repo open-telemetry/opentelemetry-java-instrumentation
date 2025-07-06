@@ -83,6 +83,8 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
         "http.server.response_captured_headers");
   }
 
+  private final String logLevel;
+
   private static Map<String, String> getPeerServiceMapping(
       DeclarativeConfigPropertiesBridge bridge) {
     List<DeclarativeConfigProperties> configProperties =
@@ -97,7 +99,8 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
                 e -> Objects.requireNonNull(e.getString("service"), "service must not be null")));
   }
 
-  public DeclarativeConfigPropertiesBridge(ConfigProvider configProvider) {
+  public DeclarativeConfigPropertiesBridge(ConfigProvider configProvider, String logLevel) {
+    this.logLevel = logLevel;
     DeclarativeConfigProperties inst = configProvider.getInstrumentationConfig();
     if (inst == null) {
       inst = DeclarativeConfigProperties.empty();
@@ -119,6 +122,10 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
   @Nullable
   @Override
   public Boolean getBoolean(String propertyName) {
+    if ("otel.javaagent.debug".equals(propertyName)) {
+      return "DEBUG".equals(this.logLevel);
+    }
+
     return getPropertyValue(propertyName, DeclarativeConfigProperties::getBoolean);
   }
 
