@@ -1,0 +1,9 @@
+file_format: 0.4
+disabled: true
+log_level: DEBUG
+instrumentation/development:
+  java:
+    agent:
+      logging:
+        output:
+          simple:
