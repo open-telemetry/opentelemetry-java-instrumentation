@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling.config;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigException;
+import io.opentelemetry.api.incubator.config.GlobalConfigProvider;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.extension.DeclarativeConfigPropertiesBridge;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -82,6 +83,7 @@ public final class DeclarativeConfigEarlyInitAgentConfig implements EarlyInitAge
             this.configurationModel, SpiHelper.serviceComponentLoader(extensionClassLoader));
     Runtime.getRuntime().addShutdownHook(new Thread(sdk::close));
     GlobalOpenTelemetry.set(sdk);
+    GlobalConfigProvider.set(this.configProvider);
 
     setForceFlush(sdk);
 
