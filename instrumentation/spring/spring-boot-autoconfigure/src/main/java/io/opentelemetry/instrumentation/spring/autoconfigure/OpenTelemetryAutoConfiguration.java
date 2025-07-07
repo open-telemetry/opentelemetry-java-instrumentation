@@ -12,6 +12,8 @@ import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.sdk.DeclarativeConfigPropertiesBridge;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.DeclarativeConfigDisabled;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.DeclarativeConfigEnabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelMapConverter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.ConfigPropertiesBridge;
@@ -88,7 +90,7 @@ public class OpenTelemetryAutoConfiguration {
       OtelResourceProperties.class,
       OtelSpringProperties.class
     })
-    @ConditionalOnProperty(name = "otel.file_format", matchIfMissing = true, havingValue = "never")
+    @Conditional(DeclarativeConfigDisabled.class)
     static class PropertiesConfig {
 
       @Bean
@@ -147,7 +149,7 @@ public class OpenTelemetryAutoConfiguration {
   }
 
     @Configuration
-    @ConditionalOnProperty(name = "otel.file_format")
+    @Conditional(DeclarativeConfigEnabled.class)
     static class EmbeddedConfigFileConfig {
 
       @Bean
@@ -226,7 +228,7 @@ public class OpenTelemetryAutoConfiguration {
     }
 
     @Configuration
-    @ConditionalOnProperty(name = "otel.file_format", matchIfMissing = true, havingValue = "never")
+    @Conditional(DeclarativeConfigDisabled.class)
     static class PropertiesConfig {
       /**
        * Is only added so that we have the same converters as with active OpenTelemetry SDK
