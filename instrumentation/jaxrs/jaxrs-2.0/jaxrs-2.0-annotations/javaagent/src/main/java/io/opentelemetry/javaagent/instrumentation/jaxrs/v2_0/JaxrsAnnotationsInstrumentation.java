@@ -74,36 +74,42 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
 
     public static class AdviceScope {
       private final CallDepth callDepth;
-      private Jaxrs2HandlerData handlerData;
-      private AsyncResponse asyncResponse;
-      private Context context;
-      private Scope scope;
+      private final Jaxrs2HandlerData handlerData;
+      private final AsyncResponse asyncResponse;
+      private final Context context;
+      private final Scope scope;
 
-      public AdviceScope(CallDepth callDepth) {
+      public AdviceScope(CallDepth callDepth, Object[] args, Object target, Method method) {
         this.callDepth = callDepth;
-      }
-
-      @CanIgnoreReturnValue
-      public AdviceScope enter(Object[] args, Object target, Method method) {
-        if (callDepth.getAndIncrement() > 0) {
-          return this;
+        if (this.callDepth.getAndIncrement() > 0) {
+          handlerData = null;
+          context = null;
+          scope = null;
+          asyncResponse = null;
+          return;
         }
 
+        AsyncResponse asyncResponseArg = null;
         for (Object arg : args) {
           if (arg instanceof AsyncResponse) {
-            asyncResponse = (AsyncResponse) arg;
-            if (ASYNC_RESPONSE_DATA.get(asyncResponse) != null) {
+            asyncResponseArg = (AsyncResponse) arg;
+            if (ASYNC_RESPONSE_DATA.get(asyncResponseArg) != null) {
               /*
                * We are probably in a recursive call and don't want to start a new span because it
                * would replace the existing span in the asyncResponse and cause it to never finish. We
                * could work around this by using a list instead, but we likely don't want the extra
                * span anyway.
                */
-              return this;
+              handlerData = null;
+              context = null;
+              scope = null;
+              asyncResponse = null;
+              return;
             }
             break;
           }
         }
+        asyncResponse = asyncResponseArg;
 
         Context parentContext = Java8BytecodeBridge.currentContext();
         handlerData = new Jaxrs2HandlerData(target.getClass(), method);
@@ -115,7 +121,9 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
             handlerData);
 
         if (!instrumenter().shouldStart(parentContext, handlerData)) {
-          return this;
+          context = null;
+          scope = null;
+          return;
         }
 
         context = instrumenter().start(parentContext, handlerData);
@@ -124,7 +132,6 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
         if (ASYNC_RESPONSE_DATA != null && asyncResponse != null) {
           ASYNC_RESPONSE_DATA.set(asyncResponse, AsyncResponseData.create(context, handlerData));
         }
-        return this;
       }
 
       @Nullable
@@ -167,8 +174,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
         @Advice.This Object target,
         @Advice.Origin Method method,
         @Advice.AllArguments Object[] args) {
-      AdviceScope adviceScope = new AdviceScope(CallDepth.forClass(Path.class));
-      return adviceScope.enter(args, target, method);
+      return new AdviceScope(CallDepth.forClass(Path.class), args, target, method);
     }
 
     @AssignReturned.ToReturned

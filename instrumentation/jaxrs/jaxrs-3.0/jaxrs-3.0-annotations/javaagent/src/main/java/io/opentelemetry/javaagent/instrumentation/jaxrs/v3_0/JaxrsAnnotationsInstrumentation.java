@@ -74,36 +74,40 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
 
     public static class AdviceScope {
       public Jaxrs3HandlerData handlerData;
-      public AsyncResponse asyncResponse;
-      public CallDepth callDepth;
-      public Context context;
-      public Scope scope;
+      public final AsyncResponse asyncResponse;
+      public final CallDepth callDepth;
+      public final Context context;
+      public final Scope scope;
 
-      public AdviceScope(CallDepth callDepth) {
+      public AdviceScope(CallDepth callDepth, Class<?> type, Method method, Object[] args) {
         this.callDepth = callDepth;
-      }
-
-      @CanIgnoreReturnValue
-      public AdviceScope enter(Class<?> type, Method method, Object[] args) {
         if (callDepth.getAndIncrement() > 0) {
-          return this;
+          asyncResponse = null;
+          context = null;
+          scope = null;
+          return;
         }
 
+        AsyncResponse asyncResponseArg = null;
         for (Object arg : args) {
           if (arg instanceof AsyncResponse) {
-            asyncResponse = (AsyncResponse) arg;
-            if (RESPONSE_DATA.get(asyncResponse) != null) {
+            asyncResponseArg = (AsyncResponse) arg;
+            if (RESPONSE_DATA.get(asyncResponseArg) != null) {
               /*
                * We are probably in a recursive call and don't want to start a new span because it
                * would replace the existing span in the asyncResponse and cause it to never finish. We
                * could work around this by using a list instead, but we likely don't want the extra
                * span anyway.
                */
-              return this;
+              asyncResponse = null;
+              context = null;
+              scope = null;
+              return;
             }
             break;
           }
         }
+        asyncResponse = asyncResponseArg;
 
         Context parentContext = Java8BytecodeBridge.currentContext();
         handlerData = new Jaxrs3HandlerData(type, method);
@@ -115,7 +119,9 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
             handlerData);
 
         if (!instrumenter().shouldStart(parentContext, handlerData)) {
-          return this;
+          context = null;
+          scope = null;
+          return;
         }
 
         context = instrumenter().start(parentContext, handlerData);
@@ -124,7 +130,6 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
         if (asyncResponse != null) {
           RESPONSE_DATA.set(asyncResponse, AsyncResponseData.create(context, handlerData));
         }
-        return this;
       }
 
       @Nullable
@@ -164,8 +169,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
         @Advice.This Object target,
         @Advice.Origin Method method,
         @Advice.AllArguments Object[] args) {
-      AdviceScope adviceScope = new AdviceScope(CallDepth.forClass(Path.class));
-      return adviceScope.enter(target.getClass(), method, args);
+      return new AdviceScope(CallDepth.forClass(Path.class), target.getClass(), method, args);
     }
 
     @AssignReturned.ToReturned

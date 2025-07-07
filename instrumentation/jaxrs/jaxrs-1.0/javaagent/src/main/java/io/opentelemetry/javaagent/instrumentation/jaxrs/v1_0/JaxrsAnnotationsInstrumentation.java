@@ -17,7 +17,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
@@ -70,19 +69,18 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
   public static class JaxRsAnnotationsAdvice {
 
     public static class AdviceScope {
-      private HandlerData handlerData;
+      private final HandlerData handlerData;
       private final CallDepth callDepth;
-      private Context context;
-      private Scope scope;
+      private final Context context;
+      private final Scope scope;
 
-      public AdviceScope(CallDepth callDepth) {
+      public AdviceScope(CallDepth callDepth, Class<?> type, Method method) {
         this.callDepth = callDepth;
-      }
-
-      @CanIgnoreReturnValue
-      public AdviceScope enter(Class<?> type, Method method) {
         if (callDepth.getAndIncrement() > 0) {
-          return this;
+          handlerData = null;
+          context = null;
+          scope = null;
+          return;
         }
 
         Context parentContext = Java8BytecodeBridge.currentContext();
@@ -95,12 +93,13 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
             handlerData);
 
         if (!instrumenter().shouldStart(parentContext, handlerData)) {
-          return this;
+          scope = null;
+          context = null;
+          return;
         }
 
         context = instrumenter().start(parentContext, handlerData);
         scope = context.makeCurrent();
-        return this;
       }
 
       public void exit(@Nullable Throwable throwable) {
@@ -118,8 +117,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope nameSpan(@Advice.This Object target, @Advice.Origin Method method) {
-      AdviceScope adviceScope = new AdviceScope(CallDepth.forClass(Path.class));
-      return adviceScope.enter(target.getClass(), method);
+      return new AdviceScope(CallDepth.forClass(Path.class), target.getClass(), method);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
