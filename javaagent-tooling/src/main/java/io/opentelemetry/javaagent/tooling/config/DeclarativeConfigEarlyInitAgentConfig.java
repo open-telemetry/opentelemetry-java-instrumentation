@@ -81,8 +81,7 @@ public final class DeclarativeConfigEarlyInitAgentConfig implements EarlyInitAge
   public AutoConfiguredOpenTelemetrySdk installOpenTelemetrySdk(ClassLoader extensionClassLoader) {
     OpenTelemetrySdk sdk =
         DeclarativeConfiguration.create(
-            this.configurationModel,
-            SpiHelper.serviceComponentLoader(extensionClassLoader));
+            this.configurationModel, SpiHelper.serviceComponentLoader(extensionClassLoader));
     Runtime.getRuntime().addShutdownHook(new Thread(sdk::close));
     GlobalOpenTelemetry.set(sdk);
 
