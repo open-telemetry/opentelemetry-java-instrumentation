@@ -32,23 +32,23 @@ class DeclarativeConfigPropertiesBridgeTest {
   @BeforeEach
   void setup() {
     bridge = create("config.yaml");
-
-    OpenTelemetryConfigurationModel emptyModel =
-        new OpenTelemetryConfigurationModel()
-            .withAdditionalProperty("instrumentation/development", new InstrumentationModel());
-    SdkConfigProvider emptyConfigProvider = SdkConfigProvider.create(emptyModel);
     emptyBridge =
-        new DeclarativeConfigPropertiesBridge(Objects.requireNonNull(emptyConfigProvider), "DEBUG");
+        create(
+            new OpenTelemetryConfigurationModel()
+                .withAdditionalProperty("instrumentation/development", new InstrumentationModel()));
   }
 
   private static DeclarativeConfigPropertiesBridge create(String name) {
-    OpenTelemetryConfigurationModel model =
+    return create(
         DeclarativeConfiguration.parse(
-            DeclarativeConfigPropertiesBridgeTest.class.getClassLoader().getResourceAsStream(name));
-    SdkConfigProvider configProvider = SdkConfigProvider.create(model);
-    DeclarativeConfigPropertiesBridge configPropertiesBridge =
-        new DeclarativeConfigPropertiesBridge(Objects.requireNonNull(configProvider), "DEBUG");
-    return configPropertiesBridge;
+            DeclarativeConfigPropertiesBridgeTest.class
+                .getClassLoader()
+                .getResourceAsStream(name)));
+  }
+
+  private static DeclarativeConfigPropertiesBridge create(OpenTelemetryConfigurationModel model) {
+    return new DeclarativeConfigPropertiesBridge(
+        Objects.requireNonNull(SdkConfigProvider.create(model)), "DEBUG");
   }
 
   @Test
