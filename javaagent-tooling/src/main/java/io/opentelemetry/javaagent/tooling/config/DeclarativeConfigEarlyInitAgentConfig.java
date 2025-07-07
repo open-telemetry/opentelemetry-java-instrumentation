@@ -65,9 +65,7 @@ public final class DeclarativeConfigEarlyInitAgentConfig implements EarlyInitAge
   }
 
   @Override
-  public void logEarlyConfigErrorsIfAny() {
-    // todo
-  }
+  public void logEarlyConfigErrorsIfAny() {}
 
   private static OpenTelemetryConfigurationModel loadConfigurationModel(String configurationFile) {
     try (FileInputStream fis = new FileInputStream(configurationFile)) {
