@@ -28,7 +28,7 @@ In order to collect spans, add the `collectSpans` property (along with `collectM
 ```kotlin
 tasks {
   test {
-    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
     systemProperty("collectSpans", true)
   }
 }

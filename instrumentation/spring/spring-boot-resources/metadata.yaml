@@ -1,0 +1,3 @@
+description: >
+  This instrumentation automatically detects the `service.name` and `service.version` for Spring
+  Boot applications and sets them as resource attributes.

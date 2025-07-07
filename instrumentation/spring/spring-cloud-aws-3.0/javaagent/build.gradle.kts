@@ -30,3 +30,11 @@ dependencies {
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
+
+tasks {
+  test {
+    // only generates spans from io.opentelemetry.aws-sdk-2.2 scope
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectSpans", true)
+  }
+}
