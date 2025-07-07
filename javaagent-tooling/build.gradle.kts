@@ -17,6 +17,11 @@ dependencies {
   implementation(project(":instrumentation-annotations-support"))
   implementation(project(":muzzle"))
   implementation(project(":sdk-autoconfigure-support"))
+  implementation(project(":sdk-bridge")) {
+    // is part of bootstrap classpath
+    exclude(group = "io.opentelemetry", module = "opentelemetry-api-incubator")
+    exclude(group = "io.opentelemetry", module = "opentelemetry-sdk-extension-autoconfigure-spi")
+  }
 
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry:opentelemetry-sdk")

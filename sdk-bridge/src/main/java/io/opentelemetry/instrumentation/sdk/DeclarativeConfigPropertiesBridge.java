@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.sdk;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigException;
@@ -110,7 +111,7 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
     this.logLevel = logLevel;
     DeclarativeConfigProperties inst = configProvider.getInstrumentationConfig();
     if (inst == null) {
-      inst = DeclarativeConfigProperties.empty();
+      inst = empty();
     }
     instrumentationJavaNode = inst.getStructured("java", empty());
     instrumentationGeneralNode = inst.getStructured("general", empty());
@@ -223,7 +224,7 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
     }
     if (segments.length > 1) {
       for (int i = 0; i < segments.length - 1; i++) {
-        target = target.getStructured(segments[i], DeclarativeConfigProperties.empty());
+        target = target.getStructured(segments[i], empty());
       }
     }
     String lastPart = segments[segments.length - 1];
