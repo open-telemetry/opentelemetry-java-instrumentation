@@ -45,6 +45,7 @@ subprojects {
   }
 
   repositories {
+    mavenLocal()
     mavenCentral()
     maven {
       name = "sonatype"

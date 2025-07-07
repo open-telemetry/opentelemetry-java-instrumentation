@@ -14,6 +14,7 @@ import java.util.List;
  */
 public class InternalInstrumenterCustomizerUtil {
   static {
+    instrumenterCustomizerProviders = Collections.emptyList();
     try {
       // initializing InstrumenterCustomizerUtil will call setInstrumenterCustomizerProviders on
       // this class
@@ -25,7 +26,7 @@ public class InternalInstrumenterCustomizerUtil {
   }
 
   private static volatile List<InternalInstrumenterCustomizerProvider>
-      instrumenterCustomizerProviders = Collections.emptyList();
+      instrumenterCustomizerProviders;
 
   public static void setInstrumenterCustomizerProviders(
       List<InternalInstrumenterCustomizerProvider> providers) {
