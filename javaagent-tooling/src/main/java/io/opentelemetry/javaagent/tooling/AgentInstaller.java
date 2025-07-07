@@ -162,7 +162,7 @@ public class AgentInstaller {
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
         earlyConfig.installOpenTelemetrySdk(extensionClassLoader);
 
-    ConfigProperties sdkConfig = ConfigPropertiesUtil.resolveConfigProperties(autoConfiguredSdk);
+    ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
     AgentInstrumentationConfig.internalInitializeConfig(
         new ConfigPropertiesBridge(
             sdkConfig, AutoConfigureUtil.getConfigProvider(autoConfiguredSdk)));
