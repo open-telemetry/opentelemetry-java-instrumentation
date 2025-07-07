@@ -189,8 +189,9 @@ public class OpenTelemetryAutoConfiguration {
        * integrate with spring boot properties.
        */
       @Bean
-      public ConfigProperties otelProperties(ConfigProvider configProvider) {
-        return DeclarativeConfigPropertiesBridge.create(configProvider.getInstrumentationConfig());
+      public ConfigProperties otelProperties(
+          OpenTelemetryConfigurationModel model, ConfigProvider configProvider) {
+        return new DeclarativeConfigPropertiesBridge(configProvider, model.getLogLevel());
       }
     }
   }
