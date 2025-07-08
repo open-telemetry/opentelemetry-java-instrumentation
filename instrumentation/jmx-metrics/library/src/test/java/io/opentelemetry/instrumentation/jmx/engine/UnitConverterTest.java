@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.jmx.engine;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -58,10 +58,11 @@ class UnitConverterTest {
   @CsvSource({
     ", s", // null -> "s"
     "'', s", // "" -> "s"
+    "1, ''", // empty target unit
   })
   void shouldSkipConversionWhenSourceUnitNotSpecified(String sourceUnit, String targetUnit) {
     UnitConverter converter = UnitConverter.getInstance(sourceUnit, targetUnit);
-    assertNull(converter);
+    assertThat(converter).isNull();
   }
 
   @Test
