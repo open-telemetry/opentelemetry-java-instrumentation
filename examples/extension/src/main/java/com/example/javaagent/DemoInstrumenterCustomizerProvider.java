@@ -47,10 +47,7 @@ public class DemoInstrumenterCustomizerProvider implements InstrumenterCustomize
   @Override
   public void customize(InstrumenterCustomizer customizer) {
     String instrumentationName = customizer.getInstrumentationName();
-    SpanKind spanKind = customizer.getSpanKind();
-
-    // Apply customizations only to HTTP server spans
-    if (isHttpServerInstrumentation(instrumentationName) && spanKind == SpanKind.SERVER) {
+    if (isHttpServerInstrumentation(instrumentationName)) {
       customizeHttpServer(customizer);
     }
   }
