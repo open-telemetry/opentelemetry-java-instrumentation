@@ -82,8 +82,7 @@ public class MetricAggregationTest {
 
   @AfterEach
   void after() throws Exception {
-    ObjectName objectName =
-        new ObjectName("otel.jmx.test:type=" + Hello.class.getSimpleName() + ",*");
+    ObjectName objectName = new ObjectName(DOMAIN + ":type=" + Hello.class.getSimpleName() + ",*");
     theServer
         .queryMBeans(objectName, null)
         .forEach(
@@ -103,7 +102,8 @@ public class MetricAggregationTest {
   private InMemoryMetricReader reader;
   private OpenTelemetrySdk sdk;
 
-  private static ObjectName getObjectName(@Nullable String a, @Nullable String b) {
+  private static ObjectName getObjectName(@Nullable String a, @Nullable String b)
+      throws MalformedObjectNameException {
     StringBuilder parts = new StringBuilder();
     parts.append("otel.jmx.test:type=").append(Hello.class.getSimpleName());
     if (a != null) {
@@ -112,11 +112,7 @@ public class MetricAggregationTest {
     if (b != null) {
       parts.append(",b=").append(b);
     }
-    try {
-      return new ObjectName(parts.toString());
-    } catch (MalformedObjectNameException e) {
-      throw new RuntimeException(e);
-    }
+    return new ObjectName(parts.toString());
   }
 
   static List<MetricInfo.Type> metricTypes() {
