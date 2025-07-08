@@ -1,9 +1,9 @@
 # Changelog
 
-## Version 2.17.1 (2025-06-21)
+## Version 2.17.1 (2025-07-08)
 
-This is just a re-release of 2.17.0 due to issues with Maven Central publishing during the 2.17.0 release.
-It contains no changes over the 2.17.0 release.
+- Backport: Fix invalid jmx state metrics empty unit
+  ([#14195](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14195))
 
 ## Version 2.17.0 (2025-06-18)
 
