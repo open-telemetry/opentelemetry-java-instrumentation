@@ -245,13 +245,14 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
     return null;
   }
 
+  @Nullable
   private String agentLoggerName() {
     DeclarativeConfigProperties logOutput = getLogOutput();
     Set<String> names = logOutput.getPropertyKeys();
 
     if (names.isEmpty()) {
-      // no log output configured, use the default
-      return "simple";
+      // no log output configured
+      return null;
     }
 
     if (names.size() > 1) {
