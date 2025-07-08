@@ -11,6 +11,7 @@ import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.extension.DeclarativeConfigPropertiesBridge;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.SdkAutoConfigureAccess;
 import io.opentelemetry.sdk.autoconfigure.internal.SpiHelper;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.common.CompletableResultCode;
@@ -20,8 +21,6 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTe
 import io.opentelemetry.sdk.resources.Resource;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -98,25 +97,8 @@ public final class DeclarativeConfigEarlyInitAgentConfig implements EarlyInitAge
 
     setForceFlush(sdk);
 
-    try {
-      Method method =
-          AutoConfiguredOpenTelemetrySdk.class.getDeclaredMethod(
-              "create",
-              OpenTelemetrySdk.class,
-              Resource.class,
-              ConfigProperties.class,
-              Object.class);
-      method.setAccessible(true);
-      return (AutoConfiguredOpenTelemetrySdk)
-          method.invoke(
-              null,
-              sdk,
-              Resource.getDefault(),
-              this.declarativeConfigProperties,
-              this.configProvider);
-    } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
-      throw new IllegalStateException("Error calling create on AutoConfiguredOpenTelemetrySdk", e);
-    }
+    return SdkAutoConfigureAccess.create(
+        sdk, Resource.getDefault(), this.declarativeConfigProperties, this.configProvider);
   }
 
   static void setForceFlush(OpenTelemetrySdk sdk) {
