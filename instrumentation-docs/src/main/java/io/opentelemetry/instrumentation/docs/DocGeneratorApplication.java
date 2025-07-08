@@ -14,6 +14,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.TreeMap;
@@ -105,6 +106,49 @@ public class DocGeneratorApplication {
         + " ("
         + String.format(Locale.getDefault(FORMAT), "%.2f", (double) numerator / denominator * 100)
         + "%)";
+  }
+
+  @SuppressWarnings("unused") // temporary helper method used for project tracking
+  private static String listAllModules(List<InstrumentationModule> modules) {
+    return modules.stream()
+        .map(InstrumentationModule::getInstrumentationName)
+        .sorted()
+        .map(name -> "- [ ] " + name)
+        .collect(Collectors.joining("\n"));
+  }
+
+  @SuppressWarnings("unused") // temporary helper method used for project tracking
+  private static String modulesWithDescriptions(List<InstrumentationModule> modules) {
+    // checklist of all modules sorted by name, with a check if description is set
+    return modules.stream()
+        .sorted(Comparator.comparing(InstrumentationModule::getInstrumentationName))
+        .map(
+            module -> {
+              boolean hasDescription =
+                  module.getMetadata() != null
+                      && module.getMetadata().getDescription() != null
+                      && !module.getMetadata().getDescription().isEmpty();
+              String checkbox = hasDescription ? "- [x] " : "- [ ] ";
+              return checkbox + module.getInstrumentationName();
+            })
+        .collect(Collectors.joining("\n"));
+  }
+
+  @SuppressWarnings("unused") // temporary helper method used for project tracking
+  private static String modulesWithConfigs(List<InstrumentationModule> modules) {
+    // checklist of all modules sorted by name, with a check if config is set
+    return modules.stream()
+        .sorted(Comparator.comparing(InstrumentationModule::getInstrumentationName))
+        .map(
+            module -> {
+              boolean hasDescription =
+                  module.getMetadata() != null
+                      && module.getMetadata().getConfigurations() != null
+                      && !module.getMetadata().getConfigurations().isEmpty();
+              String checkbox = hasDescription ? "- [x] " : "- [ ] ";
+              return checkbox + module.getInstrumentationName();
+            })
+        .collect(Collectors.joining("\n"));
   }
 
   private DocGeneratorApplication() {}

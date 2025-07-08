@@ -179,9 +179,14 @@ public class YamlHelper {
           telemetryEntry.put("spans", spanList);
         }
 
-        telemetryList.add(telemetryEntry);
+        if (!spanList.isEmpty() || !metricsList.isEmpty()) {
+          telemetryList.add(telemetryEntry);
+        }
       }
-      moduleMap.put("telemetry", telemetryList);
+
+      if (!telemetryList.isEmpty()) {
+        moduleMap.put("telemetry", telemetryList);
+      }
     }
     return moduleMap;
   }
@@ -286,8 +291,8 @@ public class YamlHelper {
     return mapper.readValue(input, InstrumentationMetaData.class);
   }
 
-  public static EmittedMetrics emittedMetricsParser(String input) {
-    return new Yaml().loadAs(input, EmittedMetrics.class);
+  public static EmittedMetrics emittedMetricsParser(String input) throws JsonProcessingException {
+    return mapper.readValue(input, EmittedMetrics.class);
   }
 
   public static EmittedSpans emittedSpansParser(String input) throws JsonProcessingException {

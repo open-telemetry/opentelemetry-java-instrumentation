@@ -73,7 +73,7 @@ public final class AgentTestRunner extends InstrumentationTestRunner {
       }
       String path = Paths.get(resource.getPath()).toString();
 
-      MetaDataCollector.writeTelemetryToFiles(path, metrics, tracesByScope);
+      MetaDataCollector.writeTelemetryToFiles(path, metricsByScope, tracesByScope);
     }
 
     // additional library ignores are ignored during tests, because they can make it really

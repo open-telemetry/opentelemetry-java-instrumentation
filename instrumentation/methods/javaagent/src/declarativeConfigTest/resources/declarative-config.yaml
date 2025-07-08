@@ -1,0 +1,33 @@
+file_format: "0.4"
+tracer_provider:
+  processors:
+    - simple:
+        exporter:
+          test:
+    - simple:
+        exporter:
+          console:
+
+logger_provider:
+  processors:
+    - simple:
+        exporter:
+          test:
+
+meter_provider:
+  readers:
+    - periodic:
+        # Set really long interval. We'll call forceFlush when we need the metrics
+        # instead of collecting them periodically.
+        interval: 1000000
+        exporter:
+          test:
+
+instrumentation/development:
+  java:
+    methods:
+      include:
+        - class: io.opentelemetry.javaagent.instrumentation.methods.MethodTest$ConfigTracedCallable
+          methods:
+            - name: call
+              span_kind: SERVER

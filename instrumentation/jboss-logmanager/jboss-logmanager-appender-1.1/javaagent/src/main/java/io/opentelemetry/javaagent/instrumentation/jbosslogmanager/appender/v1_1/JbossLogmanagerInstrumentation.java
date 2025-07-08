@@ -42,7 +42,7 @@ public class JbossLogmanagerInstrumentation implements TypeInstrumentation {
   public static class CallLogRawAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
-        @Advice.This() Logger logger,
+        @Advice.This Logger logger,
         @Advice.Argument(0) ExtLogRecord record,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
       // need to track call depth across all loggers in order to avoid double capture when one

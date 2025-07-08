@@ -40,11 +40,11 @@ dependencies {
   implementation("org.eclipse.aether:aether-transport-http:${aetherVersion}")
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
-  implementation("com.gradleup.shadow:shadow-gradle-plugin:8.3.6")
+  implementation("com.gradleup.shadow:shadow-gradle-plugin:8.3.8")
 
   testImplementation("org.assertj:assertj-core:3.27.3")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.13.1"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.13.3"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -107,7 +107,7 @@ nexusPublishing {
   }
 
   connectTimeout.set(Duration.ofMinutes(5))
-  clientTimeout.set(Duration.ofMinutes(5))
+  clientTimeout.set(Duration.ofMinutes(30))
 }
 
 tasks {
