@@ -23,7 +23,9 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.web.reactive.HandlerResult;
@@ -58,12 +60,40 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HandleAdvice {
 
+    public static class AdviceScope {
+      private final Context context;
+      private final Scope scope;
+
+      public AdviceScope(Context context, Scope scope) {
+        this.context = context;
+        this.scope = scope;
+      }
+
+      public Mono<HandlerResult> exit(
+          Throwable throwable,
+          ServerWebExchange exchange,
+          Object handler,
+          Mono<HandlerResult> mono) {
+        scope.close();
+
+        if (throwable != null) {
+          instrumenter().end(context, handler, null, throwable);
+        } else {
+          mono = AdviceUtils.wrapMono(mono, context);
+          exchange.getAttributes().put(AdviceUtils.CONTEXT, context);
+          AdviceUtils.registerOnSpanEnd(exchange, context, handler);
+          // span finished by wrapped Mono in DispatcherHandlerInstrumentation
+          // the Mono is already wrapped at this point, but doesn't read the ON_SPAN_END until
+          // the Mono is resolved, which is after this point
+        }
+        return mono;
+      }
+    }
+
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
-        @Advice.Argument(0) ServerWebExchange exchange,
-        @Advice.Argument(1) Object handler,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+    public static AdviceScope methodEnter(
+        @Advice.Argument(0) ServerWebExchange exchange, @Advice.Argument(1) Object handler) {
 
       Context parentContext = Context.current();
 
@@ -75,40 +105,30 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
           parentContext, HttpServerRouteSource.NESTED_CONTROLLER, httpRouteGetter(), exchange);
 
       if (handler == null) {
-        return;
+        return null;
       }
 
       if (!instrumenter().shouldStart(parentContext, handler)) {
-        return;
+        return null;
       }
-
-      context = instrumenter().start(parentContext, handler);
-      scope = context.makeCurrent();
+      Context context = instrumenter().start(parentContext, handler);
+      return new AdviceScope(context, context.makeCurrent());
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(
-        @Advice.Return(readOnly = false) Mono<HandlerResult> mono,
+    public static Mono<HandlerResult> methodExit(
+        @Advice.Return Mono<HandlerResult> mono,
         @Advice.Argument(0) ServerWebExchange exchange,
         @Advice.Argument(1) Object handler,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
-      scope.close();
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
 
-      if (throwable != null) {
-        instrumenter().end(context, handler, null, throwable);
-      } else {
-        mono = AdviceUtils.wrapMono(mono, context);
-        exchange.getAttributes().put(AdviceUtils.CONTEXT, context);
-        AdviceUtils.registerOnSpanEnd(exchange, context, handler);
-        // span finished by wrapped Mono in DispatcherHandlerInstrumentation
-        // the Mono is already wrapped at this point, but doesn't read the ON_SPAN_END until
-        // the Mono is resolved, which is after this point
+      if (adviceScope == null) {
+        return mono;
       }
+
+      return adviceScope.exit(throwable, exchange, handler, mono);
     }
   }
 }
