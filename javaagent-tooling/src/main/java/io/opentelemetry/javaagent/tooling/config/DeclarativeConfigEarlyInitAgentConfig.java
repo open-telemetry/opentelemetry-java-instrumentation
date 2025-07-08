@@ -11,7 +11,7 @@ import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.extension.DeclarativeConfigPropertiesBridge;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
-import io.opentelemetry.sdk.autoconfigure.SdkAutoConfigureAccess;
+import io.opentelemetry.sdk.autoconfigure.SdkAutoconfigureAccess;
 import io.opentelemetry.sdk.autoconfigure.internal.SpiHelper;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.common.CompletableResultCode;
@@ -80,7 +80,7 @@ public final class DeclarativeConfigEarlyInitAgentConfig implements EarlyInitAge
     try (FileInputStream fis = new FileInputStream(configurationFile)) {
       return DeclarativeConfiguration.parse(fis);
     } catch (IOException e) {
-      ErrorBuffer.setErrorMessage(
+      ErrorBuffer.addErrorMessage(
           "Error reading configuration file: " + configurationFile + ". " + e.getMessage());
       return null;
     }
@@ -97,7 +97,7 @@ public final class DeclarativeConfigEarlyInitAgentConfig implements EarlyInitAge
 
     setForceFlush(sdk);
 
-    return SdkAutoConfigureAccess.create(
+    return SdkAutoconfigureAccess.create(
         sdk, Resource.getDefault(), this.declarativeConfigProperties, this.configProvider);
   }
 

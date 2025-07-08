@@ -7,8 +7,9 @@ package io.opentelemetry.javaagent.tooling.config;
 
 import static java.util.logging.Level.SEVERE;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 
 /**
  * This class is used to buffer error messages that occur during early initialization of the agent.
@@ -19,19 +20,15 @@ public final class ErrorBuffer {
   // this class is used early, and must not use logging in most of its methods
   // in case any file loading/parsing error occurs, we save the error message and log it later, when
   // the logging subsystem is initialized
-  @Nullable private static String errorMessage;
+  private static final List<String> errorMessages = new ArrayList<>();
 
-  static void setErrorMessage(String errorMessage) {
-    if (ErrorBuffer.errorMessage == null) {
-      ErrorBuffer.errorMessage = errorMessage;
-    } else {
-      ErrorBuffer.errorMessage += "\n" + errorMessage;
-    }
+  static void addErrorMessage(String errorMessage) {
+    errorMessages.add(errorMessage);
   }
 
   public static void logErrorIfAny() {
-    if (errorMessage != null) {
-      Logger.getLogger(ConfigurationPropertiesSupplier.class.getName()).log(SEVERE, errorMessage);
+    for (String message : errorMessages) {
+      Logger.getLogger(ConfigurationPropertiesSupplier.class.getName()).log(SEVERE, message);
     }
   }
 }
