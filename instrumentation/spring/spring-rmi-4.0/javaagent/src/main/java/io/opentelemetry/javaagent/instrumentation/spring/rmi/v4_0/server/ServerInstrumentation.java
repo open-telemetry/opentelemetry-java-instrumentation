@@ -41,49 +41,50 @@ public class ServerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InvokeMethodAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.This RmiBasedExporter thisObject,
-        @Advice.Argument(0) RemoteInvocation remoteInv,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelRequest") ClassAndMethod request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+    public static class AdviceLocals {
+      public CallDepth callDepth;
+      public ClassAndMethod request;
+      public Context context;
+      public Scope scope;
+    }
 
-      callDepth = CallDepth.forClass(RmiBasedExporter.class);
-      if (callDepth.getAndIncrement() > 0) {
-        return;
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static AdviceLocals onEnter(
+        @Advice.This RmiBasedExporter thisObject, @Advice.Argument(0) RemoteInvocation remoteInv) {
+
+      AdviceLocals locals = new AdviceLocals();
+
+      locals.callDepth = CallDepth.forClass(RmiBasedExporter.class);
+      if (locals.callDepth.getAndIncrement() > 0) {
+        return locals;
       }
 
       Context parentContext = THREAD_LOCAL_CONTEXT.getAndResetContext();
       Class<?> serverClass = thisObject.getService().getClass();
       String methodName = remoteInv.getMethodName();
-      request = ClassAndMethod.create(serverClass, methodName);
+      locals.request = ClassAndMethod.create(serverClass, methodName);
 
-      if (!serverInstrumenter().shouldStart(parentContext, request)) {
-        return;
+      if (!serverInstrumenter().shouldStart(parentContext, locals.request)) {
+        return locals;
       }
 
-      context = serverInstrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+      locals.context = serverInstrumenter().start(parentContext, locals.request);
+      locals.scope = locals.context.makeCurrent();
+      return locals;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelRequest") ClassAndMethod request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Thrown Throwable throwable, @Advice.Enter AdviceLocals locals) {
 
-      if (callDepth.decrementAndGet() > 0) {
+      if (locals.callDepth.decrementAndGet() > 0) {
         return;
       }
-      if (scope == null) {
+      if (locals.scope == null) {
         return;
       }
-      scope.close();
-      serverInstrumenter().end(context, request, null, throwable);
+      locals.scope.close();
+      serverInstrumenter().end(locals.context, locals.request, null, throwable);
     }
   }
 }
