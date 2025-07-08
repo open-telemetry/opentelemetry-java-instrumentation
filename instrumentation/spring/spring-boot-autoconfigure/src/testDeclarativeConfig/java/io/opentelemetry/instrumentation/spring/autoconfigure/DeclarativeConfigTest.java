@@ -81,7 +81,7 @@ class DeclarativeConfigTest {
   @Test
   void shouldInitializeSdkWhenNotDisabled() {
     this.contextRunner
-        .withPropertyValues("otel.sdk.disabled=false")
+        .withPropertyValues("otel.disabled=false")
         .run(
             context ->
                 assertThat(context).getBean("openTelemetry").isInstanceOf(OpenTelemetrySdk.class));
@@ -91,7 +91,7 @@ class DeclarativeConfigTest {
   void shouldInitializeNoopOpenTelemetryWhenSdkIsDisabled() {
     this.contextRunner
         .withPropertyValues(
-            "otel.sdk.disabled=true",
+            "otel.disabled=true",
             "otel.resource.attributes=service.name=workflow-backend-dev,service.version=3c8f9ce9")
         .run(
             context ->

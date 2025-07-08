@@ -13,9 +13,9 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class DeclarativeConfigDisabled implements Condition {
+public class OtelDisabled implements Condition {
   @Override
   public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-    return !EarlyConfig.isDeclarativeConfig(context.getEnvironment());
+    return !EarlyConfig.otelEnabled(context.getEnvironment());
   }
 }

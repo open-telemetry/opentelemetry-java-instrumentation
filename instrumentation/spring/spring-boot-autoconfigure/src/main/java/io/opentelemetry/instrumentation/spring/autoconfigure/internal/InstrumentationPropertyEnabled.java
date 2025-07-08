@@ -5,9 +5,13 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
+import static io.opentelemetry.instrumentation.spring.autoconfigure.internal.EarlyConfig.translatePropertyName;
+
 import java.util.Map;
+import java.util.Objects;
 import org.springframework.context.annotation.Condition;
 import org.springframework.context.annotation.ConditionContext;
+import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotatedTypeMetadata;
 
 /**
@@ -19,10 +23,16 @@ public class InstrumentationPropertyEnabled implements Condition {
   @Override
   public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
     Map<String, Object> attributes =
-        metadata.getAnnotationAttributes(ConditionalOnEnabledInstrumentation.class.getName());
+        Objects.requireNonNull(
+            metadata.getAnnotationAttributes(ConditionalOnEnabledInstrumentation.class.getName()));
 
-    String name = String.format("otel.instrumentation.%s.enabled", attributes.get("module"));
-    Boolean explicit = context.getEnvironment().getProperty(name, Boolean.class);
+    Environment environment = context.getEnvironment();
+
+    String name =
+        String.format(
+            translatePropertyName(environment, "otel.instrumentation.%s.enabled"),
+            attributes.get("module"));
+    Boolean explicit = environment.getProperty(name, Boolean.class);
     if (explicit != null) {
       return explicit;
     }
@@ -30,8 +40,9 @@ public class InstrumentationPropertyEnabled implements Condition {
     if (!defaultValue) {
       return false;
     }
-    return context
-        .getEnvironment()
-        .getProperty("otel.instrumentation.common.default-enabled", Boolean.class, true);
+    return environment.getProperty(
+        translatePropertyName(environment, "otel.instrumentation.common.default-enabled"),
+        Boolean.class,
+        true);
   }
 }

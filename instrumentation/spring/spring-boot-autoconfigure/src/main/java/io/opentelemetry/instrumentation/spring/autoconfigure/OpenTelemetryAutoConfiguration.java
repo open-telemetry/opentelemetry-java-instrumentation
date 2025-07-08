@@ -14,8 +14,9 @@ import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProp
 import io.opentelemetry.instrumentation.sdk.DeclarativeConfigPropertiesBridge;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.DeclarativeConfigDisabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.DeclarativeConfigEnabled;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelDisabled;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelEnabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelMapConverter;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.ConfigPropertiesBridge;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties;
@@ -45,7 +46,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationPropertiesBinding;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.info.BuildProperties;
@@ -71,7 +71,7 @@ public class OpenTelemetryAutoConfiguration {
   public OpenTelemetryAutoConfiguration() {}
 
   @Configuration
-  @Conditional(SdkEnabled.class)
+  @Conditional(OtelEnabled.class)
   @ConditionalOnMissingBean(OpenTelemetry.class)
   static class OpenTelemetrySdkConfig {
     @Bean
@@ -207,7 +207,7 @@ public class OpenTelemetryAutoConfiguration {
 
   @Configuration
   @ConditionalOnMissingBean(OpenTelemetry.class)
-  @ConditionalOnProperty(name = "otel.sdk.disabled", havingValue = "true")
+  @Conditional(OtelDisabled.class)
   static class DisabledOpenTelemetrySdkConfig {
 
     @Bean

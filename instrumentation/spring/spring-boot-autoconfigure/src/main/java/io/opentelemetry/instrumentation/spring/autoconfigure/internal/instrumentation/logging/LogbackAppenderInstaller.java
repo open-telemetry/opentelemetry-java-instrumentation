@@ -10,6 +10,7 @@ import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.DeprecatedConfigProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.EarlyConfig;
 import java.util.Iterator;
 import java.util.Optional;
 import org.slf4j.ILoggerFactory;
@@ -55,11 +56,11 @@ class LogbackAppenderInstaller {
 
   private static boolean isAppenderAddable(
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent, String property) {
-    boolean otelSdkDisabled =
-        evaluateBooleanProperty(applicationEnvironmentPreparedEvent, "otel.sdk.disabled", false);
+    boolean otelEnabled =
+        EarlyConfig.otelEnabled(applicationEnvironmentPreparedEvent.getEnvironment());
     boolean logbackInstrumentationEnabled =
         evaluateBooleanProperty(applicationEnvironmentPreparedEvent, property, true);
-    return !otelSdkDisabled && logbackInstrumentationEnabled;
+    return otelEnabled && logbackInstrumentationEnabled;
   }
 
   private static void reInitializeOpenTelemetryAppender(
