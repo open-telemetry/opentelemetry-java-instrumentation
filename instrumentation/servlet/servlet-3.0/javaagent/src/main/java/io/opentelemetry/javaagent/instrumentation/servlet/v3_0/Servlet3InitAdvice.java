@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.SERVLET_MAPPING_RESOLVER_FACTORY;
+
 import javax.servlet.Servlet;
 import javax.servlet.ServletConfig;
 import net.bytebuddy.asm.Advice;
@@ -20,7 +20,7 @@ public class Servlet3InitAdvice {
     if (servletConfig == null) {
       return;
     }
-    VirtualField.find(Servlet.class, MappingResolver.Factory.class)
-        .set(servlet, new Servlet3MappingResolverFactory(servletConfig));
+    SERVLET_MAPPING_RESOLVER_FACTORY.set(
+        servlet, new Servlet3MappingResolverFactory(servletConfig));
   }
 }

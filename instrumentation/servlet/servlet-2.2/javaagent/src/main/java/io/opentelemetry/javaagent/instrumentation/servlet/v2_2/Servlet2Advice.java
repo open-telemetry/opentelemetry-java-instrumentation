@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
+import static io.opentelemetry.javaagent.instrumentation.servlet.v2_2.Servlet2Singletons.RESPONSE_STATUS;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v2_2.Servlet2Singletons.helper;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
@@ -27,8 +27,7 @@ import net.bytebuddy.implementation.bytecode.assign.Assigner;
 public class Servlet2Advice {
 
   public static class AdviceScope {
-    private static final VirtualField<ServletResponse, Integer> RESPONSE_STATUS =
-        VirtualField.find(ServletResponse.class, Integer.class);
+
     private final CallDepth callDepth;
     private final ServletRequestContext<HttpServletRequest> requestContext;
     private final Context context;
