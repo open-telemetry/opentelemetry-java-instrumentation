@@ -18,6 +18,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -51,42 +52,56 @@ public class AnnotatedMethodInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AnnotatedMethodAdvice {
 
+    public static class AdviceScope {
+      public CallDepth callDepth;
+      public SpringWsRequest request;
+      public Context context;
+      public Scope scope;
+
+      public AdviceScope(
+          CallDepth callDepth, SpringWsRequest request, Context context, Scope scope) {
+        this.callDepth = callDepth;
+        this.request = request;
+        this.context = context;
+        this.scope = scope;
+      }
+
+      public void exit(@Nullable Throwable throwable) {
+        if (callDepth.decrementAndGet() > 0) {
+          return;
+        }
+        scope.close();
+        instrumenter().end(context, request, null, throwable);
+      }
+    }
+
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void startSpan(
-        @Advice.Origin("#t") Class<?> codeClass,
-        @Advice.Origin("#m") String methodName,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelRequest") SpringWsRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      callDepth = CallDepth.forClass(PayloadRoot.class);
+    public static AdviceScope startSpan(
+        @Advice.Origin("#t") Class<?> codeClass, @Advice.Origin("#m") String methodName) {
+
+      CallDepth callDepth = CallDepth.forClass(PayloadRoot.class);
       if (callDepth.getAndIncrement() > 0) {
-        return;
+        return new AdviceScope(callDepth, null, null, null);
       }
 
       Context parentContext = currentContext();
-      request = SpringWsRequest.create(codeClass, methodName);
+      SpringWsRequest request = SpringWsRequest.create(codeClass, methodName);
       if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
+        return null;
       }
 
-      context = instrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+      Context context = instrumenter().start(parentContext, request);
+      return new AdviceScope(callDepth, request, context, parentContext.makeCurrent());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelRequest") SpringWsRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (callDepth.decrementAndGet() > 0 || scope == null) {
-        return;
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.exit(throwable);
       }
-
-      scope.close();
-      instrumenter().end(context, request, null, throwable);
     }
   }
 }
