@@ -5,19 +5,17 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static io.opentelemetry.instrumentation.logging.LoggingSpanExporterConfigurer.enableLoggingExporter;
 import static io.opentelemetry.javaagent.tooling.AgentInstaller.JAVAAGENT_ENABLED_CONFIG;
-import static java.util.Collections.emptyList;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.exporter.logging.LoggingSpanExporter;
 import io.opentelemetry.instrumentation.thread.AddThreadDetailsSpanProcessor;
 import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
-import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 
 @AutoService(AutoConfigurationCustomizerProvider.class)
 public class AgentTracerProviderConfigurer implements AutoConfigurationCustomizerProvider {
@@ -41,22 +39,10 @@ public class AgentTracerProviderConfigurer implements AutoConfigurationCustomize
       sdkTracerProviderBuilder.addSpanProcessor(new AddThreadDetailsSpanProcessor());
     }
 
-    maybeEnableLoggingExporter(sdkTracerProviderBuilder, config);
+    if (AgentConfig.isDebugModeEnabled(config)) {
+      enableLoggingExporter(sdkTracerProviderBuilder, config);
+    }
 
     return sdkTracerProviderBuilder;
-  }
-
-  private static void maybeEnableLoggingExporter(
-      SdkTracerProviderBuilder builder, ConfigProperties config) {
-    if (AgentConfig.isDebugModeEnabled(config)) {
-      // don't install another instance if the user has already explicitly requested it.
-      if (loggingExporterIsNotAlreadyConfigured(config)) {
-        builder.addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()));
-      }
-    }
-  }
-
-  private static boolean loggingExporterIsNotAlreadyConfigured(ConfigProperties config) {
-    return !config.getList("otel.traces.exporter", emptyList()).contains("logging");
   }
 }
