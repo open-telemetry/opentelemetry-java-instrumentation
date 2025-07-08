@@ -20,7 +20,7 @@ public class StepSingletons {
               GlobalOpenTelemetry.get(), instrumentationName(), StepSingletons::spanName)
           .buildInstrumenter();
 
-  public static VirtualField<StepExecution, ContextAndScope> CONTEXT_AND_SCOPE =
+  public static final VirtualField<StepExecution, ContextAndScope> CONTEXT_AND_SCOPE =
       VirtualField.find(StepExecution.class, ContextAndScope.class);
 
   public static Instrumenter<StepExecution, Void> stepInstrumenter() {
