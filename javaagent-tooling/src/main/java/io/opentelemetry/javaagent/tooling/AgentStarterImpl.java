@@ -11,6 +11,7 @@ import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.AgentStarter;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
+import io.opentelemetry.javaagent.tooling.config.ErrorBuffer;
 import java.io.File;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
@@ -96,7 +97,7 @@ public class AgentStarterImpl implements AgentStarter {
     Throwable startupError = null;
     try {
       loggingCustomizer.init(earlyConfig);
-      earlyConfig.logEarlyConfigErrorsIfAny();
+      ErrorBuffer.logErrorIfAny();
 
       AgentInstaller.installBytebuddyAgent(instrumentation, extensionClassLoader, earlyConfig);
       WeakConcurrentMapCleaner.start();
