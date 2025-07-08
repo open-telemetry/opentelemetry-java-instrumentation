@@ -65,4 +65,9 @@ public class Servlet3InstrumentationModule extends InstrumentationModule
   private static String adviceClassName(String suffix) {
     return Servlet3InstrumentationModule.class.getPackage().getName() + suffix;
   }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
+  }
 }
