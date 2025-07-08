@@ -17,6 +17,8 @@ import java.util.logging.Logger;
  */
 public final class ErrorBuffer {
 
+  private ErrorBuffer() {}
+
   // this class is used early, and must not use logging in most of its methods
   // in case any file loading/parsing error occurs, we save the error message and log it later, when
   // the logging subsystem is initialized
