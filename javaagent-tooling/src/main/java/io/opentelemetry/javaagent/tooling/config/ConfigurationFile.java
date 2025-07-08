@@ -18,18 +18,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 
 final class ConfigurationFile {
 
   static final String CONFIGURATION_FILE_PROPERTY = "otel.javaagent.configuration-file";
 
   private static Map<String, String> configFileContents;
-
-  // this class is used early, and must not use logging in most of its methods
-  // in case any file loading/parsing error occurs, we save the error message and log it later, when
-  // the logging subsystem is initialized
-  @Nullable private static String fileLoadErrorMessage;
 
   static Map<String, String> getProperties() {
     if (configFileContents == null) {
