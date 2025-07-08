@@ -21,8 +21,6 @@ public interface EarlyInitAgentConfig {
 
   int getInt(String propertyName, int defaultValue);
 
-  void logEarlyConfigErrorsIfAny();
-
   /**
    * Install the {@link OpenTelemetrySdk} using autoconfigure, and return the {@link
    * AutoConfiguredOpenTelemetrySdk}.
@@ -37,7 +35,7 @@ public interface EarlyInitAgentConfig {
             .getString("otel.experimental.config.file");
 
     return configurationFile != null
-        ? new DeclarativeConfigEarlyInitAgentConfig(configurationFile)
+        ? DeclarativeConfigEarlyInitAgentConfig.create(configurationFile)
         : new LegacyConfigFileEarlyInitAgentConfig();
   }
 }

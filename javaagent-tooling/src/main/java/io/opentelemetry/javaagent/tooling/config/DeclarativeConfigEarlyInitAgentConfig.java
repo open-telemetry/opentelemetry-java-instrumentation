@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.tooling.config;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigException;
 import io.opentelemetry.api.incubator.config.GlobalConfigProvider;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
 import io.opentelemetry.javaagent.extension.DeclarativeConfigPropertiesBridge;
@@ -26,6 +25,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Objects;
 import javax.annotation.Nullable;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Agent config class that is only supposed to be used before the SDK (and {@link
@@ -36,12 +36,23 @@ public final class DeclarativeConfigEarlyInitAgentConfig implements EarlyInitAge
   private final ConfigProperties declarativeConfigProperties;
   private final SdkConfigProvider configProvider;
 
-  DeclarativeConfigEarlyInitAgentConfig(String configurationFile) {
-    this.configurationModel = loadConfigurationModel(configurationFile);
+  DeclarativeConfigEarlyInitAgentConfig(OpenTelemetryConfigurationModel model) {
+    this.configurationModel = model;
     configProvider = SdkConfigProvider.create(configurationModel);
     this.declarativeConfigProperties =
         new DeclarativeConfigPropertiesBridge(
             configProvider, this.configurationModel.getLogLevel());
+  }
+
+  @NotNull
+  public static EarlyInitAgentConfig create(String configurationFile) {
+    OpenTelemetryConfigurationModel model = loadConfigurationModel(configurationFile);
+    if (model == null) {
+      // broken configuration file, return a broken config, error is logged later
+      return new BrokenEarlyInitAgentConfig();
+    }
+
+    return new DeclarativeConfigEarlyInitAgentConfig(model);
   }
 
   @Override
@@ -65,14 +76,14 @@ public final class DeclarativeConfigEarlyInitAgentConfig implements EarlyInitAge
     return declarativeConfigProperties.getInt(propertyName, defaultValue);
   }
 
-  @Override
-  public void logEarlyConfigErrorsIfAny() {}
-
+  @Nullable
   private static OpenTelemetryConfigurationModel loadConfigurationModel(String configurationFile) {
     try (FileInputStream fis = new FileInputStream(configurationFile)) {
       return DeclarativeConfiguration.parse(fis);
     } catch (IOException e) {
-      throw new DeclarativeConfigException("unable to read " + configurationFile, e);
+      ErrorBuffer.setErrorMessage(
+          "Error reading configuration file: " + configurationFile + ". " + e.getMessage());
+      return null;
     }
   }
 

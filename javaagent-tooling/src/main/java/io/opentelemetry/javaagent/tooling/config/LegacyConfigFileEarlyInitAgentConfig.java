@@ -61,11 +61,6 @@ public final class LegacyConfigFileEarlyInitAgentConfig implements EarlyInitAgen
   }
 
   @Override
-  public void logEarlyConfigErrorsIfAny() {
-    ConfigurationFile.logErrorIfAny();
-  }
-
-  @Override
   public AutoConfiguredOpenTelemetrySdk installOpenTelemetrySdk(ClassLoader extensionClassLoader) {
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
         AutoConfiguredOpenTelemetrySdk.builder()

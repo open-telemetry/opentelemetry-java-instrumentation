@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
+import static io.opentelemetry.javaagent.tooling.config.ErrorBuffer.setErrorMessage;
 import static java.util.Collections.emptyMap;
-import static java.util.logging.Level.SEVERE;
 
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import java.io.File;
@@ -17,7 +17,6 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Properties;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
@@ -59,7 +58,7 @@ final class ConfigurationFile {
     // Configuration properties file is optional
     File configurationFile = new File(configurationFilePath);
     if (!configurationFile.exists()) {
-      fileLoadErrorMessage = "Configuration file \"" + configurationFilePath + "\" not found.";
+      setErrorMessage("Configuration file \"" + configurationFilePath + "\" not found.");
       return emptyMap();
     }
 
@@ -68,23 +67,16 @@ final class ConfigurationFile {
         new InputStreamReader(new FileInputStream(configurationFile), StandardCharsets.UTF_8)) {
       properties.load(reader);
     } catch (FileNotFoundException fnf) {
-      fileLoadErrorMessage = "Configuration file \"" + configurationFilePath + "\" not found.";
+      setErrorMessage("Configuration file \"" + configurationFilePath + "\" not found.");
     } catch (IOException ioe) {
-      fileLoadErrorMessage =
+      setErrorMessage(
           "Configuration file \""
               + configurationFilePath
-              + "\" cannot be accessed or correctly parsed.";
+              + "\" cannot be accessed or correctly parsed.");
     }
 
     return properties.entrySet().stream()
         .collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue().toString()));
-  }
-
-  static void logErrorIfAny() {
-    if (fileLoadErrorMessage != null) {
-      Logger.getLogger(ConfigurationPropertiesSupplier.class.getName())
-          .log(SEVERE, fileLoadErrorMessage);
-    }
   }
 
   private ConfigurationFile() {}
