@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
-import static io.opentelemetry.javaagent.tooling.config.ErrorBuffer.setErrorMessage;
+import static io.opentelemetry.javaagent.tooling.config.ErrorBuffer.addErrorMessage;
 import static java.util.Collections.emptyMap;
 
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
@@ -58,7 +58,7 @@ final class ConfigurationFile {
     // Configuration properties file is optional
     File configurationFile = new File(configurationFilePath);
     if (!configurationFile.exists()) {
-      setErrorMessage("Configuration file \"" + configurationFilePath + "\" not found.");
+      addErrorMessage("Configuration file \"" + configurationFilePath + "\" not found.");
       return emptyMap();
     }
 
@@ -67,9 +67,9 @@ final class ConfigurationFile {
         new InputStreamReader(new FileInputStream(configurationFile), StandardCharsets.UTF_8)) {
       properties.load(reader);
     } catch (FileNotFoundException fnf) {
-      setErrorMessage("Configuration file \"" + configurationFilePath + "\" not found.");
+      addErrorMessage("Configuration file \"" + configurationFilePath + "\" not found.");
     } catch (IOException ioe) {
-      setErrorMessage(
+      addErrorMessage(
           "Configuration file \""
               + configurationFilePath
               + "\" cannot be accessed or correctly parsed.");
