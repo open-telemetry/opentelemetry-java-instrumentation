@@ -22,3 +22,8 @@ dependencies {
   // Used by byte-buddy but not brought in as a transitive dependency.
   compileOnly("com.google.code.findbugs:annotations")
 }
+
+// Needed by mockito
+configurations.testRuntimeClasspath {
+  exclude(group = "net.bytebuddy", module = "byte-buddy-dep")
+}
