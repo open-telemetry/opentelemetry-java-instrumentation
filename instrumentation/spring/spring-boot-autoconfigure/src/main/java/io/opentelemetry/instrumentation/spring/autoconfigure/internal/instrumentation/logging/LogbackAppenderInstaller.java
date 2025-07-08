@@ -17,6 +17,7 @@ import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
+import org.springframework.core.env.ConfigurableEnvironment;
 
 class LogbackAppenderInstaller {
 
@@ -42,25 +43,18 @@ class LogbackAppenderInstaller {
     }
   }
 
-  private static boolean isLogbackAppenderAddable(
-      ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent) {
-    return isAppenderAddable(
-        applicationEnvironmentPreparedEvent, "otel.instrumentation.logback-appender.enabled");
+  private static boolean isLogbackAppenderAddable(ApplicationEnvironmentPreparedEvent event) {
+    return isAppenderAddable(event, "logback-appender");
   }
 
-  private static boolean isLogbackMdcAppenderAddable(
-      ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent) {
-    return isAppenderAddable(
-        applicationEnvironmentPreparedEvent, "otel.instrumentation.logback-mdc.enabled");
+  private static boolean isLogbackMdcAppenderAddable(ApplicationEnvironmentPreparedEvent event) {
+    return isAppenderAddable(event, "logback-mdc");
   }
 
-  private static boolean isAppenderAddable(
-      ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent, String property) {
-    boolean otelEnabled =
-        EarlyConfig.otelEnabled(applicationEnvironmentPreparedEvent.getEnvironment());
-    boolean logbackInstrumentationEnabled =
-        evaluateBooleanProperty(applicationEnvironmentPreparedEvent, property, true);
-    return otelEnabled && logbackInstrumentationEnabled;
+  private static boolean isAppenderAddable(ApplicationEnvironmentPreparedEvent event, String name) {
+    ConfigurableEnvironment environment = event.getEnvironment();
+    return EarlyConfig.otelEnabled(environment)
+        && EarlyConfig.isInstrumentationEnabled(environment, name, true);
   }
 
   private static void reInitializeOpenTelemetryAppender(
@@ -237,18 +231,9 @@ class LogbackAppenderInstaller {
 
   private static Boolean evaluateBooleanProperty(
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent, String property) {
-    return applicationEnvironmentPreparedEvent
-        .getEnvironment()
-        .getProperty(property, Boolean.class);
-  }
-
-  private static boolean evaluateBooleanProperty(
-      ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent,
-      String property,
-      boolean defaultValue) {
-    return applicationEnvironmentPreparedEvent
-        .getEnvironment()
-        .getProperty(property, Boolean.class, defaultValue);
+    ConfigurableEnvironment environment = applicationEnvironmentPreparedEvent.getEnvironment();
+    return environment.getProperty(
+        EarlyConfig.translatePropertyName(environment, property), Boolean.class);
   }
 
   private static <T> Optional<T> findAppender(Class<T> appenderClass) {
