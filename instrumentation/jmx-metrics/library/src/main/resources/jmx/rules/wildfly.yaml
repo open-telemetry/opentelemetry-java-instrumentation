@@ -7,18 +7,22 @@ rules:
       wildfly.deployment: param(deployment)
     unit: "{session}"
     mapping:
+      # wildfly.session.created
       sessionsCreated:
         metric: created
         type: counter
         desc: The number of sessions created
+      # wildfly.session.count
       activeSessions:
         metric: count
         type: updowncounter
         desc: The number of active sessions
+      # wildfly.session.expired
       expiredSessions:
         metric: expired
         type: counter
         desc: The number of expired sessions
+      # wildfly.session.rejected
       rejectedSessions:
         metric: rejected
         type: counter
@@ -31,20 +35,24 @@ rules:
       wildfly.listener: param(http-listener)
     type: counter
     mapping:
+      # wildfly.request.count
       requestCount:
         metric: request.count
         unit: "{request}"
         desc: The number of requests received
+      # wildfly.request.duration.sum
       processingTime:
         metric: request.duration.sum
         sourceUnit: ns
         unit: s
         desc: The total amount of time spent processing requests.
+      # wildfly.error.count
       errorCount:
         metric: error.count
         unit: "{request}"
         desc: The number of requests that have resulted in a 5xx response.
 
+  # wildly.network.io
   - bean: jboss.as:subsystem=undertow,server=*,http-listener=*
     metricAttribute:
       wildfly.server: param(server)
