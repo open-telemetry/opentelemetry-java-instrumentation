@@ -4,10 +4,13 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
+
+import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
 
 public class WildflyTest extends TargetSystemTest {
 
@@ -40,6 +43,42 @@ public class WildflyTest extends TargetSystemTest {
   }
 
   private static MetricsVerifier createMetricsVerifier() {
-    return MetricsVerifier.create();
+    AttributeMatcher deploymentAttribute = attribute("wildfly.deployment", "testapp.war");
+//    AttributeMatcher datasourceAttribute = attribute("data_sourcedata_source", "ExampleDS");
+
+    return MetricsVerifier.create()
+        .add(
+            "wildfly.session.created",
+            metric ->
+                metric
+                    .isCounter()
+                    .hasDescription("The number of sessions created.")
+                    .hasUnit("{session}")
+                    .hasDataPointsWithOneAttribute(deploymentAttribute))
+        .add(
+            "wildfly.session.count",
+            metric ->
+                metric
+                    .isUpDownCounter()
+                    .hasDescription("The number of active sessions.")
+                    .hasUnit("{session}")
+                    .hasDataPointsWithOneAttribute(deploymentAttribute))
+        .add(
+            "wildfly.session.expired",
+            metric ->
+                metric
+                    .isCounter()
+                    .hasDescription("The number of expired sessions.")
+                    .hasUnit("{session}")
+                    .hasDataPointsWithOneAttribute(deploymentAttribute))
+        .add(
+            "wildfly.session.rejected",
+            metric ->
+                metric
+                    .isCounter()
+                    .hasDescription("The number of rejected sessions.")
+                    .hasUnit("{session}")
+                    .hasDataPointsWithOneAttribute(deploymentAttribute))
+        ;
   }
 }
