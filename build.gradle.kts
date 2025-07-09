@@ -191,12 +191,12 @@ tasks {
         .header("authorization", "Bearer $token")
         .build()
       httpClient.newCall(request).execute().use { response ->
-        response.body.string()
+        response.body!!.string()
       }
 
       httpClient.newCall(request).execute().use { response ->
         if (response.code != 201) throw GradleException("Unexpected response status ${response.code} while uploading the release bundle")
-        println("Uploaded deployment ${response.body.string()}")
+        println("Uploaded deployment ${response.body!!.string()}")
       }
     }
   }
