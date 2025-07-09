@@ -79,7 +79,7 @@ public class TargetSystemTest {
     TargetSystemTest.testAppPath = getArtifactPath("io.opentelemetry.testapp.path");
   }
 
-  private static Path getArtifactPath(String systemProperty){
+  private static Path getArtifactPath(String systemProperty) {
     String pathValue = System.getProperty(systemProperty);
     assertThat(pathValue).isNotNull();
     Path path = Paths.get(pathValue);

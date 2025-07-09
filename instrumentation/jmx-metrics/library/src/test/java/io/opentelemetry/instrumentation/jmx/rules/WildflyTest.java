@@ -1,18 +1,23 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.jmx.rules;
 
+import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
+import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
+
+import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
+import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
-import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
-
-import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
-import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 
 public class WildflyTest extends TargetSystemTest {
 
@@ -29,11 +34,12 @@ public class WildflyTest extends TargetSystemTest {
     jvmArgs.add(javaAgentJvmArgument());
     jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));
 
-    GenericContainer<?> target = new GenericContainer<>(dockerImage)
-        .withStartupTimeout(Duration.ofMinutes(2))
-        .withExposedPorts(WILDFLY_SERVICE_PORT)
-        .withEnv("JAVA_TOOL_OPTIONS", String.join(" ", jvmArgs))
-        .waitingFor(Wait.forListeningPorts(WILDFLY_SERVICE_PORT));
+    GenericContainer<?> target =
+        new GenericContainer<>(dockerImage)
+            .withStartupTimeout(Duration.ofMinutes(2))
+            .withExposedPorts(WILDFLY_SERVICE_PORT)
+            .withEnv("JAVA_TOOL_OPTIONS", String.join(" ", jvmArgs))
+            .waitingFor(Wait.forListeningPorts(WILDFLY_SERVICE_PORT));
 
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
@@ -46,10 +52,10 @@ public class WildflyTest extends TargetSystemTest {
 
   private static MetricsVerifier createMetricsVerifier() {
     AttributeMatcher deploymentAttribute = attribute("wildfly.deployment", "testapp.war");
-    AttributeMatcherGroup serverListenerAttributes = attributeGroup(
-        attribute("wildfly.server", "default-server"),
-            attribute("wildfly.listener", "default"));
-//    AttributeMatcher datasourceAttribute = attribute("data_sourcedata_source", "ExampleDS");
+    AttributeMatcher serverAttribute = attribute("wildfly.server", "default-server");
+    AttributeMatcher listenerAttribute = attribute("wildfly.listener", "default");
+    AttributeMatcherGroup serverListenerAttributes =
+        attributeGroup(serverAttribute, listenerAttribute);
 
     return MetricsVerifier.create()
         // session metrics
@@ -86,25 +92,46 @@ public class WildflyTest extends TargetSystemTest {
                     .hasUnit("{session}")
                     .hasDataPointsWithOneAttribute(deploymentAttribute))
         // request metrics
-        .add("wildfly.request.count", metric ->
-            metric
-                .isCounter()
-                .hasDescription("The number of requests received.")
-                .hasUnit("{request}")
-                .hasDataPointsWithAttributes(serverListenerAttributes))
-        .add("wildfly.request.duration.sum", metric ->
-            metric
-                .isCounter()
-                .hasDescription("The total amount of time spent processing requests.")
-                .hasUnit("s")
-                .hasDataPointsWithAttributes(serverListenerAttributes))
-        .add("wildfly.error.count", metric ->
-            metric
-                .isCounter()
-                .hasDescription("The number of requests that have resulted in a 5xx response.")
-                .hasUnit("{request}")
-                .hasDataPointsWithAttributes(serverListenerAttributes))
-
-        ;
+        .add(
+            "wildfly.request.count",
+            metric ->
+                metric
+                    .isCounter()
+                    .hasDescription("The number of requests received.")
+                    .hasUnit("{request}")
+                    .hasDataPointsWithAttributes(serverListenerAttributes))
+        .add(
+            "wildfly.request.duration.sum",
+            metric ->
+                metric
+                    .isCounter()
+                    .hasDescription("The total amount of time spent processing requests.")
+                    .hasUnit("s")
+                    .hasDataPointsWithAttributes(serverListenerAttributes))
+        .add(
+            "wildfly.error.count",
+            metric ->
+                metric
+                    .isCounter()
+                    .hasDescription("The number of requests that have resulted in a 5xx response.")
+                    .hasUnit("{request}")
+                    .hasDataPointsWithAttributes(serverListenerAttributes))
+        // network io metrics
+        .add(
+            "wildfly.network.io",
+            metric ->
+                metric
+                    .hasDescription("Total number of bytes transferred")
+                    .hasUnit("By")
+                    .isCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            attribute("network.io.direction", "receive"),
+                            serverAttribute,
+                            listenerAttribute),
+                        attributeGroup(
+                            attribute("network.io.direction", "transmit"),
+                            serverAttribute,
+                            listenerAttribute)));
   }
 }

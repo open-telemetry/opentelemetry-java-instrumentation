@@ -22,10 +22,7 @@ import org.testcontainers.containers.wait.strategy.Wait;
 public class TomcatTest extends TargetSystemTest {
 
   @ParameterizedTest
-  @ValueSource(strings = {
-    "tomcat:10.0",
-    "tomcat:9.0"
-  })
+  @ValueSource(strings = {"tomcat:10.0", "tomcat:9.0"})
   void testCollectedMetrics(String dockerImageName) {
     List<String> yamlFiles = Collections.singletonList("tomcat.yaml");
 

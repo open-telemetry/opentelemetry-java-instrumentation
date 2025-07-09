@@ -31,8 +31,10 @@ tasks {
       .withNormalizer(ClasspathNormalizer::class)
 
     doFirst {
-      jvmArgs("-Dio.opentelemetry.javaagent.path=${shadowTask.archiveFile.get()}",
-        "-Dio.opentelemetry.testapp.path=${testAppTask.get().archiveFile.get().asFile.absolutePath}")
+      jvmArgs(
+        "-Dio.opentelemetry.javaagent.path=${shadowTask.archiveFile.get()}",
+        "-Dio.opentelemetry.testapp.path=${testAppTask.get().archiveFile.get().asFile.absolutePath}"
+      )
     }
   }
 }

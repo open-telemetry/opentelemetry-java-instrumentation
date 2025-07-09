@@ -44,25 +44,25 @@ rules:
         metric: error.count
         unit: "{request}"
         desc: The number of requests that have resulted in a 5xx response.
-#
-#  - bean: jboss.as:subsystem=undertow,server=*,http-listener=*
-#    metricAttribute:
-#      server: param(server)
-#      listener: param(http-listener)
-#    type: counter
-#    unit: By
-#    mapping:
-#      bytesSent:
-#        metric: wildfly.network.io
-#        desc: Total number of bytes transferred
-#        metricAttribute:
-#          direction: const(out)
-#      bytesReceived:
-#        metric: wildfly.network.io
-#        desc: Total number of bytes transferred
-#        metricAttribute:
-#          direction: const(in)
-#
+
+  - bean: jboss.as:subsystem=undertow,server=*,http-listener=*
+    metricAttribute:
+      wildfly.server: param(server)
+      wildfly.listener: param(http-listener)
+    type: counter
+    unit: By
+    mapping:
+      bytesSent:
+        metric: &metric wildfly.network.io
+        desc: &desc Total number of bytes transferred
+        metricAttribute:
+          network.io.direction: const(transmit)
+      bytesReceived:
+        metric: *metric
+        desc: *desc
+        metricAttribute:
+          network.io.direction: const(receive)
+
 #  - bean: jboss.as:subsystem=datasources,data-source=*,statistics=pool
 #    unit: "1"
 #    metricAttribute:
