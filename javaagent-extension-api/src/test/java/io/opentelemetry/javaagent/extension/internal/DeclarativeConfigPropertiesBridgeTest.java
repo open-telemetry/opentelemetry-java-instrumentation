@@ -6,10 +6,8 @@
 package io.opentelemetry.javaagent.extension.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.data.MapEntry.entry;
 
-import io.opentelemetry.api.incubator.config.DeclarativeConfigException;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.SdkConfigProvider;
@@ -17,6 +15,7 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.Instru
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -25,30 +24,29 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 class DeclarativeConfigPropertiesBridgeTest {
-
   private ConfigProperties bridge;
   private ConfigProperties emptyBridge;
 
   @BeforeEach
   void setup() {
-    bridge = create("config.yaml");
+    bridge = create("config.yaml", Collections.emptyMap());
 
     OpenTelemetryConfigurationModel emptyModel =
         new OpenTelemetryConfigurationModel()
             .withAdditionalProperty("instrumentation/development", new InstrumentationModel());
-    SdkConfigProvider emptyConfigProvider = SdkConfigProvider.create(emptyModel);
     emptyBridge =
-        new DeclarativeConfigPropertiesBridge(Objects.requireNonNull(emptyConfigProvider));
+        new DeclarativeConfigPropertiesBridge(
+            Objects.requireNonNull(SdkConfigProvider.create(emptyModel)), Collections.emptyMap());
   }
 
-  private static DeclarativeConfigPropertiesBridge create(String name) {
+  private static DeclarativeConfigPropertiesBridge create(
+      String name, Map<String, Object> earlyInitProperties) {
     OpenTelemetryConfigurationModel model =
         DeclarativeConfiguration.parse(
             DeclarativeConfigPropertiesBridgeTest.class.getClassLoader().getResourceAsStream(name));
     SdkConfigProvider configProvider = SdkConfigProvider.create(model);
-    DeclarativeConfigPropertiesBridge configPropertiesBridge =
-        new DeclarativeConfigPropertiesBridge(Objects.requireNonNull(configProvider));
-    return configPropertiesBridge;
+    return new DeclarativeConfigPropertiesBridge(
+        Objects.requireNonNull(configProvider), earlyInitProperties);
   }
 
   @Test
@@ -143,15 +141,13 @@ class DeclarativeConfigPropertiesBridgeTest {
 
   @Test
   void agent() {
+    Map<String, Object> earlyInitProperties = new HashMap<>();
+    earlyInitProperties.put("otel.javaagent.debug", true);
+    earlyInitProperties.put("otel.javaagent.logging", "application");
+    DeclarativeConfigPropertiesBridge bridge = create("config.yaml", earlyInitProperties);
+
     assertThat(bridge.getBoolean("otel.javaagent.debug")).isTrue();
     assertThat(bridge.getBoolean("otel.javaagent.experimental.indy")).isTrue();
-
     assertThat(bridge.getString("otel.javaagent.logging")).isEqualTo("application");
-    assertThat(bridge.getInt("otel.javaagent.logging.application.logs-buffer-max-records"))
-        .isEqualTo(1000);
-    assertThat(create("agent-logging-simple.yaml").getString("otel.javaagent.logging"))
-        .isEqualTo("simple");
-    assertThatThrownBy(() -> create("agent-logging-both.yaml").getString("otel.javaagent.logging"))
-        .isInstanceOf(DeclarativeConfigException.class);
   }
 }
