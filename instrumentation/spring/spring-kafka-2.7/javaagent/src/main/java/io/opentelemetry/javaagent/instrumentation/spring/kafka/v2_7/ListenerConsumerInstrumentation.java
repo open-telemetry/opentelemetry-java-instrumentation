@@ -79,9 +79,9 @@ public class ListenerConsumerInstrumentation implements TypeInstrumentation {
   public static class InvokeBatchAdvice {
 
     public static class AdviceScope {
-      public final KafkaReceiveRequest request;
-      public final Context context;
-      public final Scope scope;
+      private final KafkaReceiveRequest request;
+      private final Context context;
+      private final Scope scope;
 
       private AdviceScope(KafkaReceiveRequest request, Context context, Scope scope) {
         this.request = request;

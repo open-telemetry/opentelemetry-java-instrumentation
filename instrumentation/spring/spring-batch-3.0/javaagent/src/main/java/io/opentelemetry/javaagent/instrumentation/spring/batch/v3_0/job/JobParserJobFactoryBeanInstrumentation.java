@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
@@ -58,7 +59,7 @@ public class JobParserJobFactoryBeanInstrumentation implements TypeInstrumentati
     @Advice.AssignReturned.AsScalar
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static JobExecutionListener[] onEnter(
-        @Advice.Argument(0) JobExecutionListener[] listeners) {
+        @Advice.Argument(0) @Nullable JobExecutionListener[] listeners) {
       if (listeners == null) {
         return new JobExecutionListener[] {new TracingJobExecutionListener()};
       }

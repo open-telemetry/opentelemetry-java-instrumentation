@@ -85,6 +85,9 @@ public class AnnotatedMethodInstrumentation implements TypeInstrumentation {
         if (callDepth.decrementAndGet() > 0) {
           return;
         }
+        if (scope == null) {
+          return;
+        }
         scope.close();
         instrumenter().end(context, request, null, throwable);
       }
