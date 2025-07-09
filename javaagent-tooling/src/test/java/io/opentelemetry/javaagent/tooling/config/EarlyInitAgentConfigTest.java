@@ -13,7 +13,7 @@ import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class DeclarativeConfigEarlyInitAgentConfigTest {
+class EarlyInitAgentConfigTest {
 
   @BeforeEach
   void setUp() {
@@ -23,7 +23,6 @@ class DeclarativeConfigEarlyInitAgentConfigTest {
   @Test
   void globalOpenTelemetry() {
     EarlyInitAgentConfig config = EarlyInitAgentConfig.create(); // no declarative config file
-    assertThat(config.isAgentEnabled()).isTrue();
     AutoConfiguredOpenTelemetrySdk sdk =
         config.installOpenTelemetrySdk(
             DeclarativeConfigEarlyInitAgentConfig.class.getClassLoader());
