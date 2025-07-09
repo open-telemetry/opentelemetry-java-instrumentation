@@ -21,14 +21,14 @@ public class AdviceScope {
   private final String item;
   private final Scope scope;
 
-  public AdviceScope(Context context, Scope scope, String item) {
+  private AdviceScope(Context context, Scope scope, String item) {
     this.context = context;
     this.scope = scope;
     this.item = item;
   }
 
   @Nullable
-  public static AdviceScope start(String itemName) {
+  public static AdviceScope enter(String itemName) {
     Context parentContext = currentContext();
     ChunkContext chunkContext = getChunkContext(parentContext);
     if (chunkContext == null || !shouldTraceItems()) {
@@ -43,7 +43,7 @@ public class AdviceScope {
     return new AdviceScope(context, context.makeCurrent(), item);
   }
 
-  public void close(@Nullable Throwable thrown) {
+  public void exit(@Nullable Throwable thrown) {
     scope.close();
     itemInstrumenter().end(context, item, null, thrown);
   }

@@ -39,7 +39,7 @@ public class SimpleChunkProviderInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope onEnter() {
-      return AdviceScope.start(ITEM_OPERATION_READ);
+      return AdviceScope.enter(ITEM_OPERATION_READ);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
@@ -47,7 +47,7 @@ public class SimpleChunkProviderInstrumentation implements TypeInstrumentation {
         @Advice.Thrown @Nullable Throwable thrown,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
-        adviceScope.close(thrown);
+        adviceScope.exit(thrown);
       }
     }
   }

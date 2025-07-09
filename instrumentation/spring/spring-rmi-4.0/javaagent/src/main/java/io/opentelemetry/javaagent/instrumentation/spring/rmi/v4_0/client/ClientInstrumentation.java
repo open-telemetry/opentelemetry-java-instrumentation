@@ -44,9 +44,9 @@ public class ClientInstrumentation implements TypeInstrumentation {
   public static class InvokeMethodAdvice {
 
     public static class AdviceScope {
-      public Method method;
-      public Context context;
-      public Scope scope;
+      private final Method method;
+      private final Context context;
+      private final Scope scope;
 
       public AdviceScope(Method method, Context context, Scope scope) {
         this.method = method;

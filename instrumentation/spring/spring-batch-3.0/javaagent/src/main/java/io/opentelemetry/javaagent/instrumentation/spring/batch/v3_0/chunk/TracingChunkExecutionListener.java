@@ -20,13 +20,12 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.core.Ordered;
 
 public final class TracingChunkExecutionListener implements ChunkListener, Ordered {
-  private final VirtualField<ChunkContext, ContextAndScope> executionVirtualField;
+  private static final VirtualField<ChunkContext, ContextAndScope> CONTEXT_AND_SCOPE =
+      VirtualField.find(ChunkContext.class, ContextAndScope.class);
   private final Class<?> builderClass;
   private ChunkContextAndBuilder chunkContextAndBuilder;
 
-  public TracingChunkExecutionListener(
-      VirtualField<ChunkContext, ContextAndScope> executionVirtualField, Class<?> builderClass) {
-    this.executionVirtualField = executionVirtualField;
+  public TracingChunkExecutionListener(Class<?> builderClass) {
     this.builderClass = builderClass;
   }
 
@@ -41,7 +40,7 @@ public final class TracingChunkExecutionListener implements ChunkListener, Order
     Context context = chunkInstrumenter().start(parentContext, chunkContextAndBuilder);
     // beforeJob & afterJob always execute on the same thread
     Scope scope = context.makeCurrent();
-    executionVirtualField.set(chunkContext, new ContextAndScope(context, scope));
+    CONTEXT_AND_SCOPE.set(chunkContext, new ContextAndScope(context, scope));
   }
 
   @Override
@@ -57,12 +56,12 @@ public final class TracingChunkExecutionListener implements ChunkListener, Order
   }
 
   private void end(ChunkContext chunkContext, @Nullable Throwable throwable) {
-    ContextAndScope contextAndScope = executionVirtualField.get(chunkContext);
+    ContextAndScope contextAndScope = CONTEXT_AND_SCOPE.get(chunkContext);
     if (contextAndScope == null) {
       return;
     }
 
-    executionVirtualField.set(chunkContext, null);
+    CONTEXT_AND_SCOPE.set(chunkContext, null);
     contextAndScope.closeScope();
     chunkInstrumenter().end(contextAndScope.getContext(), chunkContextAndBuilder, null, throwable);
   }

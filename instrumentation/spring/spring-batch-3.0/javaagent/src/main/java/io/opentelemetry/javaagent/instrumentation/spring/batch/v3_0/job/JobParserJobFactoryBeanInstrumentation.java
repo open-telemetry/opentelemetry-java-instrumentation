@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.job;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.job.JobSingletons.CONTEXT_AND_SCOPE;
 import static net.bytebuddy.matcher.ElementMatchers.isArray;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -59,18 +58,14 @@ public class JobParserJobFactoryBeanInstrumentation implements TypeInstrumentati
     @Advice.AssignReturned.AsScalar
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static JobExecutionListener[] onEnter(
-        @Advice.Argument(0) JobExecutionListener[] originalListeners) {
-      JobExecutionListener[] listeners = originalListeners;
-
+        @Advice.Argument(0) JobExecutionListener[] listeners) {
       if (listeners == null) {
-        listeners = new JobExecutionListener[] {new TracingJobExecutionListener(CONTEXT_AND_SCOPE)};
-      } else {
-        JobExecutionListener[] newListeners = new JobExecutionListener[listeners.length + 1];
-        newListeners[0] = new TracingJobExecutionListener(CONTEXT_AND_SCOPE);
-        System.arraycopy(listeners, 0, newListeners, 1, listeners.length);
-        listeners = newListeners;
+        return new JobExecutionListener[] {new TracingJobExecutionListener()};
       }
-      return listeners;
+      JobExecutionListener[] newListeners = new JobExecutionListener[listeners.length + 1];
+      newListeners[0] = new TracingJobExecutionListener();
+      System.arraycopy(listeners, 0, newListeners, 1, listeners.length);
+      return newListeners;
     }
   }
 }

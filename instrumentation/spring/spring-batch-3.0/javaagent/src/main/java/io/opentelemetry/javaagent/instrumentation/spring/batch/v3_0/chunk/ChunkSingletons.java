@@ -16,17 +16,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksBuilder;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.ContextAndScope;
 import org.springframework.batch.core.scope.context.ChunkContext;
 import org.springframework.batch.core.step.builder.SimpleStepBuilder;
 
 public class ChunkSingletons {
 
   private static final Instrumenter<ChunkContextAndBuilder, Void> INSTRUMENTER;
-
-  public static final VirtualField<ChunkContext, ContextAndScope> CONTEXT_AND_SCOPE =
-      VirtualField.find(ChunkContext.class, ContextAndScope.class);
 
   static {
     InstrumenterBuilder<ChunkContextAndBuilder, Void> instrumenterBuilder =

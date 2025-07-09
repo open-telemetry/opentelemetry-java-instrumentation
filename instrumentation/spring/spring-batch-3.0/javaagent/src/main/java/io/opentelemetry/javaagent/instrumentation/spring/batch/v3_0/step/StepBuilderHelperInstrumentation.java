@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.step;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.step.StepSingletons.CONTEXT_AND_SCOPE;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -39,7 +38,7 @@ public class StepBuilderHelperInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.This StepBuilderHelper<?> stepBuilder) {
-      stepBuilder.listener(new TracingStepExecutionListener(CONTEXT_AND_SCOPE));
+      stepBuilder.listener(new TracingStepExecutionListener());
     }
   }
 }

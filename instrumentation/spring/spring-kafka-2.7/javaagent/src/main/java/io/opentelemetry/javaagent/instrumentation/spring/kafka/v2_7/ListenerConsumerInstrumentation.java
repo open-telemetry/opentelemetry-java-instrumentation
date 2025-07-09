@@ -90,7 +90,7 @@ public class ListenerConsumerInstrumentation implements TypeInstrumentation {
       }
 
       @Nullable
-      public static AdviceScope start(ConsumerRecords<?, ?> records, Consumer<?, ?> consumer) {
+      public static AdviceScope enter(ConsumerRecords<?, ?> records, Consumer<?, ?> consumer) {
         KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
         Context receiveContext = consumerContext.getContext();
 
@@ -105,7 +105,7 @@ public class ListenerConsumerInstrumentation implements TypeInstrumentation {
         return new AdviceScope(request, context, context.makeCurrent());
       }
 
-      public void close(@Nullable Throwable throwable) {
+      public void exit(@Nullable Throwable throwable) {
         scope.close();
         batchProcessInstrumenter().end(context, request, null, throwable);
       }
@@ -115,7 +115,7 @@ public class ListenerConsumerInstrumentation implements TypeInstrumentation {
     public static AdviceScope onEnter(
         @Advice.Argument(0) ConsumerRecords<?, ?> records,
         @Advice.FieldValue("consumer") Consumer<?, ?> consumer) {
-      return AdviceScope.start(records, consumer);
+      return AdviceScope.enter(records, consumer);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
@@ -123,7 +123,7 @@ public class ListenerConsumerInstrumentation implements TypeInstrumentation {
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
-        adviceScope.close(throwable);
+        adviceScope.exit(throwable);
       }
     }
   }

@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMetho
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -24,6 +25,7 @@ import org.springframework.remoting.rmi.RmiBasedExporter;
 import org.springframework.remoting.support.RemoteInvocation;
 
 public class ServerInstrumentation implements TypeInstrumentation {
+
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.remoting.rmi.RmiBasedExporter");
@@ -41,50 +43,60 @@ public class ServerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InvokeMethodAdvice {
 
-    public static class AdviceLocals {
-      public CallDepth callDepth;
-      public ClassAndMethod request;
-      public Context context;
-      public Scope scope;
+    public static class AdviceScope {
+      private final CallDepth callDepth;
+      private final ClassAndMethod request;
+      private final Context context;
+      private final Scope scope;
+
+      public AdviceScope(
+          CallDepth callDepth, RmiBasedExporter rmiExporter, RemoteInvocation remoteInvocation) {
+        this.callDepth = callDepth;
+        if (callDepth.getAndIncrement() > 0) {
+          this.request = null;
+          this.context = null;
+          this.scope = null;
+          return;
+        }
+
+        Context parentContext = THREAD_LOCAL_CONTEXT.getAndResetContext();
+        Class<?> serverClass = rmiExporter.getService().getClass();
+        String methodName = remoteInvocation.getMethodName();
+        request = ClassAndMethod.create(serverClass, methodName);
+
+        if (!serverInstrumenter().shouldStart(parentContext, request)) {
+          context = null;
+          scope = null;
+          return;
+        }
+
+        context = serverInstrumenter().start(parentContext, request);
+        scope = context.makeCurrent();
+      }
+
+      public void exit(@Nullable Throwable throwable) {
+        if (callDepth.decrementAndGet() > 0) {
+          return;
+        }
+        if (scope == null) {
+          return;
+        }
+        scope.close();
+        serverInstrumenter().end(context, request, null, throwable);
+      }
     }
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AdviceLocals onEnter(
+    public static AdviceScope onEnter(
         @Advice.This RmiBasedExporter thisObject, @Advice.Argument(0) RemoteInvocation remoteInv) {
-
-      AdviceLocals locals = new AdviceLocals();
-
-      locals.callDepth = CallDepth.forClass(RmiBasedExporter.class);
-      if (locals.callDepth.getAndIncrement() > 0) {
-        return locals;
-      }
-
-      Context parentContext = THREAD_LOCAL_CONTEXT.getAndResetContext();
-      Class<?> serverClass = thisObject.getService().getClass();
-      String methodName = remoteInv.getMethodName();
-      locals.request = ClassAndMethod.create(serverClass, methodName);
-
-      if (!serverInstrumenter().shouldStart(parentContext, locals.request)) {
-        return locals;
-      }
-
-      locals.context = serverInstrumenter().start(parentContext, locals.request);
-      locals.scope = locals.context.makeCurrent();
-      return locals;
+      return new AdviceScope(CallDepth.forClass(RmiBasedExporter.class), thisObject, remoteInv);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown Throwable throwable, @Advice.Enter AdviceLocals locals) {
-
-      if (locals.callDepth.decrementAndGet() > 0) {
-        return;
-      }
-      if (locals.scope == null) {
-        return;
-      }
-      locals.scope.close();
-      serverInstrumenter().end(locals.context, locals.request, null, throwable);
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+      adviceScope.exit(throwable);
     }
   }
 }

@@ -65,7 +65,7 @@ public class SpringJmsMessageListenerInstrumentation implements TypeInstrumentat
       }
 
       @Nullable
-      public static AdviceScope start(Message message) {
+      public static AdviceScope enter(Message message) {
         Context parentContext = Java8BytecodeBridge.currentContext();
         Context receiveContext = JmsReceiveContextHolder.getReceiveContext(parentContext);
         if (receiveContext != null) {
@@ -82,7 +82,7 @@ public class SpringJmsMessageListenerInstrumentation implements TypeInstrumentat
         return new AdviceScope(request, context, context.makeCurrent());
       }
 
-      public void close(Throwable throwable) {
+      public void exit(Throwable throwable) {
         scope.close();
         listenerInstrumenter().end(context, request, null, throwable);
       }
@@ -90,7 +90,7 @@ public class SpringJmsMessageListenerInstrumentation implements TypeInstrumentat
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope onEnter(@Advice.Argument(0) Message message) {
-      return AdviceScope.start(message);
+      return AdviceScope.enter(message);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -98,7 +98,7 @@ public class SpringJmsMessageListenerInstrumentation implements TypeInstrumentat
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
-        adviceScope.close(throwable);
+        adviceScope.exit(throwable);
       }
     }
   }

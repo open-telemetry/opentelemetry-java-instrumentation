@@ -44,7 +44,7 @@ public class SimpleChunkProcessorInstrumentation implements TypeInstrumentation 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope onEnter(
         @Advice.FieldValue("itemProcessor") ItemProcessor<?, ?> itemProcessor) {
-      return AdviceScope.start(ITEM_OPERATION_PROCESS);
+      return AdviceScope.enter(ITEM_OPERATION_PROCESS);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
@@ -52,7 +52,7 @@ public class SimpleChunkProcessorInstrumentation implements TypeInstrumentation 
         @Advice.Thrown @Nullable Throwable thrown,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
-        adviceScope.close(thrown);
+        adviceScope.exit(thrown);
       }
     }
   }
@@ -63,7 +63,7 @@ public class SimpleChunkProcessorInstrumentation implements TypeInstrumentation 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope onEnter(@Advice.FieldValue("itemWriter") ItemWriter<?> itemWriter) {
-      return AdviceScope.start(ITEM_OPERATION_WRITE);
+      return AdviceScope.enter(ITEM_OPERATION_WRITE);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
@@ -72,7 +72,7 @@ public class SimpleChunkProcessorInstrumentation implements TypeInstrumentation 
         @Advice.Enter @Nullable AdviceScope adviceScope) {
 
       if (adviceScope != null) {
-        adviceScope.close(thrown);
+        adviceScope.exit(thrown);
       }
     }
   }

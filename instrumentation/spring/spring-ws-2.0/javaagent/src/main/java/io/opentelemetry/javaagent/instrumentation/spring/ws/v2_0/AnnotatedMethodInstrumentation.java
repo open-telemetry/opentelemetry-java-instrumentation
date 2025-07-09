@@ -53,17 +53,32 @@ public class AnnotatedMethodInstrumentation implements TypeInstrumentation {
   public static class AnnotatedMethodAdvice {
 
     public static class AdviceScope {
-      public CallDepth callDepth;
-      public SpringWsRequest request;
-      public Context context;
-      public Scope scope;
+      private final CallDepth callDepth;
+      private final SpringWsRequest request;
+      private final Context context;
+      private final Scope scope;
 
-      public AdviceScope(
+      private AdviceScope(
           CallDepth callDepth, SpringWsRequest request, Context context, Scope scope) {
         this.callDepth = callDepth;
         this.request = request;
         this.context = context;
         this.scope = scope;
+      }
+
+      public static AdviceScope enter(CallDepth callDepth, Class<?> codeClass, String methodName) {
+        if (callDepth.getAndIncrement() > 0) {
+          return new AdviceScope(callDepth, null, null, null);
+        }
+
+        Context parentContext = currentContext();
+        SpringWsRequest request = SpringWsRequest.create(codeClass, methodName);
+        if (!instrumenter().shouldStart(parentContext, request)) {
+          return new AdviceScope(callDepth, null, null, null);
+        }
+
+        Context context = instrumenter().start(parentContext, request);
+        return new AdviceScope(callDepth, request, context, parentContext.makeCurrent());
       }
 
       public void exit(@Nullable Throwable throwable) {
@@ -75,33 +90,17 @@ public class AnnotatedMethodInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope startSpan(
         @Advice.Origin("#t") Class<?> codeClass, @Advice.Origin("#m") String methodName) {
-
       CallDepth callDepth = CallDepth.forClass(PayloadRoot.class);
-      if (callDepth.getAndIncrement() > 0) {
-        return new AdviceScope(callDepth, null, null, null);
-      }
-
-      Context parentContext = currentContext();
-      SpringWsRequest request = SpringWsRequest.create(codeClass, methodName);
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return null;
-      }
-
-      Context context = instrumenter().start(parentContext, request);
-      return new AdviceScope(callDepth, request, context, parentContext.makeCurrent());
+      return AdviceScope.enter(callDepth, codeClass, methodName);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable AdviceScope adviceScope) {
-      if (adviceScope != null) {
-        adviceScope.exit(throwable);
-      }
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+      adviceScope.exit(throwable);
     }
   }
 }

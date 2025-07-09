@@ -18,12 +18,10 @@ import org.springframework.batch.core.JobExecutionListener;
 import org.springframework.core.Ordered;
 
 public final class TracingJobExecutionListener implements JobExecutionListener, Ordered {
-  private final VirtualField<JobExecution, ContextAndScope> executionVirtualField;
+  private static final VirtualField<JobExecution, ContextAndScope> CONTEXT_AND_SCOPE =
+      VirtualField.find(JobExecution.class, ContextAndScope.class);
 
-  public TracingJobExecutionListener(
-      VirtualField<JobExecution, ContextAndScope> executionVirtualField) {
-    this.executionVirtualField = executionVirtualField;
-  }
+  public TracingJobExecutionListener() {}
 
   @Override
   public void beforeJob(JobExecution jobExecution) {
@@ -35,16 +33,16 @@ public final class TracingJobExecutionListener implements JobExecutionListener, 
     Context context = jobInstrumenter().start(parentContext, jobExecution);
     // beforeJob & afterJob always execute on the same thread
     Scope scope = context.makeCurrent();
-    executionVirtualField.set(jobExecution, new ContextAndScope(context, scope));
+    CONTEXT_AND_SCOPE.set(jobExecution, new ContextAndScope(context, scope));
   }
 
   @Override
   public void afterJob(JobExecution jobExecution) {
-    ContextAndScope contextAndScope = executionVirtualField.get(jobExecution);
+    ContextAndScope contextAndScope = CONTEXT_AND_SCOPE.get(jobExecution);
     if (contextAndScope == null) {
       return;
     }
-    executionVirtualField.set(jobExecution, null);
+    CONTEXT_AND_SCOPE.set(jobExecution, null);
     contextAndScope.closeScope();
     jobInstrumenter().end(contextAndScope.getContext(), jobExecution, null, null);
   }

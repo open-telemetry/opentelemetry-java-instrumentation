@@ -64,9 +64,32 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(Context context, Scope scope) {
+      private AdviceScope(Context context, Scope scope) {
         this.context = context;
         this.scope = scope;
+      }
+
+      @Nullable
+      public static AdviceScope enter(ServerWebExchange exchange, Object handler) {
+        Context parentContext = Context.current();
+
+        // HttpRouteSource.CONTROLLER has useFirst true, and it will update http.route only once
+        // using the last portion of the nested path.
+        // HttpRouteSource.NESTED_CONTROLLER has useFirst false, and it will make http.route updated
+        // twice: 1st using the last portion of the nested path, 2nd time using the full nested
+        // path.
+        HttpServerRoute.update(
+            parentContext, HttpServerRouteSource.NESTED_CONTROLLER, httpRouteGetter(), exchange);
+
+        if (handler == null) {
+          return null;
+        }
+
+        if (!instrumenter().shouldStart(parentContext, handler)) {
+          return null;
+        }
+        Context context = instrumenter().start(parentContext, handler);
+        return new AdviceScope(context, context.makeCurrent());
       }
 
       public Mono<HandlerResult> exit(
@@ -94,25 +117,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope methodEnter(
         @Advice.Argument(0) ServerWebExchange exchange, @Advice.Argument(1) Object handler) {
-
-      Context parentContext = Context.current();
-
-      // HttpRouteSource.CONTROLLER has useFirst true, and it will update http.route only once
-      // using the last portion of the nested path.
-      // HttpRouteSource.NESTED_CONTROLLER has useFirst false, and it will make http.route updated
-      // twice: 1st using the last portion of the nested path, 2nd time using the full nested path.
-      HttpServerRoute.update(
-          parentContext, HttpServerRouteSource.NESTED_CONTROLLER, httpRouteGetter(), exchange);
-
-      if (handler == null) {
-        return null;
-      }
-
-      if (!instrumenter().shouldStart(parentContext, handler)) {
-        return null;
-      }
-      Context context = instrumenter().start(parentContext, handler);
-      return new AdviceScope(context, context.makeCurrent());
+      return AdviceScope.enter(exchange, handler);
     }
 
     @AssignReturned.ToReturned

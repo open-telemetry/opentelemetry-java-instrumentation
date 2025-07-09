@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.chunk;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.chunk.ChunkSingletons.CONTEXT_AND_SCOPE;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -41,8 +40,7 @@ public class StepBuilderInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.This AbstractTaskletStepBuilder<?> stepBuilder) {
-      stepBuilder.listener(
-          new TracingChunkExecutionListener(CONTEXT_AND_SCOPE, stepBuilder.getClass()));
+      stepBuilder.listener(new TracingChunkExecutionListener(stepBuilder.getClass()));
     }
   }
 }

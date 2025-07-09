@@ -9,8 +9,6 @@ import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.Sprin
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.ContextAndScope;
 import org.springframework.batch.core.StepExecution;
 
 public class StepSingletons {
@@ -19,9 +17,6 @@ public class StepSingletons {
       Instrumenter.<StepExecution, Void>builder(
               GlobalOpenTelemetry.get(), instrumentationName(), StepSingletons::spanName)
           .buildInstrumenter();
-
-  public static final VirtualField<StepExecution, ContextAndScope> CONTEXT_AND_SCOPE =
-      VirtualField.find(StepExecution.class, ContextAndScope.class);
 
   public static Instrumenter<StepExecution, Void> stepInstrumenter() {
     return INSTRUMENTER;

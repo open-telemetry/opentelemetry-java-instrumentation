@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.job;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.job.JobSingletons.CONTEXT_AND_SCOPE;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -40,7 +39,7 @@ public class JobBuilderHelperInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.This JobBuilderHelper<?> jobBuilder) {
-      jobBuilder.listener(new TracingJobExecutionListener(CONTEXT_AND_SCOPE));
+      jobBuilder.listener(new TracingJobExecutionListener());
     }
   }
 }

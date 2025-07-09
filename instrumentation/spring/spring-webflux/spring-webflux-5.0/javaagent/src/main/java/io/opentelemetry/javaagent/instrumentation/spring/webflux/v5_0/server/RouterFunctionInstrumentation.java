@@ -66,11 +66,10 @@ public class RouterFunctionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static Mono<HandlerFunction<?>> methodExit(
         @Advice.This RouterFunction<?> thiz,
-        @Advice.Return Mono<HandlerFunction<?>> originalResult,
+        @Advice.Return Mono<HandlerFunction<?>> result,
         @Advice.Thrown Throwable throwable) {
-      Mono<HandlerFunction<?>> result = originalResult;
       if (throwable == null) {
-        result = result.doOnNext(new RouteOnSuccess(thiz));
+        return result.doOnNext(new RouteOnSuccess(thiz));
       }
       return result;
     }

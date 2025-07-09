@@ -12,9 +12,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
-import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.ContextAndScope;
 import org.springframework.batch.core.JobExecution;
 
 public class JobSingletons {
@@ -24,9 +22,6 @@ public class JobSingletons {
           .getBoolean("otel.instrumentation.spring-batch.experimental-span-attributes", false);
 
   private static final Instrumenter<JobExecution, Void> INSTRUMENTER;
-
-  public static final VirtualField<JobExecution, ContextAndScope> CONTEXT_AND_SCOPE =
-      VirtualField.find(JobExecution.class, ContextAndScope.class);
 
   static {
     InstrumenterBuilder<JobExecution, Void> instrumenter =

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.job;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.job.JobSingletons.CONTEXT_AND_SCOPE;
 import static net.bytebuddy.matcher.ElementMatchers.isArray;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -61,10 +60,10 @@ public class JobFactoryBeanInstrumentation implements TypeInstrumentation {
       Object[] listeners = originalListeners;
 
       if (listeners == null) {
-        listeners = new Object[] {new TracingJobExecutionListener(CONTEXT_AND_SCOPE)};
+        listeners = new Object[] {new TracingJobExecutionListener()};
       } else {
         Object[] newListeners = new Object[listeners.length + 1];
-        newListeners[0] = new TracingJobExecutionListener(CONTEXT_AND_SCOPE);
+        newListeners[0] = new TracingJobExecutionListener();
         System.arraycopy(listeners, 0, newListeners, 1, listeners.length);
         listeners = newListeners;
       }

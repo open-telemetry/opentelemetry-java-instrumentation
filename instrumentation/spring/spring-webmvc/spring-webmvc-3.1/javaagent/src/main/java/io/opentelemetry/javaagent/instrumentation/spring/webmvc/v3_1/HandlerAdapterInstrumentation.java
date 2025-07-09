@@ -64,6 +64,34 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
         this.scope = scope;
       }
 
+      @Nullable
+      public static AdviceScope enter(HttpServletRequest request, Object handler) {
+        // TODO (trask) should there be a way to customize Instrumenter.shouldStart()?
+        if (IsGrailsHandler.isGrailsHandler(handler)) {
+          // skip creating handler span for grails, grails instrumentation will take care of it
+          return null;
+        }
+
+        Context parentContext = Java8BytecodeBridge.currentContext();
+
+        // don't start a new top-level span
+        if (!Java8BytecodeBridge.spanFromContext(parentContext).getSpanContext().isValid()) {
+          return null;
+        }
+
+        // Name the parent span based on the matching pattern
+        HttpServerRoute.update(
+            parentContext, CONTROLLER, SpringWebMvcServerSpanNaming.SERVER_SPAN_NAME, request);
+
+        if (!handlerInstrumenter().shouldStart(parentContext, handler)) {
+          return null;
+        }
+
+        // Now create a span for handler/controller execution.
+        Context context = handlerInstrumenter().start(parentContext, handler);
+        return new AdviceScope(context, context.makeCurrent());
+      }
+
       public void exit(Object handler, @Nullable Throwable throwable) {
         scope.close();
         handlerInstrumenter().end(context, handler, null, throwable);
@@ -74,31 +102,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope nameResourceAndStartSpan(
         @Advice.Argument(0) HttpServletRequest request, @Advice.Argument(2) Object handler) {
-
-      // TODO (trask) should there be a way to customize Instrumenter.shouldStart()?
-      if (IsGrailsHandler.isGrailsHandler(handler)) {
-        // skip creating handler span for grails, grails instrumentation will take care of it
-        return null;
-      }
-
-      Context parentContext = Java8BytecodeBridge.currentContext();
-
-      // don't start a new top-level span
-      if (!Java8BytecodeBridge.spanFromContext(parentContext).getSpanContext().isValid()) {
-        return null;
-      }
-
-      // Name the parent span based on the matching pattern
-      HttpServerRoute.update(
-          parentContext, CONTROLLER, SpringWebMvcServerSpanNaming.SERVER_SPAN_NAME, request);
-
-      if (!handlerInstrumenter().shouldStart(parentContext, handler)) {
-        return null;
-      }
-
-      // Now create a span for handler/controller execution.
-      Context context = handlerInstrumenter().start(parentContext, handler);
-      return new AdviceScope(context, context.makeCurrent());
+      return AdviceScope.enter(request, handler);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
