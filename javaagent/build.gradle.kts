@@ -67,6 +67,7 @@ dependencies {
     exclude("io.opentelemetry", "opentelemetry-sdk")
     exclude("io.opentelemetry", "opentelemetry-sdk-extension-autoconfigure")
     exclude("io.opentelemetry", "opentelemetry-sdk-extension-autoconfigure-spi")
+    exclude("io.opentelemetry.instrumentation", "sdk-bridge")
   }
   baseJavaagentLibs(project(":javaagent-extension-api"))
 

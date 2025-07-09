@@ -42,6 +42,9 @@ targets:
       target: ':sdk-autoconfigure-support'
     - type: gradle
       path: ./
+      target: ':sdk-bridge'
+    - type: gradle
+      path: ./
       target: ':testing-common'
     - type: gradle
       path: ./

@@ -1,0 +1,56 @@
+file_format: 0.4
+disabled: true
+log_level: DEBUG
+instrumentation/development:
+  general:
+    peer:
+      service_mapping:
+        - peer: 1.2.3.4
+          service: FooService
+        - peer: 2.3.4.5
+          service: BarService
+    http:
+#      known_methods:
+#        - GET
+#        - POST
+#        - PUT
+      client:
+        request_captured_headers:
+          - Content-Type
+          - Accept
+        response_captured_headers:
+          - Content-Type
+          - Content-Encoding
+      server:
+        request_captured_headers:
+          - Content-Type
+          - Accept
+        response_captured_headers:
+          - Content-Type
+          - Content-Encoding
+  java:
+    agent:
+      experimental:
+        indy: true
+      logging:
+        output:
+          application:
+            logs_buffer_max_records: 1000
+    common:
+      default:
+        enabled: false
+    runtime_telemetry:
+      enabled: false
+    example_instrumentation:
+      string_key: value
+      bool_key: true
+      int_key: 1
+      double_key: 1.1
+      list_key:
+        - value1
+        - value2
+        - true
+      map_key:
+        string_key1: value1
+        string_key2: value2
+        bool_key: true

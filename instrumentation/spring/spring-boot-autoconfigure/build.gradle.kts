@@ -36,6 +36,9 @@ dependencies {
   annotationProcessor("org.springframework.boot:spring-boot-autoconfigure-processor:$springBootVersion")
   annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:$springBootVersion")
   implementation("javax.validation:validation-api")
+  // snake yaml is already used by "spring-boot-resources"
+  // and less likely to cause problems compared to jackson
+  implementation("org.snakeyaml:snakeyaml-engine")
 
   implementation(project(":instrumentation-annotations-support"))
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))
@@ -65,7 +68,9 @@ dependencies {
   library("org.springframework.boot:spring-boot-starter-data-r2dbc:$springBootVersion")
 
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
   implementation(project(":sdk-autoconfigure-support"))
+  implementation(project(":sdk-bridge"))
   compileOnly("io.opentelemetry:opentelemetry-extension-trace-propagators")
   compileOnly("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
   compileOnly("io.opentelemetry:opentelemetry-exporter-logging")
@@ -169,6 +174,16 @@ testing {
         implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
         implementation("jakarta.servlet:jakarta.servlet-api:5.0.0")
         implementation("org.springframework.boot:spring-boot-starter-test:3.2.4") {
+          exclude("org.junit.vintage", "junit-vintage-engine")
+        }
+      }
+    }
+
+    val testDeclarativeConfig by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project())
+        implementation("io.opentelemetry:opentelemetry-sdk")
+        implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
           exclude("org.junit.vintage", "junit-vintage-engine")
         }
       }
