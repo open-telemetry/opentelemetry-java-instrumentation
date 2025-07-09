@@ -5,14 +5,17 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
+import static java.util.Arrays.asList;
+
+import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
+import io.opentelemetry.sdk.common.CompletableResultCode;
 import java.util.Collections;
 import javax.annotation.Nullable;
 
 public interface EarlyInitAgentConfig {
-  boolean isAgentEnabled();
 
   @Nullable
   String getString(String propertyName);
@@ -37,5 +40,16 @@ public interface EarlyInitAgentConfig {
     return configurationFile != null
         ? DeclarativeConfigEarlyInitAgentConfig.create(configurationFile)
         : new LegacyConfigFileEarlyInitAgentConfig();
+  }
+
+  static void setForceFlush(OpenTelemetrySdk sdk) {
+    OpenTelemetrySdkAccess.internalSetForceFlush(
+        (timeout, unit) -> {
+          CompletableResultCode traceResult = sdk.getSdkTracerProvider().forceFlush();
+          CompletableResultCode metricsResult = sdk.getSdkMeterProvider().forceFlush();
+          CompletableResultCode logsResult = sdk.getSdkLoggerProvider().forceFlush();
+          CompletableResultCode.ofAll(asList(traceResult, metricsResult, logsResult))
+              .join(timeout, unit);
+        });
   }
 }
