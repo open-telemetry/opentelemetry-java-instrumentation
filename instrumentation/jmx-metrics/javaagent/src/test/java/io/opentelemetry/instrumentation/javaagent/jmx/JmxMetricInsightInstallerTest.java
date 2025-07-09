@@ -33,11 +33,7 @@ class JmxMetricInsightInstallerTest {
   private static final Set<String> FILES_TO_BE_TESTED =
       new HashSet<>(
           Arrays.asList(
-              "activemq.yaml",
-              "camel.yaml",
-              "hadoop.yaml",
-              "jetty.yaml",
-              "kafka-broker.yaml"));
+              "activemq.yaml", "camel.yaml", "hadoop.yaml", "jetty.yaml", "kafka-broker.yaml"));
 
   @Test
   void testToVerifyExistingRulesAreValid() throws Exception {
