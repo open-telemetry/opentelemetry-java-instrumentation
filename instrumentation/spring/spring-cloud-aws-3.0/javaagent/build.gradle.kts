@@ -22,7 +22,7 @@ dependencies {
 
   testImplementation("org.elasticmq:elasticmq-rest-sqs_2.13")
 
-  testImplementation("io.awspring.cloud:spring-cloud-aws-starter-sqs:3.0.0")
+  testLibrary("io.awspring.cloud:spring-cloud-aws-starter-sqs:3.0.0")
   testLibrary("org.springframework.boot:spring-boot-starter-test:3.0.0")
   testLibrary("org.springframework.boot:spring-boot-starter-web:3.0.0")
 }
