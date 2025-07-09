@@ -39,7 +39,7 @@ public interface EarlyInitAgentConfig {
 
     return configurationFile != null
         ? DeclarativeConfigEarlyInitAgentConfig.create(configurationFile)
-        : new LegacyConfigFileEarlyInitAgentConfig();
+        : LegacyConfigFileEarlyInitAgentConfig.create();
   }
 
   static void setForceFlush(OpenTelemetrySdk sdk) {
