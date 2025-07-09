@@ -31,12 +31,11 @@ import net.bytebuddy.implementation.bytecode.assign.Assigner;
 @SuppressWarnings("unused")
 public class Servlet3Advice {
 
-  // TODO
   public static class AdviceScope {
-    public CallDepth callDepth;
-    public ServletRequestContext<HttpServletRequest> requestContext;
-    public Context context;
-    public Scope scope;
+    private final CallDepth callDepth;
+    private final ServletRequestContext<HttpServletRequest> requestContext;
+    private final Context context;
+    private final Scope scope;
 
     public AdviceScope(
         CallDepth callDepth,
@@ -61,9 +60,11 @@ public class Servlet3Advice {
         // Given request already has a context associated with it.
         // see the needsRescoping() javadoc for more explanation
         contextToUpdate = attachedContext;
+        context = null;
       } else {
         // We are inside nested servlet/filter/app-server span, don't create new span
         contextToUpdate = currentContext;
+        context = null;
       }
 
       // Update context with info from current request to ensure that server span gets the best
