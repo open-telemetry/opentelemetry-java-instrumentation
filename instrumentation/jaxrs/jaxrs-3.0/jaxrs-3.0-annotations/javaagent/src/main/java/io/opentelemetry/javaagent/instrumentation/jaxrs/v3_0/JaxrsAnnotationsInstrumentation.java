@@ -73,15 +73,16 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
   public static class JaxRsAnnotationsAdvice {
 
     public static class AdviceScope {
-      public Jaxrs3HandlerData handlerData;
-      public final AsyncResponse asyncResponse;
-      public final CallDepth callDepth;
-      public final Context context;
-      public final Scope scope;
+      private final Jaxrs3HandlerData handlerData;
+      private final AsyncResponse asyncResponse;
+      private final CallDepth callDepth;
+      private final Context context;
+      private final Scope scope;
 
       public AdviceScope(CallDepth callDepth, Class<?> type, Method method, Object[] args) {
         this.callDepth = callDepth;
         if (callDepth.getAndIncrement() > 0) {
+          handlerData = null;
           asyncResponse = null;
           context = null;
           scope = null;
@@ -99,6 +100,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
                * could work around this by using a list instead, but we likely don't want the extra
                * span anyway.
                */
+              handlerData = null;
               asyncResponse = null;
               context = null;
               scope = null;

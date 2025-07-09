@@ -67,7 +67,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
         return new AdviceScope(context, context.makeCurrent(), handlerData);
       }
 
-      public void end(Throwable throwable) {
+      public void exit(Throwable throwable) {
         if (scope == null) {
           return;
         }
@@ -111,7 +111,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
         @Advice.Enter @Nullable AdviceScope adviceScope) {
 
       if (adviceScope != null) {
-        adviceScope.end(throwable);
+        adviceScope.exit(throwable);
       }
     }
   }

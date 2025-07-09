@@ -49,7 +49,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
       }
 
       @Nullable
-      public static AdviceScope start(
+      public static AdviceScope enter(
           Class<?> filterClass, Method method, ContainerRequestContext requestContext) {
         Context parentContext = Java8BytecodeBridge.currentContext();
         Jaxrs3HandlerData handlerData = new Jaxrs3HandlerData(filterClass, method);
@@ -65,15 +65,10 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
         }
 
         Context context = instrumenter().start(parentContext, handlerData);
-        Scope scope = context.makeCurrent();
-        return new AdviceScope(context, scope, handlerData);
+        return new AdviceScope(context, context.makeCurrent(), handlerData);
       }
 
       public void exit(@Nullable Throwable throwable) {
-        if (scope == null) {
-          return;
-        }
-
         scope.close();
         instrumenter().end(context, handlerData, null, throwable);
       }
@@ -103,7 +98,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
         return null;
       }
 
-      return AdviceScope.start(filterClass, method, requestContext);
+      return AdviceScope.enter(filterClass, method, requestContext);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

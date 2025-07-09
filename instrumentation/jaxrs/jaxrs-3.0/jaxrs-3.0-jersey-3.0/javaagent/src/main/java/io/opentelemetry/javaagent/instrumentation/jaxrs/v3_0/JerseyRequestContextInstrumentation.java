@@ -36,9 +36,9 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
   public static class ContainerRequestContextAdvice {
 
     public static class AdviceScope {
-      public Jaxrs3HandlerData handlerData;
-      public Context context;
-      public Scope scope;
+      private final Jaxrs3HandlerData handlerData;
+      private final Context context;
+      private final Scope scope;
 
       public AdviceScope(
           Class<?> resourceClass, Method method, ContainerRequestContext requestContext) {
@@ -46,9 +46,7 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
         context =
             Jaxrs3RequestContextHelper.createOrUpdateAbortSpan(
                 instrumenter(), requestContext, handlerData);
-        if (context != null) {
-          scope = context.makeCurrent();
-        }
+        scope = context != null ? context.makeCurrent() : null;
       }
 
       public void exit(@Nullable Throwable throwable) {

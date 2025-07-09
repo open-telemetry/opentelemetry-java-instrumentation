@@ -51,7 +51,7 @@ public class Resteasy31RequestContextInstrumentation extends AbstractRequestCont
         scope = context != null ? context.makeCurrent() : null;
       }
 
-      public void exit(Throwable throwable) {
+      public void exit(@Nullable Throwable throwable) {
         if (scope == null) {
           return;
         }
