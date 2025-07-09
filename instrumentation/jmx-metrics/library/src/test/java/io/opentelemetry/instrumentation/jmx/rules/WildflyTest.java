@@ -64,7 +64,7 @@ public class WildflyTest extends TargetSystemTest {
             metric ->
                 metric
                     .isCounter()
-                    .hasDescription("The number of sessions created.")
+                    .hasDescription("The number of sessions created")
                     .hasUnit("{session}")
                     .hasDataPointsWithOneAttribute(deploymentAttribute))
         .add(
@@ -72,7 +72,7 @@ public class WildflyTest extends TargetSystemTest {
             metric ->
                 metric
                     .isUpDownCounter()
-                    .hasDescription("The number of active sessions.")
+                    .hasDescription("The number of active sessions")
                     .hasUnit("{session}")
                     .hasDataPointsWithOneAttribute(deploymentAttribute))
         .add(
@@ -80,7 +80,7 @@ public class WildflyTest extends TargetSystemTest {
             metric ->
                 metric
                     .isCounter()
-                    .hasDescription("The number of expired sessions.")
+                    .hasDescription("The number of expired sessions")
                     .hasUnit("{session}")
                     .hasDataPointsWithOneAttribute(deploymentAttribute))
         .add(
@@ -88,7 +88,7 @@ public class WildflyTest extends TargetSystemTest {
             metric ->
                 metric
                     .isCounter()
-                    .hasDescription("The number of rejected sessions.")
+                    .hasDescription("The number of rejected sessions")
                     .hasUnit("{session}")
                     .hasDataPointsWithOneAttribute(deploymentAttribute))
         // request metrics
@@ -97,7 +97,7 @@ public class WildflyTest extends TargetSystemTest {
             metric ->
                 metric
                     .isCounter()
-                    .hasDescription("The number of requests received.")
+                    .hasDescription("The number of requests received")
                     .hasUnit("{request}")
                     .hasDataPointsWithAttributes(serverListenerAttributes))
         .add(
@@ -105,7 +105,7 @@ public class WildflyTest extends TargetSystemTest {
             metric ->
                 metric
                     .isCounter()
-                    .hasDescription("The total amount of time spent processing requests.")
+                    .hasDescription("The total amount of time spent processing requests")
                     .hasUnit("s")
                     .hasDataPointsWithAttributes(serverListenerAttributes))
         .add(
@@ -113,7 +113,7 @@ public class WildflyTest extends TargetSystemTest {
             metric ->
                 metric
                     .isCounter()
-                    .hasDescription("The number of requests that have resulted in a 5xx response.")
+                    .hasDescription("The number of requests that have resulted in a 5xx response")
                     .hasUnit("{request}")
                     .hasDataPointsWithAttributes(serverListenerAttributes))
         // network io metrics

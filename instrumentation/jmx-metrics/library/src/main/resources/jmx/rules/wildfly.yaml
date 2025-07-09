@@ -10,19 +10,19 @@ rules:
       sessionsCreated:
         metric: created
         type: counter
-        desc: The number of sessions created.
+        desc: The number of sessions created
       activeSessions:
         metric: count
         type: updowncounter
-        desc: The number of active sessions.
+        desc: The number of active sessions
       expiredSessions:
         metric: expired
         type: counter
-        desc: The number of expired sessions.
+        desc: The number of expired sessions
       rejectedSessions:
         metric: rejected
         type: counter
-        desc: The number of rejected sessions.
+        desc: The number of rejected sessions
 
   - bean: jboss.as:subsystem=undertow,server=*,http-listener=*
     prefix: wildfly.
@@ -34,7 +34,7 @@ rules:
       requestCount:
         metric: request.count
         unit: "{request}"
-        desc: The number of requests received.
+        desc: The number of requests received
       processingTime:
         metric: request.duration.sum
         sourceUnit: ns
@@ -81,6 +81,7 @@ rules:
 #      WaitCount:
 #        metric: wildfly.db.client.connections.WaitCount
 #        type: counter
+
 #  - bean: jboss.as:subsystem=transactions
 #    type: counter
 #    prefix: wildfly.db.client.
