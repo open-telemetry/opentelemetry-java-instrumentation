@@ -339,14 +339,14 @@ public enum JdbcConnectionUrlParser {
 
       if (portLoc > 0) {
         hostEndLoc = portLoc;
-        int portEndLoc = clusterSepLoc > 0 ? clusterSepLoc : dbLoc;
+        int portEndLoc = clusterSepLoc > 0 ? clusterSepLoc : (dbLoc > 0 ? dbLoc : jdbcUrl.length());
         try {
           builder.port(Integer.parseInt(jdbcUrl.substring(portLoc + 1, portEndLoc)));
         } catch (NumberFormatException e) {
           logger.log(FINE, e.getMessage(), e);
         }
       } else {
-        hostEndLoc = clusterSepLoc > 0 ? clusterSepLoc : dbLoc;
+        hostEndLoc = clusterSepLoc > 0 ? clusterSepLoc : (dbLoc > 0 ? dbLoc : jdbcUrl.length());
       }
 
       if (ipv6End > 0) {
