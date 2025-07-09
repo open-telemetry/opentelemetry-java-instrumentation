@@ -20,7 +20,11 @@ public final class LegacyConfigFileEarlyInitAgentConfig implements EarlyInitAgen
 
   private final Map<String, String> configFileContents;
 
-  LegacyConfigFileEarlyInitAgentConfig() {
+  public static LegacyConfigFileEarlyInitAgentConfig create() {
+    return new LegacyConfigFileEarlyInitAgentConfig();
+  }
+
+  private LegacyConfigFileEarlyInitAgentConfig() {
     this.configFileContents = ConfigurationFile.getProperties();
   }
 

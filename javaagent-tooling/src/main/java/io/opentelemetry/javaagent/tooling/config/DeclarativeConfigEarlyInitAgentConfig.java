@@ -19,6 +19,8 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTe
 import io.opentelemetry.sdk.resources.Resource;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import javax.annotation.Nullable;
 import org.jetbrains.annotations.NotNull;
 
@@ -70,7 +72,7 @@ public final class DeclarativeConfigEarlyInitAgentConfig implements EarlyInitAge
     OpenTelemetryConfigurationModel model = loadConfigurationModel(configurationFile);
     SdkConfigProvider configProvider = SdkConfigProvider.create(model);
     DeclarativeConfigPropertiesBridge configProperties =
-        new DeclarativeConfigPropertiesBridge(configProvider);
+        new DeclarativeConfigPropertiesBridge(configProvider, getEarlyInitProperties());
     OpenTelemetrySdk sdk =
         DeclarativeConfiguration.create(
             model, SpiHelper.serviceComponentLoader(extensionClassLoader));
@@ -82,4 +84,13 @@ public final class DeclarativeConfigEarlyInitAgentConfig implements EarlyInitAge
         sdk, Resource.getDefault(), configProperties, configProvider);
   }
 
+  // these properties are used to initialize the SDK before the configuration file is loaded
+  // for consistency, we pass them to the bridge, so that they can be read later with the same
+  // value from the {@link DeclarativeConfigPropertiesBridge}
+  private Map<String, Object> getEarlyInitProperties() {
+    Map<String, Object> earlyInitProperties = new HashMap<>();
+    earlyInitProperties.put("otel.javaagent.debug", this.getBoolean("otel.javaagent.debug", false));
+    earlyInitProperties.put("otel.javaagent.logging", this.getString("otel.javaagent.logging"));
+    return earlyInitProperties;
+  }
 }

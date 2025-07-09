@@ -8,18 +8,14 @@ package io.opentelemetry.javaagent.extension.internal;
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
 import io.opentelemetry.api.incubator.config.ConfigProvider;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigException;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -60,8 +56,6 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
 
   private static final Map<String, String> JAVA_MAPPING_RULES = new HashMap<>();
   private static final Map<String, String> GENERAL_MAPPING_RULES = new HashMap<>();
-  private static final Set<String> AGENT_LOGGING_OUTPUTS =
-      new HashSet<>(Arrays.asList("application", "simple"));
 
   // The node at .instrumentation.java
   private final DeclarativeConfigProperties instrumentationJavaNode;
@@ -91,6 +85,8 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
         "http.server.response_captured_headers");
   }
 
+  private final Map<String, Object> earlyInitProperties;
+
   private static Map<String, String> getPeerServiceMapping(
       DeclarativeConfigPropertiesBridge bridge) {
     List<DeclarativeConfigProperties> configProperties =
@@ -105,7 +101,9 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
                 e -> Objects.requireNonNull(e.getString("service"), "service must not be null")));
   }
 
-  public DeclarativeConfigPropertiesBridge(ConfigProvider configProvider) {
+  public DeclarativeConfigPropertiesBridge(
+      ConfigProvider configProvider, Map<String, Object> earlyInitProperties) {
+    this.earlyInitProperties = earlyInitProperties;
     DeclarativeConfigProperties inst = configProvider.getInstrumentationConfig();
     if (inst == null) {
       inst = DeclarativeConfigProperties.empty();
@@ -117,16 +115,20 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
   @Nullable
   @Override
   public String getString(String propertyName) {
-    if ("otel.javaagent.logging".equals(propertyName)) {
-      return agentLoggerName();
+    Object value = earlyInitProperties.get(propertyName);
+    if (value != null) {
+      return value.toString();
     }
-
     return getPropertyValue(propertyName, DeclarativeConfigProperties::getString);
   }
 
   @Nullable
   @Override
   public Boolean getBoolean(String propertyName) {
+    Object value = earlyInitProperties.get(propertyName);
+    if (value != null) {
+      return (Boolean) value;
+    }
     return getPropertyValue(propertyName, DeclarativeConfigProperties::getBoolean);
   }
 
@@ -236,41 +238,5 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
       return "agent." + property.substring(OTEL_JAVA_AGENT_PREFIX.length()).replace('-', '_');
     }
     return null;
-  }
-
-  @Nullable
-  private String agentLoggerName() {
-    DeclarativeConfigProperties logOutput = getLogOutput();
-    Set<String> names = logOutput.getPropertyKeys();
-
-    if (names.isEmpty()) {
-      // no log output configured
-      return null;
-    }
-
-    if (names.size() > 1) {
-      throw new DeclarativeConfigException(
-          "Multiple log output formats are configured: "
-              + String.join(", ", names)
-              + ". Please choose one of them.");
-    }
-
-    String name = names.iterator().next();
-    if (!AGENT_LOGGING_OUTPUTS.contains(name)) {
-      throw new DeclarativeConfigException(
-          "Unsupported log output format: '"
-              + name
-              + "' . Supported formats are: "
-              + String.join(", ", AGENT_LOGGING_OUTPUTS));
-    }
-    return name;
-  }
-
-  private DeclarativeConfigProperties getLogOutput() {
-    return getAgent().getStructured("logging", empty()).getStructured("output", empty());
-  }
-
-  private DeclarativeConfigProperties getAgent() {
-    return instrumentationJavaNode.getStructured("agent", empty());
   }
 }
