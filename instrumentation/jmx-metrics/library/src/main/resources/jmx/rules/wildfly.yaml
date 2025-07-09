@@ -23,19 +23,27 @@ rules:
         metric: rejected
         type: counter
         desc: The number of rejected sessions.
-#
-#  - bean: jboss.as:subsystem=undertow,server=*,http-listener=*
-#    metricAttribute:
-#      server: param(server)
-#      listener: param(http-listener)
-#    prefix: wildfly.request.
-#    type: counter
-#    unit: "1"
-#    mapping:
-#      requestCount:
-#      processingTime:
-#        unit: ns
-#      errorCount:
+
+  - bean: jboss.as:subsystem=undertow,server=*,http-listener=*
+    prefix: wildfly.
+    metricAttribute:
+      wildfly.server: param(server)
+      wildfly.listener: param(http-listener)
+    type: counter
+    mapping:
+      requestCount:
+        metric: request.count
+        unit: "{request}"
+        desc: The number of requests received.
+      processingTime:
+        metric: request.duration.sum
+        sourceUnit: ns
+        unit: s
+        desc: The total amount of time spent processing requests.
+      errorCount:
+        metric: error.count
+        unit: "{request}"
+        desc: The number of requests that have resulted in a 5xx response.
 #
 #  - bean: jboss.as:subsystem=undertow,server=*,http-listener=*
 #    metricAttribute:

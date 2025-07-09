@@ -5,12 +5,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
+import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
+import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 
 public class WildflyTest extends TargetSystemTest {
 
@@ -44,9 +46,13 @@ public class WildflyTest extends TargetSystemTest {
 
   private static MetricsVerifier createMetricsVerifier() {
     AttributeMatcher deploymentAttribute = attribute("wildfly.deployment", "testapp.war");
+    AttributeMatcherGroup serverListenerAttributes = attributeGroup(
+        attribute("wildfly.server", "default-server"),
+            attribute("wildfly.listener", "default"));
 //    AttributeMatcher datasourceAttribute = attribute("data_sourcedata_source", "ExampleDS");
 
     return MetricsVerifier.create()
+        // session metrics
         .add(
             "wildfly.session.created",
             metric ->
@@ -79,6 +85,26 @@ public class WildflyTest extends TargetSystemTest {
                     .hasDescription("The number of rejected sessions.")
                     .hasUnit("{session}")
                     .hasDataPointsWithOneAttribute(deploymentAttribute))
+        // request metrics
+        .add("wildfly.request.count", metric ->
+            metric
+                .isCounter()
+                .hasDescription("The number of requests received.")
+                .hasUnit("{request}")
+                .hasDataPointsWithAttributes(serverListenerAttributes))
+        .add("wildfly.request.duration.sum", metric ->
+            metric
+                .isCounter()
+                .hasDescription("The total amount of time spent processing requests.")
+                .hasUnit("s")
+                .hasDataPointsWithAttributes(serverListenerAttributes))
+        .add("wildfly.error.count", metric ->
+            metric
+                .isCounter()
+                .hasDescription("The number of requests that have resulted in a 5xx response.")
+                .hasUnit("{request}")
+                .hasDataPointsWithAttributes(serverListenerAttributes))
+
         ;
   }
 }
