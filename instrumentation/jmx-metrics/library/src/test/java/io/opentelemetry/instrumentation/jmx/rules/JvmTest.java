@@ -20,7 +20,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-class JvmTargetSystemTest extends TargetSystemTest {
+class JvmTest extends TargetSystemTest {
 
   @ParameterizedTest
   @ValueSource(

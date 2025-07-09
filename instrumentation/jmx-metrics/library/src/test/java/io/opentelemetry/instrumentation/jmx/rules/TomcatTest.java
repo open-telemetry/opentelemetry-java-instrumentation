@@ -19,7 +19,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-public class TomcatIntegrationTest extends TargetSystemTest {
+public class TomcatTest extends TargetSystemTest {
 
   @ParameterizedTest
   @CsvSource({
