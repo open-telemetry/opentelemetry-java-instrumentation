@@ -10,8 +10,8 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.instrumenter.InstrumenterCustomizer;
 import io.opentelemetry.instrumentation.api.incubator.instrumenter.InstrumenterCustomizerProvider;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -19,7 +19,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.context.ContextKey;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -27,11 +26,12 @@ import java.util.concurrent.atomic.AtomicLong;
  * instrumentation behavior in a custom distribution.
  *
  * <p>This customizer adds:
+ *
  * <ul>
- *   <li>Custom attributes to HTTP server spans</li>
- *   <li>Custom metrics for HTTP operations</li>
- *   <li>Request correlation IDs via context customization</li>
- *   <li>Custom span name transformation</li>
+ *   <li>Custom attributes to HTTP server spans
+ *   <li>Custom metrics for HTTP operations
+ *   <li>Request correlation IDs via context customization
+ *   <li>Custom span name transformation
  * </ul>
  *
  * <p>The customizer will be automatically applied to instrumenters that match the specified
@@ -77,7 +77,12 @@ public class DemoInstrumenterCustomizerProvider implements InstrumenterCustomize
     }
 
     @Override
-    public void onEnd(AttributesBuilder attributes, Context context, Object request, Object response, Throwable error) {
+    public void onEnd(
+        AttributesBuilder attributes,
+        Context context,
+        Object request,
+        Object response,
+        Throwable error) {
       if (error != null) {
         attributes.put(ERROR_ATTR, error.getClass().getSimpleName());
       }
@@ -88,10 +93,12 @@ public class DemoInstrumenterCustomizerProvider implements InstrumenterCustomize
   private static class DemoMetrics implements OperationMetrics {
     @Override
     public OperationListener create(Meter meter) {
-      LongCounter requestCounter = meter.counterBuilder("demo.requests")
-          .setDescription("Number of requests")
-          .setUnit("requests")
-          .build();
+      LongCounter requestCounter =
+          meter
+              .counterBuilder("demo.requests")
+              .setDescription("Number of requests")
+              .setUnit("requests")
+              .build();
 
       return new OperationListener() {
         @Override
@@ -117,11 +124,11 @@ public class DemoInstrumenterCustomizerProvider implements InstrumenterCustomize
     public Context onStart(Context context, Object request, Attributes startAttributes) {
       // Generate a unique request ID for correlation
       String requestId = "req-" + requestIdCounter.getAndIncrement();
-      
+
       // Add custom context data that can be accessed throughout the request lifecycle
       // This follows the pattern used in real implementations like UndertowSingletons
       context = context.with(REQUEST_ID_KEY, requestId);
       return context;
     }
   }
-} 
+}
