@@ -37,8 +37,7 @@ class JmxMetricInsightInstallerTest {
               "camel.yaml",
               "hadoop.yaml",
               "jetty.yaml",
-              "kafka-broker.yaml",
-              "wildfly.yaml"));
+              "kafka-broker.yaml"));
 
   @Test
   void testToVerifyExistingRulesAreValid() throws Exception {
