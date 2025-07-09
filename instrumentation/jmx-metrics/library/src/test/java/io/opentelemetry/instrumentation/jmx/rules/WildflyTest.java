@@ -21,10 +21,14 @@ import org.testcontainers.containers.wait.strategy.Wait;
 
 public class WildflyTest extends TargetSystemTest {
 
-  private static final int WILDFLY_SERVICE_PORT = 8080;
-
   @ParameterizedTest
-  @ValueSource(strings = {"quay.io/wildfly/wildfly:32.0.1.Final-jdk11"})
+  @ValueSource(
+      strings = {
+        // keep testing on old and deprecated version for compatibility
+        "jboss/wildfly:8.2.1.Final",
+        // recent/latest to be maintained as newer versions are released
+        "quay.io/wildfly/wildfly:36.0.1.Final-jdk21"
+      })
   public void testWildflyMetrics(String dockerImage) {
     List<String> yamlFiles = Collections.singletonList("wildfly.yaml");
 
@@ -50,12 +54,16 @@ public class WildflyTest extends TargetSystemTest {
     verifyMetrics(createMetricsVerifier());
   }
 
+  private static final int WILDFLY_SERVICE_PORT = 8080;
+
   private static MetricsVerifier createMetricsVerifier() {
     AttributeMatcher deploymentAttribute = attribute("wildfly.deployment", "testapp.war");
     AttributeMatcher serverAttribute = attribute("wildfly.server", "default-server");
     AttributeMatcher listenerAttribute = attribute("wildfly.listener", "default");
     AttributeMatcherGroup serverListenerAttributes =
         attributeGroup(serverAttribute, listenerAttribute);
+
+    AttributeMatcher dataSourceAttribute = attribute("db.client.connection.pool.name", "ExampleDS");
 
     return MetricsVerifier.create()
         // session metrics
@@ -132,6 +140,28 @@ public class WildflyTest extends TargetSystemTest {
                         attributeGroup(
                             attribute("network.io.direction", "transmit"),
                             serverAttribute,
-                            listenerAttribute)));
+                            listenerAttribute)))
+        // database connection pool metrics
+        .add(
+            "wildfly.db.client.connection.count",
+            metric ->
+                metric
+                    .isUpDownCounter()
+                    .hasDescription("The number of open physical database connections")
+                    .hasUnit("{connection}")
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            dataSourceAttribute, attribute("db.client.connection.state", "used")),
+                        attributeGroup(
+                            dataSourceAttribute, attribute("db.client.connection.state", "idle"))))
+        .add(
+            "wildfly.db.client.connection.wait.count",
+            metric ->
+                metric
+                    .isCounter()
+                    .hasDescription(
+                        "The number of connection requests that had to wait to obtain it")
+                    .hasUnit("{request}")
+                    .hasDataPointsWithOneAttribute(dataSourceAttribute));
   }
 }

@@ -45,12 +45,12 @@ rules:
         metric: request.duration.sum
         sourceUnit: ns
         unit: s
-        desc: The total amount of time spent processing requests.
+        desc: The total amount of time spent processing requests
       # wildfly.error.count
       errorCount:
         metric: error.count
         unit: "{request}"
-        desc: The number of requests that have resulted in a 5xx response.
+        desc: The number of requests that have resulted in a 5xx response
 
   # wildly.network.io
   - bean: jboss.as:subsystem=undertow,server=*,http-listener=*
@@ -71,24 +71,33 @@ rules:
         metricAttribute:
           network.io.direction: const(receive)
 
-#  - bean: jboss.as:subsystem=datasources,data-source=*,statistics=pool
-#    unit: "1"
-#    metricAttribute:
-#      data_source: param(data-source)
-#    mapping:
-#      ActiveCount:
-#        metric: wildfly.db.client.connections.usage
-#        metricAttribute:
-#          state: const(used)
-#        desc: The number of open jdbc connections
-#      IdleCount:
-#        metric: wildfly.db.client.connections.usage
-#        metricAttribute:
-#          state: const(idle)
-#        desc: The number of open jdbc connections
-#      WaitCount:
-#        metric: wildfly.db.client.connections.WaitCount
-#        type: counter
+  - bean: jboss.as:subsystem=datasources,data-source=*,statistics=pool
+    prefix: wildfly.db.client.connection.
+    metricAttribute:
+      db.client.connection.pool.name: param(data-source)
+    mapping:
+      # wildfly.db.client.connection.count
+      ActiveCount:
+        metric: &metric count
+        type: updowncounter
+        unit: "{connection}"
+        desc: &desc The number of open physical database connections
+        metricAttribute:
+          db.client.connection.state: const(used)
+      IdleCount:
+        metric: *metric
+        type: updowncounter
+        unit: "{connection}"
+        desc: *desc
+        metricAttribute:
+          db.client.connection.state: const(idle)
+      # wildfly.db.client.connection.wait.count
+      WaitCount:
+        metric: wait.count
+        type: counter
+        # In this context, 'request' means 'connection request'
+        unit: "{request}"
+        desc: The number of connection requests that had to wait to obtain it
 
 #  - bean: jboss.as:subsystem=transactions
 #    type: counter
