@@ -47,7 +47,8 @@ class JvmTest extends TargetSystemTest {
             .withExposedPorts(8080)
             .waitingFor(Wait.forListeningPorts(8080));
 
-    copyFilesToTarget(target, yamlFiles);
+    copyAgentToTarget(target);
+    copyYamlFilesToTarget(target, yamlFiles);
 
     startTarget(target);
 
