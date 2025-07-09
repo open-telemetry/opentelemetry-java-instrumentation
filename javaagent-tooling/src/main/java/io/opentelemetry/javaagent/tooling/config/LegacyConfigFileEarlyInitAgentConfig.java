@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.tooling.config;
 
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -23,11 +22,6 @@ public final class LegacyConfigFileEarlyInitAgentConfig implements EarlyInitAgen
 
   LegacyConfigFileEarlyInitAgentConfig() {
     this.configFileContents = ConfigurationFile.getProperties();
-  }
-
-  @Override
-  public boolean isAgentEnabled() {
-    return getBoolean(JAVAAGENT_ENABLED_CONFIG, true);
   }
 
   @Nullable
@@ -62,13 +56,9 @@ public final class LegacyConfigFileEarlyInitAgentConfig implements EarlyInitAgen
 
   @Override
   public AutoConfiguredOpenTelemetrySdk installOpenTelemetrySdk(ClassLoader extensionClassLoader) {
-    AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
-        AutoConfiguredOpenTelemetrySdk.builder()
-            .setResultAsGlobal()
-            .setServiceClassLoader(extensionClassLoader)
-            .build();
-    OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();
-    DeclarativeConfigEarlyInitAgentConfig.setForceFlush(sdk);
-    return autoConfiguredSdk;
+    return AutoConfiguredOpenTelemetrySdk.builder()
+        .setResultAsGlobal()
+        .setServiceClassLoader(extensionClassLoader)
+        .build();
   }
 }

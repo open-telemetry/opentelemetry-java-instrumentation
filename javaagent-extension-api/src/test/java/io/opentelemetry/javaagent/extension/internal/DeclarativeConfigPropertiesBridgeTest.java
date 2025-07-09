@@ -38,7 +38,7 @@ class DeclarativeConfigPropertiesBridgeTest {
             .withAdditionalProperty("instrumentation/development", new InstrumentationModel());
     SdkConfigProvider emptyConfigProvider = SdkConfigProvider.create(emptyModel);
     emptyBridge =
-        new DeclarativeConfigPropertiesBridge(Objects.requireNonNull(emptyConfigProvider), "DEBUG");
+        new DeclarativeConfigPropertiesBridge(Objects.requireNonNull(emptyConfigProvider));
   }
 
   private static DeclarativeConfigPropertiesBridge create(String name) {
@@ -47,7 +47,7 @@ class DeclarativeConfigPropertiesBridgeTest {
             DeclarativeConfigPropertiesBridgeTest.class.getClassLoader().getResourceAsStream(name));
     SdkConfigProvider configProvider = SdkConfigProvider.create(model);
     DeclarativeConfigPropertiesBridge configPropertiesBridge =
-        new DeclarativeConfigPropertiesBridge(Objects.requireNonNull(configProvider), "DEBUG");
+        new DeclarativeConfigPropertiesBridge(Objects.requireNonNull(configProvider));
     return configPropertiesBridge;
   }
 
