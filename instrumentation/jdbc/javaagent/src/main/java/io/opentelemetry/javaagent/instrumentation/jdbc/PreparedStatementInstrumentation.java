@@ -96,7 +96,7 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
             .and(takesArgument(2, int.class))
             .and(takesArguments(3))
             .and(isPublic()),
-        PreparedStatementInstrumentation.class.getName() + "$SetParameter2Advice");
+        PreparedStatementInstrumentation.class.getName() + "$SetParameter3Advice");
     transformer.applyAdviceToMethod(
         named("clearParameters").and(takesNoArguments()).and(isPublic()),
         PreparedStatementInstrumentation.class.getName() + "$ClearParametersAdvice");
@@ -176,6 +176,38 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
         @Advice.This PreparedStatement statement,
         @Advice.Argument(0) int index,
         @Advice.Argument(1) Object value) {
+      if (!CAPTURE_QUERY_PARAMETERS) {
+        return;
+      }
+
+      String str = null;
+
+      if (value instanceof Boolean
+          // Short, Int, Long, Float, Double, BigDecimal
+          || value instanceof Number
+          || value instanceof String
+          || value instanceof Date
+          || value instanceof Time
+          || value instanceof Timestamp
+          || value instanceof URL
+          || value instanceof RowId) {
+        str = value.toString();
+      }
+
+      if (str != null) {
+        JdbcData.addParameter(statement, Integer.toString(index - 1), str);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class SetParameter3Advice {
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(
+        @Advice.This PreparedStatement statement,
+        @Advice.Argument(0) int index,
+        @Advice.Argument(1) Object value,
+        @Advice.Argument(2) int targetSqlType) {
       if (!CAPTURE_QUERY_PARAMETERS) {
         return;
       }

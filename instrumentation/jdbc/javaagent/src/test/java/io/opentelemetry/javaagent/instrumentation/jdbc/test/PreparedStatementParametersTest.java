@@ -28,7 +28,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
-import java.sql.JDBCType;
+import java.sql.Types;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -353,7 +353,7 @@ class PreparedStatementParametersTest {
         spanName,
         url,
         table,
-        statement -> statement.setObject(1, "S", JDBCType.CHAR),
+        statement -> statement.setObject(1, "S", Types.CHAR),
         "S");
   }
 
