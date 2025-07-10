@@ -31,7 +31,8 @@ public final class ResponseHeaderScrubber extends ResponseTransformer {
         // While we could potentially make these configurable, it's simpler to just handle
         // the cases across any gen AI instrumentation in one place here.
         case "openai-organization":
-          scrubbed = scrubbed.plus(HttpHeader.httpHeader("openai-organization", "test_organization"));
+          scrubbed =
+              scrubbed.plus(HttpHeader.httpHeader("openai-organization", "test_organization"));
           break;
         default:
           scrubbed = scrubbed.plus(header);

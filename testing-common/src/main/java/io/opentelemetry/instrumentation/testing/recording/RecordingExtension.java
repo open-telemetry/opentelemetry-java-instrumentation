@@ -42,7 +42,6 @@ public final class RecordingExtension extends WireMockExtension
     this.apiUrl = apiUrl;
   }
 
-
   public boolean isRecording() {
     return RECORD_WITH_REAL_API;
   }
