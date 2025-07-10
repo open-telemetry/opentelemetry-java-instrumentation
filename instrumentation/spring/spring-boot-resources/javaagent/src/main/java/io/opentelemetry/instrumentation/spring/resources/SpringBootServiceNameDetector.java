@@ -71,7 +71,10 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
 
   @Override
   public Resource createResource(ConfigProperties config) {
+    return create();
+  }
 
+  Resource create() {
     logger.log(FINER, "Performing Spring Boot service name auto-detection...");
     // Note: The order should be consistent with the order of Spring matching, but noting
     // that we have "first one wins" while Spring has "last one wins".

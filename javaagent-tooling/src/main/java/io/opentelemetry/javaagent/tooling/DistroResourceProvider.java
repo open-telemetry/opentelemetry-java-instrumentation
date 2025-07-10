@@ -15,10 +15,14 @@ import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
 
 @AutoService(ResourceProvider.class)
-public class DistroVersionResourceProvider implements ResourceProvider {
+public class DistroResourceProvider implements ResourceProvider {
 
   @Override
   public Resource createResource(ConfigProperties config) {
+    return get();
+  }
+
+  static Resource get() {
     return AgentVersion.VERSION == null
         ? Resource.empty()
         : Resource.create(

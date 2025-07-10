@@ -46,6 +46,10 @@ public final class JarServiceNameDetector implements ConditionalResourceProvider
 
   @Override
   public Resource createResource(ConfigProperties config) {
+    return create();
+  }
+
+  public Resource create() {
     return jarPathSupplier
         .get()
         .map(
