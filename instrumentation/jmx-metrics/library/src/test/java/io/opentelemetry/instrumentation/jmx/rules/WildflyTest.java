@@ -189,8 +189,7 @@ public class WildflyTest extends TargetSystemTest {
                     .hasDescription("The total number of transactions rolled back")
                     .hasUnit("{transaction}")
                     // older versions do not report 'system' cause, hence non-strict assertion
-                    .hasDataPointsWithOneAttribute(
-                        attributeWithAnyValue("wildfly.rollback.cause")))
+                    .hasDataPointsWithOneAttribute(attributeWithAnyValue("wildfly.rollback.cause")))
         .add(
             "wildfly.transaction.committed",
             metric ->
