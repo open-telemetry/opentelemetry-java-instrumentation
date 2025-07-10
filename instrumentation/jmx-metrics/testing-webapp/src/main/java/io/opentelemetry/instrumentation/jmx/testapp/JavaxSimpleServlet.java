@@ -5,13 +5,16 @@
 
 package io.opentelemetry.instrumentation.jmx.testapp;
 
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-public class SimpleServlet extends HttpServlet {
+// servlet that will be used for javax servlet containers
+@WebServlet(urlPatterns = "/javax/*", name = "javaxServlet")
+public class JavaxSimpleServlet extends HttpServlet {
 
   private static final long serialVersionUID = 3726145372238690099L;
 
