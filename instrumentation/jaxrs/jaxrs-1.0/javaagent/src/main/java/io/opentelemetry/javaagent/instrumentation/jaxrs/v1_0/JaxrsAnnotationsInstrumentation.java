@@ -22,7 +22,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Method;
@@ -83,7 +82,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
           return;
         }
 
-        Context parentContext = Java8BytecodeBridge.currentContext();
+        Context parentContext = Context.current();
         handlerData = new HandlerData(type, method);
 
         HttpServerRoute.update(
@@ -103,11 +102,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
       }
 
       public void exit(@Nullable Throwable throwable) {
-        if (callDepth.decrementAndGet() > 0) {
-          return;
-        }
-
-        if (scope == null) {
+        if (callDepth.decrementAndGet() > 0 || scope == null) {
           return;
         }
         scope.close();

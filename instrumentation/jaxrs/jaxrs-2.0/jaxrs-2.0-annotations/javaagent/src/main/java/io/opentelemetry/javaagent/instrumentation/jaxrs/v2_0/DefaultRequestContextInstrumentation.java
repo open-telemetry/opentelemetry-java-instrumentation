@@ -11,7 +11,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsConstants;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsServerSpanNaming;
 import java.lang.reflect.Method;
@@ -51,7 +50,7 @@ public class DefaultRequestContextInstrumentation extends AbstractRequestContext
       @Nullable
       public static AdviceScope enter(Class<?> filterClass, Method method) {
 
-        Context parentContext = Java8BytecodeBridge.currentContext();
+        Context parentContext = Context.current();
         Jaxrs2HandlerData handlerData = new Jaxrs2HandlerData(filterClass, method);
 
         HttpServerRoute.update(

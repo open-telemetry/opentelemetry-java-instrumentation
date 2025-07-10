@@ -9,7 +9,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import org.jboss.resteasy.core.ResourceLocatorInvoker;
 import org.jboss.resteasy.core.ResourceMethodInvoker;
 
-public class ResteasySingletons {
+public final class ResteasySingletons {
 
   public static final VirtualField<ResourceLocatorInvoker, String> LOCATOR_NAME =
       VirtualField.find(ResourceLocatorInvoker.class, String.class);
