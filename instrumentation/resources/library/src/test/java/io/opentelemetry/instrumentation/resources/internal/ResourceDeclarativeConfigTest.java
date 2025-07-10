@@ -22,7 +22,7 @@ import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class DeclarativeConfigTest {
+class ResourceDeclarativeConfigTest {
 
   // just to ensure that the test exporters are registered
   @RegisterExtension

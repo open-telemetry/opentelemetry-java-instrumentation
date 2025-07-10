@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.resources.internal;
+package io.opentelemetry.javaagent.tooling.resources;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
-import io.opentelemetry.testing.internal.jackson.core.JsonProcessingException;
-import io.opentelemetry.testing.internal.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 class ResourceCustomizerProviderTest {
@@ -27,10 +27,7 @@ class ResourceCustomizerProviderTest {
               try {
                 assertThat(objectMapper.writeValueAsString(configurationModel.getResource()))
                     .isEqualTo(
-                        "{\"attributes\":[],\"detectionDevelopment\":{\"attributes\":null,\"detectors\":["
-                            + "{\"additionalProperties\":{\"distribution\":null}},"
-                            + "{\"additionalProperties\":{\"service\":null}}]},"
-                            + "\"schemaUrl\":null,\"attributesList\":null}");
+                        "{\"attributes\":[],\"detection/development\":{\"detectors\":[{\"distribution\":null},{\"service\":null}]}}");
               } catch (JsonProcessingException e) {
                 throw new AssertionError(e);
               }
