@@ -723,6 +723,12 @@ targets:
       target: ':instrumentation:okhttp:okhttp-3.0:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:openai:openai-java-1.1:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:openai:openai-java-1.1:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:opensearch:opensearch-rest-1.0:javaagent'
     - type: gradle
       path: ./
