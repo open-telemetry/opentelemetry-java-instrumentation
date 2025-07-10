@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jmx.rules;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
+import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeWithAnyValue;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcherGroup;
@@ -24,10 +25,10 @@ public class WildflyTest extends TargetSystemTest {
   @ParameterizedTest
   @ValueSource(
       strings = {
-          // keep testing on old and deprecated version for compatibility
-          "jboss/wildfly:10.1.0.Final",
-          // recent/latest to be maintained as newer versions are released
-          "quay.io/wildfly/wildfly:36.0.1.Final-jdk21"
+        // keep testing on old and deprecated version for compatibility
+        "jboss/wildfly:10.1.0.Final",
+        // recent/latest to be maintained as newer versions are released
+        "quay.io/wildfly/wildfly:36.0.1.Final-jdk21"
       })
   public void testWildflyMetrics(String dockerImage) {
     List<String> yamlFiles = Collections.singletonList("wildfly.yaml");
@@ -187,10 +188,8 @@ public class WildflyTest extends TargetSystemTest {
                     .isCounter()
                     .hasDescription("The total number of transactions rolled back")
                     .hasUnit("{transaction}")
-                    .hasDataPointsWithAttributes(
-                        attributeGroup(attribute("wildfly.rollback.cause", "application")),
-                        attributeGroup(attribute("wildfly.rollback.cause", "resource")),
-                        attributeGroup(attribute("wildfly.rollback.cause", "system"))
-                    ));
+                    // older versions do not report 'system' cause, hence non-strict assertion
+                    .hasDataPointsWithOneAttribute(
+                        attributeWithAnyValue("wildfly.rollback.cause")));
   }
 }
