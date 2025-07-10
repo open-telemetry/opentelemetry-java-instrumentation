@@ -254,6 +254,7 @@
       <property name="arrayInitIndent" value="2"/>
     </module>
     -->
+    <!-- handled by error prone
     <module name="AbbreviationAsWordInName">
       <property name="ignoreFinal" value="false"/>
       <property name="allowedAbbreviationLength" value="0"/>
@@ -262,6 +263,7 @@
                     PARAMETER_DEF, VARIABLE_DEF, METHOD_DEF, PATTERN_VARIABLE_DEF, RECORD_DEF,
                     RECORD_COMPONENT_DEF"/>
     </module>
+    -->
     <module name="OverloadMethodsDeclarationOrder"/>
     <!-- there are only a few violations of this, and they all appear to be for good reasons
     <module name="VariableDeclarationUsageDistance"/>

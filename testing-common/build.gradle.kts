@@ -54,6 +54,11 @@ dependencies {
   api("org.mockito:mockito-core")
   api("org.slf4j:slf4j-api")
 
+  // used to record LLM responses in gen AI tests
+  api("com.github.tomakehurst:wiremock-jre8:2.35.2")
+  implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.2")
+  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.18.2")
+
   compileOnly(project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
   compileOnly(project(":testing:proto-shaded-for-testing", configuration = "shadow"))
   compileOnly(project(":javaagent-bootstrap"))
