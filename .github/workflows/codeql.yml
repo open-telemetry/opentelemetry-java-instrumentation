@@ -57,7 +57,7 @@ jobs:
           cache-read-only: ${{ github.event_name == 'pull_request' }}
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@39edc492dbe16b1465b0cafca41432d857bdb31a # v3.29.1
+        uses: github/codeql-action/init@181d5eefc20863364f96762470ba6f862bdef56b # v3.29.2
         with:
           languages: ${{ matrix.language }}
           # using "latest" helps to keep up with the latest Kotlin support
@@ -73,6 +73,6 @@ jobs:
         run: ./gradlew assemble -x javadoc -x :instrumentation:quarkus-resteasy-reactive:quarkus3-testing:quarkusGenerateCodeDev -x :instrumentation:quarkus-resteasy-reactive:quarkus2-testing:quarkusGenerateCodeDev --no-build-cache --no-daemon
 
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@39edc492dbe16b1465b0cafca41432d857bdb31a # v3.29.1
+        uses: github/codeql-action/analyze@181d5eefc20863364f96762470ba6f862bdef56b # v3.29.2
         with:
           category: "/language:${{matrix.language}}"
