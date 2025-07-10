@@ -344,6 +344,9 @@ class PreparedStatementParametersTest {
       String url,
       String table)
       throws SQLException {
+    // we are using old database drivers that don't support the tested setObject method
+    Assumptions.assumeTrue(Boolean.getBoolean("testLatestDeps"));
+
     test(
         system,
         connection,
