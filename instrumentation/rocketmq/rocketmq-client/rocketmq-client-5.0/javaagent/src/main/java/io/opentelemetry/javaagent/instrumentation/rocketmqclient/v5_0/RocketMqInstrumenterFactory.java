@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
+
 import apache.rocketmq.v2.ReceiveMessageRequest;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.StatusCode;
@@ -30,10 +32,13 @@ final class RocketMqInstrumenterFactory {
 
   private RocketMqInstrumenterFactory() {}
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   public static Instrumenter<PublishingMessageImpl, SendReceiptImpl> createProducerInstrumenter(
       OpenTelemetry openTelemetry, List<String> capturedHeaders) {
     RocketMqProducerAttributeGetter getter = RocketMqProducerAttributeGetter.INSTANCE;
-    MessageOperation operation = MessageOperation.PUBLISH;
+    MessageOperation operation =
+        emitStableMessagingSemconv() ? MessageOperation.CREATE : MessageOperation.PUBLISH;
+    ;
 
     AttributesExtractor<PublishingMessageImpl, SendReceiptImpl> attributesExtractor =
         buildMessagingAttributesExtractor(getter, operation, capturedHeaders);
