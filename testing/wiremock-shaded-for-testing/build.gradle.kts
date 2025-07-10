@@ -26,6 +26,7 @@ tasks {
     relocate("org.apache.hc", "io.opentelemetry.testing.internal.apachehttp")
     relocate("org.eclipse.jetty", "io.opentelemetry.testing.internal.jetty")
     relocate("com.fasterxml.jackson", "io.opentelemetry.testing.internal.jackson")
+    relocate("javax.servlet", "io.opentelemetry.testing.internal.servlet")
 
     mergeServiceFiles()
   }
