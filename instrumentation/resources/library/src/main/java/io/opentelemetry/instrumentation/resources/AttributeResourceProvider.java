@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 /**
  * An easier alternative to {@link io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider}, which
@@ -45,7 +46,6 @@ public abstract class AttributeResourceProvider<D> implements ConditionalResourc
   }
 
   private Set<AttributeKey<?>> filteredKeys;
-
   private final Map<AttributeKey<Object>, Function<D, Optional<?>>> attributeGetters =
       new HashMap<>();
 
@@ -66,16 +66,25 @@ public abstract class AttributeResourceProvider<D> implements ConditionalResourc
 
   @Override
   public final Resource createResource(ConfigProperties config) {
+    return create(filteredKeys);
+  }
+
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  public final Resource createUnconditional() {
+    return create((Set) attributeGetters.keySet());
+  }
+
+  private Resource create(@Nullable Set<AttributeKey<?>> keys) {
+    if (keys == null) {
+      throw new IllegalStateException("shouldApply should be called first");
+    }
     return attributeProvider
         .readData()
         .map(
             data -> {
-              if (filteredKeys == null) {
-                throw new IllegalStateException("shouldApply should be called first");
-              }
               AttributesBuilder builder = Attributes.builder();
               attributeGetters.entrySet().stream()
-                  .filter(e -> filteredKeys.contains(e.getKey()))
+                  .filter(e -> keys.contains(e.getKey()))
                   .forEach(
                       e ->
                           e.getValue()
