@@ -23,7 +23,7 @@ tasks {
 
     // Ensures tests are not affected by wiremock dependencies. Wiremock itself is
     // safe with its original name.
-    relocate("org.apache.httpcomponents", "io.opentelemetry.testing.internal.apachehttp")
+    relocate("org.apache.hc", "io.opentelemetry.testing.internal.apachehttp")
     relocate("org.eclipse.jetty", "io.opentelemetry.testing.internal.jetty")
     relocate("com.fasterxml.jackson", "io.opentelemetry.testing.internal.jackson")
 
