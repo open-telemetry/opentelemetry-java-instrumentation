@@ -50,11 +50,14 @@ tasks.named<ShadowJar>("shadowJar").configure {
 
 tasks.withType<Test>().configureEach {
   val shadowJar = tasks.shadowJar.get()
-  val agentShadowJar = project(":testing:agent-for-testing").tasks.shadowJar
+  val agentProject = project(":testing:agent-for-testing")
+  val agentShadowJar = agentProject.tasks.findByName("shadowJar")
   inputs.file(shadowJar.archiveFile)
 
   dependsOn(shadowJar)
-  dependsOn(agentShadowJar.get())
+  if (agentShadowJar != null) {
+    dependsOn(agentShadowJar)
+  }
 
   jvmArgs("-Dotel.javaagent.debug=true")
   jvmArgs("-Dotel.javaagent.experimental.initializer.jar=${shadowJar.archiveFile.get().asFile.absolutePath}")
