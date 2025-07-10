@@ -75,23 +75,6 @@ public abstract class AbstractElasticsearchTransportClientTest
 
     assertThat(clusterHealthStatus.name()).isEqualTo("GREEN");
 
-    List<AttributeAssertion> assertions =
-        new ArrayList<>(
-            addNetworkTypeAttribute(
-                equalTo(NETWORK_PEER_ADDRESS, getAddress()),
-                equalTo(NETWORK_PEER_PORT, getPort()),
-                equalTo(
-                    maybeStable(DB_SYSTEM),
-                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                equalTo(maybeStable(DB_OPERATION), "ClusterHealthAction")));
-
-    if (Boolean.getBoolean("testExperimental")) {
-      assertions.addAll(
-          asList(
-              equalTo(ELASTICSEARCH_ACTION, "ClusterHealthAction"),
-              equalTo(ELASTICSEARCH_REQUEST, "ClusterHealthRequest")));
-    }
-
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -100,7 +83,17 @@ public abstract class AbstractElasticsearchTransportClientTest
                     span.hasName("ClusterHealthAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(assertions),
+                        .hasAttributesSatisfyingExactly(
+                            addNetworkTypeAttribute(
+                                equalTo(NETWORK_PEER_ADDRESS, getAddress()),
+                                equalTo(NETWORK_PEER_PORT, getPort()),
+                                equalTo(
+                                    maybeStable(DB_SYSTEM),
+                                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                                equalTo(maybeStable(DB_OPERATION), "ClusterHealthAction"),
+                                equalTo(ELASTICSEARCH_ACTION, experimental("ClusterHealthAction")),
+                                equalTo(
+                                    ELASTICSEARCH_REQUEST, experimental("ClusterHealthRequest")))),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -148,15 +141,10 @@ public abstract class AbstractElasticsearchTransportClientTest
                 equalTo(
                     maybeStable(DB_SYSTEM),
                     DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                equalTo(maybeStable(DB_OPERATION), "GetAction")));
-
-    if (Boolean.getBoolean("testExperimental")) {
-      assertions.addAll(
-          asList(
-              equalTo(ELASTICSEARCH_ACTION, "GetAction"),
-              equalTo(ELASTICSEARCH_REQUEST, "GetRequest"),
-              equalTo(ELASTICSEARCH_REQUEST_INDICES, "invalid-index")));
-    }
+                equalTo(maybeStable(DB_OPERATION), "GetAction"),
+                equalTo(ELASTICSEARCH_ACTION, experimental("GetAction")),
+                equalTo(ELASTICSEARCH_REQUEST, experimental("GetRequest")),
+                equalTo(ELASTICSEARCH_REQUEST_INDICES, experimental("invalid-index"))));
 
     if (SemconvStability.emitStableDatabaseSemconv()) {
       assertions.add(equalTo(ERROR_TYPE, "org.elasticsearch.transport.RemoteTransportException"));
@@ -235,14 +223,29 @@ public abstract class AbstractElasticsearchTransportClientTest
                     span.hasName("CreateIndexAction")
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(createIndexActionAttributes(indexName))),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_PEER_ADDRESS, getAddress()),
+                            equalTo(NETWORK_PEER_PORT, getPort()),
+                            equalTo(
+                                maybeStable(DB_SYSTEM),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                            equalTo(maybeStable(DB_OPERATION), "CreateIndexAction"),
+                            equalTo(ELASTICSEARCH_ACTION, experimental("CreateIndexAction")),
+                            equalTo(ELASTICSEARCH_REQUEST, experimental("CreateIndexRequest")),
+                            equalTo(ELASTICSEARCH_REQUEST_INDICES, experimental(indexName)))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName(getPutMappingActionName())
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(putMappingActionAttributes())),
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                maybeStable(DB_SYSTEM),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                            equalTo(maybeStable(DB_OPERATION), getPutMappingActionName()),
+                            equalTo(ELASTICSEARCH_ACTION, experimental(getPutMappingActionName())),
+                            equalTo(ELASTICSEARCH_REQUEST, experimental("PutMappingRequest")))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -250,7 +253,29 @@ public abstract class AbstractElasticsearchTransportClientTest
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            indexActionAttributes(indexName, indexType))),
+                            equalTo(NETWORK_PEER_ADDRESS, getAddress()),
+                            equalTo(NETWORK_PEER_PORT, getPort()),
+                            equalTo(
+                                maybeStable(DB_SYSTEM),
+                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                            equalTo(maybeStable(DB_OPERATION), "IndexAction"),
+                            equalTo(ELASTICSEARCH_ACTION, experimental("IndexAction")),
+                            equalTo(ELASTICSEARCH_REQUEST, experimental("IndexRequest")),
+                            equalTo(ELASTICSEARCH_REQUEST_INDICES, experimental(indexName)),
+                            equalTo(
+                                stringKey("elasticsearch.request.write.type"),
+                                experimental(indexType)),
+                            equalTo(longKey("elasticsearch.response.status"), experimental(201)),
+                            equalTo(
+                                longKey("elasticsearch.shard.replication.total"), experimental(2)),
+                            equalTo(
+                                longKey("elasticsearch.shard.replication.successful"),
+                                experimental(1)),
+                            equalTo(
+                                longKey("elasticsearch.shard.replication.failed"), experimental(0)),
+                            equalTo(
+                                longKey("elasticsearch.request.write.version"),
+                                hasWriteVersion() ? experimental(-3) : null))),
         // moved here by sorting, chronologically happens before PutMappingAction
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -270,99 +295,22 @@ public abstract class AbstractElasticsearchTransportClientTest
                             getActionAttributes(indexName, indexType, id, 1))));
   }
 
-  private List<AttributeAssertion> createIndexActionAttributes(String indexName) {
-    List<AttributeAssertion> assertions =
-        new ArrayList<>(
-            addNetworkTypeAttribute(
-                equalTo(NETWORK_PEER_ADDRESS, getAddress()),
-                equalTo(NETWORK_PEER_PORT, getPort()),
-                equalTo(
-                    maybeStable(DB_SYSTEM),
-                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                equalTo(maybeStable(DB_OPERATION), "CreateIndexAction")));
-
-    if (Boolean.getBoolean("testExperimental")) {
-      assertions.addAll(
-          asList(
-              equalTo(ELASTICSEARCH_ACTION, "CreateIndexAction"),
-              equalTo(ELASTICSEARCH_REQUEST, "CreateIndexRequest"),
-              equalTo(ELASTICSEARCH_REQUEST_INDICES, indexName)));
-    }
-    return assertions;
-  }
-
-  private List<AttributeAssertion> putMappingActionAttributes() {
-    List<AttributeAssertion> assertions =
-        new ArrayList<>(
-            asList(
-                equalTo(
-                    maybeStable(DB_SYSTEM),
-                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                equalTo(maybeStable(DB_OPERATION), getPutMappingActionName())));
-
-    if (Boolean.getBoolean("testExperimental")) {
-      assertions.addAll(
-          asList(
-              equalTo(ELASTICSEARCH_ACTION, getPutMappingActionName()),
-              equalTo(ELASTICSEARCH_REQUEST, "PutMappingRequest")));
-    }
-    return assertions;
-  }
-
-  private List<AttributeAssertion> indexActionAttributes(String indexName, String indexType) {
-    List<AttributeAssertion> assertions =
-        new ArrayList<>(
-            addNetworkTypeAttribute(
-                equalTo(NETWORK_PEER_ADDRESS, getAddress()),
-                equalTo(NETWORK_PEER_PORT, getPort()),
-                equalTo(
-                    maybeStable(DB_SYSTEM),
-                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                equalTo(maybeStable(DB_OPERATION), "IndexAction")));
-
-    if (Boolean.getBoolean("testExperimental")) {
-      List<AttributeAssertion> experimentalAttrs =
-          new ArrayList<>(
-              asList(
-                  equalTo(ELASTICSEARCH_ACTION, "IndexAction"),
-                  equalTo(ELASTICSEARCH_REQUEST, "IndexRequest"),
-                  equalTo(ELASTICSEARCH_REQUEST_INDICES, indexName),
-                  equalTo(stringKey("elasticsearch.request.write.type"), indexType),
-                  equalTo(longKey("elasticsearch.response.status"), 201),
-                  equalTo(longKey("elasticsearch.shard.replication.total"), 2),
-                  equalTo(longKey("elasticsearch.shard.replication.successful"), 1),
-                  equalTo(longKey("elasticsearch.shard.replication.failed"), 0)));
-      if (hasWriteVersion()) {
-        experimentalAttrs.add(equalTo(longKey("elasticsearch.request.write.version"), -3));
-      }
-      assertions.addAll(experimentalAttrs);
-    }
-    return assertions;
-  }
-
   private List<AttributeAssertion> getActionAttributes(
       String indexName, String indexType, String id, long version) {
-    List<AttributeAssertion> assertions =
-        new ArrayList<>(
-            addNetworkTypeAttribute(
-                equalTo(NETWORK_PEER_ADDRESS, getAddress()),
-                equalTo(NETWORK_PEER_PORT, getPort()),
-                equalTo(
-                    maybeStable(DB_SYSTEM),
-                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                equalTo(maybeStable(DB_OPERATION), "GetAction")));
-
-    if (Boolean.getBoolean("testExperimental")) {
-      assertions.addAll(
-          asList(
-              equalTo(ELASTICSEARCH_ACTION, "GetAction"),
-              equalTo(ELASTICSEARCH_REQUEST, "GetRequest"),
-              equalTo(ELASTICSEARCH_REQUEST_INDICES, indexName),
-              equalTo(ELASTICSEARCH_TYPE, indexType),
-              equalTo(ELASTICSEARCH_ID, id),
-              equalTo(ELASTICSEARCH_VERSION, version)));
-    }
-    return assertions;
+    return new ArrayList<>(
+        addNetworkTypeAttribute(
+            equalTo(NETWORK_PEER_ADDRESS, getAddress()),
+            equalTo(NETWORK_PEER_PORT, getPort()),
+            equalTo(
+                maybeStable(DB_SYSTEM),
+                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+            equalTo(maybeStable(DB_OPERATION), "GetAction"),
+            equalTo(ELASTICSEARCH_ACTION, experimental("GetAction")),
+            equalTo(ELASTICSEARCH_REQUEST, experimental("GetRequest")),
+            equalTo(ELASTICSEARCH_REQUEST_INDICES, experimental(indexName)),
+            equalTo(ELASTICSEARCH_TYPE, experimental(indexType)),
+            equalTo(ELASTICSEARCH_ID, experimental(id)),
+            equalTo(ELASTICSEARCH_VERSION, experimental(version))));
   }
 
   protected boolean hasWriteVersion() {

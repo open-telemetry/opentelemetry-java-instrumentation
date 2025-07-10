@@ -83,7 +83,6 @@ tasks {
   }
 
   val testExperimental by registering(Test::class) {
-    systemProperty("testExperimental", true)
     jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
     systemProperty("metaDataConfig", "otel.instrumentation.elasticsearch.experimental-span-attributes=true")
   }

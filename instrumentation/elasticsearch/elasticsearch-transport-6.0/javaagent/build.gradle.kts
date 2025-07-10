@@ -119,7 +119,6 @@ tasks {
       testClassesDirs = suite.sources.output.classesDirs
       classpath = suite.sources.runtimeClasspath
 
-      systemProperty("testExperimental", true)
       jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
       systemProperty("metaDataConfig", "otel.instrumentation.elasticsearch.experimental-span-attributes=true")
     }
