@@ -24,10 +24,10 @@ public class WildflyTest extends TargetSystemTest {
   @ParameterizedTest
   @ValueSource(
       strings = {
-        // keep testing on old and deprecated version for compatibility
-        "jboss/wildfly:9.0.1.Final",
-        // recent/latest to be maintained as newer versions are released
-        "quay.io/wildfly/wildfly:36.0.1.Final-jdk21"
+          // keep testing on old and deprecated version for compatibility
+          "jboss/wildfly:10.1.0.Final",
+          // recent/latest to be maintained as newer versions are released
+          "quay.io/wildfly/wildfly:36.0.1.Final-jdk21"
       })
   public void testWildflyMetrics(String dockerImage) {
     List<String> yamlFiles = Collections.singletonList("wildfly.yaml");
@@ -162,6 +162,35 @@ public class WildflyTest extends TargetSystemTest {
                     .hasDescription(
                         "The number of connection requests that had to wait to obtain it")
                     .hasUnit("{request}")
-                    .hasDataPointsWithOneAttribute(dataSourceAttribute));
+                    .hasDataPointsWithOneAttribute(dataSourceAttribute))
+        // transactions
+        .add(
+            "wildfly.transaction.inflight",
+            metric ->
+                metric
+                    .isUpDownCounter()
+                    .hasDescription("The number of in-flight transactions")
+                    .hasUnit("{transaction}")
+                    .hasDataPointsWithoutAttributes())
+        .add(
+            "wildfly.transaction.count",
+            metric ->
+                metric
+                    .isCounter()
+                    .hasDescription("The total number of transactions")
+                    .hasUnit("{transaction}")
+                    .hasDataPointsWithoutAttributes())
+        .add(
+            "wildfly.transaction.rollback",
+            metric ->
+                metric
+                    .isCounter()
+                    .hasDescription("The total number of transactions rolled back")
+                    .hasUnit("{transaction}")
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(attribute("wildfly.rollback.cause", "application")),
+                        attributeGroup(attribute("wildfly.rollback.cause", "resource")),
+                        attributeGroup(attribute("wildfly.rollback.cause", "system"))
+                    ));
   }
 }

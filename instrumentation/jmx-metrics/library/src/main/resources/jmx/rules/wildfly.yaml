@@ -101,26 +101,41 @@ rules:
 
 
   - bean: jboss.as:subsystem=transactions
-    type: counter
-    prefix: wildfly.db.client.
-    unit: "{transactions}"
+
+    prefix: wildfly.transaction.
+    unit: "{transaction}"
     mapping:
-      # wildfly.db.client.transaction.count
+      # wildfly.transaction.inflight
+      numberOfInflightTransactions:
+        metric: inflight
+        type: updowncounter
+        desc: The number of in-flight transactions
+      # wildfly.transaction.count
       numberOfTransactions:
-        metric: transaction.count
-      # wildfly.db.client.rollback.count
+        metric: count
+        type: &type counter
+        desc: The total number of transactions
+      # wildfly.transaction.rollback
       numberOfApplicationRollbacks:
-        metric: &metric rollback.count
+        metric: &metric rollback
+        type: *type
         metricAttribute:
           wildfly.rollback.cause: const(application)
         desc: &desc The total number of transactions rolled back
       numberOfResourceRollbacks:
         metric: *metric
+        type: *type
         metricAttribute:
           wildfly.rollback.cause: const(resource)
         desc: *desc
       numberOfSystemRollbacks:
         metric: *metric
+        type: *type
         metricAttribute:
           wildfly.rollback.cause: const(system)
         desc: *desc
+      # wildfly.transaction.committed
+      numberOfCommitedTransactions:
+        metric: committed
+        type: counter
+        desc: The total number of transactions committed
