@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @SuppressWarnings("IdentifierName") // Want to match library's convention
 public class OpenAIInstrumentationModule extends InstrumentationModule {
   public OpenAIInstrumentationModule() {
-    super("openai", "openai-java", "openai-java-1.1");
+    super("openai-java", "openai-java-1.1", "openai");
   }
 
   @Override
