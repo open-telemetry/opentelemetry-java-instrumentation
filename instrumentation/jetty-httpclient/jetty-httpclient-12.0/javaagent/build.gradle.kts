@@ -23,3 +23,9 @@ dependencies {
 
   testImplementation(project(":instrumentation:jetty-httpclient:jetty-httpclient-12.0:testing"))
 }
+
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+}

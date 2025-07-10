@@ -13,7 +13,7 @@ otelJava {
 }
 
 dependencies {
-  jmhImplementation("org.springframework.boot:spring-boot-starter-web:3.4.5")
+  jmhImplementation("org.springframework.boot:spring-boot-starter-web:3.5.3")
 }
 
 tasks {

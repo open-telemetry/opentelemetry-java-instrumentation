@@ -73,11 +73,9 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -562,7 +560,7 @@ public abstract class AbstractGrpcTest {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(ErrorProvider.class)
+  @MethodSource("provideErrorArguments")
   void errorReturned(Status status) throws Exception {
     BindableService greeter =
         new GreeterGrpc.GreeterImplBase() {
@@ -691,7 +689,7 @@ public abstract class AbstractGrpcTest {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(ErrorProvider.class)
+  @MethodSource("provideErrorArguments")
   void errorThrown(Status status) throws Exception {
     BindableService greeter =
         new GreeterGrpc.GreeterImplBase() {
@@ -824,25 +822,22 @@ public abstract class AbstractGrpcTest {
                                                     (long) Status.Code.UNKNOWN.value()))))));
   }
 
-  static class ErrorProvider implements ArgumentsProvider {
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(
-          arguments(Status.UNKNOWN.withCause(new RuntimeException("some error"))),
-          arguments(Status.DEADLINE_EXCEEDED.withCause(new RuntimeException("some error"))),
-          arguments(Status.UNIMPLEMENTED.withCause(new RuntimeException("some error"))),
-          arguments(Status.INTERNAL.withCause(new RuntimeException("some error"))),
-          arguments(Status.UNAVAILABLE.withCause(new RuntimeException("some error"))),
-          arguments(Status.DATA_LOSS.withCause(new RuntimeException("some error"))),
-          arguments(Status.NOT_FOUND.withCause(new RuntimeException("some error"))),
-          arguments(Status.UNKNOWN.withDescription("some description")),
-          arguments(Status.DEADLINE_EXCEEDED.withDescription("some description")),
-          arguments(Status.UNIMPLEMENTED.withDescription("some description")),
-          arguments(Status.INTERNAL.withDescription("some description")),
-          arguments(Status.UNAVAILABLE.withDescription("some description")),
-          arguments(Status.DATA_LOSS.withDescription("some description")),
-          arguments(Status.NOT_FOUND.withDescription("some description")));
-    }
+  private static Stream<Arguments> provideErrorArguments() {
+    return Stream.of(
+        arguments(Status.UNKNOWN.withCause(new RuntimeException("some error"))),
+        arguments(Status.DEADLINE_EXCEEDED.withCause(new RuntimeException("some error"))),
+        arguments(Status.UNIMPLEMENTED.withCause(new RuntimeException("some error"))),
+        arguments(Status.INTERNAL.withCause(new RuntimeException("some error"))),
+        arguments(Status.UNAVAILABLE.withCause(new RuntimeException("some error"))),
+        arguments(Status.DATA_LOSS.withCause(new RuntimeException("some error"))),
+        arguments(Status.NOT_FOUND.withCause(new RuntimeException("some error"))),
+        arguments(Status.UNKNOWN.withDescription("some description")),
+        arguments(Status.DEADLINE_EXCEEDED.withDescription("some description")),
+        arguments(Status.UNIMPLEMENTED.withDescription("some description")),
+        arguments(Status.INTERNAL.withDescription("some description")),
+        arguments(Status.UNAVAILABLE.withDescription("some description")),
+        arguments(Status.DATA_LOSS.withDescription("some description")),
+        arguments(Status.NOT_FOUND.withDescription("some description")));
   }
 
   @Test

@@ -56,6 +56,8 @@ tasks {
   }
 
   test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+
     filter {
       excludeTestsMatching("ReactorNettyConnectionSpanTest")
       excludeTestsMatching("ReactorNettyClientSslTest")

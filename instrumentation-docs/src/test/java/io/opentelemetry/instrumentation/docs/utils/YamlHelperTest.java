@@ -10,10 +10,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
+import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
+import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationClassification;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
+import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
 import java.io.BufferedWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -282,5 +285,139 @@ class YamlHelperTest {
         .isEqualTo("Enables statement sanitization for database queries.");
     assertThat(config.defaultValue()).isEqualTo("true");
     assertThat(config.type()).isEqualTo(ConfigurationType.BOOLEAN);
+  }
+
+  @Test
+  void testMetricsParsing() throws Exception {
+    List<InstrumentationModule> modules = new ArrayList<>();
+    Map<InstrumentationType, Set<String>> targetVersions = new HashMap<>();
+
+    EmittedMetrics.Metric metric =
+        new EmittedMetrics.Metric(
+            "db.client.operation.duration",
+            "Duration of database client operations.",
+            "HISTOGRAM",
+            "s",
+            List.of(
+                new TelemetryAttribute("db.namespace", "STRING"),
+                new TelemetryAttribute("db.operation.name", "STRING"),
+                new TelemetryAttribute("db.system.name", "STRING"),
+                new TelemetryAttribute("server.address", "STRING"),
+                new TelemetryAttribute("server.port", "LONG")));
+
+    targetVersions.put(
+        InstrumentationType.LIBRARY, new HashSet<>(List.of("org.apache.mylib:mylib-core:2.3.0")));
+    modules.add(
+        new InstrumentationModule.Builder()
+            .srcPath("instrumentation/mylib/mylib-core-2.3")
+            .instrumentationName("mylib-2.3")
+            .namespace("mylib")
+            .group("mylib")
+            .targetVersions(targetVersions)
+            .metrics(Map.of("default", List.of(metric)))
+            .build());
+
+    StringWriter stringWriter = new StringWriter();
+    BufferedWriter writer = new BufferedWriter(stringWriter);
+
+    YamlHelper.generateInstrumentationYaml(modules, writer);
+    writer.flush();
+
+    String expectedYaml =
+        """
+        libraries:
+          mylib:
+          - name: mylib-2.3
+            source_path: instrumentation/mylib/mylib-core-2.3
+            scope:
+              name: io.opentelemetry.mylib-2.3
+            target_versions:
+              library:
+              - org.apache.mylib:mylib-core:2.3.0
+            telemetry:
+            - when: default
+              metrics:
+              - name: db.client.operation.duration
+                description: Duration of database client operations.
+                type: HISTOGRAM
+                unit: s
+                attributes:
+                - name: db.namespace
+                  type: STRING
+                - name: db.operation.name
+                  type: STRING
+                - name: db.system.name
+                  type: STRING
+                - name: server.address
+                  type: STRING
+                - name: server.port
+                  type: LONG
+        """;
+
+    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+  }
+
+  @Test
+  void testSpanParsing() throws Exception {
+    List<InstrumentationModule> modules = new ArrayList<>();
+    Map<InstrumentationType, Set<String>> targetVersions = new HashMap<>();
+
+    EmittedSpans.Span span =
+        new EmittedSpans.Span(
+            "CLIENT",
+            List.of(
+                new TelemetryAttribute("db.namespace", "STRING"),
+                new TelemetryAttribute("db.operation.name", "STRING"),
+                new TelemetryAttribute("db.system.name", "STRING"),
+                new TelemetryAttribute("server.address", "STRING"),
+                new TelemetryAttribute("server.port", "LONG")));
+
+    targetVersions.put(
+        InstrumentationType.LIBRARY, new HashSet<>(List.of("org.apache.mylib:mylib-core:2.3.0")));
+    modules.add(
+        new InstrumentationModule.Builder()
+            .srcPath("instrumentation/mylib/mylib-core-2.3")
+            .instrumentationName("mylib-2.3")
+            .namespace("mylib")
+            .group("mylib")
+            .targetVersions(targetVersions)
+            .spans(Map.of("default", List.of(span)))
+            .build());
+
+    StringWriter stringWriter = new StringWriter();
+    BufferedWriter writer = new BufferedWriter(stringWriter);
+
+    YamlHelper.generateInstrumentationYaml(modules, writer);
+    writer.flush();
+
+    String expectedYaml =
+        """
+        libraries:
+          mylib:
+          - name: mylib-2.3
+            source_path: instrumentation/mylib/mylib-core-2.3
+            scope:
+              name: io.opentelemetry.mylib-2.3
+            target_versions:
+              library:
+              - org.apache.mylib:mylib-core:2.3.0
+            telemetry:
+            - when: default
+              spans:
+              - span_kind: CLIENT
+                attributes:
+                - name: db.namespace
+                  type: STRING
+                - name: db.operation.name
+                  type: STRING
+                - name: db.system.name
+                  type: STRING
+                - name: server.address
+                  type: STRING
+                - name: server.port
+                  type: LONG
+        """;
+
+    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
   }
 }

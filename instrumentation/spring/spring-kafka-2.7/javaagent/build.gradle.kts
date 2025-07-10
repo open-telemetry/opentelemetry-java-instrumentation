@@ -40,15 +40,11 @@ testing {
         implementation(project(":instrumentation:spring:spring-kafka-2.7:testing"))
 
         // the "library" configuration is not recognized by the test suite plugin
-        if (latestDepTest) {
-          implementation("org.springframework.kafka:spring-kafka:latest.release")
-          implementation("org.springframework.boot:spring-boot-starter-test:latest.release")
-          implementation("org.springframework.boot:spring-boot-starter:latest.release")
-        } else {
-          implementation("org.springframework.kafka:spring-kafka:2.7.0")
-          implementation("org.springframework.boot:spring-boot-starter-test:2.5.3")
-          implementation("org.springframework.boot:spring-boot-starter:2.5.3")
-        }
+        val springKafkaVersion = if (latestDepTest) "latest.release" else "2.7.0"
+        val springBootVersion = if (latestDepTest) "latest.release" else "2.5.3"
+        implementation("org.springframework.kafka:spring-kafka:$springKafkaVersion")
+        implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
+        implementation("org.springframework.boot:spring-boot-starter:$springBootVersion")
       }
 
       targets {

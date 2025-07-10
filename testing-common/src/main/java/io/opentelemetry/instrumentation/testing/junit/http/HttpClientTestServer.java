@@ -147,7 +147,15 @@ public final class HttpClientTestServer extends ServerExtension {
               }
               span.startSpan().end();
 
-              return delegate.serve(ctx, req);
+              // this header is set by java http client http/2 tests
+              // we delay the response a bit to ensure that client can send the full request before
+              // it receives the response
+              // this is a workaround for http/2 tests failing with java.io.IOException: RST_STREAM
+              // received
+              boolean delay = req.headers().get("java-http-client-http2") != null;
+
+              HttpResponse response = delegate.serve(ctx, req);
+              return delay ? HttpResponse.delayed(response, Duration.ofMillis(10)) : response;
             })
         .decorator(LoggingService.newDecorator());
   }

@@ -14,4 +14,4 @@ jobs:
 
       - name: Run markdownlint
         run: |
-          npx markdownlint-cli@0.44.0 -c .github/config/markdownlint.yml -p .gitignore **/*.md -i licenses/licenses.md
+          npx markdownlint-cli@0.45.0 -c .github/config/markdownlint.yml -p .gitignore **/*.md -i licenses/licenses.md

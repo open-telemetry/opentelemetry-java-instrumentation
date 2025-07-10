@@ -4,7 +4,7 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.4.5"
     id("com.gradle.plugin-publish") version "1.3.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.1.21"
+    id("org.jetbrains.kotlin.jvm") version "2.2.0"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("org.unbroken-dome.xjc") version "2.0.0"
     id("org.graalvm.buildtools.native") version "0.10.6"
@@ -12,15 +12,15 @@ pluginManagement {
 }
 
 plugins {
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.2.1"
-  id("org.gradle.toolchains.foojay-resolver-convention") version "0.10.0"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.3"
+  id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
   // in particular, these commands are failing (reproducible locally):
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "9.4.0" apply false
-  id("com.gradle.develocity") version "4.0.1"
+  id("com.gradle.develocity") version "4.0.2"
 }
 
 dependencyResolutionManagement {
@@ -436,6 +436,7 @@ include(":instrumentation:opentelemetry-api:opentelemetry-api-1.38:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.40:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.42:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.47:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.50:javaagent")
 include(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 include(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent")
@@ -598,12 +599,18 @@ include(":instrumentation:vaadin-14.2:javaagent")
 include(":instrumentation:vaadin-14.2:testing")
 include(":instrumentation:vertx:vertx-http-client:vertx-http-client-3.0:javaagent")
 include(":instrumentation:vertx:vertx-http-client:vertx-http-client-4.0:javaagent")
+include(":instrumentation:vertx:vertx-http-client:vertx-http-client-5.0:javaagent")
 include(":instrumentation:vertx:vertx-http-client:vertx-http-client-common:javaagent")
 include(":instrumentation:vertx:vertx-kafka-client-3.6:javaagent")
 include(":instrumentation:vertx:vertx-kafka-client-3.6:testing")
+include(":instrumentation:vertx:vertx-kafka-client-3.6:vertx-kafka-client-3.6-testing")
+include(":instrumentation:vertx:vertx-kafka-client-3.6:vertx-kafka-client-4-testing")
+include(":instrumentation:vertx:vertx-kafka-client-3.6:vertx-kafka-client-5-testing")
 include(":instrumentation:vertx:vertx-redis-client-4.0:javaagent")
 include(":instrumentation:vertx:vertx-rx-java-3.5:javaagent")
-include(":instrumentation:vertx:vertx-sql-client-4.0:javaagent")
+include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent")
+include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-5.0:javaagent")
+include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-common:javaagent")
 include(":instrumentation:vertx:vertx-web-3.0:javaagent")
 include(":instrumentation:vertx:vertx-web-3.0:testing")
 include(":instrumentation:vibur-dbcp-11.0:javaagent")

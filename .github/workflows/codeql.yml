@@ -21,12 +21,18 @@ permissions:
 
 jobs:
   analyze:
+    name: Analyze (${{ matrix.language }})
     permissions:
       contents: read
       actions: read  # for github/codeql-action/init to get workflow details
       security-events: write  # for github/codeql-action/analyze to upload SARIF results
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: actions
+          - language: java
     runs-on: oracle-8cpu-32gb-x86-64
-
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
@@ -44,20 +50,22 @@ jobs:
           # and so it uses more parallelism which uses more memory
           sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx8g /" gradle.properties
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@06832c7b30a0129d7fb559bcc6e43d26f6374244 # v4.3.1
+      - name: Set up Gradle
+        if: matrix.language == 'java'
+        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
         with:
           cache-read-only: ${{ github.event_name == 'pull_request' }}
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@60168efe1c415ce0f5521ea06d5c2062adbeed1b # v3.28.17
+        uses: github/codeql-action/init@181d5eefc20863364f96762470ba6f862bdef56b # v3.29.2
         with:
-          languages: java, actions
+          languages: ${{ matrix.language }}
           # using "latest" helps to keep up with the latest Kotlin support
           # see https://github.com/github/codeql-action/issues/1555#issuecomment-1452228433
           tools: latest
 
-      - name: Build
+      - name: Assemble
+        if: matrix.language == 'java'
         # --no-build-cache is required for codeql to analyze all modules
         # --no-daemon is required for codeql to observe the compilation
         # (see https://docs.github.com/en/code-security/codeql-cli/getting-started-with-the-codeql-cli/preparing-your-code-for-codeql-analysis#specifying-build-commands)
@@ -65,4 +73,6 @@ jobs:
         run: ./gradlew assemble -x javadoc -x :instrumentation:quarkus-resteasy-reactive:quarkus3-testing:quarkusGenerateCodeDev -x :instrumentation:quarkus-resteasy-reactive:quarkus2-testing:quarkusGenerateCodeDev --no-build-cache --no-daemon
 
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@60168efe1c415ce0f5521ea06d5c2062adbeed1b # v3.28.17
+        uses: github/codeql-action/analyze@181d5eefc20863364f96762470ba6f862bdef56b # v3.29.2
+        with:
+          category: "/language:${{matrix.language}}"

@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.api.trace.SpanKind;
@@ -27,7 +28,6 @@ import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;
 import org.elasticsearch.client.RestClient;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -75,46 +75,43 @@ class ElasticsearchRest6Test {
   @Test
   @SuppressWarnings({"deprecation", "rawtypes"})
   // ignore deprecation interface
-  public void elasticsearchStatus() throws IOException {
-
+  void elasticsearchStatus() throws IOException {
     Response response = client.performRequest("GET", "_cluster/health");
     Map result = objectMapper.readValue(response.getEntity().getContent(), Map.class);
 
-    Assertions.assertEquals(result.get("status"), "green");
+    assertThat(result.get("status")).isEqualTo("green");
 
     testing.waitAndAssertTraces(
         trace -> {
           trace.hasSpansSatisfyingExactly(
-              span -> {
-                span.hasName("GET")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasNoParent()
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(maybeStable(DB_SYSTEM), "elasticsearch"),
-                        equalTo(HTTP_REQUEST_METHOD, "GET"),
-                        equalTo(SERVER_ADDRESS, httpHost.getHostName()),
-                        equalTo(SERVER_PORT, httpHost.getPort()),
-                        equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"));
-              },
-              span -> {
-                span.hasName("GET")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(SERVER_ADDRESS, httpHost.getHostName()),
-                        equalTo(SERVER_PORT, httpHost.getPort()),
-                        equalTo(HTTP_REQUEST_METHOD, "GET"),
-                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                        equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
-                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200L));
-              });
+              span ->
+                  span.hasName("GET")
+                      .hasKind(SpanKind.CLIENT)
+                      .hasNoParent()
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(maybeStable(DB_SYSTEM), "elasticsearch"),
+                          equalTo(HTTP_REQUEST_METHOD, "GET"),
+                          equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                          equalTo(SERVER_PORT, httpHost.getPort()),
+                          equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")),
+              span ->
+                  span.hasName("GET")
+                      .hasKind(SpanKind.CLIENT)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                          equalTo(SERVER_PORT, httpHost.getPort()),
+                          equalTo(HTTP_REQUEST_METHOD, "GET"),
+                          equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                          equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
+                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)));
         });
   }
 
   @Test
   @SuppressWarnings({"deprecation", "rawtypes"})
   // ignore deprecation interface
-  public void elasticsearchStatusAsync() throws Exception {
+  void elasticsearchStatusAsync() throws Exception {
     Response[] requestResponse = {null};
     Exception[] exception = {null};
     CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -152,40 +149,36 @@ class ElasticsearchRest6Test {
     }
     Map result = objectMapper.readValue(requestResponse[0].getEntity().getContent(), Map.class);
 
-    Assertions.assertEquals(result.get("status"), "green");
+    assertThat(result.get("status")).isEqualTo("green");
 
     testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent();
-              },
-              span -> {
-                span.hasName("GET")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(maybeStable(DB_SYSTEM), "elasticsearch"),
-                        equalTo(HTTP_REQUEST_METHOD, "GET"),
-                        equalTo(SERVER_ADDRESS, httpHost.getHostName()),
-                        equalTo(SERVER_PORT, httpHost.getPort()),
-                        equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"));
-              },
-              span -> {
-                span.hasName("GET")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(1))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(SERVER_ADDRESS, httpHost.getHostName()),
-                        equalTo(SERVER_PORT, httpHost.getPort()),
-                        equalTo(HTTP_REQUEST_METHOD, "GET"),
-                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                        equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
-                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200));
-              },
-              span -> {
-                span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0));
-              });
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "elasticsearch"),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SERVER_PORT, httpHost.getPort()),
+                            equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SERVER_PORT, httpHost.getPort()),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200)),
+                span ->
+                    span.hasName("callback")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 }

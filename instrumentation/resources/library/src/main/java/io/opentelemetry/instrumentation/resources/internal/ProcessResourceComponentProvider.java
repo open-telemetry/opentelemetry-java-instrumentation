@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.resources.internal;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.resources.ProcessResource;
+import io.opentelemetry.instrumentation.resources.ProcessRuntimeResource;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 
 /**
@@ -19,6 +20,6 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 @AutoService(ComponentProvider.class)
 public class ProcessResourceComponentProvider extends ResourceComponentProvider {
   public ProcessResourceComponentProvider() {
-    super(ProcessResource::get);
+    super("process", () -> ProcessResource.get().merge(ProcessRuntimeResource.get()));
   }
 }

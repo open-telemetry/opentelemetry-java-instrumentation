@@ -82,18 +82,6 @@ public final class RuntimeMetricsBuilder {
     return this;
   }
 
-  /**
-   * Enable experimental JMX telemetry collection.
-   *
-   * @deprecated Use {@link #emitExperimentalTelemetry()} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public RuntimeMetricsBuilder enableExperimentalJmxTelemetry() {
-    emitExperimentalTelemetry = true;
-    return this;
-  }
-
   /** Enable the capture of the jvm.gc.cause attribute with the jvm.gc.duration metric. */
   @CanIgnoreReturnValue
   public RuntimeMetricsBuilder captureGcCause() {

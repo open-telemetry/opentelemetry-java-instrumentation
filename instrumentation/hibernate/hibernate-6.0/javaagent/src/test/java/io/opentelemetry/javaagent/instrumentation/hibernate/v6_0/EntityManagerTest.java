@@ -43,7 +43,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public class EntityManagerTest extends AbstractHibernateTest {
+class EntityManagerTest extends AbstractHibernateTest {
   static final EntityManagerFactory entityManagerFactory =
       Persistence.createEntityManagerFactory("test-pu");
 
@@ -258,7 +258,7 @@ public class EntityManagerTest extends AbstractHibernateTest {
             named(
                 "remove",
                 new Parameter(
-                    "delete",
+                    "remove",
                     "io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value",
                     true,
                     true,

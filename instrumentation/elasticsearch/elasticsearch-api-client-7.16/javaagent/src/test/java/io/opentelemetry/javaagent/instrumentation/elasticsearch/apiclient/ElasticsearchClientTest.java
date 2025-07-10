@@ -17,6 +17,7 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_ELASTICSEARCH_PATH_PARTS;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
@@ -33,7 +34,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -82,9 +82,9 @@ class ElasticsearchClientTest {
   }
 
   @Test
-  public void elasticsearchStatus() throws IOException {
+  void elasticsearchStatus() throws IOException {
     InfoResponse response = client.info();
-    Assertions.assertEquals(response.version().number(), "7.17.2");
+    assertThat(response.version().number()).isEqualTo("7.17.2");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -114,7 +114,7 @@ class ElasticsearchClientTest {
   }
 
   @Test
-  public void elasticsearchIndex() throws IOException {
+  void elasticsearchIndex() throws IOException {
     client.index(
         r ->
             r.id("test-id")
@@ -157,7 +157,7 @@ class ElasticsearchClientTest {
   }
 
   @Test
-  public void elasticsearchStatusAsync() throws Exception {
+  void elasticsearchStatusAsync() throws Exception {
     CountDownLatch countDownLatch = new CountDownLatch(1);
     AsyncRequest request = new AsyncRequest();
 
@@ -177,7 +177,7 @@ class ElasticsearchClientTest {
     //noinspection ResultOfMethodCallIgnored
     countDownLatch.await(10, TimeUnit.SECONDS);
 
-    Assertions.assertEquals(request.getResponse().version().number(), "7.17.2");
+    assertThat(request.getResponse().version().number()).isEqualTo("7.17.2");
 
     testing.waitAndAssertTraces(
         trace ->

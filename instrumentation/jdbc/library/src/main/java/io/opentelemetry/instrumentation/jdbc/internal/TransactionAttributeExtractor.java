@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -19,8 +20,6 @@ enum TransactionAttributeExtractor implements AttributesExtractor<DbRequest, Voi
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
-  private static final AttributeKey<String> DB_OPERATION_NAME =
-      AttributeKey.stringKey("db.operation.name");
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, DbRequest request) {

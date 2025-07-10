@@ -1,0 +1,1 @@
+description: This instrumentation provides CLIENT spans and metrics for versions 2 and 3 of the Apache HttpClient.

@@ -48,6 +48,7 @@ import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling;
 import io.opentelemetry.javaagent.tooling.util.Trie;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.SdkAutoconfigureAccess;
+import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
@@ -57,6 +58,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -123,6 +125,11 @@ public class AgentInstaller {
     EmbeddedInstrumentationProperties.setPropertiesLoader(extensionClassLoader);
     setDefineClassHandler();
     FieldBackedImplementationConfiguration.configure(earlyConfig);
+    // preload ThreadLocalRandom to avoid occasional
+    // java.lang.ClassCircularityError: java/util/concurrent/ThreadLocalRandom
+    // see https://github.com/raphw/byte-buddy/issues/1666 and
+    // https://bugs.openjdk.org/browse/JDK-8164165
+    ThreadLocalRandom.current();
 
     AgentBuilder agentBuilder =
         new AgentBuilder.Default(
@@ -160,7 +167,9 @@ public class AgentInstaller {
         installOpenTelemetrySdk(extensionClassLoader);
 
     ConfigProperties sdkConfig = AgentListener.resolveConfigProperties(autoConfiguredSdk);
-    AgentInstrumentationConfig.internalInitializeConfig(new ConfigPropertiesBridge(sdkConfig));
+    AgentInstrumentationConfig.internalInitializeConfig(
+        new ConfigPropertiesBridge(
+            sdkConfig, AutoConfigureUtil.getConfigProvider(autoConfiguredSdk)));
     copyNecessaryConfigToSystemProperties(sdkConfig);
 
     setBootstrapPackages(sdkConfig, extensionClassLoader);

@@ -19,11 +19,9 @@ import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -44,36 +42,32 @@ class ForwardedUrlSchemeProviderTest {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(ForwardedHeaderValues.class)
+  @MethodSource("forwardedHeaderValues")
   void parseForwardedHeader(List<String> values, String expectedScheme) {
     when(getter.getHttpRequestHeader(REQUEST, "forwarded")).thenReturn(values);
     assertThat(underTest.apply(REQUEST)).isEqualTo(expectedScheme);
   }
 
-  static final class ForwardedHeaderValues implements ArgumentsProvider {
-
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) {
-      return Stream.of(
-          arguments(singletonList("for=1.1.1.1;proto=xyz"), "xyz"),
-          arguments(singletonList("for=1.1.1.1;proto=xyz;"), "xyz"),
-          arguments(singletonList("for=1.1.1.1;proto=xyz,"), "xyz"),
-          arguments(singletonList("for=1.1.1.1;proto="), null),
-          arguments(singletonList("for=1.1.1.1;proto=;"), null),
-          arguments(singletonList("for=1.1.1.1;proto=,"), null),
-          arguments(singletonList("for=1.1.1.1;proto=\"xyz\""), "xyz"),
-          arguments(singletonList("for=1.1.1.1;proto=\"xyz\";"), "xyz"),
-          arguments(singletonList("for=1.1.1.1;proto=\"xyz\","), "xyz"),
-          arguments(singletonList("for=1.1.1.1;proto=\""), null),
-          arguments(singletonList("for=1.1.1.1;proto=\"\""), null),
-          arguments(singletonList("for=1.1.1.1;proto=\"\";"), null),
-          arguments(singletonList("for=1.1.1.1;proto=\"\","), null),
-          arguments(asList("for=1.1.1.1", "proto=xyz", "proto=abc"), "xyz"));
-    }
+  private static Stream<Arguments> forwardedHeaderValues() {
+    return Stream.of(
+        arguments(singletonList("for=1.1.1.1;proto=xyz"), "xyz"),
+        arguments(singletonList("for=1.1.1.1;proto=xyz;"), "xyz"),
+        arguments(singletonList("for=1.1.1.1;proto=xyz,"), "xyz"),
+        arguments(singletonList("for=1.1.1.1;proto="), null),
+        arguments(singletonList("for=1.1.1.1;proto=;"), null),
+        arguments(singletonList("for=1.1.1.1;proto=,"), null),
+        arguments(singletonList("for=1.1.1.1;proto=\"xyz\""), "xyz"),
+        arguments(singletonList("for=1.1.1.1;proto=\"xyz\";"), "xyz"),
+        arguments(singletonList("for=1.1.1.1;proto=\"xyz\","), "xyz"),
+        arguments(singletonList("for=1.1.1.1;proto=\""), null),
+        arguments(singletonList("for=1.1.1.1;proto=\"\""), null),
+        arguments(singletonList("for=1.1.1.1;proto=\"\";"), null),
+        arguments(singletonList("for=1.1.1.1;proto=\"\","), null),
+        arguments(asList("for=1.1.1.1", "proto=xyz", "proto=abc"), "xyz"));
   }
 
   @ParameterizedTest
-  @ArgumentsSource(ForwardedProtoHeaderValues.class)
+  @MethodSource("forwardedProtoHeaderValues")
   @SuppressWarnings("MockitoDoSetup")
   void parseForwardedProtoHeader(List<String> values, String expectedScheme) {
     doReturn(emptyList()).when(getter).getHttpRequestHeader(REQUEST, "forwarded");
@@ -81,15 +75,11 @@ class ForwardedUrlSchemeProviderTest {
     assertThat(underTest.apply(REQUEST)).isEqualTo(expectedScheme);
   }
 
-  static final class ForwardedProtoHeaderValues implements ArgumentsProvider {
-
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext extensionContext) {
-      return Stream.of(
-          arguments(singletonList("xyz"), "xyz"),
-          arguments(singletonList("\"xyz\""), "xyz"),
-          arguments(singletonList("\""), null),
-          arguments(asList("xyz", "abc"), "xyz"));
-    }
+  private static Stream<Arguments> forwardedProtoHeaderValues() {
+    return Stream.of(
+        arguments(singletonList("xyz"), "xyz"),
+        arguments(singletonList("\"xyz\""), "xyz"),
+        arguments(singletonList("\""), null),
+        arguments(asList("xyz", "abc"), "xyz"));
   }
 }

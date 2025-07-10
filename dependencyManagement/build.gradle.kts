@@ -5,12 +5,12 @@ plugins {
 data class DependencySet(val group: String, val version: String, val modules: List<String>)
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.49.0"
-val otelContribVersion = "1.46.0-alpha"
+val otelSdkVersion = "1.51.0"
+val otelContribVersion = "1.47.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.26"
+val groovyVersion = "4.0.27"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -27,24 +27,24 @@ val DEPENDENCY_BOMS = listOf(
   // for some reason boms show up as runtime dependencies in license and vulnerability scans
   // even if they are only used by test dependencies, so not using junit bom since it is LGPL
 
-  "com.fasterxml.jackson:jackson-bom:2.19.0",
-  "com.squareup.okio:okio-bom:3.11.0", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
+  "com.fasterxml.jackson:jackson-bom:2.19.1",
+  "com.squareup.okio:okio-bom:3.15.0", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
   "com.google.guava:guava-bom:33.4.8-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
-  "org.testcontainers:testcontainers-bom:1.21.0"
+  "org.testcontainers:testcontainers-bom:1.21.3"
 )
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
-val errorProneVersion = "2.38.0"
-val byteBuddyVersion = "1.17.5"
+val errorProneVersion = "2.40.0"
+val byteBuddyVersion = "1.17.6"
 val asmVersion = "9.8"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.17"
-val semConvVersion = "1.32.0"
+val semConvVersion = "1.34.0"
 val semConvAlphaVersion =  semConvVersion.replaceFirst("(-rc.*)?$".toRegex(), "-alpha$1")
 
 val CORE_DEPENDENCIES = listOf(
@@ -81,7 +81,7 @@ val CORE_DEPENDENCIES = listOf(
 // There are dependencies included here that appear to have no usages, but are maintained at
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
-  "org.junit.jupiter:junit-jupiter-api:5.12.2",
+  "org.junit.jupiter:junit-jupiter-api:5.13.3",
   "org.spockframework:spock-core:2.4-M6-groovy-4.0",
   "org.spockframework:spock-junit4:2.4-M6-groovy-4.0",
 
@@ -91,16 +91,16 @@ val DEPENDENCIES = listOf(
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
   "com.uber.nullaway:nullaway:0.12.7",
-  "commons-beanutils:commons-beanutils:1.10.1",
+  "commons-beanutils:commons-beanutils:1.11.0",
   "commons-cli:commons-cli:1.9.0",
   "commons-codec:commons-codec:1.18.0",
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
-  "commons-fileupload:commons-fileupload:1.5",
+  "commons-fileupload:commons-fileupload:1.6.0",
   "commons-io:commons-io:2.19.0",
   "commons-lang:commons-lang:2.6",
   "commons-logging:commons-logging:1.3.5",
-  "commons-validator:commons-validator:1.9.0",
+  "commons-validator:commons-validator:1.10.0",
   "io.netty:netty:3.10.6.Final",
   "io.opentelemetry.contrib:opentelemetry-azure-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-aws-resources:${otelContribVersion}",
@@ -108,7 +108,7 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-gcp-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-baggage-processor:${otelContribVersion}",
-  "io.opentelemetry.proto:opentelemetry-proto:1.5.0-alpha",
+  "io.opentelemetry.proto:opentelemetry-proto:1.7.0-alpha",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
   "org.assertj:assertj-core:3.27.3",
   "org.awaitility:awaitility:4.3.0",

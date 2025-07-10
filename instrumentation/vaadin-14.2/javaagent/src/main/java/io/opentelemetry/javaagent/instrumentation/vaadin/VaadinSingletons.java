@@ -47,7 +47,7 @@ public class VaadinSingletons {
             // add context for tracking nested request handler calls
             .addContextCustomizer(
                 (context, vaadinHandlerRequest, startAttributes) ->
-                    context.with(REQUEST_HANDLER_CONTEXT_KEY, Boolean.TRUE))
+                    context.with(REQUEST_HANDLER_CONTEXT_KEY, true))
             .buildInstrumenter();
 
     RPC_INSTRUMENTER =

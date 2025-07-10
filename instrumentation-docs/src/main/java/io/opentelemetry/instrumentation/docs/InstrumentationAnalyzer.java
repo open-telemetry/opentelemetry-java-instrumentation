@@ -5,24 +5,29 @@
 
 package io.opentelemetry.instrumentation.docs;
 
-import static io.opentelemetry.instrumentation.docs.parsers.GradleParser.parseGradleFile;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
-import io.opentelemetry.instrumentation.docs.internal.DependencyInfo;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
+import io.opentelemetry.instrumentation.docs.parsers.GradleParser;
+import io.opentelemetry.instrumentation.docs.parsers.MetricParser;
+import io.opentelemetry.instrumentation.docs.parsers.ModuleParser;
+import io.opentelemetry.instrumentation.docs.parsers.SpanParser;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import io.opentelemetry.instrumentation.docs.utils.InstrumentationPath;
 import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
+/**
+ * Analyzes instrumentation modules by extracting version information, metrics, spans, and metadata
+ * from various source files.
+ */
 class InstrumentationAnalyzer {
 
   private static final Logger logger = Logger.getLogger(InstrumentationAnalyzer.class.getName());
@@ -34,81 +39,52 @@ class InstrumentationAnalyzer {
   }
 
   /**
-   * Converts a list of {@link InstrumentationPath} into a list of {@link InstrumentationModule},
+   * Analyzes all instrumentation modules found in the root directory.
    *
-   * @param paths the list of {@link InstrumentationPath} objects to be converted
-   * @return a list of {@link InstrumentationModule} objects with aggregated types
+   * @return a list of analyzed {@link InstrumentationModule}
+   * @throws IOException if file operations fail
    */
-  public static List<InstrumentationModule> convertToInstrumentationModules(
-      List<InstrumentationPath> paths) {
-    Map<String, InstrumentationModule> moduleMap = new HashMap<>();
-
-    for (InstrumentationPath path : paths) {
-      String key = path.group() + ":" + path.namespace() + ":" + path.instrumentationName();
-      if (!moduleMap.containsKey(key)) {
-        moduleMap.put(
-            key,
-            new InstrumentationModule.Builder()
-                .srcPath(path.srcPath().replace("/javaagent", "").replace("/library", ""))
-                .instrumentationName(path.instrumentationName())
-                .namespace(path.namespace())
-                .group(path.group())
-                .build());
-      }
-    }
-
-    return new ArrayList<>(moduleMap.values());
-  }
-
-  /**
-   * Traverses the given root directory to find all instrumentation paths and then analyzes them.
-   * Extracts version information from each instrumentation's build.gradle file, and other
-   * information from metadata.yaml files.
-   *
-   * @return a list of {@link InstrumentationModule}
-   */
-  List<InstrumentationModule> analyze() throws JsonProcessingException {
+  public List<InstrumentationModule> analyze() throws IOException {
     List<InstrumentationPath> paths = fileManager.getInstrumentationPaths();
-    List<InstrumentationModule> modules = convertToInstrumentationModules(paths);
+    List<InstrumentationModule> modules =
+        ModuleParser.convertToModules(fileManager.rootDir(), paths);
 
     for (InstrumentationModule module : modules) {
-      List<String> gradleFiles = fileManager.findBuildGradleFiles(module.getSrcPath());
-      analyzeVersions(gradleFiles, module);
-
-      String metadataFile = fileManager.getMetaDataFile(module.getSrcPath());
-      if (metadataFile != null) {
-        try {
-          module.setMetadata(YamlHelper.metaDataParser(metadataFile));
-        } catch (ValueInstantiationException e) {
-          logger.severe("Error parsing metadata file for " + module.getInstrumentationName());
-          throw e;
-        }
-      }
+      enrichModule(module);
     }
+
     return modules;
   }
 
-  void analyzeVersions(List<String> files, InstrumentationModule module) {
-    Map<InstrumentationType, Set<String>> versions = new HashMap<>();
-    for (String file : files) {
-      String fileContents = fileManager.readFileToString(file);
-      DependencyInfo results = null;
-
-      if (file.contains("/javaagent/")) {
-        results = parseGradleFile(fileContents, InstrumentationType.JAVAAGENT);
-        versions
-            .computeIfAbsent(InstrumentationType.JAVAAGENT, k -> new HashSet<>())
-            .addAll(results.versions());
-      } else if (file.contains("/library/")) {
-        results = parseGradleFile(fileContents, InstrumentationType.LIBRARY);
-        versions
-            .computeIfAbsent(InstrumentationType.LIBRARY, k -> new HashSet<>())
-            .addAll(results.versions());
-      }
-      if (results != null && results.minJavaVersionSupported() != null) {
-        module.setMinJavaVersion(results.minJavaVersionSupported());
-      }
+  private void enrichModule(InstrumentationModule module) throws IOException {
+    InstrumentationMetaData metaData = getMetadata(module);
+    if (metaData != null) {
+      module.setMetadata(metaData);
     }
-    module.setTargetVersions(versions);
+
+    module.setTargetVersions(getVersionInformation(module));
+    module.setMetrics(MetricParser.getMetrics(module, fileManager));
+    module.setSpans(SpanParser.getSpans(module, fileManager));
+  }
+
+  @Nullable
+  private InstrumentationMetaData getMetadata(InstrumentationModule module)
+      throws JsonProcessingException {
+    String metadataFile = fileManager.getMetaDataFile(module.getSrcPath());
+    if (metadataFile == null) {
+      return null;
+    }
+    try {
+      return YamlHelper.metaDataParser(metadataFile);
+    } catch (ValueInstantiationException e) {
+      logger.severe("Error parsing metadata file for " + module.getInstrumentationName());
+      throw e;
+    }
+  }
+
+  private Map<InstrumentationType, Set<String>> getVersionInformation(
+      InstrumentationModule module) {
+    List<String> gradleFiles = fileManager.findBuildGradleFiles(module.getSrcPath());
+    return GradleParser.extractVersions(gradleFiles, module);
   }
 }

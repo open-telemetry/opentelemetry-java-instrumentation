@@ -21,6 +21,10 @@ configurations.configureEach {
   if (name == "testRuntimeClasspath") {
     exclude(group = "io.opentelemetry", module = "opentelemetry-api-incubator")
   }
+  resolutionStrategy {
+    // use older version of opentelemetry-sdk-testing that does not depend on opentelemetry-api-incubator
+    force("io.opentelemetry:opentelemetry-sdk-testing:1.47.0")
+  }
 }
 
 testing {

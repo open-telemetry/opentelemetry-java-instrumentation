@@ -34,8 +34,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationContext> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   private ConfigurableApplicationContext appContext;
 

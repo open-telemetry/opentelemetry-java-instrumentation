@@ -15,7 +15,7 @@ dependencies {
   compileOnly("org.hibernate.reactive:hibernate-reactive-core:1.0.0.Final")
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
-  testInstrumentation(project(":instrumentation:vertx:vertx-sql-client-4.0:javaagent"))
+  testInstrumentation(project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent"))
 
   library("io.vertx:vertx-sql-client:4.4.2")
   compileOnly("io.vertx:vertx-codegen:4.4.2")

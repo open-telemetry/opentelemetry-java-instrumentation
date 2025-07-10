@@ -33,7 +33,7 @@ public abstract class AbstractOracleUcpInstrumentationTest {
   private static final Logger logger =
       LoggerFactory.getLogger(AbstractOracleUcpInstrumentationTest.class);
 
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.orcale-ucp-11.2";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.oracle-ucp-11.2";
   private static OracleContainer oracle;
 
   protected abstract InstrumentationExtension testing();

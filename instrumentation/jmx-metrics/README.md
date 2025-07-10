@@ -6,7 +6,7 @@ local [MBeans](https://docs.oracle.com/javase/tutorial/jmx/mbeans/index.html)
 available within the instrumented application. The required MBeans and corresponding metrics can be described using a YAML configuration file. The individual metric configurations allow precise metric selection and identification.
 
 The selected JMX metrics are reported using the Java Agent internal SDK. This means that they share the configuration and metric exporter with other metrics collected by the agent and are controlled by the same properties, for example `otel.metric.export.interval` or `otel.metrics.exporter`.
-The Open Telemetry resource description for the metrics reported by JMX Metric Insight will be the same as for other metrics exported by the SDK, while the instrumentation scope will be `io.opentelemetry.jmx`.
+The OpenTelemetry resource description for the metrics reported by JMX Metric Insight will be the same as for other metrics exported by the SDK, while the instrumentation scope will be `io.opentelemetry.jmx`.
 
 To control the time interval between MBean detection attempts, one can use the `otel.jmx.discovery.delay` property, which defines the number of milliseconds to elapse between the first and the next detection cycle. JMX Metric Insight may dynamically adjust the time interval between further attempts, but it guarantees that the MBean discovery will run perpetually.
 
@@ -29,7 +29,7 @@ No targets are enabled by default. The supported target environments are listed 
 - [camel](javaagent/camel.md)
 - [jetty](javaagent/jetty.md)
 - [kafka-broker](javaagent/kafka-broker.md)
-- [tomcat](javaagent/tomcat.md)
+- [tomcat](library/tomcat.md)
 - [wildfly](javaagent/wildfly.md)
 - [hadoop](javaagent/hadoop.md)
 
@@ -287,6 +287,8 @@ In the particular case where only two values are defined, we can simplify furthe
             off: '*'
 ```
 
+State metrics do not have a unit (nor source unit) and use an empty string `""` as unit.
+
 ### Metric attributes modifiers
 
 JMX attributes values may require modification or normalization in order to fit semantic conventions.
@@ -382,7 +384,7 @@ rules:                                # start of list of configuration rules
       <ATTRIBUTE2>: beanattr(<ATTR>)  # <ATTR> is used as the MBean attribute name to extract the value
       <ATTRIBUTE3>: const(<CONST>)    # <CONST> is used as a constant
     prefix: <METRIC_NAME_PREFIX>      # optional, useful for avoiding specifying metric names below
-    unit: <UNIT>                      # optional, redefines the default unit for the whole rule
+    unit: <UNIT>                      # optional, defines the default unit for the whole rule. must be defined at metric level if not set here
     type: <TYPE>                      # optional, redefines the default type for the whole rule
     dropNegativeValues: <BOOL>        # optional, redefines if negative values are dropped for the whole rule
     mapping:
@@ -390,13 +392,13 @@ rules:                                # start of list of configuration rules
         metric: <METRIC_NAME1>        # metric name will be <METRIC_NAME_PREFIX><METRIC_NAME1>
         type: <TYPE>                  # optional, the default type is gauge
         desc: <DESCRIPTION1>          # optional
-        unit: <UNIT1>                 # optional
+        unit: <UNIT1>                 # optional if unit is already defined on rule level (redefines it in such a case), required otherwise
         dropNegativeValues: <BOOL>    # optional, defines if negative values are dropped for the metric
         metricAttribute:              # optional, will be used in addition to the shared metric attributes above
           <ATTRIBUTE3>: const(<STR>)  # direct value for the metric attribute
       <BEANATTR2>:                    # use a.b to get access into CompositeData
         metric: <METRIC_NAME2>        # optional, the default is the MBean attribute name
-        unit: <UNIT2>                 # optional
+        unit: <UNIT2>                 # optional if unit is already defined on rule level (redefines it in such a case), required otherwise
       <BEANATTR3>:                    # metric name will be <METRIC_NAME_PREFIX><BEANATTR3>
       <BEANATTR4>:                    # metric name will be <METRIC_NAME_PREFIX><BEANATTR4>
   - beans:                            # alternatively, if multiple object names are needed

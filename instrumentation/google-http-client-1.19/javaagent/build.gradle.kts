@@ -15,3 +15,9 @@ muzzle {
 dependencies {
   library("com.google.http-client:google-http-client:1.19.0")
 }
+
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+}

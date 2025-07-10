@@ -25,7 +25,6 @@ import org.springframework.web.servlet.DispatcherServlet;
 @ConditionalOnEnabledInstrumentation(module = "spring-webmvc")
 @ConditionalOnClass({Filter.class, OncePerRequestFilter.class, DispatcherServlet.class})
 @Configuration
-@SuppressWarnings("OtelPrivateConstructorForUtilityClass")
 public class SpringWebMvc6InstrumentationAutoConfiguration {
 
   @Bean

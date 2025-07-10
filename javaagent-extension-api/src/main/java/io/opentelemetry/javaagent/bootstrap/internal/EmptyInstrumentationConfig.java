@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap.internal;
 
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import java.time.Duration;
 import java.util.List;
@@ -57,5 +58,11 @@ final class EmptyInstrumentationConfig implements InstrumentationConfig {
   @Override
   public Map<String, String> getMap(String name, Map<String, String> defaultValue) {
     return defaultValue;
+  }
+
+  @Nullable
+  @Override
+  public DeclarativeConfigProperties getDeclarativeConfig(String instrumentationName) {
+    return null;
   }
 }
