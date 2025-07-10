@@ -96,6 +96,12 @@ class ManifestResourceProviderTest {
                       assertThat(resource.getAttribute(SERVICE_NAME)).isEqualTo(t.expectedName);
                       assertThat(resource.getAttribute(SERVICE_VERSION))
                           .isEqualTo(t.expectedVersion);
+
+                      if (t.existing.getAttributes().isEmpty()) {
+                        // component provider does not consider existing resource
+                        assertThat(provider.createUnconditional().getAttributes())
+                            .isEqualTo(resource.getAttributes());
+                      }
                     }))
         .collect(Collectors.toList());
   }

@@ -41,6 +41,10 @@ public class SpringBootServiceVersionDetector implements ResourceProvider {
 
   @Override
   public Resource createResource(ConfigProperties config) {
+    return create();
+  }
+
+  Resource create() {
     return getServiceVersionFromBuildInfo()
         .map(
             version -> {
