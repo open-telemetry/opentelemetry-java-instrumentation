@@ -136,10 +136,7 @@ public class JaxrsAnnotationsInstrumentation implements TypeInstrumentation {
       @Nullable
       @CanIgnoreReturnValue
       public Object exit(@Nullable Object returnValue, @Nullable Throwable throwable) {
-        if (callDepth.decrementAndGet() > 0) {
-          return returnValue;
-        }
-        if (scope == null) {
+        if (callDepth.decrementAndGet() > 0 || scope == null) {
           return returnValue;
         }
         scope.close();
