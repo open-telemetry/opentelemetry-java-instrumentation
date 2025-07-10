@@ -28,6 +28,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
+import java.sql.JDBCType;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -303,6 +304,56 @@ class PreparedStatementParametersTest {
         url,
         table,
         statement -> statement.setString(1, "S"),
+        "S");
+  }
+
+  @ParameterizedTest
+  @MethodSource("preparedStatementStream")
+  void testObjectPreparedStatementParameter(
+      String system,
+      Connection connection,
+      String username,
+      String query,
+      String sanitizedQuery,
+      String spanName,
+      String url,
+      String table)
+      throws SQLException {
+    test(
+        system,
+        connection,
+        username,
+        query,
+        sanitizedQuery,
+        spanName,
+        url,
+        table,
+        statement -> statement.setObject(1, "S"),
+        "S");
+  }
+
+  @ParameterizedTest
+  @MethodSource("preparedStatementStream")
+  void testObjectWithTypePreparedStatementParameter(
+      String system,
+      Connection connection,
+      String username,
+      String query,
+      String sanitizedQuery,
+      String spanName,
+      String url,
+      String table)
+      throws SQLException {
+    test(
+        system,
+        connection,
+        username,
+        query,
+        sanitizedQuery,
+        spanName,
+        url,
+        table,
+        statement -> statement.setObject(1, "S", JDBCType.CHAR),
         "S");
   }
 
