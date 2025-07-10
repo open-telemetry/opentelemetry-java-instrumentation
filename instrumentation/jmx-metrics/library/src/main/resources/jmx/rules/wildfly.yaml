@@ -135,7 +135,7 @@ rules:
           wildfly.rollback.cause: const(system)
         desc: *desc
       # wildfly.transaction.committed
-      numberOfCommitedTransactions:
+      numberOfCommittedTransactions:
         metric: committed
         type: counter
         desc: The total number of transactions committed

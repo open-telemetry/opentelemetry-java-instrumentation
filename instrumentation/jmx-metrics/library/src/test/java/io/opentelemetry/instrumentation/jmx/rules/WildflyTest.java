@@ -190,6 +190,14 @@ public class WildflyTest extends TargetSystemTest {
                     .hasUnit("{transaction}")
                     // older versions do not report 'system' cause, hence non-strict assertion
                     .hasDataPointsWithOneAttribute(
-                        attributeWithAnyValue("wildfly.rollback.cause")));
+                        attributeWithAnyValue("wildfly.rollback.cause")))
+        .add(
+            "wildfly.transaction.committed",
+            metric ->
+                metric
+                    .isCounter()
+                    .hasDescription("The total number of transactions committed")
+                    .hasUnit("{transaction}")
+                    .hasDataPointsWithoutAttributes());
   }
 }
