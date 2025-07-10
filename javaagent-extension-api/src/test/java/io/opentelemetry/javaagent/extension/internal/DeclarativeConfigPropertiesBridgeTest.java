@@ -114,7 +114,12 @@ class DeclarativeConfigPropertiesBridgeTest {
         .isEqualTo(expectedMap);
   }
 
-  // tests for specific properties
+  @Test
+  void vendor() {
+    // verify vendor specific property names are preserved in unchanged form (prefix is not stripped
+    // as for otel.instrumentation.*)
+    assertThat(bridge.getBoolean("acme.full_name.preserved")).isTrue();
+  }
 
   @DisplayName("properties from the general instrumentation section in config.yaml")
   @Test

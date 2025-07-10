@@ -237,6 +237,6 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
     } else if (property.startsWith(OTEL_JAVA_AGENT_PREFIX)) {
       return "agent." + property.substring(OTEL_JAVA_AGENT_PREFIX.length()).replace('-', '_');
     }
-    return null;
+    return property;
   }
 }
