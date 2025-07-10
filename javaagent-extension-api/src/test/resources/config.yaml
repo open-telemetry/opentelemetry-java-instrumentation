@@ -8,10 +8,10 @@ instrumentation/development:
         - peer: 2.3.4.5
           service: BarService
     http:
-#      known_methods:
-#        - GET
-#        - POST
-#        - PUT
+      #      known_methods:
+      #        - GET
+      #        - POST
+      #        - PUT
       client:
         request_captured_headers:
           - Content-Type
@@ -27,6 +27,9 @@ instrumentation/development:
           - Content-Type
           - Content-Encoding
   java:
+    acme:
+      full_name:
+        preserved: true
     agent:
       experimental:
         indy: true
