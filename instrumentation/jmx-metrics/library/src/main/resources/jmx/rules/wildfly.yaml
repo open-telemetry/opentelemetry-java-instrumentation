@@ -12,11 +12,18 @@ rules:
         metric: created
         type: counter
         desc: The number of sessions created
-      # wildfly.session.count
+      # wildfly.session.active.count
       activeSessions:
-        metric: count
+        metric: active.count
         type: updowncounter
         desc: The number of active sessions
+      # wildfly.session.active.limit
+      maxActiveSessions:
+        metric: active.limit
+        type: updowncounter
+        desc: The maximum number of active sessions
+        # discard negative values used to indicate absence of limit
+        dropNegativeValues: true
       # wildfly.session.expired
       expiredSessions:
         metric: expired
@@ -39,7 +46,7 @@ rules:
       requestCount:
         metric: request.count
         unit: "{request}"
-        desc: The number of requests received
+        desc: The number of requests served
       # wildfly.request.duration.sum
       processingTime:
         metric: request.duration.sum

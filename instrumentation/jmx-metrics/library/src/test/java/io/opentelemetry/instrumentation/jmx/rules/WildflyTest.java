@@ -77,11 +77,19 @@ public class WildflyTest extends TargetSystemTest {
                     .hasUnit("{session}")
                     .hasDataPointsWithOneAttribute(deploymentAttribute))
         .add(
-            "wildfly.session.count",
+            "wildfly.session.active.count",
             metric ->
                 metric
                     .isUpDownCounter()
                     .hasDescription("The number of active sessions")
+                    .hasUnit("{session}")
+                    .hasDataPointsWithOneAttribute(deploymentAttribute))
+        .add(
+            "wildfly.session.active.limit",
+            metric ->
+                metric
+                    .isUpDownCounter()
+                    .hasDescription("The maximum number of active sessions")
                     .hasUnit("{session}")
                     .hasDataPointsWithOneAttribute(deploymentAttribute))
         .add(
@@ -106,7 +114,7 @@ public class WildflyTest extends TargetSystemTest {
             metric ->
                 metric
                     .isCounter()
-                    .hasDescription("The number of requests received")
+                    .hasDescription("The number of requests served")
                     .hasUnit("{request}")
                     .hasDataPointsWithAttributes(serverListenerAttributes))
         .add(
