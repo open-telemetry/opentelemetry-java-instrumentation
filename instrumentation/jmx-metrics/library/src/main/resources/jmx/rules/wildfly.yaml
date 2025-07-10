@@ -105,14 +105,14 @@ rules:
     prefix: wildfly.transaction.
     unit: "{transaction}"
     mapping:
-      # wildfly.transaction.inflight
+      # wildfly.transaction.count
       numberOfInflightTransactions:
-        metric: inflight
+        metric: count
         type: updowncounter
         desc: The number of in-flight transactions
-      # wildfly.transaction.count
+      # wildfly.transaction.created
       numberOfTransactions:
-        metric: count
+        metric: created
         type: &type counter
         desc: The total number of transactions created
       # wildfly.transaction.rollback

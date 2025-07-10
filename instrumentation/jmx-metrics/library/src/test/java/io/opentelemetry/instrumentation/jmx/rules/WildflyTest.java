@@ -166,7 +166,7 @@ public class WildflyTest extends TargetSystemTest {
                     .hasDataPointsWithOneAttribute(dataSourceAttribute))
         // transactions
         .add(
-            "wildfly.transaction.inflight",
+            "wildfly.transaction.count",
             metric ->
                 metric
                     .isUpDownCounter()
@@ -174,7 +174,7 @@ public class WildflyTest extends TargetSystemTest {
                     .hasUnit("{transaction}")
                     .hasDataPointsWithoutAttributes())
         .add(
-            "wildfly.transaction.count",
+            "wildfly.transaction.created",
             metric ->
                 metric
                     .isCounter()
