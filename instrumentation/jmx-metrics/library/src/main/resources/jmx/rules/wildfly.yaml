@@ -99,25 +99,28 @@ rules:
         unit: "{request}"
         desc: The number of connection requests that had to wait to obtain it
 
-#  - bean: jboss.as:subsystem=transactions
-#    type: counter
-#    prefix: wildfly.db.client.
-#    unit: "{transactions}"
-#    mapping:
-#      numberOfTransactions:
-#        metric: transaction.NumberOfTransactions
-#      numberOfApplicationRollbacks:
-#        metric: rollback.count
-#        metricAttribute:
-#          cause: const(application)
-#        desc: The total number of transactions rolled back
-#      numberOfResourceRollbacks:
-#        metric: rollback.count
-#        metricAttribute:
-#          cause: const(resource)
-#        desc: The total number of transactions rolled back
-#      numberOfSystemRollbacks:
-#        metric: rollback.count
-#        metricAttribute:
-#          cause: const(system)
-#        desc: The total number of transactions rolled back
+
+  - bean: jboss.as:subsystem=transactions
+    type: counter
+    prefix: wildfly.db.client.
+    unit: "{transactions}"
+    mapping:
+      # wildfly.db.client.transaction.count
+      numberOfTransactions:
+        metric: transaction.count
+      # wildfly.db.client.rollback.count
+      numberOfApplicationRollbacks:
+        metric: &metric rollback.count
+        metricAttribute:
+          wildfly.rollback.cause: const(application)
+        desc: &desc The total number of transactions rolled back
+      numberOfResourceRollbacks:
+        metric: *metric
+        metricAttribute:
+          wildfly.rollback.cause: const(resource)
+        desc: *desc
+      numberOfSystemRollbacks:
+        metric: *metric
+        metricAttribute:
+          wildfly.rollback.cause: const(system)
+        desc: *desc
