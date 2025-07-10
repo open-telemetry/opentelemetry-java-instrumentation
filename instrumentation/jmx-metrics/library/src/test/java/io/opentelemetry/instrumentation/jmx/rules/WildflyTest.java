@@ -24,10 +24,10 @@ public class WildflyTest extends TargetSystemTest {
   @ParameterizedTest
   @ValueSource(
       strings = {
-          // keep testing on old and deprecated version for compatibility
-          "jboss/wildfly:9.0.1.Final",
-          // recent/latest to be maintained as newer versions are released
-          "quay.io/wildfly/wildfly:36.0.1.Final-jdk21"
+        // keep testing on old and deprecated version for compatibility
+        "jboss/wildfly:9.0.1.Final",
+        // recent/latest to be maintained as newer versions are released
+        "quay.io/wildfly/wildfly:36.0.1.Final-jdk21"
       })
   public void testWildflyMetrics(String dockerImage) {
     List<String> yamlFiles = Collections.singletonList("wildfly.yaml");
