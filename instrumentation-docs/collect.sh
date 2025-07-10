@@ -73,9 +73,9 @@ readonly INSTRUMENTATIONS=(
 #  "vibur-dbcp-11.0:javaagent:test"
 #  "vibur-dbcp-11.0:javaagent:testStableSemconv"
 #  "spring:spring-batch-3.0:javaagent:test"
-#  "spring:spring-cloud-aws-3.0:javaagent:test"
-  "spring:spring-data:spring-data-1.8:javaagent:test"
-  "spring:spring-data:spring-data-1.8:javaagent:testStableSemconv"
+  "spring:spring-cloud-aws-3.0:javaagent:test"
+#  "spring:spring-data:spring-data-1.8:javaagent:test"
+#  "spring:spring-data:spring-data-1.8:javaagent:testStableSemconv"
 )
 
 readonly TELEMETRY_DIR_NAME=".telemetry"

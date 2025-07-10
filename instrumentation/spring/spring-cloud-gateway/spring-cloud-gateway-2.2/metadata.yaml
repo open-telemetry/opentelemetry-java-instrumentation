@@ -6,5 +6,6 @@ configurations:
   - name: otel.instrumentation.spring-cloud-gateway.experimental-span-attributes
     type: boolean
     default: false
-    description: Enables experimental `spring-cloud-gateway.route` attributes (e.g.,
+    description: >
+      Enables experimental `spring-cloud-gateway.route` attributes (e.g.,
       `spring-cloud-gateway.route.id`, `spring-cloud-gateway.route.uri`, etc.) on spans.
