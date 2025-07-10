@@ -178,7 +178,7 @@ public class WildflyTest extends TargetSystemTest {
             metric ->
                 metric
                     .isCounter()
-                    .hasDescription("The total number of transactions")
+                    .hasDescription("The total number of transactions created")
                     .hasUnit("{transaction}")
                     .hasDataPointsWithoutAttributes())
         .add(

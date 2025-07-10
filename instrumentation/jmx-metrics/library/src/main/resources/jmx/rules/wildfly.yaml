@@ -114,7 +114,7 @@ rules:
       numberOfTransactions:
         metric: count
         type: &type counter
-        desc: The total number of transactions
+        desc: The total number of transactions created
       # wildfly.transaction.rollback
       numberOfApplicationRollbacks:
         metric: &metric rollback
