@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 
-class DeclarativeConfigTest {
+class ResourceDeclarativeConfigTest {
 
   @Test
   void endToEnd() {
