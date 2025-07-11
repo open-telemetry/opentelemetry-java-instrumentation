@@ -1,0 +1,2 @@
+description: >
+  This instrumentation provides a library integeration that enables producer and consumer spans and metrics for Apache Kafka 2.6+ clients.
