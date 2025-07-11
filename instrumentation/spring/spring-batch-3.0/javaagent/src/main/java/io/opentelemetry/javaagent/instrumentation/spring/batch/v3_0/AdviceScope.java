@@ -27,14 +27,14 @@ public final class AdviceScope {
   }
 
   @Nullable
-  public static AdviceScope enter(String itemName) {
+  public static AdviceScope enter(String itemOperationName) {
     Context parentContext = Context.current();
     ChunkContext chunkContext = getChunkContext(parentContext);
     if (chunkContext == null || !shouldTraceItems()) {
       return null;
     }
 
-    String item = ItemSingletons.itemName(chunkContext, itemName);
+    String item = ItemSingletons.itemName(chunkContext, itemOperationName);
     if (!itemInstrumenter().shouldStart(parentContext, item)) {
       return null;
     }

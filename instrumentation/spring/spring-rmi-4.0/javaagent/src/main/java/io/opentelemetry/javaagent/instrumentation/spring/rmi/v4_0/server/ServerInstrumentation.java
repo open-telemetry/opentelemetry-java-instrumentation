@@ -75,10 +75,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
       }
 
       public void exit(@Nullable Throwable throwable) {
-        if (callDepth.decrementAndGet() > 0) {
-          return;
-        }
-        if (scope == null) {
+        if (callDepth.decrementAndGet() > 0 || scope == null) {
           return;
         }
         scope.close();
