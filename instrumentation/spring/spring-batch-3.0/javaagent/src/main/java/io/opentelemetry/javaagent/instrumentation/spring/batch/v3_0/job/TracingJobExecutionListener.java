@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.job;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.job.JobSingletons.jobInstrumenter;
 
 import io.opentelemetry.context.Context;
@@ -25,7 +24,7 @@ public final class TracingJobExecutionListener implements JobExecutionListener, 
 
   @Override
   public void beforeJob(JobExecution jobExecution) {
-    Context parentContext = currentContext();
+    Context parentContext = Context.current();
     if (!jobInstrumenter().shouldStart(parentContext, jobExecution)) {
       return;
     }

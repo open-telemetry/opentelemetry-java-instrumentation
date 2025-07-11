@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.SpringBatchInstrumentationConfig.shouldTraceItems;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.item.ItemSingletons.getChunkContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.item.ItemSingletons.itemInstrumenter;
@@ -29,7 +28,7 @@ public class AdviceScope {
 
   @Nullable
   public static AdviceScope enter(String itemName) {
-    Context parentContext = currentContext();
+    Context parentContext = Context.current();
     ChunkContext chunkContext = getChunkContext(parentContext);
     if (chunkContext == null || !shouldTraceItems()) {
       return null;

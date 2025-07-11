@@ -16,10 +16,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.spring.webmvc.IsGrailsHandler;
@@ -72,10 +72,10 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
           return null;
         }
 
-        Context parentContext = Java8BytecodeBridge.currentContext();
+        Context parentContext = Context.current();
 
         // don't start a new top-level span
-        if (!Java8BytecodeBridge.spanFromContext(parentContext).getSpanContext().isValid()) {
+        if (!Span.fromContext(parentContext).getSpanContext().isValid()) {
           return null;
         }
 

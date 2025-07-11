@@ -15,7 +15,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.jms.JmsReceiveContextHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -66,7 +65,7 @@ public class SpringJmsMessageListenerInstrumentation implements TypeInstrumentat
 
       @Nullable
       public static AdviceScope enter(Message message) {
-        Context parentContext = Java8BytecodeBridge.currentContext();
+        Context parentContext = Context.current();
         Context receiveContext = JmsReceiveContextHolder.getReceiveContext(parentContext);
         if (receiveContext != null) {
           parentContext = receiveContext;

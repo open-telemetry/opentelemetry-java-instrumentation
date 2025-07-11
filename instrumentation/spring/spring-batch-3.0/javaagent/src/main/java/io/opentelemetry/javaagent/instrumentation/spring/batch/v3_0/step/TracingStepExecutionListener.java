@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.step;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.step.StepSingletons.stepInstrumenter;
 
 import io.opentelemetry.context.Context;
@@ -26,7 +25,7 @@ public final class TracingStepExecutionListener implements StepExecutionListener
 
   @Override
   public void beforeStep(StepExecution stepExecution) {
-    Context parentContext = currentContext();
+    Context parentContext = Context.current();
     if (!stepInstrumenter().shouldStart(parentContext, stepExecution)) {
       return;
     }

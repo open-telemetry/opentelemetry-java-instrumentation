@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.spring.ws.v2_0.SpringWsSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
@@ -71,7 +70,7 @@ public class AnnotatedMethodInstrumentation implements TypeInstrumentation {
           return new AdviceScope(callDepth, null, null, null);
         }
 
-        Context parentContext = currentContext();
+        Context parentContext = Context.current();
         SpringWsRequest request = SpringWsRequest.create(codeClass, methodName);
         if (!instrumenter().shouldStart(parentContext, request)) {
           return new AdviceScope(callDepth, null, null, null);

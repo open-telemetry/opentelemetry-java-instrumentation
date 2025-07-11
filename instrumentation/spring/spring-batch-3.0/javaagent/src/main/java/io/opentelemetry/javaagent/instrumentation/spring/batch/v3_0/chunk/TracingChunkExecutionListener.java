@@ -5,8 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.chunk;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.rootContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.SpringBatchInstrumentationConfig.shouldCreateRootSpanForChunk;
 import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.chunk.ChunkSingletons.chunkInstrumenter;
 
@@ -31,7 +29,7 @@ public final class TracingChunkExecutionListener implements ChunkListener, Order
 
   @Override
   public void beforeChunk(ChunkContext chunkContext) {
-    Context parentContext = shouldCreateRootSpanForChunk() ? rootContext() : currentContext();
+    Context parentContext = shouldCreateRootSpanForChunk() ? Context.root() : Context.current();
     chunkContextAndBuilder = new ChunkContextAndBuilder(chunkContext, builderClass);
     if (!chunkInstrumenter().shouldStart(parentContext, chunkContextAndBuilder)) {
       return;

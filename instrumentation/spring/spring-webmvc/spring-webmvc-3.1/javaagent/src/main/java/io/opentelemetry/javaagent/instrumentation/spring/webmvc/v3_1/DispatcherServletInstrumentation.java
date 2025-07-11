@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.webmvc.v3_1.SpringWebMvcSingletons.modelAndViewInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
@@ -88,7 +87,7 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope enter(ModelAndView mv) {
-        Context parentContext = currentContext();
+        Context parentContext = Context.current();
         if (!modelAndViewInstrumenter().shouldStart(parentContext, mv)) {
           return null;
         }
