@@ -211,7 +211,6 @@ public final class InstrumentationModuleInstaller {
       AgentBuilder.Identified.Extendable extendableAgentBuilder =
           setTypeMatcher(agentBuilder, instrumentationModule, typeInstrumentation)
               .and(muzzleMatcher)
-              .transform(ConstantAdjuster.instance())
               .transform(
                   (builder, typeDescription, classLoader, module, protectionDomain) -> {
                     if (JavaModule.isSupported()
