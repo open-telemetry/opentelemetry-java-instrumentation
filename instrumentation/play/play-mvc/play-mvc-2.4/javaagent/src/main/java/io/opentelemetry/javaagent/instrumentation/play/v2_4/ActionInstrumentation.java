@@ -49,14 +49,14 @@ public class ActionInstrumentation implements TypeInstrumentation {
   public static class ApplyAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static ActionScope onEnter(
+    public static AdviceScope onEnter(
         @Advice.This Object target,
         @Advice.Origin Method method,
         @Advice.Argument(0) Request<?> req) {
       Context parentContext = currentContext();
 
       ActionData actionData = new ActionData(target.getClass(), method);
-      return ActionScope.start(parentContext, actionData);
+      return AdviceScope.start(parentContext, actionData);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -65,7 +65,7 @@ public class ActionInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable,
         @Advice.Argument(0) Request<?> req,
         @Advice.Return(readOnly = false) Future<Result> responseFuture,
-        @Advice.Enter ActionScope actionScope) {
+        @Advice.Enter AdviceScope actionScope) {
       if (actionScope == null || actionScope.getScope() == null) {
         return;
       }

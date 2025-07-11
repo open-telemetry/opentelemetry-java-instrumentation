@@ -11,13 +11,13 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 
 /** Container used to carry state between enter and exit advices */
-public final class ActionScope {
+public final class AdviceScope {
 
   private final ActionData actionData;
   private final Context context;
   private final Scope scope;
 
-  public ActionScope(Context context, Scope scope, ActionData actionData) {
+  public AdviceScope(Context context, Scope scope, ActionData actionData) {
     this.actionData = actionData;
     this.context = context;
     this.scope = scope;
@@ -31,13 +31,13 @@ public final class ActionScope {
     return scope;
   }
 
-  public static ActionScope start(Context parentContext, ActionData actionData) {
+  public static AdviceScope start(Context parentContext, ActionData actionData) {
     if (!instrumenter().shouldStart(parentContext, actionData)) {
       return null;
     }
 
     Context context = instrumenter().start(parentContext, actionData);
-    return new ActionScope(context, context.makeCurrent(), actionData);
+    return new AdviceScope(context, context.makeCurrent(), actionData);
   }
 
   public void closeScope() {
