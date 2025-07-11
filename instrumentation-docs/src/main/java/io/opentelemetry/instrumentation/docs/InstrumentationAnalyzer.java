@@ -7,19 +7,17 @@ package io.opentelemetry.instrumentation.docs;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
-import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
-import io.opentelemetry.instrumentation.docs.parsers.EmittedMetricsParser;
 import io.opentelemetry.instrumentation.docs.parsers.GradleParser;
+import io.opentelemetry.instrumentation.docs.parsers.MetricParser;
 import io.opentelemetry.instrumentation.docs.parsers.ModuleParser;
 import io.opentelemetry.instrumentation.docs.parsers.SpanParser;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import io.opentelemetry.instrumentation.docs.utils.InstrumentationPath;
 import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -65,7 +63,7 @@ class InstrumentationAnalyzer {
     }
 
     module.setTargetVersions(getVersionInformation(module));
-    module.setMetrics(MetricsProcessor.getMetrics(module, fileManager));
+    module.setMetrics(MetricParser.getMetrics(module, fileManager));
     module.setSpans(SpanParser.getSpans(module, fileManager));
   }
 
@@ -88,27 +86,5 @@ class InstrumentationAnalyzer {
       InstrumentationModule module) {
     List<String> gradleFiles = fileManager.findBuildGradleFiles(module.getSrcPath());
     return GradleParser.extractVersions(gradleFiles, module);
-  }
-
-  /** Handles processing of metrics data for instrumentation modules. */
-  static class MetricsProcessor {
-
-    public static Map<String, List<EmittedMetrics.Metric>> getMetrics(
-        InstrumentationModule module, FileManager fileManager) {
-      Map<String, EmittedMetrics> metrics =
-          EmittedMetricsParser.getMetricsFromFiles(fileManager.rootDir(), module.getSrcPath());
-
-      Map<String, List<EmittedMetrics.Metric>> result = new HashMap<>();
-      metrics.entrySet().stream()
-          .filter(MetricsProcessor::hasValidMetrics)
-          .forEach(entry -> result.put(entry.getKey(), entry.getValue().getMetrics()));
-      return result;
-    }
-
-    private static boolean hasValidMetrics(Map.Entry<String, EmittedMetrics> entry) {
-      return entry.getValue() != null && entry.getValue().getMetrics() != null;
-    }
-
-    private MetricsProcessor() {}
   }
 }

@@ -1,4 +1,8 @@
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.RequestBody.Companion.asRequestBody
 import java.time.Duration
+import java.util.Base64
 
 plugins {
   id("idea")
@@ -14,6 +18,12 @@ plugins {
   See https://github.com/gradle/gradle/issues/17559#issuecomment-1327991512
    */
   id("org.graalvm.buildtools.native") apply false
+}
+
+buildscript {
+  dependencies {
+    classpath("com.squareup.okhttp3:okhttp:5.1.0")
+  }
 }
 
 apply(from = "version.gradle.kts")
@@ -111,6 +121,8 @@ if (gradle.startParameter.taskNames.contains("listTestsInPartition")) {
 }
 
 tasks {
+  val stableVersion = version.toString().replace("-alpha", "")
+
   val generateFossaConfiguration by registering {
     group = "Help"
     description = "Generate .fossa.yml configuration file"
@@ -138,6 +150,49 @@ tasks {
         writer.println("    configurations-only:")
         writer.println("      # consumer will only be exposed to these dependencies")
         writer.println("      - runtimeClasspath")
+      }
+    }
+  }
+
+  val generateReleaseBundle by registering(Zip::class) {
+    dependsOn(getTasksByName("publishAllPublicationToReleaseRepoRepository", true))
+    from("releaseRepo")
+
+    exclude("**/maven-metadata.*")
+    duplicatesStrategy = DuplicatesStrategy.FAIL
+    includeEmptyDirs = false
+    archiveFileName.set("release-bundle-$stableVersion.zip")
+  }
+
+  val uploadReleaseBundle by registering {
+    dependsOn(generateReleaseBundle)
+
+    val username = System.getenv("SONATYPE_USER") ?: throw GradleException("Sonatype user not set")
+    val password = System.getenv("SONATYPE_KEY") ?: throw GradleException("Sonatype key not set")
+    val token = Base64.getEncoder().encodeToString("$username:$password".toByteArray())
+
+    var query = "?name=opentelemetry-java-instrumentation-$stableVersion"
+    query += "&publishingType=AUTOMATIC"
+
+    doFirst {
+      val bundle = generateReleaseBundle.get().outputs.files.singleFile
+      val httpClient = OkHttpClient()
+
+      val request = okhttp3.Request.Builder()
+        .url("https://central.sonatype.com/api/v1/publisher/upload$query")
+        .post(
+          okhttp3.MultipartBody.Builder().addFormDataPart(
+            "bundle",
+            bundle.name,
+            bundle.asRequestBody("application/zip".toMediaType())
+          ).build()
+        )
+        .header("authorization", "Bearer $token")
+        .build()
+
+      httpClient.newCall(request).execute().use { response ->
+        if (response.code != 201) throw GradleException("Unexpected response status ${response.code} while uploading the release bundle")
+        println("Uploaded deployment ${response.body.string()}")
       }
     }
   }

@@ -11,11 +11,11 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsConstants;
 import java.lang.reflect.Method;
+import javax.annotation.Nullable;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.UriInfo;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.asm.Advice.Local;
 
 /**
  * Jersey specific context instrumentation.
@@ -35,17 +35,39 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
   @SuppressWarnings("unused")
   public static class ContainerRequestContextAdvice {
 
+    public static class AdviceScope {
+      private final Jaxrs2HandlerData handlerData;
+      private final Context context;
+      private final Scope scope;
+
+      public AdviceScope(
+          Class<?> resourceClass, Method method, ContainerRequestContext requestContext) {
+        handlerData = new Jaxrs2HandlerData(resourceClass, method);
+        context =
+            Jaxrs2RequestContextHelper.createOrUpdateAbortSpan(
+                instrumenter(), requestContext, handlerData);
+        scope = context != null ? context.makeCurrent() : null;
+      }
+
+      public void exit(@Nullable Throwable throwable) {
+        if (scope == null) {
+          return;
+        }
+        scope.close();
+        instrumenter().end(context, handlerData, null, throwable);
+      }
+    }
+
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void decorateAbortSpan(
-        @Advice.This ContainerRequestContext requestContext,
-        @Local("otelHandlerData") Jaxrs2HandlerData handlerData,
-        @Local("otelContext") Context context,
-        @Local("otelScope") Scope scope) {
+    public static AdviceScope decorateAbortSpan(
+        @Advice.This ContainerRequestContext requestContext) {
+
       UriInfo uriInfo = requestContext.getUriInfo();
 
       if (requestContext.getProperty(JaxrsConstants.ABORT_HANDLED) != null
           || !(uriInfo instanceof ResourceInfo)) {
-        return;
+        return null;
       }
 
       ResourceInfo resourceInfo = (ResourceInfo) uriInfo;
@@ -53,29 +75,18 @@ public class JerseyRequestContextInstrumentation extends AbstractRequestContextI
       Class<?> resourceClass = resourceInfo.getResourceClass();
 
       if (resourceClass == null || method == null) {
-        return;
+        return null;
       }
 
-      handlerData = new Jaxrs2HandlerData(resourceClass, method);
-      context =
-          Jaxrs2RequestContextHelper.createOrUpdateAbortSpan(
-              instrumenter(), requestContext, handlerData);
-      if (context != null) {
-        scope = context.makeCurrent();
-      }
+      return new AdviceScope(resourceClass, method, requestContext);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Local("otelHandlerData") Jaxrs2HandlerData handlerData,
-        @Local("otelContext") Context context,
-        @Local("otelScope") Scope scope,
-        @Advice.Thrown Throwable throwable) {
-      if (scope == null) {
-        return;
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.exit(throwable);
       }
-      scope.close();
-      instrumenter().end(context, handlerData, null, throwable);
     }
   }
 }

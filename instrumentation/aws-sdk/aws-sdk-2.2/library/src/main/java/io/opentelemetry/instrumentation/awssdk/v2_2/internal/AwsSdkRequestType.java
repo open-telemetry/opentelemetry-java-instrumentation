@@ -26,7 +26,9 @@ enum AwsSdkRequestType {
        * Only one of TopicArn and TargetArn are permitted on an SNS request.
        */
       request(AttributeKeys.MESSAGING_DESTINATION_NAME.getKey(), "TargetArn"),
-      request(AttributeKeys.MESSAGING_DESTINATION_NAME.getKey(), "TopicArn")),
+      request(AttributeKeys.MESSAGING_DESTINATION_NAME.getKey(), "TopicArn"),
+      request(AttributeKeys.AWS_SNS_TOPIC_ARN.getKey(), "TopicArn"),
+      response(AttributeKeys.AWS_SNS_TOPIC_ARN.getKey(), "TopicArn")),
   STEPFUNCTIONS(
       request(AttributeKeys.AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN.getKey(), "stateMachineArn"),
       request(AttributeKeys.AWS_STEP_FUNCTIONS_ACTIVITY_ARN.getKey(), "activityArn"));
@@ -47,6 +49,7 @@ enum AwsSdkRequestType {
     // Copied from AwsIncubatingAttributes
     static final AttributeKey<String> AWS_SECRETSMANAGER_SECRET_ARN =
         stringKey("aws.secretsmanager.secret.arn");
+    static final AttributeKey<String> AWS_SNS_TOPIC_ARN = stringKey("aws.sns.topic.arn");
     static final AttributeKey<String> AWS_STEP_FUNCTIONS_ACTIVITY_ARN =
         stringKey("aws.step_functions.activity.arn");
     static final AttributeKey<String> AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN =
