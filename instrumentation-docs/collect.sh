@@ -8,66 +8,64 @@ set -euo pipefail
 
 readonly INSTRUMENTATIONS=(
   # <module path (colon-separated)> : <javaagent|library> : [ gradle-task-suffix ]
-#  "activej-http-6.0:javaagent:test"
-#  "akka:akka-http-10.0:javaagent:test"
-#  "apache-httpasyncclient-4.1:javaagent:test"
-#  "alibaba-druid-1.0:javaagent:test"
-#  "alibaba-druid-1.0:javaagent:testStableSemconv"
-#  "apache-dbcp-2.0:javaagent:test"
-#  "apache-dbcp-2.0:javaagent:testStableSemconv"
-#  "apache-httpclient:apache-httpclient-2.0:javaagent:test"
-#  "apache-httpclient:apache-httpclient-4.0:javaagent:test"
-#  "apache-httpclient:apache-httpclient-4.3:library:test"
-#  "apache-httpclient:apache-httpclient-5.0:javaagent:test"
-#  "apache-dubbo-2.7:javaagent:testDubbo"
-#  "c3p0-0.9:javaagent:test"
-#  "c3p0-0.9:javaagent:testStableSemconv"
-#  "clickhouse-client-0.5:javaagent:test"
-#  "clickhouse-client-0.5:javaagent:testStableSemconv"
-#  "aws-sdk:aws-sdk-1.11:javaagent:test"
-#  "google-http-client-1.19:javaagent:test"
-#  "http-url-connection:javaagent:test"
-#  "java-http-client:javaagent:test"
-#  "jetty-httpclient:jetty-httpclient-9.2:javaagent:test"
-#  "jetty-httpclient:jetty-httpclient-12.0:javaagent:test"
-#  "jodd-http-4.2:javaagent:test"
-#  "netty:netty-3.8:javaagent:test"
-#  "netty:netty-4.0:javaagent:test"
-#  "netty:netty-4.1:javaagent:test"
-#  "okhttp:okhttp-2.2:javaagent:test"
-#  "okhttp:okhttp-3.0:javaagent:test"
-#  "pekko:pekko-http-1.0:javaagent:test"
-#  "play:play-ws:play-ws-1.0:javaagent:test"
-#  "play:play-ws:play-ws-2.0:javaagent:test"
-#  "play:play-ws:play-ws-2.1:javaagent:test"
-#  "reactor:reactor-netty:reactor-netty-0.9:javaagent:test"
-#  "reactor:reactor-netty:reactor-netty-1.0:javaagent:test"
-#  "spring:spring-webflux:spring-webflux-5.0:javaagent:test"
-#  "vertx:vertx-http-client:vertx-http-client-3.0:javaagent:test"
-#  "vertx:vertx-http-client:vertx-http-client-4.0:javaagent:test"
-#  "vertx:vertx-http-client:vertx-http-client-5.0:javaagent:test"
-#  "vertx:vertx-redis-client-4.0:javaagent:test"
-#  "vertx:vertx-redis-client-4.0:javaagent:testStableSemconv"
-#  "vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent:test"
-#  "vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent:testStableSemconv"
-#  "vertx:vertx-sql-client:vertx-sql-client-5.0:javaagent:test"
-#  "vertx:vertx-sql-client:vertx-sql-client-5.0:javaagent:testStableSemconv"
-#  "aws-sdk:aws-sdk-1.11:javaagent:testStableSemconv"
-#  "aws-sdk:aws-sdk-2.2:javaagent:test"
-#  "aws-sdk:aws-sdk-2.2:javaagent:testStableSemconv"
-#  "aws-sdk:aws-sdk-2.2:javaagent:testBedrockRuntime"
-#  "hikaricp-3.0:javaagent:test"
-#  "hikaricp-3.0:javaagent:testStableSemconv"
-#  "tomcat:tomcat-jdbc:javaagent:test"
-#  "tomcat:tomcat-jdbc:javaagent:testStableSemconv"
-#  "oshi:javaagent:test"
-#  "oshi:javaagent:testExperimental"
-#  "vibur-dbcp-11.0:javaagent:test"
-#  "vibur-dbcp-11.0:javaagent:testStableSemconv"
+  "activej-http-6.0:javaagent:test"
+  "akka:akka-http-10.0:javaagent:test"
+  "apache-httpasyncclient-4.1:javaagent:test"
+  "alibaba-druid-1.0:javaagent:test"
+  "alibaba-druid-1.0:javaagent:testStableSemconv"
+  "apache-dbcp-2.0:javaagent:test"
+  "apache-dbcp-2.0:javaagent:testStableSemconv"
+  "apache-httpclient:apache-httpclient-2.0:javaagent:test"
+  "apache-httpclient:apache-httpclient-4.0:javaagent:test"
+  "apache-httpclient:apache-httpclient-4.3:library:test"
+  "apache-httpclient:apache-httpclient-5.0:javaagent:test"
+  "apache-dubbo-2.7:javaagent:testDubbo"
+  "c3p0-0.9:javaagent:test"
+  "c3p0-0.9:javaagent:testStableSemconv"
+  "clickhouse-client-0.5:javaagent:test"
+  "clickhouse-client-0.5:javaagent:testStableSemconv"
+  "aws-sdk:aws-sdk-1.11:javaagent:test"
+  "google-http-client-1.19:javaagent:test"
+  "http-url-connection:javaagent:test"
+  "java-http-client:javaagent:test"
+  "jetty-httpclient:jetty-httpclient-9.2:javaagent:test"
+  "jetty-httpclient:jetty-httpclient-12.0:javaagent:test"
+  "jodd-http-4.2:javaagent:test"
+  "netty:netty-3.8:javaagent:test"
+  "netty:netty-4.0:javaagent:test"
+  "netty:netty-4.1:javaagent:test"
+  "okhttp:okhttp-2.2:javaagent:test"
+  "okhttp:okhttp-3.0:javaagent:test"
+  "pekko:pekko-http-1.0:javaagent:test"
+  "play:play-ws:play-ws-1.0:javaagent:test"
+  "play:play-ws:play-ws-2.0:javaagent:test"
+  "play:play-ws:play-ws-2.1:javaagent:test"
+  "reactor:reactor-netty:reactor-netty-0.9:javaagent:test"
+  "reactor:reactor-netty:reactor-netty-1.0:javaagent:test"
+  "spring:spring-webflux:spring-webflux-5.0:javaagent:test"
+  "vertx:vertx-http-client:vertx-http-client-3.0:javaagent:test"
+  "vertx:vertx-http-client:vertx-http-client-4.0:javaagent:test"
+  "vertx:vertx-http-client:vertx-http-client-5.0:javaagent:test"
+  "vertx:vertx-redis-client-4.0:javaagent:test"
+  "vertx:vertx-redis-client-4.0:javaagent:testStableSemconv"
+  "vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent:test"
+  "vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent:testStableSemconv"
+  "vertx:vertx-sql-client:vertx-sql-client-5.0:javaagent:test"
+  "vertx:vertx-sql-client:vertx-sql-client-5.0:javaagent:testStableSemconv"
+  "aws-sdk:aws-sdk-1.11:javaagent:testStableSemconv"
+  "aws-sdk:aws-sdk-2.2:javaagent:test"
+  "aws-sdk:aws-sdk-2.2:javaagent:testStableSemconv"
+  "aws-sdk:aws-sdk-2.2:javaagent:testBedrockRuntime"
+  "hikaricp-3.0:javaagent:test"
+  "hikaricp-3.0:javaagent:testStableSemconv"
+  "tomcat:tomcat-jdbc:javaagent:test"
+  "tomcat:tomcat-jdbc:javaagent:testStableSemconv"
+  "oshi:javaagent:test"
+  "oshi:javaagent:testExperimental"
+  "vibur-dbcp-11.0:javaagent:test"
+  "vibur-dbcp-11.0:javaagent:testStableSemconv"
   "elasticsearch:elasticsearch-api-client-7.16:javaagent:test"
   "elasticsearch:elasticsearch-api-client-7.16:javaagent:testStableSemconv"
-  "elasticsearch:elasticsearch-rest-5.0:javaagent:test"
-  "elasticsearch:elasticsearch-rest-6.4:javaagent:test"
   "elasticsearch:elasticsearch-rest-7.0:javaagent:test"
   "elasticsearch:elasticsearch-transport-5.0:javaagent:test"
   "elasticsearch:elasticsearch-transport-5.0:javaagent:testStableSemconv"
@@ -87,6 +85,8 @@ readonly INSTRUMENTATIONS=(
 )
 
 readonly COLIMA_INSTRUMENTATIONS=(
+  "elasticsearch:elasticsearch-rest-6.4:javaagent:test"
+  "elasticsearch:elasticsearch-rest-5.0:javaagent:test"
   "oracle-ucp-11.2:javaagent:test"
   "oracle-ucp-11.2:javaagent:testStableSemconv"
 )
@@ -235,18 +235,18 @@ main() {
   done < <(process_descriptors "${INSTRUMENTATIONS[@]}")
   run_gradle_tasks "${gradle_tasks[@]}"
 
-#  # Setup colima for Oracle UCP tests if needed
-#  setup_colima
-#
-#  # Process colima-specific instrumentations
-#  echo "Processing colima instrumentations..."
-#  gradle_tasks=()
-#  while IFS= read -r line; do
-#    gradle_tasks+=("$line")
-#  done < <(process_descriptors "${COLIMA_INSTRUMENTATIONS[@]}")
-#  run_gradle_tasks "${gradle_tasks[@]}"
-#
-#  colima stop
+  # Setup colima if needed
+  setup_colima
+
+  # Process colima-specific instrumentations
+  echo "Processing colima instrumentations..."
+  gradle_tasks=()
+  while IFS= read -r line; do
+    gradle_tasks+=("$line")
+  done < <(process_descriptors "${COLIMA_INSTRUMENTATIONS[@]}")
+  run_gradle_tasks "${gradle_tasks[@]}"
+
+  colima stop
 
   # uncomment the next line to remove all .telemetry directories
   #find_and_remove_all_telemetry

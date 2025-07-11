@@ -224,15 +224,16 @@ public abstract class AbstractElasticsearchTransportClientTest
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, getAddress()),
-                            equalTo(NETWORK_PEER_PORT, getPort()),
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "CreateIndexAction"),
-                            equalTo(ELASTICSEARCH_ACTION, experimental("CreateIndexAction")),
-                            equalTo(ELASTICSEARCH_REQUEST, experimental("CreateIndexRequest")),
-                            equalTo(ELASTICSEARCH_REQUEST_INDICES, experimental(indexName)))),
+                            addNetworkTypeAttribute(
+                                equalTo(NETWORK_PEER_ADDRESS, getAddress()),
+                                equalTo(NETWORK_PEER_PORT, getPort()),
+                                equalTo(
+                                    maybeStable(DB_SYSTEM),
+                                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                                equalTo(maybeStable(DB_OPERATION), "CreateIndexAction"),
+                                equalTo(ELASTICSEARCH_ACTION, experimental("CreateIndexAction")),
+                                equalTo(ELASTICSEARCH_REQUEST, experimental("CreateIndexRequest")),
+                                equalTo(ELASTICSEARCH_REQUEST_INDICES, experimental(indexName))))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -253,29 +254,33 @@ public abstract class AbstractElasticsearchTransportClientTest
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, getAddress()),
-                            equalTo(NETWORK_PEER_PORT, getPort()),
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "IndexAction"),
-                            equalTo(ELASTICSEARCH_ACTION, experimental("IndexAction")),
-                            equalTo(ELASTICSEARCH_REQUEST, experimental("IndexRequest")),
-                            equalTo(ELASTICSEARCH_REQUEST_INDICES, experimental(indexName)),
-                            equalTo(
-                                stringKey("elasticsearch.request.write.type"),
-                                experimental(indexType)),
-                            equalTo(longKey("elasticsearch.response.status"), experimental(201)),
-                            equalTo(
-                                longKey("elasticsearch.shard.replication.total"), experimental(2)),
-                            equalTo(
-                                longKey("elasticsearch.shard.replication.successful"),
-                                experimental(1)),
-                            equalTo(
-                                longKey("elasticsearch.shard.replication.failed"), experimental(0)),
-                            equalTo(
-                                longKey("elasticsearch.request.write.version"),
-                                hasWriteVersion() ? experimental(-3) : null))),
+                            addNetworkTypeAttribute(
+                                equalTo(NETWORK_PEER_ADDRESS, getAddress()),
+                                equalTo(NETWORK_PEER_PORT, getPort()),
+                                equalTo(
+                                    maybeStable(DB_SYSTEM),
+                                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+                                equalTo(maybeStable(DB_OPERATION), "IndexAction"),
+                                equalTo(ELASTICSEARCH_ACTION, experimental("IndexAction")),
+                                equalTo(ELASTICSEARCH_REQUEST, experimental("IndexRequest")),
+                                equalTo(ELASTICSEARCH_REQUEST_INDICES, experimental(indexName)),
+                                equalTo(
+                                    stringKey("elasticsearch.request.write.type"),
+                                    experimental(indexType)),
+                                equalTo(
+                                    longKey("elasticsearch.response.status"), experimental(201)),
+                                equalTo(
+                                    longKey("elasticsearch.shard.replication.total"),
+                                    experimental(2)),
+                                equalTo(
+                                    longKey("elasticsearch.shard.replication.successful"),
+                                    experimental(1)),
+                                equalTo(
+                                    longKey("elasticsearch.shard.replication.failed"),
+                                    experimental(0)),
+                                equalTo(
+                                    longKey("elasticsearch.request.write.version"),
+                                    hasWriteVersion() ? experimental(-3) : null)))),
         // moved here by sorting, chronologically happens before PutMappingAction
         trace ->
             trace.hasSpansSatisfyingExactly(
