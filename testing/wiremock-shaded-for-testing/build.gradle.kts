@@ -15,6 +15,7 @@ tasks {
       exclude(dependency("org.slf4j:slf4j-api"))
       exclude(dependency("org.junit.jupiter:junit-jupiter-api"))
       exclude(dependency("org.junit.platform:junit-platform-commons"))
+      exclude(dependency("org.ow2.asm:asm"))
       // Exclude dependencies bundled during Armeria shading
       exclude(dependency("com.fasterxml.jackson.core:jackson-annotations"))
       exclude(dependency("com.fasterxml.jackson.core:jackson-core"))
