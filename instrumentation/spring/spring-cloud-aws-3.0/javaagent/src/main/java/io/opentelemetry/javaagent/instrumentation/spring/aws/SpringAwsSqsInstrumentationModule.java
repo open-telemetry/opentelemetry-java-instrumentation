@@ -37,7 +37,8 @@ public class SpringAwsSqsInstrumentationModule extends InstrumentationModule
         new AbstractMessageConvertingMessageSourceInstrumentation(),
         new MessagingMessageListenerAdapterInstrumentation(),
         new SqsTemplateInstrumentation(),
-        new AcknowledgementExecutionContextInstrumentation());
+        new AcknowledgementExecutionContextInstrumentation(),
+        new MessageHeaderUtilsInstrumentation());
   }
 
   @Override

@@ -167,34 +167,33 @@ tasks {
   val uploadReleaseBundle by registering {
     dependsOn(generateReleaseBundle)
 
-    val bundle = generateReleaseBundle.get().outputs.files.singleFile
-    val httpClient = OkHttpClient()
     val username = System.getenv("SONATYPE_USER") ?: throw GradleException("Sonatype user not set")
     val password = System.getenv("SONATYPE_KEY") ?: throw GradleException("Sonatype key not set")
     val token = Base64.getEncoder().encodeToString("$username:$password".toByteArray())
 
     var query = "?name=opentelemetry-java-instrumentation-$stableVersion"
-    // uncomment to automatically publish the release
-    // query += "&publishingType=AUTOMATIC"
+    query += "&publishingType=AUTOMATIC"
 
-    val request = okhttp3.Request.Builder()
-      .url("https://central.sonatype.com/api/v1/publisher/upload$query")
-      .post(
-        okhttp3.MultipartBody.Builder().addFormDataPart(
-          "bundle",
-          bundle.name,
-          bundle.asRequestBody("application/zip".toMediaType())
-        ).build()
-      )
-      .header("authorization", "Bearer $token")
-      .build()
-    httpClient.newCall(request).execute().use { response ->
-      response.body!!.string()
-    }
+    doFirst {
+      val bundle = generateReleaseBundle.get().outputs.files.singleFile
+      val httpClient = OkHttpClient()
 
-    httpClient.newCall(request).execute().use { response ->
-      if (response.code != 201) throw GradleException("Unexpected response status ${response.code} while uploading the release bundle")
-      println("Uploaded deployment ${response.body!!.string()}")
+      val request = okhttp3.Request.Builder()
+        .url("https://central.sonatype.com/api/v1/publisher/upload$query")
+        .post(
+          okhttp3.MultipartBody.Builder().addFormDataPart(
+            "bundle",
+            bundle.name,
+            bundle.asRequestBody("application/zip".toMediaType())
+          ).build()
+        )
+        .header("authorization", "Bearer $token")
+        .build()
+
+      httpClient.newCall(request).execute().use { response ->
+        if (response.code != 201) throw GradleException("Unexpected response status ${response.code} while uploading the release bundle")
+        println("Uploaded deployment ${response.body.string()}")
+      }
     }
   }
 }
