@@ -11,7 +11,6 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.v2_2.Servlet2Si
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
@@ -52,7 +51,7 @@ public class Servlet2Advice {
         return;
       }
 
-      Context parentContext = Java8BytecodeBridge.currentContext();
+      Context parentContext = Context.current();
       requestContext = new ServletRequestContext<>(request);
 
       if (!helper().shouldStart(parentContext, requestContext)) {
@@ -80,7 +79,7 @@ public class Servlet2Advice {
 
       boolean topLevel = callDepth.decrementAndGet() == 0;
       if (context == null && topLevel) {
-        Context currentContext = Java8BytecodeBridge.currentContext();
+        Context currentContext = Context.current();
         // Something else is managing the context, we're in the outermost level of Servlet
         // instrumentation and we have an uncaught throwable. Let's add it to the current span.
         if (throwable != null) {

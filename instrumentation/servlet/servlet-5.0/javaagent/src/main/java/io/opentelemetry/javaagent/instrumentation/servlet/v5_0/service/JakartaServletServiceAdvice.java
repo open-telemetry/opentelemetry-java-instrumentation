@@ -11,7 +11,6 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Si
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
@@ -47,7 +46,7 @@ public class JakartaServletServiceAdvice {
       this.callDepth = callDepth;
       this.callDepth.getAndIncrement();
 
-      Context currentContext = Java8BytecodeBridge.currentContext();
+      Context currentContext = Context.current();
       Context attachedContext = helper().getServerContext(request);
       Context contextToUpdate;
 
