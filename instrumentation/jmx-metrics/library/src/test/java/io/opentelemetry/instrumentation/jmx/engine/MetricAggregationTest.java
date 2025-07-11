@@ -229,7 +229,7 @@ public class MetricAggregationTest {
       String metricName, String mbean, List<MetricAttribute> attributes, MetricInfo.Type metricType)
       throws MalformedObjectNameException {
     JmxMetricInsight metricInsight =
-        JmxMetricInsight.createService(testing.getOpenTelemetrySdk(), 0);
+        JmxMetricInsight.createService(testing.getOpenTelemetry(), 0);
     MetricConfiguration metricConfiguration = new MetricConfiguration();
     List<MetricExtractor> extractors = new ArrayList<>();
 
