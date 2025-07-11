@@ -49,29 +49,31 @@ public class ServerInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(
-          CallDepth callDepth, RmiBasedExporter rmiExporter, RemoteInvocation remoteInvocation) {
+      private AdviceScope(
+          CallDepth callDepth, ClassAndMethod request, Context context, Scope scope) {
         this.callDepth = callDepth;
+        this.request = request;
+        this.context = context;
+        this.scope = scope;
+      }
+
+      public static AdviceScope enter(
+          CallDepth callDepth, RmiBasedExporter rmiExporter, RemoteInvocation remoteInvocation) {
         if (callDepth.getAndIncrement() > 0) {
-          this.request = null;
-          this.context = null;
-          this.scope = null;
-          return;
+          return new AdviceScope(callDepth, null, null, null);
         }
 
         Context parentContext = THREAD_LOCAL_CONTEXT.getAndResetContext();
         Class<?> serverClass = rmiExporter.getService().getClass();
         String methodName = remoteInvocation.getMethodName();
-        request = ClassAndMethod.create(serverClass, methodName);
+        ClassAndMethod request = ClassAndMethod.create(serverClass, methodName);
 
         if (!serverInstrumenter().shouldStart(parentContext, request)) {
-          context = null;
-          scope = null;
-          return;
+          return new AdviceScope(callDepth, request, null, null);
         }
 
-        context = serverInstrumenter().start(parentContext, request);
-        scope = context.makeCurrent();
+        Context context = serverInstrumenter().start(parentContext, request);
+        return new AdviceScope(callDepth, request, context, context.makeCurrent());
       }
 
       public void exit(@Nullable Throwable throwable) {
