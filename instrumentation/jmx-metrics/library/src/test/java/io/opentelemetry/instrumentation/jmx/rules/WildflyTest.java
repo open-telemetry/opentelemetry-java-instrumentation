@@ -22,6 +22,8 @@ import org.testcontainers.containers.wait.strategy.Wait;
 
 public class WildflyTest extends TargetSystemTest {
 
+  private static final int WILDFLY_SERVICE_PORT = 8080;
+
   @ParameterizedTest
   @ValueSource(
       strings = {
@@ -54,8 +56,6 @@ public class WildflyTest extends TargetSystemTest {
 
     verifyMetrics(createMetricsVerifier());
   }
-
-  private static final int WILDFLY_SERVICE_PORT = 8080;
 
   private static MetricsVerifier createMetricsVerifier() {
     AttributeMatcher deploymentAttribute = attribute("wildfly.deployment", "testapp.war");

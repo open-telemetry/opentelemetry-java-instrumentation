@@ -86,15 +86,15 @@ rules:
       # wildfly.db.client.connection.count
       ActiveCount:
         metric: &metric count
-        type: updowncounter
-        unit: "{connection}"
+        type: &type updowncounter
+        unit: &unit "{connection}"
         desc: &desc The number of open physical database connections
         metricAttribute:
           db.client.connection.state: const(used)
       IdleCount:
         metric: *metric
-        type: updowncounter
-        unit: "{connection}"
+        type: *type
+        unit: *unit
         desc: *desc
         metricAttribute:
           db.client.connection.state: const(idle)
@@ -106,9 +106,7 @@ rules:
         unit: "{request}"
         desc: The number of connection requests that had to wait to obtain it
 
-
   - bean: jboss.as:subsystem=transactions
-
     prefix: wildfly.transaction.
     unit: "{transaction}"
     mapping:
@@ -120,12 +118,17 @@ rules:
       # wildfly.transaction.created
       numberOfTransactions:
         metric: created
-        type: &type counter
+        type: counter
         desc: The total number of transactions created
+      # wildfly.transaction.committed
+      numberOfCommittedTransactions:
+        metric: committed
+        type: counter
+        desc: The total number of transactions committed
       # wildfly.transaction.rollback
       numberOfApplicationRollbacks:
         metric: &metric rollback
-        type: *type
+        type: &type counter
         metricAttribute:
           wildfly.rollback.cause: const(application)
         desc: &desc The total number of transactions rolled back
@@ -141,8 +144,4 @@ rules:
         metricAttribute:
           wildfly.rollback.cause: const(system)
         desc: *desc
-      # wildfly.transaction.committed
-      numberOfCommittedTransactions:
-        metric: committed
-        type: counter
-        desc: The total number of transactions committed
+
