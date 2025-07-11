@@ -1,0 +1,5 @@
+[tools]
+lychee = "0.18.1"
+
+[tasks.lint-links]
+run = "lychee --verbose --config .lychee.toml ."

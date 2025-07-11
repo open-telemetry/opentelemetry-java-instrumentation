@@ -10,9 +10,9 @@ jobs:
   link-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: jdx/mise-action@5cb1df66ed5e1fb3c670ea0b62fd17a76979826a # v2.3.1
       - name: Link check
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: ./.github/scripts/link-check.sh
+        run: mise run lint-links
