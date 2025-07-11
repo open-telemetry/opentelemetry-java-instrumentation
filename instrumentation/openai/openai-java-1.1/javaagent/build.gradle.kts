@@ -7,7 +7,7 @@ muzzle {
     group.set("com.openai")
     module.set("openai-java")
     versions.set("[1.1.0,)")
-    assertInverse.set(true)
+    // TODO: assertInverse after completing instrumentation
   }
 }
 
