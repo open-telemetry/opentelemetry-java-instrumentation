@@ -28,6 +28,7 @@ tasks {
     relocate("org.apache.hc", "io.opentelemetry.testing.internal.apachehttp")
     relocate("org.eclipse.jetty", "io.opentelemetry.testing.internal.jetty")
     relocate("com.fasterxml.jackson", "io.opentelemetry.testing.internal.jackson")
+    relocate("com.jayway.jsonpath", "io.opentelemetry.testing.internal.jsonpath")
     relocate("javax.servlet", "io.opentelemetry.testing.internal.servlet")
     relocate("org.yaml", "io.opentelemetry.testing.internal.yaml")
 
