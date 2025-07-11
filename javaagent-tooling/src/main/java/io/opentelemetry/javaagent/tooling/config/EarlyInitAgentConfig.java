@@ -5,51 +5,54 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
-import static java.util.Arrays.asList;
-
-import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
-import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
-import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
-import io.opentelemetry.sdk.common.CompletableResultCode;
-import java.util.Collections;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import java.util.Map;
 import javax.annotation.Nullable;
 
-public interface EarlyInitAgentConfig {
+/**
+ * Agent config class that is only supposed to be used before the SDK (and {@link
+ * io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties}) is initialized.
+ */
+public final class EarlyInitAgentConfig {
 
-  @Nullable
-  String getString(String propertyName);
-
-  boolean getBoolean(String propertyName, boolean defaultValue);
-
-  int getInt(String propertyName, int defaultValue);
-
-  /**
-   * Install the {@link OpenTelemetrySdk} using autoconfigure, and return the {@link
-   * AutoConfiguredOpenTelemetrySdk}.
-   *
-   * @return the {@link AutoConfiguredOpenTelemetrySdk}
-   */
-  AutoConfiguredOpenTelemetrySdk installOpenTelemetrySdk(ClassLoader extensionClassLoader);
-
-  static EarlyInitAgentConfig create() {
-    String configurationFile =
-        DefaultConfigProperties.create(Collections.emptyMap())
-            .getString("otel.experimental.config.file");
-
-    return configurationFile != null
-        ? DeclarativeConfigEarlyInitAgentConfig.create(configurationFile)
-        : LegacyConfigFileEarlyInitAgentConfig.create();
+  public static EarlyInitAgentConfig create() {
+    return new EarlyInitAgentConfig(ConfigurationFile.getProperties());
   }
 
-  static void setForceFlush(OpenTelemetrySdk sdk) {
-    OpenTelemetrySdkAccess.internalSetForceFlush(
-        (timeout, unit) -> {
-          CompletableResultCode traceResult = sdk.getSdkTracerProvider().forceFlush();
-          CompletableResultCode metricsResult = sdk.getSdkMeterProvider().forceFlush();
-          CompletableResultCode logsResult = sdk.getSdkLoggerProvider().forceFlush();
-          CompletableResultCode.ofAll(asList(traceResult, metricsResult, logsResult))
-              .join(timeout, unit);
-        });
+  private final Map<String, String> configFileContents;
+
+  private EarlyInitAgentConfig(Map<String, String> configFileContents) {
+    this.configFileContents = configFileContents;
+  }
+
+  @Nullable
+  public String getString(String propertyName) {
+    String value = ConfigPropertiesUtil.getString(propertyName);
+    if (value != null) {
+      return value;
+    }
+    return configFileContents.get(propertyName);
+  }
+
+  public boolean getBoolean(String propertyName, boolean defaultValue) {
+    String configFileValueStr = configFileContents.get(propertyName);
+    boolean configFileValue =
+        configFileValueStr == null ? defaultValue : Boolean.parseBoolean(configFileValueStr);
+    return ConfigPropertiesUtil.getBoolean(propertyName, configFileValue);
+  }
+
+  public int getInt(String propertyName, int defaultValue) {
+    try {
+      String configFileValueStr = configFileContents.get(propertyName);
+      int configFileValue =
+          configFileValueStr == null ? defaultValue : Integer.parseInt(configFileValueStr);
+      return ConfigPropertiesUtil.getInt(propertyName, configFileValue);
+    } catch (NumberFormatException ignored) {
+      return defaultValue;
+    }
+  }
+
+  public void logEarlyConfigErrorsIfAny() {
+    ConfigurationFile.logErrorIfAny();
   }
 }

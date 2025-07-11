@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller.installOpenTelemetrySdk;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.load;
 import static io.opentelemetry.javaagent.tooling.SafeServiceLoader.loadOrdered;
 import static io.opentelemetry.javaagent.tooling.Utils.getResourceName;
@@ -162,8 +163,7 @@ public class AgentInstaller {
     installEarlyInstrumentation(agentBuilder, inst);
 
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
-        earlyConfig.installOpenTelemetrySdk(extensionClassLoader);
-    EarlyInitAgentConfig.setForceFlush(autoConfiguredSdk.getOpenTelemetrySdk());
+        installOpenTelemetrySdk(extensionClassLoader, earlyConfig);
 
     ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
     AgentInstrumentationConfig.internalInitializeConfig(
