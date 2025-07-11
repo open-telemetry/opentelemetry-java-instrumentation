@@ -60,6 +60,9 @@ public class MetricAggregationTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
+  // used to generate non-conflicting metric names at runtime
+  private static final AtomicInteger metricCounter = new AtomicInteger(0);
+
   private static final String DOMAIN = "otel.jmx.test";
   private static MBeanServer theServer;
 
@@ -192,8 +195,6 @@ public class MetricAggregationTest {
           point -> point.hasValue(6).hasAttribute(metricAttribute, "y"));
     }
   }
-
-  private static final AtomicInteger metricCounter = new AtomicInteger(0);
 
   private static String generateMetricName(MetricInfo.Type metricType) {
     // generate a sequential metric name that prevents naming conflicts and unexpected behaviors
