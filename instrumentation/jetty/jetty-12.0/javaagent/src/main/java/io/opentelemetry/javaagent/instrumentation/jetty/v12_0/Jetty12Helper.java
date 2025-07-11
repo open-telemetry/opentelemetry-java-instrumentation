@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jetty.v12_0;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
+import io.opentelemetry.javaagent.bootstrap.servlet.ServletAsyncContext;
 import javax.annotation.Nullable;
 import org.eclipse.jetty.server.HttpStream;
 import org.eclipse.jetty.server.Request;
@@ -54,7 +54,7 @@ public class Jetty12Helper {
       error = AppServerBridge.getException(context);
     }
     if (error == null) {
-      error = (Throwable) request.getAttribute(ServletHelper.ASYNC_EXCEPTION_ATTRIBUTE);
+      error = ServletAsyncContext.getAsyncException(context);
     }
 
     instrumenter.end(context, request, response, error);

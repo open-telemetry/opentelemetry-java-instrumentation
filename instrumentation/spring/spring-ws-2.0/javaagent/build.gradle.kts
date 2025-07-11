@@ -46,6 +46,7 @@ dependencies {
   testImplementation("javax.xml.bind:jaxb-api:2.2.11")
   testImplementation("com.sun.xml.bind:jaxb-core:2.2.11")
   testImplementation("com.sun.xml.bind:jaxb-impl:2.2.11")
+  testImplementation("com.google.guava:guava")
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
 }

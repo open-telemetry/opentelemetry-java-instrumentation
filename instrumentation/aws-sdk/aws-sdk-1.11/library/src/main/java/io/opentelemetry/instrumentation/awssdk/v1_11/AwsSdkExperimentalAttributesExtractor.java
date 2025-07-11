@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_AGENT;
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_BUCKET_NAME;
-import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_ENDPOINT;
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_QUEUE_NAME;
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_QUEUE_URL;
 import static io.opentelemetry.instrumentation.awssdk.v1_11.AwsExperimentalAttributes.AWS_STREAM_NAME;
@@ -29,7 +28,6 @@ class AwsSdkExperimentalAttributesExtractor
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, Request<?> request) {
     attributes.put(AWS_AGENT, COMPONENT_NAME);
-    attributes.put(AWS_ENDPOINT, request.getEndpoint().toString());
 
     Object originalRequest = request.getOriginalRequest();
     setRequestAttribute(attributes, AWS_BUCKET_NAME, originalRequest, RequestAccess::getBucketName);

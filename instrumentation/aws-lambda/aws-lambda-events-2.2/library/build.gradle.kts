@@ -39,7 +39,6 @@ dependencies {
 
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   testImplementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
-  testImplementation("com.google.guava:guava")
   testImplementation("com.amazonaws:aws-lambda-java-serialization:1.1.5")
 
   testImplementation(project(":instrumentation:aws-lambda:aws-lambda-events-2.2:testing"))

@@ -38,8 +38,8 @@ dependencies {
   testInstrumentation(project(":instrumentation:akka:akka-actor-fork-join-2.5:javaagent"))
   testInstrumentation(project(":instrumentation:scala-fork-join-2.8:javaagent"))
 
-  latestDepTestLibrary("com.typesafe.akka:akka-http_2.13:+")
-  latestDepTestLibrary("com.typesafe.akka:akka-stream_2.13:+")
+  latestDepTestLibrary("com.typesafe.akka:akka-http_2.13:latest.release")
+  latestDepTestLibrary("com.typesafe.akka:akka-stream_2.13:latest.release")
 }
 
 testing {
@@ -47,8 +47,8 @@ testing {
     val javaRouteTest by registering(JvmTestSuite::class) {
       dependencies {
         if (findProperty("testLatestDeps") as Boolean) {
-          implementation("com.typesafe.akka:akka-http_2.13:+")
-          implementation("com.typesafe.akka:akka-stream_2.13:+")
+          implementation("com.typesafe.akka:akka-http_2.13:latest.release")
+          implementation("com.typesafe.akka:akka-stream_2.13:latest.release")
         } else {
           implementation("com.typesafe.akka:akka-http_2.12:10.2.0")
           implementation("com.typesafe.akka:akka-stream_2.12:2.6.21")
@@ -64,9 +64,9 @@ tasks {
     jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
-
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectSpans", true)
   }
 
   check {

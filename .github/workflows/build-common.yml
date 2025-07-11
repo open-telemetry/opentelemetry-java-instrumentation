@@ -18,6 +18,9 @@ on:
       skip-windows-smoke-tests:
         type: boolean
         required: false
+    secrets:
+      FLAKY_TEST_REPORTER_ACCESS_KEY:
+        required: false
 
 permissions:
   contents: read
@@ -32,27 +35,18 @@ jobs:
         run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
-        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: temurin
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
+        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
-          # gradle enterprise is used for the build cache
-          gradle-home-cache-excludes: caches/build-cache-1
 
       - name: Spotless
         run: ./gradlew spotlessCheck ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
-
-  gradle-wrapper-validation:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-
-      - uses: gradle/actions/wrapper-validation@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
 
   license-check:
     runs-on: ubuntu-latest
@@ -63,20 +57,19 @@ jobs:
         run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
-        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: temurin
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
+        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
-          # gradle enterprise is used for the build cache
-          gradle-home-cache-excludes: caches/build-cache-1
 
       - name: Generate license report
-        run: ./gradlew generateLicenseReport ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
+        # with the build cache enabled occasionally produces outdated results
+        run: ./gradlew generateLicenseReport --no-build-cache
 
       - name: Check licenses
         run: |
@@ -91,6 +84,43 @@ jobs:
             git diff --cached --stat licenses
             echo
             git diff --cached licenses
+            exit 1
+          fi
+
+  fossa-configuration-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
+
+      - name: Set up JDK for running Gradle
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
+        with:
+          cache-read-only: ${{ inputs.cache-read-only }}
+
+      - name: Generate FOSSA configuration
+        run: ./gradlew generateFossaConfiguration
+
+      - name: Check configuration
+        run: |
+          git add .fossa.yml
+          if [[ $(git diff --cached --shortstat .fossa.yml) == "" ]]
+          then
+            echo "FOSSA configuration is up-to-date."
+          else
+            echo "FOSSA configuration is not up-to-date, please run './gradlew generateFossaConfiguration' locally and commit."
+            echo
+            git diff --cached --stat .fossa.yml
+            echo
+            git diff --cached .fossa.yml
             exit 1
           fi
 
@@ -133,6 +163,13 @@ jobs:
 
       - run: .github/scripts/check-latest-dep-test-overrides.sh
 
+  check-package-names:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - run: .github/scripts/check-package-names.sh
+
   build:
     runs-on: ubuntu-latest
     steps:
@@ -142,7 +179,7 @@ jobs:
         run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
-        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: temurin
           java-version-file: .java-version
@@ -152,17 +189,17 @@ jobs:
           sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
+        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
-          # gradle enterprise is used for the build cache
-          gradle-home-cache-excludes: caches/build-cache-1
 
       - name: Build
         # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
         run: ./gradlew check spdxSbom -x javadoc -x spotlessCheck -PskipTests=true ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
 
       - name: Check for jApiCmp diffs
+        # The jApiCmp diff compares current to latest, which isn't appropriate for release branches
+        if: ${{ !startsWith(github.ref_name, 'release/') && !startsWith(github.base_ref, 'release/') }}
         run: |
           # need to "git add" in case any generated files did not already exist
           git add docs/apidiffs
@@ -177,7 +214,7 @@ jobs:
           fi
 
       - name: Upload agent jar
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: opentelemetry-javaagent.jar
           path: javaagent/build/libs/opentelemetry-javaagent-*-SNAPSHOT.jar
@@ -188,14 +225,14 @@ jobs:
           mkdir sboms
           cp javaagent/build/spdx/*.spdx.json sboms
 
-      - uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         name: Upload SBOMs
         with:
           name: opentelemetry-java-instrumentation-SBOM.zip
           path: "sboms/*.json"
 
   test:
-    name: test${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }})
+    name: test${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }}, indy ${{ matrix.test-indy }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -205,6 +242,8 @@ jobs:
           - 17
           - 21
           - 23
+          - 24
+          - 25-ea
         vm:
           - hotspot
           - openj9
@@ -213,8 +252,17 @@ jobs:
           - 1
           - 2
           - 3
+        test-indy:
+          - false
+          - true
         exclude:
           - vm: ${{ inputs.skip-openj9-tests && 'openj9' || '' }}
+          - test-java-version: 23
+            vm: hotspot
+          - test-java-version: 24
+            vm: openj9
+          - test-java-version: 25-ea
+            vm: openj9
       fail-fast: false
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -224,27 +272,27 @@ jobs:
 
       - id: setup-test-java
         name: Set up JDK ${{ matrix.test-java-version }}-${{ matrix.vm }} for running tests
-        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           # using zulu because new releases get published quickly
           distribution: ${{ matrix.vm == 'hotspot' && 'zulu' || 'adopt-openj9'}}
           java-version: ${{ matrix.test-java-version }}
 
       - name: Set up JDK for running Gradle
-        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: temurin
           java-version-file: .java-version
 
       # vaadin 14 tests fail with node 18
       - name: Set up Node
-        uses: actions/setup-node@1d0ff469b7ec7b3cb9d8673fde0c81c44821de2a # v4.2.0
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 16
 
       # vaadin tests use pnpm
       - name: Cache pnpm modules
-        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-test-cache-pnpm-modules
@@ -253,12 +301,10 @@ jobs:
         run: .github/scripts/deadlock-detector.sh
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
+        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
         with:
           # only push cache for one matrix option since github action cache space is limited
           cache-read-only: ${{ inputs.cache-read-only || matrix.test-java-version != 11 || matrix.vm != 'hotspot' }}
-          # gradle enterprise is used for the build cache
-          gradle-home-cache-excludes: caches/build-cache-1
 
       - name: List tests
         # "check" is needed to activate all tests for listing purposes
@@ -281,10 +327,10 @@ jobs:
           ${{ env.test-tasks }}
           -PtestJavaVersion=${{ matrix.test-java-version }}
           -PtestJavaVM=${{ matrix.vm }}
+          -PtestIndy=${{ matrix.test-indy }}
           -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }}
           -Porg.gradle.java.installations.auto-download=false
           ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
-          ${{ inputs.max-test-retries && format(' -PmaxTestRetries={0}', inputs.max-test-retries) || '' }}
 
       - name: Build scan
         if: ${{ !cancelled() && hashFiles('build-scan.txt') != '' }}
@@ -299,15 +345,22 @@ jobs:
         with:
           result-encoding: string
           script: |
-            const { data: workflow_run } = await github.rest.actions.listJobsForWorkflowRun({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: context.runId,
-              per_page: 100
-            });
             const matrix = JSON.parse(process.env.matrix);
-            const job_name = `common / test${ matrix['test-partition'] } (${ matrix['test-java-version'] }, ${ matrix.vm })`;
-            return workflow_run.jobs.find((job) => job.name === job_name).html_url;
+            const job_name = `common / test${ matrix['test-partition'] } (${ matrix['test-java-version'] }, ${ matrix.vm }, indy ${ matrix['test-indy'] })`;
+            
+            const workflow_jobs_nested = await github.paginate(
+              github.rest.actions.listJobsForWorkflowRun,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: context.runId,
+                per_page: 100
+              },
+              (response) => {
+                return response.data;
+              },
+            );
+            return workflow_jobs_nested.flat().find((job) => job.name === job_name).html_url;
 
       - name: Flaky test report
         if: ${{ !cancelled() }}
@@ -322,15 +375,15 @@ jobs:
 
       - name: Upload deadlock detector artifacts if any
         if: failure()
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: deadlock-detector-test-${{ matrix.test-java-version }}-${{ matrix.vm }}-${{ matrix.test-partition }}
+          name: deadlock-detector-test-${{ matrix.test-java-version }}-${{ matrix.vm }}-${{ matrix.test-partition }}-indy-${{ matrix.test-indy }}
           path: /tmp/deadlock-detector-*
           if-no-files-found: ignore
 
       - name: Upload jvm crash dump files if any
         if: failure()
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: javacore-test-${{ matrix.test-java-version }}-${{ matrix.test-partition }}
           path: |
@@ -373,29 +426,32 @@ jobs:
         run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
-        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: temurin
           java-version-file: .java-version
 
       - name: Set up Gradle cache
-        uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
+        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
         with:
           # only push cache for one matrix option per OS since github action cache space is limited
           cache-read-only: ${{ inputs.cache-read-only || matrix.smoke-test-suite != 'tomcat' }}
-          # gradle enterprise is used for the build cache
-          gradle-home-cache-excludes: caches/build-cache-1
 
       - name: Build
         # running suite "none" compiles everything needed by smoke tests without executing any tests
+        # --no-daemon is used to free up the memory from the build step before running the test step below
         run: ./gradlew :smoke-tests:test -PsmokeTestSuite=none --no-daemon ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Test
-        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }}${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+        run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }} ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+
+      - name: Build scan
+        if: ${{ !cancelled() && hashFiles('build-scan.txt') != '' }}
+        run: cat build-scan.txt
 
       - name: Upload jvm crash dump files if any
         if: failure()
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: javacore-smoke-test-${{ matrix.smoke-test-suite }}-${{ matrix.os }}
           # we expect crash dumps either in root director or in smoke-tests
@@ -422,13 +478,13 @@ jobs:
         run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
-        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: temurin
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
+        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
@@ -445,13 +501,13 @@ jobs:
         run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
-        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: temurin
           java-version-file: .java-version
 
       - name: Set up Gradle cache
-        uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
+        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
@@ -465,12 +521,16 @@ jobs:
         working-directory: gradle-plugins
 
       - name: Build distro
-        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
         working-directory: examples/distro
 
       - name: Build extension
-        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+        run: ./gradlew build --init-script ../../.github/scripts/local.init.gradle.kts ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
         working-directory: examples/extension
+
+      - name: Build benchmark-overhead
+        run: ./gradlew assemble ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
+        working-directory: benchmark-overhead
 
       - name: Run muzzle check against extension
         run: ./gradlew muzzle --init-script ../../.github/scripts/local.init.gradle.kts

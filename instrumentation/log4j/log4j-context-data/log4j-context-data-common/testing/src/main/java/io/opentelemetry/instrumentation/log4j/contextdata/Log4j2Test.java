@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -131,5 +132,30 @@ public abstract class Log4j2Test {
         .isEqualTo(span2.getSpanContext().getSpanId());
     assertThat(events.get(3).getContextData().get(getLoggingKey("trace_flags"))).isEqualTo("01");
     assertThat(events.get(3).getContextData().get("baggage.baggage_key")).isNull();
+  }
+
+  @Test
+  void testNoOverrideTraceId() {
+    Logger logger = LogManager.getLogger("TestLogger");
+
+    ThreadContext.put(getLoggingKey("trace_id"), "test_traceId");
+    ThreadContext.put(getLoggingKey("span_id"), "test_spanId");
+    ThreadContext.put(getLoggingKey("trace_flags"), "test_traceFlag");
+    getInstrumentationExtension()
+        .runWithSpan(
+            "test",
+            () -> {
+              logger.info("log span parent");
+            });
+    List<ListAppender.LoggedEvent> events = ListAppender.get().getEvents();
+    ThreadContext.clearAll();
+    assertThat(events.size()).isEqualTo(1);
+    assertThat(events.get(0).getMessage()).isEqualTo("log span parent");
+    assertThat(events.get(0).getContextData().get(getLoggingKey("trace_id")))
+        .isEqualTo("test_traceId");
+    assertThat(events.get(0).getContextData().get(getLoggingKey("span_id")))
+        .isEqualTo("test_spanId");
+    assertThat(events.get(0).getContextData().get(getLoggingKey("trace_flags")))
+        .isEqualTo("test_traceFlag");
   }
 }

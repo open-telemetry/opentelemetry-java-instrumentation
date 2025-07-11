@@ -131,7 +131,6 @@ class S3ClientTest extends AbstractS3ClientTest {
                                 equalTo(RPC_SYSTEM, "aws-api"),
                                 equalTo(RPC_SERVICE, "Amazon S3"),
                                 equalTo(RPC_METHOD, "HeadBucket"),
-                                equalTo(stringKey("aws.endpoint"), "https://s3.amazonaws.com"),
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                 equalTo(stringKey("aws.bucket.name"), "someBucket"),
                                 equalTo(ERROR_TYPE, IllegalStateException.class.getName()))));

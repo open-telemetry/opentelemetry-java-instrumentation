@@ -1,0 +1,9 @@
+configurations:
+  - name: otel.instrumentation.kafka.producer-propagation.enabled
+    description: Enable context propagation for kafka message producers.
+    type: boolean
+    default: true
+  - name: otel.instrumentation.kafka.experimental-span-attributes
+    description: Enables the capture of the experimental consumer attribute "kafka.record.queue_time_ms"
+    type: boolean
+    default: false

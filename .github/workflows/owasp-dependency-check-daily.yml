@@ -1,5 +1,5 @@
-# the benefit of this over dependabot is that this also analyzes transitive dependencies
-# while dependabot (at least currently) only analyzes top-level dependencies
+# the benefit of this over renovate is that this also analyzes transitive dependencies
+# while renovate (at least currently) only analyzes top-level dependencies
 name: OWASP dependency check (daily)
 
 on:
@@ -8,10 +8,12 @@ on:
     - cron: "30 1 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   analyze:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
@@ -19,7 +21,7 @@ jobs:
         run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
-        uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: temurin
           java-version-file: .java-version
@@ -28,7 +30,7 @@ jobs:
         run: |
           sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
 
-      - uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
+      - uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
 
       - run: ./gradlew :javaagent:dependencyCheckAnalyze
         env:
@@ -36,11 +38,14 @@ jobs:
 
       - name: Upload report
         if: always()
-        uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           path: javaagent/build/reports
 
   workflow-notification:
+    permissions:
+      contents: read
+      issues: write
     needs:
       - analyze
     if: always()

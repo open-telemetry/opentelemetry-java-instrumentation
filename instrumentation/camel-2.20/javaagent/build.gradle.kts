@@ -8,6 +8,8 @@ muzzle {
     module.set("camel-core")
     versions.set("[2.19,3)")
     assertInverse.set(true)
+    // https://repo.maven.apache.org/maven2/org/apache/camel/core/4.12.0/core-4.12.0.pom is missing
+    skip("4.12.0")
   }
 }
 
@@ -16,7 +18,7 @@ val camelversion = "2.20.1" // first version that the tests pass on
 description = "camel-2-20"
 
 dependencies {
-  library("org.apache.camel:camel-core:$camelversion")
+  compileOnly("org.apache.camel:camel-core:$camelversion")
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
 
   // without adding this dependency, javadoc fails:
@@ -33,6 +35,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:aws-sdk:aws-sdk-1.11:javaagent"))
 
+  testImplementation("org.apache.camel:camel-core:$camelversion")
   testImplementation("org.apache.camel:camel-spring-boot-starter:$camelversion")
   testImplementation("org.apache.camel:camel-jetty-starter:$camelversion")
   testImplementation("org.apache.camel:camel-http-starter:$camelversion")

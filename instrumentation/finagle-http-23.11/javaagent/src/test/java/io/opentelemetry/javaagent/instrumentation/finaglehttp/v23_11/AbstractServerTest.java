@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11;
 
-import static io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES;
+import static io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES_WITHOUT_ROUTE;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -14,9 +14,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
-import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 
-import com.google.common.collect.Sets;
 import com.twitter.finagle.ListeningServer;
 import com.twitter.finagle.Service;
 import com.twitter.finagle.http.Request;
@@ -35,7 +33,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.net.URI;
-import java.util.Collections;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 abstract class AbstractServerTest extends AbstractHttpServerTest<ListeningServer> {
@@ -47,8 +44,7 @@ abstract class AbstractServerTest extends AbstractHttpServerTest<ListeningServer
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
     options.setTestException(false);
-    options.setHttpAttributes(
-        unused -> Sets.difference(DEFAULT_HTTP_ATTRIBUTES, Collections.singleton(HTTP_ROUTE)));
+    options.setHttpAttributes(unused -> DEFAULT_HTTP_ATTRIBUTES_WITHOUT_ROUTE);
 
     options.setTestCaptureHttpHeaders(true);
   }
@@ -74,7 +70,7 @@ abstract class AbstractServerTest extends AbstractHttpServerTest<ListeningServer
                   name ->
                       new QueryStringDecoder(uri)
                           .parameters().get(name).stream().findFirst().orElse(""));
-              response.content(Buf.Empty());
+              response.content(Buf.Utf8$.MODULE$.apply(endpoint.getBody()));
             } else if (QUERY_PARAM.equals(endpoint)) {
               response.content(Buf.Utf8$.MODULE$.apply(uri.getQuery()));
             } else if (REDIRECT.equals(endpoint)) {

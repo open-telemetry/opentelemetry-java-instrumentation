@@ -5,6 +5,7 @@ plugins {
 val mrJarVersions = listOf(9, 11)
 
 dependencies {
+  compileOnly("io.opentelemetry:opentelemetry-api-incubator")
   implementation("io.opentelemetry:opentelemetry-sdk-common")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   implementation("io.opentelemetry.semconv:opentelemetry-semconv")
@@ -84,6 +85,17 @@ testing {
 }
 
 tasks {
+  test {
+    dependsOn(jar)
+    doFirst {
+      // use the final jar instead of directories with built classes to test the mrjar functionality
+      classpath = jar.get().outputs.files + classpath
+    }
+    systemProperty("testSecret", "test")
+    systemProperty("testPassword", "test")
+    systemProperty("testNotRedacted", "test")
+  }
+
   check {
     dependsOn(testing.suites)
   }

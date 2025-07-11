@@ -7,4 +7,4 @@ Programming,
 dependency injection, and bean post-processing to trace spring applications. To include all features
 listed below use the [opentelemetry-spring-boot-starter](../starters/spring-boot-starter/README.md).
 
-Documentation for OpenTelemetry Spring Auto-Configuration can be found [here](https://opentelemetry.io/docs/zero-code/java/spring-boot/#automatic-instrumentation).
+Documentation for OpenTelemetry Spring Auto-Configuration can be found [here](https://opentelemetry.io/docs/zero-code/java/spring-boot-starter/out-of-the-box-instrumentation/).

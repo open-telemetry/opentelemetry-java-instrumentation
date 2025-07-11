@@ -17,9 +17,9 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Assumptions;
@@ -140,17 +140,16 @@ public abstract class AbstractXxlJobTest {
                         .hasAttributesSatisfyingExactly(assertions)));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   private static void checkXxlJob(
       String spanName,
       StatusData statusData,
       GlueTypeEnum glueType,
-      String codeNamespace,
-      String codeFunction) {
+      String codeClass,
+      String codeMethod) {
     List<AttributeAssertion> attributeAssertions = new ArrayList<>();
     attributeAssertions.addAll(attributeAssertions(glueType));
-    attributeAssertions.add(equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, codeNamespace));
-    attributeAssertions.add(equalTo(CodeIncubatingAttributes.CODE_FUNCTION, codeFunction));
+    attributeAssertions.addAll(
+        SemconvCodeStabilityUtil.codeFunctionAssertions(codeClass, codeMethod));
 
     checkXxlJob(spanName, statusData, attributeAssertions);
   }

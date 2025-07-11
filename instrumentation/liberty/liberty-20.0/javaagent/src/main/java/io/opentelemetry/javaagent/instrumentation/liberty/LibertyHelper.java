@@ -40,7 +40,7 @@ public class LibertyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RES
     }
 
     ServletResponseContext<RESPONSE> responseContext = new ServletResponseContext<>(response);
-    if (throwable != null || mustEndOnHandlerMethodExit(request)) {
+    if (throwable != null || mustEndOnHandlerMethodExit(context)) {
       instrumenter.end(context, requestContext, responseContext, throwable);
     }
   }

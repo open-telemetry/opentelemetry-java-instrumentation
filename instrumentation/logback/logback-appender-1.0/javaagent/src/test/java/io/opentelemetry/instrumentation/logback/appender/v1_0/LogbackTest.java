@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFileAndLineAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -19,14 +21,12 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
-import org.assertj.core.api.AbstractLongAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -115,7 +115,6 @@ class LogbackTest {
     testing.clearData();
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   private static void test(
       Logger logger,
       OneArgLoggerMethod oneArgLoggerMethod,
@@ -155,20 +154,11 @@ class LogbackTest {
                         ? testing.spans().get(0).getSpanContext()
                         : SpanContext.getInvalid());
 
-            List<AttributeAssertion> attributeAsserts =
-                new ArrayList<>(
-                    Arrays.asList(
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_NAME,
-                            Thread.currentThread().getName()),
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
-                        equalTo(
-                            CodeIncubatingAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
-                        equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "performLogging"),
-                        satisfies(
-                            CodeIncubatingAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
-                        equalTo(CodeIncubatingAttributes.CODE_FILEPATH, "LogbackTest.java")));
+            List<AttributeAssertion> attributeAsserts = new ArrayList<>(threadAssertions());
+
+            attributeAsserts.addAll(codeFunctionAssertions(LogbackTest.class, "performLogging"));
+            attributeAsserts.addAll(codeFileAndLineAssertions("LogbackTest.java"));
+
             if (logException) {
               attributeAsserts.addAll(
                   Arrays.asList(
@@ -185,7 +175,6 @@ class LogbackTest {
     }
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testMdc() {
     MDC.put("key1", "val1");
@@ -196,6 +185,13 @@ class LogbackTest {
       MDC.clear();
     }
 
+    List<AttributeAssertion> assertions = new ArrayList<>();
+    assertions.addAll(threadAssertions());
+    assertions.addAll(codeFileAndLineAssertions("LogbackTest.java"));
+    assertions.addAll(codeFunctionAssertions(LogbackTest.class, "testMdc"));
+    assertions.add(equalTo(AttributeKey.stringKey("key1"), "val1"));
+    assertions.add(equalTo(AttributeKey.stringKey("key2"), "val2"));
+
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord
@@ -203,19 +199,9 @@ class LogbackTest {
                 .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
                 .hasSeverity(Severity.INFO)
                 .hasSeverityText("INFO")
-                .hasAttributesSatisfyingExactly(
-                    equalTo(AttributeKey.stringKey("key1"), "val1"),
-                    equalTo(AttributeKey.stringKey("key2"), "val2"),
-                    equalTo(
-                        ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                    equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
-                    equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
-                    equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "testMdc"),
-                    satisfies(CodeIncubatingAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
-                    equalTo(CodeIncubatingAttributes.CODE_FILEPATH, "LogbackTest.java")));
+                .hasAttributesSatisfyingExactly(assertions));
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   public void testMarker() {
 
@@ -224,18 +210,21 @@ class LogbackTest {
 
     abcLogger.info(marker, "Message");
 
+    List<AttributeAssertion> assertions = codeFunctionAssertions(LogbackTest.class, "testMarker");
+    assertions.addAll(threadAssertions());
+    assertions.addAll(codeFileAndLineAssertions("LogbackTest.java"));
+    assertions.add(
+        equalTo(
+            AttributeKey.stringArrayKey("logback.marker"), Collections.singletonList(markerName)));
+
     testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(
-                equalTo(ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
-                equalTo(
-                    AttributeKey.stringArrayKey("logback.marker"),
-                    Collections.singletonList(markerName)),
-                equalTo(CodeIncubatingAttributes.CODE_NAMESPACE, LogbackTest.class.getName()),
-                equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "testMarker"),
-                satisfies(CodeIncubatingAttributes.CODE_LINENO, AbstractLongAssert::isPositive),
-                equalTo(CodeIncubatingAttributes.CODE_FILEPATH, "LogbackTest.java")));
+        logRecord -> logRecord.hasAttributesSatisfyingExactly(assertions));
+  }
+
+  private static List<AttributeAssertion> threadAssertions() {
+    return Arrays.asList(
+        equalTo(ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
+        equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()));
   }
 
   private static void performLogging(

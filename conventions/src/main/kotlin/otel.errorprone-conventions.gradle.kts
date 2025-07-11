@@ -10,6 +10,7 @@ dependencies {
 }
 
 val disableErrorProne = properties["disableErrorProne"]?.toString()?.toBoolean() ?: false
+val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
 
 tasks {
   withType<JavaCompile>().configureEach {
@@ -61,7 +62,6 @@ tasks {
         disable("UnnecessarilyFullyQualified")
 
         // TODO (trask) use animal sniffer
-        disable("Java7ApiChecker")
         disable("Java8ApiChecker")
         disable("AndroidJdkLibsChecker")
 
@@ -122,6 +122,16 @@ tasks {
         disable("YodaCondition")
 
         disable("NonFinalStaticField")
+
+        // Requires adding compile dependency to JSpecify
+        disable("AddNullMarkedToPackageInfo")
+
+        if (testLatestDeps) {
+          // Some latest dep tests are compiled for java 17 although the base version uses an older
+          // version. Disable rules that suggest using new language features.
+          disable("StatementSwitchToExpressionSwitch")
+          disable("PatternMatchingInstanceof")
+        }
 
         if (name.contains("Jmh") || name.contains("Test")) {
           // Allow underscore in test-type method names

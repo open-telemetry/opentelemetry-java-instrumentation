@@ -21,7 +21,7 @@ import jdk.jfr.FlightRecorder;
 import jdk.jfr.consumer.RecordingStream;
 
 /** The entry point class for runtime metrics support using JFR and JMX. */
-public final class RuntimeMetrics implements Closeable {
+public final class RuntimeMetrics implements AutoCloseable {
 
   private static final Logger logger = Logger.getLogger(RuntimeMetrics.class.getName());
 
@@ -101,7 +101,7 @@ public final class RuntimeMetrics implements Closeable {
             recordingStream.onEvent(handler.getEventName(), handler);
           });
       recordingStream.onMetadata(event -> startUpLatch.countDown());
-      Thread daemonRunner = new Thread(() -> recordingStream.start());
+      Thread daemonRunner = new Thread(recordingStream::start, "OpenTelemetry JFR-Metrics-Runner");
       daemonRunner.setDaemon(true);
       daemonRunner.start();
     }
@@ -138,7 +138,8 @@ public final class RuntimeMetrics implements Closeable {
     private static boolean isJfrAvailable() {
       try {
         Class.forName("jdk.jfr.FlightRecorder");
-      } catch (ClassNotFoundException e) {
+        // UnsatisfiedLinkError or ClassNotFoundException
+      } catch (Exception e) {
         return false;
       }
 

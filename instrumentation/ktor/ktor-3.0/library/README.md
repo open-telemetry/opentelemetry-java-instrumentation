@@ -32,7 +32,8 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-3.0:OPENTELE
 
 ## Initializing server instrumentation
 
-Initialize instrumentation by installing the `KtorServerTelemetry` feature.
+Initialize instrumentation by installing the `KtorServerTelemetry` feature. Make sure that no other
+logging plugin is installed before this.
 You must set the `OpenTelemetry` to use with the feature.
 
 ```kotlin

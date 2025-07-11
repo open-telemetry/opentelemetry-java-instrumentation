@@ -18,11 +18,13 @@ tasks {
     from("Dockerfile")
   }
 
+  val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
+
   val imageBuild by registering(DockerBuildImage::class) {
     dependsOn(imagePrepare)
     inputDir.set(dockerWorkingDir)
 
-    images.add("ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-zulu-openjdk-8u31:$extraTag")
+    images.add("ghcr.io/$repo/smoke-test-zulu-openjdk-8u31:$extraTag")
     dockerFile.set(dockerWorkingDir.get().file("Dockerfile"))
   }
 
@@ -30,6 +32,6 @@ tasks {
     group = "publishing"
     description = "Push all Docker images"
     dependsOn(imageBuild)
-    images.add("ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-zulu-openjdk-8u31:$extraTag")
+    images.add("ghcr.io/$repo/smoke-test-zulu-openjdk-8u31:$extraTag")
   }
 }

@@ -159,10 +159,11 @@ public abstract class AbstractGrpcStreamingTest {
                 .sorted()
                 .collect(Collectors.toList()));
 
-    List<Consumer<EventData>> events = new ArrayList<>();
-    for (int i = 1; i <= clientMessageCount * serverMessageCount + clientMessageCount; i++) {
-      long messageId = i;
-      events.add(
+    List<Consumer<EventData>> clientEvents = new ArrayList<>();
+    List<Consumer<EventData>> serverEvents = new ArrayList<>();
+    for (long i = 0; i < clientMessageCount; i++) {
+      long clientMessageId = i + 1;
+      clientEvents.add(
           event ->
               assertThat(event)
                   .hasName("message")
@@ -170,14 +171,46 @@ public abstract class AbstractGrpcStreamingTest {
                       attrs ->
                           assertThat(attrs)
                               .hasSize(2)
-                              .hasEntrySatisfying(
-                                  MessageIncubatingAttributes.MESSAGE_TYPE,
-                                  val ->
-                                      assertThat(val)
-                                          .satisfiesAnyOf(
-                                              v -> assertThat(v).isEqualTo("RECEIVED"),
-                                              v -> assertThat(v).isEqualTo("SENT")))
-                              .containsEntry(MessageIncubatingAttributes.MESSAGE_ID, messageId)));
+                              .containsEntry(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT")
+                              .containsEntry(
+                                  MessageIncubatingAttributes.MESSAGE_ID, clientMessageId)));
+      serverEvents.add(
+          event ->
+              assertThat(event)
+                  .hasName("message")
+                  .hasAttributesSatisfying(
+                      attrs ->
+                          assertThat(attrs)
+                              .hasSize(2)
+                              .containsEntry(MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED")
+                              .containsEntry(
+                                  MessageIncubatingAttributes.MESSAGE_ID, clientMessageId)));
+
+      for (long j = 0; j < serverMessageCount; j++) {
+        long serverMessageId = i * serverMessageCount + j + 1;
+        clientEvents.add(
+            event ->
+                assertThat(event)
+                    .hasName("message")
+                    .hasAttributesSatisfying(
+                        attrs ->
+                            assertThat(attrs)
+                                .hasSize(2)
+                                .containsEntry(MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED")
+                                .containsEntry(
+                                    MessageIncubatingAttributes.MESSAGE_ID, serverMessageId)));
+        serverEvents.add(
+            event ->
+                assertThat(event)
+                    .hasName("message")
+                    .hasAttributesSatisfying(
+                        attrs ->
+                            assertThat(attrs)
+                                .hasSize(2)
+                                .containsEntry(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT")
+                                .containsEntry(
+                                    MessageIncubatingAttributes.MESSAGE_ID, serverMessageId)));
+      }
     }
 
     testing()
@@ -199,7 +232,7 @@ public abstract class AbstractGrpcStreamingTest {
                             .satisfies(
                                 spanData ->
                                     assertThat(spanData.getEvents())
-                                        .satisfiesExactlyInAnyOrder(toArray(events))),
+                                        .satisfiesExactlyInAnyOrder(toArray(clientEvents))),
                     span ->
                         span.hasName("example.Greeter/Conversation")
                             .hasKind(SpanKind.SERVER)
@@ -217,7 +250,7 @@ public abstract class AbstractGrpcStreamingTest {
                             .satisfies(
                                 spanData ->
                                     assertThat(spanData.getEvents())
-                                        .satisfiesExactlyInAnyOrder(toArray(events)))));
+                                        .satisfiesExactlyInAnyOrder(toArray(serverEvents)))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",

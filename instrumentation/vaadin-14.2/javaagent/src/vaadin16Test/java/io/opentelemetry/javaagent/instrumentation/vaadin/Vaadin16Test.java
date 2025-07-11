@@ -21,7 +21,7 @@ public class Vaadin16Test extends AbstractVaadinTest {
   @Override
   protected void prepareVaadinBaseDir(File baseDir) {
     Path basePath = Paths.get(baseDir.toURI());
-    // underscore "_" prefix is used to hide these files from dependabot
+    // underscore "_" prefix is used to hide these files from renovate
     // (they are only used for tests ok for them to have outdated dependencies)
     copyClasspathResource("/pnpm/_package.json", basePath.resolve("package.json"));
     copyClasspathResource("/pnpm/_pnpm-lock.yaml", basePath.resolve("pnpm-lock.yaml"));

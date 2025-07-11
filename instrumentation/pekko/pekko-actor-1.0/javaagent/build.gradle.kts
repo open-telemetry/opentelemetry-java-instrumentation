@@ -29,7 +29,7 @@ dependencies {
 
   library("org.apache.pekko:pekko-actor_2.12:1.0.1")
 
-  latestDepTestLibrary("org.apache.pekko:pekko-actor_2.13:+")
+  latestDepTestLibrary("org.apache.pekko:pekko-actor_2.13:latest.release")
 
   testImplementation(project(":instrumentation:executors:testing"))
 }

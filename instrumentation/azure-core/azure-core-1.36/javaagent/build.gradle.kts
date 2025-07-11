@@ -46,8 +46,8 @@ testing {
     val testAzure by registering(JvmTestSuite::class) {
       dependencies {
         if (latestDepTest) {
-          implementation("com.azure:azure-core:+")
-          implementation("com.azure:azure-core-test:+")
+          implementation("com.azure:azure-core:latest.release")
+          implementation("com.azure:azure-core-test:latest.release")
         } else {
           implementation("com.azure:azure-core:1.36.0")
           implementation("com.azure:azure-core-test:1.16.2")

@@ -28,7 +28,7 @@ testing {
     val http2Test by registering(JvmTestSuite::class) {
       dependencies {
         if (testLatestDeps) {
-          implementation("com.squareup.okhttp3:okhttp:+")
+          implementation("com.squareup.okhttp3:okhttp:latest.release")
           compileOnly("com.google.android:annotations:4.1.1.4")
         } else {
           implementation("com.squareup.okhttp3:okhttp:3.11.0")
@@ -42,5 +42,9 @@ testing {
 tasks {
   check {
     dependsOn(testing.suites)
+  }
+
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 }

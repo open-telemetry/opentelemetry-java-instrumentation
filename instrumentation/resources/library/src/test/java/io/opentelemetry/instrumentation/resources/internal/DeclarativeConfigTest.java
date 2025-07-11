@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.FileConfiguration;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.resources.Resource;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -24,15 +24,20 @@ class DeclarativeConfigTest {
   @Test
   void endToEnd() {
     String yaml =
-        "file_format: 0.3\n"
+        "file_format: \"0.4\"\n"
+            + "tracer_provider:\n"
             + "resource:\n"
             + "  attributes:\n"
             + "    - name: service.name\n"
             + "      value: my-service\n"
-            + "tracer_provider:\n";
+            + "  detection/development:\n"
+            + "    detectors:\n"
+            + "      - host:\n"
+            + "      - process:\n";
 
+    boolean java8 = "1.8".equals(System.getProperty("java.specification.version"));
     OpenTelemetrySdk openTelemetrySdk =
-        FileConfiguration.parseAndCreate(
+        DeclarativeConfiguration.parseAndCreate(
             new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)));
     assertThat(openTelemetrySdk.getSdkTracerProvider())
         .extracting("sharedState.resource", as(InstanceOfAssertFactories.type(Resource.class)))
@@ -56,7 +61,8 @@ class DeclarativeConfigTest {
               assertThat(attributeKeys).contains("os.description");
               assertThat(attributeKeys).contains("os.type");
               // ProcessResourceComponentProvider
-              assertThat(attributeKeys).contains("process.command_line");
+              assertThat(attributeKeys)
+                  .contains(java8 ? "process.command_line" : "process.command_args");
               assertThat(attributeKeys).contains("process.executable.path");
               assertThat(attributeKeys).contains("process.pid");
               // ProcessRuntimeResourceComponentProvider

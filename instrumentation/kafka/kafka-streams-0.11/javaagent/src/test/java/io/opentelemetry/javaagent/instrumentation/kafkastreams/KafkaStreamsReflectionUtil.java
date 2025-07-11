@@ -7,7 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.kafkastreams;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
+import java.time.Duration;
 import java.util.Properties;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.serialization.Serde;
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.streams.KafkaStreams;
@@ -18,6 +21,32 @@ import org.apache.kafka.streams.kstream.KStream;
  * streams.
  */
 class KafkaStreamsReflectionUtil {
+  private static final Method consumerPollDurationMethod = getConsumerPollMethod(Duration.class);
+  private static final Method consumerPollLongMethod = getConsumerPollMethod(long.class);
+
+  private static Method getConsumerPollMethod(Class<?>... types) {
+    try {
+      return Consumer.class.getMethod("poll", types);
+    } catch (NoSuchMethodException e) {
+      return null;
+    }
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <K, V> ConsumerRecords<K, V> poll(Consumer<K, V> consumer, Duration duration) {
+    try {
+      if (consumerPollDurationMethod != null) {
+        // not present in early versions
+        return (ConsumerRecords<K, V>) consumerPollDurationMethod.invoke(consumer, duration);
+      } else if (consumerPollLongMethod != null) {
+        // not present in 4.x
+        return (ConsumerRecords<K, V>) consumerPollLongMethod.invoke(consumer, duration.toMillis());
+      }
+    } catch (Exception exception) {
+      throw new IllegalStateException(exception);
+    }
+    throw new IllegalStateException("poll method not found");
+  }
 
   private KafkaStreamsReflectionUtil() {}
 

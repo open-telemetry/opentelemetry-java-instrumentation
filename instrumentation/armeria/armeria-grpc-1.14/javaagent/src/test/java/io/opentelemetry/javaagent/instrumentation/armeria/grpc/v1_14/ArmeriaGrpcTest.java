@@ -98,7 +98,7 @@ class ArmeriaGrpcTest {
                                     .hasAttributesSatisfyingExactly(
                                         equalTo(
                                             MessageIncubatingAttributes.MESSAGE_TYPE, "RECEIVED"),
-                                        equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L))),
+                                        equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L))),
                 span ->
                     span.hasName("example.Greeter/SayHello")
                         .hasKind(SpanKind.SERVER)
@@ -123,6 +123,6 @@ class ArmeriaGrpcTest {
                                     .hasName("message")
                                     .hasAttributesSatisfyingExactly(
                                         equalTo(MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
-                                        equalTo(MessageIncubatingAttributes.MESSAGE_ID, 2L)))));
+                                        equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
   }
 }

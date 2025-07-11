@@ -18,6 +18,7 @@ import static org.objectweb.asm.Opcodes.INVOKESPECIAL;
 import static org.objectweb.asm.Opcodes.INVOKESTATIC;
 import static org.objectweb.asm.Opcodes.INVOKEVIRTUAL;
 import static org.objectweb.asm.Opcodes.IRETURN;
+import static org.objectweb.asm.Opcodes.L2I;
 import static org.objectweb.asm.Opcodes.NEW;
 import static org.objectweb.asm.Opcodes.PUTSTATIC;
 import static org.objectweb.asm.Opcodes.RETURN;
@@ -82,21 +83,28 @@ class SunMiscUnsafeGenerator {
     addField("ADDRESS_SIZE", int.class);
   }
 
-  private boolean hasSuitableField(String name, Class<?> type) {
+  private Field findSourceField(String name) {
     try {
-      Field field = internalUnsafeClass.getDeclaredField(name);
-      return Modifier.isPublic(field.getModifiers()) && field.getType() == type;
+      return internalUnsafeClass.getDeclaredField(name);
     } catch (NoSuchFieldException exception) {
-      return false;
+      return null;
     }
   }
 
+  private boolean isSuitableField(Field field, Class<?> type) {
+    // jdk25 changes field type from int to long for offsets
+    return field != null
+        && Modifier.isPublic(field.getModifiers())
+        && (field.getType() == type || (field.getType() == long.class && type == int.class));
+  }
+
   private void addField(String name, Class<?> type) {
-    if (!hasSuitableField(name, type)) {
+    Field field = findSourceField(name);
+    if (!isSuitableField(field, type)) {
       throw new IllegalStateException(
           "Could not find suitable field for " + name + " " + Type.getDescriptor(type));
     }
-    fields.add(new FieldDescriptor(name, type));
+    fields.add(new FieldDescriptor(name, type, field.getType()));
   }
 
   private void addMethods() {
@@ -231,14 +239,15 @@ class SunMiscUnsafeGenerator {
       List<String> targetNameCandidates,
       Class<?> returnType,
       Class<?>... parameterTypes) {
-    String targetName = null;
+    Method target = null;
     for (String candidate : targetNameCandidates) {
-      if (hasSuitableMethod(candidate, returnType, parameterTypes)) {
-        targetName = candidate;
+      Method method = findSourceMethod(candidate, parameterTypes);
+      if (isSuitableMethod(method, returnType)) {
+        target = method;
         break;
       }
     }
-    if (targetName == null) {
+    if (target == null) {
       if (optional) {
         return;
       }
@@ -248,16 +257,25 @@ class SunMiscUnsafeGenerator {
               + " "
               + Type.getMethodDescriptor(Type.getType(returnType), toTypes(parameterTypes)));
     }
-    methods.add(new MethodDescriptor(name, targetName, returnType, parameterTypes));
+    methods.add(
+        new MethodDescriptor(
+            name, target.getName(), returnType, target.getReturnType(), parameterTypes));
   }
 
-  private boolean hasSuitableMethod(String name, Class<?> returnType, Class<?>... parameterTypes) {
+  private Method findSourceMethod(String name, Class<?>... parameterTypes) {
     try {
-      Method method = internalUnsafeClass.getDeclaredMethod(name, parameterTypes);
-      return Modifier.isPublic(method.getModifiers()) && method.getReturnType() == returnType;
-    } catch (NoSuchMethodException e) {
-      return false;
+      return internalUnsafeClass.getDeclaredMethod(name, parameterTypes);
+    } catch (NoSuchMethodException exception) {
+      return null;
     }
+  }
+
+  private boolean isSuitableMethod(Method method, Class<?> returnType) {
+    // jdk25 changes method return type from int to long for methods returning fields offsets
+    return method != null
+        && Modifier.isPublic(method.getModifiers())
+        && (method.getReturnType() == returnType
+            || (method.getReturnType() == long.class && returnType == int.class));
   }
 
   private static Type[] toTypes(Class<?>... classes) {
@@ -270,25 +288,33 @@ class SunMiscUnsafeGenerator {
 
   private static class FieldDescriptor {
     final String name;
-    final Class<?> type;
+    final Class<?> targetType;
+    final Class<?> sourceType;
 
-    FieldDescriptor(String name, Class<?> type) {
+    FieldDescriptor(String name, Class<?> targetType, Class<?> sourceType) {
       this.name = name;
-      this.type = type;
+      this.targetType = targetType;
+      this.sourceType = sourceType;
     }
   }
 
   private static class MethodDescriptor {
     final String name;
     final String targetName;
-    final Class<?> returnType;
+    final Class<?> targetReturnType;
+    final Class<?> sourceReturnType;
     final Class<?>[] parameterTypes;
 
     MethodDescriptor(
-        String name, String targetName, Class<?> returnType, Class<?>[] parameterTypes) {
+        String name,
+        String targetName,
+        Class<?> targetReturnType,
+        Class<?> sourceReturnType,
+        Class<?>[] parameterTypes) {
       this.name = name;
       this.targetName = targetName;
-      this.returnType = returnType;
+      this.targetReturnType = targetReturnType;
+      this.sourceReturnType = sourceReturnType;
       this.parameterTypes = parameterTypes;
     }
   }
@@ -329,7 +355,7 @@ class SunMiscUnsafeGenerator {
           cv.visitField(
               ACC_PUBLIC | ACC_STATIC | ACC_FINAL,
               field.name,
-              Type.getDescriptor(field.type),
+              Type.getDescriptor(field.targetType),
               null,
               null);
       fv.visitEnd();
@@ -337,8 +363,10 @@ class SunMiscUnsafeGenerator {
 
     for (MethodDescriptor method : methods) {
       Type[] parameters = toTypes(method.parameterTypes);
-      Type returnType = Type.getType(method.returnType);
+      Type returnType = Type.getType(method.targetReturnType);
       String descriptor = Type.getMethodDescriptor(returnType, parameters);
+      String sourceDescriptor =
+          Type.getMethodDescriptor(Type.getType(method.sourceReturnType), parameters);
       MethodVisitor mv = cv.visitMethod(ACC_PUBLIC, method.name, descriptor, null, null);
       mv.visitCode();
       mv.visitFieldInsn(
@@ -352,8 +380,13 @@ class SunMiscUnsafeGenerator {
           INVOKEVIRTUAL,
           Type.getInternalName(internalUnsafeClass),
           method.targetName,
-          descriptor,
+          sourceDescriptor,
           false);
+      if (method.targetReturnType != method.sourceReturnType
+          && method.targetReturnType == int.class
+          && method.sourceReturnType == long.class) {
+        mv.visitInsn(L2I);
+      }
       mv.visitInsn(returnType.getOpcode(IRETURN));
       mv.visitMaxs(0, 0);
       mv.visitEnd();
@@ -385,8 +418,13 @@ class SunMiscUnsafeGenerator {
             GETSTATIC,
             Type.getInternalName(internalUnsafeClass),
             field.name,
-            Type.getDescriptor(field.type));
-        mv.visitFieldInsn(PUTSTATIC, UNSAFE_NAME, field.name, Type.getDescriptor(field.type));
+            Type.getDescriptor(field.sourceType));
+        if (field.sourceType != field.targetType
+            && field.targetType == int.class
+            && field.sourceType == long.class) {
+          mv.visitInsn(L2I);
+        }
+        mv.visitFieldInsn(PUTSTATIC, UNSAFE_NAME, field.name, Type.getDescriptor(field.targetType));
       }
 
       mv.visitInsn(RETURN);

@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
@@ -42,6 +43,13 @@ class MeterTest {
             .setInstrumentationVersion("1.2.3")
             .setSchemaUrl("http://schema.org")
             .build();
+  }
+
+  @Test
+  void incubatingApiNotAvailable() {
+    assertThatThrownBy(
+            () -> Class.forName("io.opentelemetry.api.incubator.metrics.ExtendedLongGaugeBuilder"))
+        .isInstanceOf(ClassNotFoundException.class);
   }
 
   @Test

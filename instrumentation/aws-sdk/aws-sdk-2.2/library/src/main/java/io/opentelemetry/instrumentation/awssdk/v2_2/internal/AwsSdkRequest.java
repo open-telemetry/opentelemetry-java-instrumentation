@@ -5,11 +5,14 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
+import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.BEDROCK_RUNTIME;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.DYNAMODB;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.KINESIS;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.S3;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.SECRETSMANAGER;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.SNS;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.SQS;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.STEPFUNCTIONS;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.FieldMapping.request;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.FieldMapping.response;
 
@@ -34,21 +37,23 @@ enum AwsSdkRequest {
   SnsRequest(SNS, "SnsRequest"),
   SqsRequest(SQS, "SqsRequest"),
   KinesisRequest(KINESIS, "KinesisRequest"),
+  SecretsManagerRequest(SECRETSMANAGER, "SecretsManagerRequest"),
+  StepFunctionsRequest(STEPFUNCTIONS, "SfnRequest"),
   // specific requests
   BatchGetItem(
       DYNAMODB,
-      "BatchGetItemRequest",
+      "dynamodb.model.BatchGetItemRequest",
       request("aws.dynamodb.table_names", "RequestItems"),
       response("aws.dynamodb.consumed_capacity", "ConsumedCapacity")),
   BatchWriteItem(
       DYNAMODB,
-      "BatchWriteItemRequest",
+      "dynamodb.model.BatchWriteItemRequest",
       request("aws.dynamodb.table_names", "RequestItems"),
       response("aws.dynamodb.consumed_capacity", "ConsumedCapacity"),
       response("aws.dynamodb.item_collection_metrics", "ItemCollectionMetrics")),
   CreateTable(
       DYNAMODB,
-      "CreateTableRequest",
+      "dynamodb.model.CreateTableRequest",
       request("aws.dynamodb.global_secondary_indexes", "GlobalSecondaryIndexes"),
       request("aws.dynamodb.local_secondary_indexes", "LocalSecondaryIndexes"),
       request(
@@ -59,29 +64,29 @@ enum AwsSdkRequest {
           "ProvisionedThroughput.WriteCapacityUnits")),
   DeleteItem(
       DYNAMODB,
-      "DeleteItemRequest",
+      "dynamodb.model.DeleteItemRequest",
       response("aws.dynamodb.consumed_capacity", "ConsumedCapacity"),
       response("aws.dynamodb.item_collection_metrics", "ItemCollectionMetrics")),
   GetItem(
       DYNAMODB,
-      "GetItemRequest",
+      "dynamodb.model.GetItemRequest",
       request("aws.dynamodb.projection_expression", "ProjectionExpression"),
       response("aws.dynamodb.consumed_capacity", "ConsumedCapacity"),
       request("aws.dynamodb.consistent_read", "ConsistentRead")),
   ListTables(
       DYNAMODB,
-      "ListTablesRequest",
+      "dynamodb.model.ListTablesRequest",
       request("aws.dynamodb.exclusive_start_table_name", "ExclusiveStartTableName"),
       response("aws.dynamodb.table_count", "TableNames"),
       request("aws.dynamodb.limit", "Limit")),
   PutItem(
       DYNAMODB,
-      "PutItemRequest",
+      "dynamodb.model.PutItemRequest",
       response("aws.dynamodb.consumed_capacity", "ConsumedCapacity"),
       response("aws.dynamodb.item_collection_metrics", "ItemCollectionMetrics")),
   Query(
       DYNAMODB,
-      "QueryRequest",
+      "dynamodb.model.QueryRequest",
       request("aws.dynamodb.attributes_to_get", "AttributesToGet"),
       request("aws.dynamodb.consistent_read", "ConsistentRead"),
       request("aws.dynamodb.index_name", "IndexName"),
@@ -92,7 +97,7 @@ enum AwsSdkRequest {
       response("aws.dynamodb.consumed_capacity", "ConsumedCapacity")),
   Scan(
       DYNAMODB,
-      "ScanRequest",
+      "dynamodb.model.ScanRequest",
       request("aws.dynamodb.attributes_to_get", "AttributesToGet"),
       request("aws.dynamodb.consistent_read", "ConsistentRead"),
       request("aws.dynamodb.index_name", "IndexName"),
@@ -106,12 +111,12 @@ enum AwsSdkRequest {
       response("aws.dynamodb.scanned_count", "ScannedCount")),
   UpdateItem(
       DYNAMODB,
-      "UpdateItemRequest",
+      "dynamodb.model.UpdateItemRequest",
       response("aws.dynamodb.consumed_capacity", "ConsumedCapacity"),
       response("aws.dynamodb.item_collection_metrics", "ItemCollectionMetrics")),
   UpdateTable(
       DYNAMODB,
-      "UpdateTableRequest",
+      "dynamodb.model.UpdateTableRequest",
       request("aws.dynamodb.attribute_definitions", "AttributeDefinitions"),
       request("aws.dynamodb.global_secondary_index_updates", "GlobalSecondaryIndexUpdates"),
       request(
@@ -119,7 +124,11 @@ enum AwsSdkRequest {
           "ProvisionedThroughput.ReadCapacityUnits"),
       request(
           "aws.dynamodb.provisioned_throughput.write_capacity_units",
-          "ProvisionedThroughput.WriteCapacityUnits"));
+          "ProvisionedThroughput.WriteCapacityUnits")),
+  ConverseRequest(
+      BEDROCK_RUNTIME,
+      "bedrockruntime.model.ConverseRequest",
+      request("gen_ai.request.model", "modelId"));
 
   private final AwsSdkRequestType type;
   private final String requestClass;
@@ -137,17 +146,17 @@ enum AwsSdkRequest {
   @Nullable
   static AwsSdkRequest ofSdkRequest(SdkRequest request) {
     // try request type
-    AwsSdkRequest result = ofType(request.getClass().getSimpleName());
+    AwsSdkRequest result = ofType(request.getClass().getName());
     // try parent - generic
     if (result == null) {
-      result = ofType(request.getClass().getSuperclass().getSimpleName());
+      result = ofType(request.getClass().getSuperclass().getName());
     }
     return result;
   }
 
   private static AwsSdkRequest ofType(String typeName) {
     for (AwsSdkRequest type : values()) {
-      if (type.requestClass.equals(typeName)) {
+      if (typeName.endsWith(type.requestClass)) {
         return type;
       }
     }

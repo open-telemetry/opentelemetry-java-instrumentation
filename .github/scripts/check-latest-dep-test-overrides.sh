@@ -3,7 +3,7 @@
 # all missing version coverage should be documented in supported-libraries.md
 
 if grep -r --include build.gradle.kts latestDepTestLibrary instrumentation \
-    | grep -v :+\" \
+    | grep -v -e :+\" -e :latest.release\" \
     | grep -v "// see .* module" \
     | grep -v "// see test suite below" \
     | grep -v "// no longer applicable" \

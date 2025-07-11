@@ -9,7 +9,6 @@ import static java.util.Collections.emptyList;
 
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.core.instrument.util.TimeUtils;
-import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,12 +27,8 @@ final class HistogramAdviceUtil {
       DoubleHistogramBuilder builder,
       DistributionStatisticConfig config,
       @Nullable TimeUnit timeUnit) {
-    if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
-      return;
-    }
     NavigableSet<Double> buckets = config.getHistogramBuckets(false);
-    ExtendedDoubleHistogramBuilder extendedBuilder = (ExtendedDoubleHistogramBuilder) builder;
-    extendedBuilder.setExplicitBucketBoundariesAdvice(computeBuckets(buckets, timeUnit));
+    builder.setExplicitBucketBoundariesAdvice(computeBuckets(buckets, timeUnit));
   }
 
   private static List<Double> computeBuckets(

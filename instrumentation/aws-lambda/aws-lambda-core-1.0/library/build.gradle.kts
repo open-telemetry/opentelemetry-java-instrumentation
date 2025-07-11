@@ -23,7 +23,6 @@ dependencies {
   testImplementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   testImplementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
-  testImplementation("com.google.guava:guava")
 
   testImplementation(project(":instrumentation:aws-lambda:aws-lambda-core-1.0:testing"))
   testImplementation("uk.org.webcompere:system-stubs-jupiter")

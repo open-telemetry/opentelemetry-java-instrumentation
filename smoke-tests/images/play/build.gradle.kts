@@ -8,7 +8,7 @@ plugins {
   id("com.google.cloud.tools.jib")
   // TODO (trask) this plugin doesn't support Play 2.9+, see https://github.com/gradle/playframework/issues/185
   //  once play 3.1 is released, we can update to https://github.com/orgs/playframework/discussions/12338
-  id("org.gradle.playframework") version "0.14"
+  id("org.gradle.playframework") version "0.16.0"
 }
 
 val playVer = "2.8.22"
@@ -46,8 +46,10 @@ java {
   targetCompatibility = JavaVersion.VERSION_1_8
 }
 
+val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
+
 jib {
   from.image = "eclipse-temurin:$targetJDK"
-  to.image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-play:jdk$targetJDK-$tag"
+  to.image = "ghcr.io/$repo/smoke-test-play:jdk$targetJDK-$tag"
   container.mainClass = "play.core.server.ProdServerStart"
 }

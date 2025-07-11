@@ -2,8 +2,11 @@ name: Release
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  required-jobs:
+  common:
     uses: ./.github/workflows/build-common.yml
 
   # test-latest-deps is intentionally not included in the release workflows
@@ -16,9 +19,11 @@ jobs:
   # and this is not a reason to hold up the release
 
   release:
+    permissions:
+      contents: write # for creating the release
     runs-on: ubuntu-latest
     needs:
-      - required-jobs
+      - common
     outputs:
       version: ${{ steps.create-github-release.outputs.version }}
       prior-version: ${{ steps.create-github-release.outputs.prior-version }}
@@ -81,13 +86,13 @@ jobs:
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
 
-      - uses: actions/setup-java@3a4f6e1af504cf6a31855fa899c6aa5355ba6c12 # v4.7.0
+      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: temurin
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@0bdd871935719febd78681f197cd39af5b6e16a6 # v4.2.2
+        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
 
       - name: Build and publish artifacts
         env:
@@ -95,7 +100,8 @@ jobs:
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
-        run: ./gradlew assemble spdxSbom publishToSonatype closeAndReleaseSonatypeStagingRepository
+        # run: ./gradlew assemble spdxSbom publishToSonatype closeAndReleaseSonatypeStagingRepository
+        run: ./gradlew assemble spdxSbom publishAllPublicationToReleaseRepoRepository generateReleaseBundle uploadReleaseBundle
 
       - name: Build and publish gradle plugins
         env:
@@ -115,7 +121,7 @@ jobs:
           cp javaagent/build/spdx/*.spdx.json sboms
           zip opentelemetry-java-instrumentation-SBOM.zip sboms/*
 
-      - uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         name: Upload SBOMs
         with:
           name: opentelemetry-java-instrumentation-SBOM
@@ -170,21 +176,28 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cp javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar opentelemetry-javaagent.jar
+          cp javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar.asc opentelemetry-javaagent.jar.asc
           gh release create --target $GITHUB_REF_NAME \
                             --title "Version $VERSION" \
                             --notes-file /tmp/release-notes.txt \
                             v$VERSION \
                             opentelemetry-javaagent.jar \
+                            opentelemetry-javaagent.jar.asc \
                             opentelemetry-java-instrumentation-SBOM.zip
 
+          # these are used as job outputs
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "prior-version=$PRIOR_VERSION" >> $GITHUB_OUTPUT
 
-  merge-change-log-to-main:
+  update-apidiff-baseline-to-released-version:
+    permissions:
+      contents: write # for git push to PR branch
     runs-on: ubuntu-latest
     needs:
       - release
     steps:
+      # add change log sync (if any) into this PR since the apidiff update
+      # is required before any other PR can be merged anyway
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Copy change log section from release branch
@@ -205,48 +218,6 @@ jobs:
         run: |
           release_date=$(gh release view v$VERSION --json publishedAt --jq .publishedAt | sed 's/T.*//')
           RELEASE_DATE=$release_date .github/scripts/merge-change-log-after-release.sh
-
-      - name: Use CLA approved github bot
-        run: .github/scripts/use-cla-approved-github-bot.sh
-
-      - name: Create pull request against main
-        env:
-          VERSION: ${{ needs.release.outputs.version }}
-          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GH_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
-        run: |
-          if git diff --quiet; then
-            if [[ $VERSION == *.0 ]]; then
-              echo there are no updates to merge, not creating pull request
-              exit 0 # success
-            else
-              echo patch release notes did not get applied for some reason
-              exit 1 # failure
-            fi
-          fi
-
-          message="Merge change log updates from $GITHUB_REF_NAME"
-          body="Merge change log updates from \`$GITHUB_REF_NAME\`."
-          branch="opentelemetrybot/merge-change-log-updates-from-${GITHUB_REF_NAME//\//-}"
-
-          git checkout -b $branch
-          git commit -a -m "$message"
-          git push --set-upstream origin $branch
-          gh pr create --title "$message" \
-                       --body "$body" \
-                       --base main
-
-  update-apidiff-baseline-to-released-version:
-    runs-on: ubuntu-latest
-    needs:
-      - release
-    steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          ref: main
-
-      - name: Use CLA approved github bot
-        run: .github/scripts/use-cla-approved-github-bot.sh
 
       - name: Wait for release to be available in maven central
         env:
@@ -270,15 +241,24 @@ jobs:
           ./gradlew japicmp -PapiBaseVersion=$PRIOR_VERSION -PapiNewVersion=$VERSION
           ./gradlew --refresh-dependencies japicmp
 
+      - name: Use CLA approved bot
+        run: .github/scripts/use-cla-approved-bot.sh
+
+      - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+
       - name: Create pull request against main
         env:
           VERSION: ${{ needs.release.outputs.version }}
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GH_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           message="Update apidiff baseline to released version $VERSION"
-          body="Update apidiff baseline to released version \`$version\`."
-          branch="opentelemetrybot/update-apidiff-baseline-to-released-version-${VERSION}"
+          body="Update apidiff baseline to released version \`$VERSION\`."
+          branch="otelbot/update-apidiff-baseline-to-released-version-${VERSION}"
 
           git checkout -b $branch
           git add docs/apidiffs

@@ -10,7 +10,9 @@ import static java.util.Collections.unmodifiableList;
 
 import com.sun.management.GarbageCollectionNotificationInfo;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
@@ -55,6 +57,8 @@ public final class GarbageCollector {
 
   static final List<Double> GC_DURATION_BUCKETS = unmodifiableList(asList(0.01, 0.1, 1., 10.));
 
+  private static final AttributeKey<String> JVM_GC_CAUSE = AttributeKey.stringKey("jvm.gc.cause");
+
   private static final NotificationFilter GC_FILTER =
       notification ->
           notification
@@ -62,7 +66,8 @@ public final class GarbageCollector {
               .equals(GarbageCollectionNotificationInfo.GARBAGE_COLLECTION_NOTIFICATION);
 
   /** Register observers for java runtime memory metrics. */
-  public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
+  public static List<AutoCloseable> registerObservers(
+      OpenTelemetry openTelemetry, boolean captureGcCause) {
     if (!isNotificationClassPresent()) {
       logger.fine(
           "The com.sun.management.GarbageCollectionNotificationInfo class is not available;"
@@ -73,14 +78,16 @@ public final class GarbageCollector {
     return registerObservers(
         openTelemetry,
         ManagementFactory.getGarbageCollectorMXBeans(),
-        GarbageCollector::extractNotificationInfo);
+        GarbageCollector::extractNotificationInfo,
+        captureGcCause);
   }
 
   // Visible for testing
   static List<AutoCloseable> registerObservers(
       OpenTelemetry openTelemetry,
       List<GarbageCollectorMXBean> gcBeans,
-      Function<Notification, GarbageCollectionNotificationInfo> notificationInfoExtractor) {
+      Function<Notification, GarbageCollectionNotificationInfo> notificationInfoExtractor,
+      boolean captureGcCause) {
     Meter meter = JmxRuntimeMetricsUtil.getMeter(openTelemetry);
 
     DoubleHistogram gcDuration =
@@ -98,7 +105,7 @@ public final class GarbageCollector {
       }
       NotificationEmitter notificationEmitter = (NotificationEmitter) gcBean;
       GcNotificationListener listener =
-          new GcNotificationListener(gcDuration, notificationInfoExtractor);
+          new GcNotificationListener(gcDuration, notificationInfoExtractor, captureGcCause);
       notificationEmitter.addNotificationListener(listener, GC_FILTER, null);
       result.add(() -> notificationEmitter.removeNotificationListener(listener));
     }
@@ -107,13 +114,16 @@ public final class GarbageCollector {
 
   private static final class GcNotificationListener implements NotificationListener {
 
+    private final boolean captureGcCause;
     private final DoubleHistogram gcDuration;
     private final Function<Notification, GarbageCollectionNotificationInfo>
         notificationInfoExtractor;
 
     private GcNotificationListener(
         DoubleHistogram gcDuration,
-        Function<Notification, GarbageCollectionNotificationInfo> notificationInfoExtractor) {
+        Function<Notification, GarbageCollectionNotificationInfo> notificationInfoExtractor,
+        boolean captureGcCause) {
+      this.captureGcCause = captureGcCause;
       this.gcDuration = gcDuration;
       this.notificationInfoExtractor = notificationInfoExtractor;
     }
@@ -126,10 +136,14 @@ public final class GarbageCollector {
       String gcName = notificationInfo.getGcName();
       String gcAction = notificationInfo.getGcAction();
       double duration = notificationInfo.getGcInfo().getDuration() / MILLIS_PER_S;
-
-      gcDuration.record(
-          duration,
-          Attributes.of(JvmAttributes.JVM_GC_NAME, gcName, JvmAttributes.JVM_GC_ACTION, gcAction));
+      AttributesBuilder builder = Attributes.builder();
+      builder.put(JvmAttributes.JVM_GC_NAME, gcName);
+      builder.put(JvmAttributes.JVM_GC_ACTION, gcAction);
+      if (captureGcCause) {
+        String gcCause = notificationInfo.getGcCause();
+        builder.put(JVM_GC_CAUSE, gcCause);
+      }
+      gcDuration.record(duration, builder.build());
     }
   }
 

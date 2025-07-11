@@ -8,13 +8,17 @@ package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint._
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier
+import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.AbstractHttpServerInstrumentationTest.TIMEOUT
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.Http.ServerBinding
 import org.apache.pekko.http.scaladsl.model.StatusCodes.Found
+import org.apache.pekko.http.scaladsl.model.headers.`Timeout-Access`
 import org.apache.pekko.http.scaladsl.server.Directives._
+import org.apache.pekko.pattern.after
 
-import scala.concurrent.{Await, ExecutionContext}
+import scala.concurrent.duration.{Duration, MILLISECONDS, SECONDS}
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 object PekkoHttpTestWebServer {
   implicit val system: ActorSystem = ActorSystem("my-system")
@@ -23,6 +27,16 @@ object PekkoHttpTestWebServer {
 
   var route = get {
     concat(
+      path(TIMEOUT.rawPath()) {
+        headerValueByType[`Timeout-Access`]() { timeout =>
+          timeout.timeoutAccess.updateTimeout(Duration(1, MILLISECONDS))
+          complete {
+            after(Duration(1, SECONDS)) {
+              Future.successful("You'll never see this")
+            }
+          }
+        }
+      },
       path(SUCCESS.rawPath()) {
         complete(
           AbstractHttpServerTest.controller(SUCCESS, supplier(SUCCESS.getBody))
@@ -36,7 +50,7 @@ object PekkoHttpTestWebServer {
                 override def getParameter(name: String): String =
                   map.get(name).orNull
               })
-              ""
+              INDEXED_CHILD.getBody
             }
           }
           complete(AbstractHttpServerTest.controller(INDEXED_CHILD, supplier))
@@ -46,7 +60,7 @@ object PekkoHttpTestWebServer {
         extractUri { uri =>
           complete(
             AbstractHttpServerTest
-              .controller(INDEXED_CHILD, supplier(uri.queryString().orNull))
+              .controller(QUERY_PARAM, supplier(uri.queryString().orNull))
           )
         }
       },

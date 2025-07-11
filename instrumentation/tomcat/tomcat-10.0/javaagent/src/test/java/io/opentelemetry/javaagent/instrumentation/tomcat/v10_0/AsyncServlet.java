@@ -45,8 +45,9 @@ class AsyncServlet extends HttpServlet {
                     resp.setStatus(endpoint.getStatus());
                     resp.getWriter().print(endpoint.getBody());
                   } else if (endpoint.equals(INDEXED_CHILD)) {
-                    endpoint.collectSpanAttributes(x -> req.getParameter(x));
+                    endpoint.collectSpanAttributes(req::getParameter);
                     resp.setStatus(endpoint.getStatus());
+                    resp.getWriter().print(endpoint.getBody());
                   } else if (endpoint.equals(QUERY_PARAM)) {
                     resp.setStatus(endpoint.getStatus());
                     resp.getWriter().print(req.getQueryString());

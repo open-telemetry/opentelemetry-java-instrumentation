@@ -21,6 +21,9 @@ public class Metric extends MetricStructure {
   @Nullable private String metric;
   @Nullable private String desc;
 
+  public Metric() {}
+
+  @Nullable
   public String getMetric() {
     return metric;
   }
@@ -35,6 +38,7 @@ public class Metric extends MetricStructure {
     return name;
   }
 
+  @Nullable
   public String getDesc() {
     return desc;
   }
@@ -44,12 +48,16 @@ public class Metric extends MetricStructure {
     this.desc = desc.trim();
   }
 
-  MetricInfo buildMetricInfo(
-      @Nullable String prefix,
-      String attributeName,
-      String defaultUnit,
-      MetricInfo.Type defaultType) {
+  /**
+   * @param attributeName attribute name
+   * @param parentJmxRule parent JMX rule where metric is defined
+   * @return metric info
+   * @throws IllegalStateException when effective metric definition is invalid
+   */
+  MetricInfo buildMetricInfo(String attributeName, JmxRule parentJmxRule) {
     String metricName;
+
+    String prefix = parentJmxRule.getPrefix();
     if (metric == null) {
       metricName = prefix == null ? attributeName : (prefix + attributeName);
     } else {
@@ -58,14 +66,32 @@ public class Metric extends MetricStructure {
 
     MetricInfo.Type metricType = getMetricType();
     if (metricType == null) {
-      metricType = defaultType;
+      metricType = parentJmxRule.getMetricType();
+    }
+    if (metricType == null) {
+      metricType = MetricInfo.Type.GAUGE;
     }
 
-    String unit = getUnit();
-    if (unit == null) {
-      unit = defaultUnit;
+    String sourceUnit = getSourceUnit();
+    if (sourceUnit == null) {
+      sourceUnit = parentJmxRule.getSourceUnit();
     }
 
-    return new MetricInfo(metricName, desc, unit, metricType);
+    String unit;
+    if (!getStateMapping().isEmpty()) {
+      // state metrics do not have a unit, use empty string
+      unit = "";
+    } else {
+      unit = getUnit();
+      if (unit == null) {
+        unit = parentJmxRule.getUnit();
+      }
+      if (unit == null) {
+        throw new IllegalStateException(
+            String.format("Metric unit is required for metric '%s'", metricName));
+      }
+    }
+
+    return new MetricInfo(metricName, desc, sourceUnit, unit, metricType);
   }
 }

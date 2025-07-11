@@ -27,7 +27,7 @@ public final class HttpRouteState implements ImplicitContextKeyed {
 
   public static void updateSpan(Context context, Span span) {
     HttpRouteState state = fromContextOrNull(context);
-    if (state != null) {
+    if (state != null && state.span == null) {
       state.span = span;
     }
   }

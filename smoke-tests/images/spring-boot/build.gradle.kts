@@ -42,9 +42,11 @@ springBoot {
   }
 }
 
+val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
+
 jib {
   from.image = "openjdk:$targetJDK"
-  to.image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$targetJDK-$tag"
+  to.image = "ghcr.io/$repo/smoke-test-spring-boot:jdk$targetJDK-$tag"
   container.ports = listOf("8080")
 }
 

@@ -37,7 +37,7 @@ dependencies {
 
   testImplementation("dev.zio:zio_$scalaVersion:$zioVersion")
 
-  latestDepTestLibrary("dev.zio:zio_$scalaVersion:+")
+  latestDepTestLibrary("dev.zio:zio_$scalaVersion:latest.release")
 }
 
 tasks {

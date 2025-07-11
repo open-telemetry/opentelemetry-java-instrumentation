@@ -27,12 +27,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
 
-final class ApplicationSpanBuilder140Incubator extends ApplicationSpanBuilder
+public final class ApplicationSpanBuilder140Incubator extends ApplicationSpanBuilder
     implements ExtendedSpanBuilder {
 
   private final io.opentelemetry.api.incubator.trace.ExtendedSpanBuilder agentBuilder;
 
-  ApplicationSpanBuilder140Incubator(io.opentelemetry.api.trace.SpanBuilder agentBuilder) {
+  public ApplicationSpanBuilder140Incubator(io.opentelemetry.api.trace.SpanBuilder agentBuilder) {
     super(agentBuilder);
     this.agentBuilder = (io.opentelemetry.api.incubator.trace.ExtendedSpanBuilder) agentBuilder;
   }

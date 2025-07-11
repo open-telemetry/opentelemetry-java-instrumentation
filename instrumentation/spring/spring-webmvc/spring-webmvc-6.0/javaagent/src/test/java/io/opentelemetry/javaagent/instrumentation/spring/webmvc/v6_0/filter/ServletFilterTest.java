@@ -12,7 +12,6 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.spring.webmvc.filter.AbstractServletFilterTest;
 import io.opentelemetry.instrumentation.spring.webmvc.filter.FilteredAppConfig;
@@ -24,6 +23,7 @@ import io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.boot.Securi
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.util.Map;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -50,8 +50,7 @@ class ServletFilterTest extends AbstractServletFilterTest {
   protected ConfigurableApplicationContext setupServer() {
     SpringApplication app =
         new SpringApplication(FilteredAppConfig.class, securityConfigClass(), filterConfigClass());
-    app.setDefaultProperties(
-        ImmutableMap.of("server.port", port, "server.error.include-message", "always"));
+    app.setDefaultProperties(Map.of("server.port", port, "server.error.include-message", "always"));
     return app.run();
   }
 

@@ -2,14 +2,11 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
-val cassandraDriverTestVersions = "[3.0,4.0)"
-
 muzzle {
-
   pass {
     group.set("com.datastax.cassandra")
     module.set("cassandra-driver-core")
-    versions.set(cassandraDriverTestVersions)
+    versions.set("[3.0,4.0)")
     assertInverse.set(true)
   }
 
@@ -19,7 +16,7 @@ muzzle {
     name.set("Newest versions of Guava")
     group.set("com.datastax.cassandra")
     module.set("cassandra-driver-core")
-    versions.set(cassandraDriverTestVersions)
+    versions.set("[3.0,4.0)")
     // While com.datastax.cassandra uses old versions of Guava, users may depends themselves on newer versions of Guava
     extraDependency("com.google.guava:guava:27.0-jre")
   }

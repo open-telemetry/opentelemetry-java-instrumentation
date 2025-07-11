@@ -24,6 +24,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -47,19 +54,8 @@ public class FlakyTestReporter {
   private int errorCount;
   private final List<FlakyTest> flakyTests = new ArrayList<>();
 
-  private static class FlakyTest {
-    final String testClassName;
-    final String testName;
-    final String timestamp;
-    final String message;
-
-    FlakyTest(String testClassName, String testName, String timestamp, String message) {
-      this.testClassName = testClassName;
-      this.testName = testName;
-      this.timestamp = timestamp;
-      this.message = message;
-    }
-  }
+  private record FlakyTest(
+      String testClassName, String testName, String timestamp, String message) {}
 
   private void addFlakyTest(
       String testClassName, String testName, String timestamp, String message) {
@@ -75,6 +71,7 @@ public class FlakyTestReporter {
     }
   }
 
+  @SuppressWarnings("JavaTimeDefaultTimeZone")
   private void scanTestFile(Path testReport) {
     Document doc = parse(testReport);
     doc.getDocumentElement().normalize();
@@ -88,6 +85,29 @@ public class FlakyTestReporter {
 
     // there are no flaky tests if there are no failures, skip it
     if (failures == 0 && errors == 0) {
+      return;
+    }
+
+    // google sheets don't automatically recognize dates with time zone, here we reformat the date
+    // so that it wouldn't have the time zone
+    TemporalAccessor ta =
+        DateTimeFormatter.ISO_DATE_TIME.parseBest(
+            timestamp, ZonedDateTime::from, LocalDateTime::from);
+    timestamp = DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(ta);
+
+    // when test result file was modified more than 20 minutes after the time in the results file
+    // then the test results were restored from gradle cache and the test wasn't actually executed
+    Instant reportModified = Instant.ofEpochMilli(testReport.toFile().lastModified());
+    reportModified = reportModified.minus(20, ChronoUnit.MINUTES);
+    Instant testExecuted = null;
+    if (ta instanceof ZonedDateTime zonedDateTime) {
+      testExecuted = zonedDateTime.toInstant();
+    } else if (ta instanceof LocalDateTime localDateTime) {
+      testExecuted = localDateTime.toInstant(OffsetDateTime.now().getOffset());
+    }
+    if (testExecuted != null && reportModified.isAfter(testExecuted)) {
+      System.err.println(
+          "Ignoring " + testReport + " since it appears to be restored from gradle build cache");
       return;
     }
 
@@ -160,6 +180,15 @@ public class FlakyTestReporter {
     return value != null ? value.getNodeValue() : null;
   }
 
+  private static class BaseFileVisitor<T> extends SimpleFileVisitor<T> {
+    @Override
+    public FileVisitResult visitFileFailed(T file, IOException exception) {
+      System.err.println("Failed to visit " + file.toString());
+      exception.printStackTrace();
+      return CONTINUE;
+    }
+  }
+
   private void scanTestResults(Path buildDir) throws IOException {
     Path testResults = buildDir.resolve("test-results");
     if (!Files.exists(testResults)) {
@@ -168,7 +197,7 @@ public class FlakyTestReporter {
 
     Files.walkFileTree(
         testResults,
-        new SimpleFileVisitor<>() {
+        new BaseFileVisitor<>() {
           @Override
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
             String name = file.getFileName().toString();
@@ -185,7 +214,7 @@ public class FlakyTestReporter {
     FlakyTestReporter reporter = new FlakyTestReporter();
     Files.walkFileTree(
         path,
-        new SimpleFileVisitor<>() {
+        new BaseFileVisitor<>() {
           @Override
           public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
               throws IOException {
@@ -248,7 +277,8 @@ public class FlakyTestReporter {
       row.add(flakyTest.testName);
       row.add(buildScanUrl);
       row.add(jobUrl);
-      row.add(flakyTest.message);
+      // there is a limit of 50000 characters in a single cell
+      row.add(abbreviate(flakyTest.message, 10000));
       data.add(row);
     }
 
@@ -260,6 +290,14 @@ public class FlakyTestReporter {
         .append(SPREADSHEET_ID, "Sheet1!A:F", valueRange)
         .setValueInputOption("USER_ENTERED")
         .execute();
+  }
+
+  private static String abbreviate(String text, int maxLength) {
+    if (text.length() > maxLength) {
+      return text.substring(0, maxLength - 3) + "...";
+    }
+
+    return text;
   }
 
   public static void main(String... args) throws Exception {

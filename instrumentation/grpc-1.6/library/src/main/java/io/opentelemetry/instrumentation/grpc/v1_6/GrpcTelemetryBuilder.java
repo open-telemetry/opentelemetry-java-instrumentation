@@ -49,25 +49,12 @@ public final class GrpcTelemetryBuilder {
       additionalServerExtractors = new ArrayList<>();
 
   private boolean captureExperimentalSpanAttributes;
+  private boolean emitMessageEvents = true;
   private List<String> capturedClientRequestMetadata = Collections.emptyList();
   private List<String> capturedServerRequestMetadata = Collections.emptyList();
 
   GrpcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
-  }
-
-  /**
-   * Adds an additional {@link AttributesExtractor} to invoke to set attributes to instrumented
-   * items. The {@link AttributesExtractor} will be executed after all default extractors.
-   *
-   * @deprecated Use {@link #addAttributesExtractor(AttributesExtractor)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public GrpcTelemetryBuilder addAttributeExtractor(
-      AttributesExtractor<? super GrpcRequest, ? super Status> attributesExtractor) {
-    additionalExtractors.add(attributesExtractor);
-    return this;
   }
 
   /**
@@ -127,6 +114,16 @@ public final class GrpcTelemetryBuilder {
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setPeerService(String peerService) {
     this.peerService = peerService;
+    return this;
+  }
+
+  /**
+   * Determines whether to add span event for each individual message received and sent. The default
+   * is true. Set this to false in case of streaming large volumes of messages.
+   */
+  @CanIgnoreReturnValue
+  public GrpcTelemetryBuilder setEmitMessageEvents(boolean emitMessageEvents) {
+    this.emitMessageEvents = emitMessageEvents;
     return this;
   }
 
@@ -211,6 +208,7 @@ public final class GrpcTelemetryBuilder {
         // So we go ahead and inject manually in this instrumentation.
         clientInstrumenterBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient()),
         openTelemetry.getPropagators(),
-        captureExperimentalSpanAttributes);
+        captureExperimentalSpanAttributes,
+        emitMessageEvents);
   }
 }

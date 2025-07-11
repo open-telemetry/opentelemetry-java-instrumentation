@@ -13,8 +13,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.incubator.events.EventLogger;
-import io.opentelemetry.api.incubator.events.GlobalEventLoggerProvider;
+import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
 import io.opentelemetry.sdk.common.Clock;
 import io.opentelemetry.sdk.internal.DaemonThreadFactory;
@@ -57,14 +56,16 @@ final class JarAnalyzer implements ClassFileTransformer {
   private final Set<URI> seenUris = new HashSet<>();
   private final BlockingQueue<URL> toProcess = new LinkedBlockingDeque<>();
 
-  private JarAnalyzer(OpenTelemetry unused, int jarsPerSecond) {
-    // TODO(jack-berg): Use OpenTelemetry to obtain EventLogger when event API is stable
-    EventLogger eventLogger =
-        GlobalEventLoggerProvider.get()
-            .eventLoggerBuilder(JmxRuntimeMetricsUtil.getInstrumentationName())
-            .setInstrumentationVersion(JmxRuntimeMetricsUtil.getInstrumentationVersion())
-            .build();
-    Worker worker = new Worker(eventLogger, toProcess, jarsPerSecond);
+  private JarAnalyzer(OpenTelemetry openTelemetry, int jarsPerSecond) {
+    ExtendedLogRecordBuilder logRecordBuilder =
+        (ExtendedLogRecordBuilder)
+            openTelemetry
+                .getLogsBridge()
+                .loggerBuilder(JmxRuntimeMetricsUtil.getInstrumentationName())
+                .setInstrumentationVersion(JmxRuntimeMetricsUtil.getInstrumentationVersion())
+                .build()
+                .logRecordBuilder();
+    Worker worker = new Worker(logRecordBuilder, toProcess, jarsPerSecond);
     Thread workerThread =
         new DaemonThreadFactory(JarAnalyzer.class.getSimpleName() + "_WorkerThread")
             .newThread(worker);
@@ -152,11 +153,12 @@ final class JarAnalyzer implements ClassFileTransformer {
 
   private static final class Worker implements Runnable {
 
-    private final EventLogger eventLogger;
+    private final ExtendedLogRecordBuilder eventLogger;
     private final BlockingQueue<URL> toProcess;
     private final io.opentelemetry.sdk.internal.RateLimiter rateLimiter;
 
-    private Worker(EventLogger eventLogger, BlockingQueue<URL> toProcess, int jarsPerSecond) {
+    private Worker(
+        ExtendedLogRecordBuilder eventLogger, BlockingQueue<URL> toProcess, int jarsPerSecond) {
       this.eventLogger = eventLogger;
       this.toProcess = toProcess;
       this.rateLimiter =
@@ -166,7 +168,7 @@ final class JarAnalyzer implements ClassFileTransformer {
 
     /**
      * Continuously poll the {@link #toProcess} for archive {@link URL}s, and process each wit
-     * {@link #processUrl(EventLogger, URL)}.
+     * {@link #processUrl(ExtendedLogRecordBuilder, URL)}.
      */
     @Override
     public void run() {
@@ -200,7 +202,7 @@ final class JarAnalyzer implements ClassFileTransformer {
    * Process the {@code archiveUrl}, extracting metadata from it and emitting an event with the
    * content.
    */
-  static void processUrl(EventLogger eventLogger, URL archiveUrl) {
+  static void processUrl(ExtendedLogRecordBuilder eventLogger, URL archiveUrl) {
     JarDetails jarDetails;
     try {
       jarDetails = JarDetails.forUrl(archiveUrl);
@@ -239,6 +241,6 @@ final class JarAnalyzer implements ClassFileTransformer {
     builder.put(PACKAGE_CHECKSUM, packageChecksum);
     builder.put(PACKAGE_CHECKSUM_ALGORITHM, "SHA1");
 
-    eventLogger.builder(EVENT_NAME_INFO).setAttributes(builder.build()).emit();
+    eventLogger.setEventName(EVENT_NAME_INFO).setAllAttributes(builder.build()).emit();
   }
 }

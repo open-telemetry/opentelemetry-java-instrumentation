@@ -6,6 +6,9 @@ on:
     - cron: "0 4 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   graalvm-native-tests:
     uses: ./.github/workflows/reusable-native-tests.yml
@@ -13,6 +16,9 @@ jobs:
       test-latest-deps: true
 
   workflow-notification:
+    permissions:
+      contents: read
+      issues: write
     needs:
       - graalvm-native-tests
     if: always()

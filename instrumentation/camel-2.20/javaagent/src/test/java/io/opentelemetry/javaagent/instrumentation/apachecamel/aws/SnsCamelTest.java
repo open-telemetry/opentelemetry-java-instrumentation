@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 class SnsCamelTest {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static final Logger logger = LoggerFactory.getLogger(SnsCamelTest.class);
 

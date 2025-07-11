@@ -21,9 +21,10 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.javaagent.bootstrap.AgentClassLoader;
 import io.opentelemetry.javaagent.bootstrap.BootstrapPackagePrefixesHolder;
-import io.opentelemetry.javaagent.bootstrap.ClassFileTransformerHolder;
 import io.opentelemetry.javaagent.bootstrap.DefineClassHelper;
 import io.opentelemetry.javaagent.bootstrap.InstrumentedTaskClasses;
+import io.opentelemetry.javaagent.bootstrap.LambdaTransformer;
+import io.opentelemetry.javaagent.bootstrap.LambdaTransformerHolder;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizer;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
@@ -47,7 +48,9 @@ import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling;
 import io.opentelemetry.javaagent.tooling.util.Trie;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.SdkAutoconfigureAccess;
+import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -55,6 +58,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -63,7 +67,6 @@ import javax.annotation.Nullable;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.AgentBuilderUtil;
-import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
 import net.bytebuddy.description.type.TypeDefinition;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.DynamicType;
@@ -122,6 +125,11 @@ public class AgentInstaller {
     EmbeddedInstrumentationProperties.setPropertiesLoader(extensionClassLoader);
     setDefineClassHandler();
     FieldBackedImplementationConfiguration.configure(earlyConfig);
+    // preload ThreadLocalRandom to avoid occasional
+    // java.lang.ClassCircularityError: java/util/concurrent/ThreadLocalRandom
+    // see https://github.com/raphw/byte-buddy/issues/1666 and
+    // https://bugs.openjdk.org/browse/JDK-8164165
+    ThreadLocalRandom.current();
 
     AgentBuilder agentBuilder =
         new AgentBuilder.Default(
@@ -159,7 +167,9 @@ public class AgentInstaller {
         installOpenTelemetrySdk(extensionClassLoader);
 
     ConfigProperties sdkConfig = AgentListener.resolveConfigProperties(autoConfiguredSdk);
-    AgentInstrumentationConfig.internalInitializeConfig(new ConfigPropertiesBridge(sdkConfig));
+    AgentInstrumentationConfig.internalInitializeConfig(
+        new ConfigPropertiesBridge(
+            sdkConfig, AutoConfigureUtil.getConfigProvider(autoConfiguredSdk)));
     copyNecessaryConfigToSystemProperties(sdkConfig);
 
     setBootstrapPackages(sdkConfig, extensionClassLoader);
@@ -199,9 +209,18 @@ public class AgentInstaller {
     logger.log(FINE, "Installed {0} extension(s)", numberOfLoadedExtensions);
 
     agentBuilder = AgentBuilderUtil.optimize(agentBuilder);
-    ResettableClassFileTransformer resettableClassFileTransformer = agentBuilder.installOn(inst);
+    ClassFileTransformer transformer = agentBuilder.installOn(inst);
+    LambdaTransformer lambdaTransformer;
+    if (JavaModule.isSupported()) {
+      // wrapping in a JPMS compliant implementation
+      lambdaTransformer = new Java9LambdaTransformer(transformer);
+    } else {
+      // wrapping in a java 8 compliant transformer
+      lambdaTransformer = new Java8LambdaTransformer(transformer);
+    }
+    LambdaTransformerHolder.setLambdaTransformer(lambdaTransformer);
+
     instrumentationInstalled = true;
-    ClassFileTransformerHolder.setClassFileTransformer(resettableClassFileTransformer);
 
     addHttpServerResponseCustomizers(extensionClassLoader);
 
@@ -216,9 +235,11 @@ public class AgentInstaller {
 
     AgentBuilder.Identified.Extendable extendableAgentBuilder =
         agentBuilder
-            .ignore(
-                target -> instrumentationInstalled, // turn off after instrumentation is installed
-                Objects::nonNull)
+            // ignore classes that are not in boot loader, this also ignores classes in our agent
+            // loader
+            .ignore(any(), Objects::nonNull)
+            // turn off after instrumentation is installed
+            .or(target -> instrumentationInstalled)
             .type(none())
             .transform(
                 (builder, typeDescription, classLoader, module, protectionDomain) -> builder);

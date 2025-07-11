@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.vertx.reactive.server;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.vertx.circuitbreaker.CircuitBreakerOptions;
@@ -15,8 +17,12 @@ import io.vertx.reactivex.circuitbreaker.CircuitBreaker;
 import io.vertx.reactivex.core.AbstractVerticle;
 import io.vertx.reactivex.ext.web.Router;
 import io.vertx.reactivex.ext.web.RoutingContext;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-class VertxRxCircuitBreakerHttpServerTest extends VertxRxHttpServerTest {
+class VertxRxCircuitBreakerHttpServerTest extends AbstractVertxRxHttpServerTest {
+
+  @RegisterExtension
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   @Override
   protected void configure(HttpServerTestOptions options) {

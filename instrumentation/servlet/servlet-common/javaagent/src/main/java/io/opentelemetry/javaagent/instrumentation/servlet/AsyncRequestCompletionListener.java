@@ -23,17 +23,21 @@ public class AsyncRequestCompletionListener<REQUEST, RESPONSE>
       Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> instrumenter,
       ServletRequestContext<REQUEST> requestContext,
       Context context) {
+    // The context passed into this method may contain other spans besides the server span. To end
+    // the server span we get the context that set at the start of the request with
+    // ServletHelper#setAsyncListenerResponse that contains just the server span.
+    Context serverSpanContext = servletHelper.getAsyncListenerContext(context);
     this.servletHelper = servletHelper;
     this.instrumenter = instrumenter;
     this.requestContext = requestContext;
-    this.context = context;
+    this.context = serverSpanContext != null ? serverSpanContext : context;
   }
 
   @Override
   public void onComplete(RESPONSE response) {
     if (responseHandled.compareAndSet(false, true)) {
       ServletResponseContext<RESPONSE> responseContext = new ServletResponseContext<>(response);
-      Throwable throwable = servletHelper.getAsyncException(requestContext.request());
+      Throwable throwable = servletHelper.getAsyncException(context);
       instrumenter.end(context, requestContext, responseContext, throwable);
     }
   }
@@ -41,10 +45,10 @@ public class AsyncRequestCompletionListener<REQUEST, RESPONSE>
   @Override
   public void onTimeout(long timeout) {
     if (responseHandled.compareAndSet(false, true)) {
-      RESPONSE response = servletHelper.getAsyncListenerResponse(requestContext.request());
+      RESPONSE response = servletHelper.getAsyncListenerResponse(context);
       ServletResponseContext<RESPONSE> responseContext = new ServletResponseContext<>(response);
       responseContext.setTimeout(timeout);
-      Throwable throwable = servletHelper.getAsyncException(requestContext.request());
+      Throwable throwable = servletHelper.getAsyncException(context);
       instrumenter.end(context, requestContext, responseContext, throwable);
     }
   }

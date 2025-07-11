@@ -53,7 +53,7 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
   @Test
   void testKafkaProduceAndConsumeWithStreamsInBetween() throws Exception {
     Properties config = new Properties();
-    config.putAll(producerProps(KafkaStreamsBaseTest.kafka.getBootstrapServers()));
+    config.putAll(producerProps(kafka.getBootstrapServers()));
     config.put(StreamsConfig.APPLICATION_ID_CONFIG, "test-application");
     config.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.Integer().getClass().getName());
     config.put(
@@ -74,12 +74,11 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
     streams.start();
 
     String greeting = "TESTING TESTING 123!";
-    KafkaStreamsBaseTest.producer.send(new ProducerRecord<>(STREAM_PENDING, 10, greeting));
+    producer.send(new ProducerRecord<>(STREAM_PENDING, 10, greeting));
 
     awaitUntilConsumerIsReady();
     @SuppressWarnings("PreferJavaTimeOverload")
-    ConsumerRecords<Integer, String> records =
-        KafkaStreamsBaseTest.consumer.poll(Duration.ofSeconds(10).toMillis());
+    ConsumerRecords<Integer, String> records = poll(Duration.ofSeconds(10));
     Headers receivedHeaders = null;
     for (ConsumerRecord<Integer, String> record : records) {
       Span.current().setAttribute("testing", 123);

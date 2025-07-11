@@ -8,13 +8,13 @@ buildscript {
     }
     maven {
       name = "sonatype"
-      url = uri("https://oss.sonatype.org/content/repositories/snapshots")
+      url = uri("https://central.sonatype.com/repository/maven-snapshots/")
     }
   }
   dependencies {
-    classpath "com.diffplug.spotless:spotless-plugin-gradle:7.0.2"
-    classpath "com.gradleup.shadow:shadow-gradle-plugin:8.3.5"
-    classpath "io.opentelemetry.instrumentation:gradle-plugins:2.13.0-alpha-SNAPSHOT"
+    classpath "com.diffplug.spotless:spotless-plugin-gradle:7.1.0"
+    classpath "com.gradleup.shadow:shadow-gradle-plugin:8.3.8"
+    classpath "io.opentelemetry.instrumentation:gradle-plugins:2.18.0-alpha-SNAPSHOT"
   }
 }
 
@@ -27,14 +27,13 @@ subprojects {
   ext {
     versions = [
       // this line is managed by .github/scripts/update-sdk-version.sh
-      opentelemetrySdk           : "1.46.0",
+      opentelemetrySdk           : "1.51.0",
 
       // these lines are managed by .github/scripts/update-version.sh
-      opentelemetryJavaagent     : "2.13.0-SNAPSHOT",
-      opentelemetryJavaagentAlpha: "2.13.0-alpha-SNAPSHOT",
+      opentelemetryJavaagent     : "2.18.0-SNAPSHOT",
+      opentelemetryJavaagentAlpha: "2.18.0-alpha-SNAPSHOT",
 
-      autoservice                : "1.1.1",
-      junit                      : "5.11.4"
+      autoservice                : "1.1.1"
     ]
 
     deps = [
@@ -49,7 +48,7 @@ subprojects {
     mavenCentral()
     maven {
       name = "sonatype"
-      url = uri("https://oss.sonatype.org/content/repositories/snapshots")
+      url = uri("https://central.sonatype.com/repository/maven-snapshots/")
     }
   }
 
@@ -68,10 +67,12 @@ subprojects {
     implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:${versions.opentelemetryJavaagent}"))
     implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:${versions.opentelemetryJavaagentAlpha}"))
 
-    testImplementation("org.mockito:mockito-core:5.15.2")
-    testImplementation(enforcedPlatform("org.junit:junit-bom:${versions.junit}"))
-    testImplementation("org.junit.jupiter:junit-jupiter-api:${versions.junit}")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${versions.junit}")
+    testImplementation("org.mockito:mockito-core:5.18.0")
+
+    testImplementation(enforcedPlatform("org.junit:junit-bom:5.13.3"))
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
   }
 
   tasks {

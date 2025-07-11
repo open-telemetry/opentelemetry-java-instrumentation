@@ -127,7 +127,8 @@ class Netty38ServerTest extends AbstractHttpServerTest<ServerBootstrap> {
                                   HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()));
                           response.setContent(responseContent);
                         } else if (INDEXED_CHILD.equals(endpoint)) {
-                          responseContent = ChannelBuffers.EMPTY_BUFFER;
+                          responseContent =
+                              ChannelBuffers.copiedBuffer(endpoint.getBody(), CharsetUtil.UTF_8);
                           endpoint.collectSpanAttributes(
                               name ->
                                   new QueryStringDecoder(uri)

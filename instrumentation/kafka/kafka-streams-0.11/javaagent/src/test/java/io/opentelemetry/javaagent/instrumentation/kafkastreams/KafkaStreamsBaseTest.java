@@ -28,6 +28,7 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
@@ -146,7 +147,7 @@ abstract class KafkaStreamsBaseTest {
       return;
     }
     for (int i = 0; i < 10; i++) {
-      consumer.poll(0);
+      poll(Duration.ofMillis(100));
       if (consumerReady.await(1, TimeUnit.SECONDS)) {
         break;
       }
@@ -155,6 +156,10 @@ abstract class KafkaStreamsBaseTest {
       throw new AssertionError("Consumer wasn't assigned any partitions!");
     }
     consumer.seekToBeginning(Collections.emptyList());
+  }
+
+  public static ConsumerRecords<Integer, String> poll(Duration duration) {
+    return KafkaStreamsReflectionUtil.poll(consumer, duration);
   }
 
   static Context getContext(Headers headers) {

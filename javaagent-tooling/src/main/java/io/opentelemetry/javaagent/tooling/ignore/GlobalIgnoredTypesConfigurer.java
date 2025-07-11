@@ -99,7 +99,8 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
         .allowClass("sun.net.www.protocol.")
         .allowClass("sun.rmi.server")
         .allowClass("sun.rmi.transport")
-        .allowClass("sun.net.www.http.HttpClient");
+        .allowClass("sun.net.www.http.HttpClient")
+        .allowClass("sun.net.httpserver.");
 
     builder.ignoreClass("org.slf4j.");
 
@@ -183,5 +184,8 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
     // Skip propagating context into truffle compiler.
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/8415
     builder.ignoreTaskClass("org.graalvm.compiler.truffle.runtime.CompilationTask");
+
+    // Skip propagating context into mysql jdbc driver cleanup thread.
+    builder.ignoreTaskClass("com.mysql.cj.jdbc.AbandonedConnectionCleanupThread");
   }
 }

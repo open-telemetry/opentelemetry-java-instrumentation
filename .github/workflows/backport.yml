@@ -12,7 +12,7 @@ permissions:
 jobs:
   backport:
     permissions:
-      contents: write  # for Git to git push
+      contents: write  # for git push to PR branch
     runs-on: ubuntu-latest
     steps:
       - run: |
@@ -26,23 +26,36 @@ jobs:
           # history is needed to run git cherry-pick below
           fetch-depth: 0
 
-      - name: Use CLA approved github bot
-        run: .github/scripts/use-cla-approved-github-bot.sh
+      - name: Use CLA approved bot
+        run: .github/scripts/use-cla-approved-bot.sh
+
+      - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
 
       - name: Create pull request
         env:
           NUMBER: ${{ github.event.inputs.number }}
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GH_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           commit=$(gh pr view $NUMBER --json mergeCommit --jq .mergeCommit.oid)
           title=$(gh pr view $NUMBER --json title --jq .title)
 
-          branch="opentelemetrybot/backport-${NUMBER}-to-${GITHUB_REF_NAME//\//-}"
+          branch="otelbot/backport-${NUMBER}-to-${GITHUB_REF_NAME//\//-}"
 
           git checkout -b $branch
           git cherry-pick $commit
+
+          # note this push will fail if the backport contains any workflow files
+          # because secrets.GITHUB_TOKEN doesn't have this permission
+          # supporting this would require another access token with content write
+          # and workflow write permissions
+          # so for now at least PRs that update workflow files need to be backported manually
           git push --set-upstream origin $branch
+
           gh pr create --title "[$GITHUB_REF_NAME] $title" \
                        --body "Clean cherry-pick of #$NUMBER to the \`$GITHUB_REF_NAME\` branch." \
                        --base $GITHUB_REF_NAME

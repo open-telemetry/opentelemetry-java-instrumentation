@@ -1,0 +1,5 @@
+configurations:
+  - name: otel.instrumentation.apache-shenyu.experimental-span-attributes
+    description: Enables experimental span attributes for Apache Shenyu instrumentation.
+    type: boolean
+    default: false

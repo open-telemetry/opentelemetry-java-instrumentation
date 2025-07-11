@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc.boot;
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionSuffixAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -19,8 +21,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -48,7 +48,6 @@ import org.springframework.security.web.util.OnCommittedResponseWrapper;
 import org.springframework.web.servlet.resource.ResourceHttpRequestHandler;
 import org.springframework.web.servlet.view.RedirectView;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractSpringBootBasedTest
     extends AbstractHttpServerTest<ConfigurableApplicationContext> {
 
@@ -151,8 +150,7 @@ public abstract class AbstractSpringBootBasedTest
             span.hasName("BasicErrorController.error")
                 .hasKind(SpanKind.INTERNAL)
                 .hasAttributesSatisfyingExactly(
-                    satisfies(CODE_NAMESPACE, v -> v.endsWith(".BasicErrorController")),
-                    equalTo(CODE_FUNCTION, "error")));
+                    codeFunctionSuffixAssertions(".BasicErrorController", "error")));
     return spanAssertions;
   }
 
@@ -168,19 +166,7 @@ public abstract class AbstractSpringBootBasedTest
 
     span.hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
-            satisfies(
-                CODE_NAMESPACE,
-                val ->
-                    val.satisfiesAnyOf(
-                        v -> assertThat(v).isEqualTo(OnCommittedResponseWrapper.class.getName()),
-                        v ->
-                            assertThat(v)
-                                .isEqualTo(
-                                    "org.springframework.security.web.firewall.FirewalledResponse"),
-                        v ->
-                            assertThat(v)
-                                .isEqualTo("jakarta.servlet.http.HttpServletResponseWrapper"))),
-            equalTo(CODE_FUNCTION, methodName));
+            codeFunctionAssertions(OnCommittedResponseWrapper.class, methodName));
     return span;
   }
 
@@ -207,8 +193,7 @@ public abstract class AbstractSpringBootBasedTest
     String codeFunction = handlerSpanName.substring(handlerSpanName.indexOf('.') + 1);
     span.hasName(handlerSpanName)
         .hasKind(SpanKind.INTERNAL)
-        .hasAttributesSatisfyingExactly(
-            equalTo(CODE_NAMESPACE, codeNamespace), equalTo(CODE_FUNCTION, codeFunction));
+        .hasAttributesSatisfyingExactly(codeFunctionAssertions(codeNamespace, codeFunction));
     if (endpoint == EXCEPTION) {
       span.hasStatus(StatusData.error());
       span.hasEventsSatisfyingExactly(

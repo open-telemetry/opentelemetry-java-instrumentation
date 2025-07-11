@@ -34,8 +34,11 @@ public final class GraphQLTelemetry {
       OpenTelemetry openTelemetry,
       boolean sanitizeQuery,
       Instrumenter<DataFetchingEnvironment, Void> dataFetcherInstrumenter,
-      boolean createSpansForTrivialDataFetcher) {
-    helper = GraphqlInstrumenterFactory.createInstrumentationHelper(openTelemetry, sanitizeQuery);
+      boolean createSpansForTrivialDataFetcher,
+      boolean addOperationNameToSpanName) {
+    helper =
+        GraphqlInstrumenterFactory.createInstrumentationHelper(
+            openTelemetry, sanitizeQuery, addOperationNameToSpanName);
     this.dataFetcherInstrumenter = dataFetcherInstrumenter;
     this.createSpansForTrivialDataFetcher = createSpansForTrivialDataFetcher;
   }

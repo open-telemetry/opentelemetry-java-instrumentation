@@ -17,3 +17,9 @@ dependencies {
   testImplementation(project(":instrumentation:jodd-http-4.2:javaagent"))
   testImplementation(project(":instrumentation-api-incubator"))
 }
+
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+}

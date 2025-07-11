@@ -12,11 +12,11 @@ class Experimental private constructor() {
 
   companion object {
     fun emitExperimentalTelemetry(builder: AbstractKtorClientTelemetryBuilder) {
-      builder.builder().setEmitExperimentalHttpClientMetrics(true)
+      builder.builder().setEmitExperimentalHttpClientTelemetry(true)
     }
 
     fun emitExperimentalTelemetry(builder: AbstractKtorServerTelemetryBuilder) {
-      builder.builder.setEmitExperimentalHttpServerMetrics(true)
+      builder.builder.setEmitExperimentalHttpServerTelemetry(true)
     }
   }
 }

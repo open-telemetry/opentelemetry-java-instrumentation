@@ -13,6 +13,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.semconv.DbAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,7 +22,8 @@ import org.junit.jupiter.api.Test;
 
 class DbClientAttributesExtractorTest {
 
-  static final class TestAttributesGetter implements DbClientAttributesGetter<Map<String, String>> {
+  static final class TestAttributesGetter
+      implements DbClientAttributesGetter<Map<String, String>, Void> {
     @Override
     public String getDbSystem(Map<String, String> map) {
       return map.get("db.system");
@@ -84,15 +86,15 @@ class DbClientAttributesExtractorTest {
       assertThat(startAttributes.build())
           .containsOnly(
               entry(DbIncubatingAttributes.DB_SYSTEM, "myDb"),
-              entry(DbIncubatingAttributes.DB_SYSTEM_NAME, "myDb"),
+              entry(DbAttributes.DB_SYSTEM_NAME, "myDb"),
               entry(DbIncubatingAttributes.DB_USER, "username"),
               entry(DbIncubatingAttributes.DB_NAME, "potatoes"),
               entry(DbIncubatingAttributes.DB_CONNECTION_STRING, "mydb:///potatoes"),
               entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT * FROM potato"),
               entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
-              entry(DbIncubatingAttributes.DB_NAMESPACE, "potatoes"),
-              entry(DbIncubatingAttributes.DB_QUERY_TEXT, "SELECT * FROM potato"),
-              entry(DbIncubatingAttributes.DB_OPERATION_NAME, "SELECT"));
+              entry(DbAttributes.DB_NAMESPACE, "potatoes"),
+              entry(DbAttributes.DB_QUERY_TEXT, "SELECT * FROM potato"),
+              entry(DbAttributes.DB_OPERATION_NAME, "SELECT"));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
@@ -105,10 +107,10 @@ class DbClientAttributesExtractorTest {
     } else if (SemconvStability.emitStableDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
-              entry(DbIncubatingAttributes.DB_SYSTEM_NAME, "myDb"),
-              entry(DbIncubatingAttributes.DB_NAMESPACE, "potatoes"),
-              entry(DbIncubatingAttributes.DB_QUERY_TEXT, "SELECT * FROM potato"),
-              entry(DbIncubatingAttributes.DB_OPERATION_NAME, "SELECT"));
+              entry(DbAttributes.DB_SYSTEM_NAME, "myDb"),
+              entry(DbAttributes.DB_NAMESPACE, "potatoes"),
+              entry(DbAttributes.DB_QUERY_TEXT, "SELECT * FROM potato"),
+              entry(DbAttributes.DB_OPERATION_NAME, "SELECT"));
     }
 
     assertThat(endAttributes.build().isEmpty()).isTrue();

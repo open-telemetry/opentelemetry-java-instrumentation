@@ -25,9 +25,11 @@ java {
   targetCompatibility = JavaVersion.VERSION_1_8
 }
 
+val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
+
 jib {
   from.image = "openjdk:$targetJDK"
-  to.image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-security-manager:jdk$targetJDK-$tag"
+  to.image = "ghcr.io/$repo/smoke-test-security-manager:jdk$targetJDK-$tag"
   container.mainClass = "io.opentelemetry.smoketest.securitymanager.Main"
   container.jvmFlags = listOf("-Djava.security.manager", "-Djava.security.policy=/app/resources/security.policy")
 }

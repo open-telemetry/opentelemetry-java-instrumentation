@@ -1,35 +1,8 @@
----
+# OpenTelemetry Instrumentation for Java
 
-<p align="center">
-  <strong>
-    <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation#getting-started">Getting Started</a>
-    &nbsp;&nbsp;&bull;&nbsp;&nbsp;
-    <a href="https://github.com/open-telemetry/community#special-interest-groups">Getting Involved</a>
-    &nbsp;&nbsp;&bull;&nbsp;&nbsp;
-    <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/discussions">Getting In Touch</a>
-  </strong>
-</p>
-
-<p align="center">
-  <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/build.yml">
-    <img alt="Build Status" src="https://img.shields.io/github/actions/workflow/status/open-telemetry/opentelemetry-java-instrumentation/build.yml?branch=main&style=for-the-badge">
-  </a>
-  <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases">
-    <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/open-telemetry/opentelemetry-java-instrumentation?style=for-the-badge">
-  </a>
-</p>
-
-<p align="center">
-  <strong>
-    <a href="CONTRIBUTING.md">Contributing</a>
-    &nbsp;&nbsp;&bull;&nbsp;&nbsp;
-    <a href="docs/scope.md">Scope</a>
-  </strong>
-</p>
-
----
-
-# <img src="https://opentelemetry.io/img/logos/opentelemetry-logo-nav.png" alt="OpenTelemetry Icon" width="45" height=""> OpenTelemetry Instrumentation for Java
+[![Release](https://img.shields.io/github/v/release/open-telemetry/opentelemetry-java-instrumentation?include_prereleases&style=)](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/open-telemetry/opentelemetry-java-instrumentation/badge)](https://scorecard.dev/viewer/?uri=github.com/open-telemetry/opentelemetry-java-instrumentation)
+[![Slack](https://img.shields.io/badge/slack-@cncf/otel--java-blue.svg?logo=slack)](https://cloud-native.slack.com/archives/C014L2KCTE3)
 
 * [About](#about)
 * [Getting Started](#getting-started)
@@ -65,13 +38,6 @@ the [latest version](https://github.com/open-telemetry/opentelemetry-java-instru
 This package includes the instrumentation agent as well as
 instrumentations for all supported libraries and all available data exporters.
 The package provides a completely automatic, out-of-the-box experience.
-
-*Note: There are 2.x releases and 1.x releases. The 2.0 release included significant breaking
-changes, the details of which can be found in the [release notes](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/tag/v2.0.0).
-It is recommended to use the latest 2.x release which will have the latest features and improvements.
-1.x will receive security patches for a limited time and will not include other bug fixes and
-enhancements.*
-
 
 Enable the instrumentation agent using the `-javaagent` flag to the JVM.
 
@@ -131,6 +97,11 @@ having to create a separate distribution or to fork this repository. For example
 custom samplers or span exporters, set new defaults, and embed it all in the agent to obtain a
 single jar file.
 
+## Creating an agent distribution
+
+[Distribution](examples/distro/README.md) provides guidance on creating a separate distribution, serving as a collection of examples for extending the functionality of the OpenTelemetry Java instrumentation agent. It also demonstrates how to repackage the agent while incorporating custom features.
+[Agent extensions](#creating-agent-extensions) are recommended instead for most users as they are simpler and do not require rebuilding with each OpenTelemetry Java agent release.
+
 ## Manually instrumenting
 
 For most users, the out-of-the-box instrumentation is completely sufficient and nothing more has to
@@ -158,39 +129,39 @@ Debug logging negatively impacts the performance of your application.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Triagers ([@open-telemetry/java-instrumentation-triagers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-triagers)):
-
-- [Jonas Kunz](https://github.com/JonasKunz), Elastic
-- [Sylvain Juge](https://github.com/SylvainJuge), Elastic
-
-Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-approvers)):
-
-- [Gregor Zietlinger](https://github.com/zeitlinger), Grafana
-- [Jack Berg](https://github.com/jack-berg), New Relic
-- [Jason Plumb](https://github.com/breedx-splk), Splunk
-- [Jay DeLuca](https://github.com/jaydeluca)
-- [Jean Bisutti](https://github.com/jeanbisutti), Microsoft
-- [John Watson](https://github.com/jkwatson), Cloudera
-- [Steve Rao](https://github.com/steverao), Alibaba
-
-Maintainers ([@open-telemetry/java-instrumentation-maintainers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-maintainers)):
+### Maintainers
 
 - [Lauri Tulmin](https://github.com/laurit), Splunk
 - [Trask Stalnaker](https://github.com/trask), Microsoft
 
-Emeritus maintainers:
+For more information about the maintainer role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#maintainer).
+
+### Approvers
+
+- [Gregor Zeitlinger](https://github.com/zeitlinger), Grafana
+- [Jack Berg](https://github.com/jack-berg), New Relic
+- [Jason Plumb](https://github.com/breedx-splk), Splunk
+- [Jay DeLuca](https://github.com/jaydeluca), Grafana
+- [Jean Bisutti](https://github.com/jeanbisutti), Microsoft
+- [John Watson](https://github.com/jkwatson), Cloudera
+- [Jonas Kunz](https://github.com/JonasKunz), Elastic
+- [Steve Rao](https://github.com/steverao), Alibaba
+- [Sylvain Juge](https://github.com/SylvainJuge), Elastic
+
+For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#approver).
+
+### Emeritus maintainers
 
 - [Mateusz Rzeszutek](https://github.com/mateuszrzeszutek)
 - [Nikita Salnikov-Tarnovski](https://github.com/iNikem)
 - [Tyler Benson](https://github.com/tylerbenson)
 
-Learn more about roles in
-the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md).
+For more information about the emeritus role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#emeritus-maintainerapprovertriager).
 
-Thanks to all the people who already contributed!
+### Thanks to all of our contributors!
 
 <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/graphs/contributors">
-  <img src="https://contributors-img.web.app/image?repo=open-telemetry/opentelemetry-java-instrumentation" />
+  <img alt="Repo contributors" src="https://contrib.rocks/image?repo=open-telemetry/opentelemetry-java-instrumentation" />
 </a>
 
 [config-agent]: https://opentelemetry.io/docs/zero-code/java/agent/configuration/

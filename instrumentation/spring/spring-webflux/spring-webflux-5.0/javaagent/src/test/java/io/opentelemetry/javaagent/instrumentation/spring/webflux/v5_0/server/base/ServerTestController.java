@@ -99,7 +99,7 @@ public abstract class ServerTestController {
         () -> {
           endpoint.collectSpanAttributes(it -> request.getQueryParams().getFirst(it));
           setStatus(response, endpoint);
-          return "";
+          return endpoint.getBody();
         });
   }
 

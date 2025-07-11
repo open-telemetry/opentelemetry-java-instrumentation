@@ -27,6 +27,8 @@ public abstract class AbstractTestContainerManager implements TestContainerManag
         jvmArgsEnvVarName,
         "-Xmx512m -javaagent:/"
             + TARGET_AGENT_FILENAME
+            // args passed to the agent directly
+            + "=otel.javaagent.debug=true;otel.instrumentation.http.server.capture-request-headers=X-Test-Request"
             // Liberty20Jdk11, Payara6Jdk11 and Payara6Jdk17 fail with
             // java.util.zip.ZipException: Invalid CEN header (invalid zip64 extra data field size)
             + " -Djdk.util.zip.disableZip64ExtraFieldValidation=true");

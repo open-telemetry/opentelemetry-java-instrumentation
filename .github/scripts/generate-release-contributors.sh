@@ -85,4 +85,5 @@ echo "$contributors1" "$contributors2" \
   | grep -v github-actions \
   | grep -v renovate \
   | grep -v opentelemetrybot \
+  | grep -v otelbot \
   | sed 's/^/@/'

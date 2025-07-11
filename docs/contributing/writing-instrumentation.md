@@ -58,15 +58,25 @@ instrumentation ->
             build.gradle.kts
         testing
             build.gradle.kts
+        metadata.yaml
 ```
 
 The top level `settings.gradle.kts` file would contain the following (please add in alphabetical order):
 
 ```kotlin
-include("instrumentation:yarpc-1.0:javaagent")
-include("instrumentation:yarpc-1.0:library")
-include("instrumentation:yarpc-1.0:testing")
+include(":instrumentation:yarpc-1.0:javaagent")
+include(":instrumentation:yarpc-1.0:library")
+include(":instrumentation:yarpc-1.0:testing")
 ```
+
+### Instrumentation metadata.yaml (Experimental)
+
+Each module can contain a `metadata.yaml` file that describes the instrumentation. This information
+is then used when generating the [instrumentation-list.yaml](../instrumentation-list.yaml) file.
+The schema for `metadata.yaml` is still in development and may change in the future. See the
+[instrumentation-docs readme](../../instrumentation-docs/readme.md) for more information and the
+latest schema.
+
 
 ### Instrumentation Submodules
 
@@ -123,26 +133,26 @@ plugins {
 The `otel.library-instrumentation` gradle plugin will apply all the default settings and configure
 build tooling for the library instrumentation module.
 
-By convention, OpenTelemetry library instrumentations are centered around `*Tracing`
-and `*TracingBuilder` classes. These two are usually the only public classes in the whole module.
+By convention, OpenTelemetry library instrumentations are centered around `*Telemetry`
+and `*TelemetryBuilder` classes. These two are usually the only public classes in the whole module.
 Keep the amount of public classes and methods as small as possible.
 
-Start by creating a `YarpcTracing` class:
+Start by creating a `YarpcTelemetry` class:
 
 ```java
-public final class YarpcTracing {
+public final class YarpcTelemetry {
 
-  public static YarpcTracing create(OpenTelemetry openTelemetry) {
+  public static YarpcTelemetry create(OpenTelemetry openTelemetry) {
     return builder(openTelemetry).build();
   }
 
-  public static YarpcTracingBuilder builder(OpenTelemetry openTelemetry) {
-    return new YarpcTracingBuilder(openTelemetry);
+  public static YarpcTelemetryBuilder builder(OpenTelemetry openTelemetry) {
+    return new YarpcTelemetryBuilder(openTelemetry);
   }
 
   // ...
 
-  YarpcTracing() {}
+  YarpcTelemetry() {}
 
   public Interceptor newTracingInterceptor() {
     // ...
@@ -150,7 +160,7 @@ public final class YarpcTracing {
 }
 ```
 
-By convention, the `YarpcTracing` class exposes the `create()` and `builder()` methods as the only
+By convention, the `YarpcTelemetry` class exposes the `create()` and `builder()` methods as the only
 way of constructing a new instance; the constructor must be kept package-private (at most). Most of
 the configuration/construction logic happens in the builder class. Don't expose any other way of
 creating a new instance other than using the builder.
@@ -164,21 +174,21 @@ emits telemetry when used.
 Consider the following builder class:
 
 ```java
-public final class YarpcTracingBuilder {
+public final class YarpcTelemetryBuilder {
 
-  YarpcTracingBuilder(OpenTelemetry openTelemetry) {}
+  YarpcTelemetryBuilder(OpenTelemetry openTelemetry) {}
 
   // ...
 
-  public YarpcTracing build() {
+  public YarpcTelemetry build() {
     // ...
   }
 }
 ```
 
 The builder must have a package-private constructor, so that the only way of creating a new one is
-calling the `YarpcTracing#builder()` method and a public `build()` method that will return a new,
-properly configured `YarpcTracing` instance.
+calling the `YarpcTelemetry#builder()` method and a public `build()` method that will return a new,
+properly configured `YarpcTelemetry` instance.
 
 The library instrumentation builders can contain configuration settings that let you customize the
 behavior of the instrumentation. Most of these options are used to configure the
@@ -188,7 +198,7 @@ process.
 The configuration and usage of the `Instrumenter` class is described in
 [a separate document](using-instrumenter-api.md). In most cases, the `build()`
 method is supposed to create a fully configured `Instrumenter` instance and pass it
-to `YarpcTracing`, which in turn can pass it to the interceptor returned
+to `YarpcTelemetry`, which in turn can pass it to the interceptor returned
 by `newTracingInterceptor()`. The actual process of configuring an `Instrumenter` and various
 interfaces involved are described in the [`Instrumenter` API doc](using-instrumenter-api.md).
 
@@ -215,10 +225,10 @@ library instrumentation test, there will be code calling into the instrumentatio
 javaagent instrumentation test it will generally use the underlying library API as is and just rely
 on the javaagent to apply all the necessary bytecode changes automatically.
 
-You can use either JUnit 5 (recommended) or Spock to test the instrumentation. Start by creating an
-abstract class with an abstract method, for example `configure()`, that returns the instrumented
-object, such as a client, server, or the main class of the instrumented library. Then, depending on
-the chosen test library, go to the [JUnit](#junit) or [Spock](#spock) section.
+You can use JUnit 5 to test the instrumentation. Start by creating an abstract class with an
+abstract method, for example `configure()`, that returns the instrumented object, such as a client,
+server, or the main class of the instrumented library. See the [JUnit](#junit) section for more
+information.
 
 After writing some tests, return to the `library` package and make sure it has
 a `testImplementation` dependency on the `testing` submodule. Then, create a test class that extends
@@ -281,37 +291,6 @@ You can use the `@RegisterExtension` annotation to make sure that the instrument
 picked up by JUnit. Then, return the same extension instance in the `testing()` method
 implementation so that it's used in all test scenarios implemented in the abstract class.
 
-### Spock
-
-The `testing-common` module contains some utilities that facilitate writing Spock instrumentation
-tests, such as the `InstrumentationSpecification` base class and the `LibraryTestTrait`
-and `AgentTestTrait` traits.
-
-Consider the following abstract test class extending `InstrumentationSpecification`:
-
-```groovy
-abstract class AbstractYarpcTest extends InstrumentationSpecification {
-
-  abstract Yarpc configure(Yarpc yarpc);
-
-  def "test something"() {
-    // ...
-  }
-}
-```
-
-The `InstrumentationSpecification` class contains abstract methods that are implemented by one of
-our test traits in the actual test class. For example:
-
-```groovy
-class LibraryYarpcTest extends AbstractYarpcTest implements LibraryTestTrait {
-
-  @Override
-  Yarpc configure(Yarpc yarpc) {
-    // register interceptor/listener etc
-  }
-}
-```
 
 ## Writing Java agent instrumentation
 
@@ -352,9 +331,8 @@ without the user knowing about the instrumentation.
 
 Create a test that extends the base class you wrote earlier but does nothing in the `configure()`
 method. Unlike the library instrumentation, the javaagent instrumentation is supposed to work
-without any explicit user code modification. Depending on the testing framework, either use
-the `AgentInstrumentationExtension` or implement the `AgentTestingTrait`, and try running tests in
-this class. All tests should pass.
+without any explicit user code modification. Add an `AgentInstrumentationExtension` and try running
+tests in this class. All tests should pass.
 
 Note that all the tests inside the `javaagent` module are run using the `agent-for-testing`
 javaagent, with the instrumentation being loaded as an extension. This is done to perform the same
@@ -423,6 +401,26 @@ compileOnly(project(":instrumentation:yarpc-1.0:bootstrap"))
 All classes from the newly added bootstrap module will be loaded by the bootstrap module and
 globally available within the JVM. **IMPORTANT: Note that you _cannot_ use any third-party libraries
 here, including the instrumented library - you can only use JDK and OpenTelemetry API classes.**
+
+### Common Modules
+
+When creating a common module shared among different instrumentations, the naming convention should
+include a version suffix that matches the major/minor version of the instrumented library specified
+in the common module's `build.gradle.kts`.
+
+For example, if the common module's Gradle file contains the following dependency:
+
+```kotlin
+dependencies {
+  compileOnly("org.yarpc.client:rest:5.0.0")
+}
+```
+
+Then the module should be named using the suffix `yarp-common-5.0`.
+
+If the common module does not have a direct dependency on the instrumented library, no version
+suffix is required. Examples of such cases include modules named `lettuce-common` and
+`netty-common`.
 
 ## Writing Java agent unit tests
 

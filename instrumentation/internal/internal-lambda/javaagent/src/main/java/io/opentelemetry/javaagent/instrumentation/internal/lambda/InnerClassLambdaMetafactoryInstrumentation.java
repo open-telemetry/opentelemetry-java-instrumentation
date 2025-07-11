@@ -116,9 +116,13 @@ public class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumen
                 super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
                 // if current instruction is a call to ASM ClassWriter.toByteArray() insert call to
                 // our lambda transformer
-                if (opcode == Opcodes.INVOKEVIRTUAL
-                    && "toByteArray".equals(name)
-                    && "()[B".equals(descriptor)) {
+                if ((opcode == Opcodes.INVOKEVIRTUAL
+                        && "toByteArray".equals(name)
+                        && "()[B".equals(descriptor))
+                    // jdk 24
+                    || (opcode == Opcodes.INVOKEINTERFACE
+                        && "build".equals(name)
+                        && descriptor.endsWith(")[B"))) {
                   mv.visitVarInsn(Opcodes.ALOAD, 0);
                   mv.visitFieldInsn(
                       Opcodes.GETFIELD, slashClassName, "lambdaClassName", "Ljava/lang/String;");
@@ -128,7 +132,7 @@ public class InnerClassLambdaMetafactoryInstrumentation implements TypeInstrumen
                       Opcodes.GETFIELD, slashClassName, "targetClass", "Ljava/lang/Class;");
                   mv.visitMethodInsn(
                       Opcodes.INVOKESTATIC,
-                      Type.getInternalName(LambdaTransformer.class),
+                      Type.getInternalName(LambdaTransformerHelper.class),
                       "transform",
                       "([BLjava/lang/String;Ljava/lang/Class;)[B",
                       false);

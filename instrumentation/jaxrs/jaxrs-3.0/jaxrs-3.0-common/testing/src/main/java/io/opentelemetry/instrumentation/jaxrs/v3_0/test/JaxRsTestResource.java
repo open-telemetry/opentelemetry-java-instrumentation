@@ -105,7 +105,7 @@ public class JaxRsTestResource {
                 INDEXED_CHILD,
                 () -> {
                   INDEXED_CHILD.collectSpanAttributes(parameters::getFirst);
-                  response.resume("");
+                  response.resume(INDEXED_CHILD.getBody());
                 }));
   }
 

@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("org.opensearch.client")
     module.set("opensearch-rest-client")
-    versions.set("[1.0,)")
+    versions.set("[1.0,3.0)")
     assertInverse.set(true)
   }
 
@@ -26,6 +26,7 @@ dependencies {
 
   implementation(project(":instrumentation:opensearch:opensearch-rest-common:javaagent"))
 
+  testInstrumentation(project(":instrumentation:opensearch:opensearch-rest-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:apache-httpasyncclient-4.1:javaagent"))
 
@@ -33,7 +34,9 @@ dependencies {
   testImplementation("org.apache.logging.log4j:log4j-api:2.18.0")
   testImplementation("org.apache.commons:commons-lang3:3.12.0")
   testImplementation("commons-io:commons-io:2.11.0")
-  testImplementation("org.opensearch:opensearch-testcontainers:2.0.0")
+  testImplementation(project(":instrumentation:opensearch:opensearch-rest-common:testing"))
+
+  latestDepTestLibrary("org.opensearch.client:opensearch-rest-client:2.+") // see opensearch-rest-3.0 module
 }
 
 tasks {

@@ -20,7 +20,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import org.glassfish.grizzly.http.server.HttpHandler;
@@ -52,33 +51,18 @@ abstract class GrizzlyTest extends AbstractHttpServerTest<HttpServer> {
                 endpoint,
                 () -> {
                   if (endpoint.equals(SUCCESS)) {
-                    try {
-                      response.getWriter().write(endpoint.getBody());
-                    } catch (IOException e) {
-                      throw new RuntimeException(e);
-                    }
+                    response.getWriter().write(endpoint.getBody());
                   } else if (endpoint.equals(INDEXED_CHILD)) {
-                    response.setStatus(endpoint.getStatus());
                     endpoint.collectSpanAttributes(request::getParameter);
+                    response.setStatus(endpoint.getStatus());
+                    response.getWriter().write(endpoint.getBody());
                   } else if (endpoint.equals(QUERY_PARAM)) {
                     response.setStatus(endpoint.getStatus());
-                    try {
-                      response.getWriter().write(request.getQueryString());
-                    } catch (IOException e) {
-                      throw new RuntimeException(e);
-                    }
+                    response.getWriter().write(request.getQueryString());
                   } else if (endpoint.equals(REDIRECT)) {
-                    try {
-                      response.sendRedirect(endpoint.getBody());
-                    } catch (IOException e) {
-                      throw new RuntimeException(e);
-                    }
+                    response.sendRedirect(endpoint.getBody());
                   } else if (endpoint.equals(ERROR)) {
-                    try {
-                      response.sendError(endpoint.getStatus(), endpoint.getBody());
-                    } catch (IOException e) {
-                      throw new RuntimeException(e);
-                    }
+                    response.sendError(endpoint.getStatus(), endpoint.getBody());
                   } else if (endpoint.equals(NOT_FOUND)) {
                     response.setStatus(endpoint.getStatus());
                   } else if (endpoint.equals(EXCEPTION)) {

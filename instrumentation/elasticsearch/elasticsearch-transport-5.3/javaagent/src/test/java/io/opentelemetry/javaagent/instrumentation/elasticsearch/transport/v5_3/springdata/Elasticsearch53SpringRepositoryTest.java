@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.v5_3.
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -17,9 +18,10 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.io.File;
+import java.util.List;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -79,11 +81,7 @@ class Elasticsearch53SpringRepositoryTest {
                     span.hasName("DocRepository.findAll")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                DocRepository.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "findAll")),
+                        .hasAttributesSatisfyingExactly(assertFunctionName("findAll")),
                 span ->
                     span.hasName("SearchAction")
                         .hasKind(SpanKind.CLIENT)
@@ -113,11 +111,7 @@ class Elasticsearch53SpringRepositoryTest {
                     span.hasName("DocRepository.index")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                DocRepository.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "index")),
+                        .hasAttributesSatisfyingExactly(assertFunctionName("index")),
                 span ->
                     span.hasName("IndexAction")
                         .hasKind(SpanKind.CLIENT)
@@ -162,11 +156,7 @@ class Elasticsearch53SpringRepositoryTest {
                     span.hasName("DocRepository.findById")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                DocRepository.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "findById")),
+                        .hasAttributesSatisfyingExactly(assertFunctionName("findById")),
                 span ->
                     span.hasName("GetAction")
                         .hasKind(SpanKind.CLIENT)
@@ -196,11 +186,7 @@ class Elasticsearch53SpringRepositoryTest {
                     span.hasName("DocRepository.index")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                DocRepository.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "index")),
+                        .hasAttributesSatisfyingExactly(assertFunctionName("index")),
                 span ->
                     span.hasName("IndexAction")
                         .hasKind(SpanKind.CLIENT)
@@ -240,11 +226,7 @@ class Elasticsearch53SpringRepositoryTest {
                     span.hasName("DocRepository.findById")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                DocRepository.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "findById")),
+                        .hasAttributesSatisfyingExactly(assertFunctionName("findById")),
                 span ->
                     span.hasName("GetAction")
                         .hasKind(SpanKind.CLIENT)
@@ -272,11 +254,7 @@ class Elasticsearch53SpringRepositoryTest {
                     span.hasName("DocRepository.deleteById")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                DocRepository.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "deleteById")),
+                        .hasAttributesSatisfyingExactly(assertFunctionName("deleteById")),
                 span ->
                     span.hasName("DeleteAction")
                         .hasKind(SpanKind.CLIENT)
@@ -315,11 +293,7 @@ class Elasticsearch53SpringRepositoryTest {
                     span.hasName("DocRepository.findAll")
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CodeIncubatingAttributes.CODE_NAMESPACE,
-                                DocRepository.class.getName()),
-                            equalTo(CodeIncubatingAttributes.CODE_FUNCTION, "findAll")),
+                        .hasAttributesSatisfyingExactly(assertFunctionName("findAll")),
                 span ->
                     span.hasName("SearchAction")
                         .hasKind(SpanKind.CLIENT)
@@ -333,5 +307,9 @@ class Elasticsearch53SpringRepositoryTest {
                             equalTo(stringKey("elasticsearch.request"), "SearchRequest"),
                             equalTo(stringKey("elasticsearch.request.indices"), "test-index"),
                             equalTo(stringKey("elasticsearch.request.search.types"), "doc"))));
+  }
+
+  private static List<AttributeAssertion> assertFunctionName(String methodName) {
+    return codeFunctionAssertions(DocRepository.class, methodName);
   }
 }

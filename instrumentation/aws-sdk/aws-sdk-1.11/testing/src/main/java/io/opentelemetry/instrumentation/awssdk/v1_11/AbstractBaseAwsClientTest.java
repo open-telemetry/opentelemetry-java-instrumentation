@@ -103,7 +103,6 @@ public abstract class AbstractBaseAwsClientTest {
                                   equalTo(RPC_SYSTEM, "aws-api"),
                                   satisfies(RPC_SERVICE, v -> v.contains(service)),
                                   equalTo(RPC_METHOD, operation),
-                                  equalTo(stringKey("aws.endpoint"), endpoint.getServiceEndpoint()),
                                   equalTo(stringKey("aws.agent"), "java-aws-sdk")));
 
                       if (hasRequestId()) {

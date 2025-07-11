@@ -172,6 +172,14 @@ class LogbackAppenderInstaller {
     initializeMdcAppenderFromProperties(applicationEnvironmentPreparedEvent, openTelemetryAppender);
     openTelemetryAppender.start();
     logger.addAppender(openTelemetryAppender);
+    // move existing appenders under otel mdc appender, so they could observe the added mdc values
+    for (Iterator<Appender<ILoggingEvent>> i = logger.iteratorForAppenders(); i.hasNext(); ) {
+      Appender<ILoggingEvent> appender = i.next();
+      if (appender != openTelemetryAppender) {
+        openTelemetryAppender.addAppender(appender);
+        logger.detachAppender(appender);
+      }
+    }
   }
 
   private static void initializeMdcAppenderFromProperties(

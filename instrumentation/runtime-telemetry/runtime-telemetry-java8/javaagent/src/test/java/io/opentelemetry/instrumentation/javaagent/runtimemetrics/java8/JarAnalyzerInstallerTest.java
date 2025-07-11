@@ -12,6 +12,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
+import io.opentelemetry.sdk.logs.data.internal.ExtendedLogRecordData;
 import java.util.List;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
@@ -39,10 +40,7 @@ class JarAnalyzerInstallerTest {
                         .filter(
                             record ->
                                 "package.info"
-                                    .equals(
-                                        record
-                                            .getAttributes()
-                                            .get(AttributeKey.stringKey("event.name"))))
+                                    .equals(((ExtendedLogRecordData) record).getEventName()))
                         .collect(toList()),
                 (eventList) -> !eventList.isEmpty());
 

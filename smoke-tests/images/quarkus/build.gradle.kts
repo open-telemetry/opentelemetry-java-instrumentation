@@ -12,11 +12,11 @@ plugins {
   id("otel.java-conventions")
 
   id("com.google.cloud.tools.jib")
-  id("io.quarkus") version "3.15.3"
+  id("io.quarkus") version "3.24.3"
 }
 
 dependencies {
-  implementation(enforcedPlatform("io.quarkus:quarkus-bom:3.15.3"))
+  implementation(enforcedPlatform("io.quarkus:quarkus-bom:3.24.3"))
   implementation("io.quarkus:quarkus-rest")
 }
 
@@ -34,9 +34,11 @@ java {
   targetCompatibility = JavaVersion.VERSION_17
 }
 
+val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
+
 jib {
   from.image = "eclipse-temurin:$targetJDK"
-  to.image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-quarkus:jdk$targetJDK-$tag"
+  to.image = "ghcr.io/$repo/smoke-test-quarkus:jdk$targetJDK-$tag"
   container {
     mainClass = "bogus" // to suppress Jib warning about missing main class
   }

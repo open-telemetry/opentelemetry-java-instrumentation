@@ -16,3 +16,9 @@ dependencies {
   implementation(project(":instrumentation:java-http-client:library"))
   testImplementation(project(":instrumentation:java-http-client:testing"))
 }
+
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+}

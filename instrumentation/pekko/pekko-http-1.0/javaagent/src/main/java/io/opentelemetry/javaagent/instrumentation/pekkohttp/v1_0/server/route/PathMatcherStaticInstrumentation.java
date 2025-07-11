@@ -9,7 +9,9 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -18,7 +20,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pekko.http.scaladsl.model.Uri;
 import org.apache.pekko.http.scaladsl.server.PathMatcher;
 import org.apache.pekko.http.scaladsl.server.PathMatchers;
-import org.apache.pekko.http.scaladsl.server.PathMatchers$;
 
 public class PathMatcherStaticInstrumentation implements TypeInstrumentation {
   @Override
@@ -43,11 +44,13 @@ public class PathMatcherStaticInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Uri.Path path,
         @Advice.Return PathMatcher.Matching<?> result) {
       // result is either matched or unmatched, we only care about the matches
+      Context context = Java8BytecodeBridge.currentContext();
+      PekkoRouteHolder routeHolder = PekkoRouteHolder.get(context);
+      if (routeHolder == null) {
+        return;
+      }
       if (result.getClass() == PathMatcher.Matched.class) {
-        if (PathMatchers$.PathEnd$.class == pathMatcher.getClass()) {
-          PekkoRouteHolder.endMatched();
-          return;
-        }
+        PathMatcher.Matched<?> match = (PathMatcher.Matched<?>) result;
         // if present use the matched path that was remembered in PathMatcherInstrumentation,
         // otherwise just use a *
         String prefix = VirtualField.find(PathMatcher.class, String.class).get(pathMatcher);
@@ -58,9 +61,9 @@ public class PathMatcherStaticInstrumentation implements TypeInstrumentation {
             prefix = "*";
           }
         }
-        if (prefix != null) {
-          PekkoRouteHolder.push(prefix);
-        }
+        routeHolder.push(path, match.pathRest(), prefix);
+      } else {
+        routeHolder.didNotMatch();
       }
     }
   }

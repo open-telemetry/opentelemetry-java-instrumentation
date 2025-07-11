@@ -13,16 +13,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * An abstract class containing skeletal info about Metrics:
  * <li>the metric type
  * <li>the metric attributes
  * <li>the unit
+ * <li>the sourceUnit
  *
  *     <p>Known subclasses are {@link JmxRule} and {@link Metric}.
  */
-abstract class MetricStructure {
+public abstract class MetricStructure {
 
   // Used by the YAML parser
   //
@@ -45,7 +47,10 @@ abstract class MetricStructure {
   private Map<String, Object> metricAttribute;
   private StateMapping stateMapping = StateMapping.empty();
   private static final String STATE_MAPPING_DEFAULT = "*";
-  private String unit;
+
+  @Nullable private String sourceUnit;
+  @Nullable private String unit;
+  @Nullable private Boolean dropNegativeValues;
 
   private MetricInfo.Type metricType;
   private List<MetricAttribute> metricAttributes;
@@ -55,15 +60,38 @@ abstract class MetricStructure {
   void setType(String t) {
     // Do not complain about case variations
     t = t.trim().toUpperCase(Locale.ROOT);
-    this.metricType = MetricInfo.Type.valueOf(t);
+    try {
+      this.metricType = MetricInfo.Type.valueOf(t);
+    } catch (IllegalArgumentException e) {
+      throw new IllegalArgumentException("Invalid metric type: " + t, e);
+    }
   }
 
+  @Nullable
+  public String getSourceUnit() {
+    return sourceUnit;
+  }
+
+  public void setSourceUnit(String unit) {
+    this.sourceUnit = validateUnit(unit.trim());
+  }
+
+  @Nullable
   public String getUnit() {
     return unit;
   }
 
   public void setUnit(String unit) {
-    this.unit = validateUnit(unit.trim());
+    this.unit = unit.trim();
+  }
+
+  public void setDropNegativeValues(Boolean dropNegativeValues) {
+    this.dropNegativeValues = dropNegativeValues;
+  }
+
+  @Nullable
+  public Boolean getDropNegativeValues() {
+    return dropNegativeValues;
   }
 
   private static void addMappedValue(
@@ -136,36 +164,84 @@ abstract class MetricStructure {
     return list;
   }
 
-  private static MetricAttribute buildMetricAttribute(String key, String target) {
+  // package protected for testing
+  static MetricAttribute buildMetricAttribute(String key, String target) {
+    String errorMsg =
+        String.format("Invalid metric attribute expression for '%s' : '%s'", key, target);
+
+    String targetExpr = target;
+
+    // an optional modifier may wrap the target
+    // - lowercase(param(STRING))
+    boolean lowercase = false;
+    String lowerCaseExpr = tryParseFunction("lowercase", targetExpr, errorMsg);
+    if (lowerCaseExpr != null) {
+      lowercase = true;
+      targetExpr = lowerCaseExpr;
+    }
+
+    //
     // The recognized forms of target are:
     //  - param(STRING)
     //  - beanattr(STRING)
     //  - const(STRING)
     // where STRING is the name of the corresponding parameter key, attribute name,
-    // or the direct value to use
-    int k = target.indexOf(')');
+    // or the constant value to use
 
-    // Check for one of the cases as above
-    if (target.startsWith("param(")) {
-      if (k > 0) {
-        String jmxAttribute = target.substring(6, k).trim();
-        return new MetricAttribute(
-            key, MetricAttributeExtractor.fromObjectNameParameter(jmxAttribute));
-      }
-    } else if (target.startsWith("beanattr(")) {
-      if (k > 0) {
-        String jmxAttribute = target.substring(9, k).trim();
-        return new MetricAttribute(key, MetricAttributeExtractor.fromBeanAttribute(jmxAttribute));
-      }
-    } else if (target.startsWith("const(")) {
-      if (k > 0) {
-        String constantValue = target.substring(6, k).trim();
-        return new MetricAttribute(key, MetricAttributeExtractor.fromConstant(constantValue));
+    MetricAttributeExtractor extractor = null;
+
+    String paramName = tryParseFunction("param", targetExpr, errorMsg);
+    if (paramName != null) {
+      extractor = MetricAttributeExtractor.fromObjectNameParameter(paramName);
+    }
+
+    if (extractor == null) {
+      String attributeName = tryParseFunction("beanattr", targetExpr, errorMsg);
+      if (attributeName != null) {
+        extractor = MetricAttributeExtractor.fromBeanAttribute(attributeName);
       }
     }
 
-    String msg = "Invalid metric attribute specification for '" + key + "': " + target;
-    throw new IllegalArgumentException(msg);
+    if (extractor == null) {
+      String constantValue = tryParseFunction("const", targetExpr, errorMsg);
+      if (constantValue != null) {
+        extractor = MetricAttributeExtractor.fromConstant(constantValue);
+      }
+    }
+
+    if (extractor == null) {
+      // expression did not match any supported syntax
+      throw new IllegalArgumentException(errorMsg);
+    }
+
+    if (lowercase) {
+      extractor = MetricAttributeExtractor.toLowerCase(extractor);
+    }
+    return new MetricAttribute(key, extractor);
+  }
+
+  /**
+   * Parses a function expression for metric attributes
+   *
+   * @param function function name to attempt parsing from expression
+   * @param expression expression to parse
+   * @param errorMsg error message to use when syntax error is present
+   * @return {@literal null} if expression does not start with function
+   * @throws IllegalArgumentException if expression syntax is invalid
+   */
+  private static String tryParseFunction(String function, String expression, String errorMsg) {
+    if (!expression.startsWith(function)) {
+      return null;
+    }
+    String expr = expression.substring(function.length()).trim();
+    if (expr.charAt(0) != '(' || expr.charAt(expr.length() - 1) != ')') {
+      throw new IllegalArgumentException(errorMsg);
+    }
+    expr = expr.substring(1, expr.length() - 1).trim();
+    if (expr.isEmpty()) {
+      throw new IllegalArgumentException(errorMsg);
+    }
+    return expr.trim();
   }
 
   private MetricAttribute buildStateMetricAttribute(String key, Map<?, ?> stateMap) {

@@ -18,4 +18,7 @@ configurations.configureEach {
       force("io.opentelemetry:opentelemetry-sdk-testing:1.27.0")
     }
   }
+  if (name == "testRuntimeClasspath") {
+    exclude(group = "io.opentelemetry", module = "opentelemetry-api-incubator")
+  }
 }

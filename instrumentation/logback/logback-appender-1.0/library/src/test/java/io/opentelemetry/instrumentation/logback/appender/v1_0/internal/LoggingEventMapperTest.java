@@ -103,8 +103,8 @@ class LoggingEventMapperTest {
 
     assertThat(builder.build())
         .containsOnly(
-            entry(AttributeKey.booleanArrayKey("booleanArray"), singletonList(Boolean.TRUE)),
-            entry(AttributeKey.booleanArrayKey("BooleanArray"), singletonList(Boolean.TRUE)),
+            entry(AttributeKey.booleanArrayKey("booleanArray"), singletonList(true)),
+            entry(AttributeKey.booleanArrayKey("BooleanArray"), singletonList(true)),
             entry(AttributeKey.longArrayKey("byteArray"), singletonList(2L)),
             entry(AttributeKey.longArrayKey("ByteArray"), singletonList(2L)),
             entry(AttributeKey.longArrayKey("shortArray"), singletonList(2L)),

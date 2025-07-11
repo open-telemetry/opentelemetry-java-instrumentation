@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
 import static java.util.Collections.emptyList;
 
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -107,4 +108,18 @@ public interface InstrumentationConfig {
    * {@code key=value,anotherKey=anotherValue}. The returned map is unmodifiable.
    */
   Map<String, String> getMap(String name, Map<String, String> defaultValue);
+
+  /**
+   * Returns a {@link DeclarativeConfigProperties} for the given instrumentation name, or {@code
+   * null} if no declarative configuration is available for that instrumentation.
+   *
+   * <p>Declarative configuration is used to configure instrumentation properties in a declarative
+   * way, such as through YAML or JSON files.
+   *
+   * @param instrumentationName the name of the instrumentation
+   * @return the declarative configuration properties for the given instrumentation name, or {@code
+   *     null} if not available
+   */
+  @Nullable
+  DeclarativeConfigProperties getDeclarativeConfig(String instrumentationName);
 }

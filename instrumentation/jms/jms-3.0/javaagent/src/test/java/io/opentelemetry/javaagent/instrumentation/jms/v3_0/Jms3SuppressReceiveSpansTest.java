@@ -21,13 +21,13 @@ import jakarta.jms.MessageProducer;
 import jakarta.jms.TextMessage;
 import org.apache.activemq.artemis.jms.client.ActiveMQDestination;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class Jms3SuppressReceiveSpansTest extends AbstractJms3Test {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
-  @ArgumentsSource(DestinationsProvider.class)
   @ParameterizedTest
+  @MethodSource("destinationArguments")
   void testMessageConsumer(DestinationFactory destinationFactory, boolean isTemporary)
       throws JMSException {
 

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_42.incuba
 
 import application.io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_40.incubator.logs.ApplicationLogger140Incubator;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_42.logs.ApplicationLogRecordBuilder142;
 
 class ApplicationLogger142Incubator extends ApplicationLogger140Incubator {
 

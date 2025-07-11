@@ -10,10 +10,10 @@ import static java.util.Collections.emptyList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterFactory;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaProcessRequest;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaProducerRequest;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaReceiveRequest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaInstrumenterFactory;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProducerRequest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -44,14 +44,6 @@ public final class KafkaTelemetryBuilder {
       AttributesExtractor<KafkaProducerRequest, RecordMetadata> extractor) {
     producerAttributesExtractors.add(extractor);
     return this;
-  }
-
-  /** Use {@link #addConsumerProcessAttributesExtractors(AttributesExtractor)} instead. */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public KafkaTelemetryBuilder addConsumerAttributesExtractors(
-      AttributesExtractor<KafkaProcessRequest, Void> extractor) {
-    return addConsumerProcessAttributesExtractors(extractor);
   }
 
   @CanIgnoreReturnValue

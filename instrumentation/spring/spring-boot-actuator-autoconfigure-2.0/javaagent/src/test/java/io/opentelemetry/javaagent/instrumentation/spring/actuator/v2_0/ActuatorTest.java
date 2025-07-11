@@ -15,6 +15,8 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.javaagent.instrumentation.spring.actuator.v2_0.SpringApp.TestBean;
+import java.util.ArrayList;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
@@ -57,9 +59,12 @@ class ActuatorTest {
                                                         "value"))))));
 
     MeterRegistry meterRegistry = context.getBean(MeterRegistry.class);
-    assertThat(meterRegistry).isNotNull().isInstanceOf(CompositeMeterRegistry.class);
-    assertThat(((CompositeMeterRegistry) meterRegistry).getRegistries())
-        .anyMatch(r -> r.getClass().getSimpleName().equals("OpenTelemetryMeterRegistry"))
-        .anyMatch(r -> r.getClass().getSimpleName().equals("SimpleMeterRegistry"));
+    assertThat(meterRegistry).isInstanceOf(CompositeMeterRegistry.class);
+
+    Set<MeterRegistry> registries = ((CompositeMeterRegistry) meterRegistry).getRegistries();
+    ArrayList<MeterRegistry> list = new ArrayList<>(registries);
+
+    String last = list.get(list.size() - 1).getClass().getSimpleName();
+    assertThat(last).isEqualTo("OpenTelemetryMeterRegistry");
   }
 }

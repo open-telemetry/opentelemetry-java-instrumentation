@@ -34,7 +34,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-public class CriteriaTest extends AbstractHibernateTest {
+class CriteriaTest extends AbstractHibernateTest {
   private static Stream<Arguments> provideParameters() {
     List<Consumer<Query<Value>>> interactions =
         Arrays.asList(Query::getResultList, Query::uniqueResult, Query::getSingleResultOrNull);
