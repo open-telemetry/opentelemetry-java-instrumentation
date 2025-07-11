@@ -134,21 +134,21 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 - [Lauri Tulmin](https://github.com/laurit), Splunk
 - [Trask Stalnaker](https://github.com/trask), Microsoft
 
-For more information about the maintainer role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#maintainer).
+For more information about the maintainer role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#maintainer).
 
 ### Approvers
 
 - [Gregor Zeitlinger](https://github.com/zeitlinger), Grafana
 - [Jack Berg](https://github.com/jack-berg), New Relic
 - [Jason Plumb](https://github.com/breedx-splk), Splunk
-- [Jay DeLuca](https://github.com/jaydeluca)
+- [Jay DeLuca](https://github.com/jaydeluca), Grafana
 - [Jean Bisutti](https://github.com/jeanbisutti), Microsoft
 - [John Watson](https://github.com/jkwatson), Cloudera
 - [Jonas Kunz](https://github.com/JonasKunz), Elastic
 - [Steve Rao](https://github.com/steverao), Alibaba
 - [Sylvain Juge](https://github.com/SylvainJuge), Elastic
 
-For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver).
+For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#approver).
 
 ### Emeritus maintainers
 

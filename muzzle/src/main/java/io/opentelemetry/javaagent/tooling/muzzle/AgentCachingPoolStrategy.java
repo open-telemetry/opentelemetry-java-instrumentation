@@ -355,7 +355,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     }
 
     void enterLoadAnnotations() {
-      loadingAnnotations.set(Boolean.TRUE);
+      loadingAnnotations.set(true);
     }
 
     void exitLoadAnnotations() {

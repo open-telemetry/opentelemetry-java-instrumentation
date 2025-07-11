@@ -6,99 +6,110 @@
 package io.opentelemetry.instrumentation.docs.parsers;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mockStatic;
 
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
-import io.opentelemetry.instrumentation.docs.utils.FileManager;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.HashMap;
+import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
-import org.mockito.MockedStatic;
 
 @SuppressWarnings("NullAway")
 class MetricParserTest {
-
   @Test
-  void parseMetricsDeduplicatesMetricsByName() {
-    String input =
-        """
-        metrics:
-          - name: metric1
-            type: counter
-          - name: metric1
-            type: counter
-          - name: metric2
-            type: gauge
-        """;
+  void testFiltersMetricsByScope() {
+    String targetScopeName = "my-instrumentation-scope";
 
-    Map<String, StringBuilder> metricMap = new HashMap<>();
-    metricMap.put("default", new StringBuilder(input));
+    EmittedMetrics.Metric metric1 = createMetric("my.metric1", "desc1", "attr1");
+    EmittedMetrics.Metric otherMetric = createMetric("other.metric", "desc2", "other.attr");
 
-    Map<String, EmittedMetrics> result = EmittedMetricsParser.parseMetrics(metricMap);
-    List<String> metricNames =
-        result.get("default").getMetrics().stream()
-            .map(EmittedMetrics.Metric::getName)
-            .sorted()
-            .toList();
+    EmittedMetrics.MetricsByScope targetMetricsByScope =
+        new EmittedMetrics.MetricsByScope(targetScopeName, List.of(metric1));
 
-    assertThat(metricNames).hasSize(2);
-    assertThat(metricNames).containsExactly("metric1", "metric2");
+    EmittedMetrics.MetricsByScope otherMetricsByScope =
+        new EmittedMetrics.MetricsByScope("other-scope", List.of(otherMetric));
+
+    EmittedMetrics emittedMetrics =
+        new EmittedMetrics("default", List.of(targetMetricsByScope, otherMetricsByScope));
+
+    Map<String, Map<String, MetricParser.MetricAggregator.AggregatedMetricInfo>> metrics =
+        MetricParser.MetricAggregator.aggregateMetrics("default", emittedMetrics, targetScopeName);
+
+    Map<String, List<EmittedMetrics.Metric>> result =
+        MetricParser.MetricAggregator.buildFilteredMetrics(metrics);
+
+    assertThat(result.get("default")).hasSize(1);
+    assertThat(result.get("default").get(0).getName()).isEqualTo("my.metric1");
   }
 
   @Test
-  void parseMetricsHandlesEmptyInput() {
-    String input = "metrics:\n";
-    Map<String, StringBuilder> metricMap = new HashMap<>();
-    metricMap.put("default", new StringBuilder(input));
+  void testAggregatesAndDeduplicatesAttributes() {
+    String targetScopeName = "my-instrumentation-scope";
 
-    Map<String, EmittedMetrics> result = EmittedMetricsParser.parseMetrics(metricMap);
-    assertThat(result).isEmpty();
+    EmittedMetrics.Metric metric1 =
+        new EmittedMetrics.Metric(
+            "my.metric1",
+            "desc1",
+            "gauge",
+            "unit",
+            List.of(
+                new TelemetryAttribute("attr1", "STRING"),
+                new TelemetryAttribute("attr2", "STRING")));
+
+    EmittedMetrics.Metric metric1Dup =
+        new EmittedMetrics.Metric(
+            "my.metric1",
+            "desc1",
+            "gauge",
+            "unit",
+            List.of(
+                new TelemetryAttribute("attr1", "STRING"),
+                new TelemetryAttribute("attr3", "STRING")));
+
+    EmittedMetrics.MetricsByScope targetMetricsByScope =
+        new EmittedMetrics.MetricsByScope(targetScopeName, List.of(metric1, metric1Dup));
+
+    EmittedMetrics emittedMetrics = new EmittedMetrics("default", List.of(targetMetricsByScope));
+
+    Map<String, Map<String, MetricParser.MetricAggregator.AggregatedMetricInfo>> metrics =
+        MetricParser.MetricAggregator.aggregateMetrics("default", emittedMetrics, targetScopeName);
+
+    Map<String, List<EmittedMetrics.Metric>> result =
+        MetricParser.MetricAggregator.buildFilteredMetrics(metrics);
+    List<TelemetryAttribute> attrs = result.get("default").get(0).getAttributes();
+
+    assertThat(attrs).hasSize(3);
+    assertThat(attrs.stream().map(TelemetryAttribute::getName))
+        .containsExactlyInAnyOrder("attr1", "attr2", "attr3");
   }
 
   @Test
-  void getMetricsFromFilesCombinesFilesCorrectly(@TempDir Path tempDir) throws IOException {
-    Path telemetryDir = Files.createDirectories(tempDir.resolve(".telemetry"));
+  void testPreservesMetricMetadata() {
+    String targetScopeName = "my-instrumentation-scope";
 
-    String file1Content = "when: default\n  metrics:\n  - name: metric1\n    type: counter\n";
-    String file2Content = "when: default\n  metrics:\n  - name: metric2\n    type: gauge\n";
+    EmittedMetrics.Metric metric1 =
+        createMetric("my.metric1", "description of my.metric1", "attr1");
 
-    Files.writeString(telemetryDir.resolve("metrics-1.yaml"), file1Content);
-    Files.writeString(telemetryDir.resolve("metrics-2.yaml"), file2Content);
+    EmittedMetrics.MetricsByScope targetMetricsByScope =
+        new EmittedMetrics.MetricsByScope(targetScopeName, List.of(metric1));
 
-    // Create a non-metrics file that should be ignored
-    Files.writeString(telemetryDir.resolve("other-file.yaml"), "some content");
+    EmittedMetrics emittedMetrics = new EmittedMetrics("default", List.of(targetMetricsByScope));
 
-    try (MockedStatic<FileManager> fileManagerMock = mockStatic(FileManager.class)) {
-      fileManagerMock
-          .when(
-              () -> FileManager.readFileToString(telemetryDir.resolve("metrics-1.yaml").toString()))
-          .thenReturn(file1Content);
-      fileManagerMock
-          .when(
-              () -> FileManager.readFileToString(telemetryDir.resolve("metrics-2.yaml").toString()))
-          .thenReturn(file2Content);
+    Map<String, Map<String, MetricParser.MetricAggregator.AggregatedMetricInfo>> metrics =
+        MetricParser.MetricAggregator.aggregateMetrics("default", emittedMetrics, targetScopeName);
 
-      Map<String, EmittedMetrics> result =
-          EmittedMetricsParser.getMetricsFromFiles(tempDir.toString(), "");
+    Map<String, List<EmittedMetrics.Metric>> result =
+        MetricParser.MetricAggregator.buildFilteredMetrics(metrics);
 
-      EmittedMetrics metrics = result.get("default");
-
-      assertThat(metrics.getMetrics()).hasSize(2);
-      List<String> metricNames =
-          metrics.getMetrics().stream().map(EmittedMetrics.Metric::getName).sorted().toList();
-      assertThat(metricNames).containsExactly("metric1", "metric2");
-    }
+    EmittedMetrics.Metric foundMetric = result.get("default").get(0);
+    assertThat(foundMetric.getName()).isEqualTo("my.metric1");
+    assertThat(foundMetric.getDescription()).isEqualTo("description of my.metric1");
+    assertThat(foundMetric.getType()).isEqualTo("gauge");
+    assertThat(foundMetric.getUnit()).isEqualTo("unit");
   }
 
-  @Test
-  void getMetricsFromFilesHandlesNonexistentDirectory() {
-    Map<String, EmittedMetrics> result =
-        EmittedMetricsParser.getMetricsFromFiles("/nonexistent", "path");
-    assertThat(result).isEmpty();
+  private static EmittedMetrics.Metric createMetric(
+      String name, String description, String attrName) {
+    return new EmittedMetrics.Metric(
+        name, description, "gauge", "unit", List.of(new TelemetryAttribute(attrName, "STRING")));
   }
 }

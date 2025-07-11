@@ -33,17 +33,12 @@ class UnitConverter {
    * @param sourceUnit a source unit supported by requested converter
    * @param targetUnit a target unit supported by requested converter
    * @return an instance of converter, or {@literal null} if {@code sourceUnit} is {@literal null}
-   *     or empty, which means that there is no conversion needed.
-   * @throws IllegalArgumentException if {@code targetUnit} is empty, or matching converter was not
-   *     found for provided units.
+   *     or empty or if {@code targetUnit} is empty, which means that there is no conversion needed.
+   * @throws IllegalArgumentException if matching converter was not found for provided units.
    */
   @Nullable
   public static UnitConverter getInstance(@Nullable String sourceUnit, String targetUnit) {
-    if (targetUnit.isEmpty()) {
-      throw new IllegalArgumentException("Non empty targetUnit must be provided");
-    }
-
-    if (sourceUnit == null || sourceUnit.isEmpty()) {
+    if (sourceUnit == null || sourceUnit.isEmpty() || targetUnit.isEmpty()) {
       // No conversion is needed
       return null;
     }

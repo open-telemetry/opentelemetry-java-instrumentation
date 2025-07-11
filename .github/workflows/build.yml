@@ -37,12 +37,12 @@ jobs:
     if: "!startsWith(github.ref_name, 'release/')"
     uses: ./.github/workflows/reusable-shell-script-check.yml
 
-  markdown-link-check:
+  link-check:
     # release branches are excluded to avoid unnecessary maintenance if external links break
     # (and also because the README.md javaagent download link has to be updated on release branches
     #  before the release download has been published)
     if: "!startsWith(github.ref_name, 'release/')"
-    uses: ./.github/workflows/reusable-markdown-link-check.yml
+    uses: ./.github/workflows/reusable-link-check.yml
 
   markdown-lint-check:
     # release branches are excluded
@@ -58,7 +58,7 @@ jobs:
   publish-snapshots:
     needs:
       # intentionally not blocking snapshot publishing on test-latest-deps, muzzle,
-      # markdown-link-check, or misspell-check
+      # link-check, or misspell-check
       - common
     runs-on: ubuntu-latest
     # skipping release branches because the versions in those branches are not snapshots
