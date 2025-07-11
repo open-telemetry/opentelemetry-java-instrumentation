@@ -89,7 +89,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope onEnter(
         @Advice.This RmiBasedExporter thisObject, @Advice.Argument(0) RemoteInvocation remoteInv) {
-      return new AdviceScope(CallDepth.forClass(RmiBasedExporter.class), thisObject, remoteInv);
+      return AdviceScope.enter(CallDepth.forClass(RmiBasedExporter.class), thisObject, remoteInv);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
