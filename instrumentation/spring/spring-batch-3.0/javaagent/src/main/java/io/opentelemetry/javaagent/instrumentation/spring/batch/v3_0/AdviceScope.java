@@ -15,7 +15,7 @@ import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.item.ItemSin
 import javax.annotation.Nullable;
 import org.springframework.batch.core.scope.context.ChunkContext;
 
-public class AdviceScope {
+public final class AdviceScope {
   private final Context context;
   private final String item;
   private final Scope scope;
