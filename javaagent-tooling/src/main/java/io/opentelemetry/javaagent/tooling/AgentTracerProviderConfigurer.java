@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static io.opentelemetry.javaagent.tooling.config.LegacyConfigFileEarlyInitAgentConfig.JAVAAGENT_ENABLED_CONFIG;
+import static io.opentelemetry.javaagent.tooling.AgentInstaller.JAVAAGENT_ENABLED_CONFIG;
 import static java.util.Collections.emptyList;
 
 import com.google.auto.service.AutoService;
