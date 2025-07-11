@@ -20,6 +20,7 @@ This repository has four main submodules:
 ## Extensions examples
 
 - [DemoIdGenerator](custom/src/main/java/com/example/javaagent/DemoIdGenerator.java) - custom `IdGenerator`
+- [DemoInstrumenterCustomizerProvider](custom/src/main/java/com/example/javaagent/DemoInstrumenterCustomizerProvider.java) - custom instrumentation customization
 - [DemoPropagator](custom/src/main/java/com/example/javaagent/DemoPropagator.java) - custom `TextMapPropagator`
 - [DemoSampler](custom/src/main/java/com/example/javaagent/DemoSampler.java) - custom `Sampler`
 - [DemoSpanProcessor](custom/src/main/java/com/example/javaagent/DemoSpanProcessor.java) - custom `SpanProcessor`
@@ -35,6 +36,15 @@ The following description follows one specific use-case:
 
 As an example, let us take some database client instrumentation that creates a span for database call
 and extracts data from db connection to provide attributes for that span.
+
+### I want to customize instrumentation without modifying core code
+
+The `InstrumenterCustomizerProvider` extension point allows you to customize instrumentation behavior without modifying core code:
+
+- Add custom attributes and metrics to existing instrumentations
+- Implement context customizers for request correlation
+- Transform span names to match your naming conventions
+- Apply customizations conditionally based on instrumentation type and span kind
 
 ### I don't want this span at all
 
